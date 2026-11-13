@@ -25,7 +25,7 @@ export function readDate(text: string): ISODateString | null {
         'MMMM d',
         'MMM d',
         'd MMMM',
-        'd MMM',
+        'd MMM'
     ];
 
     // Match the existing English month-first default, swapping only an unambiguous day.

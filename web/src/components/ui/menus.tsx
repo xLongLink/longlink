@@ -14,7 +14,7 @@ import {
     useTransition,
     type MouseEvent,
     type ReactElement,
-    type ReactNode,
+    type ReactNode
 } from 'react';
 import {
     DropdownMenu,
@@ -26,7 +26,7 @@ import {
     DropdownMenuSub,
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
+    DropdownMenuTrigger
 } from '@/components/shadcn/dropdown-menu';
 
 export type ActionMenuItemData = {
@@ -71,7 +71,7 @@ export function MenuControl({
     iconOnly = false,
     isMenuOpen,
     onOpenChange,
-    alignment = 'start',
+    alignment = 'start'
 }: {
     items: NativeMenuOption[];
     label: string;
@@ -151,7 +151,7 @@ function MenuSurface({
     items,
     closeMenu,
     nested = false,
-    alignment = 'start',
+    alignment = 'start'
 }: {
     owner: string;
     items: NativeMenuOption[];

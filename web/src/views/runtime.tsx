@@ -15,7 +15,7 @@ import {
     IconRequestContext,
     LinkNavigationContext,
     MenuNavigationContext,
-    DialogActivityContext,
+    DialogActivityContext
 } from '@/components/ui/contexts';
 import {
     requestSchema,
@@ -37,7 +37,7 @@ import {
     viewportMessageSchema,
     type ViewportMessage,
     viewAppearanceSchema,
-    type ViewAppearance,
+    type ViewAppearance
 } from './protocol';
 import '../index.css';
 
@@ -67,7 +67,7 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
                 hash,
                 select: (id) => {
                     window.location.hash = id;
-                },
+                }
             }}
         >
             {children}
@@ -110,7 +110,7 @@ const initialization = z
         source: z.string(),
         params: parametersSchema,
         appearance: viewAppearanceSchema,
-        navigationBaseUrl: z.url({ protocol: /^https?$/ }),
+        navigationBaseUrl: z.url({ protocol: /^https?$/ })
     })
     .strict();
 
@@ -136,11 +136,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
     const pending = new Map<
         number,
-        {
-            resolve: (value: ViewData) => void;
-            reject: (error: Error) => void;
-            timer: ReturnType<typeof setTimeout>;
-        }
+        { resolve: (value: ViewData) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
     >();
 
     let sequence = 0;
@@ -240,10 +236,7 @@ function initialize(event: MessageEvent<unknown>): void {
     /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
     function useApi(path: string): readonly [ViewData, () => Promise<void>] {
         // Use the full request path as cache identity, including pagination parameters.
-        const { data } = useSuspenseQuery({
-            queryKey: ['api', path],
-            queryFn: () => request(path),
-        });
+        const { data } = useSuspenseQuery({ queryKey: ['api', path], queryFn: () => request(path) });
 
         const invalidate = React.useCallback(
             () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
@@ -302,10 +295,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
         if (fullscreen) fullscreenDepth += open ? 1 : -1;
 
-        const command = {
-            type: 'modal',
-            depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)),
-        };
+        const command = { type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) };
 
         port.postMessage(fullscreenDepth > 0 ? { ...command, fullscreen: true } : command);
     }
@@ -314,7 +304,7 @@ function initialize(event: MessageEvent<unknown>): void {
     const observer = new ResizeObserver(() => {
         port.postMessage({
             type: 'resize',
-            height: Math.min(1_000_000, Math.max(1, Math.ceil(mount.getBoundingClientRect().height))),
+            height: Math.min(1_000_000, Math.max(1, Math.ceil(mount.getBoundingClientRect().height)))
         });
     });
 
@@ -348,7 +338,7 @@ function initialize(event: MessageEvent<unknown>): void {
             jsxRuntime: 'classic',
             jsxPragma: '__jsx',
             jsxFragmentPragma: 'Fragment',
-            production: true,
+            production: true
         }).code;
 
         const bindings = {
@@ -363,7 +353,7 @@ function initialize(event: MessageEvent<unknown>): void {
             request,
             navigate,
             useApi,
-            useConfirm,
+            useConfirm
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;

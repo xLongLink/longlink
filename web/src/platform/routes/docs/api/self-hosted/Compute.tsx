@@ -11,10 +11,10 @@ const article = {
     toc: [
         { id: 'compute', label: 'Compute', level: 1 },
         { id: 'configuration', label: 'Configuration', level: 2 },
-        { id: 'connect', label: 'Connect to the Platform', level: 2 },
+        { id: 'connect', label: 'Connect to the Platform', level: 2 }
     ],
     lastUpdated: '2026-10-29',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/self-hosted/Compute.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/self-hosted/Compute.tsx'
 };
 
 /** Introduces connecting self-hosted compute to the Platform. */

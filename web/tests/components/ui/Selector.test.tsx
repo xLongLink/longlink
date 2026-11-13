@@ -120,12 +120,12 @@ it('selects only enabled filtered multi options, preserves other selections, and
                         options: [
                             { value: 'design', label: 'Design', description: 'Design team' },
                             { value: 'development', label: 'Development' },
-                            { value: 'disabled', label: 'Design locked', disabled: true },
-                        ],
+                            { value: 'disabled', label: 'Design locked', disabled: true }
+                        ]
                     },
                     { type: 'divider' },
                     { value: 'support', label: 'Support' },
-                    { value: 'locked', label: 'Locked', disabled: true },
+                    { value: 'locked', label: 'Locked', disabled: true }
                 ]}
             />
         </form>,
@@ -301,7 +301,7 @@ it('keeps a rejected clear controlled and displays selected badges without losin
             expect([...trigger.querySelectorAll('.view-picker-badge')].map((badge) => badge.textContent)).toEqual([
                 'Alpha',
                 'Beta',
-                'Gamma',
+                'Gamma'
             ]);
             expect(trigger.querySelector('.view-picker-overflow')?.textContent).toBe('+1');
             expect(new FormData(form).getAll('team')).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta']);

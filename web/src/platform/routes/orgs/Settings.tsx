@@ -37,18 +37,18 @@ import { IllustratedDialogContent } from '@/platform/components/IllustratedDialo
 
 const organizationSections = [
     { id: 'general', label: 'General' },
-    { id: 'private-registries', label: 'Private registries' },
+    { id: 'private-registries', label: 'Private registries' }
 ];
 
 const billingSections = [
     { id: 'usage', label: 'Usage' },
     { id: 'payment-methods', label: 'Payment Methods' },
-    { id: 'invoices', label: 'Invoices' },
+    { id: 'invoices', label: 'Invoices' }
 ];
 
 const peopleSections = [
     { id: 'members', label: 'Members' },
-    { id: 'invitations', label: 'Invitations' },
+    { id: 'invitations', label: 'Invitations' }
 ];
 
 /** Shares organization identity and permissions while sections own resource lifetimes. */
@@ -172,7 +172,7 @@ function GeneralSection({
     tags,
     name,
     canMaintain,
-    canDelete,
+    canDelete
 }: {
     base: string;
     tags: OrganizationContext['tags'];
@@ -225,7 +225,7 @@ function GeneralSection({
                                   // Leave the deleted organization only after the server accepts deletion.
                                   await api.delete(base);
                                   window.location.assign('/user/organizations');
-                              },
+                              }
                           }
                         : null
                 }
@@ -287,7 +287,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                         <Text type="supporting">{row.user.email}</Text>
                                     </Stack>
                                 </Stack>
-                            ),
+                            )
                         },
                         ...(canAdminister
                             ? [
@@ -311,26 +311,23 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                                                         onClick: () =>
                                                                             setMember({
                                                                                 id: row.user.id,
-                                                                                action: { kind: 'role', role },
-                                                                            }),
-                                                                    },
+                                                                                action: { kind: 'role', role }
+                                                                            })
+                                                                    }
                                                                 ]
                                                       ),
                                                       {
                                                           id: 'remove',
                                                           label: 'Remove member',
                                                           onClick: () =>
-                                                              setMember({
-                                                                  id: row.user.id,
-                                                                  action: { kind: 'remove' },
-                                                              }),
-                                                      },
+                                                              setMember({ id: row.user.id, action: { kind: 'remove' } })
+                                                      }
                                                   ]}
                                               />
-                                          ),
-                                  },
+                                          )
+                                  }
                               ]
-                            : []),
+                            : [])
                     ]}
                 />
             </Stack>
@@ -364,14 +361,14 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                             client.removeQueries({ queryKey: ['api', base], exact: true });
                                             await client.invalidateQueries({
                                                 queryKey: ['api', '/api/v1/me/organizations'],
-                                                exact: true,
+                                                exact: true
                                             });
 
                                             return;
                                         }
                                     } else {
                                         await api.patch(`${base}/members/${member.id}`, {
-                                            json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role }),
+                                            json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role })
                                         });
                                     }
 
@@ -383,7 +380,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                             client.invalidateQueries({ queryKey: ['api', base], exact: true }),
                                             client.invalidateQueries({
                                                 queryKey: ['api', '/api/v1/me/organizations'],
-                                                exact: true,
+                                                exact: true
                                             })
                                         );
                                     }
@@ -425,8 +422,8 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
             await api.post(`${base}/invitations`, {
                 json: schemas.zOrganizationInvitationCreate.parse({
                     role: data.get('role'),
-                    email: z.string().trim().parse(data.get('email')),
-                }),
+                    email: z.string().trim().parse(data.get('email'))
+                })
             });
             closeInvitation();
         } catch (failure) {
@@ -463,7 +460,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                             key: 'role',
                             header: 'Role',
                             width: proportional(1),
-                            renderCell: (row) => <Text type="supporting">{row.role}</Text>,
+                            renderCell: (row) => <Text type="supporting">{row.role}</Text>
                         },
                         ...(canMaintain
                             ? [
@@ -482,10 +479,10 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                                   await invalidateInvitations();
                                               }}
                                           />
-                                      ),
-                                  },
+                                      )
+                                  }
                               ]
-                            : []),
+                            : [])
                     ]}
                 />
             </Stack>
@@ -547,20 +544,16 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                         options={[
                                             { value: 'read', label: 'read', icon: 'lucide:eye-off' },
                                             { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
-                                            {
-                                                value: 'maintain',
-                                                label: 'maintain',
-                                                icon: 'lucide:wrench',
-                                            },
+                                            { value: 'maintain', label: 'maintain', icon: 'lucide:wrench' },
                                             ...(canInviteAdmin
                                                 ? [
                                                       {
                                                           value: 'admin',
                                                           label: 'admin',
-                                                          icon: 'lucide:check-check' as const,
-                                                      },
+                                                          icon: 'lucide:check-check' as const
+                                                      }
                                                   ]
-                                                : []),
+                                                : [])
                                         ]}
                                     />
                                     <Button label="Invite" variant="default" type="submit" width="100%" />

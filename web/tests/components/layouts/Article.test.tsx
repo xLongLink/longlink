@@ -43,7 +43,7 @@ it('does not offer unrelated collection navigation for an unlisted article', () 
 
 it.each([
     ['/docs/first///', 'ArrowLeft', 'ArrowRight', 'Next'],
-    ['/docs/last', 'ArrowRight', 'ArrowLeft', 'Previous'],
+    ['/docs/last', 'ArrowRight', 'ArrowLeft', 'Previous']
 ])('preserves collection boundaries and normalizes %s', async (path, boundaryKey, availableKey, availableLabel) => {
     // Act
     await withMounted(
@@ -114,7 +114,7 @@ it.each([
     ['Alt', { altKey: true }],
     ['Control', { ctrlKey: true }],
     ['Meta', { metaKey: true }],
-    ['Shift', { shiftKey: true }],
+    ['Shift', { shiftKey: true }]
 ])('leaves %s-modified arrows available without navigating', async (_modifier, modifiers) => {
     // Act
     await withMounted(
@@ -169,7 +169,7 @@ it.each([
         <select key="select" aria-label="Editing control">
             <option>First</option>
             <option>Second</option>
-        </select>,
+        </select>
     ],
     [
         'contenteditable descendant',
@@ -177,7 +177,7 @@ it.each([
             <p aria-label="Editing control" tabIndex={0}>
                 Draft article
             </p>
-        </section>,
+        </section>
     ],
     [
         'slider descendant',
@@ -190,8 +190,8 @@ it.each([
             aria-valuenow={50}
         >
             <button aria-label="Editing control">Slider thumb</button>
-        </section>,
-    ],
+        </section>
+    ]
 ])('does not steal arrow input from a %s', async (_name, control) => {
     // Act
     await withMounted(

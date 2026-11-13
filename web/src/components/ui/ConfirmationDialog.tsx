@@ -9,7 +9,7 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
-    AlertDialogTitle,
+    AlertDialogTitle
 } from '@/components/shadcn/alert-dialog';
 
 /** Presents scoped confirmations without the fixed frame used by general View dialogs. */
@@ -18,7 +18,7 @@ export function ConfirmationDialog({
     isPending,
     error,
     onCancel,
-    onAction,
+    onAction
 }: {
     options: ConfirmOptions;
     isPending: boolean;
@@ -48,7 +48,7 @@ export function ConfirmationDialog({
                 className="view-confirmation"
                 style={{
                     top: 'calc(var(--view-viewport-top, 0px) + var(--view-viewport-height, 100dvh) / 2)',
-                    maxHeight: 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 2)',
+                    maxHeight: 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 2)'
                 }}
                 initialFocus={cancel}
                 aria-busy={isPending || undefined}

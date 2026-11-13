@@ -38,7 +38,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
     const {
         data: candidate,
         isPending,
-        refetch,
+        refetch
     } = useQuery({
         queryKey: ['api', path, attemptId],
         queryFn: ({ signal }) => api(path, { signal }).json(schemas.zSolutionUpdateCheck),
@@ -46,7 +46,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
         staleTime: Infinity,
         retry: false,
         refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
+        refetchOnReconnect: false
     });
 
     // Preserve configured required secrets, and require values for new required environments.
@@ -75,10 +75,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
         }
 
         await api.post(`/api/v1/solutions/${item.id}/update`, {
-            json: schemas.zSolutionPatch.parse({
-                envs: patchEnvs,
-                expected_revision_id: candidate.revision_id,
-            }),
+            json: schemas.zSolutionPatch.parse({ envs: patchEnvs, expected_revision_id: candidate.revision_id })
         });
         await onSuccess();
     }
@@ -193,10 +190,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
 
                                                     setEnvs((current) => ({
                                                         ...current,
-                                                        [environment.name]: {
-                                                            ...current[environment.name],
-                                                            value,
-                                                        },
+                                                        [environment.name]: { ...current[environment.name], value }
                                                     }));
                                                 }}
                                             />
@@ -209,8 +203,8 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                                             ...current,
                                                             [environment.name]: {
                                                                 ...current[environment.name],
-                                                                removed,
-                                                            },
+                                                                removed
+                                                            }
                                                         }))
                                                     }
                                                 />

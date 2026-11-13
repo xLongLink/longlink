@@ -11,7 +11,7 @@ import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 export function ApiBoundary({
     children,
     fallback = <PageLoading label="Loading page" />,
-    fallbackRender,
+    fallbackRender
 }: {
     children: ReactNode;
     fallback?: ReactNode;

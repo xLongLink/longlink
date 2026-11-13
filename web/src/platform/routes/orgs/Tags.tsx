@@ -38,7 +38,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         },
         onError: reportError,
         retry: false,
-        networkMode: 'always',
+        networkMode: 'always'
     });
 
     // Keep category editing separate from Solution deployments and assignments.
@@ -69,7 +69,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                         <Text>{tab.name}</Text>
                                     </Stack>
                                 );
-                            },
+                            }
                         },
                         ...(canMaintain
                             ? [
@@ -88,35 +88,35 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                                       id: 'edit',
                                                       label: 'Edit',
                                                       icon: <Pencil className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setAction({ kind: 'edit', tag }),
+                                                      onClick: () => setAction({ kind: 'edit', tag })
                                                   },
                                                   {
                                                       id: 'up',
                                                       label: 'Move Up',
                                                       icon: <ArrowUp className="size-4" aria-hidden="true" />,
                                                       isDisabled: tags[0]?.id === tag.id,
-                                                      onClick: () => move.mutate({ tag, direction: 'up' }),
+                                                      onClick: () => move.mutate({ tag, direction: 'up' })
                                                   },
                                                   {
                                                       id: 'down',
                                                       label: 'Move Down',
                                                       icon: <ArrowDown className="size-4" aria-hidden="true" />,
                                                       isDisabled: tags[tags.length - 1]?.id === tag.id,
-                                                      onClick: () => move.mutate({ tag, direction: 'down' }),
+                                                      onClick: () => move.mutate({ tag, direction: 'down' })
                                                   },
                                                   {
                                                       id: 'delete',
                                                       label: 'Delete',
                                                       variant: 'destructive',
                                                       icon: <Trash className="size-4" aria-hidden="true" />,
-                                                      onClick: () => setAction({ kind: 'delete', tag }),
-                                                  },
+                                                      onClick: () => setAction({ kind: 'delete', tag })
+                                                  }
                                               ]}
                                           />
-                                      ),
-                                  },
+                                      )
+                                  }
                               ]
-                            : []),
+                            : [])
                     ]}
                 />
             </Stack>
@@ -146,11 +146,11 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                       queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true }),
                                       queryClient.invalidateQueries({
                                           queryKey: ['api', `${base}/solutions`],
-                                          exact: true,
-                                      }),
+                                          exact: true
+                                      })
                                   ]);
                                   setAction((current) => (current === action ? null : current));
-                              },
+                              }
                           }
                         : null
                 }
@@ -165,7 +165,7 @@ function TagForm({
     base,
     tag,
     onSuccess,
-    onCancel,
+    onCancel
 }: {
     base: string;
     tag: Tag | null;
@@ -176,7 +176,7 @@ function TagForm({
     async function save(data: FormData) {
         const json = schemas.zOrganizationTagWrite.parse({
             name: z.string().trim().parse(data.get('name')),
-            icon: data.get('icon'),
+            icon: data.get('icon')
         });
 
         if (tag) {
@@ -203,7 +203,7 @@ function TagForm({
                         options={Object.entries(tabs.icons).map(([value, option]) => ({
                             value,
                             label: option.label,
-                            icon: schemas.zTagIcon.parse(value),
+                            icon: schemas.zTagIcon.parse(value)
                         }))}
                         hasSearch
                         hasClear={false}
@@ -224,7 +224,7 @@ export function SolutionTags({
     tags,
     solution,
     onSuccess,
-    onClose,
+    onClose
 }: {
     base: string;
     tags: Tag[];

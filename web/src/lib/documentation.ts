@@ -8,7 +8,7 @@ export const documentationCategories: string[] = [
     'Form',
     'Charts',
     'Others',
-    'Layouts',
+    'Layouts'
 ];
 
 // Describe the runtime bindings exposed to Views.
@@ -16,31 +16,31 @@ export const viewHooks = [
     {
         name: 'useConfirm()',
         description:
-            'Returns show(options), hide(), isOpen, and element. Render element once. Options: title, optional description and cancelLabel (default Cancel), actionLabel, optional actionVariant (default primary), and onAction. Actions may be async; success closes, failure keeps the dialog open for retry. Loading prevents duplicate actions and dismissal. Scoped request errors are reported by the host; other errors appear in the dialog.',
+            'Returns show(options), hide(), isOpen, and element. Render element once. Options: title, optional description and cancelLabel (default Cancel), actionLabel, optional actionVariant (default primary), and onAction. Actions may be async; success closes, failure keeps the dialog open for retry. Loading prevents duplicate actions and dismissal. Scoped request errors are reported by the host; other errors appear in the dialog.'
     },
     {
         name: 'useState(initial)',
         description:
-            'Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.',
+            'Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.'
     },
     {
         name: 'useEffect(effect, dependencies)',
         description:
-            'Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.',
+            'Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.'
     },
     {
         name: 'useMemo(factory, dependencies)',
         description:
-            'Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.',
+            'Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.'
     },
     {
         name: 'useRef(initial)',
         description:
-            'Returns a stable object with a mutable current property. Changing current does not trigger a render.',
+            'Returns a stable object with a mutable current property. Changing current does not trigger a render.'
     },
     {
         name: 'useApi(path)',
         description:
-            'Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.',
-    },
+            'Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.'
+    }
 ];

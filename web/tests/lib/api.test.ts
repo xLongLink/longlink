@@ -11,7 +11,7 @@ describe('api error mapping', () => {
         {
             name: 'returns the server detail message with status and url',
             detail: 'Name too short',
-            message: 'Name too short',
+            message: 'Name too short'
         },
         {
             name: 'reports validation locations and messages without submitted values or error context',
@@ -20,11 +20,11 @@ describe('api error mapping', () => {
                     loc: ['body', 'envs', 'API_KEY'],
                     msg: 'Invalid API key',
                     input: 'submitted-secret',
-                    ctx: { error: 'sensitive internal diagnostic' },
-                },
+                    ctx: { error: 'sensitive internal diagnostic' }
+                }
             ],
-            message: 'envs.API_KEY: Invalid API key',
-        },
+            message: 'envs.API_KEY: Invalid API key'
+        }
     ])('$name', async ({ detail, message }) => {
         // Arrange
         vi.stubGlobal('fetch', async () => Response.json({ detail }, { status: 422 }));
@@ -34,11 +34,7 @@ describe('api error mapping', () => {
 
         // Assert
         await expect(request).rejects.toBeInstanceOf(ApiError);
-        await expect(request).rejects.toMatchObject({
-            message,
-            status: 422,
-            url: 'https://api.example/organizations',
-        });
+        await expect(request).rejects.toMatchObject({ message, status: 422, url: 'https://api.example/organizations' });
     });
 
     it.each([
@@ -47,8 +43,8 @@ describe('api error mapping', () => {
         { name: 'non-string detail', response: () => Response.json({ detail: 123 }, { status: 422 }) },
         {
             name: 'non-JSON body',
-            response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 }),
-        },
+            response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 })
+        }
     ])('falls back for a $name', async ({ response }) => {
         // Arrange
         const serverResponse = response();
@@ -61,7 +57,7 @@ describe('api error mapping', () => {
         await expect(request).rejects.toBeInstanceOf(ApiError);
         await expect(request).rejects.toMatchObject({
             message: 'The server could not complete the request. Please try again.',
-            status: serverResponse.status,
+            status: serverResponse.status
         });
     });
 

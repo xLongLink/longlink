@@ -9,11 +9,11 @@ const article = {
     description: 'Build and package a LongLink project for deployment.',
     toc: [
         { id: 'building', label: 'Building', level: 1 },
-        { id: 'metadata', label: 'Metadata', level: 2 },
+        { id: 'metadata', label: 'Metadata', level: 2 }
     ],
     lastUpdated: '2026-09-24',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Building.tsx',
-    title: 'Building Projects | LongLink Documentation',
+    title: 'Building Projects | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {
@@ -58,19 +58,19 @@ environments = "src.envs:Env"
                         idKey="metadata"
                         data={[
                             { metadata: 'description', label: 'org.opencontainers.image.description' },
-                            { metadata: 'environments', label: 'dev.longlink.environments' },
+                            { metadata: 'environments', label: 'dev.longlink.environments' }
                         ]}
                         columns={[
                             {
                                 key: 'metadata',
                                 header: 'Metadata',
-                                renderCell: (row) => <InlineCode>{row.metadata}</InlineCode>,
+                                renderCell: (row) => <InlineCode>{row.metadata}</InlineCode>
                             },
                             {
                                 key: 'label',
                                 header: 'Image label',
-                                renderCell: (row) => <InlineCode>{row.label}</InlineCode>,
-                            },
+                                renderCell: (row) => <InlineCode>{row.label}</InlineCode>
+                            }
                         ]}
                     />
                 </Stack>

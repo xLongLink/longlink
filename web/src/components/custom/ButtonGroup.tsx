@@ -10,7 +10,7 @@ export function ButtonGroup({
     label,
     orientation = 'horizontal',
     size: requestedSize,
-    isDisabled = false,
+    isDisabled = false
 }: {
     children?: ReactNode;
     label: string;

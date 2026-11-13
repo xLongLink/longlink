@@ -37,7 +37,7 @@ import {
     Users,
     Wrench,
     XCircle,
-    type LucideIcon,
+    type LucideIcon
 } from 'lucide-react';
 
 // Bundle the shared aliases without acquiring any View loading or caching dependencies.
@@ -79,5 +79,5 @@ export const stoneIconComponents = {
     hardDrive: HardDrive,
     userRound: UserRound,
     users: Users,
-    upload: Upload,
+    upload: Upload
 } satisfies Record<string, LucideIcon>;

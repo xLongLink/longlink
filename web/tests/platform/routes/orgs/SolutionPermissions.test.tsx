@@ -33,7 +33,7 @@ it('retains an explicit no-access draft after save failure and retries against t
 
         if (request.method === 'GET' && path === '/api/v1/organizations/acme/members') {
             return Response.json([
-                { user: { id: member, name: 'Alex', email: 'alex@example.com', avatar: '' }, role: 'read' },
+                { user: { id: member, name: 'Alex', email: 'alex@example.com', avatar: '' }, role: 'read' }
             ]);
         }
 
@@ -105,7 +105,7 @@ it('retains an explicit no-access draft after save failure and retries against t
                 await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());
                 expect(writes).toEqual([
                     { role: null, revision_id: revision },
-                    { role: null, revision_id: revision },
+                    { role: null, revision_id: revision }
                 ]);
             }
         );

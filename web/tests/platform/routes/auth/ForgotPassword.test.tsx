@@ -95,7 +95,7 @@ it.each([204, 503])('only confirms a reset email after a successful response, st
                 if (status === 204) {
                     await vi.waitFor(() =>
                         expect(announcements).toEqual([
-                            'If an account exists for that email, password reset instructions are on the way.',
+                            'If an account exists for that email, password reset instructions are on the way.'
                         ])
                     );
                     expect(

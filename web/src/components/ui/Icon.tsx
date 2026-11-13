@@ -13,7 +13,7 @@ const emptyIcon = createLucideIcon({ size: 24, node: [] });
 /** Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions. */
 export function Icon({
     icon,
-    size,
+    size
 }: {
     /** Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs. */
     icon: StoneIconName;
@@ -47,7 +47,7 @@ export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' |
         },
         staleTime: Infinity,
         gcTime: Infinity,
-        retry: 1,
+        retry: 1
     });
 
     // Keep labeled controls usable even if an icon cannot be loaded.

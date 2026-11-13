@@ -8,26 +8,18 @@ export default function DataTablePage() {
         <ViewLayout
             name="DataTable"
             properties={[
-                {
-                    name: 'data',
-                    type: 'T[]',
-                    description: 'Data objects displayed as rows.',
-                },
+                { name: 'data', type: 'T[]', description: 'Data objects displayed as rows.' },
                 {
                     name: 'hasHover',
                     type: 'boolean',
-                    description: 'Applies a hover highlight background to rows on pointer devices.',
+                    description: 'Applies a hover highlight background to rows on pointer devices.'
                 },
-                {
-                    name: 'isStriped',
-                    type: 'boolean',
-                    description: 'Applies a background wash to even-numbered rows.',
-                },
+                { name: 'isStriped', type: 'boolean', description: 'Applies a background wash to even-numbered rows.' },
                 {
                     name: 'columns',
                     type: '{ key: string; header?: ReactNode; width?: ColumnWidth; align?: "start" | "center" | "end"; renderCell?: ((row: T) => ReactNode); }[]',
-                    description: 'Columns with custom cells and proportional() or pixel() widths.',
-                },
+                    description: 'Columns with custom cells and proportional() or pixel() widths.'
+                }
             ]}
             example={{
                 title: 'DataTable',
@@ -42,7 +34,7 @@ export default function DataTablePage() {
       ]}
     />
   );
-}`,
+}`
             }}
         />
     );
@@ -56,7 +48,7 @@ export function DataTableExample() {
             data={[{ item: 'Order', status: 'Open' }]}
             columns={[
                 { key: 'item', header: 'Item' },
-                { key: 'status', header: 'Status' },
+                { key: 'status', header: 'Status' }
             ]}
         />
     );

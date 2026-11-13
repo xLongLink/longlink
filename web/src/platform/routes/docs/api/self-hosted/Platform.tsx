@@ -11,11 +11,10 @@ const article = {
     description: 'Install the LongLink Platform Docker image and configure environment variables.',
     toc: [
         { id: 'platform', label: 'Platform', level: 1 },
-        { id: 'environment', label: 'Environment variables', level: 2 },
+        { id: 'environment', label: 'Environment variables', level: 2 }
     ],
     lastUpdated: '2026-10-29',
-    editUrl:
-        'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/self-hosted/Platform.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/self-hosted/Platform.tsx'
 };
 
 /** Introduces self-hosted Platform installation. */
@@ -55,101 +54,101 @@ export default function Platform() {
                                 name: 'PUBLIC_URL',
                                 type: 'string · default: http://localhost:5173',
                                 description:
-                                    'Public HTTPS origin without a path. HTTP is allowed only for loopback development.',
+                                    'Public HTTPS origin without a path. HTTP is allowed only for loopback development.'
                             },
                             {
                                 name: 'SESSION_KEY',
                                 type: 'string · required',
                                 description:
-                                    'Session signing secret with at least 32 characters. Keep stable across restarts and replicas.',
+                                    'Session signing secret with at least 32 characters. Keep stable across restarts and replicas.'
                             },
                             {
                                 name: 'ENCRYPTION_KEY',
                                 type: 'string · required',
                                 description:
-                                    'Encrypts stored infrastructure credentials. At least 32 characters; retain and back up this key.',
+                                    'Encrypts stored infrastructure credentials. At least 32 characters; retain and back up this key.'
                             },
                             {
                                 name: 'ADMIN_EMAIL',
                                 type: 'email · required',
                                 description:
-                                    'Platform administrator email. The sole administrator is reconciled on startup.',
+                                    'Platform administrator email. The sole administrator is reconciled on startup.'
                             },
                             {
                                 name: 'ADMIN_PASSWORD',
                                 type: 'string · required',
                                 description:
-                                    'Platform administrator password, reconciled on startup. Use a strong password.',
+                                    'Platform administrator password, reconciled on startup. Use a strong password.'
                             },
                             {
                                 name: 'DATABASE_URL',
                                 type: 'string · required',
                                 description:
-                                    'Platform database connection URL, including its asynchronous driver, credentials, and database name.',
+                                    'Platform database connection URL, including its asynchronous driver, credentials, and database name.'
                             },
                             {
                                 name: 'SMTP_HOST',
                                 type: 'string · required',
-                                description: 'SMTP server for account verification and password reset emails.',
+                                description: 'SMTP server for account verification and password reset emails.'
                             },
                             {
                                 name: 'SMTP_PORT',
                                 type: 'integer · default: 587',
-                                description: 'SMTP server port, from 1 to 65535.',
+                                description: 'SMTP server port, from 1 to 65535.'
                             },
                             {
                                 name: 'SMTP_TRANSPORT',
                                 type: '"plain" | "starttls" | "tls" · default: starttls',
-                                description: 'SMTP connection security. Use starttls or tls for hosted deployments.',
+                                description: 'SMTP connection security. Use starttls or tls for hosted deployments.'
                             },
                             {
                                 name: 'SMTP_FROM',
                                 type: 'email · default: no-reply@longlink.dev',
-                                description: 'Sender address. Configure an address your SMTP provider permits.',
+                                description: 'Sender address. Configure an address your SMTP provider permits.'
                             },
                             {
                                 name: 'SMTP_USERNAME',
                                 type: 'string · optional',
                                 description:
-                                    'SMTP authentication username. Configure together with SMTP_PASSWORD or omit both.',
+                                    'SMTP authentication username. Configure together with SMTP_PASSWORD or omit both.'
                             },
                             {
                                 name: 'SMTP_PASSWORD',
                                 type: 'string · optional',
-                                description: 'SMTP authentication password. Requires SMTP_USERNAME.',
+                                description: 'SMTP authentication password. Requires SMTP_USERNAME.'
                             },
                             {
                                 name: 'GOOGLE_OAUTH_CLIENT_ID',
                                 type: 'string · optional',
-                                description: 'Enables Google sign-in when configured with GOOGLE_OAUTH_CLIENT_SECRET.',
+                                description: 'Enables Google sign-in when configured with GOOGLE_OAUTH_CLIENT_SECRET.'
                             },
                             {
                                 name: 'GOOGLE_OAUTH_CLIENT_SECRET',
                                 type: 'string · optional',
-                                description: 'Google OAuth client secret. Requires GOOGLE_OAUTH_CLIENT_ID.',
+                                description: 'Google OAuth client secret. Requires GOOGLE_OAUTH_CLIENT_ID.'
                             },
                             {
                                 name: 'GITHUB_OAUTH_CLIENT_ID',
                                 type: 'string · optional',
-                                description: 'Enables GitHub sign-in when configured with GITHUB_OAUTH_CLIENT_SECRET.',
+                                description: 'Enables GitHub sign-in when configured with GITHUB_OAUTH_CLIENT_SECRET.'
                             },
                             {
                                 name: 'GITHUB_OAUTH_CLIENT_SECRET',
                                 type: 'string · optional',
-                                description: 'GitHub OAuth client secret. Requires GITHUB_OAUTH_CLIENT_ID.',
+                                description: 'GitHub OAuth client secret. Requires GITHUB_OAUTH_CLIENT_ID.'
                             },
                             {
                                 name: 'STRIPE_SECRET_KEY',
                                 type: 'string · optional',
                                 description:
-                                    'Stripe secret or restricted API key. Configure with STRIPE_WEBHOOK_SECRET to enable payments.',
+                                    'Stripe secret or restricted API key. Configure with STRIPE_WEBHOOK_SECRET to enable payments.'
                             },
                             {
                                 name: 'STRIPE_WEBHOOK_SECRET',
                                 type: 'string · optional',
                                 description:
-                                    'Stripe webhook signing secret beginning with whsec_. Requires STRIPE_SECRET_KEY.',
-                            },
+                                    'Stripe webhook signing secret beginning with whsec_. Requires STRIPE_SECRET_KEY.'
+                            }
                         ]}
                         columns={[
                             {
@@ -164,8 +163,8 @@ export default function Platform() {
                                         </Stack>
                                         <Text type="supporting">{environment.description}</Text>
                                     </Stack>
-                                ),
-                            },
+                                )
+                            }
                         ]}
                     />
                 </Stack>

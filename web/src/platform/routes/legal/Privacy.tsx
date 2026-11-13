@@ -11,48 +11,20 @@ const article = {
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },
         { id: 'our-roles', label: '2. Our roles', level: 2 },
-        {
-            id: 'personal-data-we-process',
-            label: '3. Personal data we process',
-            level: 2,
-        },
-        {
-            id: 'why-we-process-personal-data',
-            label: '4. Why we process personal data',
-            level: 2,
-        },
-        {
-            id: 'service-providers-and-other-recipients',
-            label: '5. Service providers and other recipients',
-            level: 2,
-        },
-        {
-            id: 'international-transfers',
-            label: '6. International transfers',
-            level: 2,
-        },
-        {
-            id: 'cookies-and-similar-storage',
-            label: '7. Cookies and similar storage',
-            level: 2,
-        },
+        { id: 'personal-data-we-process', label: '3. Personal data we process', level: 2 },
+        { id: 'why-we-process-personal-data', label: '4. Why we process personal data', level: 2 },
+        { id: 'service-providers-and-other-recipients', label: '5. Service providers and other recipients', level: 2 },
+        { id: 'international-transfers', label: '6. International transfers', level: 2 },
+        { id: 'cookies-and-similar-storage', label: '7. Cookies and similar storage', level: 2 },
         { id: 'retention', label: '8. Retention', level: 2 },
-        {
-            id: 'security-and-data-incidents',
-            label: '9. Security and data incidents',
-            level: 2,
-        },
+        { id: 'security-and-data-incidents', label: '9. Security and data incidents', level: 2 },
         { id: 'your-rights', label: '10. Your rights', level: 2 },
-        {
-            id: 'changes-to-this-policy',
-            label: '11. Changes to this Policy',
-            level: 2,
-        },
-        { id: 'contact', label: '12. Contact', level: 2 },
+        { id: 'changes-to-this-policy', label: '11. Changes to this Policy', level: 2 },
+        { id: 'contact', label: '12. Contact', level: 2 }
     ],
     lastUpdated: '2026-09-23',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Privacy.tsx',
-    title: 'Privacy Policy | LongLink',
+    title: 'Privacy Policy | LongLink'
 };
 
 /** Renders the privacy policy. */

@@ -16,14 +16,12 @@ it('selects the query category and updates it when following organization links'
 
     const tags = zOrganizationTagResponse.array().parse([
         { id: '00000000-0000-4000-8000-000000000003', name: 'All', kind: 'all', icon: 'app-window' },
-        { id: '00000000-0000-4000-8000-000000000004', name: 'Finance', kind: 'tag', icon: 'app-window' },
+        { id: '00000000-0000-4000-8000-000000000004', name: 'Finance', kind: 'tag', icon: 'app-window' }
     ]);
 
     const categoryHref = `${base}?tag=${tags[1].id}`;
 
-    const client = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } },
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
 
     try {
         client.setQueryData(['api', `/api/v1/organizations/${membership.organization.id}/tags`], tags);

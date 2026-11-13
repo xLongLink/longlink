@@ -9,7 +9,7 @@ function TimePicker({
     value,
     seconds,
     hourFormat,
-    select,
+    select
 }: {
     value?: ISOTimeString;
     seconds: boolean;

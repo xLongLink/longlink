@@ -49,10 +49,10 @@ export default function OrganizationLayout() {
                     return {
                         href: index === 0 ? base : `${base}?tag=${tag.id}`,
                         icon: <Icon aria-hidden="true" size={16} />,
-                        label: tag.name,
+                        label: tag.name
                     };
                 }),
-                { href: `${base}/settings`, icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' },
+                { href: `${base}/settings`, icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' }
             ]}
         >
             <PageContainer gap={8} padding={2}>

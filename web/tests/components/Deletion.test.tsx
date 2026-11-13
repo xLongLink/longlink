@@ -178,7 +178,7 @@ it('ignores backdrop dismissal but allows Escape while deletion is pending', asy
             confirmation={{
                 title: 'Delete registry',
                 description: 'Cannot be undone.',
-                onDelete: async () => await pending,
+                onDelete: async () => await pending
             }}
             onClose={onClose}
         />,

@@ -10,11 +10,11 @@ const article = {
         { id: 'brand-assets', label: 'Brand assets', level: 1 },
         { id: 'logo', label: 'Logo', level: 2 },
         { id: 'wordmark', label: 'Wordmark', level: 2 },
-        { id: 'images', label: 'Images', level: 2 },
+        { id: 'images', label: 'Images', level: 2 }
     ],
     lastUpdated: '2026-10-07',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/branding/Assets.tsx',
-    title: 'Brand assets | LongLink Branding',
+    title: 'Brand assets | LongLink Branding'
 };
 
 /** Presents the LongLink logo and downloadable brand assets. */

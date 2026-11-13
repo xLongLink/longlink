@@ -9,32 +9,24 @@ export default function PaginationPage() {
         <ViewLayout
             name="Pagination"
             properties={[
-                {
-                    name: 'page',
-                    type: 'number',
-                    description: 'Current page number, starting at 1.',
-                },
+                { name: 'page', type: 'number', description: 'Current page number, starting at 1.' },
                 {
                     name: 'onPageChange',
                     type: '(page: number) => void',
-                    description: 'Receives the selected page number.',
+                    description: 'Receives the selected page number.'
                 },
                 {
                     name: 'totalItems',
                     type: 'number',
-                    description: 'Total item count used to calculate pages, overriding totalPages.',
+                    description: 'Total item count used to calculate pages, overriding totalPages.'
                 },
                 {
                     name: 'pageSize',
                     type: 'number',
                     description:
-                        'Number of items per page. Coerced to a positive integer; non-finite values fall back to the default.',
+                        'Number of items per page. Coerced to a positive integer; non-finite values fall back to the default.'
                 },
-                {
-                    name: 'label',
-                    type: 'string',
-                    description: 'Accessible navigation label; defaults to Pagination.',
-                },
+                { name: 'label', type: 'string', description: 'Accessible navigation label; defaults to Pagination.' }
             ]}
             example={{
                 title: 'Server pagination',
@@ -49,7 +41,7 @@ export default function PaginationPage() {
       <Pagination page={page} onPageChange={setPage} totalItems={items.total} pageSize={8} />
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

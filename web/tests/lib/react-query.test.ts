@@ -34,7 +34,7 @@ it('automatically cancels and removes prior-account API queries when a new ident
                     pendingSignal = signal;
 
                     return response;
-                },
+                }
             })
             .catch((error: Error) => error);
         expect(pendingSignal?.aborted).toBe(false);
@@ -96,7 +96,7 @@ it('revalidates resource 401s without losing a valid session, but clears private
         expect(transport.mock.calls.map(([input]) => (input instanceof Request ? input.url : String(input)))).toEqual([
             'http://localhost/api/v1/me',
             'http://localhost/api/v1/protected',
-            'http://localhost/api/v1/me',
+            'http://localhost/api/v1/me'
         ]);
         expect(runtime.client.getQueryData(privateKey)).toEqual(['private-a']);
         expect(messages).toEqual(['Resource credentials expired']);
@@ -142,7 +142,7 @@ it('reports a polling incident once until success resets it, even beyond generic
         queryFn,
         retry: false,
         staleTime: 0,
-        meta: { polling: true },
+        meta: { polling: true }
     };
 
     try {

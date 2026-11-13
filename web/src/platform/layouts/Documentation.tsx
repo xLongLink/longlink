@@ -5,7 +5,7 @@ import {
     PublicationNavigation,
     PublicationNavigationItem,
     PublicationNavigationSection,
-    PublicationSectionLinks,
+    PublicationSectionLinks
 } from './PublicationNavigation';
 
 /** Renders documentation with section navigation, article, and outline columns. */

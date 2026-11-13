@@ -142,7 +142,7 @@ export function useGroupPress(ref: RefObject<HTMLElement | null>, enabled: boole
                 .map((element) => ({
                     element,
                     rect: element.getBoundingClientRect(),
-                    owned: element.closest(boundary) === group,
+                    owned: element.closest(boundary) === group
                 }))
                 .filter(({ rect }) => rect.width > 0 && rect.height > 0);
 
@@ -153,7 +153,7 @@ export function useGroupPress(ref: RefObject<HTMLElement | null>, enabled: boole
                 y: event.clientY,
                 active: false,
                 target: null,
-                actions,
+                actions
             };
 
             session.current = press;

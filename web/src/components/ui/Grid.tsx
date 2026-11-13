@@ -72,7 +72,7 @@ export function Grid(props: {
                     width: props.width,
                     height: props.height,
                     maxWidth: props.maxWidth,
-                    minHeight: props.minHeight,
+                    minHeight: props.minHeight
                 }}
             >
                 {props.children}

@@ -11,11 +11,11 @@ const article = {
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'example', label: 'Example', level: 2 },
         { id: 'permissions', label: 'Permissions', level: 2 },
-        { id: 'exceptions', label: 'Exceptions', level: 2 },
+        { id: 'exceptions', label: 'Exceptions', level: 2 }
     ],
     lastUpdated: '2026-10-29',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Routes.tsx',
-    title: 'Routes | LongLink Documentation',
+    title: 'Routes | LongLink Documentation'
 };
 
 /** Documents standard FastAPI routes and Solution endpoint authorization. */

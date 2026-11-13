@@ -68,7 +68,7 @@ export default function Organizations() {
                                         <Text type="supporting">Organization</Text>
                                     </Stack>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'id',
@@ -83,8 +83,8 @@ export default function Organizations() {
                                     variant="ghost"
                                     onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
@@ -111,10 +111,7 @@ export default function Organizations() {
                                 label="Delete"
                                 variant="destructive"
                                 onClick={() =>
-                                    setDialog({
-                                        kind: 'deletion',
-                                        item: { id: metadata.id, name: metadata.name },
-                                    })
+                                    setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
                                 }
                             />
                         </Stack>
@@ -132,7 +129,7 @@ export default function Organizations() {
                                   await api.delete(`/api/v1/organizations/${dialog.item.id}`);
                                   await invalidate();
                                   setDialog(null);
-                              },
+                              }
                           }
                         : null
                 }

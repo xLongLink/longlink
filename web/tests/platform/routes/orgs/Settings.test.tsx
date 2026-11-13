@@ -29,12 +29,12 @@ const members = schemas.zOrganizationMemberAccessResponse.array().parse([
     { user, role: 'owner' },
     {
         user: { id: '00000000-0000-4000-8000-000000000003', name: 'Mina', email: 'mina@example.com', avatar: '' },
-        role: 'read',
+        role: 'read'
     },
     {
         user: { id: '00000000-0000-4000-8000-000000000004', name: 'Noah', email: 'noah@example.com', avatar: '' },
-        role: 'write',
-    },
+        role: 'write'
+    }
 ]);
 
 /** Observes the account's independently cached organization list alongside its settings. */
@@ -53,9 +53,7 @@ async function withOrganizationSettings(
 ) {
     const errors: unknown[] = [];
 
-    const client = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } },
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
 
     client.setQueryData(['api', base], access);
     client.setQueryData(['api', `${base}/tags`], []);
@@ -124,11 +122,7 @@ it('renders General without loading inactive billing or registry resources', () 
         `/orgs/${membership.organization.id}/settings`,
         [],
         '/orgs/:organization/settings',
-        {
-            ...membership,
-            tags: [],
-            activeTag: undefined,
-        }
+        { ...membership, tags: [], activeTag: undefined }
     );
 
     // Assert
@@ -146,7 +140,7 @@ it('refreshes current membership and account permissions after self-demotion', a
     const accessMembers = [
         { user, role: 'admin' },
         members[1],
-        { ...members[2], role: 'owner' },
+        { ...members[2], role: 'owner' }
     ] satisfies OrganizationMemberAccessResponse[];
 
     const requests: string[] = [];
@@ -201,7 +195,7 @@ it('refreshes current membership and account permissions after self-demotion', a
                     `PATCH ${base}/members/${user.id}`,
                     `GET ${base}/members`,
                     `GET ${base}`,
-                    'GET /api/v1/me/organizations',
+                    'GET /api/v1/me/organizations'
                 ])
             );
         });
@@ -284,7 +278,7 @@ it('keeps a replacement member confirmation open when an older action completes'
 
 it.each([
     { fragment: 'general', group: 'Organization' },
-    { fragment: 'members', group: 'People' },
+    { fragment: 'members', group: 'People' }
 ])('keeps the selected $fragment settings link visible on arrival', async ({ fragment, group }) => {
     // Act
     await withOrganizationSettings(
@@ -313,7 +307,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
     const accessMembers = [
         { user, role },
         members[1],
-        { ...members[2], role: 'owner' },
+        { ...members[2], role: 'owner' }
     ] satisfies OrganizationMemberAccessResponse[];
 
     const requests: string[] = [];
@@ -366,7 +360,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
         id: '00000000-0000-4000-8000-000000000005',
         email: 'first@example.com',
         role: 'write',
-        created_at: '2026-10-02T00:00:00Z',
+        created_at: '2026-10-02T00:00:00Z'
     });
 
     const requests: string[] = [];

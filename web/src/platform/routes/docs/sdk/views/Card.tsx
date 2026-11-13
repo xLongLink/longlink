@@ -7,7 +7,7 @@ import {
     CardDescription,
     CardContent,
     CardFooter,
-    InteractiveCard,
+    InteractiveCard
 } from '@/components/ui/Card';
 
 /** Documents native card composition and the custom interactive wrapper. */
@@ -20,96 +20,72 @@ export default function CardPage() {
                 {
                     name: 'size',
                     type: '"default" | "sm"',
-                    description: 'Native card spacing. Card and its parts also accept native div props.',
+                    description: 'Native card spacing. Card and its parts also accept native div props.'
                 },
                 {
                     name: 'children',
                     type: 'ReactNode',
                     description:
-                        'Compose CardHeader, CardTitle, CardDescription, CardAction, CardContent, and CardFooter.',
+                        'Compose CardHeader, CardTitle, CardDescription, CardAction, CardContent, and CardFooter.'
                 },
                 ...[
-                    {
-                        name: 'children',
-                        type: 'ReactNode',
-                        description: 'Content rendered inside the card.',
-                    },
+                    { name: 'children', type: 'ReactNode', description: 'Content rendered inside the card.' },
                     {
                         name: 'padding',
                         type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                        description: 'Inner spacing using the theme spacing scale.',
+                        description: 'Inner spacing using the theme spacing scale.'
                     },
                     {
                         name: 'isClipped',
                         type: 'boolean',
-                        description: "Clips full-bleed content to the card's rounded edges.",
+                        description: "Clips full-bleed content to the card's rounded edges."
                     },
                     {
                         name: 'variant',
                         type: '"default" | "transparent" | "muted"',
-                        description: 'Background color variant, independent of the interaction mode.',
+                        description: 'Background color variant, independent of the interaction mode.'
                     },
                     {
                         name: 'width',
                         type: 'string | number',
-                        description: 'Card width; numbers are pixels and strings are CSS sizes.',
+                        description: 'Card width; numbers are pixels and strings are CSS sizes.'
                     },
                     {
                         name: 'height',
                         type: 'string | number',
-                        description: 'Card height; numbers are pixels and strings are CSS sizes.',
+                        description: 'Card height; numbers are pixels and strings are CSS sizes.'
                     },
-                    {
-                        name: 'maxWidth',
-                        type: 'string | number',
-                        description: 'Maximum card width.',
-                    },
-                    {
-                        name: 'minHeight',
-                        type: 'string | number',
-                        description: 'Minimum card height.',
-                    },
+                    { name: 'maxWidth', type: 'string | number', description: 'Maximum card width.' },
+                    { name: 'minHeight', type: 'string | number', description: 'Minimum card height.' },
                     {
                         name: 'inert',
                         type: 'boolean',
-                        description: 'Makes the card and its descendants non-interactive.',
+                        description: 'Makes the card and its descendants non-interactive.'
                     },
                     {
                         name: 'label',
                         type: 'string',
-                        description: 'Accessible label for interactive cards; supply a descriptive label.',
+                        description: 'Accessible label for interactive cards; supply a descriptive label.'
                     },
                     {
                         name: 'onClick',
                         type: '(event: ViewMouseEvent) => void',
-                        description: 'Runs when the card surface is activated.',
+                        description: 'Runs when the card surface is activated.'
                     },
-                    {
-                        name: 'href',
-                        type: 'string',
-                        description: 'Link destination, used when onChange is absent.',
-                    },
+                    { name: 'href', type: 'string', description: 'Link destination, used when onChange is absent.' },
                     {
                         name: 'target',
                         type: 'string',
-                        description: 'Link target; external URLs open in a new tab in Views.',
+                        description: 'Link target; external URLs open in a new tab in Views.'
                     },
-                    {
-                        name: 'isDisabled',
-                        type: 'boolean',
-                        description: 'Disables activation of an interactive card.',
-                    },
-                    {
-                        name: 'isSelected',
-                        type: 'boolean',
-                        description: 'Whether the card is selected.',
-                    },
+                    { name: 'isDisabled', type: 'boolean', description: 'Disables activation of an interactive card.' },
+                    { name: 'isSelected', type: 'boolean', description: 'Whether the card is selected.' },
                     {
                         name: 'onChange',
                         type: '(isSelected: boolean) => void',
-                        description: 'Enables selection and receives its next state, overriding onClick and href.',
-                    },
-                ].map((property) => ({ ...property, name: `InteractiveCard.${property.name}` })),
+                        description: 'Enables selection and receives its next state, overriding onClick and href.'
+                    }
+                ].map((property) => ({ ...property, name: `InteractiveCard.${property.name}` }))
             ]}
             example={{
                 title: 'Native composition and interactive navigation',
@@ -144,7 +120,7 @@ export default function CardPage() {
       </InteractiveCard>
     </>
   );
-}`,
+}`
             }}
         />
     );

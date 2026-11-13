@@ -11,14 +11,14 @@ import Management from '@/platform/routes/user/OrganizationManagement';
 const invitation = {
     id: '00000000-0000-4000-8000-000000000003',
     organization: { id: '00000000-0000-4000-8000-000000000004', name: 'Invited team', status: 'running' },
-    role: 'read',
+    role: 'read'
 };
 
 it('uses settings presentation instead of onboarding for an empty membership list', () => {
     // Act
     const output = renderPlatform(<Management presentation="settings" />, '/user/settings', [
         ['/api/v1/me/organizations', []],
-        ['/api/v1/me/invitations', []],
+        ['/api/v1/me/invitations', []]
     ]);
 
     // Assert
@@ -99,7 +99,7 @@ it.each([
         suffix: '/accept',
         membershipReads: 2,
         membershipsAfter: [membership, { organization: invitation.organization, role: 'read' }],
-        membershipNames: ['Acme', 'Invited team'],
+        membershipNames: ['Acme', 'Invited team']
     },
     {
         action: 'Decline',
@@ -107,8 +107,8 @@ it.each([
         suffix: '',
         membershipReads: 1,
         membershipsAfter: [membership],
-        membershipNames: ['Acme'],
-    },
+        membershipNames: ['Acme']
+    }
 ])(
     'refreshes the correct resources after $action',
     async ({ action, method, suffix, membershipReads, membershipsAfter, membershipNames }) => {

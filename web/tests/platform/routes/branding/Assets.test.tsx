@@ -73,7 +73,7 @@ it('keeps both preview modes isolated while document and account appearance chan
                     'light',
                     'dark',
                     'light',
-                    'dark',
+                    'dark'
                 ]);
                 expect(output.querySelector('img')?.getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
 

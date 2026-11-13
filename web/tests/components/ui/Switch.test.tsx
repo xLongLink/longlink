@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 
 it.each([
     ['switch', Switch],
-    ['checkbox', Checkbox],
+    ['checkbox', Checkbox]
 ] as const)('%s accepts the native checked callback and excludes disabled values', async (role, Control) => {
     const user = userEvent.setup();
 

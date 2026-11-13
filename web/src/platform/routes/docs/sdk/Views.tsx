@@ -57,7 +57,7 @@ import {
     CardFooter,
     CardContent,
     CardDescription,
-    InteractiveCard,
+    InteractiveCard
 } from '@/components/ui/Card';
 import '@/platform/components/settings-navigation.css';
 
@@ -67,15 +67,11 @@ const article = {
         { id: 'views', label: 'Views', level: 1 },
         ...documentationCategories
             .filter((category) => category !== 'Runtime')
-            .map((category) => ({
-                id: category.toLowerCase().replace(/\W+/g, '-'),
-                label: category,
-                level: 2,
-            })),
+            .map((category) => ({ id: category.toLowerCase().replace(/\W+/g, '-'), label: category, level: 2 }))
     ],
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
-    title: 'Views | LongLink Documentation',
+    title: 'Views | LongLink Documentation'
 };
 
 // Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
@@ -173,7 +169,7 @@ const previews = new Map(
         TextArea: <TextAreaExample />,
         TextInput: <TextInputExample />,
         TimeInput: <TimeInputExample />,
-        Timestamp: <TimestampExample />,
+        Timestamp: <TimestampExample />
     })
 );
 
@@ -210,14 +206,14 @@ export default function Item({ params }) {
                             {
                                 name: 'navigate(path)',
                                 description:
-                                    'Navigates within the current Solution or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.',
+                                    'Navigates within the current Solution or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
                             },
                             {
                                 name: 'request(path, options)',
                                 description:
-                                    'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.',
+                                    'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
                             },
-                            ...viewHooks,
+                            ...viewHooks
                         ]}
                         columns={[
                             {
@@ -229,8 +225,8 @@ export default function Item({ params }) {
                                         <InlineCode className="self-start">{api.name}</InlineCode>
                                         <Text type="supporting">{api.description}</Text>
                                     </Stack>
-                                ),
-                            },
+                                )
+                            }
                         ]}
                     />
                 </Disclosure>

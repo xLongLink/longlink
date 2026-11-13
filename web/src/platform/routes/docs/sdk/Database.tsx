@@ -11,11 +11,11 @@ const article = {
         { id: 'database', label: 'Database', level: 1 },
         { id: 'example', label: 'Example', level: 2 },
         { id: 'users-management', label: 'Users management', level: 2 },
-        { id: 'migrations', label: 'Migrations', level: 2 },
+        { id: 'migrations', label: 'Migrations', level: 2 }
     ],
     lastUpdated: '2026-09-29',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Database.tsx',
-    title: 'Database | LongLink Documentation',
+    title: 'Database | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {

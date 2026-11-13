@@ -23,7 +23,7 @@ const STARTUP_FAILURES = {
     assets: 'The View runtime assets could not be loaded or did not match the manifest.',
     preparation: 'The isolated View document could not be prepared.',
     transfer: 'The isolated View could not receive its startup capabilities.',
-    readiness: 'The isolated View did not become ready within 10 seconds.',
+    readiness: 'The isolated View did not become ready within 10 seconds.'
 } as const;
 
 /** Renders Solution code only in a credential-free, opaque-origin sandbox. */
@@ -32,7 +32,7 @@ export function JsxView({
     params,
     requestBaseUrl,
     navigationBaseUrl,
-    runtime,
+    runtime
 }: {
     source: string;
     params: Record<string, string>;
@@ -43,7 +43,7 @@ export function JsxView({
     const frame = useRef<HTMLIFrameElement>(null);
 
     const {
-        appearance: { theme, accent },
+        appearance: { theme, accent }
     } = useAppearance();
 
     const currentAppearance = useRef<ViewAppearance>({ theme, accent });
@@ -146,7 +146,7 @@ export function JsxView({
             if (version !== runtime.version) throw new Error('The Solution View runtime does not match its manifest');
 
             return { script, styles };
-        },
+        }
     });
 
     useEffect(() => {
@@ -242,7 +242,7 @@ export function JsxView({
                         source,
                         params: parametersSchema.parse(JSON.parse(parameters)),
                         navigationBaseUrl: new URL(navigationBaseUrl, window.location.origin).href,
-                        appearance: currentAppearance.current,
+                        appearance: currentAppearance.current
                     },
                     '*',
                     [channel.port2]
@@ -340,7 +340,7 @@ export function JsxView({
                     // Admit declared PDFs and recognized text files to host-owned previews.
                     const body = await host.load(host.requestUrl(requestBaseUrl, command.path), {
                         cache: 'no-cache',
-                        signal: controller.signal,
+                        signal: controller.signal
                     });
 
                     controller.signal.throwIfAborted();

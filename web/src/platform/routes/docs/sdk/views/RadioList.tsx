@@ -12,72 +12,45 @@ export default function RadioListPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Label text for the radio group (always rendered for accessibility).',
+                    description: 'Label text for the radio group (always rendered for accessibility).'
                 },
-                {
-                    name: 'description',
-                    type: 'string',
-                    description: 'Description text displayed below the label.',
-                },
+                { name: 'description', type: 'string', description: 'Description text displayed below the label.' },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'RadioListItem elements.',
-                },
-                {
-                    name: 'value',
-                    type: 'string',
-                    description: 'The currently selected value.',
-                },
-                {
-                    name: 'defaultValue',
-                    type: 'string',
-                    description: 'Initial value.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'RadioListItem elements.' },
+                { name: 'value', type: 'string', description: 'The currently selected value.' },
+                { name: 'defaultValue', type: 'string', description: 'Initial value.' },
                 {
                     name: 'onChange',
                     type: '(value: string) => void',
-                    description: 'Callback fired when the selected value changes.',
+                    description: 'Callback fired when the selected value changes.'
                 },
                 {
                     name: 'orientation',
                     type: '"horizontal" | "vertical"',
-                    description: 'Layout direction of the radio items.',
+                    description: 'Layout direction of the radio items.'
                 },
-                {
-                    name: 'RadioListItem.label',
-                    type: 'string',
-                    description: 'Visible label identifying this choice.',
-                },
+                { name: 'RadioListItem.label', type: 'string', description: 'Visible label identifying this choice.' },
                 {
                     name: 'RadioListItem.value',
                     type: 'string',
-                    description: 'Value passed to the surrounding RadioList when selected.',
+                    description: 'Value passed to the surrounding RadioList when selected.'
                 },
                 {
                     name: 'RadioListItem.description',
                     type: 'string',
-                    description: 'Optional helper text explaining the choice.',
+                    description: 'Optional helper text explaining the choice.'
                 },
-                {
-                    name: 'RadioListItem.isDisabled',
-                    type: 'boolean',
-                },
+                { name: 'RadioListItem.isDisabled', type: 'boolean' }
             ]}
             example={{
                 title: 'Plan form',
@@ -100,7 +73,7 @@ export default function PlanForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

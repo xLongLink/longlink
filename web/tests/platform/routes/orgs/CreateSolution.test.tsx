@@ -63,7 +63,7 @@ it('waits for image inspection before advancing to metadata without creating a S
                 // Assert
                 await vi.waitFor(() => expect(requests).toHaveLength(1));
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
-                    'GET /api/v1/organizations/organization/image',
+                    'GET /api/v1/organizations/organization/image'
                 ]);
                 expect([...new URL(requests[0]?.url ?? '').searchParams]).toEqual([['image', image]]);
                 expect(imagePanel.hidden).toBe(false);

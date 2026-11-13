@@ -79,7 +79,7 @@ it.each(['retry', 'navigation'] as const)('recovers a failed validated read thro
         await vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page.'));
         expect(output.querySelector('button')?.textContent).toBe('Retry');
         expect(errors).toEqual([
-            expect.objectContaining({ name: 'ApiError', status: 503, message: 'Orders unavailable' }),
+            expect.objectContaining({ name: 'ApiError', status: 503, message: 'Orders unavailable' })
         ]);
         expect(transport).toHaveBeenCalledTimes(1);
 
@@ -100,10 +100,10 @@ it.each(['retry', 'navigation'] as const)('recovers a failed validated read thro
         expect(output.querySelector('button')).toBeNull();
         expect(transport.mock.calls.map(([input]) => (input instanceof Request ? input.url : String(input)))).toEqual([
             'http://localhost/api/orders/failed',
-            `http://localhost/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`,
+            `http://localhost/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`
         ]);
         expect(client.getQueryData(['api', `/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`])).toEqual({
-            name: 'Healthy orders',
+            name: 'Healthy orders'
         });
         expect(errors).toHaveLength(1);
     } finally {

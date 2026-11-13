@@ -12,52 +12,52 @@ export default function SelectPage() {
                 {
                     name: 'defaultValue',
                     type: 'Value | Value[] | null',
-                    description: 'Initial uncontrolled selection.',
+                    description: 'Initial uncontrolled selection.'
                 },
                 {
                     name: 'value',
                     type: 'Value | Value[] | null',
-                    description: 'Controlled selection; use an array with multiple.',
+                    description: 'Controlled selection; use an array with multiple.'
                 },
                 {
                     name: 'onValueChange',
                     type: '(value, eventDetails) => void',
-                    description: 'Native Base UI change callback, not Selector onChange.',
+                    description: 'Native Base UI change callback, not Selector onChange.'
                 },
                 { name: 'multiple', type: 'boolean', description: 'Enables multiple selection.' },
                 {
                     name: 'items',
                     type: 'Record<string, ReactNode> | { value, label }[]',
-                    description: 'Maps values to trigger labels.',
+                    description: 'Maps values to trigger labels.'
                 },
                 { name: 'required', type: 'boolean', description: 'Requires a selection for form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Disables the control and excludes it from submission.',
+                    description: 'Disables the control and excludes it from submission.'
                 },
                 { name: 'SelectTrigger.size', type: "'sm' | 'default'", description: 'Installed trigger density.' },
                 {
                     name: 'SelectValue.placeholder',
                     type: 'ReactNode',
-                    description: 'Content shown without a selection.',
+                    description: 'Content shown without a selection.'
                 },
                 {
                     name: 'SelectContent.side / align / sideOffset / alignOffset',
                     type: 'Base UI positioning props',
-                    description: 'Positions the popup; alignItemWithTrigger defaults to true.',
+                    description: 'Positions the popup; alignItemWithTrigger defaults to true.'
                 },
                 { name: 'SelectItem.value', type: 'Value', description: 'Value submitted when this item is selected.' },
                 {
                     name: 'SelectGroup / SelectLabel / SelectSeparator',
                     type: 'components',
-                    description: 'Compose labeled option groups and separators.',
+                    description: 'Compose labeled option groups and separators.'
                 },
                 {
                     name: 'SelectScrollUpButton / SelectScrollDownButton',
                     type: 'components',
-                    description: 'Scroll controls already included by SelectContent.',
-                },
+                    description: 'Scroll controls already included by SelectContent.'
+                }
             ]}
             example={{
                 title: 'Native status selection',
@@ -72,7 +72,7 @@ export default function SelectPage() {
     <SelectItem value="open">Open</SelectItem>
     <SelectItem value="closed">Closed</SelectItem>
   </SelectContent>
-</Select>`,
+</Select>`
             }}
         />
     );

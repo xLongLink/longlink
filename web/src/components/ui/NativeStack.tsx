@@ -60,8 +60,8 @@ export function NativeStack({
                 gap: gap === undefined ? style?.gap : spacing(gap),
                 paddingInline: paddingInline === undefined ? style?.paddingInline : spacing(paddingInline),
                 paddingBlock: paddingBlock === undefined ? style?.paddingBlock : spacing(paddingBlock),
-                flexWrap: wrap ?? style?.flexWrap,
-            },
+                flexWrap: wrap ?? style?.flexWrap
+            }
         },
         children
     );

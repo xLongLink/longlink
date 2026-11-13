@@ -12,64 +12,44 @@ export default function TextAreaPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Label text for the textarea. Always rendered for accessibility.',
+                    description: 'Label text for the textarea. Always rendered for accessibility.'
                 },
                 {
                     name: 'description',
                     type: 'string',
-                    description: 'Helper text displayed between the label and textarea.',
+                    description: 'Helper text displayed between the label and textarea.'
                 },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
-                {
-                    name: 'value',
-                    type: 'string',
-                    description: 'Current value of the textarea.',
-                },
-                {
-                    name: 'defaultValue',
-                    type: 'string',
-                    description: 'Initial value.',
-                },
+                { name: 'value', type: 'string', description: 'Current value of the textarea.' },
+                { name: 'defaultValue', type: 'string', description: 'Initial value.' },
                 {
                     name: 'onChange',
                     type: '(value: string) => void',
-                    description: 'Callback fired when the textarea value changes.',
+                    description: 'Callback fired when the textarea value changes.'
                 },
                 {
                     name: 'placeholder',
                     type: 'string',
-                    description: 'Placeholder text shown when the textarea is empty.',
+                    description: 'Placeholder text shown when the textarea is empty.'
                 },
-                {
-                    name: 'rows',
-                    type: 'number',
-                    description: 'Number of visible text rows.',
-                },
+                { name: 'rows', type: 'number', description: 'Number of visible text rows.' },
                 {
                     name: 'maxLength',
                     type: 'number',
                     description:
-                        'Maximum Unicode code points, matching Python string length. Validates without truncating input.',
+                        'Maximum Unicode code points, matching Python string length. Validates without truncating input.'
                 },
-                {
-                    name: 'autoComplete',
-                    type: 'string',
-                    description: 'Native autocomplete hint.',
-                },
+                { name: 'autoComplete', type: 'string', description: 'Native autocomplete hint.' }
             ]}
             example={{
                 title: 'Notes form',
@@ -89,7 +69,7 @@ export default function NotesForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

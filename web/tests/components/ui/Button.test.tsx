@@ -179,8 +179,8 @@ it('retains submitter data and reset behavior through the real form', async () =
             expect(submissions).toEqual([
                 [
                     ['title', 'Changed'],
-                    ['intent', 'publish'],
-                ],
+                    ['intent', 'publish']
+                ]
             ]);
             input.value = 'Changed again';
             await act(async () => buttons[1]?.click());

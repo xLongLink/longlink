@@ -288,7 +288,7 @@ it('reports one failed GET shared by observers, supports dismissal, and recovers
             expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Orders unavailable');
             expect(Array.from(output.querySelectorAll('p'), (element) => element.textContent)).toEqual([
                 'Read failed',
-                'Read failed',
+                'Read failed'
             ]);
         });
         expect(transport).toHaveBeenCalledTimes(1);
@@ -308,7 +308,7 @@ it('reports one failed GET shared by observers, supports dismissal, and recovers
         await vi.waitFor(() => {
             expect(Array.from(output.querySelectorAll('p'), (element) => element.textContent)).toEqual([
                 'Recovered orders',
-                'Recovered orders',
+                'Recovered orders'
             ]);
         });
         expect(transport).toHaveBeenCalledTimes(2);

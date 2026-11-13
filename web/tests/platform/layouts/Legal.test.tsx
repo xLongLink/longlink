@@ -36,11 +36,7 @@ it('retains native modified link gestures and updates the selected legal page af
             if (!privacy || !terms) throw new Error('Missing legal navigation');
             expect(privacy.getAttribute('aria-current')).toBe('page');
 
-            const modifiedClick = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                ctrlKey: true,
-            });
+            const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
             await act(async () => terms.dispatchEvent(modifiedClick));
             expect(modifiedClick.defaultPrevented).toBe(false);

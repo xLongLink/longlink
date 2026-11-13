@@ -9,76 +9,68 @@ export default function GridPage() {
         <ViewLayout
             name="Grid"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Grid content.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Grid content.' },
                 {
                     name: 'columns',
                     type: 'number | { minWidth: number; max?: number; repeat?: "fill" | "fit"; }',
-                    description: 'Fixed column count or responsive columns with minWidth and an optional max.',
+                    description: 'Fixed column count or responsive columns with minWidth and an optional max.'
                 },
                 {
                     name: 'collapseBelow',
                     type: 'number',
-                    description: 'View width in pixels at or below which all items use one column.',
+                    description: 'View width in pixels at or below which all items use one column.'
                 },
                 {
                     name: 'gap',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Spacing between all items.',
+                    description: 'Spacing between all items.'
                 },
                 {
                     name: 'rowGap',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Row spacing; overrides `gap` for the row axis.',
+                    description: 'Row spacing; overrides `gap` for the row axis.'
                 },
                 {
                     name: 'columnGap',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Column spacing; overrides `gap` for the column axis.',
+                    description: 'Column spacing; overrides `gap` for the column axis.'
                 },
                 {
                     name: 'align',
                     type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Vertical alignment of items.',
+                    description: 'Vertical alignment of items.'
                 },
                 {
                     name: 'justify',
                     type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Horizontal alignment of items.',
+                    description: 'Horizontal alignment of items.'
                 },
                 {
                     name: 'width',
                     type: 'string | number',
-                    description: 'Container width. Numbers are treated as pixels, strings are used as-is.',
+                    description: 'Container width. Numbers are treated as pixels, strings are used as-is.'
                 },
                 {
                     name: 'height',
                     type: 'string | number',
-                    description: 'Container height. Numbers are treated as pixels, strings are used as-is.',
+                    description: 'Container height. Numbers are treated as pixels, strings are used as-is.'
                 },
                 {
                     name: 'maxWidth',
                     type: 'string | number',
-                    description: 'Maximum container width. Numbers are treated as pixels, strings are used as-is.',
+                    description: 'Maximum container width. Numbers are treated as pixels, strings are used as-is.'
                 },
                 {
                     name: 'minHeight',
                     type: 'string | number',
-                    description: 'Minimum container height. Numbers are treated as pixels, strings are used as-is.',
+                    description: 'Minimum container height. Numbers are treated as pixels, strings are used as-is.'
                 },
-                {
-                    name: 'GridSpan.children',
-                    type: 'ReactNode',
-                    description: 'Content rendered inside the grid item.',
-                },
+                { name: 'GridSpan.children', type: 'ReactNode', description: 'Content rendered inside the grid item.' },
                 {
                     name: 'GridSpan.columns',
                     type: 'number | "full"',
-                    description: 'Number of columns to occupy, or full to span the entire grid.',
-                },
+                    description: 'Number of columns to occupy, or full to span the entire grid.'
+                }
             ]}
             example={{
                 title: 'Grid',
@@ -92,7 +84,7 @@ export default function GridPage() {
       </GridSpan>
     </Grid>
   );
-}`,
+}`
             }}
         />
     );

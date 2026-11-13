@@ -13,8 +13,8 @@ describe('resolveNavigationUrl', () => {
         [
             'https://solutions.example/api/solutions/123/proxy/',
             '/items',
-            'https://solutions.example/api/solutions/123/proxy/items',
-        ],
+            'https://solutions.example/api/solutions/123/proxy/items'
+        ]
     ])('joins base %s and relative path %s', (baseUrl, path, expected) => {
         // Act and assert
         expect(resolveNavigationUrl(baseUrl, path)).toBe(expected);
@@ -49,7 +49,7 @@ describe('resolveRequestUrl', () => {
         '///evil.example/items',
         '\\evil.example/items',
         'javascript:alert(1)',
-        'data:text/html,payload',
+        'data:text/html,payload'
     ])('rejects request URL evasion paths: %s', (path) => {
         expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
             'Solution request URL must be solution-relative'
@@ -62,7 +62,7 @@ describe('resolveRequestUrl', () => {
         '/%2e%2e/api/v1/me',
         '/.%2e/api/v1/me',
         '/%2e./api/v1/me',
-        '/items%2f..%2fapi/v1/me',
+        '/items%2f..%2fapi/v1/me'
     ])('rejects encoded path that could escape the solution proxy: %s', (path) => {
         expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
             'Solution request URL must remain within the solution'

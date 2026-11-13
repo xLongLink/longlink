@@ -38,7 +38,7 @@ it('delegates ordinary solution navigation while preserving canceled, modified a
                 { metaKey: true },
                 { shiftKey: true },
                 { altKey: true },
-                { button: 1 },
+                { button: 1 }
             ]) {
                 const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...gesture });
                 await act(async () => anchor.dispatchEvent(event));

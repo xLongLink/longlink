@@ -49,11 +49,11 @@ it('shares deferred glyph loading while preserving decorative slots and explicit
                 expect(
                     Array.from(output.querySelectorAll('svg'), (svg) => [
                         svg.dataset.size,
-                        svg.getAttribute('aria-hidden'),
+                        svg.getAttribute('aria-hidden')
                     ])
                 ).toEqual([
                     ['sm', 'true'],
-                    ['lg', 'true'],
+                    ['lg', 'true']
                 ]);
             }
         );

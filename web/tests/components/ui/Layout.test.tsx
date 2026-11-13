@@ -144,7 +144,7 @@ it('names a scrolling StackItem only while its retained content overflows', asyn
                 clientWidth: { value: 100 },
                 clientHeight: { value: 100 },
                 scrollWidth: { value: 100 },
-                scrollHeight: { get: () => contentHeight },
+                scrollHeight: { get: () => contentHeight }
             });
 
             await act(async () => window.dispatchEvent(new Event('resize')));

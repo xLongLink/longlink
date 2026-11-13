@@ -14,12 +14,12 @@ export const user = zCurrentUser.parse({
     avatar: '',
     administrator: false,
     theme: 'system',
-    accent: 'neutral',
+    accent: 'neutral'
 });
 
 export const membership = zUserOrganizationMembership.parse({
     organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', status: 'running' },
-    role: 'owner',
+    role: 'owner'
 });
 
 /** Renders a resolved Platform route with validated identity and explicit cached API responses. */

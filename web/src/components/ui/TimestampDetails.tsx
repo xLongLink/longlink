@@ -9,7 +9,7 @@ export function TimestampDetails({
     dateTime,
     fullDate,
     label,
-    zoneName,
+    zoneName
 }: {
     children: string;
     dateTime: string;

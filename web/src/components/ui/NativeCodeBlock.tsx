@@ -71,9 +71,9 @@ const highlighter = createHighlighterCoreSync({
         ...powershell,
         ...typescript,
         ...objectiveC,
-        ...shellscript,
+        ...shellscript
     ],
-    themes: [githubLight, githubDark],
+    themes: [githubLight, githubDark]
 });
 
 const languages = new Set(highlighter.getLoadedLanguages());
@@ -86,7 +86,7 @@ const aliases = new Map([
     ['cxx', 'cpp'],
     ['hpp', 'cpp'],
     ['hh', 'cpp'],
-    ['hxx', 'cpp'],
+    ['hxx', 'cpp']
 ]);
 
 /** Renders source tokens as text, with trusted native-only layout options. */
@@ -118,7 +118,7 @@ export function NativeCodeBlock(props: {
         try {
             return highlighter.codeToTokens(props.code, {
                 lang: syntaxLanguage,
-                themes: { light: 'github-light', dark: 'github-dark' },
+                themes: { light: 'github-light', dark: 'github-dark' }
             }).tokens;
         } catch {
             return undefined;
@@ -230,7 +230,7 @@ export function NativeCodeBlock(props: {
 
     const style: CSSProperties & { '--view-code-gutter': string } = {
         width: props.width ?? '100%',
-        '--view-code-gutter': `${String(lines.length).length}ch`,
+        '--view-code-gutter': `${String(lines.length).length}ch`
     };
 
     // Keep hidden code mounted so toggling does not discard content or its scroll position.
@@ -292,7 +292,7 @@ export function NativeCodeBlock(props: {
                                               const style: CSSProperties &
                                                   Record<`--cb-${string}`, string | undefined> = {
                                                   '--cb-c': token.color,
-                                                  '--cb-cd': token.htmlStyle?.['--shiki-dark'] ?? token.color,
+                                                  '--cb-cd': token.htmlStyle?.['--shiki-dark'] ?? token.color
                                               };
 
                                               return (

@@ -6,7 +6,7 @@ export function NativeMoreMenu({
     label = 'More options',
     size = 'md',
     alignment = 'start',
-    isDisabled,
+    isDisabled
 }: {
     items: NativeMenuOption[];
     label?: string;

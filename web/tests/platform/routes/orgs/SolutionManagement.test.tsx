@@ -17,7 +17,7 @@ const solution = {
     status: 'running',
     deployment_pending: false,
     desired_revision_id: '00000000-0000-4000-8000-000000000004',
-    deployed_version: '1.2.0',
+    deployed_version: '1.2.0'
 };
 
 const mcpResource = `https://solutions.example/api/v1/solutions/${solution.id}/proxy/mcp`;
@@ -39,7 +39,7 @@ async function withSolutions(role: OrganizationContext['role'], check: (output: 
             return Response.json({
                 resource: mcpResource,
                 scopes_supported: [],
-                authorization_servers: ['https://platform.example'],
+                authorization_servers: ['https://platform.example']
             });
         }
 
@@ -140,7 +140,7 @@ it('confirms the canonical MCP URL copy only after the clipboard succeeds and cl
 
 it.each([
     { role: 'maintain', actions: ['Tags', 'Update', 'Logs', 'MCP', 'Delete'] },
-    { role: 'admin', actions: ['Permissions', 'Tags', 'Update', 'Logs', 'MCP', 'Delete'] },
+    { role: 'admin', actions: ['Permissions', 'Tags', 'Update', 'Logs', 'MCP', 'Delete'] }
 ] as const)('offers authorized solution actions to $role callers', async ({ role, actions }) => {
     // Arrange
     await withSolutions(role, async (output) => {

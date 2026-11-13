@@ -23,7 +23,7 @@ const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 
 const registrationCompleteSchema = z.object({
     name: z.string().trim().min(1, 'Name is required').max(255, 'Name cannot exceed 255 characters'),
-    password: passwordSchema,
+    password: passwordSchema
 });
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
@@ -37,23 +37,19 @@ export default function VerifyEmail() {
 
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
-        resolver: zodResolver(registrationCompleteSchema),
+        resolver: zodResolver(registrationCompleteSchema)
     });
 
     /** Returns the signed email claim while preserving cancellation of credential side effects. */
     async function verify({
         signal,
-        token: registrationToken,
+        token: registrationToken
     }: VerificationRequest): Promise<
         { status: 'verified'; data: z.output<typeof zEmailPayload> } | { status: 'error' } | undefined
     > {
         // Exchange the URL credential, or recover the server-owned registration setup.
         const request = registrationToken
-            ? api('/api/v1/auth/verify', {
-                  json: { token: registrationToken },
-                  method: 'POST',
-                  signal,
-              }).json()
+            ? api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json()
             : api('/api/v1/auth/register/setup', { signal }).json();
 
         // Handle only transport failures as invalid credentials.

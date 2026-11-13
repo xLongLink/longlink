@@ -16,9 +16,7 @@ function Calendar({
     formatters,
     components,
     ...props
-}: React.ComponentProps<typeof DayPicker> & {
-    buttonVariant?: React.ComponentProps<typeof Button>['variant'];
-}) {
+}: React.ComponentProps<typeof DayPicker> & { buttonVariant?: React.ComponentProps<typeof Button>['variant'] }) {
     const defaultClassNames = getDefaultClassNames();
 
     return (
@@ -34,7 +32,7 @@ function Calendar({
             locale={locale}
             formatters={{
                 formatMonthDropdown: (date) => date.toLocaleString(locale?.code, { month: 'short' }),
-                ...formatters,
+                ...formatters
             }}
             classNames={{
                 root: cn('w-fit', defaultClassNames.root),
@@ -103,7 +101,7 @@ function Calendar({
                 outside: cn('text-muted-foreground aria-selected:text-muted-foreground', defaultClassNames.outside),
                 disabled: cn('text-muted-foreground opacity-50', defaultClassNames.disabled),
                 hidden: cn('invisible', defaultClassNames.hidden),
-                ...classNames,
+                ...classNames
             }}
             components={{
                 Root: ({ className, rootRef, ...props }) => {
@@ -130,7 +128,7 @@ function Calendar({
                         </td>
                     );
                 },
-                ...components,
+                ...components
             }}
             {...props}
         />

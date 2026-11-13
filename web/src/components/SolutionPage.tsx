@@ -30,7 +30,7 @@ export function SolutionPage({
     formatTitle,
     navigationBaseUrl = '/',
     sidebarHeader,
-    viewsUrl = '/views.json',
+    viewsUrl = '/views.json'
 }: {
     action: ReactNode;
     breadcrumb: ReactNode;
@@ -69,19 +69,16 @@ export function SolutionPage({
                     label:
                         tab.label ??
                         viewLabel(manifest.views.find((view) => view.route === tab.route)?.path ?? tab.route),
-                    icon: tab.icon,
-                })),
+                    icon: tab.icon
+                }))
             };
-        },
+        }
     });
 
     const views = manifest?.views ?? EMPTY_VIEWS;
 
     const match = matchRoutes(
-        views.map((view) => ({
-            path: view.route,
-            view,
-        })),
+        views.map((view) => ({ path: view.route, view })),
         `/${routePath}`
     )?.[0];
 
@@ -105,14 +102,14 @@ export function SolutionPage({
                   return body.text();
               }
             : skipToken,
-        retry: false,
+        retry: false
     });
 
     // Build one static navigation target per solution tab.
     const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
         label: view.label,
-        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined,
+        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined
     }));
 
     // Keep wordmark navigation on the solution's first page.
@@ -147,7 +144,7 @@ export function SolutionPage({
                     activeView.route,
                     activeView.path,
                     manifest.runtime,
-                    routePath,
+                    routePath
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
                 params={Object.fromEntries(

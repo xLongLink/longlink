@@ -302,7 +302,7 @@ it('keeps fractional keyboard steps precise and falls back to unit steps when st
 
 it.each([
     [1000000000000000, 1000000000000001],
-    [1234567890123456, 1234567890123457],
+    [1234567890123456, 1234567890123457]
 ])('increments the safe integer %s by exactly one', async (initial, expected) => {
     // Decimal-place rounding and grid tolerance must not skip representable integer values.
     const changes: (number | null)[] = [];
@@ -345,7 +345,7 @@ it.each([
     ['ar-EG', '1.5', 1.5],
     ['ar', '1.5', 1.5],
     ['en-US', '१,२३४.५', 1234.5],
-    ['en-US', '\u200E١,٢٣٤.٥\u200F', 1234.5],
+    ['en-US', '\u200E١,٢٣٤.٥\u200F', 1234.5]
 ] as const)('commits pasted %s number %s using the owning document language', async (language, pasted, expected) => {
     // A separate document exercises locale discovery without changing global language or Intl state.
     const frame = document.createElement('iframe');

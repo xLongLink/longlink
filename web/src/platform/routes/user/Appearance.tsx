@@ -23,7 +23,7 @@ export default function AppearanceSettings() {
                         [
                             { value: 'system', label: 'System', image: 'theme_auto.png' },
                             { value: 'light', label: 'Light', image: 'theme_light.png' },
-                            { value: 'dark', label: 'Dark', image: 'theme_dark.png' },
+                            { value: 'dark', label: 'Dark', image: 'theme_dark.png' }
                         ] as const
                     ).map(({ value, label, image }) => (
                         <InteractiveCard

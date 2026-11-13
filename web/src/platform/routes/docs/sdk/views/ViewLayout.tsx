@@ -67,7 +67,7 @@ export default function ViewLayout({
     properties = [],
     example,
     children,
-    toc,
+    toc
 }: {
     name: string;
     properties?: ViewProperty[];
@@ -90,10 +90,7 @@ export default function ViewLayout({
             const separator = property.name.indexOf('.');
             const group = separator < 0 ? name : property.name.slice(0, separator);
 
-            const row = {
-                ...property,
-                name: separator < 0 ? property.name : property.name.slice(separator + 1),
-            };
+            const row = { ...property, name: separator < 0 ? property.name : property.name.slice(separator + 1) };
 
             const properties = groups.get(group);
 
@@ -110,8 +107,8 @@ export default function ViewLayout({
         title: `${component.label} | LongLink Documentation`,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
-            ...(toc ?? (runtime ? [{ id: 'reference', label: 'Reference', level: 2 }] : [])),
-        ],
+            ...(toc ?? (runtime ? [{ id: 'reference', label: 'Reference', level: 2 }] : []))
+        ]
     };
 
     // Render the example first and keep the property reference in a separate tab.
@@ -163,8 +160,8 @@ export default function ViewLayout({
                                                     </Stack>
                                                     <Text type="supporting">{property.description}</Text>
                                                 </Stack>
-                                            ),
-                                        },
+                                            )
+                                        }
                                     ]}
                                 />
                             ))}

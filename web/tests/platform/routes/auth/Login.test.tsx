@@ -45,8 +45,8 @@ it('routes login and password recovery through the same standalone layout', () =
             { path: 'login', file: './routes/auth/Login.tsx' },
             { path: 'auth/register', file: './routes/auth/Register.tsx' },
             { path: 'auth/forgot-password', file: './routes/auth/ForgotPassword.tsx' },
-            { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' },
-        ],
+            { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' }
+        ]
     });
 });
 
@@ -55,8 +55,8 @@ it.each([
     {
         returnTo: '/mcp/authorize?client_id=trusted&state=original',
         destination: '/mcp/authorize?client_id=trusted&state=original',
-        content: 'Review client requests access to Review solution.',
-    },
+        content: 'Review client requests access to Review solution.'
+    }
 ])(
     'keeps rejected drafts and retries to the permitted destination: $destination',
     async ({ returnTo, destination, content }) => {
@@ -85,7 +85,7 @@ it.each([
                 return Response.json({
                     client_name: 'Review client',
                     solution_name: 'Review solution',
-                    redirect_uri: 'https://client.example/callback',
+                    redirect_uri: 'https://client.example/callback'
                 });
             }
 
@@ -158,7 +158,7 @@ it.each([
                     // Keep the editable form in place and report the backend message once.
                     await vi.waitFor(() => expect(errors).toHaveLength(1));
                     expect(errors).toEqual([
-                        expect.objectContaining({ status: 400, message: 'Invalid email or password.' }),
+                        expect.objectContaining({ status: 400, message: 'Invalid email or password.' })
                     ]);
                     expect(output.textContent).not.toContain('Unable to load this page.');
                     expect(output.querySelector('input[name="password"]')).toBe(password);
@@ -187,7 +187,7 @@ it.each([
                     expect(identityReads).toBeGreaterThan(anonymousReads);
                     expect(attempts).toEqual([
                         { email: 'owner@example.com', password: 'Wrong-password-123' },
-                        { email: 'owner@example.com', password: 'Correct-password-123' },
+                        { email: 'owner@example.com', password: 'Correct-password-123' }
                     ]);
                     expect(errors).toHaveLength(1);
                 },
@@ -343,8 +343,8 @@ it('uses document navigation for enabled OAuth providers without submitting pass
                 expect(errors).toEqual([
                     expect.objectContaining({
                         status: 400,
-                        message: 'Unable to sign in with this provider. Please try again.',
-                    }),
+                        message: 'Unable to sign in with this provider. Please try again.'
+                    })
                 ]);
             },
             `/login?${new URLSearchParams({ oauth_error: '1', return_to: destination })}`

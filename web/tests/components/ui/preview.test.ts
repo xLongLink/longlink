@@ -14,7 +14,7 @@ it('does not request host capability for an inline image', async () => {
 
             return new Blob();
         },
-        download: async () => undefined,
+        download: async () => undefined
     };
 
     function Probe() {

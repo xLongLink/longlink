@@ -14,7 +14,7 @@ it.each([
     ['time', '5:04 PM'],
     ['system_date', '2026-02-19'],
     ['system_date_time', '2026-02-19 17:04:05'],
-    ['system_time', '17:04:05'],
+    ['system_time', '17:04:05']
 ] as const)('preserves the %s format in the viewer’s local time', (format, expected) => {
     // A local instant distinguishes viewer-zone formatting from forced UTC formatting.
     const date = new Date(2026, 1, 19, 17, 4, 5);
@@ -63,7 +63,7 @@ it.each([
     [-86400, 'yesterday'],
     [-172800, '2 days ago'],
     [-2592000, '1 month ago'],
-    [-31536000, '1 year ago'],
+    [-31536000, '1 year ago']
 ])('retains relative tier boundaries at %s seconds', (seconds, expected) => {
     expect(formatRelativeTimestamp(new Date(1_800_000_000_000 + seconds * 1000), 1_800_000_000_000)).toBe(expected);
 });
@@ -79,7 +79,7 @@ it('exposes copyable full-date details on keyboard focus without becoming a butt
         hour: 'numeric',
         minute: '2-digit',
         second: '2-digit',
-        timeZoneName: 'short',
+        timeZoneName: 'short'
     };
 
     await withMounted(<Timestamp value={date.toISOString()} format="relative" />, async (output) => {

@@ -6,7 +6,7 @@ import '@/platform/layouts/auth.css';
 export function AuthLayout({
     children,
     description,
-    title,
+    title
 }: {
     children: ReactNode;
     description: ReactNode;

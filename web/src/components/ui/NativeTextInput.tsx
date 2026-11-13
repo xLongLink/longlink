@@ -11,12 +11,7 @@ export function NativeTextInput({
     id: providedId,
     required,
     ...props
-}: ComponentProps<typeof Input> & {
-    label: string;
-    description?: string;
-    labelHidden?: boolean;
-    error?: string;
-}) {
+}: ComponentProps<typeof Input> & { label: string; description?: string; labelHidden?: boolean; error?: string }) {
     // Keep labels, descriptions, and validation feedback attached to the same native control.
     const generatedId = useId();
     const id = providedId ?? generatedId;

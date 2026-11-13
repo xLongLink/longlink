@@ -12,122 +12,86 @@ export default function ButtonsPage() {
         <ViewLayout
             name="Button"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Button text and optional icons.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Button text and optional icons.' },
                 {
                     name: 'variant',
                     type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
-                    description: 'Visual style variant.',
+                    description: 'Visual style variant.'
                 },
                 {
                     name: 'size',
                     type: '"xs" | "sm" | "default" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"',
-                    description: 'Size variant.',
+                    description: 'Size variant.'
                 },
-                {
-                    name: 'type',
-                    type: '"button" | "submit" | "reset"',
-                    description: 'HTML button type attribute.',
-                },
-                {
-                    name: 'name',
-                    type: 'string',
-                    description: 'HTML name attribute for form submission.',
-                },
+                { name: 'type', type: '"button" | "submit" | "reset"', description: 'HTML button type attribute.' },
+                { name: 'name', type: 'string', description: 'HTML name attribute for form submission.' },
                 {
                     name: 'value',
                     type: 'string | number | readonly string[]',
-                    description: 'HTML value attribute for form submission.',
+                    description: 'HTML value attribute for form submission.'
                 },
-                {
-                    name: 'form',
-                    type: 'string',
-                    description: 'Associates the button with a form element by ID.',
-                },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables the button.',
-                },
+                { name: 'form', type: 'string', description: 'Associates the button with a form element by ID.' },
+                { name: 'disabled', type: 'boolean', description: 'Disables the button.' },
                 {
                     name: 'focusableWhenDisabled',
                     type: 'boolean',
-                    description: 'Allows disabled buttons to remain focusable when explicitly enabled.',
+                    description: 'Allows disabled buttons to remain focusable when explicitly enabled.'
                 },
                 {
                     name: 'ActionButton.href',
                     type: 'string',
-                    description: 'Scoped destination for the custom asynchronous action button.',
+                    description: 'Scoped destination for the custom asynchronous action button.'
                 },
                 {
                     name: 'onClick',
                     type: '(event: React.MouseEvent<HTMLButtonElement>) => void',
-                    description: 'Native shadcn button event handler.',
+                    description: 'Native shadcn button event handler.'
                 },
                 {
                     name: 'ActionButton.onClick',
                     type: '(event) => void | Promise<void>',
                     description:
-                        'Custom adapter that awaits actions with loading feedback and duplicate-activation protection.',
+                        'Custom adapter that awaits actions with loading feedback and duplicate-activation protection.'
                 },
-                {
-                    name: 'IconButton.label',
-                    type: 'string',
-                    description: 'Accessible label for the icon-only button.',
-                },
-                {
-                    name: 'IconButton.icon',
-                    type: 'StoneIconName',
-                    description: 'Icon displayed inside the button.',
-                },
+                { name: 'IconButton.label', type: 'string', description: 'Accessible label for the icon-only button.' },
+                { name: 'IconButton.icon', type: 'StoneIconName', description: 'Icon displayed inside the button.' },
                 {
                     name: 'IconButton.variant',
                     type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
-                    description: 'Visual style variant.',
+                    description: 'Visual style variant.'
                 },
-                {
-                    name: 'IconButton.size',
-                    type: '"xs" | "sm" | "default" | "lg"',
-                    description: 'Icon button size.',
-                },
-                {
-                    name: 'IconButton.isDisabled',
-                    type: 'boolean',
-                    description: 'Disables the icon button.',
-                },
+                { name: 'IconButton.size', type: '"xs" | "sm" | "default" | "lg"', description: 'Icon button size.' },
+                { name: 'IconButton.isDisabled', type: 'boolean', description: 'Disables the icon button.' },
                 {
                     name: 'IconButton.onClick',
                     type: '(event: ViewMouseEvent) => void | Promise<void>',
-                    description: 'Runs an action with automatic loading and duplicate-click prevention.',
+                    description: 'Runs an action with automatic loading and duplicate-click prevention.'
                 },
                 {
                     type: 'ReactNode',
                     description: 'ActionButton or IconButton children for coordinated keyboard navigation.',
-                    name: 'ButtonGroup.children',
+                    name: 'ButtonGroup.children'
                 },
                 {
                     type: 'string',
                     description: 'Accessible label for the group (aria-label).',
-                    name: 'ButtonGroup.label',
+                    name: 'ButtonGroup.label'
                 },
                 {
                     type: '"horizontal" | "vertical"',
                     description: 'Layout direction of the button group.',
-                    name: 'ButtonGroup.orientation',
+                    name: 'ButtonGroup.orientation'
                 },
                 {
                     type: '"sm" | "lg" | "default"',
                     description: 'Default size for buttons in the group. Individual buttons can override.',
-                    name: 'ButtonGroup.size',
+                    name: 'ButtonGroup.size'
                 },
                 {
                     type: 'boolean',
                     description: 'Whether all buttons in the group are disabled.',
-                    name: 'ButtonGroup.isDisabled',
-                },
+                    name: 'ButtonGroup.isDisabled'
+                }
             ]}
             example={{
                 title: 'Button',
@@ -178,7 +142,7 @@ export default function ButtonsPage() {
       </Stack>
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

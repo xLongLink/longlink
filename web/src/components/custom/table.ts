@@ -64,8 +64,8 @@ export function tableColumns<T extends Record<string, unknown>>(
             key,
             header,
             width: proportional(contentLength <= 6 ? 1 : contentLength <= 15 ? 2 : 3, {
-                minWidth: Math.max(wordLength * 8, 60),
-            }),
+                minWidth: Math.max(wordLength * 8, 60)
+            })
         };
     });
 }
@@ -100,7 +100,7 @@ export function tableWidths<T extends Record<string, unknown>>(columns: TableCol
 
         return {
             width: pixels ? `calc((100% - ${pixels}px) * ${share})` : `${share * 100}%`,
-            minWidth: flexibleMinimum * share,
+            minWidth: flexibleMinimum * share
         };
     });
 }

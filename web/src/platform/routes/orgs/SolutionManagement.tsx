@@ -41,7 +41,7 @@ type SolutionAction =
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
     membership,
-    presentation,
+    presentation
 }: {
     membership: OrganizationContext;
     presentation: 'overview' | 'settings';
@@ -200,7 +200,7 @@ export default function SolutionManagement({
                                         )}
                                         {row.description && <Text type="supporting">{row.description}</Text>}
                                     </Stack>
-                                ),
+                                )
                             },
                             ...(presentation === 'settings'
                                 ? [
@@ -209,8 +209,8 @@ export default function SolutionManagement({
                                           header: 'Version',
                                           align: 'end' as const,
                                           width: proportional(0.25, { minWidth: 0 }),
-                                          renderCell: (row: Solution) => row.deployed_version || '—',
-                                      },
+                                          renderCell: (row: Solution) => row.deployed_version || '—'
+                                      }
                                   ]
                                 : []),
                             ...(presentation === 'settings' && canMaintain
@@ -234,18 +234,15 @@ export default function SolutionManagement({
                                                                         <Shield className="size-4" aria-hidden="true" />
                                                                     ),
                                                                     onClick: () =>
-                                                                        setSelected({
-                                                                            kind: 'permissions',
-                                                                            id: row.id,
-                                                                        }),
-                                                                },
+                                                                        setSelected({ kind: 'permissions', id: row.id })
+                                                                }
                                                             ]
                                                           : []),
                                                       {
                                                           id: 'tags',
                                                           label: 'Tags',
                                                           icon: <Tags className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'tags', solution: row }),
+                                                          onClick: () => setSelected({ kind: 'tags', solution: row })
                                                       },
                                                       ...(row.desired_revision_id &&
                                                       !row.deployment_pending &&
@@ -269,25 +266,25 @@ export default function SolutionManagement({
                                                                                       kind: 'update',
                                                                                       item: {
                                                                                           id: row.id,
-                                                                                          name: row.name,
-                                                                                      },
+                                                                                          name: row.name
+                                                                                      }
                                                                                   }
                                                                         );
-                                                                    },
-                                                                },
+                                                                    }
+                                                                }
                                                             ]
                                                           : []),
                                                       {
                                                           id: 'logs',
                                                           label: 'Logs',
                                                           icon: <Logs className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'logs', id: row.id }),
+                                                          onClick: () => setSelected({ kind: 'logs', id: row.id })
                                                       },
                                                       {
                                                           id: 'mcp',
                                                           label: 'MCP',
                                                           icon: <Plug className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'mcp', id: row.id }),
+                                                          onClick: () => setSelected({ kind: 'mcp', id: row.id })
                                                       },
                                                       {
                                                           id: 'delete',
@@ -296,15 +293,15 @@ export default function SolutionManagement({
                                                           onClick: () =>
                                                               setSelected({
                                                                   kind: 'delete',
-                                                                  item: { id: row.id, name: row.name },
-                                                              }),
-                                                      },
+                                                                  item: { id: row.id, name: row.name }
+                                                              })
+                                                      }
                                                   ]}
                                               />
-                                          ),
-                                      },
+                                          )
+                                      }
                                   ]
-                                : []),
+                                : [])
                         ]}
                     />
                 )}
@@ -427,7 +424,7 @@ export default function SolutionManagement({
                                   // Refresh Solutions only after the delete request succeeds.
                                   await api.delete(`/api/v1/solutions/${selected.item.id}`);
                                   await onSuccess();
-                              },
+                              }
                           }
                         : null
                 }

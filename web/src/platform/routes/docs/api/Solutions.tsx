@@ -10,14 +10,14 @@ const solutionRoles = [
     {
         name: 'write',
         access: 'Read access plus create and update Solution data with POST, PUT, and PATCH requests',
-        icon: ArrowUp,
+        icon: ArrowUp
     },
     {
         name: 'maintain',
         access: 'Write access plus DELETE requests, Solution deployment, and runtime logs',
-        icon: Wrench,
+        icon: Wrench
     },
-    { name: 'admin', access: 'Full access to Solution requests, deployment, and runtime logs', icon: CheckCheck },
+    { name: 'admin', access: 'Full access to Solution requests, deployment, and runtime logs', icon: CheckCheck }
 ];
 
 const article = {
@@ -25,7 +25,7 @@ const article = {
     description: 'Learn how the Platform deploys Solutions and manages their resources and permissions.',
     toc: [{ id: 'solutions', label: 'Solutions', level: 1 }],
     lastUpdated: '2026-10-18',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Solutions.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Solutions.tsx'
 };
 
 export default function Solutions() {
@@ -61,8 +61,8 @@ export default function Solutions() {
                                         </Stack>
                                         <Text type="supporting">{access}</Text>
                                     </Stack>
-                                ),
-                            },
+                                )
+                            }
                         ]}
                     />
                 </Stack>

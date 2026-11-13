@@ -72,7 +72,7 @@ export function Link({
     download,
     disabled = false,
     onClick,
-    children,
+    children
 }: {
     to?: string;
     download?: string;
@@ -154,7 +154,7 @@ export function Link({
         onClick: activate,
         onKeyDown: (event: React.KeyboardEvent<HTMLAnchorElement | HTMLButtonElement>) => {
             if (blocked && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
-        },
+        }
     };
 
     return (

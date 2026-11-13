@@ -13,38 +13,30 @@ export default function CollapsiblePage() {
                 {
                     name: 'children',
                     type: 'ReactNode',
-                    description: 'CollapsibleTrigger and CollapsibleContent elements.',
+                    description: 'CollapsibleTrigger and CollapsibleContent elements.'
                 },
-                {
-                    name: 'defaultOpen',
-                    type: 'boolean',
-                    description: 'Initial open state.',
-                },
-                {
-                    name: 'open',
-                    type: 'boolean',
-                    description: 'Controlled open state.',
-                },
+                { name: 'defaultOpen', type: 'boolean', description: 'Initial open state.' },
+                { name: 'open', type: 'boolean', description: 'Controlled open state.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents toggling without changing the open state.',
+                    description: 'Prevents toggling without changing the open state.'
                 },
                 {
                     name: 'onOpenChange',
                     type: '(open: boolean, eventDetails) => void',
-                    description: 'Requests an open-state change.',
+                    description: 'Requests an open-state change.'
                 },
                 {
                     name: 'CollapsibleTrigger.render',
                     type: 'ReactElement',
-                    description: 'Custom trigger element, such as a Button.',
+                    description: 'Custom trigger element, such as a Button.'
                 },
                 {
                     name: 'CollapsibleContent.keepMounted',
                     type: 'boolean',
-                    description: 'Keeps hidden content mounted to preserve local state. Defaults to false.',
-                },
+                    description: 'Keeps hidden content mounted to preserve local state. Defaults to false.'
+                }
             ]}
             example={{
                 title: 'Collapsible',
@@ -60,7 +52,7 @@ export default function CollapsiblePage() {
       </CollapsibleContent>
     </Collapsible>
   );
-}`,
+}`
             }}
         />
     );

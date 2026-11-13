@@ -123,9 +123,7 @@ it('uses vertical content geometry for multiline overflow and removes details wh
 
     const ranges = vi.spyOn(document, 'createRange').mockImplementation(() => {
         const range = createRange();
-        Object.defineProperty(range, 'getBoundingClientRect', {
-            value: () => new DOMRect(0, 0, 80, contentHeight),
-        });
+        Object.defineProperty(range, 'getBoundingClientRect', { value: () => new DOMRect(0, 0, 80, contentHeight) });
 
         return range;
     });

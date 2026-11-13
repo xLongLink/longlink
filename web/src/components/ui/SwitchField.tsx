@@ -6,11 +6,7 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 
 /** Custom labeled adapter with resettable values and focusable disabled controls. */
 export function SwitchField(
-    props: FieldProps & {
-        value?: boolean;
-        defaultChecked?: boolean;
-        onChange?: (value: boolean) => void;
-    }
+    props: FieldProps & { value?: boolean; defaultChecked?: boolean; onChange?: (value: boolean) => void }
 ) {
     // Keep optional local state attached to the real ancestor form for reset.
     const { ref, value, onChange } = useValue(props.value, props.defaultChecked ?? false, props.onChange);

@@ -8,13 +8,13 @@ import {
     AlertDialogContent,
     AlertDialogTitle,
     AlertDialogDescription,
-    AlertDialogFooter,
+    AlertDialogFooter
 } from '@/components/shadcn/alert-dialog';
 
 /** Tracks deletion for its mounted lifetime; callers own the resource, mounting, and success-only closure. */
 export function DeletionDialog({
     confirmation,
-    onClose,
+    onClose
 }: {
     confirmation: { title: string; description: string; onDelete: () => Promise<void> } | null;
     onClose: () => void;

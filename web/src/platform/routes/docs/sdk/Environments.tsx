@@ -9,11 +9,11 @@ const article = {
     description: 'Configure environments for local development and deployed LongLink services.',
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
-        { id: 'example', label: 'Example', level: 2 },
+        { id: 'example', label: 'Example', level: 2 }
     ],
     lastUpdated: '2026-09-26',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Environments.tsx',
-    title: 'Environments | LongLink Documentation',
+    title: 'Environments | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {

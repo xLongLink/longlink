@@ -36,8 +36,8 @@ export function selectorOptions(options: SelectorOptionType[]): PickerOptionType
                 ...option,
                 options: option.options.map((entry) => ({
                     ...entry,
-                    icon: entry.icon ? <Icon icon={entry.icon} size="sm" /> : undefined,
-                })),
+                    icon: entry.icon ? <Icon icon={entry.icon} size="sm" /> : undefined
+                }))
             };
 
         // Keep selected values and menu rows on the same icon-loading path.

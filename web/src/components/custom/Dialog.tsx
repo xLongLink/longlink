@@ -49,7 +49,7 @@ export function Dialog(props: {
                     maxWidth: 'calc(100dvw - var(--spacing-4) * 2)',
                     height: fullscreen
                         ? '95dvh'
-                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4))',
+                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4))'
                 }}
                 data-fullscreen={fullscreen || undefined}
                 aria-label={props.title ? undefined : 'Dialog'}
@@ -77,7 +77,7 @@ export function Dialog(props: {
                             className="view-dialog-content"
                             style={{
                                 paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
-                                paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0,
+                                paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0
                             }}
                         >
                             {props.children}

@@ -8,7 +8,7 @@ import {
     StepperPanel,
     StepperSeparator,
     StepperTitle,
-    StepperTrigger,
+    StepperTrigger
 } from '@/components/ui/Stepper';
 
 /** Documents the installed ReUI Stepper composition. */
@@ -20,38 +20,38 @@ export default function StepperPage() {
                 {
                     name: 'value / defaultValue',
                     type: 'number',
-                    description: 'Controlled or initial step value. defaultValue defaults to 1.',
+                    description: 'Controlled or initial step value. defaultValue defaults to 1.'
                 },
                 {
                     name: 'onValueChange',
                     type: '(value: number) => void',
-                    description: 'Receives trigger activation. Keyboard arrows move focus without activating.',
+                    description: 'Receives trigger activation. Keyboard arrows move focus without activating.'
                 },
                 {
                     name: 'orientation',
                     type: '"horizontal" | "vertical"',
-                    description: 'Navigation direction; defaults to horizontal.',
+                    description: 'Navigation direction; defaults to horizontal.'
                 },
                 {
                     name: 'indicators',
                     type: '{ active?: ReactNode; completed?: ReactNode; inactive?: ReactNode; loading?: ReactNode }',
-                    description: 'Overrides indicator content for each step state.',
+                    description: 'Overrides indicator content for each step state.'
                 },
                 {
                     name: 'StepperItem',
                     type: 'step: number; completed?: boolean; disabled?: boolean; loading?: boolean',
-                    description: 'Supplies step state to its compound children.',
+                    description: 'Supplies step state to its compound children.'
                 },
                 {
                     name: 'StepperTrigger.render',
                     type: 'ReactElement | render function',
-                    description: 'Base UI render composition for the activation control.',
+                    description: 'Base UI render composition for the activation control.'
                 },
                 {
                     name: 'StepperContent',
                     type: 'value: number; forceMount?: boolean',
-                    description: 'Shows the matching value. forceMount keeps inactive content mounted and hidden.',
-                },
+                    description: 'Shows the matching value. forceMount keeps inactive content mounted and hidden.'
+                }
             ]}
             example={{
                 title: 'Stepper',
@@ -75,7 +75,7 @@ export default function StepperPage() {
     <StepperContent value={2}>Review details.</StepperContent>
     <StepperContent value={3}>Complete the process.</StepperContent>
   </StepperPanel>
-</Stepper>`,
+</Stepper>`
             }}
         />
     );

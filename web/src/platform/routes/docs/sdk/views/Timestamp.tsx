@@ -11,20 +11,20 @@ export default function TimestampPage() {
                 {
                     name: 'value',
                     type: 'string | number',
-                    description: 'The date/time to display. Accepts Unix timestamps (seconds) or ISO 8601 strings.',
+                    description: 'The date/time to display. Accepts Unix timestamps (seconds) or ISO 8601 strings.'
                 },
                 {
                     name: 'format',
                     type: '"date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time"',
-                    description: 'Date, time, relative, or Unix-seconds display format.',
-                },
+                    description: 'Date, time, relative, or Unix-seconds display format.'
+                }
             ]}
             example={{
                 title: 'Timestamp',
                 preview: <TimestampExample />,
                 code: `function Example() {
   return <Timestamp value="2026-10-02T12:00:00Z" format="date_time" />;
-}`,
+}`
             }}
         />
     );

@@ -74,7 +74,7 @@ it('allows account credential entry only after the email proof exchange succeeds
                 expect(output.querySelector('input[name="password"]')).not.toBeNull();
                 expect(output.querySelector('button[type="submit"]')?.textContent).toBe('Create account');
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
-                    'POST /api/v1/auth/verify',
+                    'POST /api/v1/auth/verify'
                 ]);
                 expect(errors).toEqual([]);
             },
@@ -221,7 +221,7 @@ it('withholds account credentials and offers a new link when email proof is reje
                 expect(output.querySelector('input[name="name"]')).toBeNull();
                 expect(sessionStorage.getItem(storageKey)).toBeNull();
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
-                    'POST /api/v1/auth/verify',
+                    'POST /api/v1/auth/verify'
                 ]);
                 expect(await requests[0]?.clone().json()).toEqual({ token: 'rejected-registration-proof' });
                 expect(errors).toEqual([]);

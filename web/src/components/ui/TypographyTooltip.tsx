@@ -6,7 +6,7 @@ export function TypographyTooltip({
     children,
     content,
     enabled,
-    placement = 'above',
+    placement = 'above'
 }: {
     children: ReactElement;
     content: string;

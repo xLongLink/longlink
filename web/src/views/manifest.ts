@@ -19,9 +19,7 @@ function isRoute(route: string): boolean {
         });
 }
 
-const runtimeSchema = z.object({
-    version: z.string().regex(/^[a-f0-9]{64}$/),
-});
+const runtimeSchema = z.object({ version: z.string().regex(/^[a-f0-9]{64}$/) });
 
 export type ViewRuntime = z.infer<typeof runtimeSchema>;
 
@@ -39,7 +37,7 @@ const viewSchema = z.object({
                 return false;
             }
         }, 'View path must be solution-relative'),
-    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path'),
+    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path')
 });
 
 export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
@@ -67,7 +65,7 @@ const tabSchema = z.object({
     icon: z
         .string()
         .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-        .optional(),
+        .optional()
 });
 
 // Require one pinned Solution-wide runtime and valid navigation targets for the complete catalog.
@@ -76,7 +74,7 @@ export const manifestSchema = z
         views: viewsSchema,
         runtime: runtimeSchema,
         tabs: z.array(tabSchema).optional(),
-        development: z.boolean().optional(),
+        development: z.boolean().optional()
     })
     .superRefine((manifest, context) => {
         const routes = new Set(manifest.views.map((view) => view.route));
@@ -88,7 +86,7 @@ export const manifestSchema = z
                 context.addIssue({
                     code: 'custom',
                     message: 'Tabs must reference unique Views',
-                    path: ['tabs', index, 'route'],
+                    path: ['tabs', index, 'route']
                 });
             }
 

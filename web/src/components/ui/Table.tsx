@@ -6,5 +6,5 @@ export {
     TableHead,
     TableRow,
     TableCell,
-    TableCaption,
+    TableCaption
 } from '@/components/shadcn/table';

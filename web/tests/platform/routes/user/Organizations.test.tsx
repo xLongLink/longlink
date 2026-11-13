@@ -7,7 +7,7 @@ it('offers onboarding for a user without Organization memberships', () => {
     // Act
     const output = renderPlatform(<Page />, '/user/organizations', [
         ['/api/v1/me/organizations', []],
-        ['/api/v1/me/invitations', []],
+        ['/api/v1/me/invitations', []]
     ]);
 
     // Assert
@@ -22,7 +22,7 @@ it('lists a pending invitation with accept and decline actions instead of onboar
     // Act
     const output = renderPlatform(<Page />, '/user/organizations', [
         ['/api/v1/me/organizations', []],
-        ['/api/v1/me/invitations', [{ id: '00000000-0000-4000-8000-000000000002', organization, role: 'write' }]],
+        ['/api/v1/me/invitations', [{ id: '00000000-0000-4000-8000-000000000002', organization, role: 'write' }]]
     ]);
 
     // Assert

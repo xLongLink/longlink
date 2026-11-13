@@ -12,7 +12,7 @@ it('does not mount the runtime while a resolved Solution is still deploying', ()
         status: 'creating',
         deployment_pending: true,
         desired_revision_id: null,
-        deployed_version: null,
+        deployed_version: null
     });
 
     // Act
@@ -36,7 +36,7 @@ it.each(['read', 'maintain'] as const)('limits failed-deployment logs for the %s
         status: 'failed',
         deployment_pending: false,
         desired_revision_id: null,
-        deployed_version: null,
+        deployed_version: null
     });
 
     // Cached logs must remain undisclosed to members without maintenance access.
@@ -45,7 +45,7 @@ it.each(['read', 'maintain'] as const)('limits failed-deployment logs for the %s
         `/orgs/${membership.organization.id}/solutions/${solution.id}`,
         [
             [`/api/v1/organizations/${membership.organization.id}/solutions`, [solution]],
-            [`/api/v1/solutions/${solution.id}/logs`, ['Private deployment diagnostics']],
+            [`/api/v1/solutions/${solution.id}/logs`, ['Private deployment diagnostics']]
         ],
         '/orgs/:organization/solutions/:solution',
         { ...membership, role }

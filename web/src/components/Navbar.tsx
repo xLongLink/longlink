@@ -10,14 +10,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 const publicLinks = [
     { href: '/blog/', label: 'Blog' },
     { href: '/docs/', label: 'Documentation' },
-    { href: '/pricing/', label: 'Pricing' },
+    { href: '/pricing/', label: 'Pricing' }
 ];
 
 /** Renders public navigation at the page's content width. */
 export function Navbar({
     maxWidth = 1000,
     navigation,
-    expandOnTop = false,
+    expandOnTop = false
 }: {
     maxWidth?: number;
     navigation?: ReactNode;
@@ -58,7 +58,7 @@ export function Navbar({
                           'sticky top-0 z-30',
                           scrolled
                               ? 'border-border bg-background/50 backdrop-blur-sm'
-                              : 'border-transparent bg-transparent',
+                              : 'border-transparent bg-transparent'
                       ]
                     : 'border-border bg-background'
             )}

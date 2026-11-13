@@ -8,5 +8,5 @@ export {
     SelectScrollUpButton,
     SelectSeparator,
     SelectTrigger,
-    SelectValue,
+    SelectValue
 } from '@/components/shadcn/select';

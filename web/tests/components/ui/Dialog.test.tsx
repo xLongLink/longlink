@@ -124,7 +124,7 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         expect(document.activeElement).toBe(trigger);
         expect(activity.mock.calls).toEqual([
             [true, false],
-            [false, false],
+            [false, false]
         ]);
     });
 });
@@ -142,7 +142,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
     );
     expect(activity.mock.calls).toEqual([
         [true, true],
-        [false, true],
+        [false, true]
     ]);
 });
 

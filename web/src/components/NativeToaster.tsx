@@ -38,12 +38,9 @@ export function NativeToaster({ id, onReady }: { id: string; onReady: () => void
             subtree: true,
             childList: true,
             attributes: true,
-            attributeFilter: ['open', 'data-open'],
+            attributeFilter: ['open', 'data-open']
         });
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme', 'dir'],
-        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'dir'] });
 
         return () => {
             observer.disconnect();
@@ -73,12 +70,12 @@ export function NativeToaster({ id, onReady }: { id: string; onReady: () => void
             offset={{
                 right: 'max(var(--spacing-4), env(safe-area-inset-right, 0px))',
                 left: 'max(var(--spacing-4), env(safe-area-inset-left, 0px))',
-                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))',
+                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))'
             }}
             mobileOffset={{
                 right: 'max(var(--spacing-4), env(safe-area-inset-right, 0px))',
                 left: 'max(var(--spacing-4), env(safe-area-inset-left, 0px))',
-                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))',
+                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))'
             }}
             toastOptions={{ classNames: { toast: 'cn-toast' }, closeButtonAriaLabel: 'Dismiss notification' }}
             ref={(element) => {

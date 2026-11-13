@@ -16,8 +16,8 @@ const article = {
     toc: [
         { id: 'first', label: 'First section', level: 2 },
         { id: 'middle', label: 'Middle section', level: 3 },
-        { id: 'last', label: 'Last section', level: 2 },
-    ],
+        { id: 'last', label: 'Last section', level: 2 }
+    ]
 };
 
 /** Keeps real article landmarks, heading targets, and fragment links together. */
@@ -157,7 +157,7 @@ it('tracks passed headings at their scroll margin and selects the final short se
         for (const [id, top] of [
             ['first', 100],
             ['middle', 500],
-            ['last', 1900],
+            ['last', 1900]
         ] as const) {
             const heading = output.querySelector<HTMLElement>(`#${id}`);
 
@@ -198,7 +198,7 @@ it.each(['scrollend', 'wheel', 'hashchange', 'popstate'])(
                 for (const [id, top] of [
                     ['first', 100],
                     ['middle', 500],
-                    ['last', 900],
+                    ['last', 900]
                 ] as const) {
                     const heading = output.querySelector<HTMLElement>(`#${id}`);
 

@@ -10,7 +10,7 @@ import { useId, useRef, useState, type ReactNode } from 'react';
 export default function Publication({
     navigation,
     sideNav,
-    className = 'min-h-0!',
+    className = 'min-h-0!'
 }: {
     navigation?: ReactNode;
     sideNav: ReactNode;

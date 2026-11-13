@@ -129,7 +129,7 @@ it('rejects nonexistent and forbidden dates without submitting a stale saved dat
             expect(submissions.map((data) => data.getAll('due'))).toEqual([
                 ['2028-02-28'],
                 ['2028-02-29'],
-                ['2028-03-02'],
+                ['2028-03-02']
             ]);
             expect(changes).toEqual(['2028-02-29', '2028-03-02']);
             expect(output.querySelector('[role=alert]')).toBeNull();
@@ -307,7 +307,7 @@ it('keeps disabled controls focusable while preventing edits, opening and named 
         </form>,
         async (output) => {
             const controls = [
-                ...output.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input:not([type=hidden]),button'),
+                ...output.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input:not([type=hidden]),button')
             ];
 
             for (const control of controls) {

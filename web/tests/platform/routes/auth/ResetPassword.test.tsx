@@ -151,7 +151,7 @@ it('allows password editing only after the reset token exchange succeeds', async
                 // Assert
                 await vi.waitFor(() => expect(requests).toHaveLength(1));
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
-                    'POST /api/v1/auth/reset-password/verify',
+                    'POST /api/v1/auth/reset-password/verify'
                 ]);
                 expect(await requests[0]?.clone().json()).toEqual({ token: 'reset-proof' });
                 expect(sessionStorage.getItem(storageKey)).toBe('reset-proof');

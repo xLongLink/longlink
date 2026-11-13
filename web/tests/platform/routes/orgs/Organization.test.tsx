@@ -10,7 +10,7 @@ it('offers Solution onboarding for the resolved Organization', () => {
         id: '00000000-0000-4000-8000-000000000003',
         name: 'All',
         kind: 'all',
-        icon: 'app-window',
+        icon: 'app-window'
     });
 
     // Act

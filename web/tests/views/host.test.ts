@@ -27,7 +27,7 @@ describe('Solution request URLs', () => {
         { path: '/../users', message: 'Solution request URL must remain within the solution' },
         { path: '/%252e%252e/users', message: 'Request path must remain within the Solution' },
         { path: 'https://example.com/next', message: 'Solution request URL must be solution-relative' },
-        { path: '//example.com/next', message: 'Solution request URL must be solution-relative' },
+        { path: '//example.com/next', message: 'Solution request URL must be solution-relative' }
     ])('rejects unsafe bridge destination $path', ({ path, message }) => {
         // Act and assert
         expect(() => requestUrl('/api/v1/solutions/selected/proxy/', path)).toThrow(message);
@@ -176,7 +176,7 @@ describe('Solution response loading', () => {
 
     it.each([
         { name: 'missing Content-Length', headers: new Headers() },
-        { name: 'underreported Content-Length', headers: new Headers({ 'Content-Length': '1' }) },
+        { name: 'underreported Content-Length', headers: new Headers({ 'Content-Length': '1' }) }
     ])('accepts a complete response with $name', async ({ headers }) => {
         // Arrange
         const body = new ReadableStream<Uint8Array>({
@@ -184,7 +184,7 @@ describe('Solution response loading', () => {
                 controller.enqueue(new TextEncoder().encode('ab'));
                 controller.enqueue(new TextEncoder().encode('cde'));
                 controller.close();
-            },
+            }
         });
 
         vi.stubGlobal('fetch', async () => new Response(body, { headers }));
@@ -205,13 +205,13 @@ describe('Solution request errors', () => {
         {
             name: 'server diagnostics',
             cause: new ApiError('Database password: server-secret', 500, 'https://internal.example/items'),
-            expected: { error: 'The server could not complete the request. Please try again.', status: 500 },
+            expected: { error: 'The server could not complete the request. Please try again.', status: 500 }
         },
         {
             name: 'network diagnostics',
             cause: new TypeError('Fetch failed at https://internal.example/items?token=transport-secret'),
-            expected: { error: 'Solution request failed. Please try again.' },
-        },
+            expected: { error: 'Solution request failed. Please try again.' }
+        }
     ])('redacts $name before replying to the sandbox', ({ cause, expected }) => {
         // Act
         const failure = requestError(cause);

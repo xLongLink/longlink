@@ -68,20 +68,20 @@ function RegisteredCards({ base }: { base: string }) {
                         <Text className="capitalize">
                             {card.brand.replaceAll('_', ' ')} •••• {card.last4}
                         </Text>
-                    ),
+                    )
                 },
                 {
                     key: 'exp_month',
                     header: 'Expires',
                     width: proportional(1),
-                    renderCell: (card) => `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}`,
+                    renderCell: (card) => `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}`
                 },
                 {
                     key: 'is_default',
                     header: 'Status',
                     width: proportional(1),
-                    renderCell: (card) => (card.is_default ? <Token label="Default" /> : null),
-                },
+                    renderCell: (card) => (card.is_default ? <Token label="Default" /> : null)
+                }
             ]}
         />
     );

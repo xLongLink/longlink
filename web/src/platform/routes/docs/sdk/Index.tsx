@@ -12,11 +12,11 @@ const article = {
     toc: [
         { id: 'solution-sdk', label: 'Business processes, defined as code', level: 1 },
         { id: 'create-a-solution', label: 'Create a Solution', level: 2 },
-        { id: 'local-development', label: 'Local Development', level: 2 },
+        { id: 'local-development', label: 'Local Development', level: 2 }
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Index.tsx',
-    title: 'Business processes, defined as code | LongLink Documentation',
+    title: 'Business processes, defined as code | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {

@@ -8,23 +8,15 @@ export default function HeadingPage() {
         <ViewLayout
             name="Heading"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Heading content.',
-                },
-                {
-                    name: 'level',
-                    type: '1 | 2 | 3 | 4 | 5 | 6',
-                    description: 'Heading level from h1 to h6.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Heading content.' },
+                { name: 'level', type: '1 | 2 | 3 | 4 | 5 | 6', description: 'Heading level from h1 to h6.' }
             ]}
             example={{
                 title: 'Heading',
                 preview: <HeadingExample />,
                 code: `function Example() {
   return <Heading level={2}>Order details</Heading>;
-}`,
+}`
             }}
         />
     );

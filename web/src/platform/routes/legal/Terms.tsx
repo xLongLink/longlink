@@ -9,74 +9,26 @@ const article = {
     description: 'Read the LongLink terms of service.',
     toc: [
         { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
-        {
-            id: 'provider-acceptance-and-eligibility',
-            label: '1. Provider, acceptance and eligibility',
-            level: 2,
-        },
-        {
-            id: 'definitions-and-contract-documents',
-            label: '2. Definitions and contract documents',
-            level: 2,
-        },
-        {
-            id: 'service-and-beta-status',
-            label: '3. Service and beta status',
-            level: 2,
-        },
-        {
-            id: 'accounts-organizations-and-security',
-            label: '4. Accounts, organizations and security',
-            level: 2,
-        },
+        { id: 'provider-acceptance-and-eligibility', label: '1. Provider, acceptance and eligibility', level: 2 },
+        { id: 'definitions-and-contract-documents', label: '2. Definitions and contract documents', level: 2 },
+        { id: 'service-and-beta-status', label: '3. Service and beta status', level: 2 },
+        { id: 'accounts-organizations-and-security', label: '4. Accounts, organizations and security', level: 2 },
         { id: 'acceptable-use', label: '5. Acceptable use', level: 2 },
-        {
-            id: 'usage-and-payments',
-            label: '6. Usage and payments',
-            level: 2,
-        },
-        {
-            id: 'content-privacy-and-data-processing',
-            label: '7. Content and privacy',
-            level: 2,
-        },
-        {
-            id: 'our-technology-and-feedback',
-            label: '8. Our technology and feedback',
-            level: 2,
-        },
+        { id: 'usage-and-payments', label: '6. Usage and payments', level: 2 },
+        { id: 'content-privacy-and-data-processing', label: '7. Content and privacy', level: 2 },
+        { id: 'our-technology-and-feedback', label: '8. Our technology and feedback', level: 2 },
         { id: 'warranties', label: '9. Warranties', level: 2 },
-        {
-            id: 'limitation-of-liability',
-            label: '10. Limitation of liability',
-            level: 2,
-        },
-        {
-            id: 'indemnity-for-business-users',
-            label: '11. Indemnity for business users',
-            level: 2,
-        },
-        {
-            id: 'suspension-deletion-and-termination',
-            label: '12. Suspension and termination',
-            level: 2,
-        },
-        {
-            id: 'changes-to-these-terms',
-            label: '13. Changes to these Terms',
-            level: 2,
-        },
+        { id: 'limitation-of-liability', label: '10. Limitation of liability', level: 2 },
+        { id: 'indemnity-for-business-users', label: '11. Indemnity for business users', level: 2 },
+        { id: 'suspension-deletion-and-termination', label: '12. Suspension and termination', level: 2 },
+        { id: 'changes-to-these-terms', label: '13. Changes to these Terms', level: 2 },
         { id: 'force-majeure', label: '14. Force majeure', level: 2 },
-        {
-            id: 'general-and-governing-law',
-            label: '15. General and governing law',
-            level: 2,
-        },
-        { id: 'contact', label: '16. Contact', level: 2 },
+        { id: 'general-and-governing-law', label: '15. General and governing law', level: 2 },
+        { id: 'contact', label: '16. Contact', level: 2 }
     ],
     lastUpdated: '2026-09-23',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Terms.tsx',
-    title: 'Terms of Service | LongLink',
+    title: 'Terms of Service | LongLink'
 };
 
 /** Renders the terms of service. */

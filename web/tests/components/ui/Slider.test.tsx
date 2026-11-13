@@ -82,7 +82,7 @@ it('preserves caller-authored range labels and repeated form values while exclud
             expect(document.activeElement).toBe(submit);
             expect([...new FormData(form)]).toEqual([
                 ['budget', '15'],
-                ['budget', '35'],
+                ['budget', '35']
             ]);
         }
     );

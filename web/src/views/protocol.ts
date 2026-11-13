@@ -16,7 +16,7 @@ export const viewportMessageSchema = z
         type: z.literal('viewport'),
         top: z.number().nonnegative(),
         bottom: z.number().nonnegative(),
-        height: z.number().nonnegative(),
+        height: z.number().nonnegative()
     })
     .strict();
 
@@ -37,7 +37,7 @@ export const requestSchema = z
         method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
         json: z.json().optional(),
         form: z.array(z.tuple([z.string(), z.union([z.string(), z.instanceof(Blob)])])).optional(),
-        binary: z.boolean().optional(),
+        binary: z.boolean().optional()
     })
     .strict()
     .superRefine((command, context) => {
@@ -60,16 +60,12 @@ export const downloadSchema = z
             .string()
             .min(1)
             .max(256)
-            .regex(/^[^/\\\p{Cc}]+$/u),
+            .regex(/^[^/\\\p{Cc}]+$/u)
     })
     .strict();
 
 export const iconSchema = z
-    .object({
-        type: z.literal('icon'),
-        id: z.number().int().nonnegative(),
-        name: z.string().min(1),
-    })
+    .object({ type: z.literal('icon'), id: z.number().int().nonnegative(), name: z.string().min(1) })
     .strict();
 
 export const previewSchema = z
@@ -77,7 +73,7 @@ export const previewSchema = z
         type: z.literal('preview'),
         id: z.number().int().nonnegative(),
         path: z.string().min(1),
-        title: z.string().min(1).max(256),
+        title: z.string().min(1).max(256)
     })
     .strict();
 
@@ -107,13 +103,13 @@ export const iconDataSchema = z.object({
                         'y1',
                         'y2',
                         'fill',
-                        'points',
+                        'points'
                     ]),
                     z.string().max(8192)
-                ),
+                )
             ])
         )
-        .max(64),
+        .max(64)
 });
 
 export const commandSchema = z.discriminatedUnion('type', [
@@ -124,13 +120,13 @@ export const commandSchema = z.discriminatedUnion('type', [
         .object({
             type: z.literal('modal'),
             depth: z.number().int().min(0).max(MAX_MODAL_DEPTH),
-            fullscreen: z.boolean().optional(),
+            fullscreen: z.boolean().optional()
         })
         .strict(),
     z.object({ type: z.literal('navigate'), path: z.string().min(1), newTab: z.boolean().optional() }).strict(),
     downloadSchema,
     previewSchema,
-    iconSchema,
+    iconSchema
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;

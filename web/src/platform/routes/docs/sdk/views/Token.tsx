@@ -12,39 +12,22 @@ export default function TokenPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Visible text and accessible name for the token. Long labels truncate to fit.',
+                    description: 'Visible text and accessible name for the token. Long labels truncate to fit.'
                 },
-                {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'The size of the token.',
-                },
-                {
-                    name: 'icon',
-                    type: 'StoneIconName',
-                    description: 'Optional icon rendered before the label.',
-                },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables the token.',
-                },
-                {
-                    name: 'description',
-                    type: 'string',
-                    description: 'Accessible description of the tag or selection.',
-                },
+                { name: 'size', type: '"sm" | "lg" | "md"', description: 'The size of the token.' },
+                { name: 'icon', type: 'StoneIconName', description: 'Optional icon rendered before the label.' },
+                { name: 'disabled', type: 'boolean', description: 'Disables the token.' },
+                { name: 'description', type: 'string', description: 'Accessible description of the tag or selection.' },
                 {
                     name: 'onClick',
                     type: '() => void',
-                    description:
-                        'Runs when the token is clicked. Use Button or Link for primary actions or navigation.',
+                    description: 'Runs when the token is clicked. Use Button or Link for primary actions or navigation.'
                 },
                 {
                     name: 'onRemove',
                     type: '() => void',
-                    description: 'Shows a remove button and runs when it is clicked.',
-                },
+                    description: 'Shows a remove button and runs when it is clicked.'
+                }
             ]}
             example={{
                 title: 'Interests',
@@ -56,7 +39,7 @@ export default function TokenPage() {
       <Token label="Open source" />
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

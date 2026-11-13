@@ -14,10 +14,7 @@ import { NativeButton as Button } from '@/components/ui/NativeButton';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
-    const form = useForm<EmailPayload>({
-        defaultValues: { email: '' },
-        resolver: zodResolver(emailPayloadSchema),
-    });
+    const form = useForm<EmailPayload>({ defaultValues: { email: '' }, resolver: zodResolver(emailPayloadSchema) });
 
     const confirmation = 'If an account exists for that email, password reset instructions are on the way.';
     const { root, channel } = useAnnouncement(form.formState.isSubmitSuccessful ? confirmation : '', 'event');

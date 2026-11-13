@@ -29,7 +29,7 @@ export default function OrganizationSolution() {
             refetchInterval: (query) =>
                 query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
                     ? 5000
-                    : false,
+                    : false
         }
     );
 
@@ -50,14 +50,11 @@ export default function OrganizationSolution() {
 
     const deploymentNotice =
         solutionAccess.status === 'creating'
-            ? {
-                  description: 'Please try again in a moment.',
-                  title: 'Solution is being deployed',
-              }
+            ? { description: 'Please try again in a moment.', title: 'Solution is being deployed' }
             : solutionAccess.status === 'failed'
               ? {
                     description: 'Review the failed operation in the Platform administration area.',
-                    title: 'Solution deployment failed',
+                    title: 'Solution deployment failed'
                 }
               : null;
 

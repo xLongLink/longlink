@@ -14,8 +14,8 @@ export default function DropdownMenuPage() {
                 {
                     name: 'onOpenChange',
                     type: '(open: boolean, eventDetails: Menu.Root.ChangeEventDetails) => void',
-                    description: 'Called when the menu requests an open-state change.',
-                },
+                    description: 'Called when the menu requests an open-state change.'
+                }
             ]}
             example={{
                 title: 'DropdownMenu',
@@ -29,7 +29,7 @@ export default function DropdownMenuPage() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}`,
+}`
             }}
         />
     );

@@ -10,10 +10,7 @@ import { emailPayloadSchema, type EmailPayload } from '@/platform/routes/auth/va
 
 /** Exercises the same resolver and field ownership used by account email forms. */
 function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload) => void; labelHidden: boolean }) {
-    const form = useForm<EmailPayload>({
-        defaultValues: { email: '' },
-        resolver: zodResolver(emailPayloadSchema),
-    });
+    const form = useForm<EmailPayload>({ defaultValues: { email: '' }, resolver: zodResolver(emailPayloadSchema) });
 
     return (
         <form noValidate action={() => form.handleSubmit(onSubmit)()}>
@@ -64,7 +61,7 @@ it.each([false, true])(
                 expect(descriptionIds.map((id) => document.getElementById(id)?.textContent)).toEqual([
                     'Use an address you can access.',
                     'Work address',
-                    'Email is required',
+                    'Email is required'
                 ]);
                 expect(submissions).toEqual([]);
 

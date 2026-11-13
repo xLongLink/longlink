@@ -11,24 +11,24 @@ export default function EmptyStatePage() {
                 {
                     name: 'Empty.children',
                     type: 'ReactNode',
-                    description: 'Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia.',
+                    description: 'Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia.'
                 },
                 {
                     name: 'Empty.className',
                     type: 'string',
                     description:
-                        'Native div props are forwarded unchanged. EmptyState is a custom adapter for semantic headings and scoped result announcements.',
+                        'Native div props are forwarded unchanged. EmptyState is a custom adapter for semantic headings and scoped result announcements.'
                 },
                 {
                     name: 'title',
                     type: 'string',
-                    description: 'Custom EmptyState heading with scoped result announcements.',
+                    description: 'Custom EmptyState heading with scoped result announcements.'
                 },
                 {
                     name: 'isCompact',
                     type: 'boolean',
-                    description: 'Custom EmptyState compact spacing for constrained result regions.',
-                },
+                    description: 'Custom EmptyState compact spacing for constrained result regions.'
+                }
             ]}
             example={{
                 title: 'Native composition',
@@ -42,7 +42,7 @@ export default function EmptyStatePage() {
       </EmptyHeader>
     </Empty>
   );
-}`,
+}`
             }}
         />
     );

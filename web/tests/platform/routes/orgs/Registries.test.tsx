@@ -19,12 +19,12 @@ it('shows connection identity without maintenance actions for readers', () => {
         id: '00000000-0000-4000-8000-000000000003',
         provider: 'ghcr',
         host: 'ghcr.io',
-        username: 'acme',
+        username: 'acme'
     });
 
     // Act
     const output = renderPlatform(<Registries base="/api/v1/organizations/acme" canMaintain={false} />, '/', [
-        ['/api/v1/organizations/acme/registries', [connection]],
+        ['/api/v1/organizations/acme/registries', [connection]]
     ]);
 
     // Assert
@@ -42,7 +42,7 @@ it('preserves a replacement credential draft when an earlier registry save compl
         id: '00000000-0000-4000-8000-000000000003',
         provider: 'ghcr',
         host: 'ghcr.io',
-        username: 'acme',
+        username: 'acme'
     });
 
     const errors: unknown[] = [];
@@ -56,7 +56,7 @@ it('preserves a replacement credential draft when an earlier registry save compl
 
     const client = new QueryClient({
         queryCache: new QueryCache({ onError: (error) => errors.push(error) }),
-        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } },
+        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } }
     });
 
     client.setQueryData(['api', path], []);

@@ -10,11 +10,11 @@ const article = {
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },
-        { id: 'contact', label: 'Contact', level: 2 },
+        { id: 'contact', label: 'Contact', level: 2 }
     ],
     lastUpdated: '2026-07-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Impressum.tsx',
-    title: 'Impressum | LongLink',
+    title: 'Impressum | LongLink'
 };
 
 /** Renders the legal notice and company information. */

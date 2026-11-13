@@ -14,7 +14,7 @@ export function FormField({
     error: fieldError,
     name,
     required,
-    disabled,
+    disabled
 }: FieldProps & {
     children: ReactNode;
     fieldRef: RefObject<HTMLElement | null>;

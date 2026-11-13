@@ -33,7 +33,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
                                 title: 'Delete order?',
                                 actionLabel: 'Delete',
                                 actionVariant: 'destructive',
-                                onAction: operation,
+                                onAction: operation
                             })
                         }
                     >

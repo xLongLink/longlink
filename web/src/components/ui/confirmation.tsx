@@ -65,6 +65,6 @@ export function useConfirm() {
                 onCancel={hide}
                 onAction={submit}
             />
-        ) : null,
+        ) : null
     };
 }

@@ -64,7 +64,7 @@ it('activates and removes independently by pointer and keyboard without submitti
                 'remove',
                 'remove',
                 'open',
-                'parent',
+                'parent'
             ]);
         }
     );

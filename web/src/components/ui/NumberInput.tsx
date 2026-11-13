@@ -11,7 +11,7 @@ import {
     InputGroupAddon,
     InputGroupButton,
     InputGroupInput,
-    InputGroupText,
+    InputGroupText
 } from '@/components/shadcn/input-group';
 
 type NumberInputProps = FieldProps & {
@@ -235,7 +235,7 @@ export function NumberInput(props: NumberInputProps) {
                                 setDraft({
                                     value: field.value,
                                     text: event.target.value,
-                                    locale: event.currentTarget.ownerDocument.documentElement.lang,
+                                    locale: event.currentTarget.ownerDocument.documentElement.lang
                                 });
                         }}
                         onFocus={(event) => {
@@ -249,7 +249,7 @@ export function NumberInput(props: NumberInputProps) {
                             setDraft({
                                 value: field.value,
                                 text: String(field.value).replace('.', decimal),
-                                locale: event.currentTarget.ownerDocument.documentElement.lang,
+                                locale: event.currentTarget.ownerDocument.documentElement.lang
                             });
                         }}
                         onBlur={() => commit(true)}

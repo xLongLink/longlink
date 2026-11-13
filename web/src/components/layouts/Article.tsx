@@ -20,14 +20,14 @@ const articleRouteLabels = {
     views: 'Views',
     assets: 'Brand assets',
     values: 'Values',
-    comunication: 'Communication',
+    comunication: 'Communication'
 } satisfies Record<string, string>;
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-    timeZone: 'UTC',
+    timeZone: 'UTC'
 });
 
 type ArticleMetadata = {
@@ -56,7 +56,7 @@ export function DocumentationArticle({ article, children }: { article: ArticleMe
 export function PublicArticle({
     article,
     children,
-    paths,
+    paths
 }: {
     article: ArticleMetadata;
     children: ReactNode;
@@ -76,7 +76,7 @@ function ArticleRenderer({
     children,
     className,
     paths,
-    root,
+    root
 }: {
     article: ArticleMetadata;
     children: ReactNode;
@@ -122,7 +122,7 @@ function ArticleRenderer({
 export function ArticleFooter({
     lastUpdated,
     editUrl,
-    paths = [],
+    paths = []
 }: {
     lastUpdated: string;
     editUrl?: string;

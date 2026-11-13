@@ -19,7 +19,7 @@ import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react
 export default function SolutionPermissions({
     solutionId,
     organizationId,
-    onClose,
+    onClose
 }: {
     solutionId: string;
     organizationId: string;
@@ -34,8 +34,8 @@ export default function SolutionPermissions({
             apiQueryOptions(
                 `/api/v1/organizations/${organizationId}/members`,
                 schemas.zOrganizationMemberAccessResponse.array()
-            ),
-        ],
+            )
+        ]
     });
 
     return (
@@ -57,7 +57,7 @@ function MemberPermissions({
     base,
     members,
     settings,
-    onClose,
+    onClose
 }: {
     base: string;
     members: z.output<typeof schemas.zOrganizationMemberAccessResponse>[];
@@ -70,12 +70,12 @@ function MemberPermissions({
 
     // Load independent assignments together so every member appears in the table.
     const assignments = useSuspenseQueries({
-        queries: members.map(({ user }) => apiQueryOptions(`${base}/members/${user.id}/access`, schemas.zMemberAccess)),
+        queries: members.map(({ user }) => apiQueryOptions(`${base}/members/${user.id}/access`, schemas.zMemberAccess))
     });
 
     const rows = members.map(({ user }, index) => ({
         ...user,
-        role: roles[user.id] ?? assignments[index].data.role ?? '',
+        role: roles[user.id] ?? assignments[index].data.role ?? ''
     }));
 
     // Acknowledge each saved assignment before proceeding so failed saves can be retried safely.
@@ -87,10 +87,7 @@ function MemberPermissions({
                 if (!(member.id in roles)) continue;
                 const path = `${base}/members/${member.id}/access`;
                 await api.put(path, {
-                    json: schemas.zAccessUpdate.parse({
-                        role: member.role || null,
-                        revision_id: settings.revision_id,
-                    }),
+                    json: schemas.zAccessUpdate.parse({ role: member.role || null, revision_id: settings.revision_id })
                 });
                 client.setQueryData<z.output<typeof schemas.zMemberAccess>>(['api', path], (current) =>
                     current ? { ...current, role: member.role || null } : current
@@ -105,7 +102,7 @@ function MemberPermissions({
             }
         },
         onError: reportError,
-        onSuccess: onClose,
+        onSuccess: onClose
     });
 
     return (
@@ -127,7 +124,7 @@ function MemberPermissions({
                                     <Text type="supporting">{member.email}</Text>
                                 </Stack>
                             </Stack>
-                        ),
+                        )
                     },
                     {
                         key: 'role',
@@ -144,13 +141,13 @@ function MemberPermissions({
                                     ...settings.roles.map((value) => ({
                                         value,
                                         label: value,
-                                        icon: value === 'read' ? <Eye /> : value === 'write' ? <Pencil /> : <Shield />,
-                                    })),
+                                        icon: value === 'read' ? <Eye /> : value === 'write' ? <Pencil /> : <Shield />
+                                    }))
                                 ]}
                                 onChange={(role) => setRoles((current) => ({ ...current, [member.id]: role ?? '' }))}
                             />
-                        ),
-                    },
+                        )
+                    }
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="end">

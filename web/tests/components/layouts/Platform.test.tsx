@@ -34,7 +34,7 @@ it('preserves the original trailing-slash tab href', async () => {
             action={null}
             tabs={[
                 { href: '/admin/users/', label: 'Users' },
-                { href: '/admin', label: 'Overview' },
+                { href: '/admin', label: 'Overview' }
             ]}
         >
             <h1>User details</h1>
@@ -60,7 +60,7 @@ it('uses the sidebar and selects the longest nested route with a trailing slash'
             tabs={[
                 { href: '/admin', label: 'Overview' },
                 { href: '/admin/users', label: 'Users' },
-                { href: '/admin/users/active', label: 'Active users' },
+                { href: '/admin/users/active', label: 'Active users' }
             ]}
         >
             <h1>User details</h1>
@@ -148,7 +148,7 @@ it('closes mobile navigation after following a link without collapsing desktop n
             action={null}
             tabs={[
                 { href: '/admin', icon: <Home aria-hidden="true" />, label: 'Overview' },
-                { href: '/admin/users', icon: <Users aria-hidden="true" />, label: 'Users' },
+                { href: '/admin/users', icon: <Users aria-hidden="true" />, label: 'Users' }
             ]}
         >
             <h1>Administration</h1>
@@ -234,7 +234,7 @@ function NavigationPage() {
             action={null}
             tabs={[
                 { href: '/admin', label: 'Overview' },
-                { href: '/admin/users', label: 'Users' },
+                { href: '/admin/users', label: 'Users' }
             ]}
         >
             <output>{pathname}</output>
@@ -319,7 +319,7 @@ it('does not close mobile navigation for cancelled or modified link gestures', a
                 { metaKey: true },
                 { shiftKey: true },
                 { altKey: true },
-                { button: 1 },
+                { button: 1 }
             ]) {
                 await act(async () =>
                     users.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...gesture }))
@@ -345,7 +345,7 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             action={null}
             tabs={[
                 { href: '/solution', label: 'Solution view' },
-                { href: '/admin/users', icon: <Users aria-hidden="true" size={16} />, label: 'Users' },
+                { href: '/admin/users', icon: <Users aria-hidden="true" size={16} />, label: 'Users' }
             ]}
         >
             <input aria-label="Draft" defaultValue="Unsaved" />

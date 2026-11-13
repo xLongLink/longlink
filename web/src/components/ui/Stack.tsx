@@ -49,7 +49,7 @@ export function Stack({ background, ...props }: StackProps) {
                     end: 'flex-end',
                     between: 'space-between',
                     around: 'space-around',
-                    evenly: 'space-evenly',
+                    evenly: 'space-evenly'
                 }[props.justify ?? 'start'],
                 alignItems:
                     props.align === 'start'
@@ -57,7 +57,7 @@ export function Stack({ background, ...props }: StackProps) {
                         : props.align === 'end'
                           ? 'flex-end'
                           : (props.align ?? 'stretch'),
-                flexWrap: props.wrap ?? 'nowrap',
+                flexWrap: props.wrap ?? 'nowrap'
             }}
         >
             {props.children}
@@ -108,7 +108,7 @@ export function StackItem(props: {
                 subtree: true,
                 characterData: true,
                 attributes: true,
-                attributeFilter: ['class', 'dir', 'hidden', 'style'],
+                attributeFilter: ['class', 'dir', 'hidden', 'style']
             });
             observeChildren();
             window.addEventListener('resize', measure);
@@ -150,7 +150,7 @@ export function StackItem(props: {
                         ? 'flex-start'
                         : props.crossAlignSelf === 'end'
                           ? 'flex-end'
-                          : props.crossAlignSelf,
+                          : props.crossAlignSelf
             }}
         >
             {props.children}

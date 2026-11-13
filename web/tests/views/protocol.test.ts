@@ -26,7 +26,7 @@ describe('Solution request body admission', () => {
         // Assert
         expect(result).toMatchObject({
             success: false,
-            error: { issues: [{ path: ['method'], message: 'GET requests cannot send a body' }] },
+            error: { issues: [{ path: ['method'], message: 'GET requests cannot send a body' }] }
         });
     });
 
@@ -40,7 +40,7 @@ describe('Solution request body admission', () => {
         // Assert
         expect(result).toMatchObject({
             success: false,
-            error: { issues: [{ path: ['form'], message: 'Choose JSON or form data' }] },
+            error: { issues: [{ path: ['form'], message: 'Choose JSON or form data' }] }
         });
     });
 

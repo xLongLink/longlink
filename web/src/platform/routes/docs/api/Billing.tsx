@@ -12,10 +12,10 @@ const article = {
     toc: [
         { id: 'billing', label: 'Billing', level: 1 },
         { id: 'payment-methods', label: 'Payment Methods', level: 2 },
-        { id: 'invoices', label: 'Invoices', level: 2 },
+        { id: 'invoices', label: 'Invoices', level: 2 }
     ],
     lastUpdated: '2026-10-17',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Billing.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Billing.tsx'
 };
 
 /** Documents Organization billing in one Platform article using the current pricing constants. */
@@ -37,7 +37,7 @@ export default function Billing() {
                     columns={[
                         { key: 'resource', header: 'Resource', width: proportional(1) },
                         { key: 'included', header: 'Included free', width: proportional(1) },
-                        { key: 'rate', header: 'Monthly excess rate', width: proportional(2) },
+                        { key: 'rate', header: 'Monthly excess rate', width: proportional(2) }
                     ]}
                 />
                 <Heading id="payment-methods" level={2}>

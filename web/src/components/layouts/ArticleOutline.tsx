@@ -146,7 +146,7 @@ export function ArticleOutline({ items }: { items: readonly ArticleOutlineItem[]
         window.history.pushState(window.history.state, '', destinationHash);
         heading.scrollIntoView({
             behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-            block: 'start',
+            block: 'start'
         });
         heading.focus({ preventScroll: true });
 

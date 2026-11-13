@@ -25,11 +25,7 @@ it('keeps modified card clicks native and navigates from the card content', asyn
 
             if (!card || !description) throw new Error('Missing Solution documentation card');
 
-            const modifiedClick = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                ctrlKey: true,
-            });
+            const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
             await act(async () => card.dispatchEvent(modifiedClick));
             expect(modifiedClick.defaultPrevented).toBe(false);

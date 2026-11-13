@@ -8,12 +8,12 @@ export {
     StepperPanel,
     StepperSeparator,
     StepperTitle,
-    StepperTrigger,
+    StepperTrigger
 } from '@/components/reui/stepper';
 
 export type {
     StepperProps,
     StepperContentProps,
     StepperItemProps,
-    StepperTriggerProps,
+    StepperTriggerProps
 } from '@/components/reui/stepper';

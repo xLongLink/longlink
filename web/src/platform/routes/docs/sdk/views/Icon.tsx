@@ -11,20 +11,20 @@ export default function IconPage() {
                 {
                     name: 'icon',
                     type: 'StoneIconName',
-                    description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.',
+                    description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.'
                 },
                 {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
-                    description: 'Icon size; inherits the parent default or falls back to md.',
-                },
+                    description: 'Icon size; inherits the parent default or falls back to md.'
+                }
             ]}
             example={{
                 title: 'Icon',
                 preview: <IconExample />,
                 code: `function Example() {
   return <Icon icon="search" size="md" />;
-}`,
+}`
             }}
         />
     );

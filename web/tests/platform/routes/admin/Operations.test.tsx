@@ -17,12 +17,12 @@ it('keeps unfinished resource history readable without a resolved resource name'
         status: 'scheduled',
         failed: null,
         created_at: '2026-10-16T12:00:00Z',
-        finished_at: null,
+        finished_at: null
     });
 
     // Act
     const output = renderPlatform(<Page />, '/admin/operations', [
-        ['/api/v1/operations?page=1&page_size=25&search=', { items: [operation], total: 1 }],
+        ['/api/v1/operations?page=1&page_size=25&search=', { items: [operation], total: 1 }]
     ]);
 
     // Assert
@@ -50,10 +50,10 @@ it('advances again while the previous result page is still loading', async () =>
                 status: 'scheduled',
                 failed: null,
                 created_at: '2026-10-16T12:00:00Z',
-                finished_at: null,
-            },
+                finished_at: null
+            }
         ],
-        total: 75,
+        total: 75
     });
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {

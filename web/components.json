@@ -4,13 +4,7 @@
     "rsc": false,
     "tsx": true,
     "iconLibrary": "lucide",
-    "tailwind": {
-        "config": "",
-        "css": "src/shadcn.css",
-        "baseColor": "stone",
-        "cssVariables": true,
-        "prefix": ""
-    },
+    "tailwind": { "config": "", "css": "src/shadcn.css", "baseColor": "stone", "cssVariables": true, "prefix": "" },
     "aliases": {
         "components": "@/components",
         "ui": "@/components/shadcn",
@@ -18,7 +12,5 @@
         "lib": "@/lib",
         "hooks": "@/lib/hooks"
     },
-    "registries": {
-        "@reui": "https://reui.io/r/{style}/{name}.json"
-    }
+    "registries": { "@reui": "https://reui.io/r/{style}/{name}.json" }
 }

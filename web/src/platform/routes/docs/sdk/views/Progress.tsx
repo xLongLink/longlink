@@ -10,7 +10,7 @@ export default function ProgressPage() {
                 { name: 'value', type: 'number | null', description: 'Current value; null means indeterminate.' },
                 { name: 'max', type: 'number', description: 'Maximum value; defaults to 100.' },
                 { name: 'children', type: 'ReactNode', description: 'Compose ProgressLabel and ProgressValue.' },
-                { name: 'format', type: 'Intl.NumberFormatOptions', description: 'Value formatting options.' },
+                { name: 'format', type: 'Intl.NumberFormatOptions', description: 'Value formatting options.' }
             ]}
             example={{
                 title: 'Progress',
@@ -22,7 +22,7 @@ export default function ProgressPage() {
       <ProgressValue />
     </Progress>
   );
-}`,
+}`
             }}
         />
     );

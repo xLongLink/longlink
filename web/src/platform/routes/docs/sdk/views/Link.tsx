@@ -15,28 +15,20 @@ export default function LinkPage() {
                 {
                     name: 'to',
                     type: 'string',
-                    description: 'Optional link destination. Omit for a link-styled button action.',
+                    description: 'Optional link destination. Omit for a link-styled button action.'
                 },
                 {
                     name: 'download',
                     type: 'string',
-                    description: 'Download filename for a scoped Solution attachment instead of navigation.',
+                    description: 'Download filename for a scoped Solution attachment instead of navigation.'
                 },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables navigation, downloads, and actions.',
-                },
+                { name: 'disabled', type: 'boolean', description: 'Disables navigation, downloads, and actions.' },
                 {
                     name: 'onClick',
                     type: '(event: ViewMouseEvent) => void | Promise<void>',
-                    description: 'Runs an action with automatic async loading and duplicate-click prevention.',
+                    description: 'Runs an action with automatic async loading and duplicate-click prevention.'
                 },
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Link content',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Link content' }
             ]}
             example={{
                 title: 'Link',
@@ -58,7 +50,7 @@ export default function LinkPage() {
       </Dialog>
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

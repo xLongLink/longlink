@@ -143,8 +143,8 @@ it('preserves step drafts through navigation, final validation, submission, and 
                 [
                     ['customer', 'Acme'],
                     ['notes', 'Deliver tomorrow'],
-                    ['intent', 'save'],
-                ],
+                    ['intent', 'save']
+                ]
             ]);
             await act(async () => form.reset());
             expect(customer.closest('fieldset')?.hidden).toBe(false);

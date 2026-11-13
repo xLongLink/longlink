@@ -61,7 +61,7 @@ it('keeps the homepage dark without fetching account data or following personal 
                     window.dispatchEvent(
                         new StorageEvent('storage', {
                             key: 'longlink:appearance',
-                            newValue: JSON.stringify({ theme: 'light', accent: 'rose' }),
+                            newValue: JSON.stringify({ theme: 'light', accent: 'rose' })
                         })
                     )
                 );

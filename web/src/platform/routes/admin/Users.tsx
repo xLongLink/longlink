@@ -46,7 +46,7 @@ export default function Users() {
                                         <Text type="supporting">{row.email}</Text>
                                     </Stack>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'id',
@@ -59,8 +59,8 @@ export default function Users() {
                                     </Text>
                                     <Text type="supporting">ID: {row.id}</Text>
                                 </Stack>
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>

@@ -58,7 +58,7 @@ it('opens the mobile drawer and exposes its expanded state', async () => {
 
 it.each([
     { href: '/docs/', label: 'Documentation' },
-    { href: '/login/', label: 'Sign In' },
+    { href: '/login/', label: 'Sign In' }
 ])('closes the drawer when $label navigates to $href', async ({ href, label }) => {
     // Arrange
     await withMounted(

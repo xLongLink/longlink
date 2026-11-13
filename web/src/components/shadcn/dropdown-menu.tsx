@@ -49,13 +49,7 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
     return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
 
-function DropdownMenuLabel({
-    className,
-    inset,
-    ...props
-}: MenuPrimitive.GroupLabel.Props & {
-    inset?: boolean;
-}) {
+function DropdownMenuLabel({ className, inset, ...props }: MenuPrimitive.GroupLabel.Props & { inset?: boolean }) {
     return (
         <MenuPrimitive.GroupLabel
             data-slot="dropdown-menu-label"
@@ -71,10 +65,7 @@ function DropdownMenuItem({
     inset,
     variant = 'default',
     ...props
-}: MenuPrimitive.Item.Props & {
-    inset?: boolean;
-    variant?: 'default' | 'destructive';
-}) {
+}: MenuPrimitive.Item.Props & { inset?: boolean; variant?: 'default' | 'destructive' }) {
     return (
         <MenuPrimitive.Item
             data-slot="dropdown-menu-item"
@@ -98,9 +89,7 @@ function DropdownMenuSubTrigger({
     inset,
     children,
     ...props
-}: MenuPrimitive.SubmenuTrigger.Props & {
-    inset?: boolean;
-}) {
+}: MenuPrimitive.SubmenuTrigger.Props & { inset?: boolean }) {
     return (
         <MenuPrimitive.SubmenuTrigger
             data-slot="dropdown-menu-sub-trigger"
@@ -147,9 +136,7 @@ function DropdownMenuCheckboxItem({
     checked,
     inset,
     ...props
-}: MenuPrimitive.CheckboxItem.Props & {
-    inset?: boolean;
-}) {
+}: MenuPrimitive.CheckboxItem.Props & { inset?: boolean }) {
     return (
         <MenuPrimitive.CheckboxItem
             data-slot="dropdown-menu-checkbox-item"
@@ -183,9 +170,7 @@ function DropdownMenuRadioItem({
     children,
     inset,
     ...props
-}: MenuPrimitive.RadioItem.Props & {
-    inset?: boolean;
-}) {
+}: MenuPrimitive.RadioItem.Props & { inset?: boolean }) {
     return (
         <MenuPrimitive.RadioItem
             data-slot="dropdown-menu-radio-item"
@@ -247,5 +232,5 @@ export {
     DropdownMenuShortcut,
     DropdownMenuSub,
     DropdownMenuSubTrigger,
-    DropdownMenuSubContent,
+    DropdownMenuSubContent
 };

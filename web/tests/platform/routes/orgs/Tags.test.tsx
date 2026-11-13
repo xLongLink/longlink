@@ -12,7 +12,7 @@ import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.ge
 const tags = [
     { id: '00000000-0000-4000-8000-000000000001', name: 'Purchases', icon: 'tag', kind: 'tag' },
     { id: '00000000-0000-4000-8000-000000000002', name: 'Operations', icon: 'wrench', kind: 'tag' },
-    { id: '00000000-0000-4000-8000-000000000003', name: 'All Solutions', icon: 'layers', kind: 'all' },
+    { id: '00000000-0000-4000-8000-000000000003', name: 'All Solutions', icon: 'layers', kind: 'all' }
 ].map((tag) => zOrganizationTagResponse.parse(tag));
 
 it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only explicit tag edits: %s', async (edit) => {
@@ -46,7 +46,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
                     solution={{
                         id: '00000000-0000-4000-8000-000000000004',
                         name: 'Purchase approvals',
-                        tag_ids: [tags[0].id],
+                        tag_ids: [tags[0].id]
                     }}
                     onSuccess={async () => {
                         completed();
@@ -114,7 +114,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
                 await act(async () => form.requestSubmit(submit));
                 await vi.waitFor(() => expect(completed).toHaveBeenCalledOnce());
                 expect(writes).toEqual([
-                    { tag_ids: edit === 'cleared' ? [] : edit === 'changed' ? [tags[0].id, tags[1].id] : [tags[0].id] },
+                    { tag_ids: edit === 'cleared' ? [] : edit === 'changed' ? [tags[0].id, tags[1].id] : [tags[0].id] }
                 ]);
             }
         );

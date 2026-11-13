@@ -54,7 +54,7 @@ function activateLink(event: MouseEvent<HTMLElement>) {
             altKey: event.altKey,
             ctrlKey: event.ctrlKey,
             metaKey: event.metaKey,
-            shiftKey: event.shiftKey,
+            shiftKey: event.shiftKey
         })
     );
 }
@@ -114,7 +114,7 @@ export function InteractiveCard({
     maxWidth,
     minHeight,
     inert,
-    'aria-hidden': ariaHidden,
+    'aria-hidden': ariaHidden
 }: InteractiveCardProps) {
     const mode =
         onChange !== undefined
@@ -133,7 +133,7 @@ export function InteractiveCard({
         maxWidth,
         minHeight,
         padding: 'var(--view-card-padding)',
-        '--view-card-padding': `var(--spacing-${String(padding).replace('.', '-')})`,
+        '--view-card-padding': `var(--spacing-${String(padding).replace('.', '-')})`
     };
 
     // The surface forwards only its own gestures; native controls supply keyboard and accessibility semantics.

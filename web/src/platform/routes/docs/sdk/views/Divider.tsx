@@ -8,26 +8,14 @@ export default function DividerPage() {
         <ViewLayout
             name="Divider"
             properties={[
-                {
-                    name: 'label',
-                    type: 'ReactNode',
-                    description: 'Optional label centered on the divider.',
-                },
-                {
-                    name: 'variant',
-                    type: '"subtle" | "strong"',
-                    description: 'Visual weight of the divider line.',
-                },
-                {
-                    name: 'orientation',
-                    type: '"horizontal" | "vertical"',
-                    description: 'Orientation of the divider.',
-                },
+                { name: 'label', type: 'ReactNode', description: 'Optional label centered on the divider.' },
+                { name: 'variant', type: '"subtle" | "strong"', description: 'Visual weight of the divider line.' },
+                { name: 'orientation', type: '"horizontal" | "vertical"', description: 'Orientation of the divider.' },
                 {
                     name: 'isFullBleed',
                     type: 'boolean',
-                    description: 'Extend the divider to container edges with negative margins.',
-                },
+                    description: 'Extend the divider to container edges with negative margins.'
+                }
             ]}
             example={{
                 title: 'Divider',
@@ -40,7 +28,7 @@ export default function DividerPage() {
       <Text>After</Text>
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

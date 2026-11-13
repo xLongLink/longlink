@@ -82,10 +82,10 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                               variant="destructive"
                                               onClick={() => setAction({ kind: 'delete', connection: row })}
                                           />
-                                      ),
-                                  },
+                                      )
+                                  }
                               ]
-                            : []),
+                            : [])
                     ]}
                 />
             </Stack>
@@ -100,7 +100,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                   // Remove the connection only after server dependency checks succeed.
                                   await api.delete(`${base}/registries/${action.connection.id}`);
                                   await onSuccess();
-                              },
+                              }
                           }
                         : null
                 }
@@ -114,7 +114,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
 function RegistryForm({
     base,
     onSuccess,
-    onClose,
+    onClose
 }: {
     base: string;
     onSuccess: () => Promise<void>;

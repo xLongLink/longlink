@@ -10,11 +10,11 @@ const article = {
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'example', label: 'Example', level: 2 },
-        { id: 'file-responses', label: 'Previews and downloads', level: 2 },
+        { id: 'file-responses', label: 'Previews and downloads', level: 2 }
     ],
     lastUpdated: '2026-10-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
-    title: 'Storage | LongLink Documentation',
+    title: 'Storage | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {

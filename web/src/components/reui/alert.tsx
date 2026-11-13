@@ -10,7 +10,7 @@ const alertVariants = cva(
         'rounded-lg',
         'px-3',
         'py-2.5',
-        'has-[>svg]:gap-x-2.5',
+        'has-[>svg]:gap-x-2.5'
     ],
     {
         variants: {
@@ -20,12 +20,10 @@ const alertVariants = cva(
                 info: 'border-info/30 bg-info/4 [&>svg]:text-info',
                 success: 'border-success/30 bg-success/4 [&>svg]:text-success',
                 warning: 'border-warning/30 bg-warning/4 [&>svg]:text-warning',
-                invert: 'border-invert bg-invert text-invert-foreground [&_[data-slot=alert-description]]:text-invert-foreground/70',
-            },
+                invert: 'border-invert bg-invert text-invert-foreground [&_[data-slot=alert-description]]:text-invert-foreground/70'
+            }
         },
-        defaultVariants: {
-            variant: 'default',
-        },
+        defaultVariants: { variant: 'default' }
     }
 );
 

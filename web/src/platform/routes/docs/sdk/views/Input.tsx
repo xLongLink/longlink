@@ -18,50 +18,50 @@ export default function InputPage() {
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Disables interaction and excludes the input from submission.',
+                    description: 'Disables interaction and excludes the input from submission.'
                 },
                 {
                     name: 'maxLength',
                     type: 'number',
-                    description: 'Native UTF-16 length limit, not Python code-point validation.',
+                    description: 'Native UTF-16 length limit, not Python code-point validation.'
                 },
                 {
                     name: 'Field.orientation',
                     type: '"vertical" | "horizontal" | "responsive"',
-                    description: 'Installed field layout.',
+                    description: 'Installed field layout.'
                 },
                 { name: 'FieldLabel.htmlFor', type: 'string', description: 'ID of the labeled control.' },
                 {
                     name: 'FieldDescription / FieldError',
                     type: 'components',
-                    description: 'Compose helper text and error feedback; connect with aria-describedby.',
+                    description: 'Compose helper text and error feedback; connect with aria-describedby.'
                 },
                 {
                     name: 'FieldSet / FieldLegend / FieldGroup / FieldContent / FieldTitle / FieldSeparator',
                     type: 'components',
-                    description: 'Installed shadcn field composition with native element props.',
+                    description: 'Installed shadcn field composition with native element props.'
                 },
                 {
                     name: 'InputGroup / InputGroupInput / InputGroupTextarea',
                     type: 'components',
-                    description: 'Compose grouped controls without changing native input events.',
+                    description: 'Compose grouped controls without changing native input events.'
                 },
                 {
                     name: 'InputGroupAddon.align',
                     type: '"inline-start" | "inline-end" | "block-start" | "block-end"',
-                    description: 'Position an addon within the input group.',
+                    description: 'Position an addon within the input group.'
                 },
                 {
                     name: 'InputGroupButton / InputGroupText',
                     type: 'components',
-                    description: 'Compose actions and text inside a group.',
+                    description: 'Compose actions and text inside a group.'
                 },
                 {
                     name: 'Textarea',
                     type: 'component',
                     description:
-                        'Native textarea props, including rows, defaultValue, disabled, and DOM change events. Distinct from the custom TextArea adapter.',
-                },
+                        'Native textarea props, including rows, defaultValue, disabled, and DOM change events. Distinct from the custom TextArea adapter.'
+                }
             ]}
             example={{
                 title: 'Native name field',
@@ -78,7 +78,7 @@ export default function InputPage() {
 <Field>
   <FieldLabel htmlFor="notes">Notes</FieldLabel>
   <Textarea id="notes" name="notes" defaultValue="Order notes" />
-</Field>`,
+</Field>`
             }}
         />
     );

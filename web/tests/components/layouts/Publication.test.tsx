@@ -10,7 +10,7 @@ import Publication from '@/components/layouts/Publication';
 import {
     PublicationNavigation,
     PublicationNavigationItem,
-    PublicationNavigationSection,
+    PublicationNavigationSection
 } from '@/platform/layouts/PublicationNavigation';
 
 // SAFETY: happy-dom supplies its viewport controller on the test window.
@@ -53,7 +53,7 @@ function PublicationRoutes() {
                                             path: '/docs',
                                             label: 'More guides',
                                             icon: BookOpen,
-                                            children: [{ path: '/docs/second', label: 'Second guide', icon: BookOpen }],
+                                            children: [{ path: '/docs/second', label: 'Second guide', icon: BookOpen }]
                                         }}
                                         pagePath="/docs/first"
                                     />

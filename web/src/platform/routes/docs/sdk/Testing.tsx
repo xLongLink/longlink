@@ -9,11 +9,11 @@ const article = {
     description: 'Test LongLink projects and their Views.',
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
-        { id: 'example', label: 'Example', level: 2 },
+        { id: 'example', label: 'Example', level: 2 }
     ],
     lastUpdated: '2026-09-28',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Testing.tsx',
-    title: 'Testing | LongLink Documentation',
+    title: 'Testing | LongLink Documentation'
 };
 
 export default function DocsArticleRoute() {

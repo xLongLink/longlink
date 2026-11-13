@@ -4,12 +4,7 @@ import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { useId, type KeyboardEvent, type ReactNode } from 'react';
 import './publication-navigation.css';
 
-type PublicationPage = {
-    path: string;
-    label: string;
-    icon: LucideIcon;
-    children?: readonly PublicationPage[];
-};
+type PublicationPage = { path: string; label: string; icon: LucideIcon; children?: readonly PublicationPage[] };
 
 /** Adds optional arrow shortcuts without changing native link activation or Tab order. */
 function moveNavigationFocus(event: KeyboardEvent<HTMLElement>) {
@@ -43,7 +38,7 @@ function moveNavigationFocus(event: KeyboardEvent<HTMLElement>) {
 /** Renders route navigation rather than tabs with nonexistent tab panels. */
 export function PublicationSectionLinks({
     groups,
-    activePath,
+    activePath
 }: {
     groups: readonly { path: string; label: string }[];
     activePath: string;
@@ -89,7 +84,7 @@ export function PublicationNavigationItem({
     page,
     pagePath,
     hash = '',
-    trailingSlash = true,
+    trailingSlash = true
 }: {
     page: PublicationPage;
     pagePath: string;

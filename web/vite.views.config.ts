@@ -18,22 +18,18 @@ export default defineConfig({
 
                 const [script, styles] = await Promise.all([
                     readFile(path.join(directory, 'runtime.js'), 'utf8'),
-                    readFile(path.join(directory, 'runtime.css'), 'utf8'),
+                    readFile(path.join(directory, 'runtime.css'), 'utf8')
                 ]);
 
                 // The host verifies the same digest before executing Solution-owned assets in its sandbox.
                 const version = createHash('sha256').update(`${script}\n${styles}`).digest('hex');
                 await writeFile(path.join(directory, 'runtime.json'), JSON.stringify({ version }));
-            },
-        },
+            }
+        }
     ],
     resolve: { tsconfigPaths: true },
     build: {
-        rolldownOptions: {
-            checks: {
-                moduleLevelDirective: false,
-            },
-        },
+        rolldownOptions: { checks: { moduleLevelDirective: false } },
         outDir: 'build/views',
         emptyOutDir: true,
         lib: {
@@ -41,7 +37,7 @@ export default defineConfig({
             name: 'LongLinkView',
             formats: ['iife'],
             fileName: () => 'runtime.js',
-            cssFileName: 'runtime',
-        },
-    },
+            cssFileName: 'runtime'
+        }
+    }
 });

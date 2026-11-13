@@ -9,7 +9,7 @@ import { Spinner } from '@/components/shadcn/spinner';
 export function FileViewer({
     src,
     title,
-    size,
+    size
 }: {
     /** Scoped Solution operation path returning the file to preview. */
     src: string;

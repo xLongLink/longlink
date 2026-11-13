@@ -9,7 +9,7 @@ const article = {
     toc: [{ id: 'values', label: 'Values', level: 1 }],
     lastUpdated: '2026-10-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/branding/Values.tsx',
-    title: 'Values | LongLink Branding',
+    title: 'Values | LongLink Branding'
 };
 
 /** Renders the values page while its content is being built. */

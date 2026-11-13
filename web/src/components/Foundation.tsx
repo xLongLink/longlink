@@ -8,7 +8,7 @@ const industryNames = [...new Set(industries.flatMap((industry) => industry.name
 
 const useCases = [
     ...industries.flatMap((industry) => industry.useCases),
-    ...sharedUseCaseGroups.flatMap((group) => group.useCases),
+    ...sharedUseCaseGroups.flatMap((group) => group.useCases)
 ];
 
 const copies = [0, 1, 2];

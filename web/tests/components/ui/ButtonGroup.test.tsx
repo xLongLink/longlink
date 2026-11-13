@@ -89,7 +89,7 @@ it('inherits generic size while allowing action and group overrides', () => {
     expect(Array.from(output.querySelectorAll('button'), (button) => button.dataset.size)).toEqual([
         'lg',
         'sm',
-        'default',
+        'default'
     ]);
 });
 
@@ -242,7 +242,7 @@ it.each(['touch', 'pen'] as const)(
                 if (!group || !initial) throw new Error('Expected touch actions');
 
                 const rectangles = [
-                    vi.spyOn(group, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 120, 32)),
+                    vi.spyOn(group, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 120, 32))
                 ];
 
                 for (const [index, control] of controls.entries()) {
@@ -264,7 +264,7 @@ it.each(['touch', 'pen'] as const)(
                                 clientX: x,
                                 clientY: 16,
                                 bubbles: true,
-                                cancelable: true,
+                                cancelable: true
                             })
                         )
                     );
@@ -283,7 +283,7 @@ it.each(['touch', 'pen'] as const)(
                                         touches: type === 'pointerdown' ? [touch] : [],
                                         changedTouches: [touch],
                                         bubbles: true,
-                                        cancelable: true,
+                                        cancelable: true
                                     }
                                 )
                             )
@@ -353,7 +353,7 @@ it('cancels scroll flicks and second fingers without swallowing a later keyboard
                             clientX: 20,
                             clientY: y,
                             bubbles: true,
-                            cancelable: true,
+                            cancelable: true
                         })
                     )
                 );
@@ -439,7 +439,7 @@ it('cancels a pending hold when its group is disabled and permits a fresh press 
                     clientX: 20,
                     clientY: 16,
                     bubbles: true,
-                    cancelable: true,
+                    cancelable: true
                 })
             );
 
@@ -491,7 +491,7 @@ it('lets a grouped menu own its touch press without a second group activation cl
                             clientX: 60,
                             clientY: 16,
                             bubbles: true,
-                            cancelable: true,
+                            cancelable: true
                         })
                     )
                 );
@@ -506,7 +506,7 @@ it('lets a grouped menu own its touch press without a second group activation cl
                             clientX: 60,
                             clientY: 16,
                             bubbles: true,
-                            cancelable: true,
+                            cancelable: true
                         })
                     );
                     trigger.dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }));
@@ -540,7 +540,7 @@ it('expands touch targets without reaching through nested groups or treating a p
 
             const rectangles = [
                 vi.spyOn(controls[0], 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 28, 28)),
-                vi.spyOn(controls[1], 'getBoundingClientRect').mockReturnValue(new DOMRect(28, 0, 28, 28)),
+                vi.spyOn(controls[1], 'getBoundingClientRect').mockReturnValue(new DOMRect(28, 0, 28, 28))
             ];
 
             async function point(type: string, x: number, y: number, pointerType = 'touch') {
@@ -554,7 +554,7 @@ it('expands touch targets without reaching through nested groups or treating a p
                             clientX: x,
                             clientY: y,
                             bubbles: true,
-                            cancelable: true,
+                            cancelable: true
                         })
                     )
                 );

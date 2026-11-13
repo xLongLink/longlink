@@ -10,10 +10,7 @@ import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
-export type OrganizationIdentity = {
-    id: string;
-    name?: string;
-};
+export type OrganizationIdentity = { id: string; name?: string };
 
 /** Switches Organizations from the sidebar account row. */
 export function OrganizationSwitcher({ organization }: { organization: OrganizationIdentity }) {
@@ -25,12 +22,12 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         data: memberships,
         error,
         isPending,
-        refetch,
+        refetch
     } = useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: ({ signal }) => api('/api/v1/me/organizations', { signal }).json(zUserOrganizationMembership.array()),
         enabled: isOpen,
-        retry: false,
+        retry: false
     });
 
     const name =
@@ -93,7 +90,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                         variant: 'ghost',
                                         size: 'lg',
                                         className:
-                                            'w-full min-w-0 justify-start text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50',
+                                            'w-full min-w-0 justify-start text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50'
                                     })}
                                     to={`/orgs/${item.id}`}
                                     aria-current={item.id === organization.id ? 'page' : undefined}

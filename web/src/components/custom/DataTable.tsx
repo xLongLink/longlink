@@ -17,7 +17,7 @@ export function DataTable<T extends Record<string, unknown>>({
     isStriped = false,
     idKey,
     density = 'compact',
-    verticalAlign = 'middle',
+    verticalAlign = 'middle'
 }: {
     data: T[];
     columns?: TableColumn<T>[];
@@ -41,11 +41,7 @@ export function DataTable<T extends Record<string, unknown>>({
             header: () => column.header ?? column.key.charAt(0).toUpperCase() + column.key.slice(1),
             cell: ({ row }) =>
                 column.renderCell ? column.renderCell(row.original) : renderTableValue(row.original[column.key]),
-            meta: {
-                ...widths[index],
-                headerClassName: alignment,
-                cellClassName: alignment,
-            },
+            meta: { ...widths[index], headerClassName: alignment, cellClassName: alignment }
         };
     });
 
@@ -54,7 +50,7 @@ export function DataTable<T extends Record<string, unknown>>({
         data,
         columns: definitions,
         // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Native callers choose a domain key or identity callback.
-        getRowId: idKey ? (row) => String(typeof idKey === 'function' ? idKey(row) : row[idKey]) : undefined,
+        getRowId: idKey ? (row) => String(typeof idKey === 'function' ? idKey(row) : row[idKey]) : undefined
     });
 
     return (
@@ -70,7 +66,7 @@ export function DataTable<T extends Record<string, unknown>>({
                         : verticalAlign === 'bottom'
                           ? '[&_td]:align-bottom'
                           : undefined,
-                bodyRow: hasHover ? 'hover:bg-muted/40' : undefined,
+                bodyRow: hasHover ? 'hover:bg-muted/40' : undefined
             }}
         >
             <DataGridTable<T> renderHeader={resolvedColumns.length > 0} />

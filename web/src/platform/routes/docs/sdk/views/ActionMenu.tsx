@@ -14,23 +14,19 @@ export default function ActionMenuPage() {
                 {
                     name: 'button',
                     type: '{ label: string; variant?: "ghost" | "primary" | "secondary" | "destructive"; size?: "sm" | "lg" | "md"; isDisabled?: boolean; }',
-                    description: 'Label, appearance, size, and disabled state of the menu trigger.',
+                    description: 'Label, appearance, size, and disabled state of the menu trigger.'
                 },
                 {
                     name: 'items',
                     type: 'ActionMenuOption[]',
-                    description: 'Menu actions, links, dividers, and sections.',
+                    description: 'Menu actions, links, dividers, and sections.'
                 },
-                {
-                    name: 'isMenuOpen',
-                    type: 'boolean',
-                    description: 'Controlled menu open state.',
-                },
+                { name: 'isMenuOpen', type: 'boolean', description: 'Controlled menu open state.' },
                 {
                     name: 'onOpenChange',
                     type: '(isOpen: boolean) => void',
-                    description: 'Callback fired when the open state changes.',
-                },
+                    description: 'Callback fired when the open state changes.'
+                }
             ]}
             example={{
                 title: 'ActionMenu',
@@ -42,7 +38,7 @@ export default function ActionMenuPage() {
       items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}
     />
   );
-}`,
+}`
             }}
         />
     );
@@ -59,7 +55,7 @@ export function ActionMenuExample() {
                 button={{ label: 'Edit', size: 'sm' }}
                 items={[
                     { label: 'Copy', onClick: () => setAction('Copied') },
-                    { label: 'Paste', onClick: () => setAction('Pasted') },
+                    { label: 'Paste', onClick: () => setAction('Pasted') }
                 ]}
             />
             {action && <Text role="status">{action}</Text>}

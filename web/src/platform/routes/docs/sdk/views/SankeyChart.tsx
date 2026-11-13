@@ -11,18 +11,18 @@ export default function SankeyChartPage() {
                 {
                     name: 'nodes',
                     type: '{ name: string }[]',
-                    description: 'Named nodes, referenced by their zero-based array index.',
+                    description: 'Named nodes, referenced by their zero-based array index.'
                 },
                 {
                     name: 'links',
                     type: '{ source: number; target: number; value: number }[]',
-                    description: 'Directed flows referencing existing nodes. Cycles and self-links are not supported.',
+                    description: 'Directed flows referencing existing nodes. Cycles and self-links are not supported.'
                 },
                 {
                     name: 'height',
                     type: 'number',
-                    description: 'Height in pixels; defaults to 360. Minimum diagram width is 640 pixels.',
-                },
+                    description: 'Height in pixels; defaults to 360. Minimum diagram width is 640 pixels.'
+                }
             ]}
             example={{
                 title: 'SankeyChart',
@@ -38,7 +38,7 @@ export default function SankeyChartPage() {
       ]}
     />
   );
-}`,
+}`
             }}
         />
     );

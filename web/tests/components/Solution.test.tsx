@@ -41,14 +41,14 @@ describe('SolutionPage', () => {
             response: () => Response.json({ detail: 'Manifest unavailable' }, { status: 503 }),
             initialPath: '/',
             title: 'Unable to load this solution',
-            description: 'The solution definition could not be loaded.',
+            description: 'The solution definition could not be loaded.'
         },
         {
             name: 'an empty manifest response',
             response: () => manifestResponse([]),
             initialPath: '/',
             title: 'Unexpected solution response',
-            description: 'The solution did not expose any views to render.',
+            description: 'The solution did not expose any views to render.'
         },
         {
             name: 'a view failure after loading the manifest',
@@ -59,8 +59,8 @@ describe('SolutionPage', () => {
             },
             initialPath: '/home',
             title: 'Unable to load this view',
-            description: 'The view could not be loaded.',
-        },
+            description: 'The view could not be loaded.'
+        }
     ])('renders $name', async ({ response, initialPath, title, description }) => {
         // Arrange
         stubFetch(response);
@@ -100,7 +100,7 @@ describe('SolutionPage', () => {
             url.endsWith('/views.json')
                 ? manifestResponse([
                       { path: 'index.jsx', route: '/' },
-                      { path: 'home.jsx', route: '/home' },
+                      { path: 'home.jsx', route: '/home' }
                   ])
                 : sourceResponse('export default function Home() { return <Text>Home</Text>; }')
         );
@@ -169,7 +169,7 @@ describe('SolutionPage', () => {
     it.each([
         { name: 'source window', overrides: { source: window } },
         { name: 'origin', overrides: { origin: 'https://attacker.example' } },
-        { name: 'session', overrides: { data: 'wrong-session' } },
+        { name: 'session', overrides: { data: 'wrong-session' } }
     ])('rejects a handshake with the wrong $name without consuming a valid handshake', async ({ overrides }) => {
         // Arrange
         vi.useFakeTimers();
@@ -198,7 +198,7 @@ describe('SolutionPage', () => {
             source,
             params: {},
             navigationBaseUrl: 'http://localhost:3000/',
-            appearance: { theme: 'system', accent: 'neutral' },
+            appearance: { theme: 'system', accent: 'neutral' }
         });
         await act(async () => vi.advanceTimersByTimeAsync(10_000));
         expect(output.querySelector('iframe')).toBe(frame);
@@ -330,10 +330,7 @@ describe('SolutionPage', () => {
         stubFetch(
             (url) => {
                 if (url.endsWith('/views.json'))
-                    return Response.json({
-                        views: [{ path: 'home.jsx', route: '/home' }],
-                        runtime: { version },
-                    });
+                    return Response.json({ views: [{ path: 'home.jsx', route: '/home' }], runtime: { version } });
 
                 if (url.endsWith('/home.jsx'))
                     return sourceResponse('export default function Home() { return <Text>Home</Text>; }');
@@ -346,7 +343,7 @@ describe('SolutionPage', () => {
                 assets.push({
                     path: assetUrl.pathname,
                     version: assetUrl.searchParams.get('v'),
-                    status: response.status,
+                    status: response.status
                 });
 
                 return response;
@@ -369,7 +366,7 @@ describe('SolutionPage', () => {
         expect(assets).toEqual(
             expect.arrayContaining([
                 { path: '/views/runtime.js', version, status: 200 },
-                { path: '/views/runtime.css', version, status: 200 },
+                { path: '/views/runtime.css', version, status: 200 }
             ])
         );
         expect(output.querySelector('iframe')).toBeNull();

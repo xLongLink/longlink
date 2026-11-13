@@ -15,9 +15,7 @@ import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verif
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 
-const resetPasswordSchema = z.object({
-    password: passwordSchema,
-});
+const resetPasswordSchema = z.object({ password: passwordSchema });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
@@ -32,7 +30,7 @@ export default function ResetPassword() {
 
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
-        resolver: zodResolver(resetPasswordSchema),
+        resolver: zodResolver(resetPasswordSchema)
     });
 
     const confirmation = 'Your password has been reset. You can now sign in.';
@@ -45,15 +43,11 @@ export default function ResetPassword() {
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
         signal,
-        token: resetToken,
+        token: resetToken
     }: VerificationRequest): Promise<{ status: 'verified' } | { status: 'error' } | undefined> {
         // Exchange the URL credential, or recover the already established setup cookie.
         const request = resetToken
-            ? api('/api/v1/auth/reset-password/verify', {
-                  json: { token: resetToken },
-                  method: 'POST',
-                  signal,
-              })
+            ? api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST', signal })
             : api('/api/v1/auth/reset-password/setup', { signal });
 
         // Handle only transport failures as invalid credentials.

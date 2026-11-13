@@ -13,7 +13,7 @@ export function apiQueryOptions<Schema extends StandardSchemaV1>(path: string, s
         queryKey: ['api', path] as const,
         queryFn: ({ signal }) => api(path, { signal }).json(schema),
         retry: false,
-        staleTime: 0,
+        staleTime: 0
     });
 }
 
@@ -84,7 +84,7 @@ export function createQueryRuntime(
         },
         onSuccess: (_data, query) => {
             failedQueries.delete(query);
-        },
+        }
     });
 
     client = new QueryClient({
@@ -94,9 +94,9 @@ export function createQueryRuntime(
                 staleTime: 60_000,
                 refetchOnWindowFocus: false,
                 retry: (failureCount, error) =>
-                    !(error instanceof ApiError && error.status >= 400 && error.status < 500) && failureCount < 1,
-            },
-        },
+                    !(error instanceof ApiError && error.status >= 400 && error.status < 500) && failureCount < 1
+            }
+        }
     });
 
     // Only Platform sessions monitor account switches discovered by a focus refresh.

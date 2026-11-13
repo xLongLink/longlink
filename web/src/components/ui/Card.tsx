@@ -5,7 +5,7 @@ export {
     CardDescription,
     CardAction,
     CardContent,
-    CardFooter,
+    CardFooter
 } from '@/components/shadcn/card';
 
 export { InteractiveCard } from '@/components/custom/InteractiveCard';

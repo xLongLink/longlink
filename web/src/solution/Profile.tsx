@@ -83,7 +83,7 @@ export function DevelopmentProfile() {
                     className={buttonVariants({
                         variant: 'ghost',
                         size: 'lg',
-                        className: 'w-full justify-start font-normal',
+                        className: 'w-full justify-start font-normal'
                     })}
                     href="https://www.longlink.dev/docs/"
                     target="_blank"

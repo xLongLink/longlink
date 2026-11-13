@@ -23,7 +23,7 @@ it('releases owned previews on source changes and ignores late responses', async
 
     const files = {
         preview: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
-        download: async () => undefined,
+        download: async () => undefined
     };
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:first').mockReturnValueOnce('blob:last');
@@ -79,7 +79,7 @@ it('never renders a remote source directly when the scoped host rejects it', asy
             requests.push(path);
             throw new Error('Denied');
         },
-        download: async () => undefined,
+        download: async () => undefined
     };
 
     await withMounted(

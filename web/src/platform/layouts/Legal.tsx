@@ -4,7 +4,7 @@ import { legalPages, brandingPages } from '@/platform/publications';
 import {
     PublicationNavigation,
     PublicationNavigationItem,
-    PublicationNavigationSection,
+    PublicationNavigationSection
 } from './PublicationNavigation';
 
 /** Renders legal and branding pages with the public article layout. */

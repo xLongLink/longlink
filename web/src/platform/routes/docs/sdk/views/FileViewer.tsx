@@ -13,25 +13,25 @@ export default function FileViewerPage() {
                 {
                     name: 'src',
                     type: 'string',
-                    description: 'Scoped Solution operation path returning the file to preview.',
+                    description: 'Scoped Solution operation path returning the file to preview.'
                 },
                 {
                     name: 'title',
                     type: 'string',
-                    description: 'Attachment name used for accessible action labels and the downloaded filename.',
+                    description: 'Attachment name used for accessible action labels and the downloaded filename.'
                 },
                 {
                     name: 'size',
                     type: '"sm" | "lg" | "md"',
-                    description: 'Preview and download action size; inherits sizing when omitted.',
-                },
+                    description: 'Preview and download action size; inherits sizing when omitted.'
+                }
             ]}
             example={{
                 title: 'FileViewer',
                 preview: <FileViewerExample />,
                 code: `function Example() {
   return <FileViewer src="/api/items/123/image" title="invoice.png" />;
-}`,
+}`
             }}
         />
     );
@@ -61,7 +61,7 @@ export function FileViewerExample() {
                         { type: 'download', id: 0, path: '/images/introducing-longlink.png', filename },
                         new AbortController().signal
                     );
-                },
+                }
             }}
         >
             <FileViewer src="/api/items/123/image" title="invoice.png" />

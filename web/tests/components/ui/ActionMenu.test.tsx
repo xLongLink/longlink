@@ -27,10 +27,10 @@ it('skips disabled actions, opens nested actions by keyboard, and restores trigg
                 {
                     type: 'section',
                     title: 'Manage',
-                    items: [{ label: 'Delivery', items: [{ label: 'Dispatch', onClick: action }] }],
+                    items: [{ label: 'Delivery', items: [{ label: 'Dispatch', onClick: action }] }]
                 },
                 { type: 'divider' },
-                { label: 'Delete', variant: 'destructive', onClick: action },
+                { label: 'Delete', variant: 'destructive', onClick: action }
             ]}
         />,
         async (output) => {
@@ -110,7 +110,7 @@ it('delegates ordinary link selection while preserving modified clicks and disab
                 items={[
                     { label: 'Open order', href: '/order/12', onClick: action, hasCloseOnSelect: false },
                     { label: 'Blocked order', href: '/order/13', isDisabled: true, onClick: action },
-                    { label: 'Related order', href: '/order/14', onClick: action },
+                    { label: 'Related order', href: '/order/14', onClick: action }
                 ]}
             />
         </LinkNavigationContext>,
@@ -169,7 +169,7 @@ it('opens on a finger press without a second compatibility click toggling it shu
                     cancelable: true,
                     pointerType: 'touch',
                     pointerId: 1,
-                    button: 0,
+                    button: 0
                 })
             )
         );
@@ -187,7 +187,7 @@ it.each([
     { releaseX: 50, releaseType: 'pointerup', expectedCalls: 1 },
     { releaseX: 150, releaseType: 'pointerup', expectedCalls: 0 },
     { releaseX: 250, releaseType: 'pointerup', expectedCalls: 0 },
-    { releaseX: 50, releaseType: 'pointercancel', expectedCalls: 0 },
+    { releaseX: 50, releaseType: 'pointercancel', expectedCalls: 0 }
 ])(
     'restricts touch selection to its own menu at release ($releaseType at $releaseX)',
     async ({ releaseX, releaseType, expectedCalls }) => {
@@ -217,7 +217,7 @@ it.each([
                             pointerId: 7,
                             button: 0,
                             clientX: 0,
-                            clientY: 20,
+                            clientY: 20
                         })
                     )
                 );
@@ -243,7 +243,7 @@ it.each([
                         cancelable: true,
                         pointerId: 8,
                         clientX: 50,
-                        clientY: 20,
+                        clientY: 20
                     });
 
                     await act(async () => document.dispatchEvent(unrelatedMove));
@@ -256,7 +256,7 @@ it.each([
                                 cancelable: true,
                                 pointerId: 7,
                                 clientX: 50,
-                                clientY: 20,
+                                clientY: 20
                             })
                         )
                     );
@@ -269,7 +269,7 @@ it.each([
                                 cancelable: true,
                                 pointerId: 7,
                                 clientX: 150,
-                                clientY: 20,
+                                clientY: 20
                             })
                         )
                     );
@@ -282,7 +282,7 @@ it.each([
                                 cancelable: true,
                                 pointerId: 7,
                                 clientX: 50,
-                                clientY: 20,
+                                clientY: 20
                             })
                         )
                     );
@@ -294,16 +294,11 @@ it.each([
                                 bubbles: true,
                                 pointerId: 7,
                                 clientX: releaseX,
-                                clientY: 20,
+                                clientY: 20
                             })
                         );
                         document.dispatchEvent(
-                            new PointerEvent('pointerup', {
-                                bubbles: true,
-                                pointerId: 7,
-                                clientX: 50,
-                                clientY: 20,
-                            })
+                            new PointerEvent('pointerup', { bubbles: true, pointerId: 7, clientX: 50, clientY: 20 })
                         );
                     });
                     expect(ownAction).toHaveBeenCalledTimes(expectedCalls);

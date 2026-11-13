@@ -102,7 +102,7 @@ it('dismisses by keyboard and outside interaction and restores trigger focus', a
             await act(async () => {
                 await events.pointer([
                     { keys: '[TouchA>]', target: button('Owner') },
-                    { keys: '[/TouchA]', target: button('Owner') },
+                    { keys: '[/TouchA]', target: button('Owner') }
                 ]);
             });
             expect(button('Owner').getAttribute('aria-expanded')).toBe('true');
@@ -181,7 +181,7 @@ it('closes logout urgently, retains the session preference on denial, and retrie
                     requests.map((request) => [new URL(request.url).pathname, request.method, request.credentials])
                 ).toEqual([
                     ['/api/v1/auth/logout', 'POST', 'include'],
-                    ['/api/v1/auth/logout', 'POST', 'include'],
+                    ['/api/v1/auth/logout', 'POST', 'include']
                 ]);
             }
         );

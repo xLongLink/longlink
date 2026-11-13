@@ -12,63 +12,51 @@ export default function CheckboxInputPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Label text for the checkbox (always rendered for accessibility).',
+                    description: 'Label text for the checkbox (always rendered for accessibility).'
                 },
-                {
-                    name: 'description',
-                    type: 'string',
-                    description: 'Description text displayed below the label.',
-                },
+                { name: 'description', type: 'string', description: 'Description text displayed below the label.' },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
                 {
                     name: 'value',
                     type: 'boolean | "indeterminate"',
-                    description: 'Whether the checkbox is checked, unchecked, or indeterminate.',
+                    description: 'Whether the checkbox is checked, unchecked, or indeterminate.'
                 },
-                {
-                    name: 'defaultChecked',
-                    type: 'boolean',
-                    description: 'Initial checked state.',
-                },
+                { name: 'defaultChecked', type: 'boolean', description: 'Initial checked state.' },
                 {
                     name: 'onChange',
                     type: '(value: boolean) => void',
-                    description: 'Callback fired when the checkbox state changes.',
+                    description: 'Callback fired when the checkbox state changes.'
                 },
                 {
                     name: 'Checkbox.checked',
                     type: 'boolean',
-                    description: 'Controlled checked state of the unwrapped shadcn checkbox.',
+                    description: 'Controlled checked state of the unwrapped shadcn checkbox.'
                 },
                 {
                     name: 'Checkbox.onCheckedChange',
                     type: '(checked: boolean, eventDetails) => void',
-                    description: 'Receives the next checked state and Base UI event details.',
+                    description: 'Receives the next checked state and Base UI event details.'
                 },
                 {
                     name: 'Checkbox.indeterminate',
                     type: 'boolean',
-                    description: 'Displays a mixed state independently of the checked value.',
+                    description: 'Displays a mixed state independently of the checked value.'
                 },
                 {
                     name: 'Checkbox.disabled',
                     type: 'boolean',
-                    description: 'Disables the native control, including keyboard focus and form submission.',
-                },
+                    description: 'Disables the native control, including keyboard focus and form submission.'
+                }
             ]}
             example={{
                 title: 'Approval form',
@@ -88,7 +76,7 @@ export default function ApprovalForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

@@ -40,7 +40,7 @@ import {
     Users,
     Type,
     Waypoints,
-    type LucideIcon,
+    type LucideIcon
 } from 'lucide-react';
 
 type DocumentationPage = {
@@ -50,17 +50,13 @@ type DocumentationPage = {
     children?: Array<{ path: string; label: string; icon: LucideIcon }>;
 };
 
-type DocumentationSection = {
-    title: string;
-    pages: DocumentationPage[];
-    paths?: readonly string[];
-};
+type DocumentationSection = { title: string; pages: DocumentationPage[]; paths?: readonly string[] };
 
 // Keep branding navigation and publication paths in their established reading order.
 export const brandingPages = [
     { path: '/branding/assets', label: 'Brand assets', icon: Image },
     { path: '/branding/values', label: 'Values', icon: Gem },
-    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare },
+    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare }
 ];
 
 export const brandingPaths = brandingPages.map((page) => page.path);
@@ -69,7 +65,7 @@ export const brandingPaths = brandingPages.map((page) => page.path);
 export const legalPages = [
     { path: '/terms', label: 'Terms', icon: FileText },
     { path: '/impressum', label: 'Impressum', icon: Building2 },
-    { path: '/privacy', label: 'Privacy', icon: ShieldCheck },
+    { path: '/privacy', label: 'Privacy', icon: ShieldCheck }
 ];
 
 export const legalPaths = legalPages.map((page) => page.path);
@@ -130,7 +126,7 @@ export const componentDocumentation = [
     { name: 'TextInput', category: 'Form', icon: Type },
     { name: 'TimeInput', category: 'Form', icon: Clock },
     { name: 'Timestamp', category: 'Display', icon: Calendar },
-    { name: 'Token', category: 'Display', icon: Gem },
+    { name: 'Token', category: 'Display', icon: Gem }
 ].map((component) => ({
     ...component,
     label: component.name === 'Button' ? 'Buttons' : component.name,
@@ -140,12 +136,12 @@ export const componentDocumentation = [
             : component.name
                   .replace(/([a-z])([A-Z])/g, '$1-$2')
                   .replace(/\s+/g, '-')
-                  .toLowerCase(),
+                  .toLowerCase()
 }));
 
 export const documentationIntroduction: DocumentationSection = {
     title: 'Introduction',
-    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }],
+    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }]
 };
 
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
@@ -162,10 +158,10 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/sdk/storage', label: 'Storage', icon: HardDrive },
                     { path: '/docs/sdk/database', label: 'Database', icon: Database },
                     { path: '/docs/sdk/testing', label: 'Testing', icon: FlaskConical },
-                    { path: '/docs/sdk/building', label: 'Building', icon: Rocket },
-                ],
-            },
-        ],
+                    { path: '/docs/sdk/building', label: 'Building', icon: Rocket }
+                ]
+            }
+        ]
     },
     {
         path: '/docs/sdk/views',
@@ -179,7 +175,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                         componentDocumentation.flatMap((component) =>
                             component.category === category ? [`/docs/sdk/views/${component.slug}`] : []
                         )
-                    ),
+                    )
                 ],
                 pages: [
                     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
@@ -188,7 +184,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
                     { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
-                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map },
+                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map }
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,
@@ -202,14 +198,14 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                                             {
                                                 path: `/docs/sdk/views/${component.slug}`,
                                                 label: component.label,
-                                                icon: component.icon ?? FileCode2,
-                                            },
+                                                icon: component.icon ?? FileCode2
+                                            }
                                         ]
                                       : []
-                              ),
-                })),
-            },
-        ],
+                              )
+                }))
+            }
+        ]
     },
     {
         path: '/docs/api',
@@ -222,27 +218,23 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/api/organizations', label: 'Organizations', icon: Building2 },
                     { path: '/docs/api/solutions', label: 'Solutions', icon: Package },
                     { path: '/docs/api/mcp', label: 'MCP', icon: Plug },
-                    { path: '/docs/api/billing', label: 'Billing', icon: CreditCard },
-                ],
+                    { path: '/docs/api/billing', label: 'Billing', icon: CreditCard }
+                ]
             },
             {
                 title: 'Self hosted',
                 pages: [
                     { path: '/docs/api/self-hosted/platform', label: 'Platform', icon: ShieldCheck },
-                    { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers },
-                ],
-            },
-        ],
+                    { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers }
+                ]
+            }
+        ]
     },
-    {
-        path: '/docs/alternatives',
-        label: 'Alternatives',
-        sections: [{ title: 'Alternatives', pages: [] }],
-    },
+    { path: '/docs/alternatives', label: 'Alternatives', sections: [{ title: 'Alternatives', pages: [] }] }
 ];
 
 // Keep static tutorials and generated component references in their published reading order.
 export const documentationPaths = [
     documentationIntroduction,
-    ...documentationNavigation.flatMap(({ sections }) => sections),
+    ...documentationNavigation.flatMap(({ sections }) => sections)
 ].flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path));

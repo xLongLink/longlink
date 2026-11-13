@@ -68,7 +68,7 @@ export {
     DropdownMenuShortcut,
     DropdownMenuSub,
     DropdownMenuSubTrigger,
-    DropdownMenuSubContent,
+    DropdownMenuSubContent
 } from '@/components/ui/DropdownMenu';
 
 /** Custom data-driven actions with asynchronous recovery and scoped navigation. @category Action */
@@ -118,7 +118,7 @@ export {
     FieldSeparator,
     FieldSet,
     FieldContent,
-    FieldTitle,
+    FieldTitle
 } from '@/components/shadcn/field';
 
 /** @category Form */
@@ -128,7 +128,7 @@ export {
     InputGroupButton,
     InputGroupInput,
     InputGroupTextarea,
-    InputGroupText,
+    InputGroupText
 } from '@/components/shadcn/input-group';
 
 /** @category Form */
@@ -168,7 +168,7 @@ export {
     SelectScrollUpButton,
     SelectSeparator,
     SelectTrigger,
-    SelectValue,
+    SelectValue
 } from '@/components/ui/Select';
 
 /** @category Form */
@@ -190,7 +190,7 @@ export {
     ComboboxChipsInput,
     ComboboxTrigger,
     ComboboxValue,
-    useComboboxAnchor,
+    useComboboxAnchor
 } from '@/components/ui/Combobox';
 
 /** @category Form */
@@ -208,7 +208,7 @@ export {
     TableRow,
     TableHead,
     TableCell,
-    TableCaption,
+    TableCaption
 } from '@/components/ui/Table';
 
 /** Custom data-driven rows with safe formatting and ReUI rendering. @category Display */
@@ -245,7 +245,7 @@ export {
     StepperTitle,
     StepperDescription,
     StepperPanel,
-    StepperContent,
+    StepperContent
 } from '@/components/ui/Stepper';
 
 /** Custom progress adapter using zero-based indices and default ReUI styling. @category Layouts */

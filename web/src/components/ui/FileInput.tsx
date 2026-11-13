@@ -54,7 +54,7 @@ export function NativeFileInput({
     maxFiles,
     placeholder = multiple ? 'Choose files' : 'Choose file',
     mode = 'input',
-    status,
+    status
 }: FileInputProps & { status?: { type: 'error' | 'warning' | 'success'; message?: string } }) {
     // Keep the browser's transient FileList separate from the caller-owned selection.
     const field = useValue(value, null, onChange);

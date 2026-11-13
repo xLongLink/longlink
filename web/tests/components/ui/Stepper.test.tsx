@@ -15,7 +15,7 @@ import {
     StepperPanel,
     StepperSeparator,
     StepperTitle,
-    StepperTrigger,
+    StepperTrigger
 } from '@/components/ui/Stepper';
 
 it('supports compound controlled navigation and preserves force-mounted drafts and native part props', async () => {

@@ -22,7 +22,7 @@ import {
     RadialBarChart as RechartsRadialChart,
     Sankey,
     XAxis,
-    YAxis,
+    YAxis
 } from 'recharts';
 
 /** Renders categorical series using the shared chart theme and tooltip. */

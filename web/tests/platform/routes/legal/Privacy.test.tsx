@@ -20,11 +20,7 @@ it('moves outline navigation to the published section heading without adding a p
                 const scroll = vi.fn();
                 Object.defineProperty(heading, 'scrollIntoView', { configurable: true, value: scroll });
 
-                const modifiedClick = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    ctrlKey: true,
-                });
+                const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
                 await act(async () => link.dispatchEvent(modifiedClick));
                 expect(modifiedClick.defaultPrevented).toBe(false);

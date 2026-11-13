@@ -16,7 +16,7 @@ const kinds = {
     'solution.deploy': 'Solution deployment',
     'solution.delete': 'Solution deletion',
     'organization.create': 'Organization creation',
-    'organization.delete': 'Organization deletion',
+    'organization.delete': 'Organization deletion'
 };
 
 const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed', failed: 'Failed' };
@@ -62,7 +62,7 @@ export default function Operations() {
                                         {row.finished_at && ` - ${row.finished_at}`}
                                     </Text>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'resource_name',
@@ -75,7 +75,7 @@ export default function Operations() {
                                         {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
                                     </Text>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'id',
@@ -90,8 +90,8 @@ export default function Operations() {
                                     variant="ghost"
                                     onClick={() => setMetadataId(row.id)}
                                 />
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>

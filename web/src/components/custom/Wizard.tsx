@@ -11,7 +11,7 @@ import {
     StepperNav,
     StepperSeparator,
     StepperTitle,
-    StepperTrigger,
+    StepperTrigger
 } from '@/components/reui/stepper';
 import {
     Children,
@@ -24,13 +24,12 @@ import {
     useRef,
     useState,
     type ReactElement,
-    type ReactNode,
+    type ReactNode
 } from 'react';
 
-const ProgressContext = createContext<{
-    activeStep: number;
-    onStepClick?: ProgressStepperProps['onStepClick'];
-}>({ activeStep: 0 });
+const ProgressContext = createContext<{ activeStep: number; onStepClick?: ProgressStepperProps['onStepClick'] }>({
+    activeStep: 0
+});
 
 type StepProps = {
     /** Zero-based progress index; defaults to child order inside ProgressStepper. */
@@ -64,12 +63,7 @@ type WizardProps = Omit<ProgressStepperProps, 'onStepClick'> & {
 /** Adapts zero-based LongLink progress metadata to ReUI's compound stepper. */
 export function ProgressStepper(props: ProgressStepperProps) {
     return (
-        <ProgressContext
-            value={{
-                activeStep: props.activeStep ?? 0,
-                onStepClick: props.onStepClick,
-            }}
-        >
+        <ProgressContext value={{ activeStep: props.activeStep ?? 0, onStepClick: props.onStepClick }}>
             <Stepper
                 value={(props.activeStep ?? 0) + 1}
                 onValueChange={(value) => props.onStepClick?.(value - 1)}

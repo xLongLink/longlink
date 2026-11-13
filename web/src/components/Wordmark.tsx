@@ -1,12 +1,7 @@
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 
-const wordmarkSizeClasses = {
-    default: ' text-base',
-    full: ' w-full',
-    heading: ' text-2xl',
-    inherit: '',
-};
+const wordmarkSizeClasses = { default: ' text-base', full: ' w-full', heading: ' text-2xl', inherit: '' };
 
 /** Renders the shared LongLink welcome title used by authentication screens. */
 export function Welcome() {
@@ -20,7 +15,7 @@ export function Welcome() {
 /** Renders the hand-drawn LongLink wordmark in the surrounding theme and text size. */
 export function Wordmark({
     size = 'default',
-    mode,
+    mode
 }: {
     size?: 'default' | 'full' | 'heading' | 'inherit';
     mode?: 'light' | 'dark';

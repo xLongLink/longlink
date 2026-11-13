@@ -12,74 +12,46 @@ export default function TextInputPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Label text for the input: always rendered for accessibility.',
+                    description: 'Label text for the input: always rendered for accessibility.'
                 },
                 {
                     name: 'description',
                     type: 'string',
-                    description: 'Description text displayed between the label and input.',
+                    description: 'Description text displayed between the label and input.'
                 },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
-                {
-                    name: 'value',
-                    type: 'string',
-                    description: 'Current value of the input.',
-                },
-                {
-                    name: 'defaultValue',
-                    type: 'string',
-                    description: 'Initial value.',
-                },
+                { name: 'value', type: 'string', description: 'Current value of the input.' },
+                { name: 'defaultValue', type: 'string', description: 'Initial value.' },
                 {
                     name: 'onChange',
                     type: '(value: string) => void',
-                    description: 'Callback fired when the input value changes.',
+                    description: 'Callback fired when the input value changes.'
                 },
-                {
-                    name: 'placeholder',
-                    type: 'string',
-                    description: 'Placeholder text shown when the input is empty.',
-                },
+                { name: 'placeholder', type: 'string', description: 'Placeholder text shown when the input is empty.' },
                 {
                     name: 'maxLength',
                     type: 'number',
                     description:
-                        'Maximum Unicode code points, matching Python string length. Validates without truncating input.',
+                        'Maximum Unicode code points, matching Python string length. Validates without truncating input.'
                 },
-                {
-                    name: 'type',
-                    type: '"text" | "password" | "email"',
-                    description: 'The HTML input type.',
-                },
-                {
-                    name: 'autoComplete',
-                    type: 'string',
-                    description: 'Native autocomplete hint.',
-                },
-                {
-                    name: 'startIcon',
-                    type: 'ReactNode',
-                    description: 'Icon displayed at the start of the input.',
-                },
+                { name: 'type', type: '"text" | "password" | "email"', description: 'The HTML input type.' },
+                { name: 'autoComplete', type: 'string', description: 'Native autocomplete hint.' },
+                { name: 'startIcon', type: 'ReactNode', description: 'Icon displayed at the start of the input.' },
                 {
                     name: 'onEnter',
                     type: '() => void',
-                    description: 'Runs on Enter, except when confirming an IME composition.',
-                },
+                    description: 'Runs on Enter, except when confirming an IME composition.'
+                }
             ]}
             example={{
                 title: 'Name form',
@@ -99,7 +71,7 @@ export default function NameForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

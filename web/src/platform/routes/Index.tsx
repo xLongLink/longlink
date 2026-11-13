@@ -27,7 +27,7 @@ const technologies = [
     { name: 'Docker', logo: Docker, position: 'top-6 left-1/3 sm:top-0 sm:left-1/4' },
     { name: 'Kubernetes', logo: Kubernetes, position: 'top-6 right-1/3 sm:top-0 sm:right-1/4' },
     { name: 'TypeScript', logo: Typescript, position: 'bottom-6 left-1/3 sm:bottom-0 sm:left-1/3' },
-    { name: 'Tailwind CSS', logo: Tailwindcss, position: 'right-1/3 bottom-6 sm:right-1/4 sm:bottom-0' },
+    { name: 'Tailwind CSS', logo: Tailwindcss, position: 'right-1/3 bottom-6 sm:right-1/4 sm:bottom-0' }
 ];
 
 /** Renders the public home page. */

@@ -13,9 +13,9 @@ export default function UserLayout() {
                 {
                     href: '/user/organizations',
                     icon: <Building2 aria-hidden="true" size={16} />,
-                    label: 'Organizations',
+                    label: 'Organizations'
                 },
-                { href: '/user/settings', icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' },
+                { href: '/user/settings', icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' }
             ]}
         >
             <Outlet />

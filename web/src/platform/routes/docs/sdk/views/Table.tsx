@@ -11,8 +11,8 @@ export default function TablePage() {
                     name: 'children',
                     type: 'ReactNode',
                     description:
-                        'Compose TableCaption, TableHeader, TableBody, TableFooter, TableRow, TableHead, and TableCell. Each accepts its native HTML element props.',
-                },
+                        'Compose TableCaption, TableHeader, TableBody, TableFooter, TableRow, TableHead, and TableCell. Each accepts its native HTML element props.'
+                }
             ]}
             example={{
                 title: 'Table',
@@ -31,7 +31,7 @@ export default function TablePage() {
       <TableCell>Open</TableCell>
     </TableRow>
   </TableBody>
-</Table>`,
+</Table>`
             }}
         />
     );

@@ -53,14 +53,14 @@ function InvoiceTable({ base }: { base: string }) {
                             </Link>
                         ) : (
                             <Text>{invoice.number ?? invoice.id}</Text>
-                        ),
+                        )
                 },
                 {
                     key: 'created_at',
                     header: 'Date',
                     width: proportional(1),
                     renderCell: (invoice) =>
-                        new Date(invoice.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' }),
+                        new Date(invoice.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
                 },
                 {
                     key: 'total',
@@ -70,19 +70,19 @@ function InvoiceTable({ base }: { base: string }) {
                     renderCell: (invoice) => {
                         const currency = new Intl.NumberFormat(undefined, {
                             style: 'currency',
-                            currency: invoice.currency.toUpperCase(),
+                            currency: invoice.currency.toUpperCase()
                         });
 
                         return currency.format(
                             invoice.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
                         );
-                    },
+                    }
                 },
                 {
                     key: 'status',
                     header: 'Status',
                     width: proportional(1),
-                    renderCell: (invoice) => <Token label={invoice.status?.replaceAll('_', ' ') ?? 'Unknown'} />,
+                    renderCell: (invoice) => <Token label={invoice.status?.replaceAll('_', ' ') ?? 'Unknown'} />
                 },
                 {
                     key: 'has_pdf',
@@ -93,8 +93,8 @@ function InvoiceTable({ base }: { base: string }) {
                             <Link href={`${base}/invoices/${invoice.id}/pdf`} hasUnderline isExternalLink>
                                 PDF
                             </Link>
-                        ) : null,
-                },
+                        ) : null
+                }
             ]}
         />
     );

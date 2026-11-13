@@ -11,18 +11,18 @@ const organizationRoles = [
     {
         name: 'maintain',
         access: 'Write access plus invitations, Solution creation, previews, and runtime access',
-        icon: Wrench,
+        icon: Wrench
     },
     {
         name: 'admin',
         access: 'Full access to roles, invitations, Solutions, previews, and runtime access',
-        icon: CheckCheck,
+        icon: CheckCheck
     },
     {
         name: 'owner',
         access: 'Highest access to ownership, settings, members, Solutions, and resources',
-        icon: CheckCircle,
-    },
+        icon: CheckCircle
+    }
 ];
 
 const article = {
@@ -30,7 +30,7 @@ const article = {
     description: 'Learn how organizations manage members, Solutions, and dedicated infrastructure.',
     toc: [{ id: 'organizations', label: 'Organizations', level: 1 }],
     lastUpdated: '2026-10-18',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Organizations.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Organizations.tsx'
 };
 
 export default function Organizations() {
@@ -65,8 +65,8 @@ export default function Organizations() {
                                         </Stack>
                                         <Text type="supporting">{access}</Text>
                                     </Stack>
-                                ),
-                            },
+                                )
+                            }
                         ]}
                     />
                 </Stack>

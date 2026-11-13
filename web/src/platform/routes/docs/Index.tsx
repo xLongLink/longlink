@@ -13,10 +13,10 @@ const article = {
         'Learn how to build Python Solutions with the LongLink SDK and use the Platform to manage organizations, access, infrastructure, and deployment.',
     toc: [
         { id: 'documentation', label: 'Documentation', level: 1 },
-        { id: 'start-here', label: 'Start here', level: 2 },
+        { id: 'start-here', label: 'Start here', level: 2 }
     ],
     lastUpdated: '2026-10-05',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx'
 };
 
 /** Introduces the documentation and links to the main guides and references. */

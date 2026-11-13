@@ -14,7 +14,7 @@ it('sanitizes display names before requesting a scoped download', async () => {
         preview: async () => new Blob(),
         download: async (path: string, name: string) => {
             downloads.push([path, name]);
-        },
+        }
     };
 
     // Act
@@ -52,7 +52,7 @@ it('cancels a pending preview and releases only the image URL from a reopened at
             <FileRequestContext
                 value={{
                     preview: async () => (++requests === 1 ? first : new Blob(['image'], { type: 'image/png' })),
-                    download: async () => undefined,
+                    download: async () => undefined
                 }}
             >
                 <FileViewer src="/api/image" title="Image" />
@@ -101,7 +101,7 @@ it('recovers from a failed preview and closes after the host opens a document', 
                 },
                 download: async () => {
                     throw new Error('Preview must not download');
-                },
+                }
             }}
         >
             <FileViewer src="/api/report" title="report.pdf" />
@@ -118,7 +118,7 @@ it('recovers from a failed preview and closes after the host opens a document', 
             await act(async () => user.click(preview));
             expect(requests).toEqual([
                 ['/api/report', 'report.pdf'],
-                ['/api/report', 'report.pdf'],
+                ['/api/report', 'report.pdf']
             ]);
             expect(output.querySelector('img, [role="progressbar"]')).toBeNull();
             expect(output.textContent).not.toContain('File unavailable');
@@ -156,7 +156,7 @@ it('removes a prior image while a replacement loads and never renders active doc
                 value={{
                     preview: async (path) =>
                         path === '/api/image' ? new Blob(['image'], { type: 'image/png' }) : replacement,
-                    download: async () => undefined,
+                    download: async () => undefined
                 }}
             >
                 <Preview />

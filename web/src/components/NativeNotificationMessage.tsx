@@ -3,7 +3,7 @@ import { useAnnouncement } from '@/components/ui/announcement';
 /** Announces a Sonner message through an initially empty, scoped live channel. */
 export function NativeNotificationMessage({
     message,
-    priority,
+    priority
 }: {
     message: string;
     priority: 'assertive' | 'polite';

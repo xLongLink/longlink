@@ -35,12 +35,12 @@ export function createNotifications(toasterId: string) {
         const options: ExternalToast = {
             toasterId,
             onDismiss: ({ id }) => notifications.delete(id),
-            onAutoClose: ({ id }) => notifications.delete(id),
+            onAutoClose: ({ id }) => notifications.delete(id)
         };
 
         const title = createElement(NativeNotificationMessage, {
             message,
-            priority: kind === 'error' ? 'assertive' : 'polite',
+            priority: kind === 'error' ? 'assertive' : 'polite'
         });
 
         const id = kind === 'error' ? toast.error(title, options) : toast(title, options);
@@ -83,6 +83,6 @@ export function createNotifications(toasterId: string) {
             queueMicrotask(() => {
                 if (generation === disposedGeneration) dismiss();
             });
-        },
+        }
     };
 }

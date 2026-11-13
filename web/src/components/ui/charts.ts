@@ -1,7 +1,4 @@
-export type ChartSeries = {
-    key: string;
-    label: string;
-};
+export type ChartSeries = { key: string; label: string };
 
 export type ChartRow = Record<string, string | number>;
 
@@ -30,10 +27,10 @@ export const sankeyDataSchema = z
                 z.object({
                     source: z.number().int().nonnegative(),
                     target: z.number().int().nonnegative(),
-                    value: z.number().positive(),
+                    value: z.number().positive()
                 })
             )
-            .min(1),
+            .min(1)
     })
     .superRefine(({ nodes, links }, context) => {
         // Reject invalid references before building the adjacency list.

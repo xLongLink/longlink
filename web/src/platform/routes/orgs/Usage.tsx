@@ -99,7 +99,7 @@ function UsageMeter({
     base,
     resource,
     included,
-    hasPaymentMethod,
+    hasPaymentMethod
 }: {
     base: string;
     resource: 'storage' | 'database';

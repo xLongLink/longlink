@@ -11,45 +11,29 @@ export default function AvatarPage() {
                 {
                     name: 'shape',
                     type: '"circle" | "square" | "rounded"',
-                    description: 'Avatar shape: circle, rounded, or square.',
+                    description: 'Avatar shape: circle, rounded, or square.'
                 },
-                {
-                    name: 'name',
-                    type: 'string',
-                    description: 'User name for initials and alt text.',
-                },
+                { name: 'name', type: 'string', description: 'User name for initials and alt text.' },
                 {
                     name: 'seed',
                     type: 'string',
-                    description: 'Stable identity for generated avatars, independent of the display name.',
+                    description: 'Stable identity for generated avatars, independent of the display name.'
                 },
                 {
                     name: 'kind',
                     type: '"user" | "organization"',
-                    description: 'Avatar style for a user or organization.',
+                    description: 'Avatar style for a user or organization.'
                 },
-                {
-                    name: 'src',
-                    type: 'string | null',
-                    description: 'Primary image source URL.',
-                },
-                {
-                    name: 'alt',
-                    type: 'string',
-                    description: 'Alt text (falls back to name).',
-                },
-                {
-                    name: 'size',
-                    type: '"sm" | "lg" | "md"',
-                    description: 'Avatar size.',
-                },
+                { name: 'src', type: 'string | null', description: 'Primary image source URL.' },
+                { name: 'alt', type: 'string', description: 'Alt text (falls back to name).' },
+                { name: 'size', type: '"sm" | "lg" | "md"', description: 'Avatar size.' }
             ]}
             example={{
                 title: 'Avatar',
                 preview: <AvatarExample />,
                 code: `function Example() {
   return <Avatar name="Ada Lovelace" />;
-}`,
+}`
             }}
         />
     );

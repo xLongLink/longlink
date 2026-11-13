@@ -73,7 +73,7 @@ export default function Solutions() {
                                     </Stack>
                                     {row.description && <Text type="supporting">{row.description}</Text>}
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'organization',
@@ -87,7 +87,7 @@ export default function Solutions() {
                                         <Text type="supporting">Organization</Text>
                                     </Stack>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'image_desired',
@@ -100,7 +100,7 @@ export default function Solutions() {
                                     </Text>
                                     <Text type="supporting">Revision: {row.desired_revision_id ?? 'Not selected'}</Text>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'id',
@@ -115,8 +115,8 @@ export default function Solutions() {
                                     variant="ghost"
                                     onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
@@ -163,10 +163,7 @@ export default function Solutions() {
                                 label="Delete"
                                 variant="destructive"
                                 onClick={() =>
-                                    setDialog({
-                                        kind: 'deletion',
-                                        item: { id: metadata.id, name: metadata.name },
-                                    })
+                                    setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
                                 }
                             />
                         </Stack>
@@ -184,7 +181,7 @@ export default function Solutions() {
                                   await api.delete(`/api/v1/solutions/${dialog.item.id}`);
                                   await invalidate();
                                   setDialog(null);
-                              },
+                              }
                           }
                         : null
                 }

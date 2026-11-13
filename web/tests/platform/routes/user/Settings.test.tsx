@@ -72,7 +72,7 @@ it('trims blur saves, locks the pending field, and publishes the canonical accou
                 // Assert
                 await vi.waitFor(() => expect(input.readOnly).toBe(true));
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
-                    'PATCH /api/v1/me',
+                    'PATCH /api/v1/me'
                 ]);
                 expect(await requests[0]?.clone().json()).toEqual({ name: 'Updated Owner' });
                 expect(output.querySelector('output')?.textContent).toBe('Owner');
@@ -131,7 +131,7 @@ function AccountChanges() {
                         ...user,
                         id: '00000000-0000-4000-8000-000000000003',
                         name: 'Another Owner',
-                        email: 'another@example.com',
+                        email: 'another@example.com'
                     })
                 }
             >

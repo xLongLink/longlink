@@ -17,7 +17,7 @@ const invoice = {
     currency: 'usd',
     created_at: '2026-10-01T00:00:00Z',
     has_pdf: true,
-    hosted_invoice_url: 'https://example.com/invoices/acme',
+    hosted_invoice_url: 'https://example.com/invoices/acme'
 };
 
 /** Mounts the section with real providers and an isolated HTTP API boundary. */
@@ -147,7 +147,7 @@ it('keeps a failed invoice read inside the section and retries it successfully',
             const failed = requests.length === 1;
 
             return Response.json(failed ? { detail: 'Invoice provider unavailable' } : [invoice], {
-                status: failed ? 503 : 200,
+                status: failed ? 503 : 200
             });
         },
         async (output, render, errors) => {
@@ -160,7 +160,7 @@ it('keeps a failed invoice read inside the section and retries it successfully',
             expect(output.querySelector('table')).toBeNull();
             expect(requests).toEqual(['GET /api/v1/organizations/acme/invoices']);
             expect(errors).toEqual([
-                expect.objectContaining({ name: 'ApiError', status: 503, message: 'Invoice provider unavailable' }),
+                expect.objectContaining({ name: 'ApiError', status: 503, message: 'Invoice provider unavailable' })
             ]);
 
             // Act
@@ -175,7 +175,7 @@ it('keeps a failed invoice read inside the section and retries it successfully',
             expect(output.querySelector('button')).toBeNull();
             expect(requests).toEqual([
                 'GET /api/v1/organizations/acme/invoices',
-                'GET /api/v1/organizations/acme/invoices',
+                'GET /api/v1/organizations/acme/invoices'
             ]);
         }
     );

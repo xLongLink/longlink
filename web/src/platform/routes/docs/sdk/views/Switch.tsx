@@ -10,76 +10,52 @@ export default function SwitchPage() {
         <ViewLayout
             name="Switch"
             properties={[
-                {
-                    name: 'checked',
-                    type: 'boolean',
-                    description: 'Controlled checked state.',
-                },
+                { name: 'checked', type: 'boolean', description: 'Controlled checked state.' },
                 {
                     name: 'onCheckedChange',
                     type: '(checked: boolean, eventDetails) => void',
-                    description: 'Called with the next checked state and Base UI event details.',
+                    description: 'Called with the next checked state and Base UI event details.'
                 },
-                {
-                    name: 'size',
-                    type: '"sm" | "default"',
-                    description: 'Installed switch size.',
-                },
+                { name: 'size', type: '"sm" | "default"', description: 'Installed switch size.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Disables the native control, including keyboard focus and form submission.',
+                    description: 'Disables the native control, including keyboard focus and form submission.'
                 },
-                {
-                    name: 'name',
-                    type: 'string',
-                    description: 'Form submission name.',
-                },
-                {
-                    name: 'defaultChecked',
-                    type: 'boolean',
-                    description: 'Initial uncontrolled checked state.',
-                },
+                { name: 'name', type: 'string', description: 'Form submission name.' },
+                { name: 'defaultChecked', type: 'boolean', description: 'Initial uncontrolled checked state.' },
                 {
                     name: 'SwitchField.label',
                     type: 'string',
-                    description: 'Label text for the switch (always rendered for accessibility).',
+                    description: 'Label text for the switch (always rendered for accessibility).'
                 },
                 {
                     name: 'SwitchField.description',
                     type: 'string',
-                    description: 'Description text displayed below the label.',
+                    description: 'Description text displayed below the label.'
                 },
                 {
                     name: 'SwitchField.name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
                 {
                     name: 'SwitchField.required',
                     type: 'boolean',
-                    description: 'Requires a value before native form submission.',
+                    description: 'Requires a value before native form submission.'
                 },
                 {
                     name: 'SwitchField.disabled',
                     type: 'boolean',
-                    description: 'Prevents edits and submission while keeping the control keyboard-focusable.',
+                    description: 'Prevents edits and submission while keeping the control keyboard-focusable.'
                 },
-                {
-                    name: 'SwitchField.value',
-                    type: 'boolean',
-                    description: 'Whether the switch is on or off.',
-                },
-                {
-                    name: 'SwitchField.defaultChecked',
-                    type: 'boolean',
-                    description: 'Initial checked state.',
-                },
+                { name: 'SwitchField.value', type: 'boolean', description: 'Whether the switch is on or off.' },
+                { name: 'SwitchField.defaultChecked', type: 'boolean', description: 'Initial checked state.' },
                 {
                     name: 'SwitchField.onChange',
                     type: '(value: boolean) => void',
-                    description: 'Callback fired when the switch state changes.',
-                },
+                    description: 'Callback fired when the switch state changes.'
+                }
             ]}
             example={{
                 title: 'Preference form',
@@ -101,7 +77,7 @@ export default function PreferenceForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

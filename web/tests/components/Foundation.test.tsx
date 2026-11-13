@@ -43,8 +43,8 @@ class VisibilityObserver extends IntersectionObserver {
                     boundingClientRect: bounds,
                     intersectionRect: bounds,
                     rootBounds: null,
-                    time: performance.now(),
-                },
+                    time: performance.now()
+                }
             ],
             this
         );

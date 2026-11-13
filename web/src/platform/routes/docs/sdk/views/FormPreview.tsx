@@ -43,9 +43,9 @@ export default function FormPreview({ children, stepped = false }: { children: R
                                     ? {
                                           name: value instanceof File ? value.name : 'blob',
                                           size: value.size,
-                                          type: value.type,
+                                          type: value.type
                                       }
-                                    : value,
+                                    : value
                             ]),
                             null,
                             2

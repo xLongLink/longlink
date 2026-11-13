@@ -6,7 +6,7 @@ import { Divider } from '@/components/ui/Divider';
 
 it.each([
     { orientation: 'horizontal', dimension: 'height' },
-    { orientation: 'vertical', dimension: 'width' },
+    { orientation: 'vertical', dimension: 'width' }
 ] as const)(
     'gives the $orientation line visible thickness using Base UI orientation attributes',
     async ({ orientation, dimension }) => {

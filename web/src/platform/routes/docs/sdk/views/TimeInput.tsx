@@ -12,73 +12,61 @@ export default function TimeInputPage() {
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Label text for the input (required for accessibility).',
+                    description: 'Label text for the input (required for accessibility).'
                 },
                 {
                     name: 'description',
                     type: 'string',
-                    description: 'Description text displayed between the label and input.',
+                    description: 'Description text displayed between the label and input.'
                 },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
                 {
                     name: 'value',
                     type: 'ISOTimeString',
-                    description: 'Controlled time value in ISO format (HH:MM or HH:MM:SS).',
+                    description: 'Controlled time value in ISO format (HH:MM or HH:MM:SS).'
                 },
-                {
-                    name: 'defaultValue',
-                    type: 'ISOTimeString',
-                    description: 'Initial value.',
-                },
+                { name: 'defaultValue', type: 'ISOTimeString', description: 'Initial value.' },
                 {
                     name: 'onChange',
                     type: '(value: ISOTimeString | undefined) => void',
-                    description: 'Callback fired when the time changes. Receives undefined when the input is cleared.',
+                    description: 'Callback fired when the time changes. Receives undefined when the input is cleared.'
                 },
                 {
                     name: 'min',
                     type: 'ISOTimeString',
-                    description: 'Minimum selectable time in ISO format. Values outside the range are rejected.',
+                    description: 'Minimum selectable time in ISO format. Values outside the range are rejected.'
                 },
                 {
                     name: 'max',
                     type: 'ISOTimeString',
-                    description: 'Maximum selectable time in ISO format. Values outside the range are rejected.',
+                    description: 'Maximum selectable time in ISO format. Values outside the range are rejected.'
                 },
                 {
                     name: 'hasSeconds',
                     type: 'boolean',
-                    description: 'Includes seconds in the time display and parsing.',
+                    description: 'Includes seconds in the time display and parsing.'
                 },
-                {
-                    name: 'hourFormat',
-                    type: '"12h" | "24h"',
-                    description: '12-hour or 24-hour time display.',
-                },
+                { name: 'hourFormat', type: '"12h" | "24h"', description: '12-hour or 24-hour time display.' },
                 {
                     name: 'increment',
                     type: 'number',
-                    description: 'Number of minutes to add or subtract when the user presses the up or down arrow key.',
+                    description: 'Number of minutes to add or subtract when the user presses the up or down arrow key.'
                 },
                 {
                     name: 'placeholder',
                     type: 'string',
-                    description: 'Empty-field text, replaced by a format hint on focus.',
-                },
+                    description: 'Empty-field text, replaced by a format hint on focus.'
+                }
             ]}
             example={{
                 title: 'Start time form',
@@ -98,7 +86,7 @@ export default function StartTimeForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

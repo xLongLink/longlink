@@ -27,8 +27,8 @@ export default function HooksPage() {
                                 <Text>{hook.name}</Text>
                                 <Text type="supporting">{hook.description}</Text>
                             </Stack>
-                        ),
-                    },
+                        )
+                    }
                 ]}
             />
         </ViewLayout>

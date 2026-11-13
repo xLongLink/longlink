@@ -58,7 +58,7 @@ const languages = new Map(
         mm: 'objective-c',
         ps1: 'powershell',
         psm1: 'powershell',
-        psd1: 'powershell',
+        psd1: 'powershell'
     })
 );
 
@@ -66,7 +66,7 @@ const filenames = new Map([
     ['gemfile', 'ruby'],
     ['rakefile', 'ruby'],
     ['dockerfile', 'dockerfile'],
-    ['containerfile', 'dockerfile'],
+    ['containerfile', 'dockerfile']
 ]);
 
 /** Recognizes text attachments by filename or declared media type without interpreting their contents. */

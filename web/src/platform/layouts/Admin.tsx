@@ -27,7 +27,7 @@ export default function Admin() {
             }
             tabs={adminNavigation.map(({ icon: Icon, ...tab }) => ({
                 ...tab,
-                icon: <Icon aria-hidden="true" size={16} />,
+                icon: <Icon aria-hidden="true" size={16} />
             }))}
         >
             <PageContainer gap={8} padding={2}>

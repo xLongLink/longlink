@@ -14,7 +14,7 @@ import { IllustratedDialogContent } from '@/platform/components/IllustratedDialo
 /** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({
     onClose,
-    onSuccess,
+    onSuccess
 }: {
     onClose: () => void;
     onSuccess: () => Promise<void>;

@@ -21,7 +21,7 @@ import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 
 // The API also accepts raw YAML and validates its structure on the server.
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
-    kubeconfig: z.string().refine((value) => value.trim().length > 0),
+    kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
@@ -72,7 +72,7 @@ export default function Compute() {
                                     <Text>{row.name}</Text>
                                     <Text type="supporting">{row.gateway_url}</Text>
                                 </Stack>
-                            ),
+                            )
                         },
                         {
                             key: 'id',
@@ -87,8 +87,8 @@ export default function Compute() {
                                     variant="ghost"
                                     onClick={() => setDialog({ kind: 'metadata', id: row.id })}
                                 />
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
                 <Stack as="footer" align="center" paddingBlock={2}>
@@ -134,10 +134,7 @@ export default function Compute() {
                                 label="Delete"
                                 variant="destructive"
                                 onClick={() =>
-                                    setDialog({
-                                        kind: 'deletion',
-                                        item: { id: metadata.id, name: metadata.name },
-                                    })
+                                    setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
                                 }
                             />
                         </Stack>
@@ -154,7 +151,7 @@ export default function Compute() {
                             await api.delete(`/api/v1/computes/${dialog.item.id}`);
                             await invalidate();
                             setDialog((current) => (current === dialog ? null : current));
-                        },
+                        }
                     }}
                     onClose={() => setDialog(null)}
                 />
@@ -217,7 +214,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
             name: data.get('name'),
             gateway_url: data.get('gateway_url'),
             storage_endpoint: data.get('storage_endpoint'),
-            kubeconfig,
+            kubeconfig
         });
 
         await api.post('/api/v1/computes', { json });

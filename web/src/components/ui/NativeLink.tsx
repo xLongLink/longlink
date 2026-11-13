@@ -40,10 +40,7 @@ export function NativeLink({
     className,
     ...props
 }: Omit<NativeAnchorProps, 'type' | 'color'> &
-    Pick<TextProps, 'type' | 'color' | 'weight' | 'size'> & {
-        hasUnderline?: boolean;
-        isExternalLink?: boolean;
-    }) {
+    Pick<TextProps, 'type' | 'color' | 'weight' | 'size'> & { hasUnderline?: boolean; isExternalLink?: boolean }) {
     const linkTarget = isExternalLink ? '_blank' : target;
 
     const content = (
@@ -62,7 +59,7 @@ export function NativeLink({
             'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
             hasUnderline && 'underline',
             className
-        ),
+        )
     };
 
     return (

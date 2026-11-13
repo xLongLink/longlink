@@ -86,7 +86,7 @@ it('delivers registration failure and confirmed success through initially empty 
         );
         expect(document.body.textContent).not.toContain('Check your inbox for the registration link.');
         expect(caughtErrors).toEqual([
-            expect.objectContaining({ status: 503, message: 'Registration temporarily unavailable' }),
+            expect.objectContaining({ status: 503, message: 'Registration temporarily unavailable' })
         ]);
 
         const failure = document.querySelector('[data-sonner-toast]');
@@ -135,7 +135,7 @@ it('delivers registration failure and confirmed success through initially empty 
 
         expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toEqual([
             ['POST', '/api/v1/auth/register'],
-            ['POST', '/api/v1/auth/register'],
+            ['POST', '/api/v1/auth/register']
         ]);
 
         const dismiss = confirmation?.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]');

@@ -15,28 +15,24 @@ export default function MoreMenuPage() {
                     name: 'items',
                     type: 'ActionMenuOption[]',
                     description:
-                        'Menu items: data array of actions, dividers, and sections. Same type as ActionMenu items.',
+                        'Menu items: data array of actions, dividers, and sections. Same type as ActionMenu items.'
                 },
                 {
                     name: 'label',
                     type: 'string',
-                    description: 'Accessible label for the trigger button (aria-label) and tooltip text.',
+                    description: 'Accessible label for the trigger button (aria-label) and tooltip text.'
                 },
                 {
                     name: 'icon',
                     type: 'StoneIconName',
-                    description: 'Override the default three-dot icon. Accepts any ReactNode.',
+                    description: 'Override the default three-dot icon. Accepts any ReactNode.'
                 },
-                {
-                    name: 'isDisabled',
-                    type: 'boolean',
-                    description: 'Whether the menu trigger is disabled.',
-                },
+                { name: 'isDisabled', type: 'boolean', description: 'Whether the menu trigger is disabled.' },
                 {
                     name: 'onOpenChange',
                     type: '(isOpen: boolean) => void',
-                    description: 'Callback fired when the menu opens or closes.',
-                },
+                    description: 'Callback fired when the menu opens or closes.'
+                }
             ]}
             example={{
                 title: 'MoreMenu',
@@ -47,7 +43,7 @@ export default function MoreMenuPage() {
       items={[{ id: 'edit', label: 'Edit', onClick: () => navigate('/edit') }]}
     />
   );
-}`,
+}`
             }}
         />
     );
@@ -64,7 +60,7 @@ export function MoreMenuExample() {
                 icon="moreHorizontal"
                 items={[
                     { label: 'Edit', onClick: () => setAction('Editing order') },
-                    { label: 'Delete', variant: 'destructive', onClick: () => setAction('Deleted') },
+                    { label: 'Delete', variant: 'destructive', onClick: () => setAction('Deleted') }
                 ]}
             />
             {action && <Text role="status">{action}</Text>}

@@ -9,67 +9,50 @@ export default function SelectorPage() {
         <ViewLayout
             name="Selector"
             properties={[
-                {
-                    name: 'label',
-                    type: 'string',
-                    description: 'Label text for accessibility.',
-                },
-                {
-                    name: 'description',
-                    type: 'string',
-                    description: 'Helper text displayed below the label.',
-                },
+                { name: 'label', type: 'string', description: 'Label text for accessibility.' },
+                { name: 'description', type: 'string', description: 'Helper text displayed below the label.' },
                 {
                     name: 'name',
                     type: 'string',
-                    description: "Includes the themed control's value under this form submission name.",
+                    description: "Includes the themed control's value under this form submission name."
                 },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.',
-                },
+                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
                 {
                     name: 'disabled',
                     type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.',
+                    description: 'Prevents interaction and excludes the field from submission.'
                 },
                 {
                     name: 'options',
                     type: 'SelectorOptionType[]',
-                    description: 'Selectable options, dividers, or titled sections.',
+                    description: 'Selectable options, dividers, or titled sections.'
                 },
                 {
                     name: 'defaultValue',
                     type: 'string',
-                    description: 'Initial uncontrolled value restored by an uncanceled native form reset.',
+                    description: 'Initial uncontrolled value restored by an uncanceled native form reset.'
                 },
-                {
-                    name: 'hasSearch',
-                    type: 'boolean',
-                    description: 'Shows a search field for filtering options.',
-                },
+                { name: 'hasSearch', type: 'boolean', description: 'Shows a search field for filtering options.' },
                 {
                     name: 'hasClear',
                     type: 'boolean',
-                    description:
-                        'Shows the clear action by default; clearing reports null and submits an empty string.',
+                    description: 'Shows the clear action by default; clearing reports null and submits an empty string.'
                 },
                 {
                     name: 'placeholder',
                     type: 'string',
-                    description: 'Placeholder text shown when no value is selected.',
+                    description: 'Placeholder text shown when no value is selected.'
                 },
                 {
                     name: 'value',
                     type: 'string | null',
-                    description: 'Caller-owned selection, including null. Retaining it rejects a proposed change.',
+                    description: 'Caller-owned selection, including null. Retaining it rejects a proposed change.'
                 },
                 {
                     name: 'onChange',
                     type: '(value: string | null) => void',
-                    description: 'Proposes a selection or null when cleared; does not override a controlled value.',
-                },
+                    description: 'Proposes a selection or null when cleared; does not override a controlled value.'
+                }
             ]}
             example={{
                 title: 'Status form',
@@ -89,7 +72,7 @@ export default function StatusForm() {
       </Stack>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

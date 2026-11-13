@@ -11,7 +11,7 @@ import {
     TableFooter,
     TableHead,
     TableHeader,
-    TableRow,
+    TableRow
 } from '@/components/ui/Table';
 
 it('preserves native element props, refs, and row actions in a composed table', async () => {

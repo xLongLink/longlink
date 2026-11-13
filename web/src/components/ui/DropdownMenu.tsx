@@ -13,5 +13,5 @@ export {
     DropdownMenuShortcut,
     DropdownMenuSub,
     DropdownMenuSubTrigger,
-    DropdownMenuSubContent,
+    DropdownMenuSubContent
 } from '@/components/shadcn/dropdown-menu';

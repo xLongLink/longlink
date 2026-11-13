@@ -11,24 +11,24 @@ export default function ChartDocumentation({ name }: { name: ChartName }) {
                 {
                     name: 'data',
                     type: 'Record<string, string | number>[]',
-                    description: 'Category rows containing numeric series values. Empty data displays an empty state.',
+                    description: 'Category rows containing numeric series values. Empty data displays an empty state.'
                 },
                 {
                     name: 'categoryKey',
                     type: 'string',
-                    description: 'Row field used for axis labels or category names.',
+                    description: 'Row field used for axis labels or category names.'
                 },
                 {
                     name: 'series',
                     type: '{ key: string; label: string }[]',
                     description:
-                        'Numeric row fields and readable labels. PieChart and RadialChart use the first series only.',
+                        'Numeric row fields and readable labels. PieChart and RadialChart use the first series only.'
                 },
                 {
                     name: 'height',
                     type: 'number',
-                    description: 'Height in pixels; defaults to 280. Width follows the parent.',
-                },
+                    description: 'Height in pixels; defaults to 280. Width follows the parent.'
+                }
             ]}
             example={{
                 title: name,
@@ -51,7 +51,7 @@ export default function ChartDocumentation({ name }: { name: ChartName }) {
       ]}
     />
   );
-}`,
+}`
             }}
         />
     );

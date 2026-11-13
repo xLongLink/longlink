@@ -18,7 +18,7 @@ import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onClose,
+    onClose
 }: {
     organizationId: string;
     onSuccess: () => void | Promise<void>;
@@ -38,9 +38,7 @@ export default function CreateSolution({
 
         // Advance only when the image metadata is valid; reinspection resets image-specific drafts.
         const inspected = schemas.zLongLinkMetadata.parse(
-            await api(`/api/v1/organizations/${organizationId}/image`, {
-                searchParams: { image: image.trim() },
-            }).json()
+            await api(`/api/v1/organizations/${organizationId}/image`, { searchParams: { image: image.trim() } }).json()
         );
 
         setImage(image.trim());
@@ -61,7 +59,7 @@ export default function CreateSolution({
                     .filter(([, value]) => value !== '')
             ),
             image,
-            name,
+            name
         });
 
         await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });

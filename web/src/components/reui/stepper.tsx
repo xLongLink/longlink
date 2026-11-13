@@ -123,7 +123,7 @@ function Stepper({
         focusFirst,
         focusLast,
         triggerNodes,
-        indicators,
+        indicators
     };
 
     return (
@@ -257,14 +257,14 @@ function StepperTrigger({ className, children, tabIndex, render, ...props }: Ste
         onClick: () => setActiveStep(step),
         onKeyDown: handleKeyDown,
         disabled: isDisabled,
-        children,
+        children
     };
 
     return useRender({
         defaultTagName: 'button',
         render,
         ref: btnRef,
-        props: mergeProps<'button'>(defaultProps, props),
+        props: mergeProps<'button'>(defaultProps, props)
     });
 }
 
@@ -419,5 +419,5 @@ export {
     type StepperProps,
     type StepperItemProps,
     type StepperTriggerProps,
-    type StepperContentProps,
+    type StepperContentProps
 };

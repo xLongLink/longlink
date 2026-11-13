@@ -23,7 +23,7 @@ it('serializes each authored string once and excludes disabled carriers', () => 
     // Assert
     expect([...output.querySelectorAll('input[name="tags"]')].map((input) => input.getAttribute('value'))).toEqual([
         'red',
-        'blue',
+        'blue'
     ]);
     expect([...output.querySelectorAll('input')].every((input) => input.disabled)).toBe(true);
 });

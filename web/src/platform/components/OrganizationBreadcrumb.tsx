@@ -6,7 +6,7 @@ import type { OrganizationIdentity } from '@/platform/components/OrganizationSwi
 /** Renders resolved organization identity for the actual navigation layout. */
 export function OrganizationBreadcrumb({
     organization,
-    solutionName,
+    solutionName
 }: {
     organization: OrganizationIdentity;
     solutionName?: string;

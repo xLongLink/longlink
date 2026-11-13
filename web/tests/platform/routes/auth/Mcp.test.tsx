@@ -19,7 +19,7 @@ it('withholds approval actions until the server has validated the consent reques
 
 it.each([
     ['Allow access', true, 'https://client.example/callback?code=approved&state=returned'],
-    ['Deny', false, 'https://client.example/callback?error=access_denied&state=returned'],
+    ['Deny', false, 'https://client.example/callback?error=access_denied&state=returned']
 ] as const)(
     'submits %s with the authorization parameters and follows the server redirect',
     async (label, approve, url) => {
@@ -32,7 +32,7 @@ it.each([
             scope: 'mcp',
             state: 'session +/&?=#% value',
             code_challenge: 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG',
-            code_challenge_method: 'S256',
+            code_challenge_method: 'S256'
         };
 
         const requests: Request[] = [];
@@ -49,7 +49,7 @@ it.each([
                     client_name: 'MCP client',
                     redirect_uri: authorization.redirect_uri,
                     solution_name: 'Invoices',
-                    expires_in: 2592000,
+                    expires_in: 2592000
                 });
             }
 

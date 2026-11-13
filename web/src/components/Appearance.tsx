@@ -71,7 +71,7 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
         queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
         staleTime: 0,
         refetchOnWindowFocus: true,
-        retry: false,
+        retry: false
     });
 
     const { data: user, error, refetch } = currentUser;

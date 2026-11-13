@@ -20,16 +20,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
 
-const loginSchema = z.object({
-    email: emailSchema,
-    password: passwordSchema,
-});
+const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
 
 type LoginValues = z.infer<typeof loginSchema>;
 
 const oauthProviders = [
     { availability: 'google', label: 'Continue with Google', path: '/api/v1/auth/oauth/google', icon: GoogleIcon },
-    { availability: 'github', label: 'Continue with GitHub', path: '/api/v1/auth/oauth/github', icon: GitHubIcon },
+    { availability: 'github', label: 'Continue with GitHub', path: '/api/v1/auth/oauth/github', icon: GitHubIcon }
 ] as const;
 
 /** Renders the standalone account sign-in page. */
@@ -50,7 +47,7 @@ export default function Login() {
         queryKey: ['public-api', '/api/v1/auth/oauth'],
         queryFn: ({ signal }) => api('/api/v1/auth/oauth', { signal }).json(zOAuthAvailability),
         enabled: !user,
-        staleTime: Infinity,
+        staleTime: Infinity
     });
 
     // Resolve enabled providers once for both section visibility and button rendering.
@@ -58,7 +55,7 @@ export default function Login() {
 
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(loginSchema)
     });
 
     const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();

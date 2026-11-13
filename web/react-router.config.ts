@@ -25,7 +25,7 @@ const publicPagePaths = [
     '/blog/why-longlink',
     ...legalPaths,
     ...brandingPaths,
-    ...documentationPaths,
+    ...documentationPaths
 ];
 
 const outputDirectory = path.resolve(
@@ -51,7 +51,7 @@ export default {
         // Package the component runtime only with the SDK that owns it.
         if (isSolution) {
             await cp(path.join(import.meta.dirname, 'build/views'), path.join(clientDirectory, 'views'), {
-                recursive: true,
+                recursive: true
             });
 
             // Solutions retain the shared wordmark without publishing Platform images or the public agent guide.
@@ -104,7 +104,7 @@ export default {
                     pagePath === '/login'
                         ? []
                         : [
-                              `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc></url>`,
+                              `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc></url>`
                           ]
                 )
                 .join('\n');
@@ -130,5 +130,5 @@ export default {
         await rm(outputDirectory, { force: true, recursive: true });
         await mkdir(path.dirname(outputDirectory), { recursive: true });
         await rename(clientDirectory, outputDirectory);
-    },
+    }
 } satisfies Config;

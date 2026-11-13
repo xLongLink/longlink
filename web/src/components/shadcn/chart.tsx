@@ -14,15 +14,13 @@ type ChartPayload =
 
 export type ChartConfig = Record<
     string,
-    {
-        label?: React.ReactNode;
-        icon?: React.ComponentType;
-    } & ({ color?: string; theme?: never } | { color?: never; theme: Record<'light' | 'dark', string> })
+    { label?: React.ReactNode; icon?: React.ComponentType } & (
+        | { color?: string; theme?: never }
+        | { color?: never; theme: Record<'light' | 'dark', string> }
+    )
 >;
 
-type ChartContextProps = {
-    config: ChartConfig;
-};
+type ChartContextProps = { config: ChartConfig };
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
@@ -46,10 +44,7 @@ function ChartContainer({
 }: React.ComponentProps<'div'> & {
     config: ChartConfig;
     children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>['children'];
-    initialDimension?: {
-        width: number;
-        height: number;
-    };
+    initialDimension?: { width: number; height: number };
 }) {
     const uniqueId = React.useId();
     const chartId = `chart-${id ?? uniqueId.replace(/:/g, '')}`;
@@ -115,7 +110,7 @@ function ChartTooltipContent({
     formatter,
     color,
     nameKey,
-    labelKey,
+    labelKey
 }: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
     React.ComponentProps<'div'> & {
         hideLabel?: boolean;
@@ -197,12 +192,12 @@ function ChartTooltipContent({
                                                             'w-1': indicator === 'line',
                                                             'w-0 border-[1.5px] border-dashed bg-transparent':
                                                                 indicator === 'dashed',
-                                                            'my-0.5': nestLabel && indicator === 'dashed',
+                                                            'my-0.5': nestLabel && indicator === 'dashed'
                                                         }
                                                     )}
                                                     style={{
                                                         backgroundColor: indicatorColor,
-                                                        borderColor: indicatorColor,
+                                                        borderColor: indicatorColor
                                                     }}
                                                 />
                                             )
@@ -242,7 +237,7 @@ function ChartLegendContent({
     hideIcon = false,
     payload,
     verticalAlign = 'bottom',
-    nameKey,
+    nameKey
 }: React.ComponentProps<'div'> & {
     hideIcon?: boolean;
     nameKey?: string;
@@ -279,9 +274,7 @@ function ChartLegendContent({
                             ) : (
                                 <div
                                     className="h-2 w-2 shrink-0 rounded-[2px]"
-                                    style={{
-                                        backgroundColor: item.color,
-                                    }}
+                                    style={{ backgroundColor: item.color }}
                                 />
                             )}
                             {itemConfig?.label}

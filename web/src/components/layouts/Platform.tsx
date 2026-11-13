@@ -39,7 +39,7 @@ export default function Platform({
     children,
     homeHref = '/',
     sidebarHeader,
-    tabs,
+    tabs
 }: PlatformProps) {
     const { pathname } = useLocation();
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';

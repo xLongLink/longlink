@@ -17,7 +17,7 @@ export function Text({
     justify,
     hasCapsize,
     hasStrikethrough,
-    hasTabularNumbers,
+    hasTabularNumbers
 }: TextProps) {
     return (
         <NativeText

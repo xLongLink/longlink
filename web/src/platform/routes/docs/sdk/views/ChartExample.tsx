@@ -8,7 +8,7 @@ export type ChartName = keyof typeof charts | 'SankeyChart';
 export function ChartExample({
     name,
     height = 280,
-    isCompact,
+    isCompact
 }: {
     name: ChartName;
     height?: number;
@@ -23,7 +23,7 @@ export function ChartExample({
                 nodes={[{ name: 'Revenue' }, { name: 'Costs' }, { name: 'Profit' }]}
                 links={[
                     { source: 0, target: 1, value: 60 },
-                    { source: 0, target: 2, value: 40 },
+                    { source: 0, target: 2, value: 40 }
                 ]}
             />
         );
@@ -42,11 +42,11 @@ export function ChartExample({
                 { month: 'Feb', requests: 180, responses: 140 },
                 { month: 'Mar', requests: 150, responses: 130 },
                 { month: 'Apr', requests: 240, responses: 190 },
-                { month: 'May', requests: 210, responses: 170 },
+                { month: 'May', requests: 210, responses: 170 }
             ]}
             series={[
                 { key: 'requests', label: 'Requests' },
-                { key: 'responses', label: 'Responses' },
+                { key: 'responses', label: 'Responses' }
             ]}
         />
     );

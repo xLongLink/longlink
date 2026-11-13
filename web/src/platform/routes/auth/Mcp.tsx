@@ -18,12 +18,12 @@ export default function McpAuthorization() {
     const {
         data: consent,
         isLoading,
-        error,
+        error
     } = useQuery({
         queryKey: ['api', '/api/v1/mcp/consent', query, user?.id],
         queryFn: ({ signal }) => api(`/api/v1/mcp/consent?${query}`, { signal }).json(zConsent),
         enabled: !!user,
-        retry: false,
+        retry: false
     });
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
@@ -34,12 +34,7 @@ export default function McpAuthorization() {
 
         // Preserve the validated request parameters and redirect contract.
         const result = await api
-            .post('/api/v1/mcp/consent', {
-                json: {
-                    ...Object.fromEntries(params),
-                    approve: decision === 'allow',
-                },
-            })
+            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
             .json(zAuthorizationRedirect);
 
         window.location.assign(result.url);

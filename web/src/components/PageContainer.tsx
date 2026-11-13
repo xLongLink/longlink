@@ -27,8 +27,8 @@ export function PageContainer({ className, maxWidth = 1000, ...props }: PageCont
                     end: 'flex-end',
                     between: 'space-between',
                     around: 'space-around',
-                    evenly: 'space-evenly',
-                }[props.justify ?? 'start'],
+                    evenly: 'space-evenly'
+                }[props.justify ?? 'start']
             }}
         >
             {props.children}

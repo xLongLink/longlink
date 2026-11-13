@@ -15,33 +15,33 @@ export default function FormPage() {
                 {
                     name: 'children',
                     type: 'ReactNode',
-                    description: 'Named fields and layout, including a custom Wizard.',
+                    description: 'Named fields and layout, including a custom Wizard.'
                 },
                 {
                     name: 'action',
                     type: 'string',
-                    description: 'Solution-relative API path; external URLs are not supported.',
+                    description: 'Solution-relative API path; external URLs are not supported.'
                 },
                 {
                     name: 'method',
                     type: '"delete" | "post" | "put" | "patch"',
-                    description: 'Write method used to submit the form; defaults to post.',
+                    description: 'Write method used to submit the form; defaults to post.'
                 },
                 {
                     name: 'id',
                     type: 'string',
-                    description: 'Native form ID for associating external submit or reset buttons.',
+                    description: 'Native form ID for associating external submit or reset buttons.'
                 },
                 {
                     name: 'height',
                     type: 'string | number',
-                    description: 'Optional form height. Wizard owns its panel layout.',
+                    description: 'Optional form height. Wizard owns its panel layout.'
                 },
                 {
                     name: 'onSuccess',
                     type: '(data: ViewData) => void | Promise<void>',
-                    description: 'Runs after a successful write and automatic cached-data refresh.',
-                },
+                    description: 'Runs after a successful write and automatic cached-data refresh.'
+                }
             ]}
             example={{
                 title: 'Create an item form',
@@ -61,7 +61,7 @@ export default function CreateItem() {
       </Wizard>
     </Form>
   );
-}`,
+}`
             }}
         />
     );

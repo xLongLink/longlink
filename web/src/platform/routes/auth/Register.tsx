@@ -20,7 +20,7 @@ export default function Register() {
 
     const form = useForm<EmailPayload>({
         defaultValues: { email: searchParams.get('email') ?? '' },
-        resolver: zodResolver(emailPayloadSchema),
+        resolver: zodResolver(emailPayloadSchema)
     });
 
     const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();

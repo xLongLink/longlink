@@ -47,7 +47,7 @@ export function useUpdateUser() {
                     ? queryClient.setQueryData(['api', '/api/v1/me'], {
                           ...previous,
                           theme: update.theme ?? previous.theme,
-                          accent: update.accent ?? previous.accent,
+                          accent: update.accent ?? previous.accent
                       })
                     : undefined;
 
@@ -66,7 +66,7 @@ export function useUpdateUser() {
             await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
             queryClient.setQueryData(['api', '/api/v1/me'], user);
         },
-        onError: reportError,
+        onError: reportError
     });
 }
 

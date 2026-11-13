@@ -12,27 +12,27 @@ export default function TabsPage() {
                 {
                     name: 'defaultValue',
                     type: 'unknown',
-                    description: 'Initially selected value in uncontrolled mode.',
+                    description: 'Initially selected value in uncontrolled mode.'
                 },
                 { name: 'value', type: 'unknown', description: 'Selected value in controlled mode.' },
                 {
                     name: 'onValueChange',
                     type: '(value: unknown, eventDetails: Tabs.Root.ChangeEventDetails) => void',
-                    description: 'Called when the selected tab changes.',
+                    description: 'Called when the selected tab changes.'
                 },
                 { name: 'orientation', type: '"horizontal" | "vertical"' },
                 { name: 'TabsList.variant', type: '"default" | "line"' },
                 {
                     name: 'TabsList.activateOnFocus',
                     type: 'boolean',
-                    description: 'Select tabs when keyboard focus moves.',
+                    description: 'Select tabs when keyboard focus moves.'
                 },
                 { name: 'TabsTrigger.value', type: 'unknown', description: 'Value associated with this tab.' },
                 { name: 'TabsTrigger.disabled', type: 'boolean' },
                 { name: 'TabsTrigger.children', type: 'ReactNode', description: 'Visible tab label.' },
                 { name: 'TabsContent.value', type: 'unknown', description: 'Value associated with this panel.' },
                 { name: 'TabsContent.keepMounted', type: 'boolean', description: 'Keep an inactive panel in the DOM.' },
-                { name: 'TabsContent.children', type: 'ReactNode', description: 'Panel content.' },
+                { name: 'TabsContent.children', type: 'ReactNode', description: 'Panel content.' }
             ]}
             example={{
                 title: 'Tabs',
@@ -52,7 +52,7 @@ export default function TabsPage() {
       </TabsContent>
     </Tabs>
   );
-}`,
+}`
             }}
         />
     );

@@ -5,7 +5,7 @@ import {
     Pagination as Navigation,
     PaginationContent,
     PaginationEllipsis,
-    PaginationItem,
+    PaginationItem
 } from '@/components/shadcn/pagination';
 
 /** Navigates pages of table or gallery items without owning their data or selection. */

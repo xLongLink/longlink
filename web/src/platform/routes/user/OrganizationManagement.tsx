@@ -33,7 +33,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
 
     // Start independent account reads together, retaining their separate cache entries.
     const [{ data: memberships }, { data: invitations }] = useSuspenseQueries({
-        queries: [membershipsQuery, invitationsQuery],
+        queries: [membershipsQuery, invitationsQuery]
     });
 
     const invalidateMemberships = () => client.invalidateQueries({ queryKey: membershipsQuery.queryKey, exact: true });
@@ -43,7 +43,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
     // List pending invitations above memberships in the same organization table.
     const rows = [
         ...invitations.map((invitation) => ({ ...invitation, kind: 'invitation' as const })),
-        ...memberships.map((membership) => ({ ...membership, kind: 'membership' as const })),
+        ...memberships.map((membership) => ({ ...membership, kind: 'membership' as const }))
     ];
 
     /** Closes only this attempt, leaving any replacement dialog open. */
@@ -161,7 +161,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                             </Text>
                                         </Stack>
                                     </Stack>
-                                ),
+                                )
                             },
                             ...(invitations.length > 0
                                 ? [
@@ -180,7 +180,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                               setSelected({
                                                                   type: 'decline',
                                                                   id: row.id,
-                                                                  name: row.organization.name,
+                                                                  name: row.organization.name
                                                               })
                                                           }
                                                       />
@@ -192,15 +192,15 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                               setSelected({
                                                                   type: 'accept',
                                                                   id: row.id,
-                                                                  name: row.organization.name,
+                                                                  name: row.organization.name
                                                               })
                                                           }
                                                       />
                                                   </Stack>
-                                              ) : null,
-                                      },
+                                              ) : null
+                                      }
                                   ]
-                                : []),
+                                : [])
                         ]}
                     />
                 )}
@@ -249,9 +249,9 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                         await Promise.all([
                                             client.invalidateQueries({
                                                 queryKey: invitationsQuery.queryKey,
-                                                exact: true,
+                                                exact: true
                                             }),
-                                            ...(selected.type === 'accept' ? [invalidateMemberships()] : []),
+                                            ...(selected.type === 'accept' ? [invalidateMemberships()] : [])
                                         ]);
                                         closeSelected();
                                     }

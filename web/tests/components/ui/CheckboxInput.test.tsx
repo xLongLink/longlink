@@ -18,7 +18,7 @@ it('maps field names and required state onto the native checkbox', () => {
 
 it.each([
     ['checkbox', CheckboxInput],
-    ['switch', SwitchField],
+    ['switch', SwitchField]
 ] as const)('%s serializes only checked answers and restores uncanceled local defaults', async (_, Control) => {
     // Real form reset must update both the accessible state and the successful native control.
     const user = userEvent.setup();
@@ -50,7 +50,7 @@ it.each([
 
 it.each([
     ['checkbox', CheckboxInput],
-    ['switch', SwitchField],
+    ['switch', SwitchField]
 ] as const)('%s keeps controlled answers through rejected changes and reset', async (_, Control) => {
     // A caller can reject a user change without losing its saved value during native reset.
     const user = userEvent.setup();
@@ -78,7 +78,7 @@ it.each([
 
 it.each([
     ['checkbox', CheckboxInput],
-    ['switch', SwitchField],
+    ['switch', SwitchField]
 ] as const)('%s activates from its label and keyboard and enforces a required answer', async (_, Control) => {
     // Native validation must recover when the accessible control changes the actual submitted input.
     const user = userEvent.setup();
@@ -121,7 +121,7 @@ it.each([
 
 it.each([
     ['checkbox', CheckboxInput],
-    ['switch', SwitchField],
+    ['switch', SwitchField]
 ] as const)('%s keeps disabled answers focusable but immutable and omitted', async (_, Control) => {
     // Disabled settings remain discoverable without blocking submission or leaking saved values.
     const user = userEvent.setup();
@@ -160,7 +160,7 @@ it.each([
 
 it.each([
     ['checkbox', CheckboxInput],
-    ['switch', SwitchField],
+    ['switch', SwitchField]
 ] as const)('%s inherits native disabled fieldsets for focus and mutation', async (_, Control) => {
     // Fieldset disabling must cover the visible control as well as its hidden native input.
     const user = userEvent.setup();

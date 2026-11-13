@@ -17,7 +17,7 @@ it('retains multiline content under its native submission name', () => {
 
 it.each([
     ['textarea', TextArea],
-    ['text input', TextInput],
+    ['text input', TextInput]
 ] as const)('focuses the %s from its description without adding that description to its name', async (_, Control) => {
     const user = userEvent.setup();
 

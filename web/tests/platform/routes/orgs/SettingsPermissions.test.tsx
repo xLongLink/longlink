@@ -23,7 +23,7 @@ const owner = {
     id: '00000000-0000-4000-8000-000000000003',
     name: 'Organization owner',
     email: 'owner@example.com',
-    avatar: '',
+    avatar: ''
 };
 
 /** Supplies the resolved caller identity without mounting unrelated organization queries. */
@@ -65,21 +65,21 @@ it('hides owner actions from admins while keeping actions for nonowners', () => 
         ...owner,
         id: '00000000-0000-4000-8000-000000000004',
         name: 'Reader',
-        email: 'reader@example.com',
+        email: 'reader@example.com'
     };
 
     const writer = {
         ...owner,
         id: '00000000-0000-4000-8000-000000000005',
         name: 'Writer',
-        email: 'writer@example.com',
+        email: 'writer@example.com'
     };
 
     const maintainer = {
         ...owner,
         id: '00000000-0000-4000-8000-000000000006',
         name: 'Maintainer',
-        email: 'maintainer@example.com',
+        email: 'maintainer@example.com'
     };
 
     // Act
@@ -91,9 +91,9 @@ it('hides owner actions from admins while keeping actions for nonowners', () => 
                 { user: owner, role: 'owner' },
                 { user: reader, role: 'read' },
                 { user: writer, role: 'write' },
-                { user: maintainer, role: 'maintain' },
-            ],
-        ],
+                { user: maintainer, role: 'maintain' }
+            ]
+        ]
     ]);
 
     // Assert
@@ -110,10 +110,10 @@ it.each([
         target: 'another owner',
         rows: [
             { user: caller, role: 'owner' },
-            { user: owner, role: 'owner' },
+            { user: owner, role: 'owner' }
         ],
-        email: owner.email,
-    },
+        email: owner.email
+    }
 ])('keeps owner actions available to an owner targeting $target', ({ rows, email }) => {
     // Act
     const output = renderStatic(settingsFor('owner'), `${path}#members`, [[`${base}/members`, rows]]);
@@ -125,12 +125,10 @@ it.each([
 it.each([
     { role: 'maintain', options: ['read', 'write', 'maintain'] },
     { role: 'admin', options: ['read', 'write', 'maintain', 'admin'] },
-    { role: 'owner', options: ['read', 'write', 'maintain', 'admin'] },
+    { role: 'owner', options: ['read', 'write', 'maintain', 'admin'] }
 ] as const)('offers only permitted invitation roles to $role callers', async ({ role, options }) => {
     // Arrange
-    const client = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } },
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
 
     client.setQueryData(['api', `${base}/invitations`], []);
 

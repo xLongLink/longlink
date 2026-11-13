@@ -47,7 +47,7 @@ function isMenuItem(child: ReactNode): child is ReactElement<MenuItemProps> {
 /** Renders section navigation beside content, or above it at View widths of 768px and below. */
 export function Menu({
     children,
-    gap = 3,
+    gap = 3
 }: {
     /** MenuSection elements defining navigation and content. */
     children?: ReactNode;
@@ -72,13 +72,13 @@ export function Menu({
                         {
                             kind: 'subsection',
                             group: child,
-                            items: Children.toArray(child.props.children).filter(isMenuItem),
-                        },
+                            items: Children.toArray(child.props.children).filter(isMenuItem)
+                        }
                     ];
                 }
 
                 return [];
-            }),
+            })
         }));
 
     // Resolve selectable items in navigation order.

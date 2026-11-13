@@ -24,7 +24,7 @@ export async function load(
         ...options,
         signal: AbortSignal.any([options.signal, AbortSignal.timeout(REQUEST_TIMEOUT)]),
         redirect: 'error',
-        timeout: false,
+        timeout: false
     });
 
     // Preserve only supported media types before granting a binary response to the sandbox.
@@ -60,7 +60,7 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         json: command.json,
         body: form,
         cache: command.binary ? 'no-cache' : undefined,
-        signal,
+        signal
     });
 
     if (command.binary) return body;
@@ -103,7 +103,7 @@ export function requestError(cause: unknown): RequestFailure {
                 cause.status < 500
                     ? cause.message.slice(0, 1024)
                     : 'The server could not complete the request. Please try again.',
-            status: cause.status,
+            status: cause.status
         };
     }
 

@@ -16,10 +16,10 @@ export default function DialogPage() {
                 {
                     name: 'variant',
                     type: '"standard" | "fullscreen"',
-                    description: 'Fixed frame or fullscreen overlay.',
+                    description: 'Fixed frame or fullscreen overlay.'
                 },
                 { name: 'gap', type: 'Spacing', description: 'Space between the header and body.' },
-                { name: 'paddingInline', type: 'Spacing', description: 'Body inline padding.' },
+                { name: 'paddingInline', type: 'Spacing', description: 'Body inline padding.' }
             ]}
             example={{
                 title: 'Fullscreen frame',
@@ -34,7 +34,7 @@ export default function DialogPage() {
       </Dialog>
     </>
   );
-}`,
+}`
             }}
         />
     );

@@ -8,7 +8,7 @@ it('keeps cumulative links canonical while decoding readable labels', () => {
     // Assert
     expect(breadcrumbs).toEqual([
         { label: 'Documentation', href: '/docs/' },
-        { label: 'Order History', href: '/docs/order%20history/' },
+        { label: 'Order History', href: '/docs/order%20history/' }
     ]);
     expect(formatPathSegment('%invalid')).toBe('Invalid');
 });

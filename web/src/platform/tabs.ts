@@ -13,7 +13,7 @@ import {
     AppWindow,
     ClipboardList,
     BriefcaseBusiness,
-    ChartNoAxesCombined,
+    ChartNoAxesCombined
 } from 'lucide-react';
 
 export const icons = {
@@ -28,5 +28,5 @@ export const icons = {
     folder: { label: 'Folder', component: Folder },
     layers: { label: 'Layers', component: Layers },
     users: { label: 'People', component: Users },
-    wrench: { label: 'Tools', component: Wrench },
+    wrench: { label: 'Tools', component: Wrench }
 } satisfies Record<z.output<typeof zTagIcon>, { label: string; component: LucideIcon }>;

@@ -114,7 +114,7 @@ it('supports keyboard, outside, and touch dismissal and aborts the request when 
                 await act(async () => {
                     await events.pointer([
                         { keys: '[TouchA>]', target: button('Acme') },
-                        { keys: '[/TouchA]', target: button('Acme') },
+                        { keys: '[/TouchA]', target: button('Acme') }
                     ]);
                 });
                 expect(button('Acme').getAttribute('aria-expanded')).toBe('true');

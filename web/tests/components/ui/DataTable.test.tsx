@@ -27,7 +27,7 @@ it('renders every supplied row and safely formats automatically generated cells'
                 name: `Shipment ${index + 1}`,
                 active: false,
                 received: new Date('2026-10-13T14:30:00Z'),
-                details: { secret: 'not a display value' },
+                details: { secret: 'not a display value' }
             }))}
         />
     );
@@ -87,7 +87,7 @@ it('keeps fixed widths and flexible ratios readable on a narrow table', () => {
                 { key: 'action', width: pixel(80) },
                 { key: 'reference', width: proportional() },
                 { key: 'owner' },
-                { key: 'description', width: proportional(2, { minWidth: 240 }) },
+                { key: 'description', width: proportional(2, { minWidth: 240 }) }
             ]}
         />
     );
@@ -99,7 +99,7 @@ it('keeps fixed widths and flexible ratios readable on a narrow table', () => {
         '80px',
         'calc((100% - 80px) * 0.25)',
         'calc((100% - 80px) * 0.25)',
-        'calc((100% - 80px) * 0.5)',
+        'calc((100% - 80px) * 0.5)'
     ]);
 });
 
@@ -123,7 +123,7 @@ it('makes a wide read-only table a named keyboard tab target without hiding nati
                 clientWidth: { value: 320 },
                 scrollWidth: { value: 600 },
                 clientHeight: { value: 64 },
-                scrollHeight: { value: 64 },
+                scrollHeight: { value: 64 }
             });
             await act(async () => viewport.dispatchEvent(new Event('scroll')));
             expect(viewport.getAttribute('role')).toBe('group');
@@ -162,7 +162,7 @@ it('skips a fitting table and preserves focus when an overflowing table becomes 
                 clientWidth: { value: 320 },
                 scrollWidth: { get: () => contentWidth },
                 clientHeight: { value: 64 },
-                scrollHeight: { value: 64 },
+                scrollHeight: { value: 64 }
             });
             await act(async () => viewport.dispatchEvent(new Event('scroll')));
             expect(viewport.tabIndex).toBe(-1);
@@ -211,8 +211,8 @@ it('runs real View cell actions against replacement data and column definitions'
                                 <button type="button" onClick={() => selected(row.name)}>
                                     Open {row.name}
                                 </button>
-                            ),
-                        },
+                            )
+                        }
                     ]}
                 />
             </>
@@ -248,7 +248,7 @@ it('keeps native row-local edits attached to domain identities through reorderin
 
         const rows = [
             { id: 'north', name: 'North shipment' },
-            { id: 'south', name: 'South shipment' },
+            { id: 'south', name: 'South shipment' }
         ];
 
         return (
@@ -261,7 +261,7 @@ it('keeps native row-local edits attached to domain identities through reorderin
                     data={reversed ? [...rows].reverse() : rows}
                     columns={[
                         { key: 'name' },
-                        { key: 'action', renderCell: (row) => <RowSelection name={row.name} /> },
+                        { key: 'action', renderCell: (row) => <RowSelection name={row.name} /> }
                     ]}
                 />
             </>
@@ -295,8 +295,8 @@ it('retains inherited and explicit control sizes without forcing compact cells t
                 <Button variant="outline" size="sm">
                     Explicit size
                 </Button>
-            ),
-        },
+            )
+        }
     ];
 
     function Results() {

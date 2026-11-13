@@ -14,7 +14,7 @@ import {
     SelectItem,
     SelectLabel,
     SelectSeparator,
-    SelectTrigger,
+    SelectTrigger
 } from '@/components/shadcn/select';
 import {
     ComboboxContent,
@@ -24,7 +24,7 @@ import {
     ComboboxLabel,
     ComboboxList,
     ComboboxSeparator,
-    ComboboxTrigger,
+    ComboboxTrigger
 } from '@/components/shadcn/combobox';
 
 type PickerProps = Omit<FieldProps, 'name'> & {
@@ -89,9 +89,9 @@ export function Picker(props: PickerProps) {
             items: props.multiple
                 ? [
                       ...visible.filter((item) => order.includes(item.value)),
-                      ...visible.filter((item) => !order.includes(item.value)),
+                      ...visible.filter((item) => !order.includes(item.value))
                   ]
-                : visible,
+                : visible
         };
     });
 

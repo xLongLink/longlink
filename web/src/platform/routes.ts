@@ -8,8 +8,8 @@ export default [
             { index: true, file: './routes/Index.tsx' },
             { path: 'pricing', file: './routes/Pricing.tsx' },
             { path: 'blog', file: './routes/blog/Index.tsx' },
-            { path: 'blog/why-longlink', file: './routes/blog/WhyLongLink.tsx' },
-        ],
+            { path: 'blog/why-longlink', file: './routes/blog/WhyLongLink.tsx' }
+        ]
     },
     { path: 'docs/introduction', file: './routes/docs/Introduction.tsx' },
     {
@@ -28,7 +28,7 @@ export default [
             // Keep component routes aligned with the published documentation catalog.
             ...componentDocumentation.map(({ slug, label }) => ({
                 path: `docs/sdk/views/${slug}`,
-                file: `./routes/docs/sdk/views/${label}.tsx`,
+                file: `./routes/docs/sdk/views/${label}.tsx`
             })),
             { path: 'docs/api', index: true, file: './routes/docs/api/Index.tsx' },
             { path: 'docs/api/organizations', file: './routes/docs/api/Organizations.tsx' },
@@ -38,8 +38,8 @@ export default [
             { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/Platform.tsx' },
             { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/Compute.tsx' },
             { path: 'docs/alternatives', file: './routes/docs/alternatives/Index.tsx' },
-            { path: 'docs/*', file: '../components/layouts/NotFound.tsx', id: 'docs-not-found' },
-        ],
+            { path: 'docs/*', file: '../components/layouts/NotFound.tsx', id: 'docs-not-found' }
+        ]
     },
     {
         file: './layouts/Legal.tsx',
@@ -49,8 +49,8 @@ export default [
             { path: 'privacy', file: './routes/legal/Privacy.tsx' },
             { path: 'branding/assets', file: './routes/branding/Assets.tsx' },
             { path: 'branding/values', file: './routes/branding/Values.tsx' },
-            { path: 'branding/comunication', file: './routes/branding/Communication.tsx' },
-        ],
+            { path: 'branding/comunication', file: './routes/branding/Communication.tsx' }
+        ]
     },
     {
         file: './layouts/Account.tsx',
@@ -58,8 +58,8 @@ export default [
             { path: 'login', file: './routes/auth/Login.tsx' },
             { path: 'auth/register', file: './routes/auth/Register.tsx' },
             { path: 'auth/forgot-password', file: './routes/auth/ForgotPassword.tsx' },
-            { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' },
-        ],
+            { path: 'auth/reset-password', file: './routes/auth/ResetPassword.tsx' }
+        ]
     },
     {
         file: './layouts/Brand.tsx',
@@ -67,8 +67,8 @@ export default [
             { path: 'auth/verify-email', file: './routes/auth/VerifyEmail.tsx' },
             { path: 'mcp/authorize', file: './routes/auth/Mcp.tsx' },
             { path: '404', file: '../components/layouts/NotFound.tsx', id: 'not-found' },
-            { path: '*', file: '../components/layouts/NotFound.tsx' },
-        ],
+            { path: '*', file: '../components/layouts/NotFound.tsx' }
+        ]
     },
     {
         file: './layouts/Authenticated.tsx',
@@ -77,8 +77,8 @@ export default [
                 file: './layouts/User.tsx',
                 children: [
                     { path: 'user/organizations', file: './routes/user/Organizations.tsx' },
-                    { path: 'user/settings', file: './routes/user/Settings.tsx' },
-                ],
+                    { path: 'user/settings', file: './routes/user/Settings.tsx' }
+                ]
             },
             {
                 file: './layouts/Admin.tsx',
@@ -88,11 +88,11 @@ export default [
                     {
                         id: 'admin-organizations',
                         path: 'admin/organizations',
-                        file: './routes/admin/Organizations.tsx',
+                        file: './routes/admin/Organizations.tsx'
                     },
                     { id: 'admin-compute', path: 'admin/compute', file: './routes/admin/Compute.tsx' },
-                    { id: 'admin-operations', path: 'admin/operations', file: './routes/admin/Operations.tsx' },
-                ],
+                    { id: 'admin-operations', path: 'admin/operations', file: './routes/admin/Operations.tsx' }
+                ]
             },
             {
                 file: './layouts/OrganizationAccess.tsx',
@@ -101,12 +101,12 @@ export default [
                         file: './layouts/Organization.tsx',
                         children: [
                             { path: 'orgs/:organization', index: true, file: './routes/orgs/Organization.tsx' },
-                            { path: 'orgs/:organization/settings', file: './routes/orgs/Settings.tsx' },
-                        ],
+                            { path: 'orgs/:organization/settings', file: './routes/orgs/Settings.tsx' }
+                        ]
                     },
-                    { path: 'orgs/:organization/solutions/:solution/*', file: './routes/orgs/Solution.tsx' },
-                ],
-            },
-        ],
-    },
+                    { path: 'orgs/:organization/solutions/:solution/*', file: './routes/orgs/Solution.tsx' }
+                ]
+            }
+        ]
+    }
 ] satisfies RouteConfig;

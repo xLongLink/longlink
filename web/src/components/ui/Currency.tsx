@@ -2,7 +2,7 @@
 export function Currency({
     value,
     currency,
-    locale,
+    locale
 }: {
     /** Amount to format in currency units. */
     value: number;

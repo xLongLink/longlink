@@ -6,7 +6,7 @@ const style: CSSProperties & Record<`--${string}`, string> = {
     '--normal-bg': 'var(--popover)',
     '--normal-text': 'var(--popover-foreground)',
     '--normal-border': 'var(--border)',
-    '--border-radius': 'var(--radius)',
+    '--border-radius': 'var(--radius)'
 };
 
 function Toaster({ ...props }: ComponentProps<typeof Sonner>) {
@@ -19,7 +19,7 @@ function Toaster({ ...props }: ComponentProps<typeof Sonner>) {
                 info: <InfoIcon className="size-4" aria-hidden="true" />,
                 warning: <TriangleAlertIcon className="size-4" aria-hidden="true" />,
                 error: <OctagonXIcon className="size-4" aria-hidden="true" />,
-                loading: <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />,
+                loading: <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
             }}
             style={style}
             toastOptions={{ classNames: { toast: 'cn-toast' } }}

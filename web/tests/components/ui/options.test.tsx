@@ -19,9 +19,9 @@ it.each([false, true])(
                 title: 'People',
                 options: [
                     { value: 'owner-id', label: 'Owner', icon: 'userRound' },
-                    { value: 'blocked-id', label: 'Blocked', icon: 'warning', disabled: true },
-                ],
-            },
+                    { value: 'blocked-id', label: 'Blocked', icon: 'warning', disabled: true }
+                ]
+            }
         ];
 
         await withMounted(

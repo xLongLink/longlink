@@ -8,7 +8,7 @@ const article = {
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-10-18',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Index.tsx',
-    title: 'Platform Documentation | LongLink',
+    title: 'Platform Documentation | LongLink'
 };
 
 export default function DocsArticleRoute() {

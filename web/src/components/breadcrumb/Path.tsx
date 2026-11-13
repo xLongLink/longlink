@@ -7,7 +7,7 @@ import { Breadcrumbs, BreadcrumbItem } from '@/components/breadcrumb/Breadcrumbs
 export function PathBreadcrumb({
     className,
     labels,
-    root,
+    root
 }: {
     className?: string;
     labels?: Record<string, string>;

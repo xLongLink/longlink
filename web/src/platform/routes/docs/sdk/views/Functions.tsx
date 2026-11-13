@@ -9,13 +9,13 @@ const functions = [
     {
         name: 'navigate(path)',
         description:
-            'Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.',
+            'Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
     },
     {
         name: 'request(path, options)',
         description:
-            'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.',
-    },
+            'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
+    }
 ];
 
 /** Documents the non-hook bindings exposed by the View runtime. */
@@ -40,8 +40,8 @@ export default function FunctionsPage() {
                                 <Text>{functionEntry.name}</Text>
                                 <Text type="supporting">{functionEntry.description}</Text>
                             </Stack>
-                        ),
-                    },
+                        )
+                    }
                 ]}
             />
         </ViewLayout>

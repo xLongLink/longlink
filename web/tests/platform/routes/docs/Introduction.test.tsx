@@ -11,7 +11,7 @@ it('redirects the legacy introduction URL to the blog article without retaining 
         [
             { path: '/pricing/', element: <h1>Pricing</h1> },
             { path: '/docs/introduction/', element: <Introduction /> },
-            { path: '/blog/why-longlink/', element: <h1>Why LongLink</h1> },
+            { path: '/blog/why-longlink/', element: <h1>Why LongLink</h1> }
         ],
         { initialEntries: ['/pricing/', '/docs/introduction/'], initialIndex: 1 }
     );

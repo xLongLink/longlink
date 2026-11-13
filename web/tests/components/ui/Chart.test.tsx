@@ -12,28 +12,15 @@ it('rejects cyclic or invalid flow links but accepts converging acyclic flows', 
     const links = [
         { source: 0, target: 2, value: 60 },
         { source: 1, target: 2, value: 40 },
-        { source: 2, target: 3, value: 100 },
+        { source: 2, target: 3, value: 100 }
     ];
 
     expect(sankeyDataSchema.safeParse({ nodes, links }).success).toBe(true);
-    expect(
-        sankeyDataSchema.safeParse({
-            nodes,
-            links: [...links, { source: 3, target: 0, value: 10 }],
-        }).success
-    ).toBe(false);
-    expect(
-        sankeyDataSchema.safeParse({
-            nodes,
-            links: [{ source: 0, target: 4, value: 10 }],
-        }).success
-    ).toBe(false);
-    expect(
-        sankeyDataSchema.safeParse({
-            nodes,
-            links: [{ source: 0, target: 0, value: 10 }],
-        }).success
-    ).toBe(false);
+    expect(sankeyDataSchema.safeParse({ nodes, links: [...links, { source: 3, target: 0, value: 10 }] }).success).toBe(
+        false
+    );
+    expect(sankeyDataSchema.safeParse({ nodes, links: [{ source: 0, target: 4, value: 10 }] }).success).toBe(false);
+    expect(sankeyDataSchema.safeParse({ nodes, links: [{ source: 0, target: 0, value: 10 }] }).success).toBe(false);
 });
 
 it('recovers from invalid flow data when the next result contains valid links', async () => {

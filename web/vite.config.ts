@@ -18,7 +18,7 @@ const ignoredPaths = [
     '.pi/**',
     '.roo/**',
     '.windsurf/**',
-    'tools/oxlint/anti-slop/**',
+    'tools/oxlint/anti-slop/**'
 ];
 
 export default defineConfig(({ mode }) => {
@@ -35,32 +35,24 @@ export default defineConfig(({ mode }) => {
         fmt: {
             arrowParens: 'always',
             ignorePatterns: ignoredPaths,
+            objectWrap: 'collapse',
             printWidth: 120,
             semi: true,
             singleQuote: true,
             sortImports: false,
             sortPackageJson: false,
             tabWidth: 4,
-            trailingComma: 'es5',
+            trailingComma: 'none'
         },
 
         lint: {
-            categories: {
-                correctness: 'error',
-            },
-            env: {
-                browser: true,
-                builtin: true,
-                es2020: true,
-            },
+            categories: { correctness: 'error' },
+            env: { browser: true, builtin: true, es2020: true },
             ignorePatterns: ignoredPaths,
-            options: {
-                typeAware: true,
-                typeCheck: true,
-            },
+            options: { typeAware: true, typeCheck: true },
             jsPlugins: [
                 'eslint-plugin-perfectionist',
-                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
+                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
             ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
             rules: {
@@ -90,8 +82,8 @@ export default defineConfig(({ mode }) => {
                         groups: ['import'],
                         newlinesBetween: 0,
                         order: 'asc',
-                        type: 'line-length',
-                    },
+                        type: 'line-length'
+                    }
                 ],
                 'react/no-children-prop': 'off',
                 'react/no-did-update-set-state': 'off',
@@ -108,24 +100,18 @@ export default defineConfig(({ mode }) => {
                 'typescript/no-unnecessary-type-assertion': 'error',
                 'typescript/no-unsafe-assignment': 'error',
                 'typescript/unbound-method': 'off',
-                'react/no-array-index-key': 'error',
-            },
+                'react/no-array-index-key': 'error'
+            }
         },
 
         envPrefix: ['VITE_', 'VERSION'],
 
         build: {
             assetsDir: mode === 'sdk' ? '_longlink/assets' : 'assets',
-            rolldownOptions: {
-                checks: {
-                    moduleLevelDirective: false,
-                },
-            },
+            rolldownOptions: { checks: { moduleLevelDirective: false } }
         },
 
-        resolve: {
-            tsconfigPaths: true,
-        },
+        resolve: { tsconfigPaths: true },
 
         server: {
             host: devServerHost,
@@ -133,15 +119,10 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
 
             // Route API calls and canonical MCP resource discovery to the local backend.
-            proxy: {
-                '/api': 'http://localhost:8000',
-                '/.well-known/oauth-protected-resource': 'http://localhost:8000',
-            },
+            proxy: { '/api': 'http://localhost:8000', '/.well-known/oauth-protected-resource': 'http://localhost:8000' }
         },
 
         // Keep React Router's build-time preview request on the socket Vite binds in containers.
-        preview: {
-            host: '127.0.0.1',
-        },
+        preview: { host: '127.0.0.1' }
     };
 });

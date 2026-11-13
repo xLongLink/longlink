@@ -22,7 +22,7 @@ it('keeps unresolved organization reads behind their loading boundary', () => {
 
 it.each([
     { status: 403, title: 'Unable to load organization', description: "We couldn't load this organization." },
-    { status: 404, title: "We can't find that page", description: "This page doesn't exist or isn't available." },
+    { status: 404, title: "We can't find that page", description: "This page doesn't exist or isn't available." }
 ])('blocks nested organization content when membership returns $status', async ({ status, title, description }) => {
     // Arrange
     const base = `/api/v1/organizations/${membership.organization.id}`;

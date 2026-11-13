@@ -18,14 +18,14 @@ it('ignores a mismatched session and releases an admitted port when its mount is
             source: 'export default function View() { return null; }',
             params: {},
             navigationBaseUrl: 'https://platform.example/',
-            appearance: { theme: 'system', accent: 'neutral' },
+            appearance: { theme: 'system', accent: 'neutral' }
         };
 
         window.dispatchEvent(
             new MessageEvent('message', {
                 source: window,
                 ports: [channel.port1],
-                data: { ...proof, session: 'wrong-session' },
+                data: { ...proof, session: 'wrong-session' }
             })
         );
 
@@ -35,7 +35,7 @@ it('ignores a mismatched session and releases an admitted port when its mount is
             new MessageEvent('message', {
                 source: window,
                 ports: [channel.port1],
-                data: { ...proof, session: 'runtime-test-session' },
+                data: { ...proof, session: 'runtime-test-session' }
             })
         );
         expect(close).toHaveBeenCalledOnce();
@@ -90,8 +90,8 @@ it('loads gallery images concurrently without a request cap', async () => {
                     source: "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }",
                     params: {},
                     navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' },
-                },
+                    appearance: { theme: 'system', accent: 'neutral' }
+                }
             })
         );
 
@@ -116,7 +116,7 @@ it('loads gallery images concurrently without a request cap', async () => {
 
         for (const [name, value] of [
             ['data-theme', previousTheme],
-            ['data-accent', previousAccent],
+            ['data-accent', previousAccent]
         ] as const) {
             if (value === null) document.documentElement.removeAttribute(name);
             else document.documentElement.setAttribute(name, value);
@@ -164,19 +164,15 @@ it('rejects an unfinished authored request with View closed on pagehide before i
                     }`,
                     params: {},
                     navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' },
-                },
+                    appearance: { theme: 'system', accent: 'neutral' }
+                }
             })
         );
 
         // Act
         await vi.waitFor(() =>
             expect(received).toHaveBeenCalledExactlyOnceWith(
-                expect.objectContaining({
-                    type: 'request',
-                    path: '/api/pending',
-                    method: 'GET',
-                })
+                expect.objectContaining({ type: 'request', path: '/api/pending', method: 'GET' })
             )
         );
         expect(mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
@@ -186,7 +182,7 @@ it('rejects an unfinished authored request with View closed on pagehide before i
         // Assert
         expect(close).toHaveBeenCalled();
         await vi.waitFor(() => expect(mount.querySelector('[role="status"]')?.textContent).toBe('View closed'), {
-            timeout: 2_000,
+            timeout: 2_000
         });
         expect(performance.now() - started).toBeLessThan(REQUEST_TIMEOUT);
     } finally {
@@ -199,7 +195,7 @@ it('rejects an unfinished authored request with View closed on pagehide before i
 
         for (const [name, value] of [
             ['data-theme', previousTheme],
-            ['data-accent', previousAccent],
+            ['data-accent', previousAccent]
         ] as const) {
             if (value === null) document.documentElement.removeAttribute(name);
             else document.documentElement.setAttribute(name, value);
@@ -230,8 +226,8 @@ async function initializeRuntime(source: string) {
                 session: 'appearance-test-session',
                 params: {},
                 navigationBaseUrl: 'https://platform.example/',
-                appearance: { theme: 'light', accent: 'neutral' },
-            },
+                appearance: { theme: 'light', accent: 'neutral' }
+            }
         })
     );
 
@@ -250,12 +246,12 @@ async function initializeRuntime(source: string) {
 
             for (const [name, value] of [
                 ['data-theme', previousTheme],
-                ['data-accent', previousAccent],
+                ['data-accent', previousAccent]
             ] as const) {
                 if (value === null) document.documentElement.removeAttribute(name);
                 else document.documentElement.setAttribute(name, value);
             }
-        },
+        }
     };
 }
 

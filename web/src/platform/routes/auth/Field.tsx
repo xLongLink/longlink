@@ -5,10 +5,7 @@ import { Controller, type Control, type FieldPathByValue, type FieldValues } fro
 type TextFieldProps<Values extends FieldValues> = Omit<
     ComponentPropsWithoutRef<typeof NativeTextInput>,
     'name' | 'onBlur' | 'onChange' | 'error' | 'value'
-> & {
-    control: Control<Values>;
-    name: FieldPathByValue<Values, string>;
-};
+> & { control: Control<Values>; name: FieldPathByValue<Values, string> };
 
 /** Connects an auth form string field to its native control and validation feedback. */
 export function TextField<Values extends FieldValues>({ control, name, ...props }: TextFieldProps<Values>) {

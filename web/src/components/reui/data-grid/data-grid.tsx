@@ -7,7 +7,7 @@ import { columnSizingFeature, columnVisibilityFeature, metaHelper, tableFeatures
 export const dataGridFeatures = tableFeatures({
     columnVisibilityFeature,
     columnSizingFeature,
-    columnMeta: metaHelper<DataGridColumnMeta>(),
+    columnMeta: metaHelper<DataGridColumnMeta>()
 });
 
 export type DataGridFeatures = typeof dataGridFeatures;
@@ -32,13 +32,7 @@ type DataGridProps<TData extends object> = {
         headerBorder?: boolean;
         width?: 'auto' | 'fixed';
     };
-    tableClassNames?: {
-        base?: string;
-        header?: string;
-        headerRow?: string;
-        body?: string;
-        bodyRow?: string;
-    };
+    tableClassNames?: { base?: string; header?: string; headerRow?: string; body?: string; bodyRow?: string };
 };
 
 const DataGridContext = createContext<unknown>(undefined);

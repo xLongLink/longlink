@@ -8,95 +8,81 @@ export default function StackPage() {
         <ViewLayout
             name="Stack"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Stack content.',
-                },
+                { name: 'children', type: 'ReactNode', description: 'Stack content.' },
                 {
                     name: 'width',
                     type: 'string | number',
-                    description: 'Container width; numbers are pixels and strings are CSS sizes.',
+                    description: 'Container width; numbers are pixels and strings are CSS sizes.'
                 },
                 {
                     name: 'height',
                     type: 'string | number',
-                    description: 'Container height; numbers are pixels and strings are CSS sizes.',
+                    description: 'Container height; numbers are pixels and strings are CSS sizes.'
                 },
                 {
                     name: 'maxWidth',
                     type: 'string | number',
-                    description: 'Maximum container width; numbers are pixels and strings are CSS sizes.',
+                    description: 'Maximum container width; numbers are pixels and strings are CSS sizes.'
                 },
                 {
                     name: 'minHeight',
                     type: 'string | number',
-                    description: 'Minimum container height; numbers are pixels and strings are CSS sizes.',
+                    description: 'Minimum container height; numbers are pixels and strings are CSS sizes.'
                 },
                 {
                     name: 'gap',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Spacing between items.',
+                    description: 'Spacing between items.'
                 },
                 {
                     name: 'padding',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Inner padding using the spacing scale.',
+                    description: 'Inner padding using the spacing scale.'
                 },
                 {
                     name: 'paddingInline',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Horizontal padding, overriding padding on the inline axis.',
+                    description: 'Horizontal padding, overriding padding on the inline axis.'
                 },
                 {
                     name: 'paddingBlock',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Vertical padding, overriding padding on the block axis.',
+                    description: 'Vertical padding, overriding padding on the block axis.'
                 },
                 {
                     name: 'background',
                     type: '"muted"',
-                    description: 'Optional muted surface background; omitted stacks remain transparent.',
+                    description: 'Optional muted surface background; omitted stacks remain transparent.'
                 },
                 {
                     name: 'direction',
                     type: '"horizontal" | "vertical"',
-                    description: 'Horizontal or vertical layout direction.',
+                    description: 'Horizontal or vertical layout direction.'
                 },
                 {
                     name: 'justify',
                     type: '"start" | "center" | "end" | "between" | "around" | "evenly"',
-                    description: 'Main-axis alignment.',
+                    description: 'Main-axis alignment.'
                 },
                 {
                     name: 'align',
                     type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Cross-axis alignment alias. Mirrors CSS align-items.',
+                    description: 'Cross-axis alignment alias. Mirrors CSS align-items.'
                 },
-                {
-                    name: 'wrap',
-                    type: '"nowrap" | "wrap" | "wrap-reverse"',
-                    description: 'Flex wrap behavior.',
-                },
+                { name: 'wrap', type: '"nowrap" | "wrap" | "wrap-reverse"', description: 'Flex wrap behavior.' },
                 {
                     name: 'StackItem.children',
                     type: 'ReactNode',
-                    description: 'Content rendered inside the stack item.',
+                    description: 'Content rendered inside the stack item.'
                 },
-                {
-                    name: 'StackItem.size',
-                    type: '"fill" | "static"',
-                },
-                {
-                    name: 'StackItem.isScrollable',
-                    type: 'boolean',
-                },
+                { name: 'StackItem.size', type: '"fill" | "static"' },
+                { name: 'StackItem.isScrollable', type: 'boolean' },
                 {
                     name: 'StackItem.crossAlignSelf',
                     type: '"start" | "center" | "end" | "stretch"',
                     description:
-                        "Overrides this item's cross-axis alignment; omitted values inherit the parent alignment.",
-                },
+                        "Overrides this item's cross-axis alignment; omitted values inherit the parent alignment."
+                }
             ]}
             example={{
                 title: 'Stack',
@@ -110,7 +96,7 @@ export default function StackPage() {
       </StackItem>
     </Stack>
   );
-}`,
+}`
             }}
         />
     );

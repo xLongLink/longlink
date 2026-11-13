@@ -10,7 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 it('offers registration for an empty Compute registry without exposing credentials', () => {
     // Act
     const output = renderPlatform(<Page />, '/admin/compute', [
-        ['/api/v1/computes?page=1&page_size=25&search=', { items: [], total: 0 }],
+        ['/api/v1/computes?page=1&page_size=25&search=', { items: [], total: 0 }]
     ]);
 
     // Assert
@@ -38,9 +38,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
 
     const file = new KubeconfigFile([], 'config.yaml', { type: 'application/yaml' });
 
-    const client = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } },
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
 
     client.setQueryData(['api', '/api/v1/computes?page=1&page_size=25&search='], { items: [], total: 0 });
 
@@ -61,7 +59,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 for (const [name, value] of [
                     ['name', 'Fixture Compute'],
                     ['gateway_url', 'https://gateway.example.com'],
-                    ['storage_endpoint', 'https://storage.example.com'],
+                    ['storage_endpoint', 'https://storage.example.com']
                 ]) {
                     const input = document.querySelector<HTMLInputElement>(`input[name="${name}"]`);
 

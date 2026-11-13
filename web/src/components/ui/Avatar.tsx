@@ -12,17 +12,15 @@ const glyphsStyle = new dicebear.Style({
         ...glyphs.colors,
         glyph: {
             ...glyphs.colors.glyph,
-            values: ['#899bb3', '#858aa5', '#8c8c8c', '#8da58b', '#b5a18b', '#b38d94', '#a18eaf'],
-        },
-    },
+            values: ['#899bb3', '#858aa5', '#8c8c8c', '#8da58b', '#b5a18b', '#b38d94', '#a18eaf']
+        }
+    }
 });
 
 const wavesStyle = new dicebear.Style(waves);
 
 /* oxlint-disable anti-slop/no-shape-in-symbol-names -- "shape" is the existing public avatar geometry prop. */
-type AvatarProps = {
-    shape?: undefined | 'circle' | 'rounded' | 'square';
-} & {
+type AvatarProps = { shape?: undefined | 'circle' | 'rounded' | 'square' } & {
     name?: string;
     /** Stable identity for generated avatars, independent of the display name. */
     seed?: string;
@@ -98,7 +96,7 @@ export function Avatar({ kind, src, name, seed, ...props }: AvatarProps) {
                     ? 'rounded-full'
                     : props.shape === 'rounded'
                       ? 'rounded-(--radius-element)'
-                      : 'rounded-(--radius-none)',
+                      : 'rounded-(--radius-none)'
             ].join(' ')}
         >
             {imageSrc ? (

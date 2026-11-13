@@ -1,10 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 
-export type NavigationTab = {
-    href: string;
-    icon?: ReactElement;
-    label: string;
-};
+export type NavigationTab = { href: string; icon?: ReactElement; label: string };
 
 export type PlatformProps = {
     action: ReactNode;

@@ -6,7 +6,7 @@ const article = {
     description: 'Alternatives to LongLink.',
     toc: [],
     lastUpdated: '2026-10-16',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/alternatives/Index.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/alternatives/Index.tsx'
 };
 
 /** Keeps the Alternatives tab available without listing any alternatives. */

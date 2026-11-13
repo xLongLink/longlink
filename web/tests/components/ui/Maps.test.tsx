@@ -24,10 +24,10 @@ it('selects custom regions by stable ID through pointer and keyboard controls', 
                             [-20, 20],
                             [0, 20],
                             [0, 0],
-                            [-20, 0],
-                        ],
-                    ],
-                },
+                            [-20, 0]
+                        ]
+                    ]
+                }
             },
             {
                 type: 'Feature',
@@ -41,10 +41,10 @@ it('selects custom regions by stable ID through pointer and keyboard controls', 
                             [0, 20],
                             [20, 20],
                             [20, 0],
-                            [0, 0],
-                        ],
-                    ],
-                },
+                            [0, 0]
+                        ]
+                    ]
+                }
             },
             {
                 type: 'Feature',
@@ -57,12 +57,12 @@ it('selects custom regions by stable ID through pointer and keyboard controls', 
                             [20, 20],
                             [40, 20],
                             [40, 0],
-                            [20, 0],
-                        ],
-                    ],
-                },
-            },
-        ],
+                            [20, 0]
+                        ]
+                    ]
+                }
+            }
+        ]
     };
 
     function Regions() {
@@ -108,13 +108,13 @@ it('chooses the requested topology layer and rejects missing layers or broken ar
         objects: {
             districts: {
                 type: 'GeometryCollection',
-                geometries: [{ type: 'Polygon', id: 'district', arcs: [[0]], properties: { name: 'District' } }],
+                geometries: [{ type: 'Polygon', id: 'district', arcs: [[0]], properties: { name: 'District' } }]
             },
             regions: {
                 type: 'GeometryCollection',
-                geometries: [{ type: 'Polygon', id: 'region', arcs: [[0]], properties: { name: 'Region' } }],
+                geometries: [{ type: 'Polygon', id: 'region', arcs: [[0]], properties: { name: 'Region' } }]
             },
-            broken: { type: 'Polygon', arcs: [[4]] },
+            broken: { type: 'Polygon', arcs: [[4]] }
         },
         arcs: [
             [
@@ -122,9 +122,9 @@ it('chooses the requested topology layer and rejects missing layers or broken ar
                 [0, 10],
                 [10, 10],
                 [10, 0],
-                [0, 0],
-            ],
-        ],
+                [0, 0]
+            ]
+        ]
     };
 
     const selected = prepareMap(geography, 'regions');
@@ -168,12 +168,12 @@ it('replaces stale boundaries with an empty state and recovers on the next resul
                                                   [0, 10],
                                                   [10, 10],
                                                   [10, 0],
-                                                  [0, 0],
-                                              ],
-                                          ],
-                                      },
-                                  },
-                              ],
+                                                  [0, 0]
+                                              ]
+                                          ]
+                                      }
+                                  }
+                              ]
                     }}
                 />
             </>
