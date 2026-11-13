@@ -55,7 +55,7 @@ export function Navbar({
                 'border-b px-6',
                 expandOnTop
                     ? [
-                          'sticky top-0 z-30',
+                          'fixed inset-x-0 top-0 z-30',
                           scrolled
                               ? 'border-border bg-background/50 backdrop-blur-sm'
                               : 'border-transparent bg-transparent'

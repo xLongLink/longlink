@@ -35,7 +35,7 @@ export default function Home() {
     return (
         <Page description={homeDescription} title="LongLink | Build and Operate business solutions">
             <Stack as="main">
-                <section className="relative isolate -mt-(--public-navigation-height) flex flex-col overflow-hidden">
+                <section className="relative isolate flex flex-col overflow-hidden">
                     <img
                         alt=""
                         className="absolute inset-0 size-full -scale-x-100 bg-black object-cover"
