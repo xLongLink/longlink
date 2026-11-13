@@ -1,51 +1,38 @@
+import { useState } from 'react';
 import ViewLayout from './ViewLayout';
+import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/shadcn/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/Dialog';
 
-/** Documents the native shadcn Dialog composition. */
+/** Documents the custom modal frame used by isolated Views. */
 export default function DialogPage() {
     return (
         <ViewLayout
             name="Dialog"
             properties={[
-                { name: 'open', type: 'boolean', description: 'Controlled open state.' },
-                { name: 'defaultOpen', type: 'boolean', description: 'Initial uncontrolled open state.' },
+                { name: 'children', type: 'ReactNode', description: 'Dialog content.' },
+                { name: 'isOpen', type: 'boolean', description: 'Controlled open state.' },
+                { name: 'onOpenChange', type: '(open: boolean) => void', description: 'Open-state callback.' },
+                { name: 'title', type: 'string', description: 'Optional fixed header.' },
                 {
-                    name: 'onOpenChange',
-                    type: '(open, eventDetails) => void',
-                    description: 'Native open-state callback.',
+                    name: 'variant',
+                    type: '"standard" | "fullscreen"',
+                    description: 'Fixed frame or fullscreen overlay.',
                 },
-                { name: 'modal', type: 'boolean | "trap-focus"', description: 'Modal interaction and focus behavior.' },
-                { name: 'DialogTrigger.render', type: 'ReactElement', description: 'Compose a trigger with a Button.' },
-                { name: 'DialogContent.children', type: 'ReactNode', description: 'Dialog header, body, and footer.' },
-                { name: 'DialogContent.showCloseButton', type: 'boolean', description: 'Defaults to true.' },
+                { name: 'gap', type: 'Spacing', description: 'Space between the header and body.' },
+                { name: 'paddingInline', type: 'Spacing', description: 'Body inline padding.' },
             ]}
             example={{
-                title: 'Dialog',
+                title: 'Fullscreen frame',
                 preview: <DialogExample />,
                 code: `function Example() {
+  const [open, setOpen] = useState(false);
   return (
-    <Dialog>
-      <DialogTrigger render={<Button variant="outline" />}>Open details</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Order details</DialogTitle>
-          <DialogDescription>Review this order before continuing.</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button onClick={() => setOpen(true)}>Open fullscreen</Button>
+      <Dialog title="Order details" variant="fullscreen" isOpen={open} onOpenChange={setOpen}>
+        <p>Order details</p>
+      </Dialog>
+    </>
   );
 }`,
             }}
@@ -53,20 +40,16 @@ export default function DialogPage() {
     );
 }
 
-/** Opens a native modal through its composed trigger. */
+/** Shows host-coordinated fullscreen behavior only after activation. */
 export function DialogExample() {
+    const [open, setOpen] = useState(false);
+
     return (
-        <Dialog>
-            <DialogTrigger render={<Button variant="outline" />}>Open details</DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Order details</DialogTitle>
-                    <DialogDescription>Review this order before continuing.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <>
+            <Button onClick={() => setOpen(true)}>Open fullscreen</Button>
+            <Dialog title="Order details" variant="fullscreen" isOpen={open} onOpenChange={setOpen}>
+                <p>Order details</p>
+            </Dialog>
+        </>
     );
 }

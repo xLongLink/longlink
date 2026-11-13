@@ -137,26 +137,15 @@ const nativeComposition = (
                 </ComboboxContent>
             </Combobox>
         </CardContent>
-        <CardFooter>
-            <Dialog modal="trap-focus">
-                <DialogTrigger>Open</DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Title</DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription>Description</DialogDescription>
-                    <DialogClose>Close</DialogClose>
-                </DialogContent>
-            </Dialog>
-        </CardFooter>
+        <CardFooter>Actions</CardFooter>
     </Card>
 );
 
 const _adapters = (
     <InteractiveCard padding={4} isSelected onChange={() => {}}>
-        <ViewDialog isOpen onOpenChange={() => {}} title="Title">
+        <Dialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
             {nativeComposition}
-        </ViewDialog>
+        </Dialog>
     </InteractiveCard>
 );
 
@@ -166,7 +155,7 @@ const _badVariant = <Badge variant="not-a-variant" />;
 const _legacyButton = <Button label="Save" />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error Native Dialog must not accept the custom ViewDialog contract.
+// @ts-expect-error Dialog visibility changes require a controlled callback.
 const _legacyDialog = <Dialog isOpen title="Title" />;
 
 // @ts-expect-error ButtonGroup no longer accepts the legacy medium size.

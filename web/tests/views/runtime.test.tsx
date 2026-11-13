@@ -493,18 +493,15 @@ it('edits and resets composed native text fields through the authored View bound
     }
 });
 
-it('composes native Dialog triggers with public Buttons inside an authored View', async () => {
+it('controls the LongLink Dialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        return <Dialog>
-            <DialogTrigger render={<Button variant="outline" />}>Open order</DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Order details</DialogTitle>
-                    <DialogDescription>Review the order</DialogDescription>
-                </DialogHeader>
-                <DialogClose render={<Button variant="outline" />}>Finish review</DialogClose>
-            </DialogContent>
-        </Dialog>;
+        const [open, setOpen] = useState(false);
+        return <>
+            <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
+            <Dialog title="Order details" isOpen={open} onOpenChange={setOpen}>
+                <p>Review the order</p>
+            </Dialog>
+        </>;
     }`);
 
     try {
@@ -512,7 +509,7 @@ it('composes native Dialog triggers with public Buttons inside an authored View'
         const user = userEvent.setup();
         const trigger = runtime.mount.querySelector('button');
 
-        if (!trigger) throw new Error('Expected native dialog trigger');
+        if (!trigger) throw new Error('Expected dialog opener');
         await user.click(trigger);
         await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
         const dialog = document.querySelector('[role="dialog"]');
@@ -521,11 +518,9 @@ it('composes native Dialog triggers with public Buttons inside an authored View'
         expect(document.getElementById(titleId ?? '')?.textContent).toBe('Order details');
         expect(dialog?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
 
-        const close = Array.from(dialog?.querySelectorAll('button') ?? []).find((button) =>
-            button.textContent?.includes('Finish review')
-        );
+        const close = dialog?.querySelector<HTMLButtonElement>('[aria-label="Close dialog"]');
 
-        if (!close) throw new Error('Expected composed dialog close button');
+        if (!close) throw new Error('Expected dialog close button');
         await user.click(close);
         await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
         await vi.waitFor(() => expect(document.activeElement).toBe(trigger));

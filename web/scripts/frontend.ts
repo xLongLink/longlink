@@ -30,7 +30,6 @@ export { ButtonGroup } from '../src/components/ui/ButtonGroup';
 export { FileViewer } from '../src/components/ui/FileViewer';
 export * from '../src/components/ui/Card';
 export * from '../src/components/ui/Dialog';
-export * from '../src/components/ui/ViewDialog';
 export * from '../src/components/ui/Select';
 export * from '../src/components/ui/Combobox';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/components/ui/Tabs';

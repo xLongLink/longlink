@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { Form } from '@/components/ui/Form';
+import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -31,7 +31,7 @@ export default function CreateOrganization({
 
     // Keep the split dialog compact and within the dynamic viewport.
     return (
-        <ViewDialog
+        <Dialog
             isOpen
             paddingInline={0}
             onOpenChange={(open) => {
@@ -80,6 +80,6 @@ export default function CreateOrganization({
                     </Form>
                 </Stack>
             </IllustratedDialogContent>
-        </ViewDialog>
+        </Dialog>
     );
 }

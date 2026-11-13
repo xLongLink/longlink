@@ -2,9 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
 import userEvent from '@testing-library/user-event';
 import { IconButton } from '@/components/ui/IconButton';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
 import { DropdownMenu } from '@/components/ui/DropdownMenu';
@@ -155,11 +155,11 @@ it('disables all grouped actions without leaking group membership into a dialog'
             </Button>
             <IconButton label="Copy" icon="copy" onClick={blocked} />
             <DropdownMenu button={{ label: 'More' }} items={[]} />
-            <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
+            <Dialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <Button variant="outline" onClick={recover}>
                     Recover
                 </Button>
-            </ViewDialog>
+            </Dialog>
         </ButtonGroup>,
         async (output) => {
             const actions = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="group"] > button'));

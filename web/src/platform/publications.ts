@@ -93,7 +93,6 @@ export const componentDocumentation = [
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'DateInput', category: 'Form', icon: Calendar },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
-    { name: 'ViewDialog', category: 'Layouts', icon: AppWindow },
     { name: 'Divider', category: 'Display', icon: Columns3 },
     { name: 'DropdownMenu', category: 'Action', icon: ChevronDown },
     { name: 'EmptyState', category: 'Display', icon: Package },

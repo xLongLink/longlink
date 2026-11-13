@@ -4,9 +4,9 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
 import { Step, Wizard } from '@/components/ui/Stepper';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { buttonVariants } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/ui/NativeText';
@@ -70,7 +70,7 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <ViewDialog
+        <Dialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -195,6 +195,6 @@ export default function CreateSolution({
                     </Step>
                 </Wizard>
             </Form>
-        </ViewDialog>
+        </Dialog>
     );
 }

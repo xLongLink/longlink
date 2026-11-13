@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import '../settings.css';
 import Usage from './Usage';
 import { api } from '@/lib/api';
 import TabsSection from './Tags';
@@ -10,15 +11,16 @@ import { Form } from '@/components/ui/Form';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './PaymentMethods';
 import { Avatar } from '@/components/ui/Avatar';
+import { Dialog } from '@/components/ui/Dialog';
 import { Divider } from '@/components/ui/Divider';
 import { Selector } from '@/components/ui/Selector';
 import SolutionManagement from './SolutionManagement';
 import { TextInput } from '@/components/ui/TextInput';
 import * as permissions from '@/platform/permissions';
+import '@/platform/components/settings-navigation.css';
 import { ApiBoundary } from '@/components/ApiBoundary';
 import { DeletionDialog } from '@/components/Deletion';
 import { useQueryClient } from '@tanstack/react-query';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { Illustration } from '@/components/Illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { NativeMoreMenu } from '@/components/ui/NativeMoreMenu';
@@ -26,13 +28,11 @@ import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Boxes, Building2, CreditCard, Users } from 'lucide-react';
-import '../settings.css';
 import { NativeButton as Button } from '@/components/ui/NativeButton';
 import { NativeHeading as Heading } from '@/components/ui/NativeHeading';
 import type { OrganizationContext } from '@/platform/layouts/Organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { NativeTable as Table, proportional } from '@/components/ui/NativeTable';
-import '@/platform/components/settings-navigation.css';
 import { IllustratedDialogContent } from '@/platform/components/IllustratedDialogContent';
 
 const organizationSections = [
@@ -335,7 +335,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <ViewDialog
+                <Dialog
                     isOpen
                     title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
                     onOpenChange={(open) => {
@@ -394,7 +394,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             />
                         </Stack>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
         </>
     );
@@ -490,7 +490,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 />
             </Stack>
             {/* Match organization creation with a centered form and a desktop-only illustration. */}
-            <ViewDialog
+            <Dialog
                 isOpen={invitationAttempt !== null}
                 paddingInline={0}
                 onOpenChange={(open) => {
@@ -569,7 +569,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                         </Form>
                     </Stack>
                 </IllustratedDialogContent>
-            </ViewDialog>
+            </Dialog>
         </>
     );
 }

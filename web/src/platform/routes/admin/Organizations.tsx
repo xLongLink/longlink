@@ -5,10 +5,10 @@ import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
+import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { Pagination } from '@/components/ui/Pagination';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { NativeLink as Link } from '@/components/ui/NativeLink';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeStack as Stack } from '@/components/ui/NativeStack';
@@ -92,7 +92,7 @@ export default function Organizations() {
                 </Stack>
             </Stack>
             {metadata && (
-                <ViewDialog
+                <Dialog
                     title="Organization metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -119,7 +119,7 @@ export default function Organizations() {
                             />
                         </Stack>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
             <DeletionDialog
                 confirmation={

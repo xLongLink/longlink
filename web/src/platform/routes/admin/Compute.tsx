@@ -5,11 +5,11 @@ import { Form } from '@/components/ui/Form';
 import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
+import { Dialog } from '@/components/ui/Dialog';
 import { TextInput } from '@/components/ui/TextInput';
 import { DeletionDialog } from '@/components/Deletion';
 import { Step, Wizard } from '@/components/ui/Stepper';
 import { Pagination } from '@/components/ui/Pagination';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { NativeFileInput } from '@/components/ui/FileInput';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { NativeTextArea } from '@/components/ui/NativeTextArea';
@@ -109,7 +109,7 @@ export default function Compute() {
                 />
             )}
             {metadata && (
-                <ViewDialog
+                <Dialog
                     title="Compute metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -142,7 +142,7 @@ export default function Compute() {
                             />
                         </Stack>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
             {dialog?.kind === 'deletion' && (
                 <DeletionDialog
@@ -226,7 +226,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
 
     // Let the shared wizard own navigation, validation, and persistent fields within the creation dialog shell.
     return (
-        <ViewDialog
+        <Dialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -301,6 +301,6 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                     </Step>
                 </Wizard>
             </Form>
-        </ViewDialog>
+        </Dialog>
     );
 }

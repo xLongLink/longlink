@@ -9,8 +9,8 @@ import { IconButton } from '@/components/ui/IconButton';
 import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { ButtonGroup } from '@/components/ui/ButtonGroup';
-import { Dialog, DialogTrigger } from '@/components/ui/Dialog';
 import { LinkNavigationContext } from '@/components/ui/contexts';
+import { Dialog, DialogTrigger } from '@/components/shadcn/dialog';
 
 it('composes a dialog trigger with native props, merged click handlers, and both refs', async () => {
     const buttonRef = createRef<HTMLButtonElement>();

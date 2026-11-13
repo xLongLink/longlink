@@ -239,10 +239,7 @@ export default function Item({ params }) {
                             </Heading>
                             <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                                 {componentDocumentation
-                                    .filter(
-                                        (component) =>
-                                            component.category === category && component.name !== 'ViewDialog'
-                                    )
+                                    .filter((component) => component.category === category)
                                     .map((component) => (
                                         <Stack key={component.slug} className="relative min-w-0" gap={2}>
                                             <InteractiveCard
@@ -270,21 +267,9 @@ export default function Item({ params }) {
                                                 </div>
                                             </InteractiveCard>
                                             <Text type="supporting">
-                                                {component.name === 'Dialog' ? (
-                                                    <>
-                                                        Dialog /{' '}
-                                                        <RouterLink
-                                                            className="relative z-20 hover:underline"
-                                                            to="/docs/sdk/views/view-dialog/"
-                                                        >
-                                                            View Dialog
-                                                        </RouterLink>
-                                                    </>
-                                                ) : component.category === 'Action' || component.category === 'Form' ? (
-                                                    component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                ) : (
-                                                    component.label
-                                                )}
+                                                {component.category === 'Action' || component.category === 'Form'
+                                                    ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                    : component.label}
                                             </Text>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}

@@ -912,32 +912,6 @@
         {
             "name": "Dialog",
             "category": "Layouts",
-            "introduction": "Native shadcn dialog composition.",
-            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose. DialogPortal and DialogOverlay are also exported. Use ViewDialog for the coordinated custom frame.",
-            "properties": [
-                {
-                    "name": "open / defaultOpen",
-                    "type": "boolean",
-                    "description": "Controlled or initial visibility."
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(open: boolean, details) => void",
-                    "description": "Cancelable native visibility changes."
-                },
-                { "name": "modal", "type": "boolean | \"trap-focus\"", "default": true },
-                { "name": "DialogContent.showCloseButton", "type": "boolean", "default": true },
-                { "name": "DialogFooter.showCloseButton", "type": "boolean", "default": false },
-                {
-                    "name": "render / className / style",
-                    "type": "Native part props",
-                    "description": "Native parts support DOM attributes, events, refs, and state-based styling."
-                }
-            ]
-        },
-        {
-            "name": "ViewDialog",
-            "category": "Layouts",
             "introduction": "Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation, while keeping Solution content sandboxed.",
             "keywords": ["modal", "confirmation", "confirm"],
             "properties": [

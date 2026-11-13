@@ -8,10 +8,10 @@ import { it, vi, expect } from 'vitest';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { createRoot } from 'react-dom/client';
+import { Dialog } from '@/components/ui/Dialog';
 import { apiQueryOptions } from '@/lib/react-query';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '@/components/ApiProvider';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { act, StrictMode, useEffect, useRef, useState } from 'react';
 
@@ -154,9 +154,9 @@ it.each(['native', 'base'] as const)(
                             {content}
                         </dialog>
                     ) : (
-                        <ViewDialog title="Membership" isOpen={open} onOpenChange={setOpen}>
+                        <Dialog title="Membership" isOpen={open} onOpenChange={setOpen}>
                             {content}
-                        </ViewDialog>
+                        </Dialog>
                     )}
                 </>
             );

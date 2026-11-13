@@ -2,17 +2,17 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
+import { Dialog } from '@/components/ui/Dialog';
 import userEvent from '@testing-library/user-event';
-import { ViewDialog } from '@/components/ui/ViewDialog';
 import { DropdownMenu } from '@/components/ui/DropdownMenu';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/ui/contexts';
 
-it('dismisses the custom ViewDialog without submitting its form', async () => {
+it('dismisses the custom Dialog without submitting its form', async () => {
     // Arrange
     const close = vi.fn();
 
     // Act
-    await withMounted(<ViewDialog isOpen onOpenChange={close} />, async () => {
+    await withMounted(<Dialog isOpen onOpenChange={close} />, async () => {
         const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
         await act(async () => button?.click());
 
@@ -36,9 +36,9 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
                     Hide
                 </button>
                 {!hidden && (
-                    <ViewDialog title="Edit order" isOpen onOpenChange={change}>
+                    <Dialog title="Edit order" isOpen onOpenChange={change}>
                         Draft
-                    </ViewDialog>
+                    </Dialog>
                 )}
             </>
         );
@@ -76,9 +76,9 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
                 </button>
                 <ButtonGroupContext value={{ orientation: 'vertical', isDisabled: true }}>
                     <ControlSizeContext value="lg">
-                        <ViewDialog title="Edit order" isOpen={open} onOpenChange={setOpen}>
+                        <Dialog title="Edit order" isOpen={open} onOpenChange={setOpen}>
                             <input aria-label="Order name" />
-                        </ViewDialog>
+                        </Dialog>
                     </ControlSizeContext>
                 </ButtonGroupContext>
             </DialogActivityContext>
@@ -134,7 +134,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
 
     await withMounted(
         <DialogActivityContext value={activity}>
-            <ViewDialog title="Preview" variant="fullscreen" isOpen onOpenChange={() => {}} />
+            <Dialog title="Preview" variant="fullscreen" isOpen onOpenChange={() => {}} />
         </DialogActivityContext>,
         async () => {
             expect(activity).toHaveBeenCalledExactlyOnceWith(true, true);
@@ -154,9 +154,9 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         const [open, setOpen] = useState(true);
 
         return (
-            <ViewDialog title="Actions" isOpen={open} onOpenChange={setOpen}>
+            <Dialog title="Actions" isOpen={open} onOpenChange={setOpen}>
                 <DropdownMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
-            </ViewDialog>
+            </Dialog>
         );
     }
 

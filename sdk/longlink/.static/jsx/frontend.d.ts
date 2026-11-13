@@ -10161,118 +10161,78 @@ type InteractiveCardProps = {
     onChange?: (isSelected: boolean) => void;
 };
 export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden, }: InteractiveCardProps): React$1.JSX.Element;
-const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
-    forceRender?: boolean | undefined;
+export function Dialog(props: {
+    children?: React$1.ReactNode;
+    title?: string;
+    variant?: "standard" | "fullscreen";
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    gap?: Spacing;
+    paddingInline?: Spacing;
+}): React$1.JSX.Element;
+interface Group<Item = any> {
+    [key: string]: unknown;
+    items: ReadonlyArray<Item>;
 }
-interface DialogBackdropState {
-    open: boolean;
-    transitionStatus: TransitionStatus;
+function SelectRoot<Value, Multiple extends boolean | undefined = false>(props: SelectRoot.Props<Value, Multiple>): React$1.JSX.Element;
+type SelectInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
+type SelectOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
+interface SelectRootProps<Value, Multiple extends boolean | undefined = false> {
+    children?: React$1.ReactNode;
+    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
+    name?: string | undefined;
+    form?: string | undefined;
+    autoComplete?: string | undefined;
+    id?: string | undefined;
+    required?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    disabled?: boolean | undefined;
+    multiple?: Multiple | undefined;
+    highlightItemOnHover?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: SelectRootOpenChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    open?: boolean | undefined;
+    modal?: boolean | undefined;
+    actionsRef?: React$1.RefObject<SelectRootActions | null> | undefined;
+    items?: Record<string, React$1.ReactNode> | ReadonlyArray<{
+        label: React$1.ReactNode;
+        value: any;
+    }> | ReadonlyArray<Group<any>> | undefined;
+    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
+    itemToStringValue?: ((itemValue: Value) => string) | undefined;
+    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
+    defaultValue?: SelectInputValue<Value, Multiple> | null | undefined;
+    value?: SelectInputValue<Value, Multiple> | null | undefined;
+    onValueChange?: ((value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: SelectRootChangeEventDetails) => void) | undefined;
 }
-namespace DialogBackdrop {
-    type Props = DialogBackdropProps;
-    type State = DialogBackdropState;
+interface SelectRootState {
 }
-const DialogClose: React$1.ForwardRefExoticComponent<Omit<DialogCloseProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface DialogCloseProps extends NativeButtonProps, BaseUIComponentProps<"button", DialogCloseState> {
+interface SelectRootActions {
+    unmount: () => void;
+    close: () => void;
 }
-interface DialogCloseState {
-    disabled: boolean;
+type SelectRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof windowResize | typeof itemPress | typeof focusOut | typeof listNavigation | typeof cancelOpen | typeof imperativeAction | typeof none;
+type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
+    preventUnmountOnClose: () => void;
+};
+type SelectRootChangeEventDetails = BaseUIChangeEventDetails<SelectRootChangeEventReason>;
+namespace SelectRoot {
+    type Props<Value, Multiple extends boolean | undefined = false> = SelectRootProps<Value, Multiple>;
+    type State = SelectRootState;
+    type Actions = SelectRootActions;
+    type ChangeEventReason = SelectRootChangeEventReason;
+    type ChangeEventDetails = SelectRootChangeEventDetails;
+    type OpenChangeEventDetails = SelectRootOpenChangeEventDetails;
 }
-namespace DialogClose {
-    type Props = DialogCloseProps;
-    type State = DialogCloseState;
+const SelectLabel: React$1.ForwardRefExoticComponent<Omit<SelectLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+type SelectLabelState = FieldRoot.State;
+interface SelectLabelProps extends Omit<BaseUIComponentProps<"div", SelectLabel.State>, "id"> {
 }
-const DialogDescription: React$1.ForwardRefExoticComponent<Omit<DialogDescriptionProps, "ref"> & React$1.RefAttributes<HTMLParagraphElement>>;
-interface DialogDescriptionProps extends BaseUIComponentProps<"p", DialogDescriptionState> {
+namespace SelectLabel {
+    type State = SelectLabelState;
+    type Props = SelectLabelProps;
 }
-interface DialogDescriptionState {
-}
-namespace DialogDescription {
-    type Props = DialogDescriptionProps;
-    type State = DialogDescriptionState;
-}
-type InteractionType = "mouse" | "touch" | "pen" | "keyboard" | "";
-const DialogPopup: React$1.ForwardRefExoticComponent<Omit<DialogPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface DialogPopupProps extends BaseUIComponentProps<"div", DialogPopupState> {
-    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
-    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
-}
-interface DialogPopupState {
-    open: boolean;
-    transitionStatus: TransitionStatus;
-    nested: boolean;
-    nestedDialogOpen: boolean;
-}
-namespace DialogPopup {
-    type Props = DialogPopupProps;
-    type State = DialogPopupState;
-}
-const DialogPortal: React$1.ForwardRefExoticComponent<Omit<DialogPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface DialogPortalState {
-}
-interface DialogPortalProps extends BaseUIComponentProps<"div", DialogPortalState> {
-    keepMounted?: boolean | undefined;
-    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
-}
-namespace DialogPortal {
-    type State = DialogPortalState;
-    type Props = DialogPortalProps;
-}
-type Listener<T> = (state: T) => void;
-class Store<State> {
-    static create<T, This extends Store<T>>(this: new (state: T) => This, state: T): This;
-    state: State;
-    private listeners;
-    private updateTick;
-    constructor(state: State);
-    subscribe: (fn: Listener<State>) => () => void;
-    getSnapshot: () => State;
-    setState(newState: State): void;
-    update<const Key extends keyof State>(changes: Pick<State, Key>): void;
-    set<Key extends keyof State>(key: Key, value: State[Key]): void;
-    notifyAll(): void;
-    use<F extends (...args: any) => any>(selector: F, ...args: SelectorArgs<F>): ReturnType<F>;
-}
-type SelectorArgs<Selector> = Selector extends ((...params: infer Params) => any) ? Tail<Params> : never;
-type Tail<T extends readonly any[]> = T extends readonly [
-    any,
-    ...infer Rest
-] ? Rest : [
-];
-class ReactStore<State extends object, Context = Record<string, never>, Selectors extends Record<string, SelectorFunction<State>> = Record<string, never>> extends Store<State> {
-    constructor(state: State, context?: Context, selectors?: Selectors);
-    readonly context: Context;
-    private selectors;
-    useSyncedValue<Key extends keyof State>(key: Key, value: State[Key]): void;
-    useSyncedValueWithCleanup<Key extends KeysAllowingUndefined<State>>(key: Key, value: State[Key]): void;
-    useSyncedValues<const Key extends keyof State>(statePart: Pick<State, Key>): void;
-    useControlledProp<Key extends keyof State>(key: Key, controlled: State[Key] | undefined): void;
-    select<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
-    useState<Key extends keyof Selectors>(key: Key, ...args: SelectorArgs$1<Selectors[Key]>): ReturnType<Selectors[Key]>;
-    useContextCallback<Key extends ContextFunctionKeys<Context>>(key: Key, fn: ContextFunction<Context, Key> | undefined): void;
-    useStateSetter<const Key extends keyof State>(key: Key): (value: State[Key]) => void;
-    observe<Key extends keyof Selectors>(selector: Key, listener: (newValue: ReturnType<Selectors[Key]>, oldValue: ReturnType<Selectors[Key]>, store: this) => void): () => void;
-    observe<Selector extends ObserveSelector<State>>(selector: Selector, listener: (newValue: ReturnType<Selector>, oldValue: ReturnType<Selector>, store: this) => void): () => void;
-}
-type MaybeCallable = (...args: any[]) => any;
-type ContextFunctionKeys<Context> = {
-    [Key in keyof Context]-?: Extract<Context[Key], MaybeCallable> extends never ? never : Key;
-}[keyof Context];
-type ContextFunction<Context, Key extends keyof Context> = Extract<Context[Key], MaybeCallable>;
-type KeysAllowingUndefined<State> = {
-    [Key in keyof State]-?: undefined extends State[Key] ? Key : never;
-}[keyof State];
-type ObserveSelector<State> = (state: State) => any;
-type SelectorFunction<State> = (state: State, ...args: any[]) => any;
-type Tail$1<T extends readonly any[]> = T extends readonly [
-    any,
-    ...infer Rest
-] ? Rest : [
-];
-type SelectorArgs$1<Selector> = Selector extends ((...params: infer Params) => any) ? Tail$1<Params> : never;
-type AlignedPlacement = `${Side}-${Alignment}`;
-type Alignment = "start" | "end";
 type Axis = "x" | "y";
 type ClientRectObject = Prettify<Rect & SideObject>;
 type Coords = {
@@ -10285,7 +10245,6 @@ type Length = "width" | "height";
 type Padding = number | Prettify<{
     [K in Side]?: number | undefined;
 }>;
-type Placement = Prettify<Side | AlignedPlacement>;
 type Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
@@ -10294,286 +10253,262 @@ type Side = "top" | "right" | "bottom" | "left";
 type SideObject = {
     [key in Side]: number;
 };
-type Strategy = "absolute" | "fixed";
-interface ComputePositionReturn extends Coords {
-    placement: Placement;
-    strategy: Strategy;
-    middlewareData: MiddlewareData;
-}
-interface MiddlewareData {
-    [key: string]: any;
-    arrow?: (Partial<Coords> & {
-        centerOffset: number;
-        alignmentOffset?: number | undefined;
-    }) | undefined;
-    autoPlacement?: {
-        index?: number | undefined;
-        overflows: Array<{
-            placement: Placement;
-            overflows: Array<number>;
-        }>;
-    } | undefined;
-    flip?: {
-        index?: number | undefined;
-        overflows: Array<{
-            placement: Placement;
-            overflows: Array<number>;
-        }>;
-    } | undefined;
-    hide?: {
-        referenceHidden?: boolean | undefined;
-        escaped?: boolean | undefined;
-        referenceHiddenOffsets?: SideObject | undefined;
-        escapedOffsets?: SideObject | undefined;
-    } | undefined;
-    offset?: (Coords & {
-        placement: Placement;
-    }) | undefined;
-    shift?: (Coords & {
-        enabled: {
-            [key in Axis]: boolean;
-        };
-    }) | undefined;
-}
 interface VirtualElement {
     getBoundingClientRect(): ClientRectObject;
     getClientRects?: (() => Array<ClientRectObject> | DOMRectList) | undefined;
     contextElement?: Element | undefined;
 }
-type Prettify$1<T> = {
-    [K in keyof T]: T[K];
-} & {};
-type ReferenceType = Element | VirtualElement;
-type UseFloatingData = Prettify$1<ComputePositionReturn & {
-    isPositioned: boolean;
-}>;
-type UseFloatingReturn<RT extends ReferenceType = ReferenceType> = Prettify$1<UseFloatingData & {
-    update: () => void;
-    floatingStyles: React$1.CSSProperties;
-    refs: {
-        reference: React$1.MutableRefObject<RT | null>;
-        floating: React$1.MutableRefObject<HTMLElement | null>;
-        setReference: (node: RT | null) => void;
-        setFloating: (node: HTMLElement | null) => void;
+type InteractionType = "mouse" | "touch" | "pen" | "keyboard" | "";
+type Side$1 = "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
+type Align = "start" | "center" | "end";
+type Boundary = "clipping-ancestors" | Element | Element[] | Rect;
+type OffsetFunction = (data: {
+    side: Side$1;
+    align: Align;
+    anchor: {
+        width: number;
+        height: number;
     };
-    elements: {
-        reference: RT | null;
-        floating: HTMLElement | null;
+    positioner: {
+        width: number;
+        height: number;
     };
-}>;
-class PopupTriggerMap {
-    private idMap;
-    add(id: string, element: Element): void;
-    delete(id: string): void;
-    hasElement(element: Element): boolean;
-    hasMatchingElement(predicate: (el: Element) => boolean): boolean;
-    getById(id: string): Element | undefined;
-    entries(): IterableIterator<[
-        string,
-        Element
-    ]>;
-    elements(): IterableIterator<Element>;
-    get size(): number;
+}) => number;
+interface SideFlipMode {
+    side?: "flip" | "none" | undefined;
+    align?: "flip" | "shift" | "none" | undefined;
+    fallbackAxisSide?: "start" | "end" | "none" | undefined;
 }
-interface PopupHandleStoreWithTriggers {
-    readonly context: {
-        readonly triggerElements: PopupTriggerMap;
-    };
+interface SideShiftMode {
+    side?: "shift" | "none" | undefined;
+    align?: "shift" | "none" | undefined;
+    fallbackAxisSide?: "start" | "end" | "none" | undefined;
 }
-interface PopupHandleStoreWithOpen extends PopupHandleStoreWithTriggers {
-    setOpen(open: boolean, eventDetails: BaseUIChangeEventDetails<typeof imperativeAction>): void;
+type CollisionAvoidance = SideFlipMode | SideShiftMode;
+interface UseAnchorPositioningSharedParameters {
+    anchor?: Element | null | VirtualElement | React$1.RefObject<Element | null> | (() => Element | VirtualElement | null) | undefined;
+    positionMethod?: "absolute" | "fixed" | undefined;
+    side?: Side$1 | undefined;
+    sideOffset?: number | OffsetFunction | undefined;
+    align?: Align | undefined;
+    alignOffset?: number | OffsetFunction | undefined;
+    collisionBoundary?: Boundary | undefined;
+    collisionPadding?: Padding | undefined;
+    sticky?: boolean | undefined;
+    arrowPadding?: number | undefined;
+    disableAnchorTracking?: boolean | undefined;
+    collisionAvoidance?: CollisionAvoidance | undefined;
 }
-class BasePopupHandle<HandleStore extends PopupHandleStoreWithTriggers, Store extends HandleStore & PopupHandleStoreWithOpen> {
-    protected readonly fallbackStore: HandleStore;
-    private readonly componentName;
-    private readonly throwOnMissingTrigger;
-    private readonly attachedStores;
-    private attachedStoreValue;
-    private readonly storeListeners;
-    constructor(fallbackStore: HandleStore, componentName: string, throwOnMissingTrigger?: boolean);
-    protected get attachedStore(): Store | null;
-    private setActiveStore;
-    protected openByTrigger(triggerId: string | null | undefined): void;
-    protected closePopup(): void;
-}
-type NarrowedElement<T> = T extends Element ? T : Element;
-interface ExtendedRefs {
-    reference: React$1.RefObject<ReferenceType$1 | null>;
-    floating: React$1.RefObject<HTMLElement | null>;
-    domReference: React$1.RefObject<NarrowedElement<ReferenceType$1> | null>;
-    setReference(node: ReferenceType$1 | null): void;
-    setFloating(node: HTMLElement | null): void;
-    setPositionReference(node: ReferenceType$1 | null): void;
-}
-interface ExtendedElements {
-    reference: ReferenceType$1 | null;
-    floating: HTMLElement | null;
-    domReference: NarrowedElement<ReferenceType$1> | null;
-}
-interface FloatingEvents {
-    emit<T extends string>(event: T, data?: any): void;
-    on(event: string, handler: (data: any) => void): void;
-    off(event: string, handler: (data: any) => void): void;
-}
-interface ContextData {
-    openEvent?: Event | undefined;
-    floatingContext?: FloatingContext | undefined;
-    [key: string]: any;
-}
-type FloatingRootContext = FloatingRootStore;
-type FloatingContext = Omit<UseFloatingReturn<ReferenceType$1>, "refs" | "elements"> & {
+const SelectTrigger: React$1.ForwardRefExoticComponent<Omit<SelectTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface SelectTriggerState extends FieldRootState {
     open: boolean;
-    onOpenChange(open: boolean, eventDetails: BaseUIChangeEventDetails<string>): void;
-    events: FloatingEvents;
-    dataRef: React$1.RefObject<ContextData>;
-    nodeId: string | undefined;
-    floatingId: string | undefined;
-    refs: ExtendedRefs;
-    elements: ExtendedElements;
-    rootStore: FloatingRootContext;
-};
-type ReferenceType$1 = Element | VirtualElement;
-interface FloatingRootState {
+    readOnly: boolean;
+    popupSide: Side$1 | null;
+    value: any;
+    placeholder: boolean;
+}
+interface SelectTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", SelectTriggerState> {
+    children?: React$1.ReactNode;
+    disabled?: boolean | undefined;
+}
+namespace SelectTrigger {
+    type State = SelectTriggerState;
+    type Props = SelectTriggerProps;
+}
+const SelectValue: React$1.ForwardRefExoticComponent<Omit<SelectValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectValueState {
+    value: any;
+    placeholder: boolean;
+}
+interface SelectValueProps extends Omit<BaseUIComponentProps<"span", SelectValueState>, "children"> {
+    children?: React$1.ReactNode | ((value: any) => React$1.ReactNode);
+    placeholder?: React$1.ReactNode;
+}
+namespace SelectValue {
+    type State = SelectValueState;
+    type Props = SelectValueProps;
+}
+const SelectIcon: React$1.ForwardRefExoticComponent<Omit<SelectIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectIconState {
     open: boolean;
-    transitionStatus: TransitionStatus | undefined;
-    domReferenceElement: Element | null;
-    referenceElement: ReferenceType$1 | null;
-    floatingElement: HTMLElement | null;
-    positionReference: ReferenceType$1 | null;
-    floatingId: string | undefined;
 }
-interface FloatingRootStoreContext {
-    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
-    readonly dataRef: React$1.RefObject<ContextData>;
-    readonly events: FloatingEvents;
-    nested: boolean;
-    readonly triggerElements: PopupTriggerMap;
+interface SelectIconProps extends BaseUIComponentProps<"span", SelectIconState> {
 }
-const selectors: {
-    open: (state: FloatingRootState) => boolean;
-    transitionStatus: (state: FloatingRootState) => TransitionStatus;
-    domReferenceElement: (state: FloatingRootState) => Element | null;
-    referenceElement: (state: FloatingRootState) => ReferenceType$1 | null;
-    floatingElement: (state: FloatingRootState) => HTMLElement | null;
-    floatingId: (state: FloatingRootState) => string | undefined;
-};
-interface FloatingRootStoreOptions {
+namespace SelectIcon {
+    type State = SelectIconState;
+    type Props = SelectIconProps;
+}
+const SelectPortal: React$1.ForwardRefExoticComponent<Omit<SelectPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPortalState {
+}
+interface SelectPortalProps extends BaseUIComponentProps<"div", SelectPortalState> {
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace SelectPortal {
+    type State = SelectPortalState;
+    type Props = SelectPortalProps;
+}
+const SelectBackdrop: React$1.ForwardRefExoticComponent<Omit<SelectBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectBackdropState {
     open: boolean;
-    transitionStatus: TransitionStatus | undefined;
-    referenceElement: ReferenceType$1 | null;
-    floatingElement: HTMLElement | null;
-    triggerElements: PopupTriggerMap;
-    floatingId: string | undefined;
-    syncOnly: boolean;
-    nested: boolean;
-    onOpenChange: ((open: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void) | undefined;
-}
-class FloatingRootStore extends ReactStore<Readonly<FloatingRootState>, FloatingRootStoreContext, typeof selectors> {
-    private readonly syncOnly;
-    constructor(options: FloatingRootStoreOptions);
-    syncOpenEvent: (newOpen: boolean, event: Event | undefined) => void;
-    dispatchOpenChange: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
-    setOpen: (newOpen: boolean, eventDetails: BaseUIChangeEventDetails<string>) => void;
-}
-type PopupStoreState<Payload> = {
-    open: boolean;
-    readonly openProp: boolean | undefined;
-    mounted: boolean;
     transitionStatus: TransitionStatus;
-    floatingRootContext: FloatingRootContext;
-    floatingId: string | undefined;
-    triggerCount: number;
-    preventUnmountingOnClose: boolean;
-    payload: Payload | undefined;
-    activeTriggerId: string | null;
-    activeTriggerElement: Element | null;
-    openedWithoutTrigger: boolean;
-    readonly triggerIdProp: string | null | undefined;
-    popupElement: HTMLElement | null;
-    positionerElement: HTMLElement | null;
-    activeTriggerProps: HTMLProps;
-    inactiveTriggerProps: HTMLProps;
-    popupProps: HTMLProps;
-};
-type PopupStoreContext<ChangeEventDetails> = {
-    readonly triggerElements: PopupTriggerMap;
-    readonly popupRef: React$1.RefObject<HTMLElement | null>;
-    onOpenChange?: ((open: boolean, eventDetails: ChangeEventDetails) => void) | undefined;
-    onOpenChangeComplete: ((open: boolean) => void) | undefined;
-};
-type S = PopupStoreState<unknown>;
-const activeTriggerIdSelector: (state: S) => string | null;
-const openSelector: (state: S) => boolean;
-const popupIdSelector: (state: S) => string | undefined;
-const popupStoreSelectors: {
-    open: typeof openSelector;
-    mounted: (state: S) => boolean;
-    transitionStatus: (state: S) => TransitionStatus;
-    floatingRootContext: (state: S) => FloatingRootStore;
-    triggerCount: (state: S) => number;
-    preventUnmountingOnClose: (state: S) => boolean;
-    payload: (state: S) => unknown;
-    activeTriggerId: typeof activeTriggerIdSelector;
-    activeTriggerElement: (state: S) => Element | null;
-    popupId: typeof popupIdSelector;
-    isTriggerActive: (state: S, triggerId: string | undefined) => boolean;
-    isOpenedByTrigger: (state: S, triggerId: string | undefined) => boolean;
-    isMountedByTrigger: (state: S, triggerId: string | undefined) => boolean;
-    triggerProps: (state: S, isActive: boolean) => HTMLProps;
-    triggerPopupId: (state: S, triggerId: string | undefined) => string | undefined;
-    popupProps: (state: S) => HTMLProps;
-    popupElement: (state: S) => HTMLElement | null;
-    positionerElement: (state: S) => HTMLElement | null;
-};
-type PopupStoreSelectors = typeof popupStoreSelectors;
-type PopupTriggerStoreKeys = "context" | "select" | "set" | "state" | "update" | "useState";
-type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>, PopupTriggerStoreKeys>;
-type PayloadChildRenderFunction<Payload> = (arg: {
-    payload: Payload | undefined;
-}) => React$1.ReactNode;
-const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
-interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
 }
-interface DialogTitleState {
+interface SelectBackdropProps extends BaseUIComponentProps<"div", SelectBackdropState> {
 }
-namespace DialogTitle {
-    type Props = DialogTitleProps;
-    type State = DialogTitleState;
+namespace SelectBackdrop {
+    type State = SelectBackdropState;
+    type Props = SelectBackdropProps;
 }
-const DialogTrigger: DialogTrigger;
-interface DialogTrigger {
-    <Payload>(componentProps: DialogTriggerProps<Payload> & React$1.RefAttributes<HTMLElement>): React$1.JSX.Element;
+const SelectPositioner: React$1.ForwardRefExoticComponent<Omit<SelectPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPositionerState {
+    open: boolean;
+    side: Side$1 | "none";
+    align: Align;
+    anchorHidden: boolean;
 }
-interface DialogTriggerProps<Payload = unknown> extends NativeButtonProps, BaseUIComponentProps<"button", DialogTriggerState> {
-    handle?: DialogHandle<Payload> | undefined;
-    payload?: Payload | undefined;
-    id?: string | undefined;
+interface SelectPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", SelectPositionerState> {
+    alignItemWithTrigger?: boolean | undefined;
 }
-interface DialogTriggerState {
+namespace SelectPositioner {
+    type State = SelectPositionerState;
+    type Props = SelectPositionerProps;
+}
+const SelectPopup: React$1.ForwardRefExoticComponent<Omit<SelectPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectPopupProps extends BaseUIComponentProps<"div", SelectPopupState> {
+    children?: React$1.ReactNode;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
+}
+interface SelectPopupState {
+    side: Side$1 | "none";
+    align: Align;
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+namespace SelectPopup {
+    type Props = SelectPopupProps;
+    type State = SelectPopupState;
+}
+const SelectList: React$1.ForwardRefExoticComponent<Omit<SelectListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectListProps extends BaseUIComponentProps<"div", SelectListState> {
+}
+interface SelectListState {
+}
+namespace SelectList {
+    type Props = SelectListProps;
+    type State = SelectListState;
+}
+const SelectItem: React$1.NamedExoticComponent<Omit<SelectItemProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface SelectItemState {
     disabled: boolean;
-    open: boolean;
+    selected: boolean;
+    highlighted: boolean;
 }
-namespace DialogTrigger {
-    type Props<Payload = unknown> = DialogTriggerProps<Payload>;
-    type State = DialogTriggerState;
+interface SelectItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", SelectItemState>, "id"> {
+    children?: React$1.ReactNode;
+    value?: any;
+    disabled?: boolean | undefined;
+    label?: string | undefined;
 }
-const DialogViewport: React$1.ForwardRefExoticComponent<Omit<DialogViewportProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface DialogViewportState {
-    open: boolean;
+namespace SelectItem {
+    type State = SelectItemState;
+    type Props = SelectItemProps;
+}
+const SelectItemIndicator: React$1.ForwardRefExoticComponent<Omit<SelectItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface SelectItemIndicatorState {
+    selected: boolean;
     transitionStatus: TransitionStatus;
-    nested: boolean;
-    nestedDialogOpen: boolean;
 }
-interface DialogViewportProps extends BaseUIComponentProps<"div", DialogViewportState> {
+interface SelectItemIndicatorProps extends BaseUIComponentProps<"span", SelectItemIndicatorState> {
+    children?: React$1.ReactNode;
+    keepMounted?: boolean | undefined;
 }
-namespace DialogViewport {
-    type State = DialogViewportState;
-    type Props = DialogViewportProps;
+namespace SelectItemIndicator {
+    type State = SelectItemIndicatorState;
+    type Props = SelectItemIndicatorProps;
 }
-interface Group<Item = any> {
-    [key: string]: unknown;
-    items: ReadonlyArray<Item>;
+const SelectItemText: React$1.NamedExoticComponent<Omit<SelectItemTextProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectItemTextState {
 }
+interface SelectItemTextProps extends BaseUIComponentProps<"div", SelectItemTextState> {
+}
+namespace SelectItemText {
+    type State = SelectItemTextState;
+    type Props = SelectItemTextProps;
+}
+const SelectArrow: React$1.ForwardRefExoticComponent<Omit<SelectArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectArrowState {
+    open: boolean;
+    side: Side$1 | "none";
+    align: Align;
+    uncentered: boolean;
+}
+interface SelectArrowProps extends BaseUIComponentProps<"div", SelectArrowState> {
+}
+namespace SelectArrow {
+    type State = SelectArrowState;
+    type Props = SelectArrowProps;
+}
+const SelectScrollDownArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollDownArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectScrollDownArrowState {
+}
+interface SelectScrollDownArrowProps extends BaseUIComponentProps<"div", SelectScrollDownArrowState> {
+    keepMounted?: boolean | undefined;
+}
+namespace SelectScrollDownArrow {
+    type State = SelectScrollDownArrowState;
+    type Props = SelectScrollDownArrowProps;
+}
+const SelectScrollUpArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollUpArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectScrollUpArrowState {
+}
+interface SelectScrollUpArrowProps extends BaseUIComponentProps<"div", SelectScrollUpArrowState> {
+    keepMounted?: boolean | undefined;
+}
+namespace SelectScrollUpArrow {
+    type State = SelectScrollUpArrowState;
+    type Props = SelectScrollUpArrowProps;
+}
+const SelectGroup: React$1.ForwardRefExoticComponent<Omit<SelectGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectGroupState {
+}
+interface SelectGroupProps extends BaseUIComponentProps<"div", SelectGroupState> {
+}
+namespace SelectGroup {
+    type State = SelectGroupState;
+    type Props = SelectGroupProps;
+}
+const SelectGroupLabel: React$1.ForwardRefExoticComponent<Omit<SelectGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface SelectGroupLabelState {
+}
+interface SelectGroupLabelProps extends BaseUIComponentProps<"div", SelectGroupLabelState> {
+}
+namespace SelectGroupLabel {
+    type State = SelectGroupLabelState;
+    type Props = SelectGroupLabelProps;
+}
+interface SelectSeparatorProps extends BaseUIComponentProps<"div", SelectSeparatorState> {
+    orientation?: Orientation | undefined;
+}
+interface SelectSeparatorState {
+    orientation: Orientation;
+}
+const SelectSeparator: React$1.ForwardRefExoticComponent<SelectSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
+namespace SelectSeparator {
+    type Props = SelectSeparatorProps;
+    type State = SelectSeparatorState;
+}
+export const Select: typeof SelectRoot;
+function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
+function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
+function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
+    size?: "sm" | "default";
+}): React$1.JSX.Element;
+export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
+function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
+function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
+function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
+export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
+export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
 class ComboboxItemCollection<in out Item, Value = Item> {
     private constructor();
     private readonly __itemCollectionBrand;
@@ -10652,46 +10587,6 @@ namespace AriaCombobox {
     type ChangeEventDetails = BaseUIChangeEventDetails<ChangeEventReason> & {
         isItemPress?: boolean | undefined;
     };
-}
-type Side$1 = "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
-type Align = "start" | "center" | "end";
-type Boundary = "clipping-ancestors" | Element | Element[] | Rect;
-type OffsetFunction = (data: {
-    side: Side$1;
-    align: Align;
-    anchor: {
-        width: number;
-        height: number;
-    };
-    positioner: {
-        width: number;
-        height: number;
-    };
-}) => number;
-interface SideFlipMode {
-    side?: "flip" | "none" | undefined;
-    align?: "flip" | "shift" | "none" | undefined;
-    fallbackAxisSide?: "start" | "end" | "none" | undefined;
-}
-interface SideShiftMode {
-    side?: "shift" | "none" | undefined;
-    align?: "shift" | "none" | undefined;
-    fallbackAxisSide?: "start" | "end" | "none" | undefined;
-}
-type CollisionAvoidance = SideFlipMode | SideShiftMode;
-interface UseAnchorPositioningSharedParameters {
-    anchor?: Element | null | VirtualElement | React$1.RefObject<Element | null> | (() => Element | VirtualElement | null) | undefined;
-    positionMethod?: "absolute" | "fixed" | undefined;
-    side?: Side$1 | undefined;
-    sideOffset?: number | OffsetFunction | undefined;
-    align?: Align | undefined;
-    alignOffset?: number | OffsetFunction | undefined;
-    collisionBoundary?: Boundary | undefined;
-    collisionPadding?: Padding | undefined;
-    sticky?: boolean | undefined;
-    arrowPadding?: number | undefined;
-    disableAnchorTracking?: boolean | undefined;
-    collisionAvoidance?: CollisionAvoidance | undefined;
 }
 const ComboboxInput: React$1.ForwardRefExoticComponent<Omit<ComboboxInputProps, "ref"> & React$1.RefAttributes<HTMLInputElement>>;
 interface ComboboxInputState extends FieldRootState {
@@ -11114,263 +11009,6 @@ namespace ProgressLabel {
     type State = ProgressLabelState;
     type Props = ProgressLabelProps;
 }
-function SelectRoot<Value, Multiple extends boolean | undefined = false>(props: SelectRoot.Props<Value, Multiple>): React$1.JSX.Element;
-type SelectInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? readonly Value[] : Value;
-type SelectOutputValue<Value, Multiple extends boolean | undefined> = Multiple extends true ? Value[] : Value;
-interface SelectRootProps<Value, Multiple extends boolean | undefined = false> {
-    children?: React$1.ReactNode;
-    inputRef?: React$1.Ref<HTMLInputElement> | undefined;
-    name?: string | undefined;
-    form?: string | undefined;
-    autoComplete?: string | undefined;
-    id?: string | undefined;
-    required?: boolean | undefined;
-    readOnly?: boolean | undefined;
-    disabled?: boolean | undefined;
-    multiple?: Multiple | undefined;
-    highlightItemOnHover?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: SelectRootOpenChangeEventDetails) => void) | undefined;
-    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
-    open?: boolean | undefined;
-    modal?: boolean | undefined;
-    actionsRef?: React$1.RefObject<SelectRootActions | null> | undefined;
-    items?: Record<string, React$1.ReactNode> | ReadonlyArray<{
-        label: React$1.ReactNode;
-        value: any;
-    }> | ReadonlyArray<Group<any>> | undefined;
-    itemToStringLabel?: ((itemValue: Value) => string) | undefined;
-    itemToStringValue?: ((itemValue: Value) => string) | undefined;
-    isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
-    defaultValue?: SelectInputValue<Value, Multiple> | null | undefined;
-    value?: SelectInputValue<Value, Multiple> | null | undefined;
-    onValueChange?: ((value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null), eventDetails: SelectRootChangeEventDetails) => void) | undefined;
-}
-interface SelectRootState {
-}
-interface SelectRootActions {
-    unmount: () => void;
-    close: () => void;
-}
-type SelectRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof windowResize | typeof itemPress | typeof focusOut | typeof listNavigation | typeof cancelOpen | typeof imperativeAction | typeof none;
-type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
-    preventUnmountOnClose: () => void;
-};
-type SelectRootChangeEventDetails = BaseUIChangeEventDetails<SelectRootChangeEventReason>;
-namespace SelectRoot {
-    type Props<Value, Multiple extends boolean | undefined = false> = SelectRootProps<Value, Multiple>;
-    type State = SelectRootState;
-    type Actions = SelectRootActions;
-    type ChangeEventReason = SelectRootChangeEventReason;
-    type ChangeEventDetails = SelectRootChangeEventDetails;
-    type OpenChangeEventDetails = SelectRootOpenChangeEventDetails;
-}
-const SelectLabel: React$1.ForwardRefExoticComponent<Omit<SelectLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-type SelectLabelState = FieldRoot.State;
-interface SelectLabelProps extends Omit<BaseUIComponentProps<"div", SelectLabel.State>, "id"> {
-}
-namespace SelectLabel {
-    type State = SelectLabelState;
-    type Props = SelectLabelProps;
-}
-const SelectTrigger: React$1.ForwardRefExoticComponent<Omit<SelectTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface SelectTriggerState extends FieldRootState {
-    open: boolean;
-    readOnly: boolean;
-    popupSide: Side$1 | null;
-    value: any;
-    placeholder: boolean;
-}
-interface SelectTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", SelectTriggerState> {
-    children?: React$1.ReactNode;
-    disabled?: boolean | undefined;
-}
-namespace SelectTrigger {
-    type State = SelectTriggerState;
-    type Props = SelectTriggerProps;
-}
-const SelectValue: React$1.ForwardRefExoticComponent<Omit<SelectValueProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface SelectValueState {
-    value: any;
-    placeholder: boolean;
-}
-interface SelectValueProps extends Omit<BaseUIComponentProps<"span", SelectValueState>, "children"> {
-    children?: React$1.ReactNode | ((value: any) => React$1.ReactNode);
-    placeholder?: React$1.ReactNode;
-}
-namespace SelectValue {
-    type State = SelectValueState;
-    type Props = SelectValueProps;
-}
-const SelectIcon: React$1.ForwardRefExoticComponent<Omit<SelectIconProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface SelectIconState {
-    open: boolean;
-}
-interface SelectIconProps extends BaseUIComponentProps<"span", SelectIconState> {
-}
-namespace SelectIcon {
-    type State = SelectIconState;
-    type Props = SelectIconProps;
-}
-const SelectPortal: React$1.ForwardRefExoticComponent<Omit<SelectPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectPortalState {
-}
-interface SelectPortalProps extends BaseUIComponentProps<"div", SelectPortalState> {
-    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
-}
-namespace SelectPortal {
-    type State = SelectPortalState;
-    type Props = SelectPortalProps;
-}
-const SelectBackdrop: React$1.ForwardRefExoticComponent<Omit<SelectBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectBackdropState {
-    open: boolean;
-    transitionStatus: TransitionStatus;
-}
-interface SelectBackdropProps extends BaseUIComponentProps<"div", SelectBackdropState> {
-}
-namespace SelectBackdrop {
-    type State = SelectBackdropState;
-    type Props = SelectBackdropProps;
-}
-const SelectPositioner: React$1.ForwardRefExoticComponent<Omit<SelectPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectPositionerState {
-    open: boolean;
-    side: Side$1 | "none";
-    align: Align;
-    anchorHidden: boolean;
-}
-interface SelectPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", SelectPositionerState> {
-    alignItemWithTrigger?: boolean | undefined;
-}
-namespace SelectPositioner {
-    type State = SelectPositionerState;
-    type Props = SelectPositionerProps;
-}
-const SelectPopup: React$1.ForwardRefExoticComponent<Omit<SelectPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectPopupProps extends BaseUIComponentProps<"div", SelectPopupState> {
-    children?: React$1.ReactNode;
-    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | HTMLElement | null | void) | undefined;
-}
-interface SelectPopupState {
-    side: Side$1 | "none";
-    align: Align;
-    open: boolean;
-    transitionStatus: TransitionStatus;
-}
-namespace SelectPopup {
-    type Props = SelectPopupProps;
-    type State = SelectPopupState;
-}
-const SelectList: React$1.ForwardRefExoticComponent<Omit<SelectListProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectListProps extends BaseUIComponentProps<"div", SelectListState> {
-}
-interface SelectListState {
-}
-namespace SelectList {
-    type Props = SelectListProps;
-    type State = SelectListState;
-}
-const SelectItem: React$1.NamedExoticComponent<Omit<SelectItemProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface SelectItemState {
-    disabled: boolean;
-    selected: boolean;
-    highlighted: boolean;
-}
-interface SelectItemProps extends NonNativeButtonProps, Omit<BaseUIComponentProps<"div", SelectItemState>, "id"> {
-    children?: React$1.ReactNode;
-    value?: any;
-    disabled?: boolean | undefined;
-    label?: string | undefined;
-}
-namespace SelectItem {
-    type State = SelectItemState;
-    type Props = SelectItemProps;
-}
-const SelectItemIndicator: React$1.ForwardRefExoticComponent<Omit<SelectItemIndicatorProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
-interface SelectItemIndicatorState {
-    selected: boolean;
-    transitionStatus: TransitionStatus;
-}
-interface SelectItemIndicatorProps extends BaseUIComponentProps<"span", SelectItemIndicatorState> {
-    children?: React$1.ReactNode;
-    keepMounted?: boolean | undefined;
-}
-namespace SelectItemIndicator {
-    type State = SelectItemIndicatorState;
-    type Props = SelectItemIndicatorProps;
-}
-const SelectItemText: React$1.NamedExoticComponent<Omit<SelectItemTextProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectItemTextState {
-}
-interface SelectItemTextProps extends BaseUIComponentProps<"div", SelectItemTextState> {
-}
-namespace SelectItemText {
-    type State = SelectItemTextState;
-    type Props = SelectItemTextProps;
-}
-const SelectArrow: React$1.ForwardRefExoticComponent<Omit<SelectArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectArrowState {
-    open: boolean;
-    side: Side$1 | "none";
-    align: Align;
-    uncentered: boolean;
-}
-interface SelectArrowProps extends BaseUIComponentProps<"div", SelectArrowState> {
-}
-namespace SelectArrow {
-    type State = SelectArrowState;
-    type Props = SelectArrowProps;
-}
-const SelectScrollDownArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollDownArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectScrollDownArrowState {
-}
-interface SelectScrollDownArrowProps extends BaseUIComponentProps<"div", SelectScrollDownArrowState> {
-    keepMounted?: boolean | undefined;
-}
-namespace SelectScrollDownArrow {
-    type State = SelectScrollDownArrowState;
-    type Props = SelectScrollDownArrowProps;
-}
-const SelectScrollUpArrow: React$1.ForwardRefExoticComponent<Omit<SelectScrollUpArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectScrollUpArrowState {
-}
-interface SelectScrollUpArrowProps extends BaseUIComponentProps<"div", SelectScrollUpArrowState> {
-    keepMounted?: boolean | undefined;
-}
-namespace SelectScrollUpArrow {
-    type State = SelectScrollUpArrowState;
-    type Props = SelectScrollUpArrowProps;
-}
-const SelectGroup: React$1.ForwardRefExoticComponent<Omit<SelectGroupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectGroupState {
-}
-interface SelectGroupProps extends BaseUIComponentProps<"div", SelectGroupState> {
-}
-namespace SelectGroup {
-    type State = SelectGroupState;
-    type Props = SelectGroupProps;
-}
-const SelectGroupLabel: React$1.ForwardRefExoticComponent<Omit<SelectGroupLabelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface SelectGroupLabelState {
-}
-interface SelectGroupLabelProps extends BaseUIComponentProps<"div", SelectGroupLabelState> {
-}
-namespace SelectGroupLabel {
-    type State = SelectGroupLabelState;
-    type Props = SelectGroupLabelProps;
-}
-interface SelectSeparatorProps extends BaseUIComponentProps<"div", SelectSeparatorState> {
-    orientation?: Orientation | undefined;
-}
-interface SelectSeparatorState {
-    orientation: Orientation;
-}
-const SelectSeparator: React$1.ForwardRefExoticComponent<SelectSeparatorProps & React$1.RefAttributes<HTMLDivElement>>;
-namespace SelectSeparator {
-    type Props = SelectSeparatorProps;
-    type State = SelectSeparatorState;
-}
 const SliderRoot: {
     <Value extends number | readonly number[]>(props: SliderRoot.Props<Value> & {
         ref?: React$1.Ref<HTMLDivElement> | undefined;
@@ -11587,476 +11225,6 @@ namespace TabsList {
     type State = TabsListState;
     type Props = TabsListProps;
 }
-type State<Payload> = PopupStoreState<Payload> & {
-    modal: boolean | "trap-focus";
-    disablePointerDismissal: boolean;
-    openMethod: InteractionType | null;
-    nested: boolean;
-    nestedOpenDialogCount: number;
-    nestedOpenDrawerCount: number;
-    titleElementId: string | undefined;
-    descriptionElementId: string | undefined;
-    viewportElement: HTMLElement | null;
-    role: "dialog" | "alertdialog";
-};
-type Context = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
-    readonly popupRef: React$1.RefObject<HTMLElement | null>;
-    readonly backdropRef: React$1.RefObject<HTMLDivElement | null>;
-    readonly internalBackdropRef: React$1.RefObject<HTMLDivElement | null>;
-    readonly outsidePressEnabledRef: React$1.MutableRefObject<boolean>;
-    readonly onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
-};
-const selectors$1: {
-    open: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => boolean;
-    mounted: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => boolean;
-    transitionStatus: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => TransitionStatus;
-    floatingRootContext: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => FloatingRootStore;
-    triggerCount: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => number;
-    preventUnmountingOnClose: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => boolean;
-    payload: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => unknown;
-    activeTriggerId: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => string | null;
-    activeTriggerElement: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => Element | null;
-    popupId: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => string | undefined;
-    isTriggerActive: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }, triggerId: string | undefined) => boolean;
-    isOpenedByTrigger: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }, triggerId: string | undefined) => boolean;
-    isMountedByTrigger: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }, triggerId: string | undefined) => boolean;
-    triggerProps: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }, isActive: boolean) => HTMLProps;
-    triggerPopupId: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }, triggerId: string | undefined) => string | undefined;
-    popupProps: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => HTMLProps;
-    popupElement: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => HTMLElement | null;
-    positionerElement: (state: {
-        open: boolean;
-        readonly openProp: boolean | undefined;
-        mounted: boolean;
-        transitionStatus: TransitionStatus;
-        floatingRootContext: FloatingRootContext;
-        floatingId: string | undefined;
-        triggerCount: number;
-        preventUnmountingOnClose: boolean;
-        payload: unknown;
-        activeTriggerId: string | null;
-        activeTriggerElement: Element | null;
-        openedWithoutTrigger: boolean;
-        readonly triggerIdProp: string | null | undefined;
-        popupElement: HTMLElement | null;
-        positionerElement: HTMLElement | null;
-        activeTriggerProps: HTMLProps;
-        inactiveTriggerProps: HTMLProps;
-        popupProps: HTMLProps;
-    }) => HTMLElement | null;
-    modal: (state: State<unknown>) => "trap-focus" | boolean;
-    nested: (state: State<unknown>) => boolean;
-    nestedOpenDialogCount: (state: State<unknown>) => number;
-    nestedOpenDrawerCount: (state: State<unknown>) => number;
-    disablePointerDismissal: (state: State<unknown>) => boolean;
-    openMethod: (state: State<unknown>) => InteractionType | null;
-    descriptionElementId: (state: State<unknown>) => string | undefined;
-    titleElementId: (state: State<unknown>) => string | undefined;
-    viewportElement: (state: State<unknown>) => HTMLElement | null;
-    role: (state: State<unknown>) => "alertdialog" | "dialog";
-};
-type DialogHandleStore<Payload> = PopupTriggerDataStore<State<Payload>>;
-class DialogStore<Payload> extends ReactStore<Readonly<State<Payload>>, Context, typeof selectors$1> {
-    constructor(initialState: Partial<State<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
-    setOpen: (nextOpen: boolean, eventDetails: Omit<DialogRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
-}
-class DialogHandle<Payload> extends BasePopupHandle<DialogHandleStore<Payload>, DialogStore<Payload>> {
-    constructor();
-    open(triggerId: string | null): void;
-    openWithPayload(payload: Payload): void;
-    close(): void;
-    get isOpen(): boolean;
-}
-function createDialogHandle<Payload>(): DialogHandle<Payload>;
-const DialogRoot: <Payload>(props: DialogRoot.Props<Payload>) => React$1.JSX.Element;
-interface DialogRootState {
-}
-interface DialogRootProps<Payload = unknown> {
-    open?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    modal?: boolean | "trap-focus" | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: DialogRoot.ChangeEventDetails) => void) | undefined;
-    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
-    disablePointerDismissal?: boolean | undefined;
-    actionsRef?: React$1.RefObject<DialogRoot.Actions | null> | undefined;
-    handle?: DialogHandle<Payload> | undefined;
-    children?: React$1.ReactNode | PayloadChildRenderFunction<Payload>;
-    triggerId?: string | null | undefined;
-    defaultTriggerId?: string | null | undefined;
-}
-interface DialogRootActions {
-    unmount: () => void;
-    close: () => void;
-}
-type DialogRootChangeEventReason = typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof closePress | typeof focusOut | typeof imperativeAction | typeof none;
-type DialogRootChangeEventDetails = BaseUIChangeEventDetails<DialogRoot.ChangeEventReason> & {
-    preventUnmountOnClose: () => void;
-};
-namespace DialogRoot {
-    type State = DialogRootState;
-    type Props<Payload = unknown> = DialogRootProps<Payload>;
-    type Actions = DialogRootActions;
-    type ChangeEventReason = DialogRootChangeEventReason;
-    type ChangeEventDetails = DialogRootChangeEventDetails;
-}
-export function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
-function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
-function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
-function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
-export function DialogOverlay({ className, ...props }: DialogBackdrop.Props): React$1.JSX.Element;
-export function DialogContent({ className, children, showCloseButton, ...props }: DialogPopup.Props & {
-    showCloseButton?: boolean;
-}): React$1.JSX.Element;
-export function DialogHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function DialogFooter({ className, showCloseButton, children, ...props }: React$1.ComponentProps<"div"> & {
-    showCloseButton?: boolean;
-}): React$1.JSX.Element;
-function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.Element;
-function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
-export function ViewDialog(props: {
-    children?: React$1.ReactNode;
-    title?: string;
-    variant?: "standard" | "fullscreen";
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    gap?: Spacing;
-    paddingInline?: Spacing;
-}): React$1.JSX.Element;
-export const Select: typeof SelectRoot;
-function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
-function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
-function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
-    size?: "sm" | "default";
-}): React$1.JSX.Element;
-export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
-function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
-function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
-function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
-export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
-export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
 export const Combobox: typeof ComboboxRoot;
 function ComboboxValue$1({ ...props }: ComboboxValue.Props): React$1.JSX.Element;
 function ComboboxTrigger$1({ className, children, ...props }: ComboboxTrigger.Props): React$1.JSX.Element;
@@ -12118,7 +11286,7 @@ namespace Slider {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$2 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Button$2 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const Badge: typeof NativeFrontend.Badge;
@@ -12151,15 +11319,6 @@ declare const ComboboxSeparator: typeof NativeFrontend.ComboboxSeparator;
 declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
 declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
 declare const Dialog: typeof NativeFrontend.Dialog;
-declare const DialogClose: typeof NativeFrontend.DialogClose;
-declare const DialogContent: typeof NativeFrontend.DialogContent;
-declare const DialogDescription: typeof NativeFrontend.DialogDescription;
-declare const DialogFooter: typeof NativeFrontend.DialogFooter;
-declare const DialogHeader: typeof NativeFrontend.DialogHeader;
-declare const DialogOverlay: typeof NativeFrontend.DialogOverlay;
-declare const DialogPortal: typeof NativeFrontend.DialogPortal;
-declare const DialogTitle: typeof NativeFrontend.DialogTitle;
-declare const DialogTrigger: typeof NativeFrontend.DialogTrigger;
 declare const Disclosure: typeof NativeFrontend.Disclosure;
 declare const Field: typeof NativeFrontend.Field;
 declare const FieldContent: typeof NativeFrontend.FieldContent;
@@ -12220,6 +11379,5 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
-declare const ViewDialog: typeof NativeFrontend.ViewDialog;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;

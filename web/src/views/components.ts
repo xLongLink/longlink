@@ -61,22 +61,6 @@ export { Divider } from '@/components/ui/Divider';
 /** @category Layouts */
 export { Dialog } from '@/components/ui/Dialog';
 
-/** @category Layouts @group Dialog */
-export {
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogOverlay,
-    DialogPortal,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/Dialog';
-
-/** Custom modal frame with isolated View host coordination. @category Layouts */
-export { ViewDialog } from '@/components/ui/ViewDialog';
-
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 export { Form } from '@/components/ui/Form';
 

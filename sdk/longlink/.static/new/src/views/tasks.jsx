@@ -84,7 +84,7 @@ export default function Tasks() {
                     },
                 ]}
             />
-            <ViewDialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <Dialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
                         <TextInput name="title" label="Title" maxLength={255} required />
@@ -95,7 +95,7 @@ export default function Tasks() {
                         </Stack>
                     </Form>
                 )}
-            </ViewDialog>
+            </Dialog>
         </Stack>
     );
 }

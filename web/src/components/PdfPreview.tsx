@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ViewDialog } from '@/components/ui/ViewDialog';
+import { Dialog } from '@/components/ui/Dialog';
 
 /** Displays only host-fetched PDF bytes in the browser's native viewer. */
 export function PdfPreview({ body, title, onClose }: { body: Blob; title: string; onClose: () => void }) {
@@ -21,7 +21,7 @@ export function PdfPreview({ body, title, onClose }: { body: Blob; title: string
 
     // Render outside the Solution sandbox without granting it navigation or plugin permissions.
     return (
-        <ViewDialog
+        <Dialog
             title={title}
             variant="fullscreen"
             isOpen
@@ -30,6 +30,6 @@ export function PdfPreview({ body, title, onClose }: { body: Blob; title: string
             gap={0}
         >
             <iframe ref={frame} title={title} className="h-full min-h-0 w-full flex-1 border-0" />
-        </ViewDialog>
+        </Dialog>
     );
 }
