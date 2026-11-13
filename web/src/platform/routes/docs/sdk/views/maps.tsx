@@ -4,7 +4,64 @@ import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Maps } from '@/components/custom/maps';
 
-const geography = z.json().parse(world);
+// Limit the example's boundaries to European countries.
+const europeanCountries = new Set([
+    'Albania',
+    'Austria',
+    'Belarus',
+    'Belgium',
+    'Bosnia and Herz.',
+    'Bulgaria',
+    'Croatia',
+    'Cyprus',
+    'Czechia',
+    'Denmark',
+    'Estonia',
+    'Finland',
+    'France',
+    'Germany',
+    'Greece',
+    'Hungary',
+    'Iceland',
+    'Ireland',
+    'Italy',
+    'Kosovo',
+    'Latvia',
+    'Lithuania',
+    'Luxembourg',
+    'Macedonia',
+    'Moldova',
+    'Montenegro',
+    'N. Cyprus',
+    'Netherlands',
+    'Norway',
+    'Poland',
+    'Portugal',
+    'Romania',
+    'Serbia',
+    'Slovakia',
+    'Slovenia',
+    'Spain',
+    'Sweden',
+    'Switzerland',
+    'Turkey',
+    'Ukraine',
+    'United Kingdom'
+]);
+
+const geography = z
+    .json()
+    .parse({
+        ...world,
+        objects: {
+            countries: {
+                ...world.objects.countries,
+                geometries: world.objects.countries.geometries.filter((country) =>
+                    europeanCountries.has(country.properties.name)
+                )
+            }
+        }
+    });
 
 /** Documents a single generic geographic map component. */
 export default function MapsPage() {
@@ -68,8 +125,12 @@ export default function MapsPage() {
 
   return (
     <Maps
-      label="Regions"
+      label="Europe"
       geography={geography}
+      objectName="countries"
+      projection="geoMercator"
+      center={[8.2, 46.8]}
+      scale={2600}
       selectedId={selectedId}
       onSelect={setSelectedId}
     />
@@ -80,15 +141,18 @@ export default function MapsPage() {
     );
 }
 
-/** Shows real TopoJSON boundaries without making the runtime country-specific. */
+/** Shows European TopoJSON boundaries without making the runtime country-specific. */
 export function MapsExample({ height = 320 }: { height?: number }) {
     const [selectedId, setSelectedId] = useState('756');
 
     return (
         <Maps
-            label="Regions"
+            label="Europe"
             geography={geography}
             objectName="countries"
+            projection="geoMercator"
+            center={[8.2, 46.8]}
+            scale={2600}
             height={height}
             selectedId={selectedId}
             onSelect={setSelectedId}

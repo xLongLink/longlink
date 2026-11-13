@@ -42,18 +42,24 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     </Stack>
                 </div>
                 <div
-                    className="min-h-0 min-w-0 flex-1 overflow-auto px-4 pt-6 pb-4 data-code:overflow-hidden"
+                    className="min-h-0 min-w-0 flex-1 overflow-auto p-2 data-code:overflow-hidden"
                     data-code={showCode || undefined}
                 >
-                    <Stack className={showCode ? 'hidden' : undefined} aria-label={`${example.title} preview`}>
+                    <Stack
+                        className={showCode ? 'hidden' : 'min-h-full [&_:is(.native-heading,.view-heading)]:mt-0'}
+                        align="center"
+                        justify="center"
+                        aria-label={`${example.title} preview`}
+                    >
                         {example.preview}
                     </Stack>
                     {showCode && (
                         <CodeBlock
                             code={example.code}
                             language={example.language ?? 'jsx'}
+                            variant="ghost"
                             showLineNumbers
-                            className="h-full"
+                            className="h-full min-h-0 [&_[data-slot=code-block-viewport]]:h-full"
                         >
                             <CodeBlockCopyButton />
                         </CodeBlock>

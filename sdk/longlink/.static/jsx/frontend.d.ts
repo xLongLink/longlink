@@ -12832,12 +12832,6 @@ export function EmptyMedia({ className, variant, ...props }: React$1.ComponentPr
 export function EmptyTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 export function EmptyDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
 export function EmptyContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyState(props: {
-    title: string;
-    description?: string;
-    headingLevel?: 1 | 3;
-    isCompact?: boolean;
-}): React$1.JSX.Element;
 export function DropdownMenu({ ...props }: MenuRoot.Props): React$1.JSX.Element;
 export function DropdownMenuPortal({ ...props }: MenuPortal.Props): React$1.JSX.Element;
 export function DropdownMenuTrigger({ ...props }: MenuTrigger.Props): React$1.JSX.Element;
@@ -14297,7 +14291,6 @@ declare const EmptyContent: typeof NativeFrontend.EmptyContent;
 declare const EmptyDescription: typeof NativeFrontend.EmptyDescription;
 declare const EmptyHeader: typeof NativeFrontend.EmptyHeader;
 declare const EmptyMedia: typeof NativeFrontend.EmptyMedia;
-declare const EmptyState: typeof NativeFrontend.EmptyState;
 declare const EmptyTitle: typeof NativeFrontend.EmptyTitle;
 declare const Field: typeof NativeFrontend.Field;
 declare const FieldContent: typeof NativeFrontend.FieldContent;

@@ -6,7 +6,6 @@ export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '../src/compo
 export * from '../src/components/shadcn/dialog';
 export * from '../src/components/shadcn/pagination';
 export * from '../src/components/shadcn/empty';
-export { EmptyState } from '../src/components/custom/empty-state';
 export * from '../src/components/shadcn/dropdown-menu';
 export * from '../src/components/shadcn/table';
 export { Separator } from '../src/components/shadcn/separator';

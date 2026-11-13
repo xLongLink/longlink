@@ -3,6 +3,7 @@ import { IconExample } from './views/icon';
 import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
 import { BadgeExample } from './views/badge';
+import { EmptyExample } from './views/empty';
 import { InputExample } from './views/input';
 import { StackExample } from './views/stack';
 import { TokenExample } from './views/token';
@@ -30,7 +31,6 @@ import { TextInputExample } from './views/text-input';
 import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
 import { ActionMenuExample } from './views/action-menu';
-import { EmptyStateExample } from './views/empty-state';
 import { FileViewerExample } from './views/file-viewer';
 import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
@@ -82,7 +82,11 @@ const previews = new Map(
         RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
         RadialChart: <ChartExample name="RadialChart" height={160} isCompact />,
         SankeyChart: <ChartExample name="SankeyChart" height={160} isCompact />,
-        Maps: <MapsExample height={150} />,
+        Maps: (
+            <div className="flex aspect-square w-full items-center justify-center overflow-hidden [&_svg]:h-full! [&_svg]:w-[200%] [&_svg]:max-w-none [&_svg]:shrink-0">
+                <MapsExample />
+            </div>
+        ),
         Avatar: <AvatarExample />,
         GeneratedAvatar: <GeneratedAvatarExample />,
         ViewDialog: <ViewDialogExample />,
@@ -114,7 +118,7 @@ const previews = new Map(
         Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
         ActionMenu: <ActionMenuExample />,
-        EmptyState: <EmptyStateExample />,
+        Empty: <EmptyExample />,
         FileInput: <FileInputExample />,
         FileViewer: <FileViewerExample />,
         Form: (
@@ -239,16 +243,21 @@ export default function Item({ params }) {
                             <Heading id={category.toLowerCase().replace(/\W+/g, '-')} level={2}>
                                 {category}
                             </Heading>
-                            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fill' }} gap={4}>
                                 {componentDocumentation
                                     .filter((component) => component.category === category)
                                     .map((component) => (
                                         <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                            <Card aria-hidden="true" inert size="sm" className="w-full max-w-full">
+                                            <Card
+                                                aria-hidden="true"
+                                                inert
+                                                size="sm"
+                                                className={`aspect-square w-full max-w-full ${component.name === 'Maps' ? 'py-0' : ''}`}
+                                            >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                                <div className="flex h-40 w-full min-w-0 items-center justify-center overflow-hidden">
+                                                <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden">
                                                     <Stack
-                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') ? '' : 'scale-90'}`}
+                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.name === 'Maps' ? '' : 'scale-90'}`}
                                                         width="100%"
                                                         maxWidth="100%"
                                                         align={component.category === 'Form' ? 'stretch' : 'center'}

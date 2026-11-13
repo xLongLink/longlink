@@ -1,6 +1,6 @@
-import { EmptyState } from './empty-state';
 import { sankeyDataSchema } from './charts';
 import type { ChartProps, ChartRow, SankeyChartProps } from './charts';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/shadcn/empty';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/shadcn/chart';
 import {
     Area,
@@ -44,7 +44,15 @@ function SeriesChart({ kind, ...props }: ChartProps & { kind: 'area' | 'bar' | '
         config[`series${index}`] = { label: series.label, color: `var(--chart-${(index % 5) + 1})` };
     });
 
-    if (!data.length || !props.series.length) return <EmptyState title="No chart data" isCompact />;
+    if (!data.length || !props.series.length) {
+        return (
+            <Empty role="status">
+                <EmptyHeader>
+                    <EmptyTitle>No chart data</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
 
     const Plot =
         kind === 'area'
@@ -173,7 +181,15 @@ export function RadarChart(props: ChartProps) {
 function CircularChart({ kind, ...props }: ChartProps & { kind: 'pie' | 'radial' }) {
     const series = props.series[0];
 
-    if (!series || !props.data.length) return <EmptyState title="No chart data" isCompact />;
+    if (!series || !props.data.length) {
+        return (
+            <Empty role="status">
+                <EmptyHeader>
+                    <EmptyTitle>No chart data</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
 
     // Give every category its own stable theme color and tooltip label.
     const config: ChartConfig = { value: { label: series.label } };
@@ -238,10 +254,27 @@ export function RadialChart(props: ChartProps) {
 
 /** Displays a directed, acyclic flow between indexed nodes. */
 export function SankeyChart(props: SankeyChartProps) {
-    if (!props.nodes.length || !props.links.length) return <EmptyState title="No chart data" isCompact />;
+    if (!props.nodes.length || !props.links.length) {
+        return (
+            <Empty role="status">
+                <EmptyHeader>
+                    <EmptyTitle>No chart data</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
+
     const parsed = sankeyDataSchema.safeParse({ nodes: props.nodes, links: props.links });
 
-    if (!parsed.success) return <EmptyState title="Invalid chart data" isCompact />;
+    if (!parsed.success) {
+        return (
+            <Empty role="status">
+                <EmptyHeader>
+                    <EmptyTitle>Invalid chart data</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
 
     return (
         <div

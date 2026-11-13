@@ -44,7 +44,13 @@ export default function Projects() {
                     </InteractiveCard>
                 ))}
             </Grid>
-            {projects.length === 0 && <EmptyState title="No projects yet" />}
+            {projects.length === 0 && (
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyTitle>No projects yet</EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
+            )}
         </Stack>
     );
 }

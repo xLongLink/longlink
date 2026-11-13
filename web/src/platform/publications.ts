@@ -95,7 +95,7 @@ export const componentDocumentation = [
     { name: 'Divider', category: 'Display', icon: Columns3 },
     { name: 'DropdownMenu', category: 'Action', icon: ChevronDown },
     { name: 'ActionMenu', category: 'Action', icon: ChevronDown },
-    { name: 'EmptyState', category: 'Display', icon: Package },
+    { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileInput', category: 'Form', icon: FileCode2 },
     { name: 'FileViewer', category: 'Display', icon: FileText },
     { name: 'Form', category: 'Form', icon: FileText },

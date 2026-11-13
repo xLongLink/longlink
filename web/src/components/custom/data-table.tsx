@@ -1,6 +1,6 @@
 import type { TableColumn } from './table';
-import { EmptyState } from '@/components/custom/empty-state';
 import { renderTableValue, tableColumns, tableWidths } from './table';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/shadcn/empty';
 import { DataGridTable } from '@/components/reui/data-grid/data-grid-table';
 import { useTable, type CellContext, type ColumnDef } from '@tanstack/react-table';
 import { DataGridScrollArea } from '@/components/reui/data-grid/data-grid-scroll-area';
@@ -88,7 +88,13 @@ export function DataTable<T extends Record<string, unknown>>({
         <DataGrid
             table={table}
             recordCount={data.length}
-            emptyMessage={<EmptyState title="No data" isCompact />}
+            emptyMessage={
+                <Empty role="status">
+                    <EmptyHeader>
+                        <EmptyTitle>No data</EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
+            }
             tableLayout={{ dense: density === 'compact', stripped: isStriped, rowBorder: true, headerBorder: true }}
             tableClassNames={{
                 base:

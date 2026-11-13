@@ -69,13 +69,13 @@ it('removes stale rows on empty results and recovers when data arrives again', a
 
         expect(output.querySelector('tbody')?.textContent).toBe('Inbound shipment');
         await act(async () => user.click(toggle));
-        expect(output.querySelector('tbody h3')?.textContent).toBe('No data');
+        expect(output.querySelector('tbody [role="status"]')?.textContent).toBe('No data');
         expect(output.querySelector('table')?.textContent).not.toContain('Inbound shipment');
         expect(output.querySelector('thead')).toBeNull();
         await act(async () => user.click(toggle));
         expect(output.querySelector('tbody')?.textContent).toBe('Inbound shipment');
         expect(output.querySelector('thead th')?.textContent).toBe('Name');
-        expect(output.querySelector('tbody h3')).toBeNull();
+        expect(output.querySelector('tbody [role="status"]')).toBeNull();
     });
 });
 

@@ -7,12 +7,12 @@ import * as permissions from '@/platform/permissions';
 import { SolutionPage } from '@/components/solution-page';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
-import { EmptyState } from '@/components/custom/empty-state';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { OrganizationSwitcher } from '@/platform/components/organization-switcher';
 import { OrganizationBreadcrumb } from '@/platform/components/organization-breadcrumb';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -62,11 +62,14 @@ export default function OrganizationSolution() {
     if (deploymentNotice) {
         const notice = (
             <div role="alert">
-                <EmptyState
-                    description={deploymentNotice.description}
-                    headingLevel={1}
-                    title={deploymentNotice.title}
-                />
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyTitle>
+                            <h1>{deploymentNotice.title}</h1>
+                        </EmptyTitle>
+                        <EmptyDescription>{deploymentNotice.description}</EmptyDescription>
+                    </EmptyHeader>
+                </Empty>
             </div>
         );
 

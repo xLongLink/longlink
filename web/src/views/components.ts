@@ -328,9 +328,6 @@ export { TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 /** @category Display */
 export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from '@/components/shadcn/empty';
 
-/** Custom semantic headings and scoped result announcements. @category Display */
-export { EmptyState } from '@/components/custom/empty-state';
-
 /** @category Action */
 export { MoreMenu } from '@/components/custom/more-menu';
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { EmptyState } from './empty-state';
 import { prepareMap, type MapData } from './map-data';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/shadcn/empty';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps/core';
 
 /** Renders generic polygon boundaries from supplied GeoJSON or TopoJSON data. */
@@ -18,9 +18,15 @@ export function Maps(props: {
 }) {
     const result = useMemo(() => prepareMap(props.geography, props.objectName), [props.geography, props.objectName]);
 
-    if (result.status === 'invalid') return <EmptyState title="Invalid map data" isCompact />;
-
-    if (!result.data.features.length) return <EmptyState title="No map data" isCompact />;
+    if (result.status === 'invalid' || !result.data.features.length) {
+        return (
+            <Empty role="status">
+                <EmptyHeader>
+                    <EmptyTitle>{result.status === 'invalid' ? 'Invalid map data' : 'No map data'}</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
 
     return (
         <ComposableMap

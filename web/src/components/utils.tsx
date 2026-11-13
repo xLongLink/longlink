@@ -1,5 +1,6 @@
-import { EmptyState } from '@/components/custom/empty-state';
+import { useAnnouncement } from '@/components/custom/announcement';
 import { NativeLoading } from '@/components/custom/native-loading';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {
@@ -12,9 +13,21 @@ export function PageLoading({ label }: { label: string }) {
 
 /** Renders a full-page unavailable state. */
 export function PageError({ description, title }: { description: string; title: string }) {
+    const { root, channel } = useAnnouncement(`${title} ${description}`);
+
     return (
         <div className="flex min-h-[70dvh] min-w-0 items-center justify-center">
-            <EmptyState description={description} headingLevel={1} title={title} />
+            <Empty ref={root}>
+                <EmptyHeader>
+                    <EmptyTitle>
+                        <h1>{title}</h1>
+                    </EmptyTitle>
+                    <EmptyDescription>
+                        <p>{description}</p>
+                    </EmptyDescription>
+                </EmptyHeader>
+                <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
+            </Empty>
         </div>
     );
 }

@@ -133,7 +133,6 @@ const nativeComposition = (
                     <EmptyDescription>Change the search filters.</EmptyDescription>
                 </EmptyHeader>
             </Empty>
-            <EmptyState title="No matching orders" isCompact />
             <Stepper defaultValue={1} onValueChange={(step) => step.toFixed()}>
                 <StepperNav>
                     <StepperItem step={1}>
