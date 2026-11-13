@@ -4,6 +4,8 @@ const [selected, setSelected] = useState('one');
 const remembered = useRef(/** @type {HTMLButtonElement | null} */ (null));
 useEffect(() => {}, []);
 const label = useMemo(() => selected.toUpperCase(), [selected]);
+const confirmation = useConfirm();
+confirmation.show({ title: 'Publish changes?', actionLabel: 'Publish', actionVariant: 'default', onAction: async () => {} });
 
 const nativeComposition = (
     <Card id="settings" onPointerDown={(event) => event.currentTarget.focus()}>

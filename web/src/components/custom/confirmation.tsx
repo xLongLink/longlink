@@ -7,7 +7,7 @@ export type ConfirmOptions = {
     description?: string;
     cancelLabel?: string;
     actionLabel: string;
-    actionVariant?: 'primary' | 'secondary' | 'destructive';
+    actionVariant?: 'default' | 'destructive';
     onAction: () => void | Promise<void>;
 };
 

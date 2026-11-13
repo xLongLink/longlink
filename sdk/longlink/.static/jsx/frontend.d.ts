@@ -14,7 +14,7 @@ type ConfirmOptions = {
     description?: string;
     cancelLabel?: string;
     actionLabel: string;
-    actionVariant?: 'primary' | 'secondary' | 'destructive';
+    actionVariant?: 'default' | 'destructive';
     onAction: () => void | Promise<void>;
 };
 
@@ -22,7 +22,7 @@ type ConfirmOptions = {
  * Render element once. show(options) opens a compact confirmation with Cancel focused.
  * Actions show loading and close only after success. Failures keep the dialog open for retry.
  * While pending, duplicate actions, show(), hide(), Cancel, and Escape are ignored.
- * Cancel defaults to "Cancel"; actionVariant defaults to "primary". Description is optional.
+ * Cancel defaults to "Cancel"; actionVariant defaults to "default". Description is optional.
  * Scoped request errors are reported by the host; other errors appear in the dialog.
  * @category Runtime @group Hooks
  */

@@ -16,7 +16,7 @@ export const viewHooks = [
     {
         name: 'useConfirm()',
         description:
-            'Returns show(options), hide(), isOpen, and element. Render element once. Options: title, optional description and cancelLabel (default Cancel), actionLabel, optional actionVariant (default primary), and onAction. Actions may be async; success closes, failure keeps the dialog open for retry. Loading prevents duplicate actions and dismissal. Scoped request errors are reported by the host; other errors appear in the dialog.'
+            'Returns show(options), hide(), isOpen, and element. Render element once. Options: title, optional description and cancelLabel (default Cancel), actionLabel, optional actionVariant (default | destructive; defaults to default), and onAction. Actions may be async; success closes, failure keeps the dialog open for retry. Loading prevents duplicate actions and dismissal. Scoped request errors are reported by the host; other errors appear in the dialog.'
     },
     {
         name: 'useState(initial)',

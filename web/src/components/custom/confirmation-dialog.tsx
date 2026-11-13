@@ -88,7 +88,7 @@ export function ConfirmationDialog({
                             </Button>
                             <Button
                                 type="button"
-                                variant={options.actionVariant === 'destructive' ? 'destructive' : 'default'}
+                                variant={options.actionVariant ?? 'default'}
                                 className="relative min-w-0"
                                 disabled={isPending}
                                 focusableWhenDisabled
