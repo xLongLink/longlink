@@ -12,14 +12,17 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
     // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.
     const output = renderStatic(
         <>
-            <PageContainer>Default page</PageContainer>
+            <PageContainer>
+                <h1>Default page</h1>
+            </PageContainer>
             <PageContainer height="100%" minHeight={0} maxWidth={720} gap={8} padding={2} paddingInline={0}>
-                Sized page
+                <h2>Sized page</h2>
             </PageContainer>
         </>
     );
 
-    const [plain, sized] = output.querySelectorAll<HTMLElement>('.platform-page-container');
+    const plain = output.querySelector('h1')?.parentElement;
+    const sized = output.querySelector('h2')?.parentElement;
 
     if (!plain || !sized) throw new Error('Expected page containers');
     expect(plain.style.gap).toBe('');

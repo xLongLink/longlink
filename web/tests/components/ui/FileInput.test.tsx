@@ -128,7 +128,7 @@ it('validates drops with the same rules, ignores non-file drops, and keeps only 
             <FileInput label="Attachment" name="attachment" mode="dropzone" accept=".yaml,.yml" />
         </form>,
         async (output) => {
-            const zone = control(output, '.view-file-input');
+            const zone = control(output, '[data-slot="input-group"][data-mode="dropzone"]');
             const form = control<HTMLFormElement>(output, 'form');
             await act(async () => drop(zone, [first, second]));
             expect(collect(form)).toEqual([first]);
@@ -214,7 +214,7 @@ it('keeps disabled fields discoverable but blocks picker, drop, callbacks and fo
             expect(document.activeElement).toBe(trigger);
             await act(async () => user.keyboard('{Enter} '));
             await act(async () => user.click(trigger));
-            await act(async () => drop(control(output, '.view-file-input'), [saved]));
+            await act(async () => drop(control(output, '[data-slot="input-group"][data-mode="dropzone"]'), [saved]));
             expect(opens).toBe(0);
             expect(changes).toEqual([]);
             expect(collect(form)).toEqual([]);

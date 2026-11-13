@@ -24,7 +24,7 @@ it.each([false, true])('keeps a rejected controlled single change out of submiss
             />
         </form>,
         async (output) => {
-            const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
             const form = output.querySelector('form');
 
             if (!trigger || !form) throw new Error('Expected owner control');
@@ -64,7 +64,7 @@ it('recovers from a required denial, clears to null, and honors canceled and com
             />
         </form>,
         async (output) => {
-            const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
             const clear = output.querySelector<HTMLButtonElement>('button[aria-label="Clear Owner"]');
             const form = output.querySelector('form');
 
@@ -131,7 +131,7 @@ it('selects only enabled filtered multi options, preserves other selections, and
         </form>,
         async (output) => {
             const form = output.querySelector('form');
-            const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
 
             if (!form || !trigger) throw new Error('Expected teams form');
 
@@ -211,7 +211,7 @@ it.each([false, true])(
             </form>,
             async (output) => {
                 const form = output.querySelector('form');
-                const triggers = output.querySelectorAll<HTMLButtonElement>('.view-picker-trigger');
+                const triggers = output.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
 
                 if (!form || triggers.length !== 2) throw new Error('Expected disabled fields');
 
@@ -247,7 +247,7 @@ it('skips disabled options during keyboard selection and keeps search and select
             />
         </form>,
         async (output) => {
-            const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
             const form = output.querySelector('form');
 
             if (!trigger || !form) throw new Error('Expected teams form');
@@ -281,14 +281,14 @@ it('keeps a rejected clear controlled and displays selected badges without losin
         async (output) => {
             const form = output.querySelector('form');
             const clearOwner = output.querySelector<HTMLButtonElement>('button[aria-label="Clear Owner"]');
-            const trigger = output.querySelectorAll<HTMLButtonElement>('.view-picker-trigger')[1];
+            const trigger = output.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')[1];
 
             if (!form || !clearOwner || !trigger) throw new Error('Expected owner and teams fields');
 
             await act(async () => user.click(clearOwner));
             expect(change).toHaveBeenCalledWith(null);
             expect(new FormData(form).getAll('owner')).toEqual(['Alice']);
-            expect(output.querySelector('.view-picker-trigger')?.textContent).toBe('Alice');
+            expect(output.querySelector('button[aria-expanded]')?.textContent).toBe('Alice');
             await act(async () => user.click(trigger));
 
             const selectAll = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
@@ -298,12 +298,12 @@ it('keeps a rejected clear controlled and displays selected badges without losin
             if (!selectAll) throw new Error('Expected select all');
 
             await act(async () => user.click(selectAll));
-            expect([...trigger.querySelectorAll('.view-picker-badge')].map((badge) => badge.textContent)).toEqual([
+            expect([...trigger.querySelectorAll('[data-slot="badge"]')].map((badge) => badge.textContent)).toEqual([
                 'Alpha',
                 'Beta',
                 'Gamma'
             ]);
-            expect(trigger.querySelector('.view-picker-overflow')?.textContent).toBe('+1');
+            expect(trigger.textContent).toBe('AlphaBetaGamma+1');
             expect(new FormData(form).getAll('team')).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta']);
         }
     );
@@ -334,7 +334,7 @@ it('closes a revoked picker without losing its value or reviving its old query w
     }
 
     await withMounted(<Access />, async (output) => {
-        const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+        const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
         const form = output.querySelector('form');
 
         if (!trigger || !form) throw new Error('Expected revocable owner field');

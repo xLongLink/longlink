@@ -11077,7 +11077,7 @@ type TableColumn<T extends Record<string, unknown>> = {
     align?: "start" | "center" | "end";
     renderCell?: (row: T) => React$1.ReactNode;
 };
-export function DataTable<T extends Record<string, unknown>>({ data, columns, hasHover, isStriped, idKey, density, verticalAlign, }: {
+export function DataTable<T extends Record<string, unknown>>({ data, columns, hasHover, isStriped, idKey, density, verticalAlign }: {
     data: T[];
     columns?: TableColumn<T>[];
     hasHover?: boolean;
@@ -11460,14 +11460,14 @@ function ActionButton({ children, variant, size: requestedSize, type, disabled, 
 }): React$1.JSX.Element;
 type ButtonProps$1 = React$1.ComponentProps<typeof ActionButton>;
 function Button$2({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
-export function ButtonGroup({ children, label, orientation, size: requestedSize, isDisabled, }: {
+export function ButtonGroup({ children, label, orientation, size: requestedSize, isDisabled }: {
     children?: React$1.ReactNode;
     label: string;
     orientation?: "horizontal" | "vertical";
     size?: "sm" | "default" | "lg";
     isDisabled?: boolean;
 }): React$1.JSX.Element;
-export function FileViewer({ src, title, size, }: {
+export function FileViewer({ src, title, size }: {
     src: string;
     title: string;
     size?: "sm" | "md" | "lg";
@@ -11500,7 +11500,7 @@ type InteractiveCardProps = {
     isSelected?: boolean;
     onChange?: (isSelected: boolean) => void;
 };
-export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden, }: InteractiveCardProps): React$1.JSX.Element;
+export function InteractiveCard({ label, padding, isClipped, variant, onClick, href, target, isDisabled, isSelected, onChange, children, width, height, maxWidth, minHeight, inert, "aria-hidden": ariaHidden }: InteractiveCardProps): React$1.JSX.Element;
 export function Dialog(props: {
     children?: React$1.ReactNode;
     title?: string;

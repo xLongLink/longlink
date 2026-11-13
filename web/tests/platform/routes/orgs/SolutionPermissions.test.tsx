@@ -61,8 +61,10 @@ it('retains an explicit no-access draft after save failure and retries against t
                 </Suspense>
             </ApiErrorContext>,
             async (output) => {
-                await vi.waitFor(() => expect(output.querySelector('.view-picker-trigger')?.textContent).toBe('read'));
-                const trigger = output.querySelector<HTMLButtonElement>('.view-picker-trigger');
+                await vi.waitFor(() =>
+                    expect(output.querySelector('button[aria-haspopup="listbox"]')?.textContent).toBe('read')
+                );
+                const trigger = output.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]');
 
                 const save = Array.from(output.querySelectorAll('button')).find(
                     (button) => button.textContent === 'Save'
