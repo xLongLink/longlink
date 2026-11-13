@@ -773,45 +773,9 @@
             "source": "reui"
         },
         {
-            "name": "Collapsible",
-            "category": "Layouts",
-            "introduction": "Native shadcn Collapsible composition backed by Base UI.",
-            "guidance": "Compose CollapsibleTrigger and CollapsibleContent. Use open, defaultOpen, disabled, and onOpenChange(open, eventDetails). Content mounting is explicit through keepMounted. Disclosure is the custom initially-open adapter with focus recovery.",
-            "properties": [
-                {
-                    "name": "open",
-                    "type": "boolean",
-                    "description": "Controlled visibility."
-                },
-                {
-                    "name": "defaultOpen",
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Initial uncontrolled visibility."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Disables user toggling."
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(open, eventDetails) => void",
-                    "description": "Native Base UI open callback."
-                },
-                {
-                    "name": "CollapsibleTrigger / CollapsibleContent",
-                    "type": "components",
-                    "description": "Native trigger and content composition."
-                }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/collapsible"
-        },
-        {
             "name": "Disclosure",
             "category": "Layouts",
-            "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery. Use Collapsible for native shadcn props.",
+            "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery.",
             "properties": [
                 {
                     "name": "children",

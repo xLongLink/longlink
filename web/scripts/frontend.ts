@@ -31,7 +31,6 @@ export { Input } from '../src/components/shadcn/input';
 export { Textarea } from '../src/components/shadcn/textarea';
 export * from '../src/components/shadcn/field';
 export * from '../src/components/shadcn/input-group';
-export * from '../src/components/shadcn/collapsible';
 export { Disclosure } from '../src/components/custom/disclosure';
 export { Switch } from '../src/components/shadcn/switch';
 export { SwitchField } from '../src/components/custom/switch-field';

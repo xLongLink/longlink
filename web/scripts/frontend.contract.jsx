@@ -90,16 +90,6 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <Collapsible
-                defaultOpen
-                onOpenChange={(open, details) => {
-                    open.valueOf();
-                    details.cancel();
-                }}
-            >
-                <CollapsibleTrigger>Details</CollapsibleTrigger>
-                <CollapsibleContent keepMounted>Draft</CollapsibleContent>
-            </Collapsible>
             <Disclosure trigger="Persistent details" defaultOpen={false} disabled={false} />
             <DropdownMenu
                 open={selected === 'menu'}

@@ -10,9 +10,6 @@ export { Grid } from '@/components/custom/grid';
 /** @category Layouts @group Grid */
 export { GridSpan } from '@/components/custom/grid';
 
-/** @category Layouts */
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
-
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. @category Layouts */
 export { Disclosure } from '@/components/custom/disclosure';
 

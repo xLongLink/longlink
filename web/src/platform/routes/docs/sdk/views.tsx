@@ -31,7 +31,6 @@ import { ActionMenuExample } from './views/action-menu';
 import { FileViewerExample } from './views/file-viewer';
 import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
-import { CollapsibleExample } from './views/collapsible';
 import { NumberInputExample } from './views/number-input';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
@@ -93,7 +92,6 @@ const previews = new Map(
             </Card>
         ),
         CheckboxInput: <CheckboxInputExample />,
-        Collapsible: <CollapsibleExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
         DateInput: <DateInputExample />,
         Dialog: (

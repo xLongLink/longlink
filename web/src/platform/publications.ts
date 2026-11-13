@@ -86,7 +86,6 @@ export const componentDocumentation = [
     { name: 'Button', category: 'Action', icon: PanelTop },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
-    { name: 'Collapsible', category: 'Layouts', icon: ChevronDown },
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'DateInput', category: 'Form', icon: Calendar },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },

@@ -10032,35 +10032,6 @@ type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactS
 type PayloadChildRenderFunction<Payload> = (arg: {
     payload: Payload | undefined;
 }) => React$1.ReactNode;
-const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
-}
-interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
-    open?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
-    disabled?: boolean | undefined;
-}
-type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
-type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
-namespace CollapsibleRoot {
-    type State = CollapsibleRootState;
-    type Props = CollapsibleRootProps;
-    type ChangeEventReason = CollapsibleRootChangeEventReason;
-    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
-}
-interface UseCollapsibleRootReturnValue {
-    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
-    disabled: boolean;
-    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
-    mounted: boolean;
-    open: boolean;
-    panelId: React$1.HTMLAttributes<Element>["id"];
-    setMounted: (nextMounted: boolean) => void;
-    setOpen: (open: boolean) => void;
-    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
-    transitionStatus: TransitionStatus;
-}
 const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
 interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
 }
@@ -10555,27 +10526,6 @@ interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIn
 namespace CheckboxIndicator {
     type State = CheckboxIndicatorState;
     type Props = CheckboxIndicatorProps;
-}
-const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface CollapsibleTriggerState extends CollapsibleRootState {
-}
-interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
-}
-namespace CollapsibleTrigger {
-    type State = CollapsibleTriggerState;
-    type Props = CollapsibleTriggerProps;
-}
-const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsiblePanelState extends CollapsibleRootState {
-    transitionStatus: TransitionStatus;
-}
-interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
-    hiddenUntilFound?: boolean | undefined;
-    keepMounted?: boolean | undefined;
-}
-namespace CollapsiblePanel {
-    type State = CollapsiblePanelState;
-    type Props = CollapsiblePanelProps;
 }
 function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
 type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
@@ -13915,9 +13865,6 @@ export function InputGroupButton({ className, type, variant, size, ...props }: O
 export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
 export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
 export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
-function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
-export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
 export function Disclosure(props: {
     children?: React$1.ReactNode;
     trigger: React$1.ReactNode;
@@ -16209,9 +16156,6 @@ namespace CSS$1 {
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
 }
-namespace Collapsible {
-    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
-}
 namespace Progress {
     export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
 }
@@ -16224,7 +16168,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
@@ -16264,9 +16208,6 @@ declare const CodeBlockLanguage: typeof NativeFrontend.CodeBlockLanguage;
 declare const CodeBlockLineActions: typeof NativeFrontend.CodeBlockLineActions;
 declare const CodeBlockTitle: typeof NativeFrontend.CodeBlockTitle;
 declare const CodeBlockWrapToggle: typeof NativeFrontend.CodeBlockWrapToggle;
-declare const Collapsible: typeof NativeFrontend.Collapsible;
-declare const CollapsibleContent: typeof NativeFrontend.CollapsibleContent;
-declare const CollapsibleTrigger: typeof NativeFrontend.CollapsibleTrigger;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const ComboboxChip: typeof NativeFrontend.ComboboxChip;
 declare const ComboboxChips: typeof NativeFrontend.ComboboxChips;

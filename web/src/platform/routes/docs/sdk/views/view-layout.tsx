@@ -170,10 +170,7 @@ export default function ViewLayout({
                                             width: proportional(1),
                                             renderCell: (property) => (
                                                 <Stack gap={0}>
-                                                    <Stack direction="horizontal" align="center" gap={2}>
-                                                        <Text>{property.name}</Text>
-                                                        <InlineCode>{property.type}</InlineCode>
-                                                    </Stack>
+                                                    <Text type="supporting">{property.name}</Text>
                                                     <Text type="supporting">{property.description}</Text>
                                                 </Stack>
                                             )
@@ -188,5 +185,3 @@ export default function ViewLayout({
         </DocumentationArticle>
     );
 }
-
-import { InlineCode } from '@/components/shadcn/inline-code';
