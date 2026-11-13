@@ -3,10 +3,10 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Icon } from '@/components/custom/icon';
 import { Toolbar } from '@base-ui/react/toolbar';
+import { Dialog } from '@/components/custom/dialog';
 import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import { ActionButton } from '@/components/custom/action-button';
 import { ControlSizeContext } from '@/components/custom/contexts';
 import { ActionButtonGroup } from '@/components/custom/action-button-group';
@@ -178,11 +178,11 @@ it('disables all grouped actions without leaking group membership into a dialog'
                     More
                 </Toolbar.Button>
             </DropdownMenu>
-            <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
+            <Dialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <ActionButton variant="outline" onClick={recover}>
                     Recover
                 </ActionButton>
-            </ViewDialog>
+            </Dialog>
         </ActionButtonGroup>,
         async (output) => {
             const actions = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="group"] > button'));

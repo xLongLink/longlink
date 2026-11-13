@@ -7,13 +7,13 @@ import CreateSolution from './create-solution';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import DeploymentReview from './deployment-review';
+import { Dialog } from '@/components/custom/dialog';
 import { useNotification } from '@/lib/notifications';
 import * as permissions from '@/platform/permissions';
 import { DeletionDialog } from '@/components/deletion';
 import SolutionPermissions from './solution-permissions';
 import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -314,7 +314,7 @@ export default function SolutionManagement({
                 <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
-                <ViewDialog
+                <Dialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -327,7 +327,7 @@ export default function SolutionManagement({
                             onClose={closeSelected}
                         />
                     </ApiBoundary>
-                </ViewDialog>
+                </Dialog>
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
@@ -348,7 +348,7 @@ export default function SolutionManagement({
                 />
             )}
             {selected?.kind === 'logs' && (
-                <ViewDialog
+                <Dialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -359,11 +359,11 @@ export default function SolutionManagement({
                             <SolutionLogs solutionId={selected.id} onClose={closeSelected} />
                         </ApiBoundary>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
             {selected?.kind === 'mcp' && (
-                <ViewDialog
+                <Dialog
                     isOpen
                     onOpenChange={(open) => {
                         if (!open) closeSelected();
@@ -416,7 +416,7 @@ export default function SolutionManagement({
                             </Stack>
                         </Stack>
                     </IllustratedDialogContent>
-                </ViewDialog>
+                </Dialog>
             )}
             <DeletionDialog
                 confirmation={

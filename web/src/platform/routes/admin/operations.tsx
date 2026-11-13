@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
+import { Dialog } from '@/components/custom/dialog';
 import { TextInput } from '@/components/custom/text-input';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -99,7 +99,7 @@ export default function Operations() {
                 </Stack>
             </Stack>
             {metadata && (
-                <ViewDialog
+                <Dialog
                     title="Operation metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -133,7 +133,7 @@ export default function Operations() {
                             </Text>
                         )}
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
         </Stack>
     );

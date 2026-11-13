@@ -914,10 +914,10 @@
             "justification": "Composes the shadcn InputGroup, Popover, and Calendar with ISO date values and LongLink Form integration."
         },
         {
-            "name": "ViewDialog",
+            "name": "Dialog",
             "category": "Layouts",
-            "guidance": "Renamed from Dialog. Existing Views that use isOpen or fullscreen host coordination must use ViewDialog; Dialog now exposes native shadcn composition.",
-            "introduction": "Displays an accessible modal that closes with Escape or its close button, not backdrop clicks. Set variant to fullscreen to fill about 95% of the screen, including over Platform navigation, while keeping Solution content sandboxed.",
+            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose, or use isOpen with onOpenChange for a built-in frame. Set variant to fullscreen on the built-in frame for isolated-host fullscreen coordination.",
+            "introduction": "Displays an accessible modal using native composition or a built-in frame. The built-in frame closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
             "keywords": [
                 "modal",
                 "confirmation",
@@ -925,9 +925,19 @@
             ],
             "properties": [
                 {
+                    "name": "open / defaultOpen",
+                    "type": "boolean",
+                    "description": "Controlled or initial visibility for native composition."
+                },
+                {
+                    "name": "DialogTrigger.render",
+                    "type": "ReactElement",
+                    "description": "Base UI trigger composition."
+                },
+                {
                     "name": "children",
                     "type": "ReactNode",
-                    "description": "ViewDialog content."
+                    "description": "Dialog content."
                 },
                 {
                     "name": "title",
@@ -963,7 +973,8 @@
                 }
             ],
             "source": "custom",
-            "justification": "Coordinates fixed and fullscreen modal frames with the isolated View host; native Dialog does not notify the host about modal activity."
+            "reference": "https://ui.shadcn.com/docs/components/base/dialog",
+            "justification": "Combines native shadcn composition and built-in fixed or fullscreen frames with isolated View host coordination."
         },
         {
             "name": "Separator",
@@ -2649,31 +2660,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/button-group"
-        },
-        {
-            "name": "Dialog",
-            "category": "Layouts",
-            "introduction": "Native shadcn Dialog composition with Base UI props.",
-            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose. Use ViewDialog for isolated-host fullscreen coordination.",
-            "properties": [
-                {
-                    "name": "open / defaultOpen",
-                    "type": "boolean",
-                    "description": "Controlled or initial visibility."
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(open, details) => void",
-                    "description": "Receives visibility changes."
-                },
-                {
-                    "name": "DialogTrigger.render",
-                    "type": "ReactElement",
-                    "description": "Base UI trigger composition."
-                }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/dialog"
         },
         {
             "name": "Pagination",

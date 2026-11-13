@@ -10,6 +10,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
 import { Form } from '@/components/custom/form';
+import { Dialog } from '@/components/custom/dialog';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { DeletionDialog } from '@/components/deletion';
@@ -19,7 +20,6 @@ import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
 import { TextInput } from '@/components/custom/text-input';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
@@ -349,7 +349,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <ViewDialog
+                <Dialog
                     isOpen
                     title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
                     onOpenChange={(open) => {
@@ -408,7 +408,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             />
                         </Stack>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
         </>
     );
@@ -504,7 +504,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 />
             </Stack>
             {/* Match organization creation with a centered form and a desktop-only illustration. */}
-            <ViewDialog
+            <Dialog
                 isOpen={invitationAttempt !== null}
                 paddingInline={0}
                 onOpenChange={(open) => {
@@ -579,7 +579,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                         </Form>
                     </Stack>
                 </IllustratedDialogContent>
-            </ViewDialog>
+            </Dialog>
         </>
     );
 }

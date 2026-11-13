@@ -2,9 +2,9 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/custom/form';
 import { useQuery } from '@tanstack/react-query';
+import { Dialog } from '@/components/custom/dialog';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -81,7 +81,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
 
     // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
-        <ViewDialog
+        <Dialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -216,6 +216,6 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                     </Wizard>
                 </Form>
             )}
-        </ViewDialog>
+        </Dialog>
     );
 }

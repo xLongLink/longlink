@@ -26,7 +26,6 @@ import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
 import { FileViewerExample } from './views/file-viewer';
 import { RadioGroupExample } from './views/radio-group';
-import { ViewDialogExample } from './views/view-dialog';
 import { Currency } from '@/components/custom/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
@@ -78,7 +77,6 @@ const previews = new Map(
             </div>
         ),
         Avatar: <AvatarExample />,
-        ViewDialog: <ViewDialogExample />,
         Badge: <BadgeExample />,
         Button: <Button>Button</Button>,
         Card: (

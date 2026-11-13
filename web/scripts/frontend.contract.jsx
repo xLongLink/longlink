@@ -259,9 +259,9 @@ const nativeComposition = (
 const _adapters = (
     <InteractiveCard size="sm" className="w-full" style={{ minHeight: 100 }} isSelected onChange={() => {}}>
         <CardContent>
-            <ViewDialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
+            <Dialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
                 {nativeComposition}
-            </ViewDialog>
+            </Dialog>
         </CardContent>
     </InteractiveCard>
 );
@@ -276,8 +276,8 @@ const _unlabeledDivider = <Divider />;
 const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error ViewDialog visibility changes require a controlled callback.
-const _legacyDialog = <ViewDialog isOpen title="Title" />;
+// @ts-expect-error Dialog visibility changes require a controlled callback.
+const _legacyDialog = <Dialog isOpen title="Title" />;
 
 // @ts-expect-error ActionButtonGroup no longer accepts the legacy medium size.
 const _legacyGroupSize = <ActionButtonGroup label="Actions" size="md" />;
@@ -292,8 +292,8 @@ const _legacyMenu = <DropdownMenu items={[]} />;
 
 // @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
 const _customGroupProps = <ButtonGroup isDisabled />;
-// @ts-expect-error Native Dialog uses open/defaultOpen, not the host-coordinated ViewDialog contract.
-const _customDialogProps = <Dialog isOpen />;
+// @ts-expect-error Framed and native visibility cannot be combined.
+const _customDialogProps = <Dialog isOpen open onOpenChange={() => {}} />;
 // @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
 const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
 

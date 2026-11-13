@@ -4,9 +4,9 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Badge } from '@/components/reui/badge';
+import { Dialog } from '@/components/custom/dialog';
 import { DeletionDialog } from '@/components/deletion';
 import { TextInput } from '@/components/custom/text-input';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -92,7 +92,7 @@ export default function Organizations() {
                 </Stack>
             </Stack>
             {metadata && (
-                <ViewDialog
+                <Dialog
                     title="Organization metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -116,7 +116,7 @@ export default function Organizations() {
                             />
                         </Stack>
                     </Stack>
-                </ViewDialog>
+                </Dialog>
             )}
             <DeletionDialog
                 confirmation={

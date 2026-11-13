@@ -79,7 +79,6 @@ export { Divider } from '@/components/custom/divider';
 
 /** @category Layouts */
 export {
-    Dialog,
     DialogTrigger,
     DialogPortal,
     DialogClose,
@@ -91,8 +90,8 @@ export {
     DialogDescription
 } from '@/components/shadcn/dialog';
 
-/** Custom modal frame coordinating fullscreen state with the isolated View host. @category Layouts */
-export { ViewDialog } from '@/components/custom/view-dialog';
+/** Native composition or a modal frame with isolated View host coordination. @category Layouts */
+export { Dialog } from '@/components/custom/dialog';
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 export { Form } from '@/components/custom/form';

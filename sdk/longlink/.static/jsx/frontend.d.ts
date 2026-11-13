@@ -12548,7 +12548,6 @@ namespace DialogRoot {
     type ChangeEventReason = DialogRootChangeEventReason;
     type ChangeEventDetails = DialogRootChangeEventDetails;
 }
-export function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
 function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
 function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
 function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
@@ -13902,7 +13901,7 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     onChange?: (isSelected: boolean) => void;
 };
 export function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
-export function ViewDialog(props: {
+type FramedDialogProps = {
     children?: React$1.ReactNode;
     title?: string;
     variant?: "standard" | "fullscreen";
@@ -13910,7 +13909,11 @@ export function ViewDialog(props: {
     onOpenChange: (open: boolean) => void;
     gap?: Spacing;
     paddingInline?: Spacing;
-}): React$1.JSX.Element;
+};
+export function Dialog(props: FramedDialogProps): React$1.ReactNode;
+export function Dialog(props: DialogRoot.Props & {
+    isOpen?: never;
+}): React$1.ReactNode;
 export const Select: typeof SelectRoot;
 function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
 function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
@@ -16269,7 +16272,6 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
-declare const ViewDialog: typeof NativeFrontend.ViewDialog;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const XAxis: typeof NativeFrontend.XAxis;
 declare const YAxis: typeof NativeFrontend.YAxis;

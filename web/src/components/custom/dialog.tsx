@@ -2,14 +2,13 @@ import { Icon } from './icon';
 import { Heading } from './heading';
 import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
+import { use, useEffect, useRef, useState } from 'react';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
-import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
+import { Dialog as NativeDialog, DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 
-/** Custom modal frame coordinating fullscreen state with the isolated View host. */
-export function ViewDialog(props: {
+type FramedDialogProps = {
     children?: ReactNode;
     /** Shows a dialog header when a title is provided. */
     title?: string;
@@ -20,19 +19,41 @@ export function ViewDialog(props: {
     /** Spacing between the title and content; defaults to 3. */
     gap?: Spacing;
     paddingInline?: Spacing;
-}) {
+};
+
+/** Composes a native dialog or a controlled frame with isolated View host coordination. */
+export function Dialog(props: FramedDialogProps): ReactNode;
+export function Dialog(props: BaseDialog.Root.Props & { isOpen?: never }): ReactNode;
+export function Dialog(props: FramedDialogProps | (BaseDialog.Root.Props & { isOpen?: never })) {
     const activity = use(DialogActivityContext);
-    const fullscreen = props.variant === 'fullscreen';
+    const framed = props.isOpen !== undefined;
+    const fullscreen = framed && props.variant === 'fullscreen';
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(!framed && Boolean(props.defaultOpen));
+    const open = framed ? props.isOpen : (props.open ?? uncontrolledOpen);
     const title = useRef<HTMLDivElement>(null);
     const popup = useRef<HTMLDivElement>(null);
 
     // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
     useEffect(() => {
-        if (!props.isOpen || !activity) return;
+        if (!open || !activity) return;
         activity(true, fullscreen);
 
         return () => activity(false, fullscreen);
-    }, [props.isOpen, activity, fullscreen]);
+    }, [open, activity, fullscreen]);
+
+    // Preserve native composition and track uncontrolled visibility for the isolated host.
+    if (!framed) {
+        return (
+            <NativeDialog
+                {...props}
+                onOpenChange={(open, details) => {
+                    props.onOpenChange?.(open, details);
+
+                    if (!details.isCanceled) setUncontrolledOpen(open);
+                }}
+            />
+        );
+    }
 
     // Keep the header fixed while bounding the content to the available viewport height.
     return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
-import { ViewDialog } from '@/components/custom/view-dialog';
+import { Dialog } from '@/components/custom/dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
@@ -43,11 +43,11 @@ export default function LinkPage() {
         sample-document.txt
       </Link>
       <Link onClick={() => setIsOpen(true)}>Document details</Link>
-      <ViewDialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
         <Stack padding={4}>
           <Text>Document details opened without navigation.</Text>
         </Stack>
-      </ViewDialog>
+      </Dialog>
     </Stack>
   );
 }`
@@ -65,11 +65,11 @@ export function LinkExample() {
         <Stack>
             <Link to="/docs/sdk/views">Docs</Link>
             <Link onClick={() => setIsOpen(true)}>Document details</Link>
-            <ViewDialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
                     <Text>Document details opened without navigation.</Text>
                 </Stack>
-            </ViewDialog>
+            </Dialog>
         </Stack>
     );
 }

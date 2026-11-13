@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/custom/form';
+import { Dialog } from '@/components/custom/dialog';
 import { Button } from '@/components/shadcn/button';
 import { Illustration } from '@/components/illustration';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { TextInput } from '@/components/custom/text-input';
 import { buttonVariants } from '@/components/shadcn/button';
-import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -68,7 +68,7 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <ViewDialog
+        <Dialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -193,6 +193,6 @@ export default function CreateSolution({
                     </Step>
                 </Wizard>
             </Form>
-        </ViewDialog>
+        </Dialog>
     );
 }
