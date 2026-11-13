@@ -39,7 +39,6 @@ export default [
             { path: 'docs/api/billing', file: './routes/docs/api/billing.tsx' },
             { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/platform.tsx' },
             { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/compute.tsx' },
-            { path: 'docs/alternatives', file: './routes/docs/alternatives/index.tsx' },
             { path: 'docs/*', file: '../components/layouts/not-found.tsx', id: 'docs-not-found' }
         ]
     },

@@ -242,8 +242,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                 ]
             }
         ]
-    },
-    { path: '/docs/alternatives', label: 'Alternatives', sections: [{ title: 'Alternatives', pages: [] }] }
+    }
 ];
 
 // Keep static tutorials and generated component references in their published reading order.
