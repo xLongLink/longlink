@@ -13,7 +13,6 @@ import { DeletionDialog } from '@/components/deletion';
 import SolutionPermissions from './solution-permissions';
 import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
-import { ActionMenu } from '@/components/custom/action-menu';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -27,6 +26,12 @@ import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
 
@@ -222,92 +227,81 @@ export default function SolutionManagement({
                                           align: 'end' as const,
                                           width: proportional(0.25, { minWidth: 0 }),
                                           renderCell: (row: Solution) => (
-                                              <ActionMenu
-                                                  trigger={
-                                                      <MenuTriggerButton
-                                                          type="button"
-                                                          variant="ghost"
-                                                          size="icon-sm"
-                                                          aria-label={`Actions for ${row.name}`}
+                                              <DropdownMenu>
+                                                  <DropdownMenuTrigger
+                                                      render={
+                                                          <MenuTriggerButton
+                                                              type="button"
+                                                              variant="ghost"
+                                                              size="icon-sm"
+                                                              aria-label={`Actions for ${row.name}`}
+                                                          >
+                                                              <Ellipsis aria-hidden="true" />
+                                                          </MenuTriggerButton>
+                                                      }
+                                                  />
+                                                  <DropdownMenuContent align="end">
+                                                      {canAdminister && (
+                                                          <DropdownMenuItem
+                                                              onClick={() =>
+                                                                  setSelected({ kind: 'permissions', id: row.id })
+                                                              }
+                                                          >
+                                                              <Shield aria-hidden="true" />
+                                                              Permissions
+                                                          </DropdownMenuItem>
+                                                      )}
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'tags', solution: row })}
                                                       >
-                                                          <Ellipsis aria-hidden="true" />
-                                                      </MenuTriggerButton>
-                                                  }
-                                                  align="end"
-                                                  items={[
-                                                      ...(canAdminister
-                                                          ? [
-                                                                {
-                                                                    id: 'permissions',
-                                                                    label: 'Permissions',
-                                                                    icon: (
-                                                                        <Shield className="size-4" aria-hidden="true" />
-                                                                    ),
-                                                                    onClick: () =>
-                                                                        setSelected({ kind: 'permissions', id: row.id })
-                                                                }
-                                                            ]
-                                                          : []),
-                                                      {
-                                                          id: 'tags',
-                                                          label: 'Tags',
-                                                          icon: <Tags className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'tags', solution: row })
-                                                      },
-                                                      ...(row.desired_revision_id &&
-                                                      !row.deployment_pending &&
-                                                      row.status !== 'creating'
-                                                          ? [
-                                                                {
-                                                                    id: 'update',
-                                                                    label: 'Update',
-                                                                    icon: (
-                                                                        <RefreshCw
-                                                                            className="size-4"
-                                                                            aria-hidden="true"
-                                                                        />
-                                                                    ),
-                                                                    onClick: () => {
-                                                                        // Retain an active attempt so repeated activation cannot replace its draft.
-                                                                        setSelected((current) =>
-                                                                            current?.kind === 'update'
-                                                                                ? current
-                                                                                : {
-                                                                                      kind: 'update',
-                                                                                      item: {
-                                                                                          id: row.id,
-                                                                                          name: row.name
-                                                                                      }
-                                                                                  }
-                                                                        );
-                                                                    }
-                                                                }
-                                                            ]
-                                                          : []),
-                                                      {
-                                                          id: 'logs',
-                                                          label: 'Logs',
-                                                          icon: <Logs className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'logs', id: row.id })
-                                                      },
-                                                      {
-                                                          id: 'mcp',
-                                                          label: 'MCP',
-                                                          icon: <Plug className="size-4" aria-hidden="true" />,
-                                                          onClick: () => setSelected({ kind: 'mcp', id: row.id })
-                                                      },
-                                                      {
-                                                          id: 'delete',
-                                                          label: 'Delete',
-                                                          icon: <Trash className="size-4" aria-hidden="true" />,
-                                                          onClick: () =>
+                                                          <Tags aria-hidden="true" />
+                                                          Tags
+                                                      </DropdownMenuItem>
+                                                      {row.desired_revision_id &&
+                                                          !row.deployment_pending &&
+                                                          row.status !== 'creating' && (
+                                                              <DropdownMenuItem
+                                                                  onClick={() => {
+                                                                      // Retain an active attempt so repeated activation cannot replace its draft.
+                                                                      setSelected((current) =>
+                                                                          current?.kind === 'update'
+                                                                              ? current
+                                                                              : {
+                                                                                    kind: 'update',
+                                                                                    item: { id: row.id, name: row.name }
+                                                                                }
+                                                                      );
+                                                                  }}
+                                                              >
+                                                                  <RefreshCw aria-hidden="true" />
+                                                                  Update
+                                                              </DropdownMenuItem>
+                                                          )}
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'logs', id: row.id })}
+                                                      >
+                                                          <Logs aria-hidden="true" />
+                                                          Logs
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'mcp', id: row.id })}
+                                                      >
+                                                          <Plug aria-hidden="true" />
+                                                          MCP
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuItem
+                                                          onClick={() =>
                                                               setSelected({
                                                                   kind: 'delete',
                                                                   item: { id: row.id, name: row.name }
                                                               })
-                                                      }
-                                                  ]}
-                                              />
+                                                          }
+                                                      >
+                                                          <Trash aria-hidden="true" />
+                                                          Delete
+                                                      </DropdownMenuItem>
+                                                  </DropdownMenuContent>
+                                              </DropdownMenu>
                                           )
                                       }
                                   ]

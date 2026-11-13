@@ -110,7 +110,7 @@ export function useGroupPress(ref: RefObject<HTMLElement | null>, enabled: boole
         function down(event: PointerEvent) {
             if (
                 event.defaultPrevented ||
-                (event.target instanceof Element && event.target.closest('[data-menu-trigger]'))
+                (event.target instanceof Element && event.target.closest('[aria-haspopup="menu"]'))
             )
                 return;
 

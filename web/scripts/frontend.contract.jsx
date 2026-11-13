@@ -124,16 +124,6 @@ const nativeComposition = (
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <ActionMenu
-                trigger={<Button variant="ghost" size="icon-sm" aria-label="Order actions" disabled={false}><Icon icon="ellipsis" size="sm" /></Button>}
-                align="end"
-                open={false}
-                onOpenChange={(open) => setSelected(open ? 'menu' : 'one')}
-                items={[
-                    { label: 'Save', icon: <Icon icon="save" size="sm" />, closeOnClick: false, onClick: async () => {} },
-                    { label: 'Unavailable', icon: 'copy', disabled: true }
-                ]}
-            />
             <ActionButton href="/orders" onClick={async (event) => event.preventDefault()}>
                 Save order
             </ActionButton>

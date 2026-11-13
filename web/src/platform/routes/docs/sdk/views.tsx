@@ -24,7 +24,6 @@ import { DateInputExample } from './views/date-input';
 import { FileInputExample } from './views/file-input';
 import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
-import { ActionMenuExample } from './views/action-menu';
 import { FileViewerExample } from './views/file-viewer';
 import { RadioGroupExample } from './views/radio-group';
 import { ViewDialogExample } from './views/view-dialog';
@@ -108,7 +107,6 @@ const previews = new Map(
         ),
         Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
-        ActionMenu: <ActionMenuExample />,
         Empty: <EmptyExample />,
         FileInput: <FileInputExample />,
         FileViewer: <FileViewerExample />,

@@ -71,9 +71,6 @@ export {
     DropdownMenuSubContent
 } from '@/components/shadcn/dropdown-menu';
 
-/** Custom data-driven actions with asynchronous recovery and scoped navigation. @category Action */
-export { ActionMenu } from '@/components/custom/action-menu';
-
 /** @category Display */
 export { Separator } from '@/components/shadcn/separator';
 

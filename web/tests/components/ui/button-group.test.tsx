@@ -2,14 +2,20 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Icon } from '@/components/custom/icon';
+import { Toolbar } from '@base-ui/react/toolbar';
 import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { ActionMenu } from '@/components/custom/action-menu';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import { ActionButton } from '@/components/custom/action-button';
 import { ControlSizeContext } from '@/components/custom/contexts';
 import { ActionButtonGroup } from '@/components/custom/action-button-group';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 it('names the group while retaining its actions', () => {
     // Act
@@ -131,15 +137,11 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
             <ActionButton size="icon-lg" aria-label="Copy">
                 <Icon icon="copy" size="lg" />
             </ActionButton>
-            <ActionMenu
-                trigger={
-                    <Button variant="outline" size="lg">
-                        More
-                    </Button>
-                }
-                items={[]}
-                onOpenChange={open}
-            />
+            <DropdownMenu onOpenChange={open}>
+                <Toolbar.Button render={<DropdownMenuTrigger render={<Button variant="outline" size="lg" />} />}>
+                    More
+                </Toolbar.Button>
+            </DropdownMenu>
         </ActionButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
@@ -167,14 +169,15 @@ it('disables all grouped actions without leaking group membership into a dialog'
             <ActionButton size="icon" aria-label="Copy" onClick={blocked}>
                 <Icon icon="copy" size="md" />
             </ActionButton>
-            <ActionMenu
-                trigger={
-                    <Button variant="outline" disabled>
-                        More
-                    </Button>
-                }
-                items={[]}
-            />
+            <DropdownMenu>
+                <Toolbar.Button
+                    disabled
+                    focusableWhenDisabled
+                    render={<DropdownMenuTrigger render={<Button variant="outline" />} />}
+                >
+                    More
+                </Toolbar.Button>
+            </DropdownMenu>
             <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <ActionButton variant="outline" onClick={recover}>
                     Recover
@@ -490,59 +493,29 @@ it('cancels a pending hold when its group is disabled and permits a fresh press 
     });
 });
 
-it('lets a grouped menu own its touch press without a second group activation closing it', async () => {
+it('lets a grouped shadcn menu own its touch activation without running an action', async () => {
     const action = vi.fn();
 
     await withMounted(
         <ActionButtonGroup label="Actions">
             <ActionButton variant="outline">Save</ActionButton>
-            <ActionMenu
-                trigger={<Button variant="outline">More</Button>}
-                items={[{ label: 'Archive', onClick: action }]}
-            />
+            <DropdownMenu>
+                <Toolbar.Button render={<DropdownMenuTrigger render={<Button variant="outline" />} />}>
+                    More
+                </Toolbar.Button>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onClick={action}>Archive</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </ActionButtonGroup>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
 
             if (!trigger) throw new Error('Expected grouped menu trigger');
-            const rectangle = vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(new DOMRect(40, 0, 40, 32));
-
-            try {
-                await act(async () =>
-                    trigger.dispatchEvent(
-                        new PointerEvent('pointerdown', {
-                            pointerType: 'touch',
-                            pointerId: 1,
-                            isPrimary: true,
-                            button: 0,
-                            clientX: 60,
-                            clientY: 16,
-                            bubbles: true,
-                            cancelable: true
-                        })
-                    )
-                );
-                expect(document.querySelector('[role="menu"]')?.textContent).toContain('Archive');
-                await act(async () => {
-                    trigger.dispatchEvent(
-                        new PointerEvent('pointerup', {
-                            pointerType: 'touch',
-                            pointerId: 1,
-                            isPrimary: true,
-                            button: 0,
-                            clientX: 60,
-                            clientY: 16,
-                            bubbles: true,
-                            cancelable: true
-                        })
-                    );
-                    trigger.dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }));
-                });
-                expect(document.querySelector('[role="menu"]')?.textContent).toContain('Archive');
-                expect(action).not.toHaveBeenCalled();
-            } finally {
-                rectangle.mockRestore();
-            }
+            const user = userEvent.setup({ document });
+            await act(async () => user.pointer([{ keys: '[TouchA>]', target: trigger }, { keys: '[/TouchA]' }]));
+            expect(document.querySelector('[role="menu"]')?.textContent).toContain('Archive');
+            expect(action).not.toHaveBeenCalled();
         }
     );
 });

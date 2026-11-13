@@ -19,7 +19,6 @@ import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
 import { TextInput } from '@/components/custom/text-input';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { ActionMenu } from '@/components/custom/action-menu';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -32,8 +31,14 @@ import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Boxes, Building2, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
-import '@/platform/components/settings-navigation.css';
 import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
+import '@/platform/components/settings-navigation.css';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 const organizationSections = [
     { id: 'general', label: 'General' },
@@ -298,42 +303,44 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                       width: proportional(0.5),
                                       renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) =>
                                           row.role === 'owner' && !canManageOwners ? null : (
-                                              <ActionMenu
-                                                  trigger={
-                                                      <MenuTriggerButton
-                                                          type="button"
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          aria-label={`Actions for ${row.user.name}`}
-                                                      >
-                                                          <Ellipsis aria-hidden="true" />
-                                                      </MenuTriggerButton>
-                                                  }
-                                                  align="end"
-                                                  items={[
-                                                      ...['read', 'write', 'maintain', 'admin'].flatMap((role) =>
-                                                          role === row.role
-                                                              ? []
-                                                              : [
-                                                                    {
-                                                                        id: role,
-                                                                        label: `Set as ${role[0].toUpperCase() + role.slice(1)}`,
-                                                                        onClick: () =>
-                                                                            setMember({
-                                                                                id: row.user.id,
-                                                                                action: { kind: 'role', role }
-                                                                            })
-                                                                    }
-                                                                ]
-                                                      ),
-                                                      {
-                                                          id: 'remove',
-                                                          label: 'Remove member',
-                                                          onClick: () =>
-                                                              setMember({ id: row.user.id, action: { kind: 'remove' } })
+                                              <DropdownMenu>
+                                                  <DropdownMenuTrigger
+                                                      render={
+                                                          <MenuTriggerButton
+                                                              type="button"
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              aria-label={`Actions for ${row.user.name}`}
+                                                          >
+                                                              <Ellipsis aria-hidden="true" />
+                                                          </MenuTriggerButton>
                                                       }
-                                                  ]}
-                                              />
+                                                  />
+                                                  <DropdownMenuContent align="end">
+                                                      {['read', 'write', 'maintain', 'admin'].map((role) =>
+                                                          role === row.role ? null : (
+                                                              <DropdownMenuItem
+                                                                  key={role}
+                                                                  onClick={() =>
+                                                                      setMember({
+                                                                          id: row.user.id,
+                                                                          action: { kind: 'role', role }
+                                                                      })
+                                                                  }
+                                                              >
+                                                                  {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
+                                                              </DropdownMenuItem>
+                                                          )
+                                                      )}
+                                                      <DropdownMenuItem
+                                                          onClick={() =>
+                                                              setMember({ id: row.user.id, action: { kind: 'remove' } })
+                                                          }
+                                                      >
+                                                          Remove member
+                                                      </DropdownMenuItem>
+                                                  </DropdownMenuContent>
+                                              </DropdownMenu>
                                           )
                                   }
                               ]

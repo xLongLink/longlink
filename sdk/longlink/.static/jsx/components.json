@@ -1004,7 +1004,7 @@
             "name": "DropdownMenu",
             "category": "Action",
             "introduction": "Native shadcn DropdownMenu composition with Base UI props.",
-            "guidance": "Compose DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, checkbox and radio items, groups, separators, and submenus. Use ActionMenu for the custom data-driven action adapter.",
+            "guidance": "Compose DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, checkbox and radio items, groups, separators, and submenus.",
             "properties": [
                 {
                     "name": "open / defaultOpen",
@@ -1024,40 +1024,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/dropdown-menu"
-        },
-        {
-            "name": "ActionMenu",
-            "category": "Action",
-            "introduction": "Custom data-driven action menu with async-action protection and scoped navigation.",
-            "properties": [
-                {
-                    "name": "trigger",
-                    "type": "ReactElement<ComponentProps<typeof Button>>",
-                    "description": "Native Button with its own children, variant, size, disabled state, and accessible label. Defaults to an outline Actions button."
-                },
-                {
-                    "name": "items",
-                    "type": "ActionMenuOption[]",
-                    "description": "Actions, links, dividers, and sections. Items support disabled, closeOnClick, and icon names or elements."
-                },
-                {
-                    "name": "open",
-                    "type": "boolean",
-                    "description": "Controlled menu open state."
-                },
-                {
-                    "name": "align",
-                    "type": "\"start\" | \"center\" | \"end\"",
-                    "description": "Popup alignment relative to the trigger."
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(isOpen: boolean) => void",
-                    "description": "Callback fired when the open state changes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Accepts data-driven Solution actions, awaits asynchronous handlers, and coordinates scoped navigation and error recovery."
         },
         {
             "name": "Empty",

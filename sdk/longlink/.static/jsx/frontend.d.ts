@@ -36,34 +36,6 @@ declare function useConfirm(): {
 /** @category Action @group Button */
 type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };
 
-/** @category Action @group ActionMenu */
-type ActionMenuItemData = {
-    id?: string;
-    label: ViewNode;
-    icon?: StoneIconName | React.JSX.Element;
-    description?: ViewNode;
-    endContent?: ViewNode;
-    variant?: 'default' | 'destructive';
-    disabled?: boolean;
-    closeOnClick?: boolean;
-    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
-    href?: string;
-    target?: '_blank' | '_self';
-    rel?: string;
-    items?: ActionMenuOption[];
-};
-
-/** @category Action @group ActionMenu */
-type ActionMenuOption =
-    | ActionMenuItemData
-    | { type: 'divider' }
-    | {
-          type: 'section';
-          id?: string;
-          title?: string;
-          items: ActionMenuItemData[];
-      };
-
 /** @category Runtime */
 declare namespace React {
     namespace JSX {
@@ -4607,15 +4579,6 @@ declare function Token(props: {
     onClick?: () => void;
     /** Shows a remove button and runs when it is clicked. */
     onRemove?: () => void;
-}): React.JSX.Element;
-
-/** @category Action */
-declare function ActionMenu(props: {
-    trigger?: React.JSX.Element;
-    items: ActionMenuOption[];
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
-    align?: 'start' | 'center' | 'end';
 }): React.JSX.Element;
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
