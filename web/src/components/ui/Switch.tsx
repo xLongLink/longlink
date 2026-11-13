@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import { useValue } from './value';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Switch as BaseSwitch } from '@base-ui/react/switch';
+import { Field, FieldLabel } from '@/components/shadcn/field';
+import { Switch as ShadcnSwitch } from '@/components/shadcn/switch';
 
 /** Edits an on/off setting using one controlled change handler. */
 export function Switch(
@@ -20,9 +20,9 @@ export function Switch(
 
     // Disabled controls remain discoverable without contributing a value or blocking submission.
     return (
-        <div ref={ref} className="view-boolean-field" data-disabled={props.disabled || undefined}>
-            <BaseSwitch.Root
-                className="view-switch"
+        <Field ref={ref} orientation="horizontal" data-disabled={props.disabled || undefined}>
+            <ShadcnSwitch
+                className="aria-disabled:opacity-50"
                 render={<button type="button" />}
                 nativeButton
                 id={id}
@@ -34,10 +34,22 @@ export function Switch(
                 aria-disabled={props.disabled || undefined}
                 aria-labelledby={labelId}
                 aria-describedby={props.description ? descriptionId : undefined}
-            >
-                <BaseSwitch.Thumb className="view-switch-thumb" />
-            </BaseSwitch.Root>
-            <FieldLabel controlId={id} label={props.label} description={props.description} required={props.required} />
-        </div>
+            />
+            <FieldLabel htmlFor={id} className="flex-col items-start gap-0.5">
+                <span id={labelId}>
+                    {props.label}
+                    {props.required && (
+                        <span className="font-normal text-muted-foreground">
+                            <span aria-hidden="true"> · </span>Required
+                        </span>
+                    )}
+                </span>
+                {props.description && (
+                    <span id={descriptionId} className="font-normal text-muted-foreground">
+                        {props.description}
+                    </span>
+                )}
+            </FieldLabel>
+        </Field>
     );
 }

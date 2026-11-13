@@ -203,21 +203,6 @@
     .view-text[data-tabular] {
         font-variant-numeric: tabular-nums;
     }
-    .view-typography-tooltip {
-        max-width: 20rem;
-        padding: var(--spacing-1) var(--spacing-2);
-        border-radius: var(--radius-container);
-        background: var(--color-text-primary);
-        color: var(--color-background-surface);
-        font-family: var(--font-family-body);
-        font-size: var(--text-body-size);
-        line-height: var(--text-body-leading);
-        overflow-wrap: anywhere;
-        word-break: normal;
-        white-space: normal;
-        box-shadow: var(--shadow-med);
-    }
-
     .view-timestamp-trigger {
         color: inherit;
         font: inherit;
@@ -230,32 +215,5 @@
     .view-timestamp-trigger:focus-visible {
         outline: var(--focus-outline-width) solid var(--ring);
         outline-offset: var(--focus-outline-offset);
-    }
-
-    .view-timestamp-details {
-        padding: var(--spacing-3);
-        border-radius: var(--radius-container);
-        background-color: var(--color-background-surface);
-        box-shadow: var(--shadow-med);
-        color: var(--color-text-primary);
-        font-family: var(--font-family-body);
-        font-size: var(--text-body-size);
-        font-weight: var(--font-weight-normal);
-        line-height: var(--text-body-leading);
-        max-width: var(--available-width);
-    }
-
-    .view-timestamp-row {
-        margin: 0;
-        padding: 0;
-    }
-
-    .view-timestamp-value {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-4);
-        margin: 0;
-        padding: 0;
-        white-space: nowrap;
     }
 }

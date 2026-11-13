@@ -1,5 +1,8 @@
+import { cn } from 'cn';
 import { X } from 'lucide-react';
+import { Badge } from '@/components/reui/badge';
 import { Icon, type StoneIconName } from './Icon';
+import { Button } from '@/components/shadcn/button';
 
 /** Displays a tag, category, or selection with optional click and removal actions. */
 export function Token(props: {
@@ -25,18 +28,25 @@ export function Token(props: {
 
     // Sibling native buttons keep activation and removal independent, including inside forms.
     return (
-        <span
-            className="view-token"
-            data-size={props.size ?? 'md'}
+        <Badge
+            variant="secondary"
+            size={props.size === 'lg' ? 'xl' : props.size === 'sm' ? 'default' : 'lg'}
+            className={cn(
+                'view-token max-w-full transition-colors has-[>.view-token-action:focus-visible]:ring-2 has-[>.view-token-action:focus-visible]:ring-ring has-[>.view-token-action:focus-visible]:ring-offset-1 has-[>.view-token-action:focus-visible]:ring-offset-background',
+                props.disabled && 'opacity-50',
+                props.onClick && !props.disabled && 'hover:bg-badge-neutral/80'
+            )}
             data-disabled={props.disabled || undefined}
-            data-interactive={props.onClick ? true : undefined}
             aria-description={props.onClick ? undefined : props.description}
         >
             {props.icon && <Icon icon={props.icon} size="sm" />}
             {props.onClick ? (
                 <button
                     type="button"
-                    className="view-token-action"
+                    className={cn(
+                        'view-token-action min-w-0 truncate border-0 bg-transparent p-0 font-[inherit] text-inherit outline-none after:absolute after:inset-0',
+                        props.disabled ? 'cursor-default' : 'cursor-pointer'
+                    )}
                     aria-description={props.description}
                     aria-disabled={props.disabled || undefined}
                     onClick={(event) => {
@@ -54,19 +64,24 @@ export function Token(props: {
                         if (props.disabled && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
                     }}
                 >
-                    <span className="view-token-label" dir={labelDirection}>
+                    <span className="block truncate [unicode-bidi:isolate]" dir={labelDirection}>
                         {props.label}
                     </span>
                 </button>
             ) : (
-                <span className="view-token-label" dir={labelDirection}>
+                <span className="min-w-0 truncate [unicode-bidi:isolate]" dir={labelDirection}>
                     {props.label}
                 </span>
             )}
             {props.onRemove && (
-                <button
+                <Button
                     type="button"
-                    className="view-token-remove"
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                        'relative z-1 size-4 shrink-0 before:absolute before:-inset-1 hover:bg-transparent',
+                        props.disabled ? 'cursor-default' : 'cursor-pointer'
+                    )}
                     aria-label={`Remove ${props.label}`}
                     aria-disabled={props.disabled || undefined}
                     onClick={(event) => {
@@ -85,9 +100,9 @@ export function Token(props: {
                         if (props.disabled && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
                     }}
                 >
-                    <X aria-hidden="true" />
-                </button>
+                    <X className="size-3" aria-hidden="true" />
+                </Button>
             )}
-        </span>
+        </Badge>
     );
 }

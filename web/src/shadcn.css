@@ -1,5 +1,4 @@
 @import './components/ui/input.css';
-@import './components/ui/fields.css';
 @import './components/ui/group.css';
 @import './components/ui/typography.css';
 @import './components/ui/layout.css';
@@ -11,7 +10,6 @@
 @import './components/ui/image.css';
 @import './components/ui/link.css';
 @import './components/ui/card.css';
-@import './components/ui/token.css';
 @import './components/ui/stepper.css';
 @import './components/ui/codeblock.css';
 @import './components/ui/fileinput.css';
@@ -47,9 +45,7 @@
 }
 
 @layer components {
-    .view-dialog-layer,
-    .view-menu-positioner,
-    .view-typography-positioner {
+    .view-dialog-layer {
         z-index: 100;
     }
 
@@ -418,6 +414,11 @@
         --border: light-dark(#e2e2e8, #f3f3f51a);
         --input: light-dark(#83838a, #5e5e61);
         --ring: var(--primary);
+        --chart-1: light-dark(#2563eb, #60a5fa);
+        --chart-2: light-dark(#0f766e, #2dd4bf);
+        --chart-3: light-dark(#7c3aed, #a78bfa);
+        --chart-4: light-dark(#b45309, #fbbf24);
+        --chart-5: light-dark(#be185d, #f472b6);
         --info: #0064e0;
         --info-foreground: light-dark(#3c4856, #d7e4f5);
         --info-muted: light-dark(#d7e4f5, #485362);

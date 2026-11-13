@@ -1,7 +1,7 @@
 import { Check, Copy } from 'lucide-react';
-import { Popover } from '@base-ui/react/popover';
 import { Button } from '@/components/shadcn/button';
 import { useEffect, useId, useRef, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 
 /** Shows the relative timestamp's keyboard-accessible, copyable absolute instant. */
 export function TimestampDetails({
@@ -51,7 +51,7 @@ export function TimestampDetails({
     }
 
     return (
-        <Popover.Root
+        <Popover
             open={open}
             triggerId={triggerId}
             onOpenChange={(next, details) => {
@@ -59,7 +59,7 @@ export function TimestampDetails({
                 setOpen(next);
             }}
         >
-            <Popover.Trigger
+            <PopoverTrigger
                 id={triggerId}
                 nativeButton={false}
                 openOnHover
@@ -85,37 +85,34 @@ export function TimestampDetails({
                     </time>
                 )}
             />
-            <Popover.Portal>
-                <Popover.Positioner className="view-typography-positioner" side="top" sideOffset={4}>
-                    <Popover.Popup
-                        className="view-timestamp-details"
-                        aria-label="Timestamp details"
-                        initialFocus={false}
-                    >
-                        <dl className="view-timestamp-row">
-                            <dt className="sr-only">{zoneName}</dt>
-                            <dd className="view-timestamp-value">
-                                <span>{fullDate}</span>
-                                <Button
-                                    variant="ghost"
-                                    type="button"
-                                    size="icon-sm"
-                                    aria-label={copies > 0 ? 'Copied' : `Copy ${fullDate}`}
-                                    title={copies > 0 ? 'Copied' : 'Copy'}
-                                    onClick={() => {
-                                        void copy();
-                                    }}
-                                >
-                                    {copies > 0 ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-                                </Button>
-                            </dd>
-                        </dl>
-                        <span className="sr-only" role="status" aria-live="polite">
-                            <span key={copies}>{copies > 0 ? 'Copied' : ''}</span>
-                        </span>
-                    </Popover.Popup>
-                </Popover.Positioner>
-            </Popover.Portal>
-        </Popover.Root>
+            <PopoverContent
+                side="top"
+                className="w-auto max-w-(--available-width)"
+                aria-label="Timestamp details"
+                initialFocus={false}
+            >
+                <dl className="m-0 p-0">
+                    <dt className="sr-only">{zoneName}</dt>
+                    <dd className="m-0 flex items-center gap-4 p-0 whitespace-nowrap">
+                        <span>{fullDate}</span>
+                        <Button
+                            variant="ghost"
+                            type="button"
+                            size="icon-sm"
+                            aria-label={copies > 0 ? 'Copied' : `Copy ${fullDate}`}
+                            title={copies > 0 ? 'Copied' : 'Copy'}
+                            onClick={() => {
+                                void copy();
+                            }}
+                        >
+                            {copies > 0 ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                        </Button>
+                    </dd>
+                </dl>
+                <span className="sr-only" role="status" aria-live="polite">
+                    <span key={copies}>{copies > 0 ? 'Copied' : ''}</span>
+                </span>
+            </PopoverContent>
+        </Popover>
     );
 }

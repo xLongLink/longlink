@@ -1,9 +1,8 @@
 import { useValue } from './value';
 import { useId, useRef } from 'react';
-import { FieldLabel } from './FieldLabel';
 import type { FieldProps } from './types';
-import { Check, Minus } from 'lucide-react';
-import { Checkbox } from '@base-ui/react/checkbox';
+import { Checkbox } from '@/components/shadcn/checkbox';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 
 /** Edits a boolean or indeterminate field. */
 export function CheckboxInput(
@@ -27,9 +26,9 @@ export function CheckboxInput(
 
     // A native button retains disabled-fieldset inheritance while Base UI owns checkbox semantics.
     return (
-        <div ref={ref} className="view-boolean-field" data-disabled={props.disabled || undefined}>
-            <Checkbox.Root
-                className="view-checkbox"
+        <Field ref={ref} orientation="horizontal" data-disabled={props.disabled || undefined}>
+            <Checkbox
+                className="aria-disabled:opacity-50"
                 render={<button type="button" />}
                 nativeButton
                 id={id}
@@ -47,12 +46,22 @@ export function CheckboxInput(
                 aria-disabled={props.disabled || undefined}
                 aria-labelledby={labelId}
                 aria-describedby={props.description ? descriptionId : undefined}
-            >
-                <Checkbox.Indicator className="view-checkbox-indicator" aria-hidden="true">
-                    {value === 'indeterminate' ? <Minus /> : <Check />}
-                </Checkbox.Indicator>
-            </Checkbox.Root>
-            <FieldLabel controlId={id} label={props.label} description={props.description} required={props.required} />
-        </div>
+            />
+            <FieldLabel htmlFor={id} className="flex-col items-start gap-0.5">
+                <span id={labelId}>
+                    {props.label}
+                    {props.required && (
+                        <span className="font-normal text-muted-foreground">
+                            <span aria-hidden="true"> · </span>Required
+                        </span>
+                    )}
+                </span>
+                {props.description && (
+                    <span id={descriptionId} className="font-normal text-muted-foreground">
+                        {props.description}
+                    </span>
+                )}
+            </FieldLabel>
+        </Field>
     );
 }

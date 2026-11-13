@@ -1,9 +1,9 @@
 import { Circle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Switch } from '@base-ui/react/switch';
-import '@/components/ui/inlinecode.css';
 import { Tabs, Tab } from '@/components/ui/Tabs';
+import '@/components/ui/inlinecode.css';
 import { useState, type ReactNode } from 'react';
+import { Switch } from '@/components/shadcn/switch';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { NativeText as Text } from '@/components/ui/NativeText';
 import { componentDocumentation } from '@/platform/publications';
@@ -33,19 +33,14 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                             <Circle size={12} fill="currentColor" className="text-(--color-window-minimize)" />
                             <Circle size={12} fill="currentColor" className="text-(--color-window-maximize)" />
                         </Stack>
-                        <span className="view-boolean-field w-auto">
-                            <Switch.Root
-                                className="view-switch"
-                                data-size="sm"
-                                aria-label="Show code"
-                                checked={showCode}
-                                onCheckedChange={setShowCode}
-                                render={<button type="button" />}
-                                nativeButton
-                            >
-                                <Switch.Thumb className="view-switch-thumb" />
-                            </Switch.Root>
-                        </span>
+                        <Switch
+                            size="sm"
+                            aria-label="Show code"
+                            checked={showCode}
+                            onCheckedChange={setShowCode}
+                            render={<button type="button" />}
+                            nativeButton
+                        />
                     </Stack>
                 </div>
                 <div className="documentation-example-body" data-code={showCode || undefined}>

@@ -52,6 +52,7 @@ it('tracks overflow and changed text while retaining the native truncation ancho
 
             expect(output.querySelector('p')).toBe(paragraph);
             expect(paragraph.hasAttribute('tabindex')).toBe(false);
+            expect(paragraph.getAttribute('aria-describedby')).toBe(document.querySelector('[role="tooltip"]')?.id);
             expect(paragraph.getAttribute('data-clamp')).toBe('single');
             expect(document.querySelector('[role="tooltip"]')?.getAttribute('data-side')).toBe('bottom');
 
