@@ -1,7 +1,6 @@
-import { redirect } from 'react-router';
+import { Navigate } from 'react-router';
 
 /** Redirects the former action group reference to the consolidated Buttons page. */
-export function loader() {
-    // Preserve existing documentation links.
-    return redirect('/docs/sdk/views/buttons/', 301);
+export default function ActionButtonGroup() {
+    return <Navigate to="/docs/sdk/views/buttons/" replace />;
 }
