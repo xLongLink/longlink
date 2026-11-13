@@ -1,6 +1,7 @@
 @layer reset, theme, base, theme-tokens, application-theme, components, utilities;
 
 @import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import './reset.css';

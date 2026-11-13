@@ -34,7 +34,7 @@
         --size-element-lg: 36px;
         --font-family-body: 'Geist Variable', sans-serif;
         --font-family-heading: var(--font-family-body);
-        --font-family-code: var(--font-family-body);
+        --font-family-code: 'Geist Mono Variable', monospace;
         --font-weight-normal: 400;
         --font-weight-medium: 500;
         --font-weight-semibold: 600;
