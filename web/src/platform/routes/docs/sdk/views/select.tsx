@@ -1,5 +1,6 @@
 import ViewLayout from './view-layout';
 import FormPreview from './form-preview';
+import { CircleCheck, CircleDot } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 /** Documents the installed shadcn Select composition without a form adapter. */
@@ -65,28 +66,19 @@ export default function SelectPage() {
                 }
             ]}
             example={{
-                title: 'Single and multiple selection',
+                title: 'Single selection',
                 preview: (
                     <FormPreview>
-                        <div className="flex flex-col gap-4">
-                            <SelectExample />
-                            <MultipleSelectExample />
-                        </div>
+                        <SelectExample />
                     </FormPreview>
                 ),
-                code: `<Select name="status" defaultValue="open">
-  <SelectTrigger aria-label="Status"><SelectValue /></SelectTrigger>
+                code: `import { CircleCheck, CircleDot } from 'lucide-react';
+
+<Select name="status" defaultValue="open">
+  <SelectTrigger className="w-full" aria-label="Status"><SelectValue /></SelectTrigger>
   <SelectContent>
-    <SelectItem value="open">Open</SelectItem>
-    <SelectItem value="closed">Closed</SelectItem>
-  </SelectContent>
-</Select>
-<Select name="teams" multiple defaultValue={['design', 'engineering']} required>
-  <SelectTrigger className="w-full" aria-label="Teams"><SelectValue placeholder="Select teams" /></SelectTrigger>
-  <SelectContent>
-    <SelectItem value="design">Design</SelectItem>
-    <SelectItem value="engineering">Engineering</SelectItem>
-    <SelectItem value="support">Support</SelectItem>
+    <SelectItem value="open"><CircleDot aria-hidden="true" />Open</SelectItem>
+    <SelectItem value="closed"><CircleCheck aria-hidden="true" />Closed</SelectItem>
   </SelectContent>
 </Select>`
             }}
@@ -94,33 +86,22 @@ export default function SelectPage() {
     );
 }
 
-/** Shows array-valued selection using the installed shadcn Select parts. */
-function MultipleSelectExample() {
-    // Native Select owns selection and repeated form entries.
-    return (
-        <Select name="teams" multiple defaultValue={['design', 'engineering']} required>
-            <SelectTrigger className="w-full" aria-label="Teams">
-                <SelectValue placeholder="Select teams" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="design">Design</SelectItem>
-                <SelectItem value="engineering">Engineering</SelectItem>
-                <SelectItem value="support">Support</SelectItem>
-            </SelectContent>
-        </Select>
-    );
-}
-
 /** Shows a named native Select in a form. */
 export function SelectExample() {
     return (
         <Select name="status" defaultValue="open">
-            <SelectTrigger aria-label="Status">
+            <SelectTrigger className="w-full" aria-label="Status">
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="open">
+                    <CircleDot aria-hidden="true" />
+                    Open
+                </SelectItem>
+                <SelectItem value="closed">
+                    <CircleCheck aria-hidden="true" />
+                    Closed
+                </SelectItem>
             </SelectContent>
         </Select>
     );

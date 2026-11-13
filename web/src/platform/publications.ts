@@ -96,7 +96,7 @@ export const componentDocumentation = [
     { name: 'Badge', category: 'Display', icon: Badge },
     { name: 'Button', category: 'Action', icon: MousePointer2 },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
-    { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
+    { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'DateInput', category: 'Form', icon: Calendar },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },

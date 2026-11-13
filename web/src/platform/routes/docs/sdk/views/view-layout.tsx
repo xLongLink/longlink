@@ -164,7 +164,10 @@ export default function ViewLayout({
                                 <Text as="p">No standalone example is available for this component.</Text>
                             )}
                         </TabsContent>
-                        <TabsContent value="properties" className="flex flex-col gap-5">
+                        <TabsContent
+                            value="properties"
+                            className="flex flex-col gap-5 [&_td]:border-border/40 [&_td]:py-1 [&_th]:border-border/40"
+                        >
                             {[...groups].map(([name, properties]) => (
                                 <DataTable
                                     key={name}
@@ -179,7 +182,7 @@ export default function ViewLayout({
                                             width: proportional(1),
                                             renderCell: (property) => (
                                                 <Stack gap={0}>
-                                                    <Text type="supporting">{property.name}</Text>
+                                                    <Text>{property.name}</Text>
                                                     <Text type="supporting">{property.description}</Text>
                                                 </Stack>
                                             )

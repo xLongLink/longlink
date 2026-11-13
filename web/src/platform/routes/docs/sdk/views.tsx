@@ -13,7 +13,7 @@ import { Icon } from '@/components/custom/icon';
 import { Badge } from '@/components/reui/badge';
 import { StepperExample } from './views/stepper';
 import { Link as RouterLink } from 'react-router';
-import { CheckboxInputExample } from './views/checkbox-input';
+import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
@@ -90,7 +90,7 @@ const previews = new Map(
                 <CardContent>Lorem ipsum dolor sit amet.</CardContent>
             </Card>
         ),
-        CheckboxInput: <CheckboxInputExample />,
+        Checkbox: <CheckboxExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
         DateInput: <DateInputExample />,
         Dialog: (
