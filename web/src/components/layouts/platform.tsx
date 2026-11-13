@@ -84,13 +84,13 @@ export default function Platform({
                                     <img
                                         alt="LongLink"
                                         className={isCollapsed ? 'size-8 object-contain' : 'block h-auto w-full'}
-                                        height={isCollapsed ? 32 : 286}
+                                        height={isCollapsed ? 32 : 291}
                                         src={
                                             isCollapsed
                                                 ? `/longlink-logo-${mode}.png`
                                                 : `/images/longlink-wordmark-${mode}.png`
                                         }
-                                        width={isCollapsed ? 32 : 1781}
+                                        width={isCollapsed ? 32 : 1939}
                                     />
                                 </RouterLink>
                             )}

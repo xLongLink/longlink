@@ -377,8 +377,8 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             expect(output.querySelector('a[href="/solution"]')).toBe(solution);
             expect(solution.hidden).toBe(false);
             expect(solution.textContent).toBe('Solution view');
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('1781');
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('286');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('1939');
+            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('291');
             await act(async () => user.tab({ shift: true }));
             expect(document.activeElement).toBe(users);
             expect(document.querySelector('[role="tooltip"]')).toBeNull();

@@ -12,7 +12,7 @@ export function Welcome() {
     );
 }
 
-/** Renders the hand-drawn LongLink wordmark in the surrounding theme and text size. */
+/** Renders the LongLink wordmark in the surrounding theme and text size. */
 export function Wordmark({
     size = 'default',
     mode
@@ -30,9 +30,9 @@ export function Wordmark({
             <img
                 alt="LongLink"
                 className={size === 'full' ? 'block h-auto w-full' : 'block h-lh w-auto max-w-none'}
-                height={286}
+                height={291}
                 src={`/images/longlink-wordmark-${resolvedMode}.png`}
-                width={1781}
+                width={1939}
             />
         </span>
     );
