@@ -2,6 +2,7 @@ import '@/components/ui/inlinecode.css';
 import { GridExample } from './views/Grid';
 import { IconExample } from './views/Icon';
 import { LinkExample } from './views/Link';
+import { MapsExample } from './views/Maps';
 import { TextExample } from './views/Text';
 import { Card } from '@/components/ui/Card';
 import { Form } from '@/components/ui/Form';
@@ -78,6 +79,7 @@ const previews = new Map(
         RadarChart: <ChartExample name="RadarChart" height={150} />,
         RadialChart: <ChartExample name="RadialChart" height={150} />,
         SankeyChart: <ChartExample name="SankeyChart" height={150} />,
+        Maps: <MapsExample height={150} />,
         Avatar: <AvatarExample />,
         Badge: <BadgeExample />,
         Button: <ButtonExample />,

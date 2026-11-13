@@ -28,6 +28,7 @@ import {
     Image,
     Layers,
     List,
+    Map,
     Menu,
     MessageSquare,
     Package,
@@ -82,6 +83,7 @@ export const componentDocumentation = [
     { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
     { name: 'RadialChart', category: 'Charts', icon: ChartPie },
     { name: 'SankeyChart', category: 'Charts', icon: ChartNoAxesCombined },
+    { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Circle },
     { name: 'Button', category: 'Action', icon: PanelTop },
@@ -182,6 +184,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
                     { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
+                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map },
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,

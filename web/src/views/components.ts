@@ -150,3 +150,6 @@ export { FileViewer } from '@/components/ui/FileViewer';
 
 /** @category Charts */
 export { AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialChart, SankeyChart } from '@/components/ui/Chart';
+
+/** @category Others */
+export { Maps } from '@/components/ui/Maps';

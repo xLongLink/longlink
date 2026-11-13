@@ -1,6 +1,66 @@
 {
     "components": [
         {
+            "name": "Maps",
+            "category": "Others",
+            "introduction": "Renders generic Polygon and MultiPolygon boundaries from supplied GeoJSON or TopoJSON using React Simple Maps.",
+            "keywords": ["map", "maps", "geography", "geojson", "topojson"],
+            "guidance": "Load parsed geography through useApi or supply local JSON. The component does not fetch URLs or assume a country dataset. Use stable feature IDs for controlled selection.",
+            "properties": [
+                { "name": "label", "type": "string", "description": "Accessible map name." },
+                {
+                    "name": "geography",
+                    "type": "GeoJSON FeatureCollection | TopoJSON Topology",
+                    "description": "Parsed Polygon or MultiPolygon boundary data."
+                },
+                {
+                    "name": "objectName",
+                    "type": "string",
+                    "description": "TopoJSON object to display; defaults to the first object."
+                },
+                {
+                    "name": "labelKey",
+                    "type": "string",
+                    "description": "Feature property used for labels and native tooltips.",
+                    "default": "name"
+                },
+                {
+                    "name": "selectedId",
+                    "type": "string",
+                    "description": "Controlled selection matching the string form of a feature ID."
+                },
+                {
+                    "name": "onSelect",
+                    "type": "(id: string) => void",
+                    "description": "Click, Enter or Space selection for features with IDs."
+                },
+                {
+                    "name": "projection",
+                    "type": "\"geoEqualEarth\" | \"geoMercator\" | \"geoEquirectangular\"",
+                    "description": "Map projection.",
+                    "default": "geoEqualEarth"
+                },
+                {
+                    "name": "center",
+                    "type": "[number, number]",
+                    "description": "Projection center as longitude and latitude.",
+                    "default": [0, 0]
+                },
+                {
+                    "name": "scale",
+                    "type": "number",
+                    "description": "Projection scale in the 800 × 400 coordinate space.",
+                    "default": 140
+                },
+                {
+                    "name": "height",
+                    "type": "number",
+                    "description": "Height in pixels; width follows the parent.",
+                    "default": 320
+                }
+            ]
+        },
+        {
             "name": "AreaChart",
             "category": "Charts",
             "introduction": "Shows trends as smooth filled areas with shared tooltips and a series legend.",
@@ -2540,3 +2600,4 @@
         }
     ]
 }
+        "Others": "Additional interface components, including geographic maps.",

@@ -5200,3 +5200,25 @@ declare function SankeyChart(props: {
     /** Height in pixels; defaults to 360. */
     height?: number;
 }): React.JSX.Element;
+
+/** Renders supplied GeoJSON or TopoJSON polygon boundaries. @category Others */
+declare function Maps(props: {
+    label: string;
+    /** Parsed GeoJSON FeatureCollection or TopoJSON Topology containing Polygon or MultiPolygon boundaries. */
+    geography: ViewJson;
+    /** TopoJSON object to display; defaults to the first object. */
+    objectName?: string;
+    /** Feature property used for labels; defaults to name. */
+    labelKey?: string;
+    /** Controlled selection matching the string form of a feature ID. */
+    selectedId?: string;
+    /** Click and keyboard selection; features without IDs remain noninteractive. */
+    onSelect?: (id: string) => void;
+    projection?: 'geoEqualEarth' | 'geoMercator' | 'geoEquirectangular';
+    /** Projection center as longitude and latitude. */
+    center?: [number, number];
+    /** Projection scale in the 800 × 400 coordinate space; defaults to 140. */
+    scale?: number;
+    /** Height in pixels; defaults to 320. */
+    height?: number;
+}): React.JSX.Element;
