@@ -147,6 +147,12 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/sdk/building', label: 'Building', icon: Rocket },
                 ],
             },
+        ],
+    },
+    {
+        path: '/docs/sdk/views',
+        label: 'Views',
+        sections: [
             {
                 title: 'Views',
                 paths: [

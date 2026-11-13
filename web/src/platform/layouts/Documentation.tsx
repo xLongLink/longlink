@@ -13,10 +13,11 @@ export default function Documentation() {
     const { pathname, hash } = useLocation();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
 
-    // Resolve the tab and its sidebar sections from the same navigation hierarchy.
+    // Prefer the specific Views section while preserving its existing SDK URLs.
     const activeGroup =
-        documentationNavigation.find(({ path }) => pagePath === path || pagePath.startsWith(`${path}/`)) ??
-        documentationNavigation[0];
+        documentationNavigation
+            .filter(({ path }) => pagePath === path || pagePath.startsWith(`${path}/`))
+            .sort((left, right) => right.path.length - left.path.length)[0] ?? documentationNavigation[0];
 
     const sections = [documentationIntroduction, ...activeGroup.sections];
 
@@ -27,14 +28,27 @@ export default function Documentation() {
                 <PublicationNavigation label="Documentation navigation">
                     {sections.map((section) => (
                         <PublicationNavigationSection key={section.title} title={section.title}>
-                            {section.pages.map((page) => (
-                                <PublicationNavigationItem
-                                    key={page.path}
-                                    page={page}
-                                    pagePath={pagePath}
-                                    hash={hash}
-                                />
-                            ))}
+                            {section.pages.map((page) =>
+                                page.children?.length ? (
+                                    <PublicationNavigationSection key={page.path} title={page.label}>
+                                        {page.children.map((child) => (
+                                            <PublicationNavigationItem
+                                                key={child.path}
+                                                page={child}
+                                                pagePath={pagePath}
+                                                hash={hash}
+                                            />
+                                        ))}
+                                    </PublicationNavigationSection>
+                                ) : (
+                                    <PublicationNavigationItem
+                                        key={page.path}
+                                        page={page}
+                                        pagePath={pagePath}
+                                        hash={hash}
+                                    />
+                                )
+                            )}
                         </PublicationNavigationSection>
                     ))}
                 </PublicationNavigation>

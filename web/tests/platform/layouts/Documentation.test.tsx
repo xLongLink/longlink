@@ -55,7 +55,7 @@ function Article() {
     );
 }
 
-it('preserves open categories across real routes, hash selection, and section keyboard navigation', async () => {
+it('keeps category headings and links visible across routes and section keyboard navigation', async () => {
     viewport.setViewport({ width: 1280 });
     await withMounted(
         <Routes>
@@ -65,38 +65,55 @@ it('preserves open categories across real routes, hash selection, and section ke
         </Routes>,
         async (output) => {
             const user = userEvent.setup();
+            const navigation = output.querySelector('[aria-label="Documentation navigation"]');
 
-            const category = Array.from(output.querySelectorAll<HTMLButtonElement>('.publication-navigation-row')).find(
-                (button) => button.textContent === 'Layout'
+            const category = Array.from(navigation?.querySelectorAll('h2') ?? []).find(
+                (heading) => heading.textContent === 'Layout'
             );
 
             if (!category) throw new Error('Missing layout category');
-            expect(category.getAttribute('aria-expanded')).toBe('false');
-            await act(async () => user.click(category));
             const card = output.querySelector<HTMLAnchorElement>('a[href="/docs/sdk/views/card/"]');
 
             if (!card) throw new Error('Missing card documentation');
+            expect(card.closest('[hidden]')).toBeNull();
             await act(async () => user.click(card));
             expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/card/');
             expect(card.getAttribute('aria-current')).toBe('page');
-            expect(category.getAttribute('aria-expanded')).toBe('true');
+            expect(navigation?.contains(category)).toBe(true);
+            expect(
+                output.querySelector('[aria-label="Documentation sections"] [aria-current="page"]')?.textContent
+            ).toBe('Views');
             const categoryLink = output.querySelector<HTMLAnchorElement>('main a');
 
             if (!categoryLink) throw new Error('Missing article category link');
             await act(async () => user.click(categoryLink));
             expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/#layouts');
-            expect(category.getAttribute('aria-current')).toBe('location');
+            expect(navigation?.contains(category)).toBe(true);
             expect(card.hasAttribute('aria-current')).toBe(false);
 
             const sections = output.querySelector('[aria-label="Documentation sections"]');
             const solutions = sections?.querySelector<HTMLAnchorElement>('a');
+            const views = sections?.querySelector<HTMLAnchorElement>('a[href="/docs/sdk/views/"]');
             const platform = sections?.querySelector<HTMLAnchorElement>('a[href="/docs/api/"]');
 
-            if (!solutions || !platform) throw new Error('Missing documentation sections');
-            solutions.focus();
+            if (!solutions || !views || !platform) throw new Error('Missing documentation sections');
+
+            await act(async () => user.click(solutions));
+            expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/');
+            expect(solutions.getAttribute('aria-current')).toBe('page');
+            expect(output.querySelector('a[href="/docs/sdk/storage/"]')).not.toBeNull();
+            expect(output.querySelector('a[href="/docs/sdk/views/card/"]')).toBeNull();
+
+            await act(async () => user.keyboard('{ArrowRight}'));
+            expect(document.activeElement).toBe(views);
+            await act(async () => user.keyboard('{Enter}'));
+            expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/');
+            expect(views.getAttribute('aria-current')).toBe('page');
+            expect(output.querySelector('a[href="/docs/sdk/storage/"]')).toBeNull();
+
             await act(async () => user.keyboard('{ArrowRight}'));
             expect(document.activeElement).toBe(platform);
-            expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/#layouts');
+            expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/');
             await act(async () => user.keyboard('{Enter}'));
             expect(platform.getAttribute('aria-current')).toBe('page');
             expect(output.querySelector('output')?.textContent).toBe('/docs/api/');
@@ -106,7 +123,7 @@ it('preserves open categories across real routes, hash selection, and section ke
     );
 });
 
-it('uses the actual documentation disclosures inside the mobile dialog and closes after navigation', async () => {
+it('shows category headings and links in the mobile dialog and closes after keyboard navigation', async () => {
     viewport.setViewport({ width: 390 });
     await withMounted(
         <Routes>
@@ -122,22 +139,21 @@ it('uses the actual documentation disclosures inside the mobile dialog and close
             await act(async () => user.click(trigger));
             const dialog = document.querySelector('[role="dialog"][aria-label="Section navigation"]');
 
-            const category = Array.from(
-                dialog?.querySelectorAll<HTMLButtonElement>('.publication-navigation-row') ?? []
-            ).find((button) => button.textContent === 'Layout');
+            const category = Array.from(dialog?.querySelectorAll('h2') ?? []).find(
+                (heading) => heading.textContent === 'Layout'
+            );
 
             if (!category) throw new Error('Missing mobile layout category');
-            category.focus();
-            await act(async () => user.keyboard('{Enter}'));
-            expect(category.getAttribute('aria-expanded')).toBe('true');
             const card = dialog?.querySelector<HTMLAnchorElement>('a[href="/docs/sdk/views/card/"]');
 
             if (!card) throw new Error('Missing mobile card link');
-            await act(async () => user.click(card));
+            expect(card.closest('[hidden]')).toBeNull();
+            card.focus();
+            await act(async () => user.keyboard('{Enter}'));
             expect(output.querySelector('output')?.textContent).toBe('/docs/sdk/views/card/');
             expect(trigger.getAttribute('aria-expanded')).toBe('false');
             await act(async () => user.click(trigger));
-            expect(category.getAttribute('aria-expanded')).toBe('true');
+            expect(dialog?.contains(category)).toBe(true);
             expect(card.getAttribute('aria-current')).toBe('page');
         },
         '/docs/sdk/views/'
