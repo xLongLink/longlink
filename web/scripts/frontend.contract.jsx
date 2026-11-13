@@ -100,7 +100,7 @@ const nativeComposition = (
                 <CollapsibleTrigger>Details</CollapsibleTrigger>
                 <CollapsibleContent keepMounted>Draft</CollapsibleContent>
             </Collapsible>
-            <Disclosure trigger="Persistent details" />
+            <Disclosure trigger="Persistent details" defaultOpen={false} disabled={false} />
             <DropdownMenu
                 open={selected === 'menu'}
                 onOpenChange={(open, details) => {
@@ -121,7 +121,16 @@ const nativeComposition = (
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <ActionMenu items={[{ label: 'Save', onClick: () => {} }]} />
+            <ActionMenu
+                trigger={<Button variant="ghost" size="icon-sm" aria-label="Order actions" disabled={false}><Icon icon="ellipsis" size="sm" /></Button>}
+                align="end"
+                open={false}
+                onOpenChange={(open) => setSelected(open ? 'menu' : 'one')}
+                items={[
+                    { label: 'Save', icon: <Icon icon="save" size="sm" />, closeOnClick: false, onClick: async () => {} },
+                    { label: 'Unavailable', icon: 'copy', disabled: true }
+                ]}
+            />
             <ActionButton href="/orders" onClick={async (event) => event.preventDefault()}>
                 Save order
             </ActionButton>
@@ -166,6 +175,11 @@ const nativeComposition = (
             <Badge onAnimationStart={(event) => event.currentTarget.focus()} style={{ textWrap: 'balance' }}>
                 Ready
             </Badge>
+            <Token label="Priority" size="xs" />
+            <Token label="Priority" size="sm" />
+            <Token label="Priority" size="default" />
+            <Token label="Priority" size="lg" />
+            <Token label="Priority" size="xl" />
             <Button
                 ref={remembered}
                 formAction="/save"

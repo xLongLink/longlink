@@ -104,7 +104,7 @@ it('keeps native submitter data and excludes disabled/loading controls from subm
         >
             <input name="title" defaultValue="Report" />
             <NativeButton label="Preview" clickAction={action} />
-            <NativeButton label="Disabled" type="submit" isDisabled />
+            <NativeButton label="Disabled" type="submit" disabled />
             <NativeButton label="Loading" type="submit" isLoading />
             <NativeButton label="Publish" type="submit" name="intent" value="publish" />
         </form>,
@@ -129,6 +129,34 @@ it('keeps native submitter data and excludes disabled/loading controls from subm
                 await events.keyboard('{Enter}');
             });
             expect(submissions).toEqual([{ title: 'Report', intent: 'publish' }]);
+        }
+    );
+});
+
+it.each(['disabled', 'isLoading'] as const)('blocks navigation and actions while %s', async (state) => {
+    const action = vi.fn();
+
+    await withMounted(
+        <>
+            <NativeButton
+                href="/orders"
+                label="Orders"
+                disabled={state === 'disabled'}
+                isLoading={state === 'isLoading'}
+                clickAction={action}
+            />
+            <Location />
+        </>,
+        async (output) => {
+            const button = output.querySelector('button');
+
+            if (!button) throw new Error('Expected a disabled navigation control');
+
+            await act(async () => button.click());
+            expect(button.disabled).toBe(true);
+            expect(output.querySelector('a')).toBeNull();
+            expect(output.querySelector('output')?.textContent).toBe('/');
+            expect(action).not.toHaveBeenCalled();
         }
     );
 });

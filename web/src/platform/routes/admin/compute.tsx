@@ -293,7 +293,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                             type="submit"
                             label="Register"
                             variant="default"
-                            isDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}
+                            disabled={fileRead.kind === 'reading' || !kubeconfig.trim()}
                         />
                     </Step>
                 </Wizard>

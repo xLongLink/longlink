@@ -63,7 +63,7 @@ export default function Register() {
                             label="Send registration link"
                             type="submit"
                             variant="default"
-                            width="100%"
+                            style={{ width: '100%' }}
                         />
                     </Stack>
                 </form>

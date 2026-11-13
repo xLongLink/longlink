@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
+import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { ActionMenu } from '@/components/custom/action-menu';
@@ -8,7 +9,7 @@ import { LinkNavigationContext } from '@/components/custom/contexts';
 
 it('retains an authored trigger without prematurely opening the popup', () => {
     // Act
-    const output = renderStatic(<ActionMenu button={{ label: 'Order actions' }} items={[]} />);
+    const output = renderStatic(<ActionMenu trigger={<Button variant="outline">Order actions</Button>} items={[]} />);
 
     // Assert
     expect(output.querySelector('button')?.textContent).toContain('Order actions');
@@ -21,9 +22,9 @@ it('skips disabled actions, opens nested actions by keyboard, and restores trigg
 
     await withMounted(
         <ActionMenu
-            button={{ label: 'Order actions' }}
+            trigger={<Button variant="outline">Order actions</Button>}
             items={[
-                { label: 'Unavailable', isDisabled: true, onClick: action },
+                { label: 'Unavailable', disabled: true, onClick: action },
                 {
                     type: 'section',
                     title: 'Manage',
@@ -72,7 +73,7 @@ it('locks a stay-open asynchronous action against repeated clicks and recovers a
 
     try {
         await withMounted(
-            <ActionMenu items={[{ label: 'Copy', hasCloseOnSelect: false, onClick: action }]} />,
+            <ActionMenu items={[{ label: 'Copy', closeOnClick: false, onClick: action }]} />,
             async (output) => {
                 await act(async () => output.querySelector('button')?.click());
                 const item = document.querySelector<HTMLElement>('[role="menuitem"]');
@@ -108,8 +109,8 @@ it('delegates ordinary link selection while preserving modified clicks and disab
         <LinkNavigationContext value={{ baseUrl: '/orders', navigate }}>
             <ActionMenu
                 items={[
-                    { label: 'Open order', href: '/order/12', onClick: action, hasCloseOnSelect: false },
-                    { label: 'Blocked order', href: '/order/13', isDisabled: true, onClick: action },
+                    { label: 'Open order', href: '/order/12', onClick: action, closeOnClick: false },
+                    { label: 'Blocked order', href: '/order/13', disabled: true, onClick: action },
                     { label: 'Related order', href: '/order/14', onClick: action }
                 ]}
             />
@@ -147,7 +148,7 @@ it('keeps controlled state authoritative and reports dismissal requests', async 
     const requests = vi.fn();
     const user = userEvent.setup();
 
-    await withMounted(<ActionMenu isMenuOpen items={[{ label: 'Copy' }]} onOpenChange={requests} />, async () => {
+    await withMounted(<ActionMenu open items={[{ label: 'Copy' }]} onOpenChange={requests} />, async () => {
         await act(async () => await user.keyboard('{Escape}'));
         expect(requests).toHaveBeenCalledWith(false);
         expect(document.querySelector('[role="menu"]')).not.toBeNull();
@@ -196,10 +197,13 @@ it.each([
 
         await withMounted(
             <>
-                <ActionMenu button={{ label: 'Own actions' }} items={[{ label: 'Own item', onClick: ownAction }]} />
                 <ActionMenu
-                    button={{ label: 'Other actions' }}
-                    isMenuOpen
+                    trigger={<Button>Own actions</Button>}
+                    items={[{ label: 'Own item', onClick: ownAction }]}
+                />
+                <ActionMenu
+                    trigger={<Button>Other actions</Button>}
+                    open
                     items={[{ label: 'Other item', onClick: otherAction }]}
                 />
             </>,

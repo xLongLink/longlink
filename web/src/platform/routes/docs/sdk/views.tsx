@@ -17,7 +17,6 @@ import { Link as RouterLink } from 'react-router';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { SelectorExample } from './views/selector';
-import { MoreMenuExample } from './views/more-menu';
 import { TextAreaExample } from './views/text-area';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
@@ -136,7 +135,6 @@ const previews = new Map(
                 <a href="#workflow">Workflow</a>
             </nav>
         ),
-        MoreMenu: <MoreMenuExample />,
         MultiSelector: <MultiSelectorExample />,
         NumberInput: <NumberInputExample />,
         Progress: <ProgressExample />,
@@ -193,7 +191,7 @@ export default function Item({ params }) {
                         <CodeBlockCopyButton className="ml-auto" />
                     </CodeBlockHeader>
                 </CodeBlock>
-                <Disclosure trigger="API reference" defaultIsOpen={false}>
+                <Disclosure trigger="API reference" defaultOpen={false}>
                     <DataTable
                         idKey="name"
                         density="compact"

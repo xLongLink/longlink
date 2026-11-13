@@ -8,15 +8,16 @@ import { Form } from '@/components/custom/form';
 import { DeletionDialog } from '@/components/deletion';
 import { Selector } from '@/components/custom/selector';
 import { TextInput } from '@/components/custom/text-input';
-import { ArrowDown, ArrowUp, Pencil, Trash } from 'lucide-react';
+import { ActionMenu } from '@/components/custom/action-menu';
 import { MultiSelector } from '@/components/custom/multi-selector';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeMoreMenu } from '@/components/custom/native-more-menu';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import { NativeButton as Button } from '@/components/custom/native-button';
+import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
@@ -78,11 +79,19 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                       header: 'Actions',
                                       align: 'end' as const,
                                       renderCell: (tag: Tag) => (
-                                          <NativeMoreMenu
-                                              label={`Actions for ${tag.name}`}
-                                              size="sm"
-                                              alignment="end"
-                                              isDisabled={move.isPending}
+                                          <ActionMenu
+                                              trigger={
+                                                  <MenuTriggerButton
+                                                      type="button"
+                                                      variant="ghost"
+                                                      size="icon-sm"
+                                                      aria-label={`Actions for ${tag.name}`}
+                                                      disabled={move.isPending}
+                                                  >
+                                                      <Ellipsis aria-hidden="true" />
+                                                  </MenuTriggerButton>
+                                              }
+                                              align="end"
                                               items={[
                                                   {
                                                       id: 'edit',
@@ -94,14 +103,14 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                                       id: 'up',
                                                       label: 'Move Up',
                                                       icon: <ArrowUp className="size-4" aria-hidden="true" />,
-                                                      isDisabled: tags[0]?.id === tag.id,
+                                                      disabled: tags[0]?.id === tag.id,
                                                       onClick: () => move.mutate({ tag, direction: 'up' })
                                                   },
                                                   {
                                                       id: 'down',
                                                       label: 'Move Down',
                                                       icon: <ArrowDown className="size-4" aria-hidden="true" />,
-                                                      isDisabled: tags[tags.length - 1]?.id === tag.id,
+                                                      disabled: tags[tags.length - 1]?.id === tag.id,
                                                       onClick: () => move.mutate({ tag, direction: 'down' })
                                                   },
                                                   {

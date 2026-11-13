@@ -322,9 +322,6 @@ export { TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 /** @category Display */
 export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from '@/components/shadcn/empty';
 
-/** @category Action */
-export { MoreMenu } from '@/components/custom/more-menu';
-
 /** @category Layouts */
 export { Menu } from '@/components/custom/menu';
 

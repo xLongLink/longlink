@@ -75,7 +75,7 @@ export default function ForgotPassword() {
                             label="Send reset email"
                             type="submit"
                             variant="default"
-                            width="100%"
+                            style={{ width: '100%' }}
                         />
                     </Stack>
                 </form>

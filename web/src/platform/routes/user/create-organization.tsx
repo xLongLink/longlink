@@ -74,7 +74,12 @@ export default function CreateOrganization({
                             {/* Let the subtitle size the column, then stretch the controls to match. */}
                             <Stack gap={4} width={0} className="min-w-full">
                                 <TextInput label="Name" name="name" placeholder="Example LongLink" required />
-                                <Button label="Create organization" variant="default" type="submit" width="100%" />
+                                <Button
+                                    label="Create organization"
+                                    variant="default"
+                                    type="submit"
+                                    style={{ width: '100%' }}
+                                />
                             </Stack>
                         </Stack>
                     </Form>

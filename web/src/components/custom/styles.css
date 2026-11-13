@@ -219,20 +219,6 @@
 }
 
 @layer components {
-    .view-action-icon {
-        display: inline-flex;
-        flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        width: var(--spacing-4);
-        height: var(--spacing-4);
-    }
-
-    .view-action-icon[data-size='lg'] {
-        width: var(--spacing-5);
-        height: var(--spacing-5);
-    }
-
     .view-action-content[aria-hidden='true'] {
         animation: view-action-hide 0s var(--duration-medium-min) forwards;
     }
@@ -314,56 +300,5 @@
         font-size: var(--text-heading-6-size);
         font-weight: var(--text-heading-6-weight);
         line-height: var(--text-heading-6-leading);
-    }
-
-    .view-disclosure-trigger {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--spacing-2);
-        width: 100%;
-        padding-block: 0;
-        font-family: var(--font-family-body);
-        font-size: var(--text-large-size);
-        font-weight: var(--font-weight-semibold);
-        color: var(--foreground);
-        text-align: start;
-    }
-
-    .view-disclosure-trigger:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-    }
-
-    .view-disclosure-trigger:disabled {
-        color: var(--color-text-disabled);
-        cursor: not-allowed;
-    }
-
-    .view-disclosure-chevron {
-        flex-shrink: 0;
-        width: var(--text-large-size);
-        height: var(--text-large-size);
-        color: var(--muted-foreground);
-        transition: transform var(--duration-fast) var(--ease-standard);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .view-disclosure-chevron {
-            transition-duration: 0s;
-        }
-    }
-
-    .view-disclosure-trigger[data-panel-open] .view-disclosure-chevron {
-        transform: rotate(180deg);
-    }
-
-    .view-disclosure-content {
-        padding-top: var(--spacing-1);
-        font-family: var(--font-family-body);
-        font-size: var(--text-body-size);
-        font-weight: var(--text-body-weight);
-        line-height: var(--text-body-leading);
-        color: var(--foreground);
     }
 }

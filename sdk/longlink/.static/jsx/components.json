@@ -824,18 +824,18 @@
                     "description": "Content shown in the trigger area (always visible)."
                 },
                 {
-                    "name": "defaultIsOpen",
+                    "name": "defaultOpen",
                     "type": "boolean",
                     "description": "Initial open state.",
                     "default": true
                 },
                 {
-                    "name": "isOpen",
+                    "name": "open",
                     "type": "boolean",
                     "description": "Controlled open state."
                 },
                 {
-                    "name": "isDisabled",
+                    "name": "disabled",
                     "type": "boolean",
                     "description": "Prevents toggling without changing the open state.",
                     "default": false
@@ -1067,25 +1067,24 @@
             "introduction": "Custom data-driven action menu with async-action protection and scoped navigation.",
             "properties": [
                 {
-                    "name": "button",
-                    "type": "{ label: string; variant?: \"ghost\" | \"primary\" | \"secondary\" | \"destructive\"; size?: \"sm\" | \"lg\" | \"md\"; isDisabled?: boolean; }",
-                    "description": "Custom trigger label, variant, size, and disabled state.",
-                    "default": {
-                        "label": "Menu",
-                        "variant": "secondary",
-                        "size": "md",
-                        "isDisabled": false
-                    }
+                    "name": "trigger",
+                    "type": "ReactElement<ComponentProps<typeof Button>>",
+                    "description": "Native Button with its own children, variant, size, disabled state, and accessible label. Defaults to an outline Actions button."
                 },
                 {
                     "name": "items",
-                    "type": "DropdownMenuOption[]",
-                    "description": "Menu actions, links, dividers, and sections."
+                    "type": "ActionMenuOption[]",
+                    "description": "Actions, links, dividers, and sections. Items support disabled, closeOnClick, and icon names or elements."
                 },
                 {
-                    "name": "isMenuOpen",
+                    "name": "open",
                     "type": "boolean",
                     "description": "Controlled menu open state."
+                },
+                {
+                    "name": "align",
+                    "type": "\"start\" | \"center\" | \"end\"",
+                    "description": "Popup alignment relative to the trigger."
                 },
                 {
                     "name": "onOpenChange",
@@ -1579,42 +1578,6 @@
             ],
             "source": "custom",
             "justification": "Coordinates Solution side navigation, section selection, and persistent section content."
-        },
-        {
-            "name": "MoreMenu",
-            "category": "Action",
-            "introduction": "Opens additional actions without exposing popup geometry or presentation modes.",
-            "properties": [
-                {
-                    "name": "items",
-                    "type": "DropdownMenuOption[]",
-                    "description": "Menu items: data array of actions, dividers, and sections. Same type as DropdownMenu items prop."
-                },
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible label for the trigger button (aria-label) and tooltip text.",
-                    "default": "More options"
-                },
-                {
-                    "name": "icon",
-                    "type": "StoneIconName",
-                    "description": "Override the default three-dot icon. Accepts any ReactNode."
-                },
-                {
-                    "name": "isDisabled",
-                    "type": "boolean",
-                    "description": "Whether the menu trigger is disabled.",
-                    "default": false
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(isOpen: boolean) => void",
-                    "description": "Callback fired when the menu opens or closes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Preserves the compact data-driven action contract and LongLink asynchronous action recovery."
         },
         {
             "name": "MultiSelector",
@@ -3116,15 +3079,9 @@
                 },
                 {
                     "name": "size",
-                    "type": "\"sm\" | \"lg\" | \"md\"",
-                    "description": "The size of the token.",
-                    "default": "md"
-                },
-                {
-                    "name": "color",
-                    "type": "\"blue\" | \"cyan\" | \"green\" | \"orange\" | \"pink\" | \"purple\" | \"red\" | \"teal\" | \"yellow\" | \"default\" | \"gray\"",
-                    "description": "Color variant of the token.",
-                    "default": "default"
+                    "type": "\"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
+                    "description": "Native ReUI Badge size.",
+                    "default": "lg"
                 },
                 {
                     "name": "icon",

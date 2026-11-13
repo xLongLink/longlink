@@ -151,13 +151,13 @@ function MemberPermissions({
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="end">
-                <Button label="Cancel" size="sm" variant="ghost" isDisabled={save.isPending} onClick={onClose} />
+                <Button label="Cancel" size="sm" variant="ghost" disabled={save.isPending} onClick={onClose} />
                 <Button
                     label="Save"
                     size="sm"
                     variant="default"
                     isLoading={save.isPending}
-                    isDisabled={save.isPending || Object.keys(roles).length === 0}
+                    disabled={save.isPending || Object.keys(roles).length === 0}
                     onClick={() => save.mutate()}
                 />
             </Stack>

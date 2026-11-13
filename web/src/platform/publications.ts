@@ -106,7 +106,6 @@ export const componentDocumentation = [
     { name: 'Input', category: 'Form', icon: Type },
     { name: 'Link', category: 'Action', icon: Globe },
     { name: 'Menu', category: 'Layouts', icon: Menu },
-    { name: 'MoreMenu', category: 'Action', icon: Menu },
     { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
     { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },
     { name: 'Progress', category: 'Display', icon: Layers },

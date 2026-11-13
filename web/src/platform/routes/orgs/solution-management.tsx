@@ -13,18 +13,19 @@ import { DeletionDialog } from '@/components/deletion';
 import SolutionPermissions from './solution-permissions';
 import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
+import { ActionMenu } from '@/components/custom/action-menu';
 import { ViewDialog } from '@/components/custom/view-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeMoreMenu } from '@/components/custom/native-more-menu';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
-import { ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
@@ -221,9 +222,18 @@ export default function SolutionManagement({
                                           align: 'end' as const,
                                           width: proportional(0.25, { minWidth: 0 }),
                                           renderCell: (row: Solution) => (
-                                              <NativeMoreMenu
-                                                  alignment="end"
-                                                  size="sm"
+                                              <ActionMenu
+                                                  trigger={
+                                                      <MenuTriggerButton
+                                                          type="button"
+                                                          variant="ghost"
+                                                          size="icon-sm"
+                                                          aria-label={`Actions for ${row.name}`}
+                                                      >
+                                                          <Ellipsis aria-hidden="true" />
+                                                      </MenuTriggerButton>
+                                                  }
+                                                  align="end"
                                                   items={[
                                                       ...(canAdminister
                                                           ? [
@@ -406,7 +416,7 @@ export default function SolutionManagement({
                                     href={`/api/v1/solutions/${selected.id}/plugin`}
                                     label="Download plugin ZIP"
                                     variant="default"
-                                    width="100%"
+                                    style={{ width: '100%' }}
                                     icon={<OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />}
                                 />
                             </Stack>
@@ -447,7 +457,7 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
     return (
         <Button
             label="Copy MCP server URL"
-            width="100%"
+            style={{ width: '100%' }}
             clickAction={async () => {
                 // Copy only the canonical connection URL, without credentials.
                 await navigator.clipboard.writeText(resource);

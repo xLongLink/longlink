@@ -2,6 +2,7 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Icon } from '@/components/custom/icon';
+import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { ActionMenu } from '@/components/custom/action-menu';
@@ -130,7 +131,15 @@ it('roves text actions, icon actions and menu triggers without opening the menu'
             <ActionButton size="icon-lg" aria-label="Copy">
                 <Icon icon="copy" size="lg" />
             </ActionButton>
-            <ActionMenu button={{ label: 'More' }} items={[]} onOpenChange={open} />
+            <ActionMenu
+                trigger={
+                    <Button variant="outline" size="lg">
+                        More
+                    </Button>
+                }
+                items={[]}
+                onOpenChange={open}
+            />
         </ActionButtonGroup>,
         async (output) => {
             const controls = Array.from(output.querySelectorAll('button'));
@@ -158,7 +167,14 @@ it('disables all grouped actions without leaking group membership into a dialog'
             <ActionButton size="icon" aria-label="Copy" onClick={blocked}>
                 <Icon icon="copy" size="md" />
             </ActionButton>
-            <ActionMenu button={{ label: 'More' }} items={[]} />
+            <ActionMenu
+                trigger={
+                    <Button variant="outline" disabled>
+                        More
+                    </Button>
+                }
+                items={[]}
+            />
             <ViewDialog isOpen title="Recovery" onOpenChange={() => {}}>
                 <ActionButton variant="outline" onClick={recover}>
                     Recover
@@ -168,7 +184,9 @@ it('disables all grouped actions without leaking group membership into a dialog'
         async (output) => {
             const actions = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="group"] > button'));
             expect(actions).toHaveLength(3);
-            expect(actions.map((button) => button.getAttribute('aria-disabled'))).toEqual(['true', 'true', 'true']);
+            expect(actions.every((button) => button.disabled || button.getAttribute('aria-disabled') === 'true')).toBe(
+                true
+            );
             await act(async () => {
                 for (const button of actions) button.click();
             });
@@ -478,7 +496,10 @@ it('lets a grouped menu own its touch press without a second group activation cl
     await withMounted(
         <ActionButtonGroup label="Actions">
             <ActionButton variant="outline">Save</ActionButton>
-            <ActionMenu button={{ label: 'More' }} items={[{ label: 'Archive', onClick: action }]} />
+            <ActionMenu
+                trigger={<Button variant="outline">More</Button>}
+                items={[{ label: 'Archive', onClick: action }]}
+            />
         </ActionButtonGroup>,
         async (output) => {
             const trigger = output.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');

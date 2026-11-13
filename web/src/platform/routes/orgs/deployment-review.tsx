@@ -112,7 +112,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                 type="submit"
                                 label="Update solution"
                                 variant="default"
-                                isDisabled={missingRequired || !hasChanges}
+                                disabled={missingRequired || !hasChanges}
                             />
                         }
                     >

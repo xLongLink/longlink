@@ -15,7 +15,7 @@ export function NativeButton({
     variant = 'outline',
     size = 'default',
     type = 'button',
-    isDisabled = false,
+    disabled = false,
     isLoading = false,
     onClick,
     clickAction,
@@ -23,7 +23,6 @@ export function NativeButton({
     target,
     rel,
     download,
-    width,
     className,
     ...props
 }: Omit<ComponentPropsWithRef<'button'>, 'onClick'> & {
@@ -32,13 +31,11 @@ export function NativeButton({
     endContent?: ReactNode;
     variant?: ComponentPropsWithRef<typeof Button>['variant'];
     size?: ComponentPropsWithRef<typeof Button>['size'];
-    isDisabled?: boolean;
     isLoading?: boolean;
     href?: string;
     target?: string;
     rel?: string;
     download?: string | boolean;
-    width?: number | string;
     onClick?: (event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
     clickAction?: (event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void | Promise<void>;
 }) {
@@ -46,7 +43,7 @@ export function NativeButton({
     const [pending, setPending] = useState(false);
     const [error, setError] = useState('');
     const busy = isLoading || pending;
-    const blocked = isDisabled || props.disabled || busy;
+    const blocked = disabled || busy;
     const isLink = href !== undefined && !blocked;
 
     /** Keep the synchronous part of the action before the native submit default. */
@@ -89,7 +86,6 @@ export function NativeButton({
                 variant={variant}
                 size={size}
                 className={cn('relative', className)}
-                style={{ ...props.style, width: width ?? props.style?.width }}
                 nativeButton={!isLink}
                 render={
                     isLink ? (
@@ -120,11 +116,7 @@ export function NativeButton({
                     className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
                     aria-hidden={busy || undefined}
                 >
-                    {icon && (
-                        <span className="view-action-icon" data-size={size}>
-                            {icon}
-                        </span>
-                    )}
+                    {icon}
                     <span className="min-w-0 overflow-hidden text-ellipsis">{label}</span>
                     {endContent}
                 </span>

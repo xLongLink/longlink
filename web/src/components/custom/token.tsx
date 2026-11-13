@@ -1,14 +1,18 @@
 import { cn } from 'cn';
 import { X } from 'lucide-react';
+import type { ComponentProps } from 'react';
 import { Badge } from '@/components/reui/badge';
 import { Icon, type StoneIconName } from './icon';
 import { Button } from '@/components/shadcn/button';
 
 /** Displays a tag, category, or selection with optional click and removal actions. */
-export function Token(props: {
+export function Token({
+    size = 'lg',
+    ...props
+}: {
     /** Visible text and accessible name for the token. Long labels truncate to fit. */
     label: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: ComponentProps<typeof Badge>['size'];
     icon?: StoneIconName;
     disabled?: boolean;
     /** Accessible description of the tag or selection. */
@@ -30,7 +34,7 @@ export function Token(props: {
     return (
         <Badge
             variant="secondary"
-            size={props.size === 'lg' ? 'xl' : props.size === 'sm' ? 'default' : 'lg'}
+            size={size}
             className={cn(
                 'view-token max-w-full transition-colors has-[>.view-token-action:focus-visible]:ring-2 has-[>.view-token-action:focus-visible]:ring-ring has-[>.view-token-action:focus-visible]:ring-offset-1 has-[>.view-token-action:focus-visible]:ring-offset-background',
                 props.disabled && 'opacity-50',

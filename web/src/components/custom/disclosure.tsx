@@ -1,15 +1,16 @@
 import type { ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useLayoutEffect, useRef } from 'react';
+import { Button } from '@/components/shadcn/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. */
 export function Disclosure(props: {
     children?: ReactNode;
     trigger: ReactNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
+    defaultOpen?: boolean;
+    open?: boolean;
+    disabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }) {
     const trigger = useRef<HTMLButtonElement>(null);
@@ -19,25 +20,31 @@ export function Disclosure(props: {
     useLayoutEffect(() => {
         const content = panel.current;
 
-        if (props.isOpen === false && content?.contains(content.ownerDocument.activeElement)) {
+        if (props.open === false && content?.contains(content.ownerDocument.activeElement)) {
             trigger.current?.focus();
         }
-    }, [props.isOpen]);
+    }, [props.open]);
 
     // Default the uncontrolled state without overriding controlled visibility.
     return (
         <Collapsible
-            open={props.isOpen}
-            defaultOpen={props.defaultIsOpen ?? true}
-            disabled={props.isDisabled ?? false}
+            open={props.open}
+            defaultOpen={props.defaultOpen ?? true}
+            disabled={props.disabled}
             onOpenChange={(open) => props.onOpenChange?.(open)}
             className="w-full"
         >
-            <CollapsibleTrigger ref={trigger} type="button" className="view-disclosure-trigger">
-                <span className="min-w-0 flex-1">{props.trigger}</span>
-                <ChevronDown aria-hidden="true" className="view-disclosure-chevron" />
+            <CollapsibleTrigger
+                ref={trigger}
+                render={<Button type="button" variant="ghost" className="group w-full justify-between" />}
+            >
+                <span className="min-w-0">{props.trigger}</span>
+                <ChevronDown
+                    aria-hidden="true"
+                    className="transition-transform duration-200 group-data-panel-open:rotate-180 motion-reduce:transition-none"
+                />
             </CollapsibleTrigger>
-            <CollapsibleContent ref={panel} keepMounted className="view-disclosure-content">
+            <CollapsibleContent ref={panel} keepMounted className="pt-2">
                 {props.children}
             </CollapsibleContent>
         </Collapsible>

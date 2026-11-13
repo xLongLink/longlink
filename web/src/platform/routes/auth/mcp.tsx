@@ -77,12 +77,12 @@ export default function McpAuthorization() {
                         <Button
                             label="Allow access"
                             variant="default"
-                            width="100%"
+                            style={{ width: '100%' }}
                             type="submit"
                             name="decision"
                             value="allow"
                         />
-                        <Button label="Deny" width="100%" type="submit" name="decision" value="deny" />
+                        <Button label="Deny" style={{ width: '100%' }} type="submit" name="decision" value="deny" />
                     </Stack>
                 </Form>
             ) : null}

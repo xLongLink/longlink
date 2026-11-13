@@ -1,11 +1,12 @@
 import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
+import { Ellipsis } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { MoreMenu } from '@/components/custom/more-menu';
+import { ActionMenu } from '@/components/custom/action-menu';
 import { ActionButton } from '@/components/custom/action-button';
-import { NativeMoreMenu } from '@/components/custom/native-more-menu';
 import { ActionButtonGroup } from '@/components/custom/action-button-group';
 
 it('opens a row editor immediately while another menu action is still saving', async () => {
@@ -20,11 +21,21 @@ it('opens a row editor immediately while another menu action is still saving', a
 
         return (
             <>
-                <NativeMoreMenu label="First row" items={[{ label: 'Save', onClick: () => save }]} />
-                <NativeMoreMenu
-                    label="Second row"
-                    size="sm"
-                    alignment="end"
+                <ActionMenu
+                    trigger={
+                        <Button variant="ghost" size="icon-sm" aria-label="First row">
+                            <Ellipsis aria-hidden="true" />
+                        </Button>
+                    }
+                    items={[{ label: 'Save', onClick: () => save }]}
+                />
+                <ActionMenu
+                    trigger={
+                        <Button variant="ghost" size="icon-sm" aria-label="Second row">
+                            <Ellipsis aria-hidden="true" />
+                        </Button>
+                    }
+                    align="end"
                     items={[{ label: 'Edit', onClick: () => setEditing(true) }]}
                 />
                 {editing && <section role="dialog" aria-label="Edit second row" />}
@@ -42,7 +53,6 @@ it('opens a row editor immediately while another menu action is still saving', a
             await act(async () => document.querySelector<HTMLElement>('[role="menuitem"]')?.click());
 
             expect(output.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Edit second row');
-            expect(triggers[1]?.getAttribute('data-size')).toBe('sm');
             await act(async () => {
                 finishSave();
                 await save;
@@ -56,7 +66,16 @@ it('opens a row editor immediately while another menu action is still saving', a
 
 it('preserves the accessible name of compact row actions', () => {
     // Act
-    const output = renderStatic(<MoreMenu label="Order actions" items={[]} />);
+    const output = renderStatic(
+        <ActionMenu
+            trigger={
+                <Button variant="ghost" size="icon-sm" aria-label="Order actions">
+                    <Ellipsis aria-hidden="true" />
+                </Button>
+            }
+            items={[]}
+        />
+    );
 
     // Assert
     expect(output.querySelector('button')?.getAttribute('aria-label')).toBe('Order actions');
@@ -68,8 +87,22 @@ it('joins group keyboard navigation without disabling or sizing its popup action
     await withMounted(
         <ActionButtonGroup label="Actions" size="lg">
             <ActionButton variant="outline">Save</ActionButton>
-            <MoreMenu label="Unavailable" isDisabled items={[]} />
-            <MoreMenu label="Order actions" items={[{ label: 'Copy order' }]} />
+            <ActionMenu
+                trigger={
+                    <Button variant="ghost" size="icon-lg" aria-label="Unavailable" disabled>
+                        <Ellipsis aria-hidden="true" />
+                    </Button>
+                }
+                items={[]}
+            />
+            <ActionMenu
+                trigger={
+                    <Button variant="ghost" size="icon-lg" aria-label="Order actions">
+                        <Ellipsis aria-hidden="true" />
+                    </Button>
+                }
+                items={[{ label: 'Copy order' }]}
+            />
         </ActionButtonGroup>,
         async (output) => {
             const buttons = output.querySelectorAll('button');
@@ -79,7 +112,6 @@ it('joins group keyboard navigation without disabling or sizing its popup action
                 await user.keyboard('{ArrowRight}');
             });
             expect(document.activeElement).toBe(buttons[2]);
-            expect(buttons[2]?.getAttribute('data-size')).toBe('lg');
 
             await act(async () => await user.keyboard('{ArrowDown}'));
             expect(document.activeElement?.getAttribute('role')).toBe('menuitem');

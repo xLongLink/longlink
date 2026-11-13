@@ -36,29 +36,32 @@ declare function useConfirm(): {
 /** @category Action @group Button */
 type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLElement; nativeEvent: MouseEvent };
 
-/** @category Action @group DropdownMenu */
-type DropdownMenuItemData = {
+/** @category Action @group ActionMenu */
+type ActionMenuItemData = {
     id?: string;
     label: ViewNode;
-    icon?: StoneIconName;
+    icon?: StoneIconName | React.JSX.Element;
     description?: ViewNode;
     endContent?: ViewNode;
     variant?: 'default' | 'destructive';
-    isDisabled?: boolean;
-    hasCloseOnSelect?: boolean;
-    onClick?: () => void;
-    items?: DropdownMenuOption[];
+    disabled?: boolean;
+    closeOnClick?: boolean;
+    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
+    href?: string;
+    target?: '_blank' | '_self';
+    rel?: string;
+    items?: ActionMenuOption[];
 };
 
-/** @category Action @group DropdownMenu */
-type DropdownMenuOption =
-    | DropdownMenuItemData
+/** @category Action @group ActionMenu */
+type ActionMenuOption =
+    | ActionMenuItemData
     | { type: 'divider' }
     | {
           type: 'section';
           id?: string;
           title?: string;
-          items: DropdownMenuItemData[];
+          items: ActionMenuItemData[];
       };
 
 /** @category Runtime */
@@ -4595,7 +4598,7 @@ declare function Image(props: Parameters<typeof NativeFrontend.Image>[0]): React
 declare function Token(props: {
     /** Visible text and accessible name for the token. Long labels truncate to fit. */
     label: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: Parameters<typeof Badge>[0]['size'];
     icon?: StoneIconName;
     disabled?: boolean;
     /** Accessible description of the tag or selection. */
@@ -4606,17 +4609,13 @@ declare function Token(props: {
     onRemove?: () => void;
 }): React.JSX.Element;
 
-/** @category Display */
+/** @category Action */
 declare function ActionMenu(props: {
-    button?: {
-        label: string;
-        variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
-        size?: 'sm' | 'md' | 'lg';
-        isDisabled?: boolean;
-    };
-    items: DropdownMenuOption[];
-    isMenuOpen?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
+    trigger?: React.JSX.Element;
+    items: ActionMenuOption[];
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    align?: 'start' | 'center' | 'end';
 }): React.JSX.Element;
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
@@ -4805,15 +4804,6 @@ declare function Timestamp(props: {
         | 'system_date'
         | 'system_date_time'
         | 'system_time';
-}): React.JSX.Element;
-
-/** @category Action */
-declare function MoreMenu(props: {
-    items: DropdownMenuOption[];
-    label?: string;
-    icon?: StoneIconName;
-    isDisabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
 }): React.JSX.Element;
 
 /** @category Layouts */
@@ -13931,9 +13921,9 @@ export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React
 export function Disclosure(props: {
     children?: React$1.ReactNode;
     trigger: React$1.ReactNode;
-    defaultIsOpen?: boolean;
-    isOpen?: boolean;
-    isDisabled?: boolean;
+    defaultOpen?: boolean;
+    open?: boolean;
+    disabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }): React$1.JSX.Element;
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {

@@ -8,7 +8,7 @@ import { Disclosure } from '@/components/custom/disclosure';
 it('honors an authored initially open disclosure', () => {
     // Act
     const output = renderStatic(
-        <Disclosure trigger="Details" defaultIsOpen>
+        <Disclosure trigger="Details" defaultOpen>
             Order details
         </Disclosure>
     );
@@ -50,7 +50,7 @@ it('requests a controlled change without overriding its owner', async () => {
     // A controlled disclosure stays closed until its owner accepts the requested value.
     const changed = vi.fn();
     await withMounted(
-        <Disclosure trigger="Details" isOpen={false} onOpenChange={changed}>
+        <Disclosure trigger="Details" open={false} onOpenChange={changed}>
             Private details
         </Disclosure>,
         async (output) => {
@@ -69,7 +69,7 @@ it('does not activate a disabled disclosure', async () => {
     // Disabled state must prevent activation.
     const changed = vi.fn();
     await withMounted(
-        <Disclosure trigger="Details" defaultIsOpen={false} isDisabled onOpenChange={changed}>
+        <Disclosure trigger="Details" defaultOpen={false} disabled onOpenChange={changed}>
             Details
         </Disclosure>,
         async (output) => {
@@ -90,7 +90,7 @@ it('returns focus to the trigger when a focused panel closes', async () => {
         const [open, setOpen] = useState(true);
 
         return (
-            <Disclosure trigger="Details" isOpen={open} onOpenChange={setOpen}>
+            <Disclosure trigger="Details" open={open} onOpenChange={setOpen}>
                 <button type="button" onClick={() => setOpen(false)}>
                     Done
                 </button>
