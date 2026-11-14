@@ -50,8 +50,8 @@ async def password_reset_user(session: AsyncSession, credential: str) -> User:
     # Convert invalid and expired credentials into one safe browser-facing response.
     try:
         return await token.password_reset_user(session, credential)
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK)
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK) from exc
 
 
 def registration_email(credential: str) -> Email:
@@ -60,8 +60,8 @@ def registration_email(credential: str) -> Email:
     # Convert invalid and expired credentials into one safe browser-facing response.
     try:
         return token.registration_claims(credential)
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=400, detail=INVALID_REGISTRATION_LINK)
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=400, detail=INVALID_REGISTRATION_LINK) from exc
 
 
 @router.get("/auth/oauth", response_model=OAuthAvailability)
@@ -285,10 +285,10 @@ async def complete_registration(
     try:
         user = await users.register(session, payload.name, email, payload.password)
         await set_auth_session(session, response, user)
-    except IntegrityError:
+    except IntegrityError as exc:
         raise HTTPException(
             status_code=409, detail="An account with this email already exists. Sign in or reset your password to continue."
-        )
+        ) from exc
 
     # Remove email verification proof only after account creation commits.
     cookies.delete_browser_cookie(response, cookies.REGISTRATION_COOKIE)

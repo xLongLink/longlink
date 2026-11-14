@@ -57,8 +57,8 @@ async def save(
     # Translate backend-specific collation conflicts at the database boundary.
     try:
         await session.flush()
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Tag already exists")
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail="Tag already exists") from exc
     return tag
 
 

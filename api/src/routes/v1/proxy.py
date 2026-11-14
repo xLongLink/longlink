@@ -117,10 +117,10 @@ async def proxy_solution_request(
                 raise
 
     # Keep transport failures behind stable browser-facing errors.
-    except TimeoutError:
-        raise HTTPException(status_code=504, detail="Solution proxy request timed out")
-    except httpx2.HTTPError:
-        raise HTTPException(status_code=503, detail="Solution proxy request failed")
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail="Solution proxy request timed out") from exc
+    except httpx2.HTTPError as exc:
+        raise HTTPException(status_code=503, detail="Solution proxy request failed") from exc
 
     # Normalize errors before checking successful response types or starting browser streaming.
     response_content_type = upstream.headers.get("content-type")

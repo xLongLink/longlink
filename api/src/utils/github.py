@@ -29,7 +29,7 @@ async def username(credential: SecretStr, *, transport: httpx2.AsyncBaseTranspor
 
     # Provider transport failures must not expose authentication details.
     except httpx2.HTTPError:
-        raise HTTPException(status_code=503, detail="GitHub account lookup is unavailable. Try again later.")
+        raise HTTPException(status_code=503, detail="GitHub account lookup is unavailable. Try again later.") from None
 
     # Reject invalid credentials and surface provider failures before persisting a connection.
     if response.status_code == 401:
@@ -43,5 +43,5 @@ async def username(credential: SecretStr, *, transport: httpx2.AsyncBaseTranspor
     try:
         profile = Profile.model_validate(response.json())
     except ValueError:
-        raise HTTPException(status_code=503, detail="GitHub returned an invalid account profile")
+        raise HTTPException(status_code=503, detail="GitHub returned an invalid account profile") from None
     return profile.login

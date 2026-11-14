@@ -96,8 +96,8 @@ async def get_organization_storage_usage(session: auth.Session, membership: auth
             usage = await storage.usage(Storage.bucket_name(membership.organization_id))
 
     # Storage outages share one stable API error without provider diagnostics.
-    except (TimeoutError, BotoCoreError, ClientError):
-        raise HTTPException(status_code=503, detail="Storage resources unavailable")
+    except (TimeoutError, BotoCoreError, ClientError) as exc:
+        raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
 
     # Report the measured usage alongside the tenant's configured quota.
     return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
@@ -134,8 +134,8 @@ async def get_organization_database_usage(session: auth.Session, membership: aut
         APITimeoutError,
         ConnectionClosedError,
         httpx.HTTPError,
-    ):
-        raise HTTPException(status_code=503, detail="Database usage unavailable")
+    ) as exc:
+        raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
 
     # Convert provisioned MiB capacity to the usage response's byte unit.
     return {"space_used": usage, "quota_bytes": organization.database_size_mib * 1024 * 1024}
@@ -156,10 +156,10 @@ async def create_organization_invitation(
     # Deliver only after the invitation transaction commits, and tell the inviter when delivery fails.
     try:
         await mail.send_organization_invitation_email(payload.email, organization_name, payload.role)
-    except aiosmtplib.SMTPException:
+    except aiosmtplib.SMTPException as exc:
         raise HTTPException(
             status_code=503, detail="The invitation was saved, but its email could not be sent. Invite the same address again to resend it."
-        )
+        ) from exc
 
 
 @router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)

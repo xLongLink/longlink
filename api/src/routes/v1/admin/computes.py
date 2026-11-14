@@ -35,13 +35,13 @@ async def create_compute_registry(session: auth.Session, payload: ComputeRegistr
 
             # Invalid candidate configuration is a validation error, not a connectivity outage.
             except ValueError as exc:
-                raise HTTPException(status_code=422, detail=str(exc))
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
             # Missing or unreachable cluster services reject the candidate Compute.
-            except (NotFoundError, ServerError, TimeoutError, OSError):
+            except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
                 raise HTTPException(
                     status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
-                )
+                ) from exc
 
             # Retain verified endpoint metadata for the remaining infrastructure checks.
             candidate = ComputeRegistry(
@@ -63,16 +63,16 @@ async def create_compute_registry(session: auth.Session, payload: ComputeRegistr
                 await storage.verify()
 
             # Any verification failure means unreachable infrastructure.
-            except Exception:
+            except Exception as exc:
                 raise HTTPException(
                     status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
-                )
+                ) from exc
 
     # Bound candidate verification independently of individual service timeouts.
-    except TimeoutError:
+    except TimeoutError as exc:
         raise HTTPException(
             status_code=503, detail="Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
-        )
+        ) from exc
 
     # Persist the verified connection as immediately assignable.
     session.add(candidate)
@@ -80,8 +80,8 @@ async def create_compute_registry(session: auth.Session, payload: ComputeRegistr
     # Translate duplicate names or physical clusters to one stable API conflict.
     try:
         await session.commit()
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Compute registry already exists")
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
     return candidate
 
 

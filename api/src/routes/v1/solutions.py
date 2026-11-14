@@ -116,8 +116,8 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
         return await solution_resources.logs(cluster, organization_id, solution_id)
 
     # Do not expose cluster diagnostics through the public log endpoint.
-    except RuntimeError:
-        raise HTTPException(status_code=503, detail="Solution logs unavailable")
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="Solution logs unavailable") from exc
 
 
 @router.delete("/solutions/{solution_id}", status_code=204)
