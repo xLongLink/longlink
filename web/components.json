@@ -4,7 +4,7 @@
     "rsc": false,
     "tsx": true,
     "iconLibrary": "lucide",
-    "tailwind": { "config": "", "css": "src/shadcn.css", "baseColor": "stone", "cssVariables": true, "prefix": "" },
+    "tailwind": { "config": "", "css": "src/index.css", "baseColor": "stone", "cssVariables": true, "prefix": "" },
     "aliases": {
         "components": "@/components",
         "ui": "@/components/shadcn",
