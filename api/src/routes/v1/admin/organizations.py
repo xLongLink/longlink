@@ -1,6 +1,7 @@
 from src import auth
 from uuid import UUID
 from fastapi import Query, Depends, APIRouter, HTTPException
+from collections.abc import Sequence
 from src.models.resources import OrganizationIdentity
 from src.database.services import organizations
 from src.models.pagination import Page, Pagination
@@ -11,7 +12,9 @@ router = APIRouter()
 
 
 @router.get("/organizations", response_model=Page[OrganizationIdentity])
-async def list_organizations(session: auth.Session, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)):
+async def list_organizations(
+    session: auth.Session, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)
+) -> dict[str, Sequence[Organization] | int]:
     """Return all organizations for administrator views."""
 
     # Search the full administrator listing before pagination.
@@ -20,7 +23,7 @@ async def list_organizations(session: auth.Session, pagination: Pagination = Dep
 
 
 @router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
-async def get_organization_quotas(session: auth.Session, organization_id: UUID):
+async def get_organization_quotas(session: auth.Session, organization_id: UUID) -> Organization:
     """Return Organization quotas for administrator views."""
 
     # Read Organization quotas without touching provider boundaries.

@@ -1,6 +1,7 @@
 import pytest
 from conftest import kubernetes_client
 from src.kubernetes import storageclasses
+from collections.abc import AsyncIterator
 
 pytestmark = pytest.mark.no_db
 
@@ -20,7 +21,7 @@ def storage_class_listing(monkeypatch: pytest.MonkeyPatch, classes: list[Storage
     """Supply the selected test case's StorageClasses to the discovery boundary."""
 
     # Preserve asynchronous iteration while replacing only the Kubernetes listing.
-    async def listed_classes(**_kwargs: object):
+    async def listed_classes(**_kwargs: object) -> AsyncIterator[StorageClass]:
         """Yield the available cluster StorageClasses."""
 
         for storage_class in classes:
@@ -37,7 +38,6 @@ def storage_class_listing(monkeypatch: pytest.MonkeyPatch, classes: list[Storage
         pytest.param([StorageClass("retain"), StorageClass("delete", default=True)], "delete", id="default-class"),
     ],
 )
-
 # Invalid listings must not silently select an arbitrary storage class.
 @pytest.mark.usefixtures("storage_class_listing")
 async def test_resolve_selects_unique_storage_class(expected: str) -> None:

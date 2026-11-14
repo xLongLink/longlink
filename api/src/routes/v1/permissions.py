@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/solutions/{solution_id}/permissions", response_model=models.PermissionSettings)
-async def settings(session: auth.Session, solution_id: UUID, user: auth.CurrentUser):
+async def settings(session: auth.Session, solution_id: UUID, user: auth.CurrentUser) -> dict[str, list[str] | UUID | None]:
     """Inspect repository-defined defaults before configuring Solution access."""
 
     solution = await permissions.load_solution(session, solution_id, user.id)
@@ -17,7 +17,7 @@ async def settings(session: auth.Session, solution_id: UUID, user: auth.CurrentU
 
 
 @router.get("/solutions/{solution_id}/members/{member_id}/access", response_model=models.MemberAccess)
-async def member_access(session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser):
+async def member_access(session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser) -> dict[str, object]:
     """Return one active member's saved Solution role."""
 
     solution = await permissions.load_solution(session, solution_id, user.id)
@@ -25,7 +25,9 @@ async def member_access(session: auth.Session, solution_id: UUID, member_id: UUI
 
 
 @router.put("/solutions/{solution_id}/members/{member_id}/access", status_code=204, response_model=None)
-async def update_access(session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser, payload: models.AccessUpdate):
+async def update_access(
+    session: auth.Session, solution_id: UUID, member_id: UUID, user: auth.CurrentUser, payload: models.AccessUpdate
+) -> None:
     """Assign an SDK-defined role or remove one member's Solution access with null."""
 
     solution = await permissions.load_solution(session, solution_id, user.id)

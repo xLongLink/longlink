@@ -139,7 +139,7 @@ def test_oauth_state_claims_reject_expired_token() -> None:
         ),
     ],
 )
-def test_token_claims_reject_missing_required_fields(claims: dict[str, str], function, message: str) -> None:
+def test_token_claims_reject_missing_required_fields(claims: dict[str, str], function: Callable[[str], object], message: str) -> None:
     """Reject signed credentials that omit their required identity claims."""
 
     # Arrange

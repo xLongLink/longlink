@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)
-async def check_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer):
+async def check_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer) -> dict[str, object]:
     """Inspect the repository's latest image without changing deployment state."""
 
     # Expose the reviewed revision and configured names, never environment values.
@@ -29,7 +29,7 @@ async def check_update(session: auth.Session, user: auth.CurrentUser, solution: 
 
 
 @router.post("/solutions/{solution_id}/update", status_code=204)
-async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer, payload: SolutionPatch):
+async def apply_update(session: auth.Session, user: auth.CurrentUser, solution: auth.SolutionMaintainer, payload: SolutionPatch) -> None:
     """Re-resolve latest and deploy a changed immutable image or configuration."""
 
     # Inspect without command locks, then revalidate the desired state and maintenance access.
@@ -104,7 +104,7 @@ async def download_plugin(solution: auth.SolutionMaintainer) -> Response:
 
 
 @router.get("/solutions/{solution_id}/logs", response_model=list[str])
-async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
+async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess) -> list[str]:
     """Return recent pod logs for one managed solution."""
 
     # Reuse the authorized cluster connection without loading Solution secrets.
@@ -121,7 +121,7 @@ async def get_solution_logs(solution_id: UUID, access: auth.SolutionLogAccess):
 
 
 @router.delete("/solutions/{solution_id}", status_code=204)
-async def delete_solution(solution_id: UUID, session: auth.Session, user: auth.CurrentUser):
+async def delete_solution(solution_id: UUID, session: auth.Session, user: auth.CurrentUser) -> None:
     """Mark one Solution absent and queue explicit lifecycle cleanup."""
 
     await solutions.delete(session, solution_id, user.id)

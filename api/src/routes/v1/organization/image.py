@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/organizations/{organization_id}/image", response_model=LongLinkMetadata)
-async def inspect_image(session: auth.Session, image: Image, membership: auth.OrganizationMember):
+async def inspect_image(session: auth.Session, image: Image, membership: auth.OrganizationMember) -> LongLinkMetadata:
     """Inspect a container image and return its LongLink metadata."""
 
     # Release the authorization transaction before registry I/O.

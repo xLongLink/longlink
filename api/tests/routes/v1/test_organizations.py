@@ -417,7 +417,7 @@ async def test_other_organization_user_cannot_delete_solution(
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     users: tuple[User, User, User],
     usage: int | Exception,
     expected_status: int,

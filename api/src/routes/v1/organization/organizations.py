@@ -10,6 +10,7 @@ from src.utils import s3, mail, roles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from src.kubernetes import databases
+from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
@@ -27,20 +28,22 @@ from src.models.organizations import (
     OrganizationMemberAccessResponse,
 )
 from src.database.models.solutions import Solution
+from src.database.models.association import UserOrganization
+from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 router = APIRouter()
 
 
 @router.get("/organizations/{organization_id}/members", response_model=list[OrganizationMemberAccessResponse])
-async def get_organization_members(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_members(session: auth.Session, membership: auth.OrganizationMember) -> Sequence[UserOrganization]:
     """Return the active Organization members without unrelated invitation data."""
 
     return await organizations.members(session, membership.organization_id)
 
 
 @router.get("/organizations/{organization_id}/invitations", response_model=list[OrganizationInvitationResponse])
-async def get_organization_invitations(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_invitations(session: auth.Session, membership: auth.OrganizationMember) -> Sequence[OrganizationInvitation]:
     """Return pending invitations only to Organization managers."""
 
     # Restrict invitation visibility to Organization managers.
@@ -50,14 +53,14 @@ async def get_organization_invitations(session: auth.Session, membership: auth.O
 
 
 @router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])
-async def get_organization_solutions(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_solutions(session: auth.Session, membership: auth.OrganizationMember) -> Sequence[Solution]:
     """Return solutions visible to the current organization member."""
 
     return await organizations.solutions(session, membership.organization_id)
 
 
 @router.get("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
-async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int | bool | None]:
     """Show current users, Solutions, and the same monthly rates used for invoicing."""
 
     # Read membership counts and payment authorization for this Organization.
@@ -81,7 +84,7 @@ async def get_organization_usage(session: auth.Session, membership: auth.Organiz
 
 
 @router.get("/organizations/{organization_id}/storage", response_model=OrganizationByteUsage)
-async def get_organization_storage_usage(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_storage_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int]:
     """Return live logical object bytes against the Organization bucket's quota."""
 
     # Load the Organization's immutable storage assignment.
@@ -104,7 +107,7 @@ async def get_organization_storage_usage(session: auth.Session, membership: auth
 
 
 @router.get("/organizations/{organization_id}/database", response_model=OrganizationByteUsage)
-async def get_organization_database_usage(session: auth.Session, membership: auth.OrganizationMember):
+async def get_organization_database_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int]:
     """Return PostgreSQL schema and index bytes, excluding WAL, backups, and replicas, against provisioned capacity."""
 
     # Read only the authorized Organization's database assignment before external I/O.
@@ -144,7 +147,7 @@ async def get_organization_database_usage(session: auth.Session, membership: aut
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     session: auth.Session, payload: OrganizationInvitationCreate, membership: auth.OrganizationMaintainer
-):
+) -> None:
     """Create one invitation for an organization member."""
 
     # Preserve immutable delivery context before authorization refreshes the membership.
@@ -163,7 +166,7 @@ async def create_organization_invitation(
 
 
 @router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)
-async def revoke_organization_invitation(session: auth.Session, invitation_id: UUID, membership: auth.OrganizationMaintainer):
+async def revoke_organization_invitation(session: auth.Session, invitation_id: UUID, membership: auth.OrganizationMaintainer) -> None:
     """Revoke one pending Organization invitation."""
 
     await invitations.revoke(session, membership.organization_id, invitation_id, membership.user_id)
@@ -173,7 +176,7 @@ async def revoke_organization_invitation(session: auth.Session, invitation_id: U
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
     session: auth.Session, member_id: UUID, payload: OrganizationMemberUpdate, membership: auth.OrganizationAdmin
-):
+) -> None:
     """Update one organization member role."""
 
     # Persist the requested role only for an active Organization member.
@@ -182,7 +185,7 @@ async def update_organization_member(
 
 
 @router.delete("/organizations/{organization_id}/members/{member_id}", status_code=204)
-async def remove_organization_member(session: auth.Session, member_id: UUID, membership: auth.OrganizationAdmin):
+async def remove_organization_member(session: auth.Session, member_id: UUID, membership: auth.OrganizationAdmin) -> None:
     """Revoke access so the member no longer counts toward month-end usage."""
 
     # The service revalidates permissions and protects the last owner under the organization lock.

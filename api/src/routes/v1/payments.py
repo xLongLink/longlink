@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/stripe/webhook", status_code=204)
-async def receive_webhook(session: auth.Session, request: Request):
+async def receive_webhook(session: auth.Session, request: Request) -> None:
     """Verify card-registration events and apply them directly to the Organization."""
 
     # Signed webhooks do not use browser credentials, and unconfigured deployments reject them.

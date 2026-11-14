@@ -1,14 +1,18 @@
 from src import auth
 from fastapi import Query, Depends, APIRouter
+from collections.abc import Sequence
 from src.models.users import AdminUserSummary
 from src.database.services import users
 from src.models.pagination import Page, Pagination
+from src.database.models.users import User
 
 router = APIRouter()
 
 
 @router.get("/users", response_model=Page[AdminUserSummary])
-async def list_users(session: auth.Session, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)):
+async def list_users(
+    session: auth.Session, pagination: Pagination = Depends(), search: str = Query(default="", max_length=200)
+) -> dict[str, Sequence[User] | int]:
     """Return all user summaries for administrator views."""
 
     # Search the full administrator listing before pagination.

@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.post("/organizations/{organization_id}/solutions", status_code=204)
-async def create_solution(session: auth.Session, payload: SolutionCreate, membership: auth.OrganizationMaintainer):
+async def create_solution(session: auth.Session, payload: SolutionCreate, membership: auth.OrganizationMaintainer) -> None:
     """Create Solution state and queue its explicit deployment lifecycle."""
 
     # Release the authorization transaction before registry I/O.

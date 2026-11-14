@@ -445,7 +445,7 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
         """Fail while listing Solution Pods."""
 
         @classmethod
-        async def list(cls, **_kwargs: object):
+        async def list(cls, **_kwargs: object) -> AsyncIterator["PodResource"]:
             """Raise the Kubernetes API failure."""
 
             raise solutions.APITimeoutError("connection failed")
