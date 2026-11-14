@@ -3,5 +3,5 @@ import routes from '@/solution/routes';
 
 it('sends local Solution paths through the one runtime route', () => {
     // Assert
-    expect(routes).toEqual([{ path: '*', file: './Solution.tsx' }]);
+    expect(routes).toEqual([{ path: '*', file: './solution.tsx' }]);
 });

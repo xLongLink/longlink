@@ -5,10 +5,7 @@ const errorPayloadSchema = z.object({ detail: z.unknown().optional() });
 
 const errorMessageSchema = z.string().refine((message) => message.trim() !== '');
 
-const validationIssueSchema = z.object({
-    msg: z.string(),
-    loc: z.array(z.unknown()).catch([]),
-});
+const validationIssueSchema = z.object({ msg: z.string(), loc: z.array(z.unknown()).catch([]) });
 
 const locationPartSchema = z.union([z.string(), z.number()]);
 
@@ -70,7 +67,7 @@ export const api = ky.create({
                 }
 
                 return new ApiError(message, error.response.status, request.url);
-            },
-        ],
-    },
+            }
+        ]
+    }
 });

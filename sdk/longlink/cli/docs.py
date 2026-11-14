@@ -1,5 +1,6 @@
 import re
-from pydantic import Field, BaseModel, JsonValue
+from typing import Self, Literal
+from pydantic import Field, BaseModel, JsonValue, model_validator
 from rapidfuzz import fuzz
 from longlink.cli import errors
 from collections.abc import Sequence
@@ -29,14 +30,30 @@ class Component(BaseModel):
 
     # Identity and authored guidance.
     name: str
+    source: Literal["shadcn", "reui", "custom", "recharts"]
     category: str
     guidance: str = ""
     keywords: list[str] = Field(default_factory=list)
     introduction: str
 
+    # Component provenance.
+    reference: str = ""
+    justification: str = ""
+
     # Supported API surface.
     members: list[Member] = Field(default_factory=list)
     properties: list[Property] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_provenance(self) -> Self:
+        """Require native references and explicit reasons for custom behavior."""
+
+        # Reject undocumented ownership instead of publishing misleading component guidance.
+        if self.source == "custom" and not self.justification.strip():
+            raise ValueError(f"Custom component {self.name} needs a justification.")
+        if self.source != "custom" and not self.reference.strip():
+            raise ValueError(f"Native component {self.name} needs an upstream reference.")
+        return self
 
 
 class Pattern(BaseModel):
@@ -190,7 +207,12 @@ def component_command(name: str, /) -> None:
     if component is None:
         raise errors.Error(f'Unknown component: {name}. Run `longlink docs search "{name}"` to find available APIs.')
     print(f"{component.name} [{component.category}]")
-    if component.introduction:
+    print(f"Source: {component.source}")
+    if component.reference:
+        print(component.reference)
+    if component.justification:
+        print(component.justification)
+    if component.introduction and component.introduction != component.justification:
         print(component.introduction)
 
     # Keep usage guidance separate from the component introduction.

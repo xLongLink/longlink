@@ -1,27 +1,23 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import { CircleX } from 'lucide-react';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
-import { Theme } from '@astryxdesign/core/theme';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Center } from '@astryxdesign/core/Center';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { ErrorBoundary } from 'react-error-boundary';
-import { stoneTheme } from '@/lib/generated/stone.js';
-import { LayerProvider } from '@astryxdesign/core/Layer';
-import { useConfirm } from '@/components/ui/confirmation';
-import { FileRequestContext } from '@/components/ui/preview';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { useConfirm } from '@/components/custom/confirmation';
+import { FileRequestContext } from '@/components/custom/preview';
+import { NativeLoading } from '@/components/custom/native-loading';
+import { FileViewerContext } from '@/components/custom/file-context';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,
     IconRequestContext,
     LinkNavigationContext,
     MenuNavigationContext,
-    DialogActivityContext,
-} from '@/components/ui/contexts';
+    DialogActivityContext
+} from '@/components/custom/contexts';
 import {
     requestSchema,
     parametersSchema,
@@ -42,7 +38,7 @@ import {
     viewportMessageSchema,
     type ViewportMessage,
     viewAppearanceSchema,
-    type ViewAppearance,
+    type ViewAppearance
 } from './protocol';
 import '../index.css';
 
@@ -72,7 +68,7 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
                 hash,
                 select: (id) => {
                     window.location.hash = id;
-                },
+                }
             }}
         >
             {children}
@@ -83,11 +79,29 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
 /** Keeps loaded Views and compilation errors in the same content region. */
 function ViewLayout({ children }: { children: React.ReactNode }) {
     return (
-        <Layout height="auto">
-            <LayoutContent padding={0} isScrollable={false} label="Solution View" role="region">
-                {children}
-            </LayoutContent>
-        </Layout>
+        <section className="view-runtime-content" aria-label="Solution View">
+            {children}
+        </section>
+    );
+}
+
+/** Presents bounded diagnostics without interpreting authored error text as markup. */
+function ViewFailure({ title, message, retry }: { title: string; message: string; retry?: () => void }) {
+    return (
+        <div role="status" className="view-runtime-error">
+            <CircleX aria-hidden="true" className="view-runtime-error-icon" />
+            <div className="view-runtime-diagnostic" data-retry={retry ? '' : undefined}>
+                <h2>{title}</h2>
+                <p>{message}</p>
+            </div>
+            {retry && (
+                <div className="view-runtime-error-actions">
+                    <components.Button variant="outline" onClick={retry}>
+                        Retry
+                    </components.Button>
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -97,7 +111,7 @@ const initialization = z
         source: z.string(),
         params: parametersSchema,
         appearance: viewAppearanceSchema,
-        navigationBaseUrl: z.url({ protocol: /^https?$/ }),
+        navigationBaseUrl: z.url({ protocol: /^https?$/ })
     })
     .strict();
 
@@ -123,11 +137,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
     const pending = new Map<
         number,
-        {
-            resolve: (value: ViewData) => void;
-            reject: (error: Error) => void;
-            timer: ReturnType<typeof setTimeout>;
-        }
+        { resolve: (value: ViewData) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }
     >();
 
     let sequence = 0;
@@ -219,6 +229,34 @@ function initialize(event: MessageEvent<unknown>): void {
     // Supply file previews and downloads without exposing the general request API to file components.
     const fileRequests = { preview: requestPreview, download };
 
+    /** Tracks an inline slot while native document rendering remains host-owned. */
+    function mountFileViewer(element: HTMLElement, path: string, title: string): () => void {
+        const id = sequence++;
+        let animation: number;
+        let previous = '';
+
+        /** Transfer geometry only when layout or visibility changes. */
+        function measure() {
+            const rect = element.getBoundingClientRect();
+            const bounds = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            const serialized = JSON.stringify(bounds);
+
+            if (serialized !== previous) {
+                previous = serialized;
+                port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds });
+            }
+
+            animation = requestAnimationFrame(measure);
+        }
+
+        measure();
+
+        return () => {
+            cancelAnimationFrame(animation);
+            port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds: null });
+        };
+    }
+
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {
         port.postMessage({ type: 'navigate', path, newTab });
@@ -227,10 +265,7 @@ function initialize(event: MessageEvent<unknown>): void {
     /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
     function useApi(path: string): readonly [ViewData, () => Promise<void>] {
         // Use the full request path as cache identity, including pagination parameters.
-        const { data } = useSuspenseQuery({
-            queryKey: ['api', path],
-            queryFn: () => request(path),
-        });
+        const { data } = useSuspenseQuery({ queryKey: ['api', path], queryFn: () => request(path) });
 
         const invalidate = React.useCallback(
             () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
@@ -289,10 +324,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
         if (fullscreen) fullscreenDepth += open ? 1 : -1;
 
-        const command = {
-            type: 'modal',
-            depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)),
-        };
+        const command = { type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) };
 
         port.postMessage(fullscreenDepth > 0 ? { ...command, fullscreen: true } : command);
     }
@@ -301,7 +333,7 @@ function initialize(event: MessageEvent<unknown>): void {
     const observer = new ResizeObserver(() => {
         port.postMessage({
             type: 'resize',
-            height: Math.min(1_000_000, Math.max(1, Math.ceil(mount.getBoundingClientRect().height))),
+            height: Math.min(1_000_000, Math.max(1, Math.ceil(mount.getBoundingClientRect().height)))
         });
     });
 
@@ -335,7 +367,7 @@ function initialize(event: MessageEvent<unknown>): void {
             jsxRuntime: 'classic',
             jsxPragma: '__jsx',
             jsxFragmentPragma: 'Fragment',
-            production: true,
+            production: true
         }).code;
 
         const bindings = {
@@ -350,7 +382,7 @@ function initialize(event: MessageEvent<unknown>): void {
             request,
             navigate,
             useApi,
-            useConfirm,
+            useConfirm
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
@@ -375,68 +407,62 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const params = Object.freeze(parsed.data.params);
         content = (
-            <LayerProvider toast={{ position: 'bottomEnd' }}>
-                <QueryClientProvider client={client}>
-                    <QueryErrorResetBoundary>
-                        {({ reset }) => (
-                            <ViewLayout>
-                                <ErrorBoundary
-                                    onReset={reset}
-                                    fallbackRender={({ error, resetErrorBoundary }) => (
-                                        <Banner
-                                            role="status"
-                                            status="error"
-                                            title="View could not be loaded"
-                                            description={
-                                                error instanceof Error
-                                                    ? error.message.slice(0, 1024)
-                                                    : 'An unexpected View error occurred.'
-                                            }
-                                            endContent={
-                                                <components.Button label="Retry" onClick={resetErrorBoundary} />
-                                            }
-                                        />
-                                    )}
-                                >
-                                    <React.Suspense
-                                        fallback={
-                                            <Center minHeight="100dvh" width="100%">
-                                                <Spinner label="Loading View" />
-                                            </Center>
+            <QueryClientProvider client={client}>
+                <QueryErrorResetBoundary>
+                    {({ reset }) => (
+                        <ViewLayout>
+                            <ErrorBoundary
+                                onReset={reset}
+                                fallbackRender={({ error, resetErrorBoundary }) => (
+                                    <ViewFailure
+                                        title="View could not be loaded"
+                                        message={
+                                            error instanceof Error
+                                                ? error.message.slice(0, 1024)
+                                                : 'An unexpected View error occurred.'
                                         }
-                                    >
-                                        <IconRequestContext value={loadIcon}>
-                                            <LinkNavigationContext
-                                                value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}
-                                            >
-                                                <MenuNavigationProvider>
-                                                    <FileRequestContext value={fileRequests}>
+                                        retry={resetErrorBoundary}
+                                    />
+                                )}
+                            >
+                                <React.Suspense
+                                    fallback={
+                                        <div className="view-runtime-loading">
+                                            <NativeLoading label="Loading View" />
+                                        </div>
+                                    }
+                                >
+                                    <IconRequestContext value={loadIcon}>
+                                        <LinkNavigationContext
+                                            value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}
+                                        >
+                                            <MenuNavigationProvider>
+                                                <FileRequestContext value={fileRequests}>
+                                                    <FileViewerContext value={mountFileViewer}>
                                                         <DialogActivityContext value={modalActivity}>
                                                             <FormRequestContext value={request}>
                                                                 <View params={params} />
                                                             </FormRequestContext>
                                                         </DialogActivityContext>
-                                                    </FileRequestContext>
-                                                </MenuNavigationProvider>
-                                            </LinkNavigationContext>
-                                        </IconRequestContext>
-                                    </React.Suspense>
-                                </ErrorBoundary>
-                            </ViewLayout>
-                        )}
-                    </QueryErrorResetBoundary>
-                </QueryClientProvider>
-            </LayerProvider>
+                                                    </FileViewerContext>
+                                                </FileRequestContext>
+                                            </MenuNavigationProvider>
+                                        </LinkNavigationContext>
+                                    </IconRequestContext>
+                                </React.Suspense>
+                            </ErrorBoundary>
+                        </ViewLayout>
+                    )}
+                </QueryErrorResetBoundary>
+            </QueryClientProvider>
         );
     } catch (error) {
         // Compilation diagnostics belong to the authored source, not privileged host state.
         content = (
             <ViewLayout>
-                <Banner
-                    role="status"
-                    status="error"
+                <ViewFailure
                     title="View compilation failed"
-                    description={
+                    message={
                         error instanceof Error
                             ? error.message.slice(0, 1024)
                             : 'Export a default JSX component without package imports.'
@@ -446,18 +472,19 @@ function initialize(event: MessageEvent<unknown>): void {
         );
     }
 
-    /** Reconciles only the theme provider so the authored component keeps its state. */
+    /** Updates document appearance without reconciling or remounting the authored View. */
     function renderAppearance(appearance: ViewAppearance) {
+        document.documentElement.dataset.themeScope = 'stone';
         document.documentElement.dataset.accent = appearance.accent;
-        root.render(
-            <Theme theme={stoneTheme} mode={appearance.theme}>
-                {content}
-            </Theme>
-        );
+
+        // An absent override lets color-scheme and dark utilities follow the live system preference.
+        if (appearance.theme === 'system') delete document.documentElement.dataset.theme;
+        else document.documentElement.dataset.theme = appearance.theme;
     }
 
     // Start from the handshake, then receive live preferences over the private port.
     renderAppearance(parsed.data.appearance);
+    root.render(content);
 }
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.

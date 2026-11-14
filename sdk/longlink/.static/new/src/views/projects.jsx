@@ -12,42 +12,45 @@ export default function Projects() {
             </Stack>
             <Grid columns={{ minWidth: 240, max: 3 }} gap={4} align="stretch">
                 {projects.slice(0, 6).map((project) => (
-                    <Card
-                        key={project.id}
-                        href={`/projects/${project.id}`}
-                        label={project.name}
-                        variant="muted"
-                        padding={0}
-                        height="100%"
-                        isClipped
-                    >
-                        <Stack gap={0}>
-                            <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} />
-                            <Stack gap={3} padding={4}>
+                    <InteractiveCard key={project.id} href={`/projects/${project.id}`} label={project.name}>
+                        <CardContent>
+                            <Stack gap={3}>
+                                <Image
+                                    src={`/assets/${project.photo}.jpg`}
+                                    alt={`${project.name} building`}
+                                    ratio={16 / 9}
+                                />
                                 <Stack gap={2} align="start">
                                     <Text as="h2" type="label" maxLines={1}>
                                         {project.name}
                                     </Text>
                                     <Badge
-                                        label={project.status}
                                         variant={
                                             project.status === 'Completed'
-                                                ? 'success'
+                                                ? 'success-light'
                                                 : project.status === 'In progress'
-                                                  ? 'warning'
-                                                  : 'neutral'
+                                                  ? 'warning-light'
+                                                  : 'secondary'
                                         }
-                                    />
+                                    >
+                                        {project.status}
+                                    </Badge>
                                 </Stack>
                                 <Text type="supporting" maxLines={2}>
                                     {project.description}
                                 </Text>
                             </Stack>
-                        </Stack>
-                    </Card>
+                        </CardContent>
+                    </InteractiveCard>
                 ))}
             </Grid>
-            {projects.length === 0 && <EmptyState title="No projects yet" />}
+            {projects.length === 0 && (
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyTitle>No projects yet</EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
+            )}
         </Stack>
     );
 }

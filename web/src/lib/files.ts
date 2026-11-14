@@ -1,14 +1,3 @@
-import type { CodeLanguage } from '@astryxdesign/core/CodeBlock';
-import { lua } from '@astryxdesign/core/CodeBlock/languages/lua';
-import { java } from '@astryxdesign/core/CodeBlock/languages/java';
-import { ruby } from '@astryxdesign/core/CodeBlock/languages/ruby';
-import { toml } from '@astryxdesign/core/CodeBlock/languages/toml';
-import { thrift } from '@astryxdesign/core/CodeBlock/languages/thrift';
-import { graphql } from '@astryxdesign/core/CodeBlock/languages/graphql';
-import { dockerfile } from '@astryxdesign/core/CodeBlock/languages/dockerfile';
-import { powershell } from '@astryxdesign/core/CodeBlock/languages/powershell';
-import { objectiveC } from '@astryxdesign/core/CodeBlock/languages/objective-c';
-
 const languages = new Map(
     Object.entries({
         txt: 'plaintext',
@@ -55,27 +44,38 @@ const languages = new Map(
         kts: 'kotlin',
         swift: 'swift',
         go: 'go',
+        lua: 'lua',
+        java: 'java',
+        rb: 'ruby',
+        rake: 'ruby',
+        gemspec: 'ruby',
+        toml: 'toml',
+        thrift: 'thrift',
+        graphql: 'graphql',
+        gql: 'graphql',
+        dockerfile: 'dockerfile',
+        m: 'objective-c',
+        mm: 'objective-c',
+        ps1: 'powershell',
+        psm1: 'powershell',
+        psd1: 'powershell'
     })
 );
 
-const extraLanguages = [lua, java, ruby, toml, thrift, graphql, dockerfile, objectiveC, powershell];
+const filenames = new Map([
+    ['gemfile', 'ruby'],
+    ['rakefile', 'ruby'],
+    ['dockerfile', 'dockerfile'],
+    ['containerfile', 'dockerfile']
+]);
 
 /** Recognizes text attachments by filename or declared media type without interpreting their contents. */
-export function textLanguage(filename: string, mediaType = ''): string | CodeLanguage | undefined {
+export function textLanguage(filename: string, mediaType = ''): string | undefined {
     const name = filename.replaceAll('\\', '/').split('/').at(-1)?.toLowerCase() ?? '';
     const extension = name.includes('.') ? name.slice(name.lastIndexOf('.') + 1) : '';
 
-    // Prefer explicitly imported language grammars and their filename metadata.
-    const extra = extraLanguages.find(
-        (language) =>
-            language.fileExtensions.includes(extension) ||
-            language.fileNames.some((file) => file.toLowerCase() === name)
-    );
-
-    if (extra) return extra;
-
-    // Resolve built-in language aliases from the final filename extension.
-    const language = languages.get(extension);
+    // Recognize named source files and extensions without loading renderer-owned grammars.
+    const language = filenames.get(name) ?? languages.get(extension);
 
     if (language) return language;
 

@@ -1,0 +1,498 @@
+import { z } from 'zod';
+import { api } from '@/lib/api';
+import { useState } from 'react';
+import { SolutionTags } from './tags';
+import { useApi } from '@/lib/hooks/use-api';
+import CreateSolution from './create-solution';
+import { ApiBoundary } from '@/components/api';
+import { OpenAI } from '@/components/svg/open-ai';
+import DeploymentReview from './deployment-review';
+import { Dialog } from '@/components/custom/dialog';
+import { useNotification } from '@/lib/notifications';
+import * as permissions from '@/platform/permissions';
+import { DeletionDialog } from '@/components/deletion';
+import SolutionPermissions from './solution-permissions';
+import { Illustration } from '@/components/illustration';
+import { Separator } from '@/components/shadcn/separator';
+import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeLink as Link } from '@/components/custom/native-link';
+import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DataTable, proportional } from '@/components/custom/data-table';
+import { Button as MenuTriggerButton } from '@/components/shadcn/button';
+import { NativeButton as Button } from '@/components/custom/native-button';
+import type { OrganizationContext } from '@/platform/layouts/organization';
+import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
+import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
+
+type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
+
+type SolutionAction =
+    | { kind: 'create' }
+    | { kind: 'tags'; solution: Solution }
+    | { kind: 'update'; item: { id: string; name: string } }
+    | { kind: 'logs'; id: string }
+    | { kind: 'permissions'; id: string }
+    | { kind: 'mcp'; id: string }
+    | { kind: 'delete'; item: { id: string; name: string } };
+
+/** Owns Solution loading and dialogs for the overview and active settings section. */
+export default function SolutionManagement({
+    membership,
+    presentation
+}: {
+    membership: OrganizationContext;
+    presentation: 'overview' | 'settings';
+}) {
+    // Derive Solution actions from the same membership that supplies organization-scoped resources.
+    const { organization, tags, activeTag, role } = membership;
+    const canMaintain = permissions.canMaintain(role);
+    const canAdminister = permissions.canAdminister(role);
+
+    // Own one dialog action; captured identity prevents old completions from closing its replacement.
+    const [selected, setSelected] = useState<SolutionAction | null>(null);
+    const base = `/api/v1/organizations/${organization.id}`;
+
+    // Keep solution refreshes scoped to the section's resource.
+    const [solutions, invalidateSolutions] = useApi(`${base}/solutions`, schemas.zOrganizationSolutionSummary.array());
+    const onboarding = presentation === 'overview' && solutions.length === 0;
+
+    const categoryName = activeTag?.name ?? 'Solutions';
+
+    const visibleSolutions =
+        presentation === 'settings' || activeTag?.kind === 'all'
+            ? solutions
+            : solutions.filter((solution) => activeTag && solution.tag_ids?.includes(activeTag.id));
+
+    /** Opens creation without replacing an already active creation attempt. */
+    function openCreate() {
+        setSelected((current) => (current?.kind === 'create' ? current : { kind: 'create' }));
+    }
+
+    /** Closes only this selection, leaving a replacement dialog open after an older operation finishes. */
+    function closeSelected() {
+        // Each render captures the selection that owns its callbacks.
+        setSelected((current) => (current === selected ? null : current));
+    }
+
+    /** Refreshes Solutions before closing only the attempt that completed successfully. */
+    async function onSuccess() {
+        // Keep refresh failures in Form and leave any replacement dialog untouched.
+        await invalidateSolutions();
+        closeSelected();
+    }
+
+    return (
+        <>
+            <Stack
+                gap={onboarding ? 8 : 4}
+                justify={onboarding ? 'center' : undefined}
+                minHeight={
+                    onboarding
+                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)'
+                        : undefined
+                }
+            >
+                {presentation === 'settings' ? (
+                    <>
+                        <Stack
+                            direction="horizontal"
+                            justify="between"
+                            align="end"
+                            wrap="wrap"
+                            minHeight="var(--size-element-md)"
+                        >
+                            <Heading level={2} hasCapsize>
+                                Solutions
+                            </Heading>
+                            {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
+                        </Stack>
+                        <Separator />
+                    </>
+                ) : solutions.length > 0 ? (
+                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
+                        <Heading level={1}>{categoryName}</Heading>
+                        {canMaintain && <Button label="New Solution" onClick={openCreate} />}
+                    </Stack>
+                ) : null}
+                {presentation === 'overview' && tags.length === 0 ? (
+                    <Text as="p" color="secondary">
+                        No tabs configured. Add tabs in organization settings under General.
+                    </Text>
+                ) : onboarding ? (
+                    <Stack gap={6} align="center">
+                        <Illustration
+                            src="/images/solution.png"
+                            alt=""
+                            className="size-20 object-contain"
+                            width={272}
+                            height={279}
+                            decoding="async"
+                        />
+                        <Stack gap={0}>
+                            <Heading level={1} justify="center">
+                                Your Solutions
+                            </Heading>
+                            <Text as="p" color="secondary" justify="center">
+                                Bring your business processes to life
+                            </Text>
+                        </Stack>
+                        <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
+                            <Button
+                                label="Read the docs"
+                                variant="outline"
+                                href="/docs/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
+                            />
+                            {canMaintain && (
+                                <Button
+                                    label="Create solution"
+                                    variant="default"
+                                    icon={<Plus className="size-4" aria-hidden="true" />}
+                                    onClick={openCreate}
+                                />
+                            )}
+                        </Stack>
+                    </Stack>
+                ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
+                    <Text as="p" color="secondary">
+                        No Solutions in this category.
+                    </Text>
+                ) : (
+                    <DataTable
+                        data={visibleSolutions}
+                        idKey="id"
+                        hasHover
+                        density="compact"
+                        columns={[
+                            {
+                                key: 'name',
+                                header: 'Solution',
+                                width: proportional(1),
+                                renderCell: (row) => (
+                                    <Stack gap={presentation === 'overview' ? 0 : undefined}>
+                                        {presentation === 'overview' ? (
+                                            <Stack direction="horizontal" gap={1} align="center">
+                                                <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
+                                                    {row.name}
+                                                </Link>
+                                                {row.status !== 'running' && (
+                                                    <Text
+                                                        className={
+                                                            row.status === 'creating'
+                                                                ? 'text-(--color-text-blue)'
+                                                                : 'text-destructive-foreground'
+                                                        }
+                                                        type="supporting"
+                                                    >
+                                                        {row.status === 'creating' ? 'Creating' : 'Failed'}
+                                                    </Text>
+                                                )}
+                                            </Stack>
+                                        ) : (
+                                            <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
+                                                {row.name}
+                                            </Link>
+                                        )}
+                                        {row.description && <Text type="supporting">{row.description}</Text>}
+                                    </Stack>
+                                )
+                            },
+                            ...(presentation === 'settings'
+                                ? [
+                                      {
+                                          key: 'deployed_version',
+                                          header: 'Version',
+                                          align: 'end' as const,
+                                          width: proportional(0.25, { minWidth: 0 }),
+                                          renderCell: (row: Solution) => row.deployed_version || '—'
+                                      }
+                                  ]
+                                : []),
+                            ...(presentation === 'settings' && canMaintain
+                                ? [
+                                      {
+                                          key: 'id',
+                                          header: 'Actions',
+                                          align: 'end' as const,
+                                          width: proportional(0.25, { minWidth: 0 }),
+                                          renderCell: (row: Solution) => (
+                                              <DropdownMenu>
+                                                  <DropdownMenuTrigger
+                                                      render={
+                                                          <MenuTriggerButton
+                                                              type="button"
+                                                              variant="ghost"
+                                                              size="icon-sm"
+                                                              aria-label={`Actions for ${row.name}`}
+                                                          >
+                                                              <Ellipsis aria-hidden="true" />
+                                                          </MenuTriggerButton>
+                                                      }
+                                                  />
+                                                  <DropdownMenuContent align="end">
+                                                      {canAdminister && (
+                                                          <DropdownMenuItem
+                                                              onClick={() =>
+                                                                  setSelected({ kind: 'permissions', id: row.id })
+                                                              }
+                                                          >
+                                                              <Shield aria-hidden="true" />
+                                                              Permissions
+                                                          </DropdownMenuItem>
+                                                      )}
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'tags', solution: row })}
+                                                      >
+                                                          <Tags aria-hidden="true" />
+                                                          Tags
+                                                      </DropdownMenuItem>
+                                                      {row.desired_revision_id &&
+                                                          !row.deployment_pending &&
+                                                          row.status !== 'creating' && (
+                                                              <DropdownMenuItem
+                                                                  onClick={() => {
+                                                                      // Retain an active attempt so repeated activation cannot replace its draft.
+                                                                      setSelected((current) =>
+                                                                          current?.kind === 'update'
+                                                                              ? current
+                                                                              : {
+                                                                                    kind: 'update',
+                                                                                    item: { id: row.id, name: row.name }
+                                                                                }
+                                                                      );
+                                                                  }}
+                                                              >
+                                                                  <RefreshCw aria-hidden="true" />
+                                                                  Update
+                                                              </DropdownMenuItem>
+                                                          )}
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'logs', id: row.id })}
+                                                      >
+                                                          <Logs aria-hidden="true" />
+                                                          Logs
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuItem
+                                                          onClick={() => setSelected({ kind: 'mcp', id: row.id })}
+                                                      >
+                                                          <Plug aria-hidden="true" />
+                                                          MCP
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuItem
+                                                          onClick={() =>
+                                                              setSelected({
+                                                                  kind: 'delete',
+                                                                  item: { id: row.id, name: row.name }
+                                                              })
+                                                          }
+                                                      >
+                                                          <Trash aria-hidden="true" />
+                                                          Delete
+                                                      </DropdownMenuItem>
+                                                  </DropdownMenuContent>
+                                              </DropdownMenu>
+                                          )
+                                      }
+                                  ]
+                                : [])
+                        ]}
+                    />
+                )}
+            </Stack>
+            {selected?.kind === 'create' && (
+                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
+            )}
+            {selected?.kind === 'permissions' && (
+                <Dialog
+                    isOpen
+                    onOpenChange={(open) => {
+                        if (!open) closeSelected();
+                    }}
+                >
+                    <ApiBoundary key={selected.id}>
+                        <SolutionPermissions
+                            solutionId={selected.id}
+                            organizationId={organization.id}
+                            onClose={closeSelected}
+                        />
+                    </ApiBoundary>
+                </Dialog>
+            )}
+            {selected?.kind === 'tags' && (
+                <SolutionTags
+                    key={selected.solution.id}
+                    base={base}
+                    tags={tags}
+                    solution={selected.solution}
+                    onSuccess={onSuccess}
+                    onClose={closeSelected}
+                />
+            )}
+            {selected?.kind === 'update' && (
+                <DeploymentReview
+                    key={selected.item.id}
+                    item={selected.item}
+                    onSuccess={onSuccess}
+                    onClose={closeSelected}
+                />
+            )}
+            {selected?.kind === 'logs' && (
+                <Dialog
+                    isOpen
+                    onOpenChange={(open) => {
+                        if (!open) closeSelected();
+                    }}
+                >
+                    <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))" paddingInline={8} paddingBlock={4}>
+                        <ApiBoundary key={selected.id}>
+                            <SolutionLogs solutionId={selected.id} onClose={closeSelected} />
+                        </ApiBoundary>
+                    </Stack>
+                </Dialog>
+            )}
+            {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
+            {selected?.kind === 'mcp' && (
+                <Dialog
+                    isOpen
+                    onOpenChange={(open) => {
+                        if (!open) closeSelected();
+                    }}
+                >
+                    <IllustratedDialogContent
+                        illustration={
+                            <Illustration
+                                src="/images/mcp.png"
+                                alt="Hand-drawn globe surrounded by orbiting spheres."
+                                className="h-full w-full object-contain"
+                                width={941}
+                                height={1672}
+                                decoding="async"
+                            />
+                        }
+                    >
+                        <Stack
+                            minHeight="100%"
+                            justify="center"
+                            width="max-content"
+                            maxWidth="100%"
+                            gap={6}
+                            className="mx-auto"
+                        >
+                            <Stack gap={2} align="center">
+                                <Plug className="size-20 text-muted-foreground" aria-hidden="true" />
+                                <Stack gap={0}>
+                                    <Heading level={2} justify="center">
+                                        Model Context Protocol
+                                    </Heading>
+                                    <Text as="p" color="secondary" justify="center">
+                                        Connect your solution to AI tools
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                            {/* Match the creation dialog's content-sized column and control width. */}
+                            <Stack gap={4} width={0} className="min-w-full">
+                                <ApiBoundary key={selected.id}>
+                                    <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
+                                </ApiBoundary>
+                                <Button
+                                    download
+                                    href={`/api/v1/solutions/${selected.id}/plugin`}
+                                    label="Download plugin ZIP"
+                                    variant="default"
+                                    style={{ width: '100%' }}
+                                    icon={<OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />}
+                                />
+                            </Stack>
+                        </Stack>
+                    </IllustratedDialogContent>
+                </Dialog>
+            )}
+            <DeletionDialog
+                confirmation={
+                    selected?.kind === 'delete'
+                        ? {
+                              title: 'Delete solution',
+                              description: `Delete solution ${selected.item.name}?`,
+                              onDelete: async () => {
+                                  // Refresh Solutions only after the delete request succeeds.
+                                  await api.delete(`/api/v1/solutions/${selected.item.id}`);
+                                  await onSuccess();
+                              }
+                          }
+                        : null
+                }
+                onClose={closeSelected}
+            />
+        </>
+    );
+}
+
+/** Reads the canonical public connection URL without guessing the deployment's origin. */
+function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
+    const showNotification = useNotification();
+
+    // Reuse OAuth discovery so the copied URL matches the plugin's configured public address.
+    const [{ resource }] = useApi(
+        `/.well-known/oauth-protected-resource/api/v1/solutions/${solutionId}/proxy/mcp`,
+        schemas.zResourceMetadata
+    );
+
+    return (
+        <Button
+            label="Copy MCP server URL"
+            style={{ width: '100%' }}
+            clickAction={async () => {
+                // Copy only the canonical connection URL, without credentials.
+                await navigator.clipboard.writeText(resource);
+
+                // Confirm a successful copy and dismiss the MCP dialog.
+                showNotification('Copied');
+                onClose();
+            }}
+        />
+    );
+}
+
+/** Loads pod logs only while their dialog is open. */
+function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
+    const [logs, invalidate] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
+
+    // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
+    return (
+        <Stack gap={3} height="100%">
+            <div className="min-h-0 min-w-0 grow">
+                <CodeBlock code={logs.join('\n')} showLineNumbers wrap className="h-full">
+                    <CodeBlockCopyButton />
+                    <div
+                        className="min-h-0 flex-1 overflow-auto"
+                        role="region"
+                        aria-label="Deployment logs"
+                        tabIndex={0}
+                    >
+                        <CodeBlockContent />
+                    </div>
+                </CodeBlock>
+            </div>
+            <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                <Button label="Close" variant="ghost" onClick={onClose} />
+                <Button
+                    label="Refresh logs"
+                    variant="outline"
+                    icon={<RefreshCw className="size-4" aria-hidden="true" />}
+                    clickAction={invalidate}
+                />
+            </Stack>
+        </Stack>
+    );
+}

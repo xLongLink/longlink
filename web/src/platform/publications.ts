@@ -1,15 +1,22 @@
 import { documentationCategories } from '../lib/documentation';
+import viewCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     AppWindow,
-    ArrowUpDown,
+    Badge,
+    ChartArea,
+    ChartColumn,
+    ChartLine,
+    ChartPie,
+    ChartRadar,
+    CircleGauge,
+    ChartNoAxesCombined,
     BookOpen,
     Building2,
     Calendar,
     CheckSquare,
     ChevronDown,
-    Circle,
+    CircleDot,
     Clock,
-    Columns3,
     CreditCard,
     Database,
     FileCode2,
@@ -19,21 +26,33 @@ import {
     Globe,
     Grip,
     HardDrive,
+    Heading,
     Image,
     Layers,
-    List,
+    ListCollapse,
+    ListFilter,
+    Loader,
+    Map,
     Menu,
+    MousePointer2,
     MessageSquare,
     Package,
     PanelTop,
+    PanelsTopLeft,
     Plug,
     Rocket,
     Settings2,
     ShieldCheck,
+    SeparatorHorizontal,
+    Table2,
+    TextAlignStart,
+    TextCursorInput,
+    ToggleLeft,
+    CalendarClock,
     Users,
     Type,
     Waypoints,
-    type LucideIcon,
+    type LucideIcon
 } from 'lucide-react';
 
 type DocumentationPage = {
@@ -43,17 +62,13 @@ type DocumentationPage = {
     children?: Array<{ path: string; label: string; icon: LucideIcon }>;
 };
 
-type DocumentationSection = {
-    title: string;
-    pages: DocumentationPage[];
-    paths?: readonly string[];
-};
+type DocumentationSection = { title: string; pages: DocumentationPage[]; paths?: readonly string[] };
 
 // Keep branding navigation and publication paths in their established reading order.
 export const brandingPages = [
     { path: '/branding/assets', label: 'Brand assets', icon: Image },
     { path: '/branding/values', label: 'Values', icon: Gem },
-    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare },
+    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare }
 ];
 
 export const brandingPaths = brandingPages.map((page) => page.path);
@@ -62,72 +77,96 @@ export const brandingPaths = brandingPages.map((page) => page.path);
 export const legalPages = [
     { path: '/terms', label: 'Terms', icon: FileText },
     { path: '/impressum', label: 'Impressum', icon: Building2 },
-    { path: '/privacy', label: 'Privacy', icon: ShieldCheck },
+    { path: '/privacy', label: 'Privacy', icon: ShieldCheck }
 ];
 
 export const legalPaths = legalPages.map((page) => page.path);
 
 // Derive route identity from the website's published component pages.
 export const componentDocumentation = [
+    { name: 'AreaChart', category: 'Charts', icon: ChartArea },
+    { name: 'BarChart', category: 'Charts', icon: ChartColumn },
+    { name: 'LineChart', category: 'Charts', icon: ChartLine },
+    { name: 'PieChart', category: 'Charts', icon: ChartPie },
+    { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
+    { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge },
+    { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
+    { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
-    { name: 'Badge', category: 'Display', icon: Circle },
-    { name: 'Button', category: 'Action', icon: PanelTop },
+    { name: 'Badge', category: 'Display', icon: Badge },
+    { name: 'Button', category: 'Action', icon: MousePointer2 },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
-    { name: 'CheckboxInput', category: 'Form', icon: CheckSquare },
-    { name: 'Collapsible', category: 'Layouts', icon: ChevronDown },
+    { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'DateInput', category: 'Form', icon: Calendar },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
-    { name: 'Divider', category: 'Display', icon: Columns3 },
-    { name: 'DropdownMenu', category: 'Action', icon: ChevronDown },
-    { name: 'EmptyState', category: 'Display', icon: Package },
+    { name: 'Divider', category: 'Display', icon: SeparatorHorizontal },
+    { name: 'DropdownMenu', category: 'Action', icon: ListCollapse },
+    { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileInput', category: 'Form', icon: FileCode2 },
     { name: 'FileViewer', category: 'Display', icon: FileText },
-    { name: 'Form', category: 'Form', icon: FileText },
     { name: 'Functions', category: 'Runtime' },
     { name: 'Grid', category: 'Layouts', icon: Grip },
-    { name: 'Heading', category: 'Display', icon: Type },
+    { name: 'Heading', category: 'Display', icon: Heading },
     { name: 'Hooks', category: 'Runtime' },
     { name: 'Icon', category: 'Display', icon: Gem },
-    { name: 'IconButton', category: 'Action', icon: Circle },
     { name: 'Image', category: 'Display', icon: Image },
+    { name: 'Input', category: 'Form', icon: TextCursorInput },
     { name: 'Link', category: 'Action', icon: Globe },
     { name: 'Menu', category: 'Layouts', icon: Menu },
-    { name: 'MetadataList', category: 'Display', icon: List },
-    { name: 'MoreMenu', category: 'Action', icon: Menu },
-    { name: 'MultiSelector', category: 'Form', icon: CheckSquare },
-    { name: 'NumberInput', category: 'Form', icon: ArrowUpDown },
-    { name: 'Pagination', category: 'Action', icon: BookOpen },
-    { name: 'ProgressBar', category: 'Display', icon: Layers },
-    { name: 'RadioList', category: 'Form', icon: List },
-    { name: 'Selector', category: 'Form', icon: ChevronDown },
+    { name: 'Progress', category: 'Display', icon: Loader },
+    { name: 'RadioGroup', category: 'Form', icon: CircleDot },
+    { name: 'Select', category: 'Form', icon: ChevronDown },
+    { name: 'Combobox', category: 'Form', icon: ListFilter },
     { name: 'Slider', category: 'Form', icon: Settings2 },
     { name: 'Stack', category: 'Layouts', icon: Layers },
     { name: 'Stepper', category: 'Layouts', icon: Waypoints },
-    { name: 'Switch', category: 'Form', icon: Settings2 },
-    { name: 'Table', category: 'Display', icon: Columns3 },
-    { name: 'Tabs', category: 'Layouts', icon: PanelTop },
+    { name: 'Switch', category: 'Form', icon: ToggleLeft },
+    { name: 'Table', category: 'Display', icon: Table2 },
+    { name: 'Tabs', category: 'Layouts', icon: PanelsTopLeft },
     { name: 'Text', category: 'Display', icon: Type },
-    { name: 'TextArea', category: 'Form', icon: FileText },
-    { name: 'TextInput', category: 'Form', icon: Type },
+    { name: 'Textarea', category: 'Form', icon: TextAlignStart },
     { name: 'TimeInput', category: 'Form', icon: Clock },
-    { name: 'Timestamp', category: 'Display', icon: Calendar },
-    { name: 'Token', category: 'Display', icon: Gem },
-].map((component) => ({
-    ...component,
-    label: component.name === 'Button' ? 'Buttons' : component.name,
-    slug:
-        component.name === 'Button'
-            ? 'buttons'
-            : component.name
-                  .replace(/([a-z])([A-Z])/g, '$1-$2')
-                  .replace(/\s+/g, '-')
-                  .toLowerCase(),
-}));
+    { name: 'Timestamp', category: 'Display', icon: CalendarClock }
+].map((component) => {
+    // Share component ownership and custom justifications with the packaged SDK documentation.
+    const provenance = viewCatalog.components.find((entry) => entry.name === component.name);
+
+    if (!provenance) throw new Error(`Missing component provenance: ${component.name}`);
+
+    return {
+        ...component,
+        source: provenance.source,
+        sourceLabel:
+            provenance.source === 'recharts'
+                ? 'shadcn/ui + Recharts'
+                : provenance.source === 'shadcn'
+                  ? 'shadcn/ui'
+                  : provenance.source === 'reui'
+                    ? 'ReUI'
+                    : 'Custom',
+        reference: 'reference' in provenance ? provenance.reference : undefined,
+        justification: 'justification' in provenance ? provenance.justification : undefined,
+        label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
+        slug:
+            component.name === 'RadialBarChart'
+                ? 'radial-chart'
+                : component.name === 'Sankey'
+                  ? 'sankey-chart'
+                  : component.name === 'Button'
+                    ? 'buttons'
+                    : component.name === 'Icon'
+                      ? 'icons'
+                      : component.name
+                            .replace(/([a-z])([A-Z])/g, '$1-$2')
+                            .replace(/\s+/g, '-')
+                            .toLowerCase()
+    };
+});
 
 export const documentationIntroduction: DocumentationSection = {
     title: 'Introduction',
-    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }],
+    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }]
 };
 
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
@@ -144,9 +183,15 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/sdk/storage', label: 'Storage', icon: HardDrive },
                     { path: '/docs/sdk/database', label: 'Database', icon: Database },
                     { path: '/docs/sdk/testing', label: 'Testing', icon: FlaskConical },
-                    { path: '/docs/sdk/building', label: 'Building', icon: Rocket },
-                ],
-            },
+                    { path: '/docs/sdk/building', label: 'Building', icon: Rocket }
+                ]
+            }
+        ]
+    },
+    {
+        path: '/docs/sdk/views',
+        label: 'Views',
+        sections: [
             {
                 title: 'Views',
                 paths: [
@@ -155,7 +200,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                         componentDocumentation.flatMap((component) =>
                             component.category === category ? [`/docs/sdk/views/${component.slug}`] : []
                         )
-                    ),
+                    )
                 ],
                 pages: [
                     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
@@ -163,6 +208,8 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
+                    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
+                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map }
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,
@@ -176,14 +223,14 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                                             {
                                                 path: `/docs/sdk/views/${component.slug}`,
                                                 label: component.label,
-                                                icon: component.icon ?? FileCode2,
-                                            },
+                                                icon: component.icon ?? FileCode2
+                                            }
                                         ]
                                       : []
-                              ),
-                })),
-            },
-        ],
+                              )
+                }))
+            }
+        ]
     },
     {
         path: '/docs/api',
@@ -196,27 +243,22 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/api/organizations', label: 'Organizations', icon: Building2 },
                     { path: '/docs/api/solutions', label: 'Solutions', icon: Package },
                     { path: '/docs/api/mcp', label: 'MCP', icon: Plug },
-                    { path: '/docs/api/billing', label: 'Billing', icon: CreditCard },
-                ],
+                    { path: '/docs/api/billing', label: 'Billing', icon: CreditCard }
+                ]
             },
             {
                 title: 'Self hosted',
                 pages: [
                     { path: '/docs/api/self-hosted/platform', label: 'Platform', icon: ShieldCheck },
-                    { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers },
-                ],
-            },
-        ],
-    },
-    {
-        path: '/docs/alternatives',
-        label: 'Alternatives',
-        sections: [{ title: 'Alternatives', pages: [] }],
-    },
+                    { path: '/docs/api/self-hosted/compute', label: 'Compute', icon: Layers }
+                ]
+            }
+        ]
+    }
 ];
 
 // Keep static tutorials and generated component references in their published reading order.
 export const documentationPaths = [
     documentationIntroduction,
-    ...documentationNavigation.flatMap(({ sections }) => sections),
+    ...documentationNavigation.flatMap(({ sections }) => sections)
 ].flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path));

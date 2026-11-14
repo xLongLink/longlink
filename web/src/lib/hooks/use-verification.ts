@@ -1,10 +1,7 @@
 import { useErrorBoundary } from 'react-error-boundary';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-export type VerificationRequest = {
-    signal: AbortSignal;
-    token: string;
-};
+export type VerificationRequest = { signal: AbortSignal; token: string };
 
 /** Owns credential-exchange state and cancellation without choosing the page's token policy. */
 export function useVerification<T>(token: string, verify: (request: VerificationRequest) => Promise<T | undefined>) {

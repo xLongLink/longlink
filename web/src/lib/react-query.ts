@@ -13,12 +13,16 @@ export function apiQueryOptions<Schema extends StandardSchemaV1>(path: string, s
         queryKey: ['api', path] as const,
         queryFn: ({ signal }) => api(path, { signal }).json(schema),
         retry: false,
-        staleTime: 0,
+        staleTime: 0
     });
 }
 
 /** Creates an isolated query cache for one browser or prerendered document. */
-export function createQueryRuntime(notify: (message: string) => void, platformSession: boolean) {
+export function createQueryRuntime(
+    notify: (message: string) => void,
+    platformSession: boolean,
+    resetNotifications?: () => void
+) {
     let client: QueryClient;
     const notifyError = createErrorReporter(notify);
     const failedQueries = new WeakMap<object, string>();
@@ -80,7 +84,7 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
         },
         onSuccess: (_data, query) => {
             failedQueries.delete(query);
-        },
+        }
     });
 
     client = new QueryClient({
@@ -90,9 +94,9 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
                 staleTime: 60_000,
                 refetchOnWindowFocus: false,
                 retry: (failureCount, error) =>
-                    !(error instanceof ApiError && error.status >= 400 && error.status < 500) && failureCount < 1,
-            },
-        },
+                    !(error instanceof ApiError && error.status >= 400 && error.status < 500) && failureCount < 1
+            }
+        }
     });
 
     // Only Platform sessions monitor account switches discovered by a focus refresh.
@@ -111,6 +115,9 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
             const nextUserId = user.success ? user.data.id : null;
 
             const changedAccount = userId !== null && nextUserId !== null && userId !== nextUserId;
+
+            // Drop previous-account feedback on identity replacement or logout, without changing session policy.
+            if (userId !== null && userId !== nextUserId) resetNotifications?.();
             userId = nextUserId;
 
             if (changedAccount) void clearSessionQueries(client, true).catch(notifyError);

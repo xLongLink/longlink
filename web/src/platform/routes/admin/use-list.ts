@@ -9,15 +9,8 @@ export function useAdminList() {
     const { search, page } = useDeferredValue(filters);
 
     return {
-        search: {
-            value: filters.search,
-            onChange: (search: string) => setFilters({ search, page: 1 }),
-        },
-        pagination: {
-            page,
-            pageSize,
-            onChange: (page: number) => setFilters({ ...filters, page }),
-        },
-        suffix: `?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(search.trim())}`,
+        search: { value: filters.search, onChange: (search: string) => setFilters({ search, page: 1 }) },
+        pagination: { page: filters.page, pageSize, onPageChange: (page: number) => setFilters({ ...filters, page }) },
+        suffix: `?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(search.trim())}`
     };
 }

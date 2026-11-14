@@ -17,7 +17,7 @@ const user = zCurrentUser.parse({
     avatar: 'owner.svg',
     administrator: false,
     theme: 'system',
-    accent: 'neutral',
+    accent: 'neutral'
 });
 
 const newerUser = zCurrentUser.parse({
@@ -26,7 +26,7 @@ const newerUser = zCurrentUser.parse({
     email: 'refreshed@example.com',
     avatar: 'refreshed.svg',
     theme: 'light',
-    accent: 'green',
+    accent: 'green'
 });
 
 /** Holds the HTTP boundary open until a test releases the response. */
@@ -132,10 +132,7 @@ it('serializes independent account controls and publishes canonical responses be
                 await vi.waitFor(() => expect(requests).toHaveLength(2));
 
                 // Assert
-                expect(await requests[1]?.clone().json()).toEqual({
-                    theme: 'dark',
-                    accent: 'violet',
-                });
+                expect(await requests[1]?.clone().json()).toEqual({ theme: 'dark', accent: 'violet' });
                 expect(snapshots).toEqual([canonicalName, preview]);
                 expect(client.getQueryData(userKey)).toEqual(preview);
                 await vi.waitFor(() =>
@@ -177,8 +174,8 @@ it.each([
     {
         behavior: 'preserves a newer account snapshot instead of rolling it back',
         refresh: newerUser,
-        expected: newerUser,
-    },
+        expected: newerUser
+    }
 ])('$behavior after a failed appearance save', async ({ refresh, expected }) => {
     // Arrange
     const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });

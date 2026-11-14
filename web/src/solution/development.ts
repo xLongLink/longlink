@@ -3,20 +3,12 @@ export const developmentCookie = 'longlink-development-user';
 export const developmentUsers = [
     {
         role: 'read',
-        user: {
-            id: '00000000-0000-0000-0000-000000000002',
-            name: 'Read user',
-            email: 'read@example.com',
-        },
+        user: { id: '00000000-0000-0000-0000-000000000002', name: 'Read user', email: 'read@example.com' }
     },
     {
         role: 'write',
-        user: {
-            id: '00000000-0000-0000-0000-000000000003',
-            name: 'Write user',
-            email: 'write@example.com',
-        },
-    },
+        user: { id: '00000000-0000-0000-0000-000000000003', name: 'Write user', email: 'write@example.com' }
+    }
 ] as const;
 
 /** Reads the local persona, defaulting to write access for development. */

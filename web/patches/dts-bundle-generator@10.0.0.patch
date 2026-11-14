@@ -1,0 +1,15 @@
+diff --git a/dist/generate-output.js b/dist/generate-output.js
+index b60047689dae7787f1450811a5b5ce869699ac83..3fec15b8ed58e588adb8ebb89128b13ced3f4d3f 100644
+--- a/dist/generate-output.js
++++ b/dist/generate-output.js
+@@ -87,7 +87,9 @@ function recreateEntityName(node, helpers) {
+         const identifiers = resolvedName.split('.');
+         let result = ts.factory.createIdentifier(identifiers[0]);
+         for (let index = 1; index < identifiers.length; index += 1) {
+-            result = ts.factory.createQualifiedName(result, ts.factory.createIdentifier(identifiers[index]));
++            result = ts.isExpressionWithTypeArguments(node.parent)
++                ? ts.factory.createPropertyAccessExpression(result, ts.factory.createIdentifier(identifiers[index]))
++                : ts.factory.createQualifiedName(result, ts.factory.createIdentifier(identifiers[index]));
+         }
+         return result;
+     }

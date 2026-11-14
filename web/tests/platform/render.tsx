@@ -3,8 +3,8 @@ import { renderStatic } from '../render';
 import { ApiErrorContext } from '@/lib/errors';
 import { Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { AccountAppearanceProvider } from '@/components/Appearance';
-import type { OrganizationContext } from '@/platform/layouts/Organization';
+import { AccountAppearanceProvider } from '@/components/appearance';
+import type { OrganizationContext } from '@/platform/layouts/organization';
 import { zCurrentUser, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const user = zCurrentUser.parse({
@@ -14,12 +14,12 @@ export const user = zCurrentUser.parse({
     avatar: '',
     administrator: false,
     theme: 'system',
-    accent: 'neutral',
+    accent: 'neutral'
 });
 
 export const membership = zUserOrganizationMembership.parse({
     organization: { id: '00000000-0000-4000-8000-000000000002', name: 'Acme', status: 'running' },
-    role: 'owner',
+    role: 'owner'
 });
 
 /** Renders a resolved Platform route with validated identity and explicit cached API responses. */

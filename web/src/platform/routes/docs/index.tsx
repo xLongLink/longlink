@@ -1,0 +1,79 @@
+import { Link } from 'react-router';
+import { Grid } from '@/components/custom/grid';
+import { Code2, Lightbulb, ServerCog } from 'lucide-react';
+import { DocumentationArticle } from '@/components/layouts/article';
+import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeHeading as Heading } from '@/components/custom/native-heading';
+
+const cardClassName =
+    'flex min-h-60 flex-col -me-(--border-width) -mb-(--border-width) rounded-none border-(length:--border-width) border-border bg-transparent p-[calc(var(--spacing-6)-var(--border-width))] text-inherit no-underline hover:border-(--color-border-emphasized) hover:bg-(--color-overlay-hover) active:bg-(--color-overlay-pressed) focus-visible:relative focus-visible:z-1 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)';
+
+const article = {
+    title: 'Documentation | LongLink',
+    description:
+        'Learn how to build Python Solutions with the LongLink SDK and use the Platform to manage organizations, access, infrastructure, and deployment.',
+    toc: [
+        { id: 'documentation', label: 'Documentation', level: 1 },
+        { id: 'start-here', label: 'Start here', level: 2 }
+    ],
+    lastUpdated: '2026-10-05',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/index.tsx'
+};
+
+/** Introduces the documentation and links to the main guides and references. */
+export default function DocsIndex() {
+    return (
+        <DocumentationArticle article={article}>
+            <Stack gap={6}>
+                <Heading id="documentation" level={1}>
+                    Documentation
+                </Heading>
+                <Text as="p">
+                    Learn how to build, run, and manage solutions with LongLink. Start with the basics, create your
+                    first Solution, or explore the platform in more detail.
+                </Text>
+                <Stack as="section" gap={3}>
+                    <Heading id="start-here" level={2}>
+                        Start here
+                    </Heading>
+                    <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
+                        <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <Lightbulb aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Explore LongLink</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Learn the core concepts and discover what you can build.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Link>
+                        <Link className={cardClassName} to="/docs/sdk/" aria-label="Build a Solution">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <Code2 aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Build a Solution</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Create a Solution and see how the pieces fit together.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Link>
+                        <Link className={cardClassName} to="/docs/api/" aria-label="Explore the Platform">
+                            <Stack className="flex-1" gap={6} justify="between">
+                                <ServerCog aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <Stack gap={3}>
+                                    <Text weight="bold">Explore the Platform</Text>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Learn how LongLink runs and manages your Solutions.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Link>
+                    </Grid>
+                </Stack>
+            </Stack>
+        </DocumentationArticle>
+    );
+}

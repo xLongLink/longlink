@@ -18,7 +18,7 @@ const ignoredPaths = [
     '.pi/**',
     '.roo/**',
     '.windsurf/**',
-    'tools/oxlint/anti-slop/**',
+    'tools/oxlint/anti-slop/**'
 ];
 
 export default defineConfig(({ mode }) => {
@@ -35,97 +35,131 @@ export default defineConfig(({ mode }) => {
         fmt: {
             arrowParens: 'always',
             ignorePatterns: ignoredPaths,
+            objectWrap: 'collapse',
             printWidth: 120,
             semi: true,
             singleQuote: true,
             sortImports: false,
             sortPackageJson: false,
             tabWidth: 4,
-            trailingComma: 'es5',
+            trailingComma: 'none'
         },
 
         lint: {
-            categories: {
-                correctness: 'error',
-            },
-            env: {
-                browser: true,
-                builtin: true,
-                es2020: true,
-            },
+            categories: { correctness: 'error' },
+            env: { browser: true, builtin: true, es2020: true },
             ignorePatterns: ignoredPaths,
-            options: {
-                typeAware: true,
-                typeCheck: true,
-            },
+            options: { typeAware: true, typeCheck: true },
             jsPlugins: [
                 'eslint-plugin-perfectionist',
-                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
+                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
             ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
             rules: {
-                'oxc/no-accumulating-spread': 'error',
-                'anti-slop/no-array-filter-map': 'error',
-                'anti-slop/no-reduce-accumulator-copy': 'error',
-                'anti-slop/no-chained-type-assertions': 'error',
-                'anti-slop/no-conditional-empty-object-spread': 'error',
-                'anti-slop/no-known-value-widening': 'error',
-                'anti-slop/no-module-mocking': 'error',
-                'anti-slop/no-object-parameters': 'error',
-                'anti-slop/no-reflect-apply': 'error',
-                'anti-slop/no-reflect-get': 'error',
-                'anti-slop/no-runtime-typeof': 'error',
-                'anti-slop/no-shape-in-symbol-names': 'error',
-                'anti-slop/no-unknown-parameters': 'error',
-                'anti-slop/no-unknown-returns': 'error',
-                'anti-slop/no-unknown-type-aliases': 'error',
-                'anti-slop/no-unsafe-dictionary-type': 'error',
-                'anti-slop/no-widen-then-assert': 'error',
-                'anti-slop/require-readable-spacing': 'error',
-                'anti-slop/require-safety-comment-for-type-assertion': 'error',
-                'perfectionist/sort-imports': [
+                'no-restricted-imports': [
                     'error',
                     {
-                        fallbackSort: { type: 'alphabetical' },
-                        groups: ['import'],
-                        newlinesBetween: 0,
-                        order: 'asc',
-                        type: 'line-length',
-                    },
-                ],
-                'react/no-children-prop': 'off',
-                'react/no-did-update-set-state': 'off',
-                'react/exhaustive-deps': 'warn',
-                'react/only-export-components': 'off',
-                'react/rules-of-hooks': 'error',
-                'typescript/await-thenable': 'off',
-                'typescript/no-base-to-string': 'off',
-                'typescript/no-explicit-any': 'error',
-                'typescript/no-floating-promises': 'error',
-                'typescript/no-misused-promises': 'error',
-                'typescript/no-non-null-assertion': 'error',
-                'typescript/no-redundant-type-constituents': 'off',
-                'typescript/no-unnecessary-type-assertion': 'error',
-                'typescript/no-unsafe-assignment': 'error',
-                'typescript/unbound-method': 'off',
-                'react/no-array-index-key': 'error',
+                        patterns: [
+                            {
+                                group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
+                                message:
+                                    'Import directly from components/shadcn, components/reui, or components/custom.'
+                            }
+                        ]
+                    }
+                ]
             },
+            overrides: [
+                // Keep registry code upstream-compatible without applying LongLink's authoring conventions.
+                {
+                    files: ['src/components/reui/**/*'],
+                    rules: {
+                        'react/exhaustive-deps': 'warn',
+                        'typescript/no-base-to-string': 'off',
+                        'react/rules-of-hooks': 'error',
+                        'react/refs': 'off',
+                        'react/immutability': 'off',
+                        'react/set-state-in-effect': 'off'
+                    }
+                },
+                {
+                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*'],
+                    rules: {
+                        'no-restricted-imports': [
+                            'error',
+                            {
+                                patterns: [
+                                    {
+                                        group: ['@/components/custom/*', '../custom/*', '../../custom/*'],
+                                        message: 'Library components must not depend on LongLink custom components.'
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    files: ['**/*'],
+                    excludeFiles: ['src/components/reui/**/*'],
+                    rules: {
+                        'oxc/no-accumulating-spread': 'error',
+                        'anti-slop/no-array-filter-map': 'error',
+                        'anti-slop/no-reduce-accumulator-copy': 'error',
+                        'anti-slop/no-chained-type-assertions': 'error',
+                        'anti-slop/no-conditional-empty-object-spread': 'error',
+                        'anti-slop/no-known-value-widening': 'error',
+                        'anti-slop/no-module-mocking': 'error',
+                        'anti-slop/no-object-parameters': 'error',
+                        'anti-slop/no-reflect-apply': 'error',
+                        'anti-slop/no-reflect-get': 'error',
+                        'anti-slop/no-runtime-typeof': 'error',
+                        'anti-slop/no-shape-in-symbol-names': 'error',
+                        'anti-slop/no-unknown-parameters': 'error',
+                        'anti-slop/no-unknown-returns': 'error',
+                        'anti-slop/no-unknown-type-aliases': 'error',
+                        'anti-slop/no-unsafe-dictionary-type': 'error',
+                        'anti-slop/no-widen-then-assert': 'error',
+                        'anti-slop/require-readable-spacing': 'error',
+                        'anti-slop/require-safety-comment-for-type-assertion': 'error',
+                        'perfectionist/sort-imports': [
+                            'error',
+                            {
+                                fallbackSort: { type: 'alphabetical' },
+                                groups: ['import'],
+                                newlinesBetween: 0,
+                                order: 'asc',
+                                type: 'line-length'
+                            }
+                        ],
+                        'react/no-children-prop': 'off',
+                        'react/no-did-update-set-state': 'off',
+                        'react/exhaustive-deps': 'warn',
+                        'react/only-export-components': 'off',
+                        'react/rules-of-hooks': 'error',
+                        'typescript/await-thenable': 'off',
+                        'typescript/no-base-to-string': 'off',
+                        'typescript/no-explicit-any': 'error',
+                        'typescript/no-floating-promises': 'error',
+                        'typescript/no-misused-promises': 'error',
+                        'typescript/no-non-null-assertion': 'error',
+                        'typescript/no-redundant-type-constituents': 'off',
+                        'typescript/no-unnecessary-type-assertion': 'error',
+                        'typescript/no-unsafe-assignment': 'error',
+                        'typescript/unbound-method': 'off',
+                        'react/no-array-index-key': 'error'
+                    }
+                }
+            ]
         },
 
         envPrefix: ['VITE_', 'VERSION'],
 
         build: {
             assetsDir: mode === 'sdk' ? '_longlink/assets' : 'assets',
-            rolldownOptions: {
-                checks: {
-                    moduleLevelDirective: false,
-                },
-            },
+            rolldownOptions: { checks: { moduleLevelDirective: false } }
         },
 
-        resolve: {
-            tsconfigPaths: true,
-        },
+        resolve: { tsconfigPaths: true },
 
         server: {
             host: devServerHost,
@@ -133,15 +167,10 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
 
             // Route API calls and canonical MCP resource discovery to the local backend.
-            proxy: {
-                '/api': 'http://localhost:8000',
-                '/.well-known/oauth-protected-resource': 'http://localhost:8000',
-            },
+            proxy: { '/api': 'http://localhost:8000', '/.well-known/oauth-protected-resource': 'http://localhost:8000' }
         },
 
         // Keep React Router's build-time preview request on the socket Vite binds in containers.
-        preview: {
-            host: '127.0.0.1',
-        },
+        preview: { host: '127.0.0.1' }
     };
 });

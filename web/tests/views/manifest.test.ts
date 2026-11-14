@@ -16,12 +16,12 @@ describe('viewsSchema', () => {
     it.each([
         { first: '/home', second: '/home' },
         { first: '/home', second: '/HOME' },
-        { first: '/issues/:issueId', second: '/issues/:otherId' },
+        { first: '/issues/:issueId', second: '/issues/:otherId' }
     ])('rejects colliding routes $first and $second', ({ first, second }) => {
         // Arrange
         const views = [
             { path: 'home.jsx', route: first },
-            { path: 'other.jsx', route: second },
+            { path: 'other.jsx', route: second }
         ];
 
         // Act
@@ -30,7 +30,7 @@ describe('viewsSchema', () => {
         // Assert
         expect(result).toMatchObject({
             success: false,
-            error: { issues: [{ path: [1, 'route'], message: 'Routes must be unique' }] },
+            error: { issues: [{ path: [1, 'route'], message: 'Routes must be unique' }] }
         });
     });
 
@@ -38,14 +38,14 @@ describe('viewsSchema', () => {
         expect(
             viewsSchema.safeParse([
                 { path: 'issues.jsx', route: '/issues' },
-                { path: 'issue.jsx', route: '/issues/:issueId' },
+                { path: 'issue.jsx', route: '/issues/:issueId' }
             ]).success
         ).toBe(true);
     });
 
     it('omits custom titles and icons from the parsed catalog', () => {
         expect(viewsSchema.parse([{ path: 'home.jsx', route: '/home', name: 'Issues', icon: 'list' }])).toEqual([
-            { path: 'home.jsx', route: '/home' },
+            { path: 'home.jsx', route: '/home' }
         ]);
     });
 });

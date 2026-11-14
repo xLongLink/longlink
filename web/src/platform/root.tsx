@@ -1,21 +1,14 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
-import { PageLoading } from '@/components/Utils';
-import { Theme } from '@astryxdesign/core/theme';
-import { Link as RouterLink } from 'react-router';
-import { stoneTheme } from '@/lib/generated/stone.js';
-import { ApiBoundary } from '@/components/ApiBoundary';
-import { ApiProvider } from '@/components/ApiProvider';
+import { PageLoading } from '@/components/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { LinkProvider } from '@astryxdesign/core/Link';
-import { LayerProvider } from '@astryxdesign/core/Layer';
-import { IconRequestContext } from '@/components/ui/contexts';
-import { AccountAppearanceProvider } from '@/components/Appearance';
+import { ApiBoundary, ApiProvider } from '@/components/api';
+import { AppearanceContext } from '@/lib/hooks/use-appearance';
+import { IconRequestContext } from '@/components/custom/contexts';
+import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
+import { AccountAppearanceProvider } from '@/components/appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
-// Handwritten fonts belong only to native Platform pages, not the embedded SDK application.
-import '@fontsource/kalam';
-import '@fontsource/kalam/700.css';
 
 /** Shows the themed loading state while the initial route modules load. */
 export function HydrateFallback() {
@@ -27,32 +20,27 @@ export function HydrateFallback() {
 export default function PlatformRoot() {
     const { pathname } = useLocation();
     const isHome = pathname === '/';
+    useDocumentTheme(isHome ? 'dark' : undefined);
 
     // The public landing page has no account queries or personal appearance synchronization.
     const content = (
-        <LinkProvider component={RouterLink}>
-            <LayerProvider toast={{ position: 'bottomEnd' }}>
-                <IconRequestContext value={icons.load}>
-                    {isHome ? (
-                        <Outlet />
-                    ) : (
-                        <ApiProvider>
-                            <AccountAppearanceProvider>
-                                <ApiBoundary>
-                                    <Outlet />
-                                </ApiBoundary>
-                            </AccountAppearanceProvider>
-                        </ApiProvider>
-                    )}
-                </IconRequestContext>
-            </LayerProvider>
-        </LinkProvider>
+        <IconRequestContext value={icons.load}>
+            {isHome ? (
+                <Outlet />
+            ) : (
+                <ApiProvider>
+                    <AccountAppearanceProvider>
+                        <ApiBoundary>
+                            <Outlet />
+                        </ApiBoundary>
+                    </AccountAppearanceProvider>
+                </ApiProvider>
+            )}
+        </IconRequestContext>
     );
 
     return isHome ? (
-        <Theme theme={stoneTheme} mode="dark">
-            {content}
-        </Theme>
+        <AppearanceContext value={{ appearance: { theme: 'dark', accent: 'neutral' } }}>{content}</AppearanceContext>
     ) : (
         content
     );
@@ -71,7 +59,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     ? '[scrollbar-gutter:auto]'
                     : undefined
             }
-            data-astryx-theme="stone"
+            data-theme-scope="stone"
             data-theme={isHome ? 'dark' : undefined}
             suppressHydrationWarning
         >

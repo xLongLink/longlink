@@ -8,7 +8,15 @@ export default function Phase({ params }) {
     const [phases] = useApi('/api/phases');
     const phase = phases.find((item) => item.slug === params.phase);
 
-    if (!phase) return <EmptyState title="Phase not found" />;
+    if (!phase) {
+        return (
+            <Empty>
+                <EmptyHeader>
+                    <EmptyTitle>Phase not found</EmptyTitle>
+                </EmptyHeader>
+            </Empty>
+        );
+    }
 
     // Keep project context visible beside the selected phase's documents.
     return (
@@ -17,10 +25,10 @@ export default function Phase({ params }) {
                 <Heading level={1}>{phase.label}</Heading>
                 <Text type="supporting">{phase.description}</Text>
             </Stack>
-            <Divider />
+            <Separator />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
-                    <Table
+                    <DataTable
                         data={phase.documents}
                         columns={[
                             {
@@ -41,15 +49,16 @@ export default function Phase({ params }) {
                 </GridSpan>
                 <Stack align="start">
                     <Badge
-                        label={project.status}
                         variant={
                             project.status === 'Completed'
-                                ? 'success'
+                                ? 'success-light'
                                 : project.status === 'In progress'
-                                  ? 'warning'
-                                  : 'neutral'
+                                  ? 'warning-light'
+                                  : 'secondary'
                         }
-                    />
+                    >
+                        {project.status}
+                    </Badge>
                 </Stack>
             </Grid>
         </Stack>

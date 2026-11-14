@@ -12,17 +12,17 @@ export default function Project({ params }) {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack direction="horizontal" align="center" gap={2}>
                 <Stack width="var(--size-element-lg)">
-                    <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} />
+                    <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} ratio={16 / 9} />
                 </Stack>
                 <Stack gap={0}>
                     <Heading level={1}>{project.name}</Heading>
                     <Text type="supporting">{project.description}</Text>
                 </Stack>
             </Stack>
-            <Divider />
+            <Separator />
             <Grid columns={3} collapseBelow={768} gap={8}>
                 <GridSpan columns={2}>
-                    <Stepper
+                    <ProgressStepper
                         activeStep={project.active_step}
                         onStepClick={(index) => navigate(`/projects/${project.id}/${phases[index].slug}`)}
                         orientation="vertical"
@@ -30,19 +30,20 @@ export default function Project({ params }) {
                         {phases.map((step, index) => (
                             <Step key={step.label} step={index} label={step.label} description={step.description} />
                         ))}
-                    </Stepper>
+                    </ProgressStepper>
                 </GridSpan>
                 <Stack align="start">
                     <Badge
-                        label={project.status}
                         variant={
                             project.status === 'Completed'
-                                ? 'success'
+                                ? 'success-light'
                                 : project.status === 'In progress'
-                                  ? 'warning'
-                                  : 'neutral'
+                                  ? 'warning-light'
+                                  : 'secondary'
                         }
-                    />
+                    >
+                        {project.status}
+                    </Badge>
                 </Stack>
             </Grid>
         </Stack>

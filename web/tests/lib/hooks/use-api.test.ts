@@ -16,7 +16,7 @@ it('keeps responses for distinct full request paths separate', () => {
     // Act
     const output = renderStatic(createElement(Probe), '/', [
         ['/api/items?page=1', { name: 'First' }],
-        ['/api/items?page=2', { name: 'Second' }],
+        ['/api/items?page=2', { name: 'Second' }]
     ]);
 
     // Assert

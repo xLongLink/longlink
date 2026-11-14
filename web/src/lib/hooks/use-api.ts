@@ -23,7 +23,7 @@ export function useApi<Schema extends StandardSchemaV1>(
     const { data } = useSuspenseQuery({
         ...options,
         meta: { polling: Boolean(options?.refetchInterval) },
-        ...apiQueryOptions(path, schema),
+        ...apiQueryOptions(path, schema)
     });
 
     const invalidate = useCallback(

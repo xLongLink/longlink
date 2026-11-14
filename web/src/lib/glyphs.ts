@@ -1,4 +1,3 @@
-import { createElement, type ReactNode } from 'react';
 import {
     X,
     AlertTriangle,
@@ -38,7 +37,7 @@ import {
     Users,
     Wrench,
     XCircle,
-    type LucideIcon,
+    type LucideIcon
 } from 'lucide-react';
 
 // Bundle the shared aliases without acquiring any View loading or caching dependencies.
@@ -80,13 +79,5 @@ export const stoneIconComponents = {
     hardDrive: HardDrive,
     userRound: UserRound,
     users: Users,
-    upload: Upload,
+    upload: Upload
 } satisfies Record<string, LucideIcon>;
-
-// SAFETY: Every registry entry is created from the bundled component map without filtering keys.
-export const stoneIconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
-        name,
-        createElement(IconComponent, { 'aria-hidden': true, size: '1em' }),
-    ])
-) as Record<keyof typeof stoneIconComponents, ReactNode>;

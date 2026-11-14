@@ -1,0 +1,74 @@
+@layer components {
+    .settings-navigation {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-0-5);
+        padding-inline-end: var(--spacing-4);
+    }
+
+    .settings-navigation a,
+    .settings-navigation summary {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        min-height: var(--size-element-md);
+        padding-inline: var(--spacing-2);
+        border-radius: var(--radius-element);
+        color: var(--foreground);
+        font-size: var(--text-label-size);
+        line-height: var(--text-label-leading);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .settings-navigation summary {
+        list-style: none;
+    }
+
+    .settings-navigation summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .settings-navigation summary::after {
+        margin-inline-start: auto;
+        content: '+';
+    }
+
+    .settings-navigation details[open] > summary::after {
+        content: '−';
+    }
+
+    .settings-navigation details > a {
+        padding-inline-start: calc(var(--spacing-2) + var(--spacing-6));
+    }
+
+    .settings-navigation svg {
+        flex: none;
+        color: var(--muted-foreground);
+    }
+
+    @media (hover: hover) {
+        .settings-navigation a:hover,
+        .settings-navigation summary:hover {
+            background: var(--color-overlay-hover);
+        }
+    }
+
+    .settings-navigation a[aria-current] {
+        background: var(--color-neutral);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .settings-navigation a:focus-visible,
+    .settings-navigation summary:focus-visible {
+        outline: var(--focus-outline-width) solid var(--ring);
+        outline-offset: calc(-1 * var(--focus-outline-width));
+    }
+
+    @media (forced-colors: active) {
+        .settings-navigation a[aria-current] {
+            color: HighlightText;
+            background: Highlight;
+        }
+    }
+}

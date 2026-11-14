@@ -1,0 +1,145 @@
+@custom-variant dark {
+    @scope ([data-theme='dark']) to ([data-theme]) {
+        @slot;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        @scope (html:not([data-theme]), [data-theme='system']) to ([data-theme]) {
+            @slot;
+        }
+    }
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-surface: var(--surface);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-info-muted: var(--info-muted);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-success-muted: var(--success-muted);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning-muted: var(--warning-muted);
+    --color-destructive-muted: var(--destructive-muted);
+    --color-badge-neutral: var(--badge-neutral);
+    --color-badge-neutral-foreground: var(--badge-neutral-foreground);
+    --color-invert: var(--invert);
+    --color-invert-foreground: var(--invert-foreground);
+    --color-focus: var(--ring);
+    --color-focus-foreground: var(--foreground);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --font-sans: var(--font-family-body);
+    --font-serif: var(--font-family-body);
+    --font-mono: var(--font-family-code);
+}
+
+@layer application-theme {
+    :root,
+    [data-theme-scope='stone'] {
+        color-scheme: light dark;
+        --radius: 0.625rem;
+        --background: light-dark(#f3f3f5, #111015);
+        --surface: light-dark(#ffffff, #1b1b1f);
+        --foreground: light-dark(#25252a, #f3f3f5);
+        --card: light-dark(#ffffff, #242325);
+        --card-foreground: var(--foreground);
+        --popover: light-dark(#ffffff, #3b3b3f);
+        --popover-foreground: var(--foreground);
+        --primary: var(--accent-fill, var(--foreground));
+        --primary-foreground: var(--brand-foreground, light-dark(#ffffff, #25252a));
+        --secondary: light-dark(#25252a0f, #f3f3f51a);
+        --secondary-foreground: var(--foreground);
+        --muted: light-dark(#e2e2e8, #3b3b3f);
+        --muted-foreground: light-dark(#83838a, #9d9da3);
+        --accent: var(--accent-muted, light-dark(#25252a14, #f3f3f520));
+        --accent-foreground: var(--accent-text, var(--foreground));
+        --destructive: light-dark(#58413e, #dcc0bc);
+        --destructive-foreground: light-dark(#58413e, #f9dcd7);
+        --destructive-muted: light-dark(#f9dcd7, #644d49);
+        --border: light-dark(#e2e2e8, #f3f3f51a);
+        --input: light-dark(#83838a, #5e5e61);
+        --ring: var(--primary);
+        --chart-1: light-dark(#2563eb, #60a5fa);
+        --chart-2: light-dark(#0f766e, #2dd4bf);
+        --chart-3: light-dark(#7c3aed, #a78bfa);
+        --chart-4: light-dark(#b45309, #fbbf24);
+        --chart-5: light-dark(#be185d, #f472b6);
+        --info: #0064e0;
+        --info-foreground: light-dark(#3c4856, #d7e4f5);
+        --info-muted: light-dark(#d7e4f5, #485362);
+        --success: light-dark(#374c36, #b4cdb2);
+        --success-foreground: light-dark(#374c36, #d0e9ce);
+        --success-muted: light-dark(#d0e9ce, #425841);
+        --warning: light-dark(#524622, #d7c59c);
+        --warning-foreground: light-dark(#524622, #f4e1b7);
+        --warning-muted: light-dark(#f4e1b7, #5e512d);
+        --badge-neutral: light-dark(#e2e2e8, #525257);
+        --badge-neutral-foreground: light-dark(#46464b, #e2e2e8);
+        --invert: var(--foreground);
+        --invert-foreground: light-dark(#ffffff, #25252a);
+    }
+
+    [data-theme='light'] {
+        color-scheme: light;
+    }
+
+    [data-theme='dark'] {
+        color-scheme: dark;
+    }
+
+    [data-theme='system'] {
+        color-scheme: light dark;
+    }
+}
+
+@layer application-theme {
+    :root,
+    [data-theme-scope='stone'] {
+        --color-background-body: var(--background);
+        --color-background-surface: var(--surface);
+        --color-background-card: var(--card);
+        --color-background-popover: var(--popover);
+        --color-background-muted: var(--muted);
+        --color-background-inverted: var(--invert);
+        --color-text-primary: var(--foreground);
+        --color-text-secondary: var(--muted-foreground);
+        --color-text-accent: var(--accent-text, var(--primary));
+        --color-icon-primary: var(--foreground);
+        --color-icon-secondary: var(--muted-foreground);
+        --color-icon-accent: var(--primary);
+        --color-accent: var(--primary);
+        --color-accent-muted: var(--accent);
+        --color-on-accent: var(--primary-foreground);
+        --color-border: var(--border);
+        --color-border-emphasized: var(--input);
+        --color-info: var(--info);
+        --color-success: var(--success);
+        --color-warning: var(--warning);
+        --color-error: var(--destructive);
+        --radius-element: calc(var(--radius) - 2px);
+        --radius-container: calc(var(--radius) + 2px);
+    }
+}

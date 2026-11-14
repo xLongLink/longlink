@@ -22,9 +22,6 @@ export function buildBreadcrumbs(pathname: string, labels?: Record<string, strin
     return segments.map((segment, index) => {
         const path = `/${segments.slice(0, index + 1).join('/')}/`;
 
-        return {
-            label: formatPathSegment(segment, labels),
-            href: path,
-        };
+        return { label: formatPathSegment(segment, labels), href: path };
     });
 }

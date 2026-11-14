@@ -1,0 +1,247 @@
+import { Page } from '@/components/page';
+import { Separator } from '@/components/shadcn/separator';
+import { documentationPaths } from '@/platform/publications';
+import { PathBreadcrumb } from '@/components/breadcrumb/path';
+import { useEffect, useEffectEvent, type ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { BreadcrumbItem } from '@/components/breadcrumb/breadcrumbs';
+import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
+
+/** Labels for public article route segments shared with visible breadcrumbs. */
+const articleRouteLabels = {
+    api: 'Platform',
+    blog: 'Blog',
+    billing: 'Billing',
+    docs: 'Documentation',
+    'why-longlink': 'Why LongLink',
+    sdk: 'Solutions',
+    views: 'Views',
+    assets: 'Brand assets',
+    values: 'Values',
+    comunication: 'Communication'
+} satisfies Record<string, string>;
+
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC'
+});
+
+type ArticleMetadata = {
+    title: string;
+    description: string;
+    lastUpdated: string;
+    editUrl: string;
+    toc: readonly ArticleOutlineItem[];
+};
+
+/** Publishes authored documentation within one shared metadata and navigation shell. */
+export function DocumentationArticle({ article, children }: { article: ArticleMetadata; children: ReactNode }) {
+    // Keep documentation typography and reading order as wrapper-owned policy.
+    return (
+        <ArticleRenderer
+            article={article}
+            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [&_:is(.native-heading,.view-heading):not(dialog_*)]:tracking-wide"
+            paths={documentationPaths}
+        >
+            {children}
+        </ArticleRenderer>
+    );
+}
+
+/** Publishes public articles with Home-rooted navigation and optional collection reading order. */
+export function PublicArticle({
+    article,
+    children,
+    paths
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    paths?: readonly string[];
+}) {
+    // Keep public navigation Home-rooted without imposing typography or a reading collection.
+    return (
+        <ArticleRenderer article={article} paths={paths} root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}>
+            {children}
+        </ArticleRenderer>
+    );
+}
+
+/** Renders authored articles with the typography and navigation policy selected by their wrapper. */
+function ArticleRenderer({
+    article,
+    children,
+    className,
+    paths,
+    root
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    className?: string;
+    paths?: readonly string[];
+    root?: ReactNode;
+}) {
+    // Keep public articles and documentation in the same flat reading columns.
+    return (
+        <Page description={article.description} title={article.title}>
+            {root ? (
+                <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
+                    <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                        <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                            <PathBreadcrumb
+                                className="min-w-0 overflow-hidden"
+                                labels={articleRouteLabels}
+                                root={root}
+                            />
+                        </div>
+                        {article.toc.length ? (
+                            <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
+                        ) : null}
+                    </div>
+                </header>
+            ) : null}
+            <div className="p-6">
+                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                        <article
+                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
+                        >
+                            {children}
+                            <footer className="flex flex-col gap-3 pt-8 pb-30">
+                                <ArticleFooter
+                                    lastUpdated={article.lastUpdated}
+                                    editUrl={article.editUrl}
+                                    paths={paths}
+                                />
+                            </footer>
+                        </article>
+                    </div>
+                    {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
+                </div>
+            </div>
+        </Page>
+    );
+}
+
+/** Renders article metadata and navigation through the collection selected by its caller. */
+export function ArticleFooter({
+    lastUpdated,
+    editUrl,
+    paths = []
+}: {
+    lastUpdated: string;
+    editUrl?: string;
+    paths?: readonly string[];
+}) {
+    // Resolve adjacent pages only within the caller's reading order.
+    const { pathname } = useLocation();
+    const navigate = useNavigate();
+    const pagePath = pathname.replace(/\/+$/, '') || '/';
+    const currentPage = paths.indexOf(pagePath);
+    const previousPage = paths[currentPage - 1];
+    const nextPage = paths[currentPage + 1];
+
+    const pageLinkClassName =
+        'box-border inline-flex h-[max(var(--size-element-md),1lh)] cursor-pointer items-center justify-center gap-2 rounded-(--radius-element) border-0 bg-(--color-neutral) px-3 py-2 [font-family:inherit] text-(length:--text-label-size) leading-(--text-label-leading) font-medium whitespace-nowrap text-(--color-text-primary) no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset) [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--color-text-primary)_8%,var(--color-neutral))]';
+
+    // Keep unmodified arrow shortcuts available outside native text-entry controls.
+    const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
+
+        // Leave text-entry controls and sliders available for their native arrow-key behavior.
+        if (
+            event.target instanceof HTMLElement &&
+            event.target.closest('input, textarea, select, [contenteditable="true"], [role="slider"]')
+        ) {
+            return;
+        }
+
+        // Navigate only when the collection has a page in the requested direction.
+        const destination =
+            event.key === 'ArrowLeft' ? previousPage : event.key === 'ArrowRight' ? nextPage : undefined;
+
+        if (destination === undefined) {
+            return;
+        }
+
+        // Match button navigation and let the router restore the reading position.
+        event.preventDefault();
+        void navigate(`${destination}/`);
+    });
+
+    // Scope the document listener to articles that belong to a reading collection.
+    useEffect(() => {
+        if (currentPage < 0) {
+            return;
+        }
+
+        // Release the listener when the article leaves the collection or unmounts.
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [currentPage]);
+
+    // Preserve boundary buttons, modification dates, and optional source links.
+    return (
+        <>
+            {currentPage >= 0 ? (
+                <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
+                    {previousPage === undefined ? (
+                        <button
+                            type="button"
+                            className={pageLinkClassName}
+                            disabled
+                            aria-disabled="true"
+                            aria-keyshortcuts="ArrowLeft"
+                        >
+                            <ArrowLeft aria-hidden size={16} />
+                            Previous
+                        </button>
+                    ) : (
+                        <RouterLink className={pageLinkClassName} to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
+                            <ArrowLeft aria-hidden size={16} />
+                            Previous
+                        </RouterLink>
+                    )}
+                    {nextPage === undefined ? (
+                        <button
+                            type="button"
+                            className={pageLinkClassName}
+                            disabled
+                            aria-disabled="true"
+                            aria-keyshortcuts="ArrowRight"
+                        >
+                            Next
+                            <ArrowRight aria-hidden size={16} />
+                        </button>
+                    ) : (
+                        <RouterLink className={pageLinkClassName} to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
+                            Next
+                            <ArrowRight aria-hidden size={16} />
+                        </RouterLink>
+                    )}
+                </nav>
+            ) : null}
+            <Separator />
+            <div className="flex w-full flex-wrap items-center justify-between gap-3 font-(family-name:--font-family-body) text-(length:--text-supporting-size) leading-(--text-supporting-leading) font-(--text-supporting-weight) text-(--color-text-secondary)">
+                <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
+                {editUrl ? (
+                    <a
+                        className="inline-flex items-center gap-0.5 text-(--color-text-accent) underline underline-offset-2 hover:text-[color-mix(in_srgb,var(--color-text-accent),var(--color-tint-hover)_15%)] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                        href={editUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Edit this page
+                        <ExternalLink aria-hidden size={12} />
+                        <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                ) : null}
+            </div>
+        </>
+    );
+}

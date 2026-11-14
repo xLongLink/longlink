@@ -5,5 +5,5 @@ export const adminNavigation = [
     { href: '/admin/solutions', icon: AppWindow, label: 'Solutions' },
     { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
     { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-    { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
+    { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' }
 ];
