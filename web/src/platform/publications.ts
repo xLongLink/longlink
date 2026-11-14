@@ -243,8 +243,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { path: '/docs/api', label: 'Overview', icon: ShieldCheck },
                     { path: '/docs/api/organizations', label: 'Organizations', icon: Building2 },
                     { path: '/docs/api/solutions', label: 'Solutions', icon: Package },
-                    { path: '/docs/api/mcp', label: 'MCP', icon: Plug },
-                    { path: '/docs/api/billing', label: 'Billing', icon: CreditCard }
+                    { path: '/docs/api/mcp', label: 'MCP', icon: Plug }
                 ]
             },
             {

@@ -36,7 +36,6 @@ export default [
             { path: 'docs/api/organizations', file: './routes/docs/api/organizations.tsx' },
             { path: 'docs/api/solutions', file: './routes/docs/api/solutions.tsx' },
             { path: 'docs/api/mcp', file: './routes/docs/api/mcp.tsx' },
-            { path: 'docs/api/billing', file: './routes/docs/api/billing.tsx' },
             { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/platform.tsx' },
             { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/compute.tsx' },
             { path: 'docs/*', file: '../components/layouts/not-found.tsx', id: 'docs-not-found' }
