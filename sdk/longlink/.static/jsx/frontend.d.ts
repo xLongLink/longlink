@@ -14000,6 +14000,10 @@ type CartesianLabelPosition = "top" | "left" | "right" | "bottom" | "inside" | "
     x?: number | string;
     y?: number | string;
 };
+type CartesianPosition = "top" | "left" | "right" | "bottom" | "center" | "insideLeft" | "insideRight" | "insideTop" | "insideBottom" | "insideTopLeft" | "insideBottomLeft" | "insideTopRight" | "insideBottomRight" | {
+    x: number | Percent;
+    y: number | Percent;
+};
 type LabelContentType = React$1.ReactElement | ((props: Props$2) => RenderableText | React$1.ReactElement);
 type PolarLabelPosition = "insideStart" | "insideEnd" | "end";
 type LabelPosition = CartesianLabelPosition | PolarLabelPosition;
@@ -14257,7 +14261,7 @@ interface DefaultLegendContentProps {
     payload?: ReadonlyArray<LegendPayload>;
     labelStyle?: React$1.CSSProperties;
 }
-type Props$6 = DefaultLegendContentProps & Omit<PresentationAttributesAdaptChildEvent<any, React$1.ReactElement>, keyof DefaultLegendContentProps>;
+type Props$6 = DefaultLegendContentProps & Omit<PresentationAttributesForHTML<LegendPayload, React$1.ReactElement>, keyof DefaultLegendContentProps>;
 type UniqueFunc<T> = (entry: T) => unknown;
 type UniqueOption<T> = boolean | UniqueFunc<T>;
 type ElementOffset = {
@@ -14267,8 +14271,9 @@ type ElementOffset = {
     width: number;
 };
 type LegendItemSorter = "value" | "dataKey" | ((item: LegendPayload) => number | string);
-type Props$7 = Omit<Props$6, "payload" | "ref" | "verticalAlign"> & {
+type Props$7 = Omit<Props$6, "payload" | "ref" | "verticalAlign" | "layout"> & {
     content?: ContentType;
+    layout?: CartesianLayout | "auto";
     wrapperStyle?: React$1.CSSProperties;
     width?: number | string;
     height?: number | string;
@@ -14277,6 +14282,8 @@ type Props$7 = Omit<Props$6, "payload" | "ref" | "verticalAlign"> & {
     portal?: HTMLElement | null;
     itemSorter?: LegendItemSorter | null;
     verticalAlign?: VerticalAlignmentType;
+    position?: CartesianPosition;
+    offset?: number;
 };
 interface RechartsScale<Domain extends CategoricalDomainItem = CategoricalDomainItem> {
     domain(): ReadonlyArray<Domain>;
@@ -14305,13 +14312,44 @@ type AxisPropsNeededForTicksGenerator = {
     type?: "number" | "category";
 };
 type StackId = string | number;
+interface AreaPointItem extends NullableCoordinate {
+    x: number | null;
+    y: number | null;
+    value?: ReadonlyArray<unknown>;
+    payload?: any;
+}
+type CubicBezierTemplate = `cubic-bezier(${number},${number},${number},${number})`;
+type NamedBezier = "linear" | "ease" | "ease-in" | "ease-out" | "ease-in-out" | CubicBezierTemplate;
+type EasingFunction = (t: number) => number;
+type EasingInput = NamedBezier | "spring" | EasingFunction;
+type AnimationItem<T> = {
+    readonly status: "matched";
+    readonly prev: T;
+    readonly next: T;
+} | {
+    readonly status: "added";
+    readonly next: T;
+} | {
+    readonly status: "removed";
+    readonly prev: T;
+};
+type AnimationMatchBy<T> = (item: T, index: number) => string | number | null;
+type AnimationMatchByProp<T> = typeof matchByIndex | typeof matchAppend | AnimationMatchBy<T>;
+const matchByIndex: "index";
+const matchAppend: "append";
+type AnimationInterpolateFn<ItemType, LayoutType extends CartesianLayout | PolarLayout> = (items: ReadonlyArray<AnimationItem<ItemType>> | null, animationElapsedTime: number, layout: LayoutType) => ReadonlyArray<ItemType>;
+type AreaRevealShapeProps = Props$4 & ShapeAnimationProps & {
+    layout?: LayoutType;
+    isRange?: boolean;
+};
 type BaseValue = number | "dataMin" | "dataMax";
 interface AreaProps<DataPointType = any, DataValueType = any> extends DataProvider<DataPointType>, Required<DataConsumer<DataPointType, DataValueType>>, ZIndexable {
     activeDot?: ActiveDotType;
     animationBegin?: number;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
-    baseLine?: BaseLineType;
+    animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<AreaPointItem, CartesianLayout>;
+    animationMatchBy?: AnimationMatchByProp<AreaPointItem>;
     baseValue?: BaseValue;
     className?: string;
     connectNulls?: boolean;
@@ -14319,18 +14357,19 @@ interface AreaProps<DataPointType = any, DataValueType = any> extends DataProvid
     hide?: boolean;
     id?: string;
     isAnimationActive?: boolean | "auto";
-    isRange?: boolean;
     label?: ImplicitLabelListType;
     legendType?: LegendType;
     name?: string | number;
     onAnimationEnd?: () => void;
     onAnimationStart?: () => void;
+    shape?: ActiveShape<AreaRevealShapeProps, SVGPathElement>;
     stackId?: StackId;
     stroke?: string;
     strokeWidth?: string | number;
     tooltipType?: TooltipType$1;
     type?: CurveType;
     unit?: string | number;
+    formatter?: Formatter;
     xAxisId?: AxisId;
     yAxisId?: AxisId;
     zIndex?: number;
@@ -14338,22 +14377,6 @@ interface AreaProps<DataPointType = any, DataValueType = any> extends DataProvid
 type AreaSvgProps = Omit<Props$4, "points" | "ref" | "layout" | "path" | "pathRef" | "baseLine" | "dangerouslySetInnerHTML">;
 type Props$8<DataPointType, ValueAxisType> = AreaSvgProps & AreaProps<DataPointType, ValueAxisType>;
 export const Area: <DataPointType = any, ValueAxisType = any>(props: Props$8<DataPointType, ValueAxisType>) => React$1.ReactElement;
-type CubicBezierTemplate = `cubic-bezier(${number},${number},${number},${number})`;
-type NamedBezier = "linear" | "ease" | "ease-in" | "ease-out" | "ease-in-out" | CubicBezierTemplate;
-type BezierEasingFunction = {
-    isStepper: false;
-    (t: number): number;
-};
-type SpringEasingFunction = {
-    isStepper: true;
-    dt: number;
-    (currX: number, destX: number, currV: number): [
-        number,
-        number
-    ];
-};
-type EasingFunction = BezierEasingFunction | SpringEasingFunction;
-type EasingInput = NamedBezier | "spring" | EasingFunction;
 type RectRadius = number | [
     number,
     number,
@@ -14404,10 +14427,9 @@ interface BarRectangleItem extends Props$9 {
     stackedBarStart: number;
     originalDataIndex: number;
 }
-type BarShapeProps = BarRectangleItem & {
+type BarShapeProps = BarRectangleItem & ShapeAnimationProps & {
     isActive: boolean;
     index: number;
-    option?: ActiveShape<BarShapeProps, SVGPathElement> | undefined;
 };
 interface BarProps<DataPointType, ValueAxisType> extends DataConsumer<DataPointType, ValueAxisType>, ZIndexable {
     className?: string;
@@ -14419,6 +14441,7 @@ interface BarProps<DataPointType, ValueAxisType> extends DataConsumer<DataPointT
     unit?: string | number;
     name?: string | number;
     tooltipType?: TooltipType$1;
+    formatter?: Formatter;
     legendType?: LegendType;
     minPointSize?: MinPointSize;
     maxBarSize?: number;
@@ -14433,6 +14456,8 @@ interface BarProps<DataPointType, ValueAxisType> extends DataConsumer<DataPointT
     animationBegin?: number;
     animationDuration?: AnimationDuration;
     animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<BarRectangleItem, CartesianLayout>;
+    animationMatchBy?: AnimationMatchByProp<BarRectangleItem>;
     id?: string;
     label?: ImplicitLabelListType;
     zIndex?: number;
@@ -14763,6 +14788,7 @@ type WithIdRequired<T> = T & {
 };
 type WithoutId<T> = Omit<T, "id">;
 type PiePresentationProps = SVGPropsNoEvents<WithoutId<React$1.SVGProps<SVGPathElement>>>;
+type GraphicalItemId = string;
 type TooltipPayloadEntry = Payload<ValueType, NameType>;
 type TooltipPayload = ReadonlyArray<TooltipPayloadEntry>;
 type TooltipIndex = string | null;
@@ -14805,12 +14831,24 @@ export function ReferenceLine<XValueType extends ReferenceCoordinateValue = any,
 export namespace ReferenceLine {
     var displayName: string;
 }
+type LineDrawShapeProps = Omit<Props$4, "pathRef"> & ShapeAnimationProps & {
+    pathRef: React$1.RefObject<SVGPathElement>;
+    visibleLength?: number | null;
+};
+interface LinePointItem {
+    readonly value: number;
+    readonly payload?: any;
+    x: number | null;
+    y: number | null;
+}
 interface LineProps<DataPointType = any, DataValueType = any> extends DataProvider<DataPointType>, DataConsumer<DataPointType, DataValueType>, ZIndexable {
     activeDot?: ActiveDotType;
     animateNewValues?: boolean;
     animationBegin?: number;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
+    animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<LinePointItem, CartesianLayout>;
+    animationMatchBy?: AnimationMatchByProp<LinePointItem>;
     className?: string;
     connectNulls?: boolean;
     dot?: DotType;
@@ -14819,13 +14857,14 @@ interface LineProps<DataPointType = any, DataValueType = any> extends DataProvid
     isAnimationActive?: boolean | "auto";
     label?: ImplicitLabelListType;
     legendType?: LegendType;
-    shape?: ActiveShape<Props$4, SVGPathElement>;
+    shape?: ActiveShape<LineDrawShapeProps, SVGPathElement>;
     name?: string | number;
     onAnimationEnd?: () => void;
     onAnimationStart?: () => void;
     tooltipType?: TooltipType$1;
     type?: CurveType;
     unit?: string | number | null;
+    formatter?: Formatter;
     xAxisId?: AxisId;
     yAxisId?: AxisId;
     zIndex?: number;
@@ -14839,6 +14878,8 @@ export const Line: {
     <DataPointType = any, ValueAxisType = any>(props: Props$12<DataPointType, ValueAxisType>): React$1.ReactElement;
     (props: Props$12<any, any>): React$1.ReactElement;
 };
+const DATA_ITEM_INDEX_ATTRIBUTE_NAME = "data-recharts-item-index";
+const DATA_ITEM_GRAPHICAL_ITEM_ID_ATTRIBUTE_NAME = "data-recharts-item-id";
 type GetTicksInput = {
     angle?: number;
     interval: CartesianAxisSettings["interval"] | undefined;
@@ -14886,12 +14927,12 @@ interface CartesianGridProps extends ZIndexable {
     syncWithTicks?: boolean;
     horizontalValues?: number[] | string[];
     verticalValues?: number[] | string[];
-    strokeDasharray?: string | number[];
+    strokeDasharray?: string | number | ReadonlyArray<number>;
     xAxisId?: AxisId;
     yAxisId?: AxisId;
     zIndex?: number;
 }
-type AcceptedSvgProps = Omit<React$1.SVGProps<SVGLineElement>, "offset">;
+type AcceptedSvgProps = Omit<React$1.SVGProps<SVGLineElement>, "offset" | "strokeDasharray">;
 type Props$13 = AcceptedSvgProps & CartesianGridProps;
 type LineItemProps = Props$13 & {
     offset: ChartOffsetInternal;
@@ -14931,6 +14972,7 @@ type EvaluatedAxisDomainType = "number" | "category";
 type DataKey<DataPointType, DataValueType = any> = TypedDataKey<DataPointType, DataValueType>;
 type PresentationAttributesWithProps<P, T> = React$1.AriaAttributes & DOMAttributesWithProps<P, T> & Omit<React$1.SVGProps<T>, keyof DOMAttributesWithProps<P, T>>;
 type PresentationAttributesAdaptChildEvent<P, T> = React$1.AriaAttributes & DOMAttributesAdaptChildEvent<P, T> & Omit<React$1.SVGProps<T>, keyof DOMAttributesAdaptChildEvent<P, T>>;
+type PresentationAttributesForHTML<P, T> = React$1.AriaAttributes & DOMAttributesAdaptChildEvent<P, T>;
 type LegendType = "circle" | "cross" | "diamond" | "line" | "plainline" | "rect" | "square" | "star" | "triangle" | "wye" | "none";
 type TooltipType$1 = "none";
 type AllowInDimension = {
@@ -15313,7 +15355,6 @@ type DOMAttributesAdaptChildEvent<P, T> = {
     onTransitionEnd?: AdaptChildTransitionEventHandler<P, T>;
     onTransitionEndCapture?: AdaptChildTransitionEventHandler<P, T>;
 };
-type AnimationTiming = "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
 type AnimationDuration = number;
 type ChartOffsetInternal = {
     top: number;
@@ -15481,7 +15522,12 @@ type DotItemDotProps = SVGPropsNoEvents<Omit<Props, "points" | "ref">> & {
     value: any;
 };
 type DotType = boolean | ((props: DotItemDotProps) => React$1.ReactNode) | Partial<Props> | React$1.ReactElement<React$1.SVGProps<SVGElement>>;
-type ActiveShape<PropsType = Record<string, any>, ElementType = SVGElement> = React$1.ReactElement<React$1.SVGProps<ElementType>> | ((props: PropsType) => React$1.ReactElement | null | undefined) | React$1.SVGProps<ElementType> | boolean;
+interface ShapeAnimationProps {
+    animationElapsedTime?: number;
+    isAnimating?: boolean;
+    isEntrance?: boolean;
+}
+type ActiveShape<PropsType = Record<string, unknown>, ElementType = SVGElement> = React$1.ReactElement<Partial<PropsType> & React$1.SVGProps<ElementType>> | ((props: PropsType, index?: string | number) => React$1.ReactNode) | (Partial<PropsType> & React$1.SVGProps<ElementType>) | boolean;
 interface DataProvider<DataPointType> {
     data?: ChartData<DataPointType>;
 }
@@ -15498,6 +15544,7 @@ interface BaseChartProps<DataPointType> extends DataProvider<DataPointType>, Ext
     desc?: string;
     margin?: Partial<Margin>;
     style?: React$1.CSSProperties;
+    cursor?: React$1.CSSProperties["cursor"];
     syncId?: number | string;
     syncMethod?: SyncMethod;
     tabIndex?: number;
@@ -15555,7 +15602,7 @@ type TooltipProps<TValue extends ValueType = ValueType, TName extends NameType =
     active?: boolean;
     allowEscapeViewBox?: AllowInDimension;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
+    animationEasing?: EasingInput;
     axisId?: AxisId;
     content?: ContentType$1<TValue, TName>;
     contentStyle?: React$1.CSSProperties;
@@ -15570,7 +15617,7 @@ type TooltipProps<TValue extends ValueType = ValueType, TName extends NameType =
     isAnimationActive?: boolean | "auto";
     itemSorter?: TooltipItemSorter;
     itemStyle?: React$1.CSSProperties;
-    labelFormatter?: (label: any, payload: TooltipPayload) => React$1.ReactNode;
+    labelFormatter?: (label: React$1.ReactNode, payload: TooltipPayload) => React$1.ReactNode;
     labelStyle?: React$1.CSSProperties;
     offset?: number | Coordinate;
     payloadUniqBy?: UniqueOption<TooltipPayloadEntry>;
@@ -15584,7 +15631,7 @@ type TooltipProps<TValue extends ValueType = ValueType, TName extends NameType =
     wrapperStyle?: React$1.CSSProperties;
 };
 function Tooltip(outsideProps: TooltipProps<ValueType, NameType>): React$1.JSX.Element | null;
-interface Props$14 {
+interface Props$14 extends Omit<React$1.HTMLAttributes<HTMLDivElement>, "id" | "className" | "style" | "onResize"> {
     aspect?: number;
     width?: Percent | number;
     height?: Percent | number;
@@ -15599,7 +15646,7 @@ interface Props$14 {
     debounce?: number;
     id?: string | number;
     className?: string | number;
-    style?: Omit<React$1.CSSProperties, keyof Props$14>;
+    style?: React$1.CSSProperties;
     onResize?: (width: number, height: number) => void;
 }
 export const ResponsiveContainer: React$1.ForwardRefExoticComponent<Props$14 & React$1.RefAttributes<HTMLDivElement>>;
@@ -15641,6 +15688,11 @@ interface PolarGridProps extends ZIndexable {
     angleAxisId?: AxisId;
     radiusAxisId?: AxisId;
     zIndex?: number;
+    stroke?: string;
+    strokeWidth?: number | string;
+    strokeDasharray?: string | number;
+    fill?: string;
+    fillOpacity?: number | string;
 }
 type Props$17 = React$1.SVGProps<SVGLineElement> & PolarGridProps;
 export const PolarGrid: {
@@ -15667,7 +15719,7 @@ interface PolarRadiusAxisProps<DataPointType = any, DataValueType = any> extends
     niceTicks?: NiceTicksAlgorithm;
     radiusAxisId?: string | number;
     tick?: TickProp<BaseTickContentProps>;
-    ticks?: ReadonlyArray<TickItem>;
+    ticks?: ReadonlyArray<AxisTick>;
     zIndex?: number;
 }
 type AxisSvgProps = Omit<PresentationAttributesAdaptChildEvent<any, SVGTextElement>, "scale" | "type">;
@@ -15741,11 +15793,13 @@ type PieSectorData = GeometrySector & TooltipTriggerInfo & {
 type PieSectorDataItem = PiePresentationProps & PieCoordinate & PieSectorData & {
     cornerRadius: number | undefined;
 };
-type PieSectorShapeProps = PieSectorDataItem & {
+type PieSectorShapeProps = PieSectorDataItem & ShapeAnimationProps & {
+    [DATA_ITEM_INDEX_ATTRIBUTE_NAME]: number;
+    [DATA_ITEM_GRAPHICAL_ITEM_ID_ATTRIBUTE_NAME]: GraphicalItemId;
     isActive: boolean;
     index: number;
-};
-type PieShape = React$1.ReactNode | ((props: PieSectorShapeProps, index: number) => React$1.ReactElement);
+} & React$1.SVGProps<SVGPathElement>;
+type PieShape = ActiveShape<PieSectorShapeProps, SVGPathElement>;
 interface PieEvents {
     onClick?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
     onMouseDown?: (data: PieSectorDataItem, index: number, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
@@ -15763,7 +15817,9 @@ interface PieProps<DataPointType = any, DataValueType = any> extends DataProvide
     activeShape?: ActiveShape<PieSectorDataItem>;
     animationBegin?: number;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
+    animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<PieSectorDataItem, PolarLayout>;
+    animationMatchBy?: AnimationMatchByProp<PieSectorDataItem>;
     className?: string;
     hide?: boolean;
     id?: string;
@@ -15780,6 +15836,7 @@ interface PieProps<DataPointType = any, DataValueType = any> extends DataProvide
     rootTabIndex?: number;
     shape?: PieShape;
     tooltipType?: TooltipType$1;
+    formatter?: Formatter;
     zIndex?: number;
 }
 type PieSvgAttributes = Omit<PresentationAttributesAdaptChildEvent<any, SVGElement>, "ref" | keyof PieEvents>;
@@ -15811,7 +15868,9 @@ interface RadarProps<DataPointType = any, DataValueType = any> extends ZIndexabl
     angleAxisId?: string | number;
     animationBegin?: number;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
+    animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<RadarPoint, PolarLayout>;
+    animationMatchBy?: AnimationMatchByProp<RadarPoint>;
     baseLinePoints?: RadarPoint[];
     className?: string;
     connectNulls?: boolean;
@@ -15842,6 +15901,8 @@ const defaultRadarProps: {
     readonly animationBegin: 0;
     readonly animationDuration: 1500;
     readonly animationEasing: "ease";
+    readonly animationMatchBy: "index";
+    readonly animationInterpolateFn: AnimationInterpolateFn<RadarPoint, PolarLayout>;
     readonly dot: false;
     readonly hide: false;
     readonly isAnimationActive: "auto";
@@ -15856,9 +15917,8 @@ export function Radar<DataPointType = any, DataValueType = any>(outsideProps: Pr
 export namespace Radar {
     var displayName: string;
 }
-interface RadialBarSectorProps extends RadialBarDataItem {
+interface RadialBarSectorProps extends RadialBarDataItem, ShapeAnimationProps {
     index: number;
-    option: RadialBarProps["activeShape"];
     isActive: boolean;
 }
 type RadialBarDataItem = Props$16 & PolarViewBoxRequired & TooltipTriggerInfo & {
@@ -15872,7 +15932,9 @@ interface InternalRadialBarProps<DataPointType = any, DataValueType = any> exten
     angleAxisId?: AxisId;
     animationBegin?: number;
     animationDuration?: AnimationDuration;
-    animationEasing?: AnimationTiming;
+    animationEasing?: EasingInput;
+    animationInterpolateFn?: AnimationInterpolateFn<RadialBarDataItem, PolarLayout>;
+    animationMatchBy?: AnimationMatchByProp<RadialBarDataItem>;
     background?: RadialBarBackground;
     barSize?: number;
     className?: string;
@@ -15903,6 +15965,7 @@ interface InternalRadialBarProps<DataPointType = any, DataValueType = any> exten
     shape?: ActiveShape<RadialBarSectorProps, SVGPathElement>;
     stackId?: string | number;
     tooltipType?: TooltipType$1;
+    formatter?: Formatter;
     zIndex?: number;
 }
 type RadialBarProps<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<RadialBarDataItem, SVGElement>, "ref" | keyof InternalRadialBarProps<DataPointType, DataValueType>> & Omit<InternalRadialBarProps<DataPointType, DataValueType>, "sectors">;
@@ -15913,7 +15976,7 @@ export namespace RadialBar {
 interface XAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "domain" | "scale" | "tick"> {
     type?: AxisDomainTypeInput;
     xAxisId?: string | number;
-    height?: number;
+    height?: number | "auto";
     mirror?: boolean;
     orientation?: XAxisOrientation;
     domain?: AxisDomain;
@@ -15928,7 +15991,7 @@ interface XAxisProps<DataPointType = any, DataValueType = any> extends Omit<Rend
     letterSpacing?: number | string;
     niceTicks?: NiceTicksAlgorithm;
 }
-type Props$22<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref"> & XAxisProps<DataPointType, DataValueType>;
+type Props$22<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref" | "height"> & XAxisProps<DataPointType, DataValueType>;
 export const XAxis: <DataPointType = any, DataValueType = any>(props: Props$22<DataPointType, DataValueType>) => React$1.ReactElement;
 interface YAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "domain" | "scale" | "tick"> {
     axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
@@ -16011,6 +16074,9 @@ interface SankeyProps extends EventThrottlingProps {
     style?: React$1.CSSProperties;
     className?: string;
     children?: React$1.ReactNode;
+    accessibilityLayer?: boolean;
+    title?: string;
+    desc?: string;
     margin?: Partial<Margin>;
     onClick?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
     onMouseEnter?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
