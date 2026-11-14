@@ -179,7 +179,7 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                         "invoice": remote.id,
                         "currency": "chf",
                         "quantity": quantity,
-                        "unit_amount_decimal": str(unit_price),
+                        "unit_amount_decimal": unit_price,
                         "description": description,
                         "metadata": {"longlink_invoice_id": str(invoice.id), "resource": resource},
                     },

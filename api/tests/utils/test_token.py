@@ -62,7 +62,7 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
     """Reject browser credentials whose subject is not a UUID."""
 
     # Arrange
-    invalid_token = signed_token({"sub": "not-a-uuid", "password_fingerprint": "fingerprint", "aud": token.AUTH_TOKEN_AUDIENCE})
+    invalid_token = signed_token({"sub": "not-a-uuid", "password_fingerprint": "fingerprint", "aud": token.AUTH_AUDIENCE})
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError, match="Invalid browser session user"):
@@ -70,9 +70,9 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
 
 
 EXPIRED_TOKEN_CLAIMS = [
-    pytest.param({"email": "member@example.com", "aud": token.REGISTRATION_TOKEN_AUDIENCE}, token.registration_claims, id="registration"),
+    pytest.param({"email": "member@example.com", "aud": token.REGISTRATION_AUDIENCE}, token.registration_claims, id="registration"),
     pytest.param(
-        {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.AUTH_TOKEN_AUDIENCE},
+        {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.AUTH_AUDIENCE},
         # Browser authentication requires its own audience and password-bound identity.
         token.auth_token_claims,
         id="authentication",
@@ -111,7 +111,7 @@ def test_oauth_state_claims_reject_expired_token() -> None:
 
     # Arrange
     encoded = expired_token(
-        {"provider": "google", "state": "expected-state", "verifier": "pkce-verifier", "aud": token.OAUTH_STATE_TOKEN_AUDIENCE}
+        {"provider": "google", "state": "expected-state", "verifier": "pkce-verifier", "aud": token.OAUTH_STATE_AUDIENCE}
     )
 
     # Act and assert
@@ -124,14 +124,14 @@ def test_oauth_state_claims_reject_expired_token() -> None:
     ("claims", "function", "message"),
     [
         pytest.param(
-            {"aud": token.REGISTRATION_TOKEN_AUDIENCE},
+            {"aud": token.REGISTRATION_AUDIENCE},
             # Registration proof requires its email even when the signature is valid.
             token.registration_claims,
             "Invalid registration token claims",
             id="missing-registration-email",
         ),
         pytest.param(
-            {"sub": "user", "aud": token.AUTH_TOKEN_AUDIENCE},
+            {"sub": "user", "aud": token.AUTH_AUDIENCE},
             token.auth_token_claims,
             "Invalid browser session claims",
             # Browser proof is unusable without its password-bound fingerprint.
@@ -152,20 +152,20 @@ def test_token_claims_reject_missing_required_fields(claims: dict[str, str], fun
 
 INVALID_PASSWORD_RESET_CLAIMS = [
     pytest.param(
-        {"sub": "not-a-uuid", "password_fingerprint": "fingerprint", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        {"sub": "not-a-uuid", "password_fingerprint": "fingerprint", "aud": token.RESET_AUDIENCE},
         signed_token,
         "Invalid password reset user",
         id="malformed-subject",
     ),
     # Reset proof cannot omit its password-bound fingerprint.
     pytest.param(
-        {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.RESET_AUDIENCE},
         signed_token,
         "Invalid password reset token claims",
         id="missing-fingerprint",
     ),
     pytest.param(
-        {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        {"sub": "00000000-0000-0000-0000-000000000001", "password_fingerprint": "fingerprint", "aud": token.RESET_AUDIENCE},
         # Expired proof is rejected even with a valid password fingerprint.
         expired_token,
         None,

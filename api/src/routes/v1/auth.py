@@ -20,7 +20,7 @@ from src.database.models.users import User
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
-INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."  # noqa: S105
+INVALID_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
 
 
 async def set_auth_session(session: AsyncSession, response: Response, user: User) -> None:
@@ -51,7 +51,7 @@ async def password_reset_user(session: AsyncSession, credential: str) -> User:
     try:
         return await token.password_reset_user(session, credential)
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK) from exc
+        raise HTTPException(status_code=400, detail=INVALID_RESET_LINK) from exc
 
 
 def registration_email(credential: str) -> Email:
@@ -201,12 +201,12 @@ async def verify_password_reset_token(session: auth.Session, response: Response,
 
     # Validate the bearer credential before moving it into a restricted cookie.
     await password_reset_user(session, payload.token)
-    cookies.set_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE, payload.token, 900)
+    cookies.set_browser_cookie(response, cookies.RESET_COOKIE, payload.token, 900)
 
 
 @router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
-    session: auth.Session, response: Response, password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE)
+    session: auth.Session, response: Response, password_reset_token: str | None = Cookie(default=None, alias=cookies.RESET_COOKIE)
 ) -> None:
     """Restore password reset state from browser-only proof."""
 
@@ -220,7 +220,7 @@ async def reset_password(
     session: auth.Session,
     response: Response,
     payload: PasswordResetComplete,
-    password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
+    password_reset_token: str | None = Cookie(default=None, alias=cookies.RESET_COOKIE),
 ) -> None:
     """Replace a password using browser-only reset proof."""
 
@@ -229,12 +229,12 @@ async def reset_password(
 
     # Reject proof consumed by a competing reset before committing the replacement.
     if not await users.replace_password(session, user, payload.password):
-        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK)
+        raise HTTPException(status_code=400, detail=INVALID_RESET_LINK)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE)
+    cookies.delete_browser_cookie(response, cookies.RESET_COOKIE)
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.

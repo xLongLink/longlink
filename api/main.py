@@ -14,7 +14,7 @@ from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.logger import ApiAccessFilter
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
+from src.utils.cookies import AUTH_COOKIE, RESET_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE
 from longlink.middleware import FrontendMiddleware
 from src.database.session import dispose_engine
 
@@ -57,7 +57,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None, title="LongLink Platform API", version="1.0.0")
 
 
-AUTHENTICATION_COOKIES = frozenset({AUTH_COOKIE, OAUTH_STATE_COOKIE, PASSWORD_RESET_COOKIE, REGISTRATION_COOKIE})
+AUTHENTICATION_COOKIES = frozenset({AUTH_COOKIE, OAUTH_STATE_COOKIE, RESET_COOKIE, REGISTRATION_COOKIE})
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 

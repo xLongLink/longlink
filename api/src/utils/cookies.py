@@ -4,13 +4,13 @@ from src.environments import env
 
 AUTH_COOKIE = "longlink_auth"
 OAUTH_STATE_COOKIE = "longlink_oauth"
-PASSWORD_RESET_COOKIE = "longlink_password_reset"  # noqa: S105
+RESET_COOKIE = "longlink_password_reset"
 REGISTRATION_COOKIE = "longlink_registration"
 
 _COOKIE_PATHS = {
     AUTH_COOKIE: "/",
     OAUTH_STATE_COOKIE: "/api/v1/auth/oauth",
-    PASSWORD_RESET_COOKIE: "/api/v1/auth/reset-password",
+    RESET_COOKIE: "/api/v1/auth/reset-password",
     REGISTRATION_COOKIE: "/api/v1/auth/register",
 }
 

@@ -1,4 +1,3 @@
-import os
 import yaml
 import pytest
 import shutil
@@ -10,47 +9,22 @@ from httpx2 import Cookies, Response, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from typing import cast
 from pathlib import Path
+from bootstrap import TEST_PASSWORD
+from src.utils import mail, token
 from contextlib import AsyncExitStack, asynccontextmanager
 from sqlalchemy import create_engine
 from kr8s.asyncio import Api
-from collections.abc import AsyncIterator, AsyncGenerator
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-TEST_PASSWORD = secrets.token_urlsafe(32)
-
-pytest_plugins = ["containers"]
-
-# Seed the required settings before importing the FastAPI app.
-os.environ["SMTP_HOST"] = "smtp.example.com"
-os.environ["PUBLIC_URL"] = "http://localhost:5173"
-os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
-os.environ["ADMIN_EMAIL"] = "test-administrator@example.com"
-os.environ["ADMIN_PASSWORD"] = TEST_PASSWORD
-os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough"
-os.environ["SMTP_PORT"] = "587"
-os.environ["SMTP_TRANSPORT"] = "starttls"
-
-# Prevent optional workstation credentials from changing test capabilities.
-os.environ.update(
-    {
-        "SMTP_PASSWORD": "null",
-        "SMTP_USERNAME": "null",
-        "GITHUB_OAUTH_CLIENT_ID": "null",
-        "GOOGLE_OAUTH_CLIENT_ID": "null",
-        "GITHUB_OAUTH_CLIENT_SECRET": "null",
-        "GOOGLE_OAUTH_CLIENT_SECRET": "null",
-    }
-)
-
-from src.utils import mail, token
 from src.database import models, session
 from src.utils.s3 import Credentials
 from src.kubernetes import storage
 from src.kubernetes import databases as database_resources
+from collections.abc import AsyncIterator, AsyncGenerator
 from src.environments import env
 from src.kubernetes.client import Kubernetes
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from src.database.models.users import User
+
+pytest_plugins = ["containers"]
 
 CONTROLLER_CREDENTIALS = Credentials("controller", secrets.token_urlsafe(32))
 

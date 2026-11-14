@@ -83,8 +83,6 @@ ignore = ["D100", "D104", "D202"]
 [tool.ruff.lint.per-file-ignores]
 # Pytest assertions are the test oracle, not production security checks.
 "tests/**" = ["S101"]
-# Test settings must be seeded before importing application modules.
-"tests/conftest.py" = ["E402"]
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends"]
@@ -102,13 +100,9 @@ include = ["main.py", "scripts", "src", "alembic"]
 # Keep SQLModel descriptor diagnostics out of the gate while checking callers.
 exclude = ["src/database/models"]
 
-[tool.ty.rules]
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-missing-attribute = "ignore"
-
 [tool.pytest.ini_options]
-pythonpath = [".."]
+addopts = "-p bootstrap"
+pythonpath = [".", "..", "tests"]
 markers = [
     "integration: marks tests requiring container-backed infrastructure",
     "no_db: skips the API test database fixture for pure unit tests",

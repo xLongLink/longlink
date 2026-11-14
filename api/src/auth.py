@@ -26,10 +26,8 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
-async def authuser(
-    request: Request, session: Session, credential: str | None = Cookie(default=None, alias=AUTH_COOKIE)
-) -> AsyncGenerator[User, None]:
-    """Authenticate a browser session and bind its user to the request audit scope."""
+async def browseruser(session: AsyncSession, credential: str | None) -> User:
+    """Resolve a browser credential without owning its caller's audit scope."""
 
     # Convert missing, expired, and invalidated sessions into one stable authentication error.
     if credential is None:
@@ -45,6 +43,16 @@ async def authuser(
     user = await token.credential_user(session, user_id, fingerprint)
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+async def authuser(
+    request: Request, session: Session, credential: str | None = Cookie(default=None, alias=AUTH_COOKIE)
+) -> AsyncGenerator[User, None]:
+    """Authenticate a browser session and bind its user to the request audit scope."""
+
+    # Resolve the browser identity before entering the request's audit scope.
+    user = await browseruser(session, credential)
 
     # Mark validated browser sessions so response middleware can prevent sensitive caching.
     request.state.user = user
