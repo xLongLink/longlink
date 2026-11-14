@@ -18,7 +18,7 @@ async def test_compute_credentials_are_encrypted_at_rest() -> None:
 
     # Assert
     assert "apiVersion" not in kubeconfig
-    assert "controller-secret" not in secret
+    assert compute.storage_secret_key not in secret
     assert restored is not None
     assert restored.kubeconfig == compute.kubeconfig
-    assert restored.storage_secret_key == "controller-secret"
+    assert restored.storage_secret_key == compute.storage_secret_key

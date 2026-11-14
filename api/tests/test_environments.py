@@ -1,4 +1,5 @@
 import pytest
+import secrets
 from pydantic import ValidationError
 from src.environments import Env
 
@@ -56,11 +57,12 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     """Accept one complete SMTP authentication configuration."""
 
     # Validate both newly supplied credentials.
-    settings = ENVIRONMENT_SETTINGS | {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
+    credential = secrets.token_urlsafe(32)
+    settings = ENVIRONMENT_SETTINGS | {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": credential}
     environment = Env.model_validate(settings)
 
     assert environment.SMTP_USERNAME == "mailer"
-    assert environment.SMTP_PASSWORD == "secret"
+    assert environment.SMTP_PASSWORD == credential
 
 
 def test_env_accepts_loopback_with_smtp_delivery() -> None:

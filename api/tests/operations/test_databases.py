@@ -70,7 +70,7 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
     renew = asyncio.Event()
 
     class Database(DatabasePostgres):
-        async def prepare_organization_database(self, organization: UUID) -> None:
+        async def prepare_organization_database(self, _organization: UUID) -> None:
             """Hold external SQL provisioning until lease loss interrupts it."""
 
             started.set()
@@ -109,7 +109,6 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
                 await provisioning
         assert interrupted.is_set()
     finally:
-
         # Reap the owner even if renewal or lease cleanup stops making progress.
         provisioning.cancel()
         async with asyncio.timeout(3):
@@ -138,7 +137,7 @@ async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
     interrupted = asyncio.Event()
 
     class Database(DatabasePostgres):
-        async def prepare_organization_database(self, organization: UUID) -> None:
+        async def prepare_organization_database(self, _organization: UUID) -> None:
             """Suspend external SQL until worker shutdown interrupts provisioning."""
 
             started.set()
@@ -160,7 +159,6 @@ async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
                 await asyncio.wait_for(asyncio.shield(provisioning), timeout=5)
             assert interrupted.is_set()
         finally:
-
             # Always await cancellation and its real lease-release transaction.
             provisioning.cancel()
             async with asyncio.timeout(3):

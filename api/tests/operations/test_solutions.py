@@ -59,7 +59,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert claimed is not None
     assert claimed.target_id == solution.id
 
-    async def delete(client: object, *_args: object) -> None:
+    async def delete(_client: object, *_args: object) -> None:
         """Raise the Kubernetes deletion failure under test."""
 
         raise RuntimeError("Kubernetes workload deletion failed")
@@ -98,7 +98,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     organization, solution = await create_deleted_solution(users[0])
     calls: list[tuple[str, object]] = []
 
-    async def delete(client: object, _organization_id: object, solution_id: object) -> None:
+    async def delete(_client: object, _organization_id: object, solution_id: object) -> None:
         """Record workload removal."""
 
         calls.append(("workload", solution_id))
@@ -123,12 +123,12 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
             finally:
                 calls.append(("admin_closed", solution.id))
 
-    async def revoke(self: storage.rustfs.RustFS, solution: UUID) -> None:
+    async def revoke(_self: storage.rustfs.RustFS, solution: UUID) -> None:
         """Record credential revocation at the provider boundary."""
 
         calls.append(("revoke", solution))
 
-    async def delete_prefix(self: storage.s3.S3, bucket: str, prefix: str) -> None:
+    async def delete_prefix(_self: storage.s3.S3, bucket: str, prefix: str) -> None:
         """Record solution file removal from its canonical Organization bucket."""
 
         assert bucket == f"longlink-{organization.id.hex}"
@@ -193,7 +193,7 @@ async def test_solution_delete_storage_failure_preserves_revisions_for_retry(
     calls: list[tuple[str, UUID]] = []
     failure = RuntimeError("storage cleanup failed")
 
-    async def delete(client: object, organization_id: UUID, solution_id: UUID) -> None:
+    async def delete(_client: object, organization_id: UUID, solution_id: UUID) -> None:
         """Complete external workload cleanup before storage fails."""
 
         assert organization_id == organization.id
@@ -208,14 +208,14 @@ async def test_solution_delete_storage_failure_preserves_revisions_for_retry(
             assert organization_id == organization.id
             calls.append(("schema", solution_id))
 
-    async def fail_storage(self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
+    async def fail_storage(_self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
         """Fail only the final external cleanup boundary."""
 
         assert organization_id == organization.id
         calls.append(("storage", solution_id))
         raise failure
 
-    async def delete_storage(self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
+    async def delete_storage(_self: StorageKubernetes, organization_id: UUID, solution_id: UUID) -> None:
         """Record successful storage cleanup on retry."""
 
         assert organization_id == organization.id
@@ -313,16 +313,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
                 calls.append("close")
 
     async def apply(
-        client: object,
-        organization_id: object,
-        _solution_id: object,
-        _image: object,
-        secrets: dict[str, str],
-        *,
-        revision_id: object,
-        migrate: bool,
-        # Match the deployment boundary's optional private-image credential.
-        registry_connection_id: UUID | None = None,
+        _client: object, organization_id: object, _solution_id: object, _image: object, secrets: dict[str, str], **_kwargs: object
     ) -> None:
         """Capture the generated runtime environment."""
 
@@ -439,7 +430,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
-    async def service_account(self: StorageKubernetes, organization: UUID, solution: UUID) -> Credentials:
+    async def service_account(_self: StorageKubernetes, _organization: UUID, _solution: UUID) -> Credentials:
         """Record credential creation at the external boundary."""
 
         calls.append("credentials")
@@ -514,16 +505,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         raise AssertionError("retry regenerated provider credentials")
 
     async def apply(
-        client: object,
-        _organization_id: object,
-        _solution_id: object,
-        _image: object,
-        secrets: dict[str, str],
-        *,
-        revision_id: object,
-        migrate: bool,
-        # Preserve the deployment boundary's registry option.
-        registry_connection_id: UUID | None = None,
+        _client: object, _organization_id: object, _solution_id: object, _image: object, secrets: dict[str, str], **_kwargs: object
     ) -> None:
         """Capture the persisted runtime environment."""
 
@@ -619,18 +601,7 @@ async def test_initial_deployment_failure_does_not_schedule_recovery(
         },
     )
 
-    async def apply(
-        client: object,
-        _organization_id: UUID,
-        _id: UUID,
-        image: str,
-        secrets: dict[str, str],
-        *,
-        revision_id: UUID,
-        migrate: bool,
-        # Keep failure injection compatible with private-image deployments.
-        registry_connection_id: UUID | None = None,
-    ) -> None:
+    async def apply(_client: object, _organization_id: UUID, _id: UUID, _image: str, _secrets: dict[str, str], **_kwargs: object) -> None:
         """Fail the initial Kubernetes rollout."""
 
         raise RuntimeError("rollout failed")
@@ -679,16 +650,7 @@ async def test_shutdown_keeps_deployment_resumable(users: tuple[User, User, User
     )
 
     async def apply(
-        client: object,
-        _organization_id: UUID,
-        _id: UUID,
-        image: str,
-        secrets: dict[str, str],
-        *,
-        revision_id: UUID,
-        migrate: bool,
-        # Keep cancellation injection compatible with the full deployment contract.
-        registry_connection_id: UUID | None = None,
+        _client: object, _organization_id: UUID, _id: UUID, image: str, _secrets: dict[str, str], *, migrate: bool, **_kwargs: object
     ) -> None:
         """Complete the first rollout and cancel its replacement."""
 
@@ -761,16 +723,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     failing = False
 
     async def apply(
-        client: object,
-        _organization_id: UUID,
-        _id: UUID,
-        image: str,
-        secrets: dict[str, str],
-        *,
-        revision_id: UUID,
-        migrate: bool,
-        # Observe the registry option alongside the captured release.
-        registry_connection_id: UUID | None = None,
+        _client: object, _organization_id: UUID, _id: UUID, image: str, secrets: dict[str, str], *, migrate: bool, **_kwargs: object
     ) -> None:
         """Capture the exact snapshot and simulate rollout outcomes."""
 
@@ -973,16 +926,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     }
 
     async def apply(
-        client: object,
-        _organization_id: UUID,
-        _id: UUID,
-        image: str,
-        secrets: dict[str, str],
-        *,
-        revision_id: UUID,
-        migrate: bool,
-        # Retain the complete release boundary while recording image and environment pairs.
-        registry_connection_id: UUID | None = None,
+        _client: object, _organization_id: UUID, _id: UUID, image: str, secrets: dict[str, str], *, revision_id: UUID, **_kwargs: object
     ) -> None:
         """Capture immutable image and environment pairs."""
 

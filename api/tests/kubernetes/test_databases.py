@@ -14,7 +14,7 @@ async def test_database_certificate_reads_cnpg_ca_in_database_namespace(monkeypa
     organization = uuid4()
     observed: list[tuple[str, str, str]] = []
 
-    async def certificate(client: Kubernetes, namespace: str, name: str, *, entry: str) -> str:
+    async def certificate(_client: Kubernetes, namespace: str, name: str, *, entry: str) -> str:
         """Capture the external trust lookup coordinates."""
 
         observed.append((namespace, name, entry))

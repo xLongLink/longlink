@@ -4,6 +4,7 @@ import time
 import pytest
 import stripe
 import hashlib
+import secrets
 import pytest_asyncio
 from types import SimpleNamespace
 from httpx2 import AsyncClient
@@ -24,15 +25,20 @@ from src.database.models.organizations import Organization
 
 
 @pytest.fixture
-def configured_stripe(monkeypatch: pytest.MonkeyPatch) -> None:
+def configured_stripe(monkeypatch: pytest.MonkeyPatch) -> str:
     """Configure test-mode credentials without contacting Stripe."""
 
+    credential = secrets.token_urlsafe(32)
     monkeypatch.setattr(env, "STRIPE_SECRET_KEY", "sk_test_payments")
-    monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_payments")
+    monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", credential)
+    return credential
 
 
 @pytest_asyncio.fixture
-async def card_organization(users: tuple[User, User, User], configured_stripe: None) -> Organization:
+async def card_organization(
+    users: tuple[User, User, User],
+    configured_stripe: str,  # noqa: ARG001 - Fixture dependency; usefixtures does not apply to fixtures.
+) -> Organization:
     """Persist an owned Organization with a real customer and checkout mapping."""
 
     organization = await create_organization(users[1])
@@ -186,7 +192,7 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
     await assert_no_new_operations(previous_operations)
 
 
-def signed_webhook(*, livemode: bool = False, secret: str = "whsec_payments") -> tuple[bytes, str]:
+def signed_webhook(secret: str, *, livemode: bool = False) -> tuple[bytes, str]:
     """Sign an otherwise actionable checkout event with a current Stripe timestamp."""
 
     body = json.dumps(
@@ -223,7 +229,7 @@ async def assert_card_registration_unchanged(organization: Organization) -> None
 
 
 async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_reconciliation(
-    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch, configured_stripe: str
 ) -> None:
     """Persist verified card registration without duplicating reconciliation on replay."""
 
@@ -257,7 +263,7 @@ async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_re
         yield connection
 
     monkeypatch.setattr(stripe_provider, "client", stripe_client)
-    body, signature = signed_webhook()
+    body, signature = signed_webhook(configured_stripe)
 
     # Act
     response = await client.post("/api/v1/stripe/webhook", content=body, headers={"stripe-signature": signature})
@@ -305,12 +311,12 @@ async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_re
 
 
 async def test_webhook_rejects_invalid_signature_without_registering_card(
-    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch, configured_stripe: str
 ) -> None:
     """Reject a correctly formed checkout event signed with the wrong secret."""
 
     # Arrange
-    body, signature = signed_webhook(secret="whsec_attacker")
+    body, signature = signed_webhook(f"{configured_stripe}-invalid")
     previous_operations = await fetch_operations()
     reject_provider_construction(monkeypatch, (stripe_provider, "client"))
 
@@ -325,12 +331,12 @@ async def test_webhook_rejects_invalid_signature_without_registering_card(
 
 
 async def test_webhook_rejects_signed_event_from_the_wrong_stripe_mode(
-    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch, configured_stripe: str
 ) -> None:
     """Reject a valid live-mode signature on a test-mode deployment."""
 
     # Arrange
-    body, signature = signed_webhook(livemode=True)
+    body, signature = signed_webhook(configured_stripe, livemode=True)
     previous_operations = await fetch_operations()
     reject_provider_construction(monkeypatch, (stripe_provider, "client"))
 

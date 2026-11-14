@@ -202,7 +202,11 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     real_client = httpx2.AsyncClient
 
     def record_context(
-        purpose: ssl.Purpose = ssl.Purpose.SERVER_AUTH, *, cafile: str | None = None, capath: str | None = None, cadata: str | None = None
+        _purpose: ssl.Purpose = ssl.Purpose.SERVER_AUTH,
+        *,
+        _cafile: str | None = None,
+        _capath: str | None = None,
+        cadata: str | None = None,
     ) -> ssl.SSLContext:
         """Record the CA bundle used for gateway verification."""
 
@@ -521,7 +525,7 @@ async def test_solution_proxy_times_out_before_gateway_response(
     # Arrange a running Solution and a gateway that delays its initial response.
     solution, _infrastructure = await create_running_solution(users[0])
 
-    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+    async def send(_transport: object, _request: httpx2.Request) -> httpx2.Response:
         """Wait longer than the configured request deadline."""
 
         await asyncio.sleep(0.01)
@@ -805,7 +809,7 @@ async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
     user = users[0]
     solution, _ = await create_running_solution(user)
 
-    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+    async def send(_transport: object, _request: httpx2.Request) -> httpx2.Response:
         """Raise a proxy transport error."""
 
         raise httpx2.HTTPError("gateway unavailable")
@@ -1009,7 +1013,7 @@ async def test_solution_proxy_forwards_error_negotiation_headers(
 
 
 @pytest.fixture
-def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+def request_scope(monkeypatch: pytest.MonkeyPatch, password_hash: str) -> SimpleNamespace:
     """Supply authorized runtime boundaries while exercising the real proxy resource ownership."""
 
     # Keep HTTP cleanup observable through the production runtime scope.
@@ -1022,14 +1026,14 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         deployed_revision_id=uuid4(),
     )
     registry = SimpleNamespace(gateway_url="https://gateway.example/", gateway_certificate=None)
-    user = User(id=uuid4(), name="Gateway User", email="gateway@example.com", password="unused-test-password")
+    user = User(id=uuid4(), name="Gateway User", email="gateway@example.com", password=password_hash)
 
-    async def access(*args: object) -> tuple[SimpleNamespace, SimpleNamespace]:
+    async def access(*_args: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Return the authorized running Solution before and after admission."""
 
         return solution, registry
 
-    async def get(model: object, key: object, **kwargs: object) -> object:
+    async def get(model: object, _key: object, **_kwargs: object) -> object:
         """Supply persisted permission records at the database boundary."""
 
         if model is PermissionCatalog:
@@ -1107,7 +1111,7 @@ async def test_gateway_response_closes_client_when_response_close_fails(
 
         closed = request_scope.closed
 
-        async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
+        async def send(self, _request: httpx2.Request, **_kwargs: object) -> httpx2.Response:
             """Return the upstream response."""
 
             return Response()
@@ -1141,7 +1145,7 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
 
         closed = request_scope.closed
 
-        async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
+        async def send(self, _request: httpx2.Request, **_kwargs: object) -> httpx2.Response:
             """Signal entry and wait for task cancellation."""
 
             entered.set()

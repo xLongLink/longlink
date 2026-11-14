@@ -31,12 +31,12 @@ WRONG_AUDIENCE_TOKEN_READERS = [
 @pytest.mark.no_db
 @pytest.mark.parametrize(("create_token", "read_claims"), WRONG_AUDIENCE_TOKEN_READERS)
 def test_token_claims_reject_wrong_audience(
-    create_token: Callable[[User], str], read_claims: Callable[[str], str | tuple[UUID, str]]
+    create_token: Callable[[User], str], read_claims: Callable[[str], str | tuple[UUID, str]], password_hash: str
 ) -> None:
     """Keep registration, browser session, and password-reset credentials separate."""
 
     # Arrange
-    user = User(email="member@example.com", password="hashed-password")
+    user = User(email="member@example.com", password=password_hash)
     encoded = create_token(user)
 
     # Act and assert
@@ -190,11 +190,11 @@ async def test_password_reset_user_rejects_invalid_claims(
             await token.password_reset_user(session, encoded)
 
 
-async def test_password_reset_user_rejects_missing_account() -> None:
+async def test_password_reset_user_rejects_missing_account(password_hash: str) -> None:
     """Reject password-reset credentials whose account is no longer active."""
 
     # Arrange
-    user = User(email="missing@example.com", password="password-hash")
+    user = User(email="missing@example.com", password=password_hash)
     encoded = token.create_password_reset_token(user)
 
     # Act and assert

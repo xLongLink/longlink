@@ -1,4 +1,6 @@
 import pytest
+import secrets
+import sqlalchemy
 from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from longlink import User
@@ -41,10 +43,14 @@ async def test_postgres_creates_idempotent_runtime_schema_with_local_users(
     active_user = {"id": UUID(int=1), "name": "Owner User", "email": "owner@example.com", "avatar": "", "updated_at": datetime.now(UTC)}
     await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
-    runtime_password = "stable-runtime-password"
+    runtime_password = secrets.token_urlsafe(32)
     sibling_id = UUID("55555555-5555-5555-5555-555555555555")
-    sibling_password = "sibling-runtime-password"
+    sibling_password = secrets.token_urlsafe(32)
     sibling_username = await adapter.solution_schema(organization_id, sibling_id, sibling_password)
+
+    # Compile sibling identifiers separately from bound query values.
+    sibling_users = sqlalchemy.table("users", sqlalchemy.column("name"), schema=sibling_id.hex)
+    sibling_items = sqlalchemy.table("sibling_items", sqlalchemy.column("id"), sqlalchemy.column("name"), schema=sibling_id.hex)
 
     # Connect independently with the actual runtime credentials.
     url = URL.create(
@@ -88,19 +94,19 @@ async def test_postgres_creates_idempotent_runtime_schema_with_local_users(
                 # Use a real transaction to exercise PostgreSQL's schema permission boundary.
                 async with runtime_engine.begin() as connection:
                     # The database, not a mocked permission check, rejects sibling access.
-                    await connection.execute(text(f'SELECT name FROM "{sibling_id.hex}".users'))
+                    await connection.execute(sqlalchemy.select(sibling_users.c.name))
 
             # Sibling application tables remain inaccessible too.
             with pytest.raises(DBAPIError) as select_error:
                 # Open a fresh transaction after the previous permission failure.
                 async with runtime_engine.begin() as connection:
-                    await connection.execute(text(f'SELECT name FROM "{sibling_id.hex}".sibling_items WHERE id = 1'))
+                    await connection.execute(sqlalchemy.select(sibling_items.c.name).where(sibling_items.c.id == 1))
 
             # Runtime credentials cannot mutate sibling application data either.
             with pytest.raises(DBAPIError) as update_error:
                 # The write probe also runs through PostgreSQL's real transaction permissions.
                 async with runtime_engine.begin() as connection:
-                    await connection.execute(text(f"UPDATE \"{sibling_id.hex}\".sibling_items SET name = 'Changed' WHERE id = 1"))
+                    await connection.execute(sqlalchemy.update(sibling_items).where(sibling_items.c.id == 1).values(name="Changed"))
 
         # Release runtime connections after the permission probes.
         finally:
@@ -136,11 +142,14 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
     # Arrange
     adapter, organization_id, solution_id = postgres_database
     await adapter.prepare_organization_database(organization_id)
-    runtime_password = "stable-runtime-password"
+    runtime_password = secrets.token_urlsafe(32)
     sibling_id = UUID("55555555-5555-5555-5555-555555555555")
-    sibling_password = "sibling-runtime-password"
+    sibling_password = secrets.token_urlsafe(32)
     runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
     sibling_username = await adapter.solution_schema(organization_id, sibling_id, sibling_password)
+
+    # Keep the surviving schema explicitly bound to the sibling identifier.
+    sibling_items = sqlalchemy.table("sibling_items", sqlalchemy.column("id"), sqlalchemy.column("name"), schema=sibling_id.hex)
     url = URL.create(
         "postgresql+psycopg",
         host=postgres_server.get_container_host_ip(),
@@ -196,7 +205,7 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
                 # Check the actual connected role and schema after cleanup.
                 current_role = await connection.scalar(text("SELECT current_user"))
                 current_schema = await connection.scalar(text("SELECT current_schema()"))
-                sibling_name = await connection.scalar(text(f'SELECT name FROM "{sibling_id.hex}".sibling_items WHERE id = 1'))
+                sibling_name = await connection.scalar(sqlalchemy.select(sibling_items.c.name).where(sibling_items.c.id == 1))
             assert current_role == sibling_username
             assert current_schema == sibling_id.hex
             assert sibling_name == "Sibling"

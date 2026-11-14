@@ -449,7 +449,7 @@ async def test_get_app_logs_returns_pod_logs(
     await add_member(user=users[1], organization=organization, role=OrganizationRoles.maintain)
     captured: dict[str, UUID | str] = {}
 
-    async def logs(client: object, organization_id: UUID, solution_id: UUID) -> list[str]:
+    async def logs(_client: object, organization_id: UUID, solution_id: UUID) -> list[str]:
         """Record the requested Solution and return its recent output."""
 
         captured["logs"] = solution_id
@@ -531,7 +531,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             raise RuntimeError("cluster credential unavailable")
         return DatabaseKubernetes({})
 
-    async def unavailable_logs(client: object, organization_id: UUID, solution_id: UUID) -> list[str]:
+    async def unavailable_logs(_client: object, _organization_id: UUID, _solution_id: UUID) -> list[str]:
         """Fail retrieval separately from client construction."""
 
         raise RuntimeError("logs unavailable")

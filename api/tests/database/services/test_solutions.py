@@ -141,7 +141,7 @@ async def test_delete_rejects_read_member_without_mutating_solution(users: tuple
 
 @pytest.mark.integration
 @pytest.mark.no_db
-async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.MonkeyPatch, postgres_url: URL) -> None:
+async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.MonkeyPatch, postgres_url: URL, password_hash: str) -> None:
     """Exercise revision ownership, concurrent updates, and cascade cleanup on PostgreSQL."""
 
     # Migrate the fixture's fresh database using the application's async URL contract.
@@ -156,7 +156,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
 
         # Exercise tenant constraints with persisted PostgreSQL users and Solutions.
         async with session_factory() as session:
-            owner = User(name="Owner", email="owner@example.com", password="unused")
+            owner = User(name="Owner", email="owner@example.com", password=password_hash)
             session.add(owner)
             await session.commit()
         organization = await create_organization(owner)

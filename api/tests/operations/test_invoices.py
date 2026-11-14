@@ -45,7 +45,7 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         persisted.invoice_due_at = period_end
         await session.commit()
 
-    async def database_usage(self: object, organization_id: UUID) -> int:
+    async def database_usage(_self: object, organization_id: UUID) -> int:
         """Measure external SQL usage, with one recoverable outage."""
 
         assert organization_id == organization.id
@@ -53,7 +53,7 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
             raise OSError("database measurement unavailable")
         return 100 * 1024**2 + 1024**3
 
-    async def storage_usage(self: object, bucket: str) -> int:
+    async def storage_usage(_self: object, bucket: str) -> int:
         """Measure external S3 usage, with one recoverable outage."""
 
         assert bucket == invoices.Storage.bucket_name(organization.id)
@@ -124,7 +124,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
     monkeypatch.setattr(env, "STRIPE_WEBHOOK_SECRET", "whsec_invoices")
 
     async def request(
-        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+        _self: stripe.HTTPXClient, method: str, url: str, _headers: object, post_data: str | None = None
     ) -> tuple[bytes, int, dict[str, str]]:
         """Emulate only Stripe HTTP, retaining remote effects across a lost response."""
 
@@ -317,7 +317,7 @@ async def test_issue_rejects_recovered_invoice_with_wrong_customer_or_currency(
     requests: list[tuple[str, str]] = []
 
     async def request(
-        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+        _self: stripe.HTTPXClient, method: str, url: str, _headers: object, _post_data: str | None = None
     ) -> tuple[bytes, int, dict[str, str]]:
         """Return an otherwise valid finalized invoice through the real Stripe SDK."""
 
@@ -373,7 +373,7 @@ async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch:
     requests: list[tuple[str, str]] = []
 
     async def request(
-        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+        _self: stripe.HTTPXClient, method: str, url: str, _headers: object, _post_data: str | None = None
     ) -> tuple[bytes, int, dict[str, str]]:
         """Expose the foreign users line without allowing provider mutations."""
 

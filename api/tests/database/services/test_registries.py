@@ -100,7 +100,7 @@ async def test_private_image_fallback_stops_on_invalid_metadata(
     failure = HTTPException(status_code=422, detail="Image is missing required LongLink metadata")
     attempts: list[str | None] = []
 
-    async def required_metadata(image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
+    async def required_metadata(_image: Image, connection: RegistryConnection | None = None) -> LongLinkMetadata:
         """Deny anonymous access only for the credentialed failure scenario."""
 
         attempts.append(connection.credential if connection is not None else None)

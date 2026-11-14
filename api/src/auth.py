@@ -20,7 +20,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
     # Keep the shared session alive for the complete dependency request scope.
     async with database.session_scope() as session:
-        yield session
+        yield session  # noqa: ASYNC119
 
 
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -51,7 +51,7 @@ async def authuser(
 
     # Keep the current user available to database audit hooks for the whole route lifecycle.
     with audit.actor(user.id):
-        yield user
+        yield user  # noqa: ASYNC119
 
 
 CurrentUser = Annotated[User, Depends(authuser)]

@@ -3,6 +3,7 @@ import pytest
 import asyncio
 import gateway
 import hashlib
+import secrets
 import pytest_asyncio
 from uuid import UUID
 from pathlib import Path
@@ -18,6 +19,7 @@ from src.database.session import session_scope
 from src.database.services import mcp
 from src.database.models.mcp import MCPCode, MCPToken
 from src.database.models.users import User
+from src.database.services.users import PASSWORD_HASH
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 
@@ -211,7 +213,7 @@ async def test_mcp_code_exchange_rechecks_identity_and_membership(
 
             # Change account state after authorization proof has already been issued.
             if invalidation == "password":
-                user.password = "changed-password-hash"
+                user.password = PASSWORD_HASH.hash(secrets.token_urlsafe(32))
             else:
                 user.deleted_at = datetime.now(UTC)
         await session.commit()
@@ -426,7 +428,7 @@ async def test_mcp_grants_recheck_expiry_revocation_identity_and_permissions(
 
                 # Password replacement invalidates the grant's captured fingerprint.
                 if invalidation == "password":
-                    user.password = "changed-password-hash"
+                    user.password = PASSWORD_HASH.hash(secrets.token_urlsafe(32))
                 else:
                     user.deleted_at = datetime.now(UTC)
             await session.commit()
@@ -513,7 +515,7 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
 
     # Make the approved Solution ready without deploying external Kubernetes resources.
     solution, _, exchange = authorization
-    secret = "test-oauth-mcp-identity-secret-01234567890"
+    secret = secrets.token_urlsafe(32)
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
         assert persisted is not None
@@ -570,7 +572,7 @@ async def mcp_gateway(users: tuple[User, User, User], tmp_path: Path, monkeypatc
     """Route the external gateway transport into a real isolated Solution runtime."""
 
     # Create valid persisted runtime state without contacting Kubernetes.
-    secret = "test-mcp-gateway-secret-01234567890"
+    secret = secrets.token_urlsafe(32)
     organization = await create_organization(users[0])
     solution = await create_solution(organization, runtime_secrets={"LONGLINK_IDENTITY_SECRET": secret}, catalog=IDENTITY_CATALOG)
     async with session_scope() as session:
