@@ -33,7 +33,7 @@ export default function DocsArticleRoute() {
                     its locked dependencies, configuration requirements, and metadata.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         Get the deployment model used by modern software teams, reproducible, versioned container
                         images, without setting up and maintaining the build infrastructure yourself. Each update

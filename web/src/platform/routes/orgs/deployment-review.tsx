@@ -88,7 +88,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
             }}
         >
             {!candidate ? (
-                <div className="h-[min(560px,calc(100dvh-var(--spacing-10)*4))] min-h-0 min-w-0 overflow-hidden">
+                <div className="h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                     <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                         <Stack gap={4} align="center" justify="center" minHeight="100%">
                             <Heading level={2}>Update {item.name}</Heading>
@@ -105,7 +105,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
             ) : (
                 <Form action={updateSolution} submitDisabled={missingRequired || !hasChanges}>
                     <Wizard
-                        height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
+                        height="min(560px, calc(100dvh - var(--spacing) * 40))"
                         backVariant="ghost"
                         finalAction={
                             <Button
@@ -120,20 +120,14 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
                                     <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Update {item.name}
                                     </Heading>
                                 </Stack>
                                 <Stack direction="horizontal" gap={4} align="center">
                                     <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
-                                            <Text
-                                                type="code"
-                                                color="secondary"
-                                                justify="center"
-                                                display="block"
-                                                className="break-all"
-                                            >
+                                            <Text className="font-mono text-sm text-muted-foreground block text-center break-all">
                                                 {candidate.current_version || imageDigest(candidate.current_image)}
                                             </Text>
                                         </Stack>
@@ -141,7 +135,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                                     <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                                     <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
-                                            <Text type="code" justify="center" display="block" className="break-all">
+                                            <Text className="font-mono text-sm block text-center break-all">
                                                 {candidate.metadata.version || imageDigest(candidate.metadata.image)}
                                             </Text>
                                         </Stack>
@@ -153,12 +147,14 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
                                     <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Configure your environment
                                     </Heading>
                                 </Stack>
                                 {!candidate.metadata.environments?.length && (
-                                    <Text color="secondary">This solution does not require environment variables.</Text>
+                                    <Text className="text-muted-foreground">
+                                        This solution does not require environment variables.
+                                    </Text>
                                 )}
                                 {(candidate.metadata.environments ?? []).map((environment) => {
                                     // Resolve the configured secret and its local draft without exposing its value.

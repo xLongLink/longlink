@@ -30,11 +30,7 @@ export default function Register() {
     return (
         <AuthLayout
             description={null}
-            title={
-                <Text display="block" justify="center" size="2xl" textWrap="nowrap" type="inherit">
-                    Welcome to LongLink
-                </Text>
-            }
+            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
         >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>
@@ -71,7 +67,7 @@ export default function Register() {
                     label={
                         <>
                             Already have an account?{' '}
-                            <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
+                            <Link href={`/login${signInSearch}`} className="font-medium">
                                 Sign In
                             </Link>
                         </>

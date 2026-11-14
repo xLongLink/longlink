@@ -32,7 +32,7 @@ export function Timestamp({ value, format = 'date_time' }: { value: number | str
 
     // Only relative timestamps expose the copyable absolute-date details.
     return (
-        <Text type="supporting" color="secondary">
+        <Text className="text-xs text-muted-foreground">
             {relative ? (
                 <TimestampDetails
                     dateTime={date.toISOString()}

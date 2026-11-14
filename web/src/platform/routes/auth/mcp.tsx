@@ -60,17 +60,17 @@ export default function McpAuthorization() {
                             <Text as="p">
                                 {consent.client_name} requests access to {consent.solution_name}.
                             </Text>
-                            <Text as="p" type="supporting">
+                            <Text as="p" className="text-xs text-muted-foreground">
                                 This client uses your current Solution permissions. Permission changes apply
                                 automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
                             </Text>
-                            <Text as="p" type="label">
+                            <Text as="p" className="text-sm font-medium">
                                 Client callback
                             </Text>
-                            <Text as="p" type="supporting" className="break-all">
+                            <Text as="p" className="text-xs text-muted-foreground break-all">
                                 {consent.redirect_uri}
                             </Text>
-                            <Text as="p" type="supporting">
+                            <Text as="p" className="text-xs text-muted-foreground">
                                 Client names are self-reported. Approve only if you recognize this callback.
                             </Text>
                         </Stack>

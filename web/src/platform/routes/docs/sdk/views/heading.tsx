@@ -9,7 +9,23 @@ export default function HeadingPage() {
             name="Heading"
             properties={[
                 { name: 'children', type: 'ReactNode', description: 'Heading content.' },
-                { name: 'level', type: '1 | 2 | 3 | 4 | 5 | 6', description: 'Heading level from h1 to h6.' }
+                {
+                    name: 'level',
+                    type: '1 | 2 | 3 | 4 | 5 | 6',
+                    description: 'Heading element from h1 to h6; defaults to 2.'
+                },
+                {
+                    name: 'accessibilityLevel',
+                    type: '1 | 2 | 3 | 4 | 5 | 6',
+                    description: 'Accessible outline level when different from the rendered heading.'
+                },
+                {
+                    name: 'className',
+                    type: 'string',
+                    description: 'Tailwind utilities overriding the default heading typography.'
+                },
+                { name: 'style', type: 'CSSProperties', description: 'Native inline styles.' },
+                { name: 'ref', type: 'Ref<HTMLHeadingElement>', description: 'Reference to the heading element.' }
             ]}
             example={{
                 title: 'Heading',

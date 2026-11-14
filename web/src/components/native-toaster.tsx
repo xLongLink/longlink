@@ -68,14 +68,14 @@ export function NativeToaster({ id, onReady }: { id: string; onReady: () => void
             expand
             closeButton
             offset={{
-                right: 'max(var(--spacing-4), env(safe-area-inset-right, 0px))',
-                left: 'max(var(--spacing-4), env(safe-area-inset-left, 0px))',
-                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))'
+                right: 'max(calc(var(--spacing)*4), env(safe-area-inset-right, 0px))',
+                left: 'max(calc(var(--spacing)*4), env(safe-area-inset-left, 0px))',
+                bottom: 'calc(calc(var(--spacing)*4) + env(safe-area-inset-bottom, 0px))'
             }}
             mobileOffset={{
-                right: 'max(var(--spacing-4), env(safe-area-inset-right, 0px))',
-                left: 'max(var(--spacing-4), env(safe-area-inset-left, 0px))',
-                bottom: 'calc(var(--spacing-4) + env(safe-area-inset-bottom, 0px))'
+                right: 'max(calc(var(--spacing)*4), env(safe-area-inset-right, 0px))',
+                left: 'max(calc(var(--spacing)*4), env(safe-area-inset-left, 0px))',
+                bottom: 'calc(calc(var(--spacing)*4) + env(safe-area-inset-bottom, 0px))'
             }}
             toastOptions={{ classNames: { toast: 'cn-toast' }, closeButtonAriaLabel: 'Dismiss notification' }}
             ref={(element) => {

@@ -43,7 +43,7 @@ export function DocumentationArticle({ article, children }: { article: ArticleMe
     return (
         <ArticleRenderer
             article={article}
-            className="[--text-body-size:var(--font-size-lg)] [--article-heading-spacing:calc(var(--spacing-9)*2)] [&_:is(.native-heading,.view-heading):not(dialog_*)]:tracking-wide"
+            className="text-lg [--article-heading-spacing:calc(var(--spacing)*18)] [&_:is(h1,h2,h3,h4,h5,h6):not(dialog_*)]:tracking-wide"
             paths={documentationPaths}
         >
             {children}
@@ -106,7 +106,7 @@ function ArticleRenderer({
                 <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
                     <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
                         <article
-                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,var(--spacing-8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
+                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,calc(var(--spacing)*8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
                         >
                             {children}
                             <footer className="flex flex-col gap-3 pt-8 pb-30">
@@ -144,7 +144,7 @@ export function ArticleFooter({
     const nextPage = paths[currentPage + 1];
 
     const pageLinkClassName =
-        'box-border inline-flex h-[max(var(--size-element-md),1lh)] cursor-pointer items-center justify-center gap-2 rounded-(--radius-element) border-0 bg-(--color-neutral) px-3 py-2 [font-family:inherit] text-(length:--text-label-size) leading-(--text-label-leading) font-medium whitespace-nowrap text-(--color-text-primary) no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset) [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--color-text-primary)_8%,var(--color-neutral))]';
+        'box-border inline-flex h-[max(calc(var(--spacing)*8),1lh)] cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-muted px-3 py-2 [font-family:inherit] text-sm leading-(--text-sm--line-height) font-medium whitespace-nowrap text-foreground no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--muted))]';
 
     // Keep unmodified arrow shortcuts available outside native text-entry controls.
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -227,11 +227,11 @@ export function ArticleFooter({
                 </nav>
             ) : null}
             <Separator />
-            <div className="flex w-full flex-wrap items-center justify-between gap-3 font-(family-name:--font-family-body) text-(length:--text-supporting-size) leading-(--text-supporting-leading) font-(--text-supporting-weight) text-(--color-text-secondary)">
+            <div className="flex w-full flex-wrap items-center justify-between gap-3 font-sans text-sm leading-(--text-sm--line-height) font-normal text-muted-foreground">
                 <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
                 {editUrl ? (
                     <a
-                        className="inline-flex items-center gap-0.5 text-(--color-text-accent) underline underline-offset-2 hover:text-[color-mix(in_srgb,var(--color-text-accent),var(--color-tint-hover)_15%)] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                        className="inline-flex items-center gap-0.5 text-primary underline underline-offset-2 hover:text-[color-mix(in_srgb,var(--primary),var(--foreground)_15%)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
                         href={editUrl}
                         target="_blank"
                         rel="noopener noreferrer"

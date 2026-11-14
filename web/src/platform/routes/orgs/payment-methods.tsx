@@ -24,8 +24,8 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
 
     return (
         <Stack gap={4}>
-            <Stack direction="horizontal" justify="between" align="end" wrap="wrap" minHeight="var(--size-element-md)">
-                <Heading level={2} hasCapsize>
+            <Stack direction="horizontal" justify="between" align="end" wrap="wrap" minHeight="calc(var(--spacing)*8)">
+                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Payment Methods
                 </Heading>
                 {usage.stripe_enabled && canManage && (
@@ -34,15 +34,15 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
             </Stack>
             <Separator />
             {!usage.stripe_enabled ? (
-                <Text as="p" color="secondary">
+                <Text as="p" className="text-muted-foreground">
                     Card registration is not enabled on this deployment.
                 </Text>
             ) : canManage ? (
-                <ApiBoundary fallback={<Text color="secondary">Loading registered cards…</Text>}>
+                <ApiBoundary fallback={<Text className="text-muted-foreground">Loading registered cards…</Text>}>
                     <RegisteredCards base={base} />
                 </ApiBoundary>
             ) : (
-                <Text as="p" color="secondary">
+                <Text as="p" className="text-muted-foreground">
                     An organization owner can view and register cards.
                 </Text>
             )}

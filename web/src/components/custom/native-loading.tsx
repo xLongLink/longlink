@@ -10,7 +10,7 @@ export function NativeLoading({ label }: { label: string }) {
     // Name the progress indicator from the visible label, keeping announcements local.
     return (
         <div
-            className="inline-flex flex-col items-center gap-2 text-[length:var(--text-body-size)] leading-(--text-body-leading) font-bold text-foreground"
+            className="inline-flex flex-col items-center gap-2 text-sm leading-(--text-sm--line-height) font-bold text-foreground"
             ref={root}
         >
             <LoaderCircle

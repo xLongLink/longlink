@@ -65,7 +65,7 @@ export default function Organizations() {
                                                 </Badge>
                                             )}
                                         </Stack>
-                                        <Text type="supporting">Organization</Text>
+                                        <Text className="text-xs text-muted-foreground">Organization</Text>
                                     </Stack>
                                 </Stack>
                             )

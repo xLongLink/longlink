@@ -17,12 +17,12 @@ it('keeps absent children empty and preserves nested text without adding button 
     const empty = renderStatic(<Text />);
 
     const output = renderStatic(
-        <Text as="h2" type="display-2">
+        <Text as="h2" className="text-5xl font-semibold tracking-tight">
             <em>Current</em> status
         </Text>
     );
 
-    expect(empty.querySelector('.view-text')?.textContent).toBe('');
+    expect(empty.querySelector('span')?.textContent).toBe('');
     expect(output.querySelector('h2 em')?.textContent).toBe('Current');
     expect(output.querySelector('h2')?.textContent).toBe('Current status');
     expect(output.querySelector('button, [role="button"], [tabindex]')).toBeNull();
@@ -75,11 +75,9 @@ it('preserves a labelled live status and its ref while updating truncation detai
             expect(document.getElementById('status-label')?.textContent).toBe('Publication status');
             expect(paragraph.dataset.publication).toBe('draft');
             expect(paragraph.classList.contains('publication-status')).toBe(true);
-            expect(paragraph.classList.contains('view-text')).toBe(true);
             expect(paragraph.style.maxWidth).toBe('80px');
             expect(paragraph.hasAttribute('tabindex')).toBe(false);
             expect(paragraph.getAttribute('aria-describedby')).toBe(document.querySelector('[role="tooltip"]')?.id);
-            expect(paragraph.getAttribute('data-clamp')).toBe('single');
             expect(document.querySelector('[role="tooltip"]')?.getAttribute('data-side')).toBe('bottom');
 
             await act(async () => await user.unhover(paragraph));
@@ -104,7 +102,7 @@ it('clips text without exposing a tooltip when truncation details are disabled',
             Private detail
         </Text>,
         async (output) => {
-            const text = output.querySelector('.view-text');
+            const text = output.querySelector('span');
 
             if (!(text instanceof HTMLElement)) throw new Error('Missing text');
 
@@ -112,7 +110,6 @@ it('clips text without exposing a tooltip when truncation details are disabled',
             Object.defineProperty(text, 'scrollWidth', { value: 200 });
             await act(async () => await user.hover(text));
 
-            expect(text.dataset.clamp).toBe('single');
             expect(document.querySelector('[role="tooltip"]')).toBeNull();
             expect(text.hasAttribute('aria-describedby')).toBe(false);
         }

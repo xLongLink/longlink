@@ -25,14 +25,14 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     Test your application with standard{' '}
-                    <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink>
                         pytest
                     </Link>{' '}
                     workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
                     services, without configuring a separate test environment.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         Tests stay fast, isolated, and reproducible while using the same application code as development
                         and production. The database and storage are created in memory for each test run, so tests do

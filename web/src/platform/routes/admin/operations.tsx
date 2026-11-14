@@ -57,7 +57,7 @@ export default function Operations() {
                             renderCell: (row) => (
                                 <Stack align="start">
                                     <Text>{kinds[row.kind]}</Text>
-                                    <Text type="supporting">
+                                    <Text className="text-xs text-muted-foreground">
                                         {statuses[row.status]}
                                         {row.finished_at && ` - ${row.finished_at}`}
                                     </Text>
@@ -71,7 +71,7 @@ export default function Operations() {
                             renderCell: (row) => (
                                 <Stack align="start">
                                     <Text>{row.resource_name ?? 'Resource unavailable'}</Text>
-                                    <Text type="supporting">
+                                    <Text className="text-xs text-muted-foreground">
                                         {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
                                     </Text>
                                 </Stack>

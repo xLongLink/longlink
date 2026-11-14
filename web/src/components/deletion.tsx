@@ -83,7 +83,7 @@ export function DeletionDialog({
             >
                 <header className="flex shrink-0 items-start justify-between gap-3">
                     <AlertDialogTitle
-                        className="my-[calc(var(--size-element-md)/2-var(--spacing-2)-var(--text-heading-2-size)*var(--text-heading-2-leading)/2)] min-w-0 flex-1"
+                        className="my-[calc(var(--spacing)*2-var(--text-3xl)*var(--text-3xl--line-height)/2)] min-w-0 flex-1"
                         render={<div />}
                     >
                         <Heading level={2}>{confirmation.title}</Heading>
@@ -100,7 +100,7 @@ export function DeletionDialog({
                     </Button>
                 </header>
                 <AlertDialogDescription render={<div />}>
-                    <Text color="secondary">{confirmation.description}</Text>
+                    <Text className="text-muted-foreground">{confirmation.description}</Text>
                 </AlertDialogDescription>
                 <AlertDialogFooter>
                     {cancelButton}

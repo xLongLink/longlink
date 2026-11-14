@@ -25,19 +25,14 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     Use{' '}
-                    <Link
-                        href="https://github.com/pydantic/pydantic-settings"
-                        hasUnderline
-                        isExternalLink
-                        type="inherit"
-                    >
+                    <Link href="https://github.com/pydantic/pydantic-settings" hasUnderline isExternalLink>
                         Pydantic Settings
                     </Link>{' '}
                     to define project configuration as typed, validated Python. Extend Environments with the values your
                     solution needs; they are loaded from .env.sample, .env, or process environment variables.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         A clear schema helps both developers and AI understand what the application expects, while early
                         validation catches missing or invalid values before the application starts running.

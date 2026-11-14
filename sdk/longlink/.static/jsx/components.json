@@ -308,6 +308,52 @@
         {
             "name": "Avatar",
             "category": "Display",
+            "introduction": "Native shadcn Avatar composes an image, loading fallback, and optional badge.",
+            "guidance": "Use AvatarImage and AvatarFallback inside Avatar. Compose AvatarGroup and AvatarGroupCount for groups. Use GeneratedAvatar for deterministic artwork and owner-specific geometry.",
+            "properties": [
+                {
+                    "name": "size",
+                    "type": "\"sm\" | \"default\" | \"lg\"",
+                    "description": "Avatar size.",
+                    "default": "default"
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Compose AvatarImage, AvatarFallback, and AvatarBadge."
+                },
+                {
+                    "name": "AvatarImage.src / AvatarImage.alt",
+                    "type": "string",
+                    "description": "Image source URL and accessible description."
+                },
+                {
+                    "name": "AvatarImage.onLoadingStatusChange",
+                    "type": "(status: \"idle\" | \"loading\" | \"loaded\" | \"error\") => void",
+                    "description": "Receives image loading status changes."
+                },
+                {
+                    "name": "AvatarFallback.children",
+                    "type": "ReactNode",
+                    "description": "Content shown when the image is unavailable."
+                },
+                {
+                    "name": "AvatarFallback.delay",
+                    "type": "number",
+                    "description": "Delay in milliseconds before showing the fallback."
+                },
+                {
+                    "name": "AvatarGroup / AvatarGroupCount / AvatarBadge",
+                    "type": "components",
+                    "description": "Native avatar grouping, overflow count, and badge composition."
+                }
+            ],
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/avatar"
+        },
+        {
+            "name": "GeneratedAvatar",
+            "category": "Display",
             "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
             "properties": [
                 {
@@ -343,9 +389,9 @@
                 },
                 {
                     "name": "size",
-                    "type": "\"sm\" | \"lg\" | \"md\"",
+                    "type": "\"sm\" | \"default\" | \"lg\"",
                     "description": "Avatar size.",
-                    "default": "md"
+                    "default": "default"
                 }
             ],
             "source": "custom",
@@ -1240,6 +1286,7 @@
             "name": "Grid",
             "category": "Layouts",
             "introduction": "Arranges View content into fixed or width-responsive columns.",
+            "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
             "keywords": [
                 "columns",
                 "layout",
@@ -1326,7 +1373,8 @@
         {
             "name": "Heading",
             "category": "Display",
-            "introduction": "Displays a semantic View heading without a separate visual-level override.",
+            "introduction": "Displays a semantic HTML heading with standard Tailwind typography.",
+            "guidance": "Accepts native heading attributes, events, refs, className, and style. Use className or style for presentation rather than custom typography props.",
             "properties": [
                 {
                     "name": "children",
@@ -1338,10 +1386,20 @@
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
                     "description": "Heading level from h1 to h6.",
                     "default": 2
+                },
+                {
+                    "name": "accessibilityLevel",
+                    "type": "1 | 2 | 3 | 4 | 5 | 6",
+                    "description": "Accessible heading level when it differs from the rendered heading element."
+                },
+                {
+                    "name": "className / style",
+                    "type": "native heading props",
+                    "description": "Standard CSS presentation on the heading element."
                 }
             ],
             "source": "custom",
-            "justification": "Maps the public numeric heading-level contract to semantic HTML and LongLink typography."
+            "justification": "Maps a numeric heading level to semantic HTML while allowing an independent accessible document outline; no Heading primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "Hooks",
@@ -1906,7 +1964,8 @@
         {
             "name": "Stack",
             "category": "Layouts",
-            "introduction": "Arranges View content using the LongLink spacing scale.",
+            "introduction": "Arranges View content using Tailwind spacing steps.",
+            "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
             "keywords": [
                 "spacing",
                 "horizontal",
@@ -2012,7 +2071,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Preserves LongLink spacing and layout properties, including independently scrollable children."
+            "justification": "Provides a flex layout composition with independently scrollable children; no Stack primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "Stepper",
@@ -2397,40 +2456,13 @@
         {
             "name": "Text",
             "category": "Display",
-            "introduction": "Displays View text with native HTML attributes, semantic typography, and truncation controls.",
-            "guidance": "Native HTML attributes, ARIA and data attributes, className, style, event handlers, and refs are forwarded to the rendered element.",
+            "introduction": "Adds optional truncation and overflow tooltips to a semantic HTML element.",
+            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, className, style, event handlers, and refs are forwarded to the rendered element. Use ordinary HTML for text that does not need truncation.",
             "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
                     "description": "Text content."
-                },
-                {
-                    "name": "color",
-                    "type": "\"primary\" | \"secondary\" | \"disabled\" | \"placeholder\" | \"accent\" | \"inherit\"",
-                    "description": "Text color; defaults to secondary for supporting text and primary otherwise."
-                },
-                {
-                    "name": "type",
-                    "type": "\"code\" | \"inherit\" | \"body\" | \"large\" | \"label\" | \"supporting\" | \"display-1\" | \"display-2\" | \"display-3\"",
-                    "description": "Theme text style, or inherit to match surrounding text.",
-                    "default": "body"
-                },
-                {
-                    "name": "size",
-                    "type": "\"4xs\" | \"3xs\" | \"2xs\" | \"xsm\" | \"sm\" | \"base\" | \"lg\" | \"xl\" | \"2xl\" | \"3xl\" | \"4xl\"",
-                    "description": "Font size override for the selected text style."
-                },
-                {
-                    "name": "weight",
-                    "type": "\"bold\" | \"normal\" | \"medium\" | \"semibold\"",
-                    "description": "Font weight override."
-                },
-                {
-                    "name": "display",
-                    "type": "\"inline\" | \"block\"",
-                    "description": "Display type. Silently overridden to 'block' when maxLines > 0 or hasCapsize is true.",
-                    "default": "inline"
                 },
                 {
                     "name": "as",
@@ -2451,42 +2483,13 @@
                     "default": true
                 },
                 {
-                    "name": "wordBreak",
-                    "type": "\"break-word\" | \"break-all\"",
-                    "description": "Word breaking for truncated text."
-                },
-                {
-                    "name": "textWrap",
-                    "type": "\"nowrap\" | \"wrap\" | \"balance\" | \"pretty\"",
-                    "description": "Text wrapping behavior."
-                },
-                {
-                    "name": "justify",
-                    "type": "\"start\" | \"center\" | \"end\"",
-                    "description": "Text alignment (justification). Uses logical values (start/end) for i18n/RTL compatibility.",
-                    "default": "start"
-                },
-                {
-                    "name": "hasCapsize",
-                    "type": "boolean",
-                    "description": "Enable optical alignment using text-box-trim. Forces block display.",
-                    "default": false
-                },
-                {
-                    "name": "hasStrikethrough",
-                    "type": "boolean",
-                    "description": "Apply strikethrough text decoration.",
-                    "default": false
-                },
-                {
-                    "name": "hasTabularNumbers",
-                    "type": "boolean",
-                    "description": "Use tabular (monospace) numbers for aligned numeric data.",
-                    "default": false
+                    "name": "className / style",
+                    "type": "native element props",
+                    "description": "Standard CSS typography, wrapping, alignment, and decoration."
                 }
             ],
             "source": "custom",
-            "justification": "Preserves semantic LongLink typography, controlled truncation, and overflow tooltip behavior."
+            "justification": "Measures overflow and shows current truncated content in an accessible tooltip; presentation remains native HTML and Tailwind."
         },
         {
             "name": "TimeInput",

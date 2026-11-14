@@ -70,12 +70,12 @@ VIEWS:
   - Table view: one table for one dataset.
   - Menu view: one menu for related options or sections.
   - Card view: one card-based presentation for one scope.
-- DON'T use raw HTML elements. Use LongLink components for structure and content.
+- USE native HTML or the exposed shadcn/ui and ReUI components. Keep custom components for functionality unavailable upstream.
 - AVOID duplicated derived state and effects that do not synchronize with external systems.
 - DON'T add standalone explanatory, onboarding, or empty-state sentences around the primary content.
 - DON'T use browsers or browser automation to inspect or verify changes. DO inspect source and run code-level checks instead.
 - DON'T add decorative containers, redundant labels, or explanatory text that repeats what the interface already makes clear.
-- DON'T use inline `style`, custom `className` values, imported CSS, or hardcoded colors and pixel values to bypass the View component API.
+- PREFER default shadcn/ui and ReUI styling. Use native `className` and `style` props for layout and typography instead of introducing custom themes or stylesheets.
 
 DOCS:
 - USE `longlink migrate` to generate migrations

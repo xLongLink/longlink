@@ -30,6 +30,7 @@ import { DropdownMenuExample } from './views/dropdown-menu';
 import { Disclosure } from '@/components/custom/disclosure';
 import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { componentDocumentation } from '@/platform/publications';
+import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { Heading as ViewHeading } from '@/components/custom/heading';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -77,6 +78,7 @@ const previews = new Map(
             </div>
         ),
         Avatar: <AvatarExample />,
+        GeneratedAvatar: <GeneratedAvatarExample />,
         Badge: (
             <div className="flex flex-wrap items-center justify-center gap-2">
                 <Badge variant="secondary">Draft</Badge>
@@ -137,7 +139,7 @@ const previews = new Map(
         Grid: <GridExample />,
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
-            <Stack className="[&_:is(.native-heading,.view-heading)]:mt-0">
+            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
                 <ViewHeading level={1}>Heading</ViewHeading>
             </Stack>
         ),
@@ -242,7 +244,7 @@ export default function Item({ params }) {
                                 renderCell: (api) => (
                                     <Stack gap={0}>
                                         <InlineCode className="self-start">{api.name}</InlineCode>
-                                        <Text type="supporting">{api.description}</Text>
+                                        <Text className="text-xs text-muted-foreground">{api.description}</Text>
                                     </Stack>
                                 )
                             }
@@ -289,7 +291,7 @@ export default function Item({ params }) {
                                                     </Stack>
                                                 </div>
                                             </Card>
-                                            <Text type="supporting">
+                                            <Text className="text-xs text-muted-foreground">
                                                 {component.category === 'Action' || component.category === 'Form'
                                                     ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
                                                     : component.label}

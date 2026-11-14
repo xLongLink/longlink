@@ -2,21 +2,21 @@
     .settings-navigation {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-0-5);
-        padding-inline-end: var(--spacing-4);
+        gap: calc(var(--spacing)*0.5);
+        padding-inline-end: calc(var(--spacing)*4);
     }
 
     .settings-navigation a,
     .settings-navigation summary {
         display: flex;
         align-items: center;
-        gap: var(--spacing-2);
-        min-height: var(--size-element-md);
-        padding-inline: var(--spacing-2);
-        border-radius: var(--radius-element);
+        gap: calc(var(--spacing)*2);
+        min-height: calc(var(--spacing)*8);
+        padding-inline: calc(var(--spacing)*2);
+        border-radius: var(--radius-lg);
         color: var(--foreground);
-        font-size: var(--text-label-size);
-        line-height: var(--text-label-leading);
+        font-size: var(--text-sm);
+        line-height: var(--text-sm--line-height);
         text-decoration: none;
         cursor: pointer;
     }
@@ -39,7 +39,7 @@
     }
 
     .settings-navigation details > a {
-        padding-inline-start: calc(var(--spacing-2) + var(--spacing-6));
+        padding-inline-start: calc(var(--spacing) * 8);
     }
 
     .settings-navigation svg {
@@ -50,19 +50,19 @@
     @media (hover: hover) {
         .settings-navigation a:hover,
         .settings-navigation summary:hover {
-            background: var(--color-overlay-hover);
+            background: var(--muted);
         }
     }
 
     .settings-navigation a[aria-current] {
-        background: var(--color-neutral);
+        background: var(--muted);
         font-weight: var(--font-weight-medium);
     }
 
     .settings-navigation a:focus-visible,
     .settings-navigation summary:focus-visible {
-        outline: var(--focus-outline-width) solid var(--ring);
-        outline-offset: calc(-1 * var(--focus-outline-width));
+        outline: 2px solid var(--ring);
+        outline-offset: -2px;
     }
 
     @media (forced-colors: active) {

@@ -48,7 +48,7 @@ export function ConfirmationDialog({
                 className="overflow-auto"
                 style={{
                     top: 'calc(var(--view-viewport-top, 0px) + var(--view-viewport-height, 100dvh) / 2)',
-                    maxHeight: 'calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 2)'
+                    maxHeight: 'calc(var(--view-viewport-height, 100dvh) - var(--spacing) * 20)'
                 }}
                 initialFocus={cancel}
                 aria-busy={isPending || undefined}
@@ -67,7 +67,7 @@ export function ConfirmationDialog({
                                     className="flex items-center gap-2 text-destructive forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
                                 >
                                     <CircleX aria-hidden="true" className="size-5 shrink-0" />
-                                    <p className="m-0 min-w-0 flex-1 text-[length:var(--text-label-size)] leading-(--text-label-leading) font-semibold wrap-anywhere">
+                                    <p className="m-0 min-w-0 flex-1 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
                                         {error}
                                     </p>
                                 </div>

@@ -25,7 +25,7 @@ export default function HooksPage() {
                         renderCell: (hook) => (
                             <Stack gap={0}>
                                 <Text>{hook.name}</Text>
-                                <Text type="supporting">{hook.description}</Text>
+                                <Text className="text-xs text-muted-foreground">{hook.description}</Text>
                             </Stack>
                         )
                     }

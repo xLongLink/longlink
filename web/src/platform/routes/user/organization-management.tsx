@@ -60,7 +60,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 justify={onboarding ? 'center' : undefined}
                 minHeight={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)'
+                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing) * 8)'
                         : undefined
                 }
             >
@@ -71,9 +71,12 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             justify="between"
                             align="end"
                             wrap="wrap"
-                            minHeight="var(--size-element-md)"
+                            minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading level={2} hasCapsize>
+                            <Heading
+                                level={2}
+                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
+                            >
                                 Organizations
                             </Heading>
                             <Button
@@ -101,10 +104,10 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} justify="center">
+                            <Heading level={1} className="text-center">
                                 Your Organizations
                             </Heading>
-                            <Text as="p" color="secondary" justify="center">
+                            <Text as="p" className="text-muted-foreground text-center">
                                 A place for your workflows and data
                             </Text>
                         </Stack>
@@ -154,7 +157,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                     {row.organization.name}
                                                 </Link>
                                             )}
-                                            <Text type="supporting">
+                                            <Text className="text-xs text-muted-foreground">
                                                 {row.kind === 'invitation'
                                                     ? `Invitation · ${row.role}`
                                                     : 'Organization'}
@@ -224,7 +227,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     }}
                 >
                     <Stack gap={3}>
-                        <Text color="secondary">
+                        <Text className="text-muted-foreground">
                             {selected.type === 'accept'
                                 ? `Accept the invitation to join ${selected.name}?`
                                 : `Decline the invitation to ${selected.name}? You will need a new invitation to join.`}

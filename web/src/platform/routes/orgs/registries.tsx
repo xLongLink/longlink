@@ -44,9 +44,9 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     justify="between"
                     align="end"
                     wrap="wrap"
-                    minHeight="var(--size-element-md)"
+                    minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} hasCapsize>
+                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Private registries
                     </Heading>
                     {canMaintain && (
@@ -133,10 +133,10 @@ function RegistryForm({
             <Stack gap={3} align="center">
                 <Illustration src="/images/lock.png" alt="" className="size-20 object-contain" decoding="async" />
                 <Stack gap={0}>
-                    <Heading level={2} justify="center">
+                    <Heading level={2} className="text-center">
                         Connect a registry
                     </Heading>
-                    <Text as="p" color="secondary" justify="center">
+                    <Text as="p" className="text-muted-foreground text-center">
                         Allow LongLink to pull your private container images
                     </Text>
                 </Stack>

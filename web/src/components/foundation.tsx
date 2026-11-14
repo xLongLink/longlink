@@ -133,13 +133,13 @@ export function Foundation() {
                 <div className="mx-auto flex max-w-[1000px] flex-col items-center gap-5 px-6 py-10 text-center">
                     <h2
                         id="foundation-heading"
-                        className="text-center font-(family-name:--font-family-heading) text-3xl leading-(--text-heading-2-leading) font-(--text-heading-2-weight) tracking-tight text-balance text-foreground sm:text-5xl"
+                        className="text-center font-sans text-3xl leading-(--text-3xl--line-height) font-semibold tracking-tight text-balance text-foreground sm:text-5xl"
                     >
                         One foundation.
                         <br />
                         Every way you work.
                     </h2>
-                    <p className="max-w-xl text-[length:var(--text-large-size)] leading-(--text-large-leading) font-(--text-large-weight) text-pretty text-muted-foreground">
+                    <p className="max-w-xl text-lg leading-(--text-lg--line-height) font-semibold text-pretty text-muted-foreground">
                         Start with one process. Build the next. LongLink gives your team a foundation for dedicated
                         business software, across industries and wherever your work takes you.
                     </p>

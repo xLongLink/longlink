@@ -26,18 +26,18 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     Use <InlineCode>ctx.storage</InlineCode> to read and write files asynchronously through a normalized{' '}
-                    <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink>
                         fsspec
                     </Link>{' '}
                     filesystem. Production uses{' '}
-                    <Link href="https://github.com/fsspec/s3fs" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://github.com/fsspec/s3fs" hasUnderline isExternalLink>
                         s3fs
                     </Link>{' '}
                     with native async S3 I/O through aiobotocore. Synchronous local and memory filesystems are adapted
                     internally, using worker threads rather than blocking async routes.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         The interface stays the same in every environment: in-memory storage for isolated tests, local
                         files during development for easy inspection, and an S3 storage space when deployed on the

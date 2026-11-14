@@ -7,7 +7,7 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const cardClassName =
-    'flex min-h-60 flex-col -me-(--border-width) -mb-(--border-width) rounded-none border-(length:--border-width) border-border bg-transparent p-[calc(var(--spacing-6)-var(--border-width))] text-inherit no-underline hover:border-(--color-border-emphasized) hover:bg-(--color-overlay-hover) active:bg-(--color-overlay-pressed) focus-visible:relative focus-visible:z-1 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)';
+    'flex min-h-60 flex-col -me-px -mb-px rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*6)-1px)] text-inherit no-underline hover:border-ring hover:bg-muted active:bg-accent focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2';
 
 const article = {
     title: 'Documentation | LongLink',
@@ -40,10 +40,10 @@ export default function DocsIndex() {
                     <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
                         <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
                             <Stack className="flex-1" gap={6} justify="between">
-                                <Lightbulb aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <Lightbulb aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text weight="bold">Explore LongLink</Text>
-                                    <Text as="p" color="secondary" textWrap="pretty">
+                                    <Text className="font-bold">Explore LongLink</Text>
+                                    <Text as="p" className="text-muted-foreground text-pretty">
                                         Learn the core concepts and discover what you can build.
                                     </Text>
                                 </Stack>
@@ -51,10 +51,10 @@ export default function DocsIndex() {
                         </Link>
                         <Link className={cardClassName} to="/docs/sdk/" aria-label="Build a Solution">
                             <Stack className="flex-1" gap={6} justify="between">
-                                <Code2 aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <Code2 aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text weight="bold">Build a Solution</Text>
-                                    <Text as="p" color="secondary" textWrap="pretty">
+                                    <Text className="font-bold">Build a Solution</Text>
+                                    <Text as="p" className="text-muted-foreground text-pretty">
                                         Create a Solution and see how the pieces fit together.
                                     </Text>
                                 </Stack>
@@ -62,10 +62,10 @@ export default function DocsIndex() {
                         </Link>
                         <Link className={cardClassName} to="/docs/api/" aria-label="Explore the Platform">
                             <Stack className="flex-1" gap={6} justify="between">
-                                <ServerCog aria-hidden="true" className="text-(--color-icon-secondary)" size={24} />
+                                <ServerCog aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text weight="bold">Explore the Platform</Text>
-                                    <Text as="p" color="secondary" textWrap="pretty">
+                                    <Text className="font-bold">Explore the Platform</Text>
+                                    <Text as="p" className="text-muted-foreground text-pretty">
                                         Learn how LongLink runs and manages your Solutions.
                                     </Text>
                                 </Stack>

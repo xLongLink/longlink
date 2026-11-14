@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { act, useState } from 'react';
+import { act, createRef, useState } from 'react';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
@@ -31,9 +31,70 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
     expect(sized.style.height).toBe('100%');
     expect(Number.parseFloat(sized.style.minHeight)).toBe(0);
     expect(sized.style.maxWidth).toBe('720px');
-    expect(sized.style.gap).toBe('var(--spacing-8)');
-    expect(sized.style.paddingInline).toBe('var(--spacing-0)');
-    expect(sized.style.paddingBlock).toBe('var(--spacing-2)');
+    expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
+    expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
+    expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
+});
+
+it.each([Stack, Grid])(
+    'forwards native container behavior and lets caller styles override layout props',
+    async (Layout) => {
+        const ref = createRef<HTMLDivElement>();
+        const user = userEvent.setup();
+        let resets = 0;
+
+        await withMounted(
+            <Layout
+                ref={ref}
+                role="region"
+                aria-label="Draft preview"
+                className="preview"
+                width={320}
+                gap={4}
+                style={{ width: 640, gap: 0 }}
+                onResetCapture={() => resets++}
+            >
+                <form>
+                    <button type="reset">Reset draft</button>
+                </form>
+            </Layout>,
+            async (output) => {
+                const container = output.querySelector<HTMLDivElement>('[role="region"]');
+                const button = output.querySelector('button');
+
+                if (!container || !button) throw new Error('Expected a native preview container');
+
+                expect(ref.current).toBe(container);
+                expect(container.getAttribute('aria-label')).toBe('Draft preview');
+                expect(container.classList.contains('preview')).toBe(true);
+                expect(container.style.width).toBe('640px');
+                expect(Number.parseFloat(container.style.gap)).toBe(0);
+                await user.click(button);
+                expect(resets).toBe(1);
+            }
+        );
+
+        expect(ref.current).toBeNull();
+    }
+);
+
+it.each([Stack, Grid])('leaves omitted geometry to caller utilities rather than inline defaults', (Layout) => {
+    const output = renderStatic(
+        <Layout className="gap-6 p-4 grid-cols-2">
+            <p>Caller layout</p>
+        </Layout>
+    );
+
+    const container = output.querySelector('p')?.parentElement;
+
+    if (!container) throw new Error('Expected a layout container');
+
+    expect(container.style.gap).toBe('');
+    expect(container.style.rowGap).toBe('');
+    expect(container.style.columnGap).toBe('');
+    expect(container.style.paddingInline).toBe('');
+    expect(container.style.paddingBlock).toBe('');
+    expect(container.style.gridTemplateColumns).toBe('');
 });
 
 it('retains an unsaved content draft when its toolbar is removed and restored', async () => {

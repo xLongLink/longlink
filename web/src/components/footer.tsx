@@ -8,7 +8,7 @@ import { LinkedInIcon } from '@/components/svg/linked-in-icon';
 /** Renders the public footer at the page's content width. */
 export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
     return (
-        <footer className="border-t border-border px-6 py-10 font-sans [&_a]:inline-flex [&_a]:items-center [&_a]:no-underline [&_a]:hover:underline [&_a:focus-visible]:outline-(length:--focus-outline-width) [&_a:focus-visible]:outline-(--focus-outline-color) [&_a:focus-visible]:[outline-style:var(--focus-outline-style)] [&_a:focus-visible]:outline-offset-(--focus-outline-offset) [&_a:not(.site-footer-home)]:text-muted-foreground [@media(hover:hover)]:[&_a:not(.site-footer-home):hover]:text-[color-mix(in_srgb,var(--color-text-secondary),var(--color-tint-hover)_15%)]">
+        <footer className="border-t border-border px-6 py-10 font-sans [&_a]:inline-flex [&_a]:items-center [&_a]:no-underline [&_a]:hover:underline [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-ring [&_a:focus-visible]:outline-solid [&_a:focus-visible]:outline-offset-2 [&_a:not(.site-footer-home)]:text-muted-foreground [@media(hover:hover)]:[&_a:not(.site-footer-home):hover]:text-[color-mix(in_srgb,var(--muted-foreground),var(--foreground)_15%)]">
             <div className="mx-auto flex w-full flex-col gap-6 max-sm:text-center" style={{ maxWidth }}>
                 <div className="flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:justify-center">
                     <div className="flex items-center gap-4 max-sm:flex-col max-sm:justify-center">
@@ -50,7 +50,7 @@ export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
                     </div>
 
                     <nav
-                        className="flex flex-wrap items-center justify-center gap-4 text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-medium"
+                        className="flex flex-wrap items-center justify-center gap-4 text-sm leading-(--text-sm--line-height) font-medium"
                         aria-label="Footer navigation"
                     >
                         <RouterLink to="/docs/">Documentation</RouterLink>
@@ -63,11 +63,11 @@ export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
                 <Separator />
 
                 <div className="flex flex-wrap items-center justify-between gap-3 max-sm:flex-col max-sm:justify-center">
-                    <p className="m-0 text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) text-muted-foreground max-sm:order-1">
+                    <p className="m-0 text-sm leading-(--text-sm--line-height) font-normal text-muted-foreground max-sm:order-1">
                         LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                     </p>
                     <nav
-                        className="flex flex-wrap items-center justify-center gap-4 text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-medium"
+                        className="flex flex-wrap items-center justify-center gap-4 text-sm leading-(--text-sm--line-height) font-medium"
                         aria-label="Legal navigation"
                     >
                         <a href="mailto:info@longlink.dev">Contact</a>

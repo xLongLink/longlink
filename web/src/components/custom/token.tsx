@@ -38,7 +38,7 @@ export function Token({
             className={cn(
                 'view-token max-w-full transition-colors has-[>.view-token-action:focus-visible]:ring-2 has-[>.view-token-action:focus-visible]:ring-ring has-[>.view-token-action:focus-visible]:ring-offset-1 has-[>.view-token-action:focus-visible]:ring-offset-background',
                 props.disabled && 'opacity-50',
-                props.onClick && !props.disabled && 'hover:bg-badge-neutral/80'
+                props.onClick && !props.disabled && 'hover:bg-secondary/80'
             )}
             data-disabled={props.disabled || undefined}
             aria-description={props.onClick ? undefined : props.description}

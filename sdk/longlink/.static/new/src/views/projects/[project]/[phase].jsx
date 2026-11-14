@@ -23,7 +23,7 @@ export default function Phase({ params }) {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack gap={0}>
                 <Heading level={1}>{phase.label}</Heading>
-                <Text type="supporting">{phase.description}</Text>
+                <Text className="text-xs text-muted-foreground">{phase.description}</Text>
             </Stack>
             <Separator />
             <Grid columns={3} collapseBelow={768} gap={8}>

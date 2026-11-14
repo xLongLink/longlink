@@ -3,7 +3,7 @@ import type { Spacing } from './types';
 
 export const GridCollapseContext = createContext(false);
 
-/** Resolves fractional spacing steps to the incumbent theme token names. */
+/** Resolves spacing steps against Tailwind's shared spacing unit. */
 export function spacing(step: Spacing) {
-    return `var(--spacing-${String(step).replace('.', '-')})`;
+    return `calc(var(--spacing) * ${step})`;
 }

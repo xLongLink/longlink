@@ -81,7 +81,7 @@ export default function OrganizationSettings() {
                     <Heading level={4} accessibilityLevel={1}>
                         {membership.organization.name}
                     </Heading>
-                    <Text type="supporting">Organization</Text>
+                    <Text className="text-xs text-muted-foreground">Organization</Text>
                 </Stack>
             </Stack>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
@@ -189,8 +189,8 @@ function GeneralSection({
 
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="var(--size-element-md)">
-                <Heading level={2} hasCapsize>
+            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     General
                 </Heading>
             </Stack>
@@ -199,7 +199,7 @@ function GeneralSection({
             {canDelete && (
                 <Stack gap={3}>
                     <Stack className="text-red-600 dark:text-red-400">
-                        <Heading level={4} accessibilityLevel={3} color="inherit">
+                        <Heading level={4} accessibilityLevel={3} className="text-inherit">
                             Danger zone
                         </Heading>
                     </Stack>
@@ -213,8 +213,10 @@ function GeneralSection({
                         className="rounded-lg border border-red-600 dark:border-red-400"
                     >
                         <Stack gap={0}>
-                            <Text weight="bold">Delete this organization</Text>
-                            <Text color="secondary">Once deleted, it will be gone forever. Please be certain.</Text>
+                            <Text className="font-bold">Delete this organization</Text>
+                            <Text className="text-muted-foreground">
+                                Once deleted, it will be gone forever. Please be certain.
+                            </Text>
                         </Stack>
                         <Button label="Delete" variant="destructive" onClick={() => setIsConfirming(true)} />
                     </Stack>
@@ -265,8 +267,8 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
     return (
         <>
             <Stack gap={4}>
-                <Stack justify="end" minHeight="var(--size-element-md)">
-                    <Heading level={2} hasCapsize>
+                <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Members
                     </Heading>
                 </Stack>
@@ -287,9 +289,9 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.user.name}</Text>
-                                            <Text type="supporting">{row.role}</Text>
+                                            <Text className="text-xs text-muted-foreground">{row.role}</Text>
                                         </Stack>
-                                        <Text type="supporting">{row.user.email}</Text>
+                                        <Text className="text-xs text-muted-foreground">{row.user.email}</Text>
                                     </Stack>
                                 </Stack>
                             )
@@ -357,7 +359,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                     }}
                 >
                     <Stack gap={3}>
-                        <Text color="secondary">
+                        <Text className="text-muted-foreground">
                             {member.action.kind === 'remove'
                                 ? `Remove ${selectedMember.user.name} from this organization? Access is revoked immediately.`
                                 : `Change ${selectedMember.user.name} to ${member.action.role}?`}
@@ -458,9 +460,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     justify="between"
                     align="end"
                     wrap="wrap"
-                    minHeight="var(--size-element-md)"
+                    minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} hasCapsize>
+                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
                     </Heading>
                     {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
@@ -477,7 +479,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                             key: 'role',
                             header: 'Role',
                             width: proportional(1),
-                            renderCell: (row) => <Text type="supporting">{row.role}</Text>
+                            renderCell: (row) => <Text className="text-xs text-muted-foreground">{row.role}</Text>
                         },
                         ...(canMaintain
                             ? [
@@ -536,10 +538,10 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                         decoding="async"
                                     />
                                     <Stack gap={0}>
-                                        <Heading level={2} justify="center">
+                                        <Heading level={2} className="text-center">
                                             Invite user
                                         </Heading>
-                                        <Text as="p" color="secondary" justify="center">
+                                        <Text as="p" className="text-muted-foreground text-center">
                                             Send an invitation to join this organization.
                                         </Text>
                                     </Stack>

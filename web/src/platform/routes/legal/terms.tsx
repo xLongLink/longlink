@@ -36,7 +36,7 @@ export default function Terms() {
     // Keep the terms of service within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <Stack className="[&_.native-heading]:tracking-wide" gap={5}>
+            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
                 <Heading id="terms-of-service" level={1}>
                     Terms of Service
                 </Heading>
@@ -48,7 +48,7 @@ export default function Terms() {
                     <Text as="p">
                         LongLink is operated by LongLink SAGL ("LongLink", "we", "us" or "our"), UID CHE-150.642.313.
                         Contact:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         .
@@ -128,7 +128,7 @@ export default function Terms() {
                     </Text>
                     <Text as="p">
                         Use reasonable access controls and notify{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>{' '}
                         promptly if you suspect unauthorized access or a credential compromise.
@@ -190,7 +190,7 @@ export default function Terms() {
                         We do not routinely monitor Customer Content. We may investigate and restrict or remove content,
                         access, or resources where reasonably necessary to address suspected abuse, security risks, or
                         legal violations. We handle personal data as described in our{' '}
-                        <Link href="/privacy/" hasUnderline type="inherit">
+                        <Link href="/privacy/" hasUnderline>
                             Privacy Policy
                         </Link>
                         .
@@ -259,7 +259,7 @@ export default function Terms() {
                     <Text as="p">
                         We act as controller for account, organization, billing, support, security, and operational
                         data, as explained in our{' '}
-                        <Link href="/privacy/" hasUnderline type="inherit">
+                        <Link href="/privacy/" hasUnderline>
                             Privacy Policy
                         </Link>
                         .
@@ -409,11 +409,11 @@ export default function Terms() {
                     </Heading>
                     <Text as="p">
                         Legal enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         . General, technical, account, and billing enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         .

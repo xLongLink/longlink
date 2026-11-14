@@ -156,13 +156,13 @@ export default function VerifyEmail() {
                     </Stack>
                 </form>
                 <Separator />
-                <Text as="p" justify="center" type="supporting">
+                <Text as="p" className="text-xs text-center text-muted-foreground">
                     By continuing, you agree to our <br />
-                    <Link href="/terms/" hasUnderline type="inherit">
+                    <Link href="/terms/" hasUnderline>
                         Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy/" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline>
                         Privacy Policy
                     </Link>
                     .

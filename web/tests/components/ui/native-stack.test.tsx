@@ -9,7 +9,15 @@ it('preserves native spacing defaults, zero overrides, and pixel sizing during S
     const output = renderStatic(
         <>
             <NativeStack className="p-6">Default</NativeStack>
-            <NativeStack as="section" gap={0} padding={4} paddingInline={0} width={320} minHeight="100vh">
+            <NativeStack
+                as="section"
+                gap={0}
+                padding={4}
+                paddingInline={0}
+                width={320}
+                minHeight="100vh"
+                style={{ width: 640 }}
+            >
                 Sized
             </NativeStack>
         </>
@@ -23,10 +31,10 @@ it('preserves native spacing defaults, zero overrides, and pixel sizing during S
     expect(plain.style.gap).toBe('');
     expect(plain.style.paddingInline).toBe('');
     expect(plain.style.paddingBlock).toBe('');
-    expect(sized.style.gap).toBe('var(--spacing-0)');
-    expect(sized.style.paddingInline).toBe('var(--spacing-0)');
-    expect(sized.style.paddingBlock).toBe('var(--spacing-4)');
-    expect(sized.style.width).toBe('320px');
+    expect(sized.style.gap).toBe('calc(var(--spacing) * 0)');
+    expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
+    expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 4)');
+    expect(sized.style.width).toBe('640px');
     expect(sized.style.minHeight).toBe('100vh');
 });
 

@@ -50,8 +50,8 @@ it('retains geometry, generated artwork choice, and named versus decorative sema
 
     const root = organization.querySelector('[data-slot="avatar"]');
     expect(root?.getAttribute('aria-label')).toBe('Acme logo');
-    expect(root?.classList.contains('size-12')).toBe(true);
-    expect(root?.classList.contains('rounded-(--radius-element)')).toBe(true);
+    expect(root?.getAttribute('data-size')).toBe('lg');
+    expect(root?.classList.contains('rounded-lg')).toBe(true);
     expect(organization.querySelector('img')?.getAttribute('src')).toBe(
         renderStatic(<GeneratedAvatar name="Acme" shape="rounded" />)
             .querySelector('img')
@@ -60,7 +60,7 @@ it('retains geometry, generated artwork choice, and named versus decorative sema
     const decorative = renderStatic(<GeneratedAvatar name="  " size="sm" />).querySelector('[data-slot="avatar"]');
     expect(decorative?.getAttribute('role')).toBe('presentation');
     expect(decorative?.getAttribute('aria-hidden')).toBe('true');
-    expect(decorative?.classList.contains('size-6')).toBe(true);
+    expect(decorative?.getAttribute('data-size')).toBe('sm');
 });
 
 it('falls back to initials if generated artwork also fails', async () => {

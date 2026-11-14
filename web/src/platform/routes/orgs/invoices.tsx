@@ -13,18 +13,18 @@ import { NativeHeading as Heading } from '@/components/custom/native-heading';
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="var(--size-element-md)">
-                <Heading level={2} hasCapsize>
+            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Invoices
                 </Heading>
             </Stack>
             <Separator />
             {canManage ? (
-                <ApiBoundary fallback={<Text color="secondary">Loading invoices…</Text>}>
+                <ApiBoundary fallback={<Text className="text-muted-foreground">Loading invoices…</Text>}>
                     <InvoiceTable base={base} />
                 </ApiBoundary>
             ) : (
-                <Text as="p" color="secondary">
+                <Text as="p" className="text-muted-foreground">
                     An organization owner can view invoices.
                 </Text>
             )}

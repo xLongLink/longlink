@@ -11,6 +11,18 @@ export default function GridPage() {
             properties={[
                 { name: 'children', type: 'ReactNode', description: 'Grid content.' },
                 {
+                    name: 'className',
+                    type: 'string',
+                    description: 'Tailwind utilities overriding the default grid-cols-1 and gap-3 layout.'
+                },
+                { name: 'style', type: 'CSSProperties', description: 'Native inline styles; override layout props.' },
+                {
+                    name: 'ref',
+                    type: 'Ref<HTMLDivElement>',
+                    description:
+                        'Reference to the grid container. Native div attributes and event handlers are supported.'
+                },
+                {
                     name: 'columns',
                     type: 'number | { minWidth: number; max?: number; repeat?: "fill" | "fit"; }',
                     description: 'Fixed column count or responsive columns with minWidth and an optional max.'
@@ -66,6 +78,17 @@ export default function GridPage() {
                     description: 'Minimum container height. Numbers are treated as pixels, strings are used as-is.'
                 },
                 { name: 'GridSpan.children', type: 'ReactNode', description: 'Content rendered inside the grid item.' },
+                { name: 'GridSpan.className', type: 'string', description: 'Tailwind utilities for the grid item.' },
+                {
+                    name: 'GridSpan.style',
+                    type: 'CSSProperties',
+                    description: 'Native inline styles; override the column span.'
+                },
+                {
+                    name: 'GridSpan.ref',
+                    type: 'Ref<HTMLDivElement>',
+                    description: 'Reference to the grid item. Native div attributes and event handlers are supported.'
+                },
                 {
                     name: 'GridSpan.columns',
                     type: 'number | "full"',

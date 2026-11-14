@@ -10,6 +10,7 @@ import { useConfirm } from '@/components/custom/confirmation';
 import { FileRequestContext } from '@/components/custom/preview';
 import { NativeLoading } from '@/components/custom/native-loading';
 import { FileViewerContext } from '@/components/custom/file-context';
+import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
     FormRequestContext,
@@ -88,20 +89,22 @@ function ViewLayout({ children }: { children: React.ReactNode }) {
 /** Presents bounded diagnostics without interpreting authored error text as markup. */
 function ViewFailure({ title, message, retry }: { title: string; message: string; retry?: () => void }) {
     return (
-        <div role="status" className="view-runtime-error">
-            <CircleX aria-hidden="true" className="view-runtime-error-icon" />
-            <div className="view-runtime-diagnostic" data-retry={retry ? '' : undefined}>
+        <Alert role="status" variant="destructive">
+            <CircleX aria-hidden="true" />
+            <AlertTitle className="line-clamp-none wrap-anywhere">
                 <h2>{title}</h2>
+            </AlertTitle>
+            <AlertDescription className="min-w-0 wrap-anywhere">
                 <p>{message}</p>
-            </div>
+            </AlertDescription>
             {retry && (
-                <div className="view-runtime-error-actions">
-                    <components.Button variant="outline" onClick={retry}>
+                <AlertAction>
+                    <components.Button type="button" variant="outline" onClick={retry}>
                         Retry
                     </components.Button>
-                </div>
+                </AlertAction>
             )}
-        </div>
+        </Alert>
     );
 }
 

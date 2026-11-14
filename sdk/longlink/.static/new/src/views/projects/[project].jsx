@@ -11,12 +11,12 @@ export default function Project({ params }) {
     return (
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack direction="horizontal" align="center" gap={2}>
-                <Stack width="var(--size-element-lg)">
+                <Stack width="calc(var(--spacing)*9)">
                     <Image src={`/assets/${project.photo}.jpg`} alt={`${project.name} building`} ratio={16 / 9} />
                 </Stack>
                 <Stack gap={0}>
                     <Heading level={1}>{project.name}</Heading>
-                    <Text type="supporting">{project.description}</Text>
+                    <Text className="text-xs text-muted-foreground">{project.description}</Text>
                 </Stack>
             </Stack>
             <Separator />

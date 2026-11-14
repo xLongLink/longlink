@@ -63,10 +63,10 @@ export default function CreateOrganization({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         New organization
                                     </Heading>
-                                    <Text as="p" color="secondary" justify="center">
+                                    <Text as="p" className="text-muted-foreground text-center">
                                         A place for your workflows and data
                                     </Text>
                                 </Stack>
