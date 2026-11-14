@@ -1,7 +1,7 @@
 import { Menu, X } from 'lucide-react';
-import { Footer } from '@/components/footer';
-import { Navbar } from '@/components/navbar';
 import { Dialog } from '@base-ui/react/dialog';
+import { Footer } from '@/components/ui/footer';
+import { Navbar } from '@/components/ui/navbar';
 import { Outlet, useLocation } from 'react-router';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { useId, useRef, useState, type ReactNode } from 'react';

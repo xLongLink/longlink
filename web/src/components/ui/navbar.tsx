@@ -1,9 +1,9 @@
 import { cn } from 'cn';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Wordmark } from '@/components/wordmark';
 import { ExternalLink, Menu } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
+import { Wordmark } from '@/components/ui/wordmark';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/shadcn/sheet';
 

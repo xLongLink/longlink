@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
-import { ModelDirectory } from '@/components/custom/model-directory';
-import modelDirectorySource from '@/components/custom/model-directory?raw';
+import { ModelDirectory } from '@/components/ui/model-directory';
+import modelDirectorySource from '@/components/ui/model-directory?raw';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 /** Documents native shadcn table composition in LongLink Views. */

@@ -3,8 +3,8 @@ import { CircleX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Brand from '@/platform/layouts/brand';
 import { Navigate, Outlet } from 'react-router';
-import { PageLoading } from '@/components/utils';
 import { Button } from '@/components/shadcn/button';
+import { PageLoading } from '@/components/ui/utils';
 import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */

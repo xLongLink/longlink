@@ -1,6 +1,6 @@
 import { Package } from 'lucide-react';
-import { Wordmark } from '@/components/wordmark';
 import { Link as RouterLink } from 'react-router';
+import { Wordmark } from '@/components/ui/wordmark';
 import { Separator } from '@/components/shadcn/separator';
 import { GitHubIcon } from '@/components/svg/git-hub-icon';
 import { LinkedInIcon } from '@/components/svg/linked-in-icon';

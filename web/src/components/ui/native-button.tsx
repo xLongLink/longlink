@@ -4,7 +4,7 @@ import { LoaderCircle } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Button } from '@/components/shadcn/button';
-import { NativeNavigationLink } from './native-link';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { useRef, useState, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
 /** Runs trusted native actions with recoverable failure feedback and immediate duplicate-click protection. */

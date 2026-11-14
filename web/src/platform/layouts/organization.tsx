@@ -3,12 +3,12 @@ import * as tabs from '@/platform/tabs';
 import { Settings2 } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { ProfileMenu } from '@/components/profile';
 import Platform from '@/components/layouts/platform';
-import { PageContainer } from '@/components/page-container';
+import { ProfileMenu } from '@/components/ui/profile';
+import { PageContainer } from '@/components/ui/page-container';
+import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { Outlet, useParams, useLocation, useOutletContext } from 'react-router';
-import { OrganizationSwitcher } from '@/platform/components/organization-switcher';
-import { OrganizationBreadcrumb } from '@/platform/components/organization-breadcrumb';
+import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { zOrganizationTagResponse, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export type OrganizationContext = z.output<typeof zUserOrganizationMembership> & {

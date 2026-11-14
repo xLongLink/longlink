@@ -1,15 +1,15 @@
 import { ApiError } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { ProfileMenu } from '@/components/profile';
 import Platform from '@/components/layouts/platform';
+import { ProfileMenu } from '@/components/ui/profile';
 import { Outlet, useMatch, useParams } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
-import { PageContainer } from '@/components/page-container';
-import { PageError, PageLoading } from '@/components/utils';
-import { OrganizationSwitcher } from '@/platform/components/organization-switcher';
+import { PageContainer } from '@/components/ui/page-container';
+import { PageError, PageLoading } from '@/components/ui/utils';
+import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
+import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
-import { OrganizationBreadcrumb } from '@/platform/components/organization-breadcrumb';
 
 /** Resolves organization access before either organization or Solution pages mount. */
 export default function OrganizationAccess() {

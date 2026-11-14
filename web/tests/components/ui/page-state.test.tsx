@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { PageError, PageLoading } from '@/components/utils';
+import { PageError, PageLoading } from '@/components/ui/utils';
 
 it('announces loading and failure transitions without repeating the hydrated initial message', async () => {
     const output = document.createElement('section');

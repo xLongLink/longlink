@@ -47,7 +47,7 @@ import {
     CodeBlockHeader,
     CodeBlockTitle
 } from '@/components/reui/code-block/code-block';
-import '@/platform/components/settings-navigation.css';
+import '@/components/ui/settings-navigation.css';
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',

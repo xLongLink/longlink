@@ -3,12 +3,12 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Dialog } from '@/components/custom/dialog';
-import { TextInput } from '@/components/custom/text-input';
+import { TextInput } from '@/components/ui/text-input';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 

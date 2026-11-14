@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { Form } from '@/components/custom/form';
 import { Dialog } from '@/components/custom/dialog';
-import { Illustration } from '@/components/illustration';
-import { TextInput } from '@/components/custom/text-input';
+import { TextInput } from '@/components/ui/text-input';
+import { Illustration } from '@/components/ui/illustration';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
-import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
+import { IllustratedDialogContent } from '@/components/ui/illustrated-dialog-content';
 
 /** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({

@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router';
-import { ProfileMenu } from '@/components/profile';
 import { adminNavigation } from '@/platform/admin';
 import Platform from '@/components/layouts/platform';
+import { ProfileMenu } from '@/components/ui/profile';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import NotFoundLayout from '@/components/layouts/not-found';
-import { PageContainer } from '@/components/page-container';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { Breadcrumbs, BreadcrumbItem } from '@/components/breadcrumb/breadcrumbs';
+import { PageContainer } from '@/components/ui/page-container';
 
 /** Renders authorized administration within the shared application layouts. */
 export default function Admin() {
@@ -20,11 +20,7 @@ export default function Admin() {
         <Platform
             action={<ProfileMenu />}
             homeHref="/user/organizations"
-            breadcrumb={
-                <Breadcrumbs>
-                    <BreadcrumbItem isCurrent>Admin</BreadcrumbItem>
-                </Breadcrumbs>
-            }
+            breadcrumb={<Breadcrumbs items={[{ label: 'Admin' }]} />}
             tabs={adminNavigation.map(({ icon: Icon, ...tab }) => ({
                 ...tab,
                 icon: <Icon aria-hidden="true" size={16} />

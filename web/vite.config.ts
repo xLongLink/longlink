@@ -55,20 +55,6 @@ export default defineConfig(({ mode }) => {
                 { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
             ],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
-            rules: {
-                'no-restricted-imports': [
-                    'error',
-                    {
-                        patterns: [
-                            {
-                                group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
-                                message:
-                                    'Import directly from components/shadcn, components/reui, or components/custom.'
-                            }
-                        ]
-                    }
-                ]
-            },
             overrides: [
                 // Keep registry code upstream-compatible without applying LongLink's authoring conventions.
                 {
@@ -90,8 +76,33 @@ export default defineConfig(({ mode }) => {
                             {
                                 patterns: [
                                     {
-                                        group: ['@/components/custom/*', '../custom/*', '../../custom/*'],
-                                        message: 'Library components must not depend on LongLink custom components.'
+                                        group: [
+                                            '@/components/custom/*',
+                                            '../custom/*',
+                                            '../../custom/*',
+                                            '@/components/ui/*',
+                                            '../ui/*',
+                                            '../../ui/*'
+                                        ],
+                                        message:
+                                            'Library components must not depend on LongLink custom or application UI components.'
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    files: ['src/components/custom/**/*'],
+                    rules: {
+                        'no-restricted-imports': [
+                            'error',
+                            {
+                                patterns: [
+                                    {
+                                        group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
+                                        message:
+                                            'Shared custom components must not depend on application UI components.'
                                     }
                                 ]
                             }

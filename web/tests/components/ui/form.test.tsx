@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import { Form } from '@/components/custom/form';
-import { TextInput } from '@/components/custom/text-input';
+import { TextInput } from '@/components/ui/text-input';
 import { FormRequestContext } from '@/components/custom/contexts';
 
 it.each([undefined, 'post', 'put', 'patch', 'delete'] as const)(

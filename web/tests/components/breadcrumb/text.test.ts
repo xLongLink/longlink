@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { buildBreadcrumbs, formatPathSegment } from '@/components/breadcrumb/text';
+import { buildBreadcrumbs } from '@/components/ui/breadcrumbs';
 
 it('keeps cumulative links canonical while decoding readable labels', () => {
     // Act
@@ -10,5 +10,5 @@ it('keeps cumulative links canonical while decoding readable labels', () => {
         { label: 'Documentation', href: '/docs/' },
         { label: 'Order History', href: '/docs/order%20history/' }
     ]);
-    expect(formatPathSegment('%invalid')).toBe('Invalid');
+    expect(buildBreadcrumbs('/%invalid/')).toEqual([{ label: 'Invalid', href: '/%invalid/' }]);
 });

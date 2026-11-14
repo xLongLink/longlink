@@ -1,6 +1,6 @@
 import { DevelopmentProfile } from '@/solution/profile';
-import { SolutionPage } from '@/components/solution-page';
-import { PathBreadcrumb } from '@/components/breadcrumb/path';
+import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
+import { SolutionPage } from '@/components/ui/solution-page';
 import { NativeLink as Link } from '@/components/custom/native-link';
 
 /** Replaces the root SPA fallback metadata after the Solution route hydrates. */

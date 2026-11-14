@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { withMounted } from '../render';
-import { Navbar } from '@/components/navbar';
+import { Navbar } from '@/components/ui/navbar';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes, useNavigate } from 'react-router';
 import { it, expect, vi, beforeEach, afterEach } from 'vitest';

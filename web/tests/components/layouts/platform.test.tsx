@@ -264,13 +264,18 @@ it('supports keyboard SPA navigation and restores selection and breadcrumb after
             await act(async () => user.keyboard('{Enter}'));
             expect(output.querySelector('output')?.textContent).toBe('/admin/users');
             expect(output.querySelector('a[aria-current="page"]')).toBe(users);
-            expect(output.querySelector('nav[aria-label="Breadcrumb"]')?.textContent).toBe('Users');
+            expect(output.querySelector('nav[aria-label="Breadcrumb"] [aria-current="page"]')?.textContent).toBe(
+                'Users'
+            );
+            expect(output.querySelector('nav[aria-label="Breadcrumb"] a')).toBeNull();
             expect(document.activeElement).toBe(users);
 
             await act(async () => output.querySelector<HTMLButtonElement>('main button:not([aria-controls])')?.click());
             expect(output.querySelector('output')?.textContent).toBe('/admin');
             expect(output.querySelector('a[aria-current="page"]')?.getAttribute('href')).toBe('/admin');
-            expect(output.querySelector('nav[aria-label="Breadcrumb"]')?.textContent).toBe('Overview');
+            expect(output.querySelector('nav[aria-label="Breadcrumb"] [aria-current="page"]')?.textContent).toBe(
+                'Overview'
+            );
 
             await act(async () => output.querySelector<HTMLAnchorElement>('a[href^="#"]')?.click());
             expect(document.activeElement).toBe(output.querySelector('main'));

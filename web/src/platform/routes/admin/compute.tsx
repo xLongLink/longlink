@@ -6,17 +6,17 @@ import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Form } from '@/components/custom/form';
 import { Dialog } from '@/components/custom/dialog';
-import { DeletionDialog } from '@/components/deletion';
+import { TextInput } from '@/components/ui/text-input';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { TextInput } from '@/components/custom/text-input';
+import { DeletionDialog } from '@/components/ui/deletion';
 import { NativeFileInput } from '@/components/custom/file-input';
+import { NativeTextArea } from '@/components/ui/native-text-area';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeTextArea } from '@/components/custom/native-text-area';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 // The API also accepts raw YAML and validates its structure on the server.
