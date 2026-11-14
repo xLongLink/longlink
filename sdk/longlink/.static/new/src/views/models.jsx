@@ -1,4 +1,4 @@
-/** Displays model usage, geographic reach, provider shares, and balanced revenue flows. */
+/** Displays model usage, geographic reach, and provider shares. */
 export default function Models() {
     // Load bundled sample analytics and atlas boundaries through the scoped SDK transport.
     const [analytics] = useApi('/assets/analytics.json');
@@ -56,7 +56,6 @@ export default function Models() {
                     title="Model usage"
                     label="Model usage over time"
                 />
-                <RevenueFlow quarters={analytics.quarters} />
             </Stack>
         </Stack>
     );
