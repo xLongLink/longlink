@@ -50,16 +50,19 @@ jobs:
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
+            - name: Install Trivy
+              run: |
+                  set -euo pipefail
+                  archive="$RUNNER_TEMP/trivy.tar.gz"
+                  curl --fail --location --output "$archive" https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz
+                  printf '%s  %s\n' 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9 "$archive" | sha256sum --check --status
+                  mkdir "$RUNNER_TEMP/trivy-bin"
+                  tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP/trivy-bin" trivy
+                  printf '%s\n' "$RUNNER_TEMP/trivy-bin" >> "$GITHUB_PATH"
+
             # Report high and critical vulnerabilities without publishing the image.
             - name: Run Trivy vulnerability scanner
-              uses: aquasecurity/trivy-action@v0.36.0
-              with:
-                  image-ref: longlink-api:trivy
-                  format: sarif
-                  output: trivy-results.sarif
-                  scanners: vuln
-                  severity: CRITICAL,HIGH
-                  limit-severities-for-sarif: true
+              run: trivy image --format sarif --output trivy-results.sarif --scanners vuln --severity CRITICAL,HIGH --exit-code 0 longlink-api:trivy
 
             - name: Upload Trivy scan results to GitHub Security tab
               uses: github/codeql-action/upload-sarif@v4.39.3
