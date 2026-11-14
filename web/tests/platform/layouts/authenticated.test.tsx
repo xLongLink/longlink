@@ -18,6 +18,48 @@ it('does not mount protected content while the identity request is unresolved', 
     expect(output.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
 });
 
+it('refreshes the startup cache when the account changes without changing its appearance', async () => {
+    let account = user;
+    const cached = localStorage.getItem('longlink:appearance');
+    const preference = JSON.stringify({ theme: user.theme, accent: user.accent });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json(account));
+
+    try {
+        localStorage.removeItem('longlink:appearance');
+
+        await withMounted(
+            <ApiProvider>
+                <AccountAppearanceProvider>
+                    <p>Account</p>
+                </AccountAppearanceProvider>
+            </ApiProvider>,
+            async () => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(localStorage.getItem('longlink:appearance')).toBe(preference);
+                });
+
+                // Another tab's cache is not authoritative for the newly authenticated account.
+                await act(async () => {
+                    account = { ...user, id: '00000000-0000-4000-8000-000000000003' };
+                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark', accent: 'rose' }));
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
+                });
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(localStorage.getItem('longlink:appearance')).toBe(preference);
+                });
+            },
+            '/user/organizations'
+        );
+    } finally {
+        transport.mockRestore();
+
+        if (cached === null) localStorage.removeItem('longlink:appearance');
+        else localStorage.setItem('longlink:appearance', cached);
+    }
+});
+
 it.each([401, 503])(
     'handles an identity refresh failure (%s) without retaining protected content or losing recovery',
     async (status) => {

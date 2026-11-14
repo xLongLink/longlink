@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/ui/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
-import { AppearanceProvider } from '@/components/appearance';
 import { IconRequestContext } from '@/components/custom/contexts';
+import { CachedAppearanceProvider } from '@/components/appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
 
@@ -18,7 +18,7 @@ export function HydrateFallback() {
 export default function SolutionRoot() {
     // Keep theme and API ownership around the active route.
     return (
-        <AppearanceProvider>
+        <CachedAppearanceProvider>
             <IconRequestContext value={icons.load}>
                 <ApiProvider>
                     <ApiBoundary>
@@ -26,7 +26,7 @@ export default function SolutionRoot() {
                     </ApiBoundary>
                 </ApiProvider>
             </IconRequestContext>
-        </AppearanceProvider>
+        </CachedAppearanceProvider>
     );
 }
 

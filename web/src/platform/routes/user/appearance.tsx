@@ -10,7 +10,7 @@ import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
-    const { appearance } = useAppearance();
+    const appearance = useAppearance();
     const userUpdate = useUpdateUser();
 
     return (

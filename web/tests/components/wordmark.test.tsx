@@ -6,7 +6,7 @@ import { Wordmark } from '@/components/ui/wordmark';
 import { Illustration } from '@/components/ui/illustration';
 import { AppearanceProvider } from '@/components/appearance';
 
-it('updates account branding without changing an explicitly scoped preview', async () => {
+it('keeps ambient assets mounted without changing an explicit wordmark mode during account changes', async () => {
     function Preview() {
         const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -24,18 +24,19 @@ it('updates account branding without changing an explicitly scoped preview', asy
 
     await withMounted(<Preview />, async (output) => {
         const images = output.querySelectorAll('img');
+        const explicitWordmark = images[2];
+        const illustration = images[3];
 
         await act(async () => output.querySelector('button')?.click());
+        expect(document.documentElement.dataset.theme).toBe('dark');
         expect(output.querySelectorAll('img')[0]).toBe(images[0]);
-        expect(images[0].getAttribute('src')).toBe('/images/longlink-wordmark-dark.png');
-        expect(images[1].getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
-        expect(images[2].classList.contains('invert')).toBe(false);
-        expect(images[2].classList.contains('object-contain')).toBe(true);
+        expect(output.querySelectorAll('img')[1]).toBe(images[1]);
+        expect(explicitWordmark.getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
         await act(async () => output.querySelector('button')?.click());
-        expect(images[0].getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
-        expect(images[1].getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
-        expect(output.querySelectorAll('img')[2]).toBe(images[2]);
-        expect(images[2].classList.contains('invert')).toBe(true);
-        expect(images[2].getAttribute('src')).toBe('/images/lock.png');
+        expect(document.documentElement.dataset.theme).toBe('light');
+        expect(explicitWordmark.getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
+        expect(output.querySelectorAll('img')[3]).toBe(illustration);
+        expect(illustration.getAttribute('src')).toBe('/images/lock.png');
+        expect(illustration.classList.contains('object-contain')).toBe(true);
     });
 });

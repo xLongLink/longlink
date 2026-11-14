@@ -4,9 +4,9 @@ import { api, ApiError } from '@/lib/api';
 import { CurrentUserContext } from '@/lib/hooks/use-user';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
-import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from 'react';
+import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
 import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
 
 /** Observes optional startup data without sharing state between documents. */
@@ -31,12 +31,12 @@ function readCache() {
     }
 }
 
-/** Shares personal appearance across native pages and isolated Solution hosts. */
-export function AppearanceProvider({ children, preference }: { children: ReactNode; preference?: Appearance }) {
+/** Follows cached personal appearance in isolated Solution hosts. */
+export function CachedAppearanceProvider({ children }: { children: ReactNode }) {
     const cache = useSyncExternalStore(subscribeToCache, readCache, () => null);
 
-    // Read the browser snapshot before paint; validated account data takes precedence.
-    const cached = useMemo(() => {
+    // Validate the browser snapshot without changing server markup during hydration.
+    const appearance = useMemo(() => {
         try {
             const parsed = appearanceSchema.safeParse(JSON.parse(cache ?? 'null'));
 
@@ -46,21 +46,14 @@ export function AppearanceProvider({ children, preference }: { children: ReactNo
         }
     }, [cache]);
 
-    const appearance = preference ?? cached;
-    useDocumentTheme(appearance.theme);
+    return <AppearanceProvider preference={appearance}>{children}</AppearanceProvider>;
+}
 
-    // Switching the personal accent requires only an attribute change, before paint.
-    useLayoutEffect(() => {
-        const previous = document.documentElement.getAttribute('data-accent');
-        document.documentElement.dataset.accent = appearance.accent;
+/** Applies personal appearance once its owner has resolved the preference. */
+export function AppearanceProvider({ children, preference }: { children: ReactNode; preference?: Appearance }) {
+    useDocumentAppearance(preference?.theme, preference?.accent);
 
-        return () => {
-            if (previous === null) delete document.documentElement.dataset.accent;
-            else document.documentElement.setAttribute('data-accent', previous);
-        };
-    }, [appearance.accent]);
-
-    return <AppearanceContext value={{ appearance }}>{children}</AppearanceContext>;
+    return <AppearanceContext value={preference ?? defaultAppearance}>{children}</AppearanceContext>;
 }
 
 /** Owns account identity and synchronizes preferences across focus and session changes. */
@@ -75,35 +68,33 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
     });
 
     const { data: user, error, refetch } = currentUser;
+    const accountId = user?.id;
     const isSaving = useIsMutating({ mutationKey: ['current-user'] }) > 0;
+    const isAnonymous = !user && (user === null || (error instanceof ApiError && error.status === 401));
 
     // Derive previews and saved preferences directly from the authoritative user query.
-    const preference = user
-        ? { theme: user.theme, accent: user.accent }
-        : user === null || (error instanceof ApiError && error.status === 401)
-          ? defaultAppearance
-          : undefined;
+    const preference = user ? { theme: user.theme, accent: user.accent } : isAnonymous ? defaultAppearance : undefined;
+
+    const cachedPreference = preference && JSON.stringify(preference);
 
     // Never carry one account's cached colors into an anonymous or different account session.
     useEffect(() => {
-        if (user) {
-            const appearance = { theme: user.theme, accent: user.accent };
-
-            // Keep previews local until the profile write settles.
-            if (!isSaving) {
-                try {
-                    const cached = JSON.stringify(appearance);
-
-                    if (localStorage.getItem('longlink:appearance') !== cached)
-                        localStorage.setItem('longlink:appearance', cached);
-                } catch {
-                    // Saving to the account does not depend on browser storage.
-                }
-            }
-        } else if (user === null || (error instanceof ApiError && error.status === 401)) {
+        if (isAnonymous) {
             clearAppearanceCache();
+
+            return;
         }
-    }, [user, error, isSaving]);
+
+        // Keep previews local until the profile write settles.
+        if (!accountId || !cachedPreference || isSaving) return;
+
+        try {
+            if (localStorage.getItem('longlink:appearance') !== cachedPreference)
+                localStorage.setItem('longlink:appearance', cachedPreference);
+        } catch {
+            // Saving to the account does not depend on browser storage.
+        }
+    }, [accountId, cachedPreference, isAnonymous, isSaving]);
 
     // Revalidate the account rather than trusting another tab's cached identity.
     useEffect(() => {

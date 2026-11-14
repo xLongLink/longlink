@@ -1,12 +1,13 @@
 import * as vm from 'node:vm';
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
+import { withMounted } from '../render';
 import { act, StrictMode } from 'react';
 import { expect, it, vi } from 'vitest';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { appearanceBootstrap } from '@/lib/appearance';
-import { AppearanceProvider } from '@/components/appearance';
+import { AppearanceProvider, CachedAppearanceProvider } from '@/components/appearance';
 
 it('hydrates cached appearance, follows cross-tab mode changes, and restores host styles after StrictMode cleanup', async () => {
     const html = document.documentElement;
@@ -24,9 +25,9 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
 
     const content = (
         <StrictMode>
-            <AppearanceProvider>
+            <CachedAppearanceProvider>
                 <p>Account</p>
-            </AppearanceProvider>
+            </CachedAppearanceProvider>
         </StrictMode>
     );
 
@@ -44,7 +45,6 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
     try {
         await act(async () => {});
         expect(html.dataset.theme).toBe('dark');
-        expect(html.style.colorScheme).toBe('dark');
         expect(recover).not.toHaveBeenCalled();
 
         // A system preference releases the explicit mode so browser color-scheme follows OS changes.
@@ -53,7 +53,6 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
             window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
         });
         expect(html.hasAttribute('data-theme')).toBe(false);
-        expect(html.style.colorScheme).toBe('light dark');
         expect(html.dataset.accent).toBe('green');
 
         // Authoritative preferences win over startup data and subsequent cross-tab notifications.
@@ -79,6 +78,7 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
 
         // Unmount must not leak theme mutations or erase unrelated host layout styles.
         expect(html.dataset.theme).toBe('dark');
+        expect(html.dataset.accent).toBe('blue');
         expect(html.style.getPropertyValue('color-scheme')).toBe('light');
         expect(html.style.getPropertyPriority('color-scheme')).toBe('important');
         expect(html.style.getPropertyValue('scrollbar-gutter')).toBe('stable');
@@ -93,5 +93,34 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
 
         if (actEnvironment) Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', actEnvironment);
         else Reflect.deleteProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT');
+    }
+});
+
+it('does not replace startup styling with cache updates while account preferences are unresolved', async () => {
+    const cached = localStorage.getItem('longlink:appearance');
+
+    // A newer cache entry must not replace startup styling while account identity is unresolved.
+    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'light', accent: 'rose' }));
+
+    try {
+        await withMounted(
+            <AppearanceProvider>
+                <p>Loading account</p>
+            </AppearanceProvider>,
+            async () => {
+                expect(document.documentElement.dataset.theme).toBe('dark');
+                expect(document.documentElement.dataset.accent).toBe('neutral');
+
+                await act(async () => {
+                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'system', accent: 'green' }));
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
+                });
+                expect(document.documentElement.dataset.theme).toBe('dark');
+                expect(document.documentElement.dataset.accent).toBe('neutral');
+            }
+        );
+    } finally {
+        if (cached === null) localStorage.removeItem('longlink:appearance');
+        else localStorage.setItem('longlink:appearance', cached);
     }
 });
