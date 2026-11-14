@@ -10,10 +10,10 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 OAuthProvider = Literal["google", "github"]
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 GITHUB_AUTHORIZATION_URL = "https://github.com/login/oauth/authorize"
-GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"  # noqa: S105
 GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 
@@ -83,12 +83,11 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
 
     # Exchange the single-use authorization code through the provider's fixed HTTPS endpoint.
     try:
-
         # Reject HTTP failures even when a provider returns a token-shaped error body.
         async with AsyncOAuth2Client(
             client_id=env.GOOGLE_OAUTH_CLIENT_ID if provider == "google" else env.GITHUB_OAUTH_CLIENT_ID,
             client_secret=env.GOOGLE_OAUTH_CLIENT_SECRET if provider == "google" else env.GITHUB_OAUTH_CLIENT_SECRET,
-            token_endpoint_auth_method="client_secret_post",
+            token_endpoint_auth_method="client_secret_post",  # noqa: S106
             redirect_uri=redirect_uri(provider),
             follow_redirects=False,
             # Bound provider I/O without inheriting redirect behavior.

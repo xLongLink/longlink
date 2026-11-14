@@ -69,7 +69,7 @@ async def test_github_provider_failures_are_classified(status: int, payload: dic
     """Expose stable domain failures instead of trusting unusable provider responses."""
 
     # Arrange
-    async def send(request: httpx2.Request) -> httpx2.Response:
+    async def send(_request: httpx2.Request) -> httpx2.Response:
         """Supply an external provider response."""
 
         return httpx2.Response(status, json=payload, headers={"Location": "https://attacker.example"})

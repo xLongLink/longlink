@@ -32,7 +32,10 @@ def configured_stripe(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest_asyncio.fixture
-async def card_organization(users: tuple[User, User, User], configured_stripe: None) -> Organization:
+async def card_organization(
+    users: tuple[User, User, User],
+    configured_stripe: None,  # noqa: ARG001 - Fixture dependency; usefixtures does not apply to fixtures.
+) -> Organization:
     """Persist an owned Organization with a real customer and checkout mapping."""
 
     organization = await create_organization(users[1])
@@ -186,7 +189,7 @@ async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
     await assert_no_new_operations(previous_operations)
 
 
-def signed_webhook(*, livemode: bool = False, secret: str = "whsec_payments") -> tuple[bytes, str]:
+def signed_webhook(*, livemode: bool = False, secret: str = "whsec_payments") -> tuple[bytes, str]:  # noqa: S107
     """Sign an otherwise actionable checkout event with a current Stripe timestamp."""
 
     body = json.dumps(
@@ -310,7 +313,7 @@ async def test_webhook_rejects_invalid_signature_without_registering_card(
     """Reject a correctly formed checkout event signed with the wrong secret."""
 
     # Arrange
-    body, signature = signed_webhook(secret="whsec_attacker")
+    body, signature = signed_webhook(secret="whsec_attacker")  # noqa: S106
     previous_operations = await fetch_operations()
     reject_provider_construction(monkeypatch, (stripe_provider, "client"))
 

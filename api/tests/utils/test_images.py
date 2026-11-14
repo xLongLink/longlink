@@ -117,7 +117,6 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
         if "/manifests/" in request.url.path:
             return httpx2.Response(200, json={"config": {"digest": "sha256:config"}}, headers={"Docker-Content-Digest": "sha256:deadbeef"})
         if request.url.host == "ghcr.io":
-
             # Registry authentication must be present before the trusted CDN redirect.
             assert request.headers["Authorization"] == "Bearer pull-token"
             return httpx2.Response(307, headers={"Location": "https://pkg-containers.githubusercontent.com/config"})
@@ -145,7 +144,7 @@ async def test_registry_json_rejects_invalid_declared_response_sizes(headers: di
     """Reject oversized or malformed declared lengths despite a valid JSON body."""
 
     # Arrange
-    def respond(request: httpx2.Request) -> httpx2.Response:
+    def respond(_request: httpx2.Request) -> httpx2.Response:
         """Return bounded JSON with an invalid declared length."""
 
         return httpx2.Response(200, content=b"{}", headers=headers)
@@ -173,7 +172,7 @@ async def test_registry_json_rejects_streamed_metadata_larger_than_limit() -> No
         async def aclose(self) -> None:
             """Close the in-memory stream."""
 
-    def respond(request: httpx2.Request) -> httpx2.Response:
+    def respond(_request: httpx2.Request) -> httpx2.Response:
         """Return oversized metadata without a declared length."""
 
         return httpx2.Response(200, stream=OversizedStream())
@@ -398,7 +397,6 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
         assert "Authorization" not in request.headers
         paths.append(request.url.path)
         if request.url.path.endswith("/dev"):
-
             # Keep the index digest separate from the selected platform manifest.
             return httpx2.Response(
                 200,

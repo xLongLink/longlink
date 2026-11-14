@@ -98,7 +98,7 @@ async def create_compute() -> ComputeRegistry:
             storage_endpoint="https://storage.example",
             # Fixture credentials are scoped to the synthetic storage endpoint.
             storage_access_key="controller",
-            storage_secret_key="controller-secret",
+            storage_secret_key="controller-secret",  # noqa: S106
         )
         session.add(compute)
         await session.commit()

@@ -22,8 +22,8 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
         region_name="us-east-1",
         endpoint_url="http://127.0.0.1:1",
         aws_access_key_id="access",
-        aws_secret_access_key="secret",
-        aws_session_token="dummy",
+        aws_secret_access_key="secret",  # noqa: S106
+        aws_session_token="dummy",  # noqa: S106
     ) as client:
         # Keep the real storage adapter while replacing its network client.
         storage = S3("http://127.0.0.1:1", Credentials("access", "secret"))
@@ -33,7 +33,7 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
 
         # Replace only the transport lifetime; production operations and paginators remain real.
         @asynccontextmanager
-        async def stubbed_client(self: S3) -> AsyncGenerator[S3Client]:
+        async def stubbed_client(_self: S3) -> AsyncGenerator[S3Client]:
             """Yield the client owned by this test's fixture."""
 
             yield cast(S3Client, client)

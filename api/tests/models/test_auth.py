@@ -18,7 +18,7 @@ def test_token_validation_preserves_opaque_proof() -> None:
     """Do not normalize signed proof at the request boundary."""
 
     # Act
-    payload = TokenPayload(token=" opaque-proof ")
+    payload = TokenPayload(token=" opaque-proof ")  # noqa: S106
 
     # Assert
-    assert payload.token == " opaque-proof "
+    assert payload.token == " opaque-proof "  # noqa: S105

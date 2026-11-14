@@ -40,7 +40,7 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
         # Keep the admitted identity bound until FastAPI finishes the dependency's request lifetime.
         request.state.user = user
         with audit.actor(user.id):
-            yield user
+            yield user  # noqa: ASYNC119
         return
 
     # Delegate browser sessions with deterministic cleanup; never fall back after invalid bearer proof.
@@ -49,7 +49,7 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
         raise HTTPException(status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": challenge})
     async with aclosing(auth.authuser(request, session, credential)) as authenticated:
         async for user in authenticated:
-            yield user
+            yield user  # noqa: ASYNC119
 
 
 # Share the browser-or-bearer authentication dependency with proxy routes.

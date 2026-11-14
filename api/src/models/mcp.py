@@ -11,7 +11,7 @@ class ClientMetadata(BaseModel):
     client_name: str = Field(default="MCP client", min_length=1, max_length=128)
     redirect_uris: list[str] = Field(min_length=1, max_length=10)
     response_types: list[Literal["code"]] = Field(default=["code"], min_length=1, max_length=1)
-    token_endpoint_auth_method: Literal["none"] = "none"
+    token_endpoint_auth_method: Literal["none"] = "none"  # noqa: S105
 
     @field_validator("redirect_uris")
     @classmethod
@@ -127,7 +127,7 @@ class AccessToken(BaseModel):
 
     # Token response
     scope: Literal["mcp"] = "mcp"
-    token_type: Literal["Bearer"] = "Bearer"
+    token_type: Literal["Bearer"] = "Bearer"  # noqa: S105
     expires_in: int
     access_token: str
 

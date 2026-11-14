@@ -16,7 +16,7 @@ def storage_compute() -> SimpleNamespace:
     return SimpleNamespace(
         storage_endpoint="https://public-storage.example",
         storage_access_key="controller",
-        storage_secret_key="secret",
+        storage_secret_key="secret",  # noqa: S106
         storage_certificate=None,
     )
 

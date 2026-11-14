@@ -54,7 +54,7 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         cluster_uid="beta-cluster",
         kubeconfig={"apiVersion": "v1", "clusters": []},
         storage_access_key="controller",
-        storage_secret_key="controller-secret",
+        storage_secret_key="controller-secret",  # noqa: S106
         **expected_item,
     )
 
@@ -64,7 +64,7 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         cluster_uid="alpha-cluster",
         kubeconfig={"apiVersion": "v1", "clusters": []},
         storage_access_key="controller",
-        storage_secret_key="controller-secret",
+        storage_secret_key="controller-secret",  # noqa: S106
         **expected_item,
     )
     async with session_scope() as session:
@@ -81,8 +81,9 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     assert response.json() == {"items": [{"id": beta_id, "name": "Beta Registry"} | expected_item], "total": 2}
 
 
+@pytest.mark.usefixtures("compute_runtime")
 async def test_compute_registry_creation_redacts_credentials_and_rejects_duplicate_name(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], compute_runtime: None
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Persist an inline-verified Compute without credentials in responses or queued work."""
 
@@ -118,7 +119,7 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     assert registry.gateway_certificate == "gateway-certificate"
     assert registry.storage_certificate == "storage-certificate"
     assert registry.storage_access_key == "controller"
-    assert registry.storage_secret_key == "controller-secret"
+    assert registry.storage_secret_key == "controller-secret"  # noqa: S105
     assert await fetch_operations() == []
 
     # Reject a duplicate after checking the successful registration's persisted outcome.
@@ -127,8 +128,9 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
 
 
+@pytest.mark.usefixtures("compute_runtime")
 async def test_create_rejects_duplicate_compute_clusters(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, compute_runtime: None
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Translate duplicate physical clusters into the stable HTTP conflict."""
 
@@ -243,10 +245,10 @@ COMPUTE_VERIFICATION_CASES = [
 
 
 @pytest.mark.parametrize(("verification_boundary", "error", "status_code", "detail"), COMPUTE_VERIFICATION_CASES)
+@pytest.mark.usefixtures("compute_runtime")
 async def test_compute_registry_creation_rejects_failed_inline_verification(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
-    compute_runtime: None,
     verification_boundary: str,
     error: Exception,
     status_code: int,

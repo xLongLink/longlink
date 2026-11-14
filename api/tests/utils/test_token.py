@@ -36,7 +36,7 @@ def test_token_claims_reject_wrong_audience(
     """Keep registration, browser session, and password-reset credentials separate."""
 
     # Arrange
-    user = User(email="member@example.com", password="hashed-password")
+    user = User(email="member@example.com", password="hashed-password")  # noqa: S106
     encoded = create_token(user)
 
     # Act and assert
@@ -194,7 +194,7 @@ async def test_password_reset_user_rejects_missing_account() -> None:
     """Reject password-reset credentials whose account is no longer active."""
 
     # Arrange
-    user = User(email="missing@example.com", password="password-hash")
+    user = User(email="missing@example.com", password="password-hash")  # noqa: S106
     encoded = token.create_password_reset_token(user)
 
     # Act and assert

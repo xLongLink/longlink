@@ -156,7 +156,7 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
 
         # Exercise tenant constraints with persisted PostgreSQL users and Solutions.
         async with session_factory() as session:
-            owner = User(name="Owner", email="owner@example.com", password="unused")
+            owner = User(name="Owner", email="owner@example.com", password="unused")  # noqa: S106
             session.add(owner)
             await session.commit()
         organization = await create_organization(owner)

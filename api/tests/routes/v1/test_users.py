@@ -162,7 +162,7 @@ async def test_patch_me_persists_without_organization_database_access(
     await create_organization(user)
     expected_name = "Updated User"
 
-    async def unavailable(*args: object, **kwargs: object) -> None:
+    async def unavailable(*_args: object, **_kwargs: object) -> None:
         """Reject any attempt to provision an Organization for a profile change."""
 
         pytest.fail("Profile updates must not access Organization databases")
