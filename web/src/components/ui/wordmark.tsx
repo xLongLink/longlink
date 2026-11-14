@@ -1,23 +1,14 @@
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 
-const wordmarkSizeClasses = { default: ' text-base', full: ' w-full', heading: ' text-2xl', inherit: '' };
-
-/** Renders the shared LongLink welcome title used by authentication screens. */
-export function Welcome() {
-    return (
-        <span className="block text-center whitespace-nowrap">
-            Welcome to <Wordmark size="inherit" />
-        </span>
-    );
-}
+const wordmarkSizeClasses = { default: ' text-base', full: ' w-full', heading: ' text-2xl' };
 
 /** Renders the LongLink wordmark in the surrounding theme and text size. */
 export function Wordmark({
     size = 'default',
     mode
 }: {
-    size?: 'default' | 'full' | 'heading' | 'inherit';
+    size?: 'default' | 'full' | 'heading';
     mode?: 'light' | 'dark';
 }) {
     const { appearance } = useAppearance();
