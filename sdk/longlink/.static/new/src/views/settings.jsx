@@ -14,11 +14,13 @@ export default function ProjectSettings() {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack gap={0}>
                 <Heading level={1}>Example Settings View</Heading>
-                <Text className="text-muted-foreground">This can be used for organizing settings into navigable sections.</Text>
+                <Text className="text-muted-foreground">
+                    This can be used for organizing settings into navigable sections.
+                </Text>
             </Stack>
             <Menu>
                 <MenuSection title="Projects">
-                    <MenuItem label="General">
+                    <MenuItem label="General" icon="settings">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>General</Heading>
                             <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
@@ -50,7 +52,7 @@ export default function ProjectSettings() {
                             </Field>
                         </Stack>
                     </MenuItem>
-                    <MenuItem label="Approvals">
+                    <MenuItem label="Approvals" icon="circle-check">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>Approvals</Heading>
                             <SwitchField
@@ -72,7 +74,7 @@ export default function ProjectSettings() {
                             </Field>
                         </Stack>
                     </MenuItem>
-                    <MenuItem label="Notifications">
+                    <MenuItem label="Notifications" icon="bell">
                         <Stack gap={4} maxWidth={640}>
                             <Heading level={2}>Notifications</Heading>
                             <SwitchField

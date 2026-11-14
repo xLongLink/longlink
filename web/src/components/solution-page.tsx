@@ -1,5 +1,6 @@
 import * as host from '@/views/host';
 import type { ReactNode } from 'react';
+import { FileText } from 'lucide-react';
 import { startCase } from 'es-toolkit/compat';
 import { PageError } from '@/components/utils';
 import { JsxView } from '@/components/jsx-view';
@@ -109,7 +110,7 @@ export function SolutionPage({
     const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
         label: view.label,
-        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : undefined
+        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : <FileText aria-hidden="true" size={16} />
     }));
 
     // Keep wordmark navigation on the solution's first page.
