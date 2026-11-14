@@ -2,6 +2,7 @@ import { Sankey } from 'recharts';
 import { useId, useState } from 'react';
 import { Badge } from '@/components/reui/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
+import './analytics.css';
 import { formatFlowValue, traceFlow, type FlowNode, type RevenueQuarter } from './flow';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/shadcn/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
@@ -9,7 +10,7 @@ import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from
 
 const categories = { revenue: 'Revenue', expense: 'Costs', profit: 'Profit' } as const;
 
-const colors = { revenue: 'var(--chart-5)', profit: 'var(--chart-2)', expense: 'var(--destructive)' };
+const colors = { revenue: 'var(--chart-5)', profit: 'var(--chart-2)', expense: 'var(--analytics-negative)' };
 
 const categoryKeys = ['revenue', 'expense', 'profit'] as const;
 
@@ -79,7 +80,7 @@ export function RevenueFlow({ quarters }: { quarters: RevenueQuarter[] }) {
     );
 
     return (
-        <Card className="min-w-0">
+        <Card className="analytics-card min-w-0">
             <CardHeader>
                 <CardTitle>Revenue Flow</CardTitle>
                 <CardAction>

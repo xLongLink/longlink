@@ -56,13 +56,13 @@ export function Maps(props: {
                             tabIndex={interactive ? 0 : -1}
                             aria-label={label}
                             aria-pressed={interactive ? selected : undefined}
-                            fill={selected ? 'var(--chart-1)' : 'var(--muted)'}
-                            stroke="var(--card)"
+                            fill={selected ? 'var(--analytics-map, var(--chart-1))' : 'var(--muted)'}
+                            stroke="var(--analytics-map-border, var(--background))"
                             strokeWidth={0.75}
                             vectorEffect="non-scaling-stroke"
                             className={
                                 interactive
-                                    ? 'cursor-pointer hover:fill-primary focus-visible:stroke-ring focus-visible:stroke-2 focus-visible:outline-none'
+                                    ? 'cursor-pointer hover:fill-[var(--analytics-map,var(--primary))] focus-visible:stroke-ring focus-visible:stroke-2 focus-visible:outline-none'
                                     : undefined
                             }
                             onClick={interactive ? () => props.onSelect?.(id ?? '') : undefined}

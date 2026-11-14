@@ -4,6 +4,7 @@ import type { MapData } from './map-data';
 import { Badge } from '@/components/reui/badge';
 import { Button } from '@/components/shadcn/button';
 import { IconTile } from '@/components/reui/icon-tile';
+import './analytics.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shadcn/card';
 
@@ -41,7 +42,7 @@ export function CountryChart({
     const selected = countries[position];
 
     return (
-        <Card className="@container/country relative isolate h-full min-w-0 overflow-hidden">
+        <Card className="analytics-card @container/country relative isolate h-full min-w-0 overflow-hidden">
             <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 z-10 hidden bg-linear-to-r from-card from-25% via-card/95 via-42% to-transparent to-70% @min-[640px]/country:block"

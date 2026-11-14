@@ -1,0 +1,15 @@
+@layer components {
+    .analytics-card {
+        --card: light-dark(#ffffff, #131313);
+        --muted-foreground: light-dark(#6b6b73, #9d9da3);
+        --chart-1: light-dark(#795bb5, #b39ce8);
+        --chart-2: light-dark(#397a64, #81b6a1);
+        --chart-3: light-dark(#526f9e, #829cc4);
+        --chart-4: light-dark(#ad684e, #d59379);
+        --chart-5: light-dark(#737373, #a3a3a3);
+        --analytics-negative: light-dark(#b44d4d, #cf7777);
+        --analytics-map: light-dark(#7890b5, #53647e);
+        --analytics-map-border: var(--card);
+        --analytics-grid-dot: light-dark(#00000008, #ffffff08);
+    }
+}
