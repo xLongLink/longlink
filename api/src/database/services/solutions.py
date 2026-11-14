@@ -219,7 +219,7 @@ async def deploy(
     try:
         validate_environment_variables(environment)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     missing = images.missing_envs(metadata, environment)
 
     # Required image variables must exist in the complete environment.

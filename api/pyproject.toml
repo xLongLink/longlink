@@ -77,7 +77,7 @@ skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 preview = true
-select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN401", "B006", "E302", "E305", "PGH003", "PT", "RUF100", "S324", "S506"]
+select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN401", "B", "E302", "E305", "PGH003", "PT", "RUF100", "S324", "S506"]
 ignore = ["D100", "D104", "D202"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -94,6 +94,9 @@ ignore = ["D100", "D104", "D202"]
 "src/utils/token.py" = ["S105"]
 # The development image builder intentionally executes a resolved UV binary without a shell.
 "**/dev/scripts/image.py" = ["S404", "S603"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
 
 [tool.ruff.lint.isort]
 no-sections = true

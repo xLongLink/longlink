@@ -104,7 +104,7 @@ def override_oauth_email(
     if isinstance(verification, dict):
         responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "12345", "email": users[1].email, **verification}
     else:
-        responses[oauth.GITHUB_EMAILS_URL] = [{"email": user.email, **flags} for user, flags in zip(users[1:], verification)]
+        responses[oauth.GITHUB_EMAILS_URL] = [{"email": user.email, **flags} for user, flags in zip(users[1:], verification, strict=False)]
 
 
 def extract_fragment_token(url: str) -> str:

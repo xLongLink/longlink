@@ -71,7 +71,7 @@ class Image(str):
         if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
             raise ValueError("Image registry is invalid")
         try:
-            parsed_registry.port
+            _ = parsed_registry.port
         except ValueError as exc:
             raise ValueError("Image registry port is invalid") from exc
 
