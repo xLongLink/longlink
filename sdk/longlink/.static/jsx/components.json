@@ -919,6 +919,7 @@
             "name": "Collapsible",
             "category": "Layouts",
             "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/collapsible",
             "introduction": "Native collapsible composition using CollapsibleTrigger and CollapsibleContent.",
             "properties": [
                 { "name": "open", "type": "boolean", "description": "Controlled visibility." },
@@ -999,6 +1000,7 @@
             "name": "Calendar",
             "category": "Form",
             "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/calendar",
             "introduction": "Native calendar with single, multiple, and date-range selection.",
             "properties": [
                 { "name": "mode", "type": "\"single\" | \"multiple\" | \"range\"", "description": "Enables the corresponding selection mode." },
