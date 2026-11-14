@@ -5,8 +5,6 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
-import { Welcome } from '@/components/wordmark';
-import { Divider } from '@/components/custom/divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -138,22 +136,40 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthLayout title={<Welcome />} description={<Divider label="Email verified. Complete your profile." />}>
+        <AuthLayout
+            description={null}
+            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+        >
             {pageMetadata}
-            <Stack gap={4}>
+            <Stack gap={3}>
+                <Separator />
                 <form noValidate action={() => form.handleSubmit(handleComplete)()}>
-                    <Stack gap={3}>
-                        <TextField
-                            control={form.control}
-                            name="name"
-                            autoComplete="name"
-                            autoFocus
-                            required
-                            label="Name"
-                        />
-                        <TextField control={form.control} name="password" required label="Password" type="password" />
-                        <Button label="Create account" type="submit" variant="default" />
-                    </Stack>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1">
+                            <Text className="text-sm font-medium">Name</Text>
+                            <TextField
+                                control={form.control}
+                                name="name"
+                                autoComplete="name"
+                                labelHidden
+                                required
+                                label="Name"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <Text className="text-sm font-medium">Password</Text>
+                            <TextField
+                                control={form.control}
+                                name="password"
+                                autoComplete="new-password"
+                                labelHidden
+                                required
+                                label="Password"
+                                type="password"
+                            />
+                        </div>
+                        <Button className="w-full" label="Create account" type="submit" variant="default" />
+                    </div>
                 </form>
                 <Separator />
                 <Text as="p" className="text-xs text-center text-muted-foreground">

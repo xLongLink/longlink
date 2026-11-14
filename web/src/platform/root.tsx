@@ -55,7 +55,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <html
             lang="en"
             className={
-                /^\/(login|auth\/(register|forgot-password|reset-password))\/?$/.test(pathname)
+                /^\/(login|auth\/(register|verify-email|forgot-password|reset-password))\/?$/.test(pathname)
                     ? '[scrollbar-gutter:auto]'
                     : undefined
             }

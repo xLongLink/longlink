@@ -37,13 +37,14 @@ it('keeps password entry masked and email drafts in their owned field', () => {
     expect(output.querySelector('input[name="password"]')?.getAttribute('type')).toBe('password');
 });
 
-it('routes login and password recovery through the same standalone layout', () => {
+it('routes login, registration, and password recovery through the same standalone layout', () => {
     // Assert
     expect(routes).toContainEqual({
         file: './layouts/account.tsx',
         children: [
             { path: 'login', file: './routes/auth/login.tsx' },
             { path: 'auth/register', file: './routes/auth/register.tsx' },
+            { path: 'auth/verify-email', file: './routes/auth/verify-email.tsx' },
             { path: 'auth/forgot-password', file: './routes/auth/forgot-password.tsx' },
             { path: 'auth/reset-password', file: './routes/auth/reset-password.tsx' }
         ]
