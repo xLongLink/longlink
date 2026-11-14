@@ -1,40 +1,16 @@
 import { useContext } from 'react';
 import { IconRequestContext } from './contexts';
 import { useQuery } from '@tanstack/react-query';
-import { stoneIconComponents } from '@/lib/glyphs';
 import type { IconName } from 'lucide-react/dynamic';
-import { AlertTriangle, createLucideIcon } from 'lucide-react';
-
-export type StoneIconName = keyof typeof stoneIconComponents | IconName | `lucide:${IconName}`;
+import { TriangleExclamationPoint, createLucideIcon } from 'lucide-react';
 
 // A blank Lucide glyph retains the requested dimensions while an icon loads.
 const emptyIcon = createLucideIcon({ size: 24, node: [] });
 
 const iconSizes = { sm: 'size-4', md: 'size-5', lg: 'size-6' };
 
-/** Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions. */
-export function Icon({
-    icon,
-    size
-}: {
-    /** Lucide kebab-case name or LongLink alias. Prefix with lucide: to bypass an existing alias, such as lucide:logs. */
-    icon: StoneIconName;
-    size: 'sm' | 'md' | 'lg';
-}) {
-    // Resolve existing LongLink names synchronously without mounting a query or loading another chunk.
-    if (Object.hasOwn(stoneIconComponents, icon)) {
-        // SAFETY: The own-property check restricts the lookup to the bundled icon names.
-        const Component = stoneIconComponents[icon as keyof typeof stoneIconComponents];
-
-        return <Component aria-hidden="true" className={`shrink-0 ${iconSizes[size]}`} data-size={size} />;
-    }
-
-    // Explicit Lucide names bypass legacy aliases but share the same on-demand cache.
-    return <DeferredIcon icon={icon.startsWith('lucide:') ? icon.slice(7) : icon} size={size} />;
-}
-
 /** Caches on-demand glyphs without suspending the containing page or changing icon dimensions. */
-export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' | 'lg' }) {
+export function Icon({ icon, size }: { icon: IconName; size: 'sm' | 'md' | 'lg' }) {
     const load = useContext(IconRequestContext);
 
     if (load === null) throw new Error('Icon requires IconRequestContext');
@@ -53,7 +29,7 @@ export function DeferredIcon({ icon, size }: { icon: string; size: 'sm' | 'md' |
     });
 
     // Keep labeled controls usable even if an icon cannot be loaded.
-    const Component = component ?? (isError ? AlertTriangle : emptyIcon);
+    const Component = component ?? (isError ? TriangleExclamationPoint : emptyIcon);
 
     return <Component aria-hidden="true" className={`shrink-0 ${iconSizes[size]}`} data-size={size} />;
 }

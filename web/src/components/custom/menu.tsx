@@ -2,8 +2,9 @@ import { cn } from 'cn';
 import { spacing } from './layout';
 import type { Spacing } from './types';
 import { ChevronDown } from 'lucide-react';
+import { Icon } from '@/components/custom/icon';
 import { MenuNavigationContext } from './contexts';
-import { Icon, type StoneIconName } from '@/components/custom/icon';
+import type { IconName } from 'lucide-react/dynamic';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
@@ -20,8 +21,8 @@ type MenuSectionProps = {
 type MenuItemProps = {
     /** Content mounted beside the navigation while this item is selected. */
     children?: ReactNode;
-    /** Optional LongLink icon name displayed beside the label. */
-    icon?: StoneIconName;
+    /** Optional Lucide icon name displayed beside the label. */
+    icon?: IconName;
     /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
     label: string;
 };
@@ -202,8 +203,8 @@ export function MenuItem(_props: MenuItemProps) {
 export function MenuSubSection(_props: {
     /** MenuItem elements nested inside this collapsible group. */
     children?: ReactNode;
-    /** Optional LongLink icon name displayed beside the group label. */
-    icon?: StoneIconName;
+    /** Optional Lucide icon name displayed beside the group label. */
+    icon?: IconName;
     /** Label displayed on the collapsible navigation group. */
     label: string;
 }) {

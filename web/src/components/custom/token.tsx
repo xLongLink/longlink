@@ -1,9 +1,10 @@
 import { cn } from 'cn';
+import { Icon } from './icon';
 import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { Badge } from '@/components/reui/badge';
-import { Icon, type StoneIconName } from './icon';
 import { Button } from '@/components/shadcn/button';
+import type { IconName } from 'lucide-react/dynamic';
 
 /** Displays a tag, category, or selection with optional click and removal actions. */
 export function Token({
@@ -13,7 +14,7 @@ export function Token({
     /** Visible text and accessible name for the token. Long labels truncate to fit. */
     label: string;
     size?: ComponentProps<typeof Badge>['size'];
-    icon?: StoneIconName;
+    icon?: IconName;
     disabled?: boolean;
     /** Accessible description of the tag or selection. */
     description?: string;

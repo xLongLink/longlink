@@ -117,7 +117,7 @@ export default function ButtonsPage() {
         <ActionButton size="icon" aria-label="Add"><Icon icon="plus" size="md" /></ActionButton>
         <ActionButton size="icon" aria-label="Edit" variant="outline"><Icon icon="edit" size="md" /></ActionButton>
         <ActionButton size="icon" aria-label="Copy" variant="secondary"><Icon icon="copy" size="md" /></ActionButton>
-        <ActionButton size="icon" aria-label="Close" variant="ghost"><Icon icon="close" size="md" /></ActionButton>
+        <ActionButton size="icon" aria-label="Close" variant="ghost"><Icon icon="x" size="md" /></ActionButton>
         <ActionButton size="icon" aria-label="Delete" variant="destructive"><Icon icon="delete" size="md" /></ActionButton>
         <ActionButton size="icon" aria-label="Link" variant="link"><Icon icon="link" size="md" /></ActionButton>
         <ActionButton size="icon" aria-label="Add (disabled)" disabled><Icon icon="plus" size="md" /></ActionButton>
@@ -182,7 +182,7 @@ export function ButtonExample() {
                     <Icon icon="copy" size="md" />
                 </ActionButton>
                 <ActionButton size="icon" aria-label="Close" variant="ghost">
-                    <Icon icon="close" size="md" />
+                    <Icon icon="x" size="md" />
                 </ActionButton>
                 <ActionButton size="icon" aria-label="Delete" variant="destructive">
                     <Icon icon="delete" size="md" />

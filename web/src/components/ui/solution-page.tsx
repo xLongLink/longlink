@@ -2,11 +2,12 @@ import * as host from '@/views/host';
 import type { ReactNode } from 'react';
 import { FileText } from 'lucide-react';
 import { startCase } from 'es-toolkit/compat';
+import { Icon } from '@/components/custom/icon';
 import { JsxView } from '@/components/jsx-view';
 import { PageError } from '@/components/ui/utils';
 import { manifestSchema } from '@/views/manifest';
 import Platform from '@/components/layouts/platform';
-import { DeferredIcon } from '@/components/custom/icon';
+import type { IconName } from 'lucide-react/dynamic';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { PageContainer } from '@/components/ui/page-container';
 import { matchRoutes, Navigate, useParams } from 'react-router';
@@ -110,7 +111,8 @@ export function SolutionPage({
     const tabs = navigationTabs.map((view) => ({
         href: resolveNavigationUrl(navigationBaseUrl, view.route),
         label: view.label,
-        icon: view.icon ? <DeferredIcon icon={view.icon} size="sm" /> : <FileText aria-hidden="true" size={16} />
+        // SAFETY: The icon loader checks manifest names against Lucide's catalog and falls back for unknown names.
+        icon: view.icon ? <Icon icon={view.icon as IconName} size="sm" /> : <FileText aria-hidden="true" size={16} />
     }));
 
     // Keep wordmark navigation on the solution's first page.

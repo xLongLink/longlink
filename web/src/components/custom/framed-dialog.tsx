@@ -67,7 +67,7 @@ export function FramedDialog(props: FramedDialogProps) {
                                 aria-label="Close dialog"
                                 render={<Button variant="ghost" size="icon" type="button" />}
                             >
-                                <Icon icon="close" size="md" />
+                                <Icon icon="x" size="md" />
                             </BaseDialog.Close>
                         </div>
                         {props.title && (

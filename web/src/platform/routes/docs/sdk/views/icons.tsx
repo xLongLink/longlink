@@ -8,11 +8,7 @@ export default function IconsPage() {
         <ViewLayout
             name="Icon"
             properties={[
-                {
-                    name: 'icon',
-                    type: 'StoneIconName',
-                    description: 'Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases.'
-                },
+                { name: 'icon', type: 'IconName', description: 'Lucide kebab-case icon name.' },
                 {
                     name: 'size',
                     type: '"sm" | "md" | "lg"',
@@ -24,7 +20,7 @@ export default function IconsPage() {
                 preview: <IconExample />,
                 code: `function Example() {
   const icons = [
-    'search', 'info', 'check', 'warning',
+    'search', 'info', 'check', 'triangle-exclamation-point',
     'calendar', 'clock', 'users', 'database',
     'copy', 'upload', 'trash', 'wrench'
   ];
@@ -52,7 +48,7 @@ export function IconExample() {
         'search',
         'info',
         'check',
-        'warning',
+        'triangle-exclamation-point',
         'calendar',
         'clock',
         'users',
@@ -63,7 +59,7 @@ export function IconExample() {
         'wrench'
     ] as const;
 
-    // Compare every supported size across a responsive grid of bundled icons.
+    // Compare every supported size across a responsive grid of icons.
     return (
         <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
             {icons.map((icon) => (

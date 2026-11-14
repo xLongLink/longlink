@@ -69,11 +69,11 @@ export function InviteMember({
                                     defaultValue="write"
                                     hasClear={false}
                                     options={[
-                                        { value: 'read', label: 'read', icon: 'lucide:eye-off' },
-                                        { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
-                                        { value: 'maintain', label: 'maintain', icon: 'lucide:wrench' },
+                                        { value: 'read', label: 'read', icon: 'eye-off' },
+                                        { value: 'write', label: 'write', icon: 'arrow-up' },
+                                        { value: 'maintain', label: 'maintain', icon: 'wrench' },
                                         ...(canInviteAdmin
-                                            ? [{ value: 'admin', label: 'admin', icon: 'lucide:check-check' as const }]
+                                            ? [{ value: 'admin', label: 'admin', icon: 'check-check' as const }]
                                             : [])
                                     ]}
                                 />
