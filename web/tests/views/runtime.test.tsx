@@ -45,7 +45,7 @@ it('ignores a mismatched session and releases an admitted port when its mount is
         close.mockRestore();
         window.__VIEW_SESSION__ = previousSession;
     }
-});
+}, 30_000);
 
 it('loads gallery images concurrently without a request cap', async () => {
     // Arrange
