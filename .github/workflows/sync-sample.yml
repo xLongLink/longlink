@@ -36,12 +36,15 @@ jobs:
 
         steps:
             - name: Checkout LongLink
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Setup Python
-              uses: ./.github/actions/setup-python
+              uses: astral-sh/setup-uv@v9.0.0
               with:
+                  enable-cache: true
                   cache-dependency-glob: sdk/uv.lock
+                  version: '0.13.4'
+                  python-version: '3.14.6'
 
             - name: Generate scaffold
               run: |
