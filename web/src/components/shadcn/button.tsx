@@ -44,7 +44,7 @@ function Button({
             data-slot="button"
             className={cn(
                 buttonVariants({ variant, size }),
-                'data-disabled:cursor-not-allowed data-disabled:opacity-50',
+                'not-disabled:not-data-disabled:not-aria-disabled:cursor-pointer data-disabled:cursor-not-allowed data-disabled:opacity-50',
                 className
             )}
             {...props}
