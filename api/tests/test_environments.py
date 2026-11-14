@@ -60,7 +60,7 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     environment = Env.model_validate(settings)
 
     assert environment.SMTP_USERNAME == "mailer"
-    assert environment.SMTP_PASSWORD == "secret"
+    assert environment.SMTP_PASSWORD == "secret"  # noqa: S105
 
 
 def test_env_accepts_loopback_with_smtp_delivery() -> None:

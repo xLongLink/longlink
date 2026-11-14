@@ -55,7 +55,7 @@ def test_solution_template_constrains_workloads() -> None:
         namespace="acme",
         runtime_revision="revision",
         migration_id="solution-migration",
-        secret_id="solution-revision",
+        secret_id="solution-revision",  # noqa: S106
         pull_secrets="[]",
     )
 
@@ -89,7 +89,7 @@ def test_solution_template_constrains_workloads() -> None:
 
         assert requests["ephemeral-storage"] == "256Mi"
         assert limits["ephemeral-storage"] == "512Mi"
-        assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]
+        assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]  # noqa: S108
         assert pod_spec["volumes"] == [{"name": "tmp", "emptyDir": {"sizeLimit": "256Mi"}}]
 
         # Only the runtime is probed; database outages must not trigger liveness restarts.

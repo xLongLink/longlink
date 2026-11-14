@@ -2,7 +2,7 @@ import os
 import yaml
 import pytest
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import pytest_asyncio
 from uuid import UUID, uuid4
 from httpx2 import Cookies, Response, AsyncClient, ASGITransport
@@ -15,7 +15,7 @@ from kr8s.asyncio import Api
 from collections.abc import AsyncIterator, AsyncGenerator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-TEST_PASSWORD = "longlink-test-password"
+TEST_PASSWORD = "longlink-test-password"  # noqa: S105
 
 pytest_plugins = ["containers"]
 
@@ -31,12 +31,12 @@ os.environ["SMTP_PORT"] = "587"
 os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ["SMTP_PASSWORD"] = "null"
+os.environ["SMTP_PASSWORD"] = "null"  # noqa: S105
 os.environ["SMTP_USERNAME"] = "null"
 os.environ["GITHUB_OAUTH_CLIENT_ID"] = "null"
 os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "null"
-os.environ["GITHUB_OAUTH_CLIENT_SECRET"] = "null"
-os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "null"
+os.environ["GITHUB_OAUTH_CLIENT_SECRET"] = "null"  # noqa: S105
+os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "null"  # noqa: S105
 
 from src.utils import mail, token
 from src.database import models, session
@@ -55,7 +55,7 @@ class StorageKubernetes:
         """Accept the bound Compute registry without opening connections."""
 
     @staticmethod
-    async def controller_credentials(cluster: object) -> Credentials:
+    async def controller_credentials(_cluster: object) -> Credentials:
         """Return stable chart-managed credentials without cluster I/O."""
 
         return Credentials("controller", "controller-secret")
@@ -69,7 +69,7 @@ class StorageKubernetes:
     # Keep pure bucket naming identical to production while replacing external I/O.
     bucket_name = staticmethod(storage.Storage.bucket_name)
 
-    async def service_account(self, organization: UUID, solution: UUID) -> Credentials:
+    async def service_account(self, _organization: UUID, _solution: UUID) -> Credentials:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
@@ -116,9 +116,12 @@ def rendered_chart() -> list[dict]:
 
     # Render the production chart with the gateway test's infrastructure settings.
     chart = Path(__file__).resolve().parents[2] / "k8s/chart"
-    release = subprocess.run(
+    executable = shutil.which("helm")
+    if executable is None:
+        pytest.fail("Helm is required to render the Compute chart")
+    release = subprocess.run(  # noqa: S603
         [
-            "helm",
+            executable,
             "template",
             "longlink-compute",
             str(chart),
@@ -157,7 +160,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
             """Accept the database Service refresh."""
 
         @asynccontextmanager
-        async def portforward(self, port: int, *, local_port: str) -> AsyncGenerator[int]:
+        async def portforward(self, _port: int, *, local_port: str) -> AsyncGenerator[int]:  # noqa: ARG002 - Called by keyword.
             """Supply a local transport port consumed only by the SQL fake."""
 
             yield 15432
@@ -168,7 +171,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     async def wait_ready(client: object, organization: UUID) -> None:
         """Accept database readiness verification."""
 
-    async def certificate(client: object, organization: UUID) -> str:
+    async def certificate(_client: object, _organization: UUID) -> str:
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"

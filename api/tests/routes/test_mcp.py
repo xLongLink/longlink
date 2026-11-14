@@ -211,7 +211,7 @@ async def test_mcp_code_exchange_rechecks_identity_and_membership(
 
             # Change account state after authorization proof has already been issued.
             if invalidation == "password":
-                user.password = "changed-password-hash"
+                user.password = "changed-password-hash"  # noqa: S105
             else:
                 user.deleted_at = datetime.now(UTC)
         await session.commit()
@@ -426,7 +426,7 @@ async def test_mcp_grants_recheck_expiry_revocation_identity_and_permissions(
 
                 # Password replacement invalidates the grant's captured fingerprint.
                 if invalidation == "password":
-                    user.password = "changed-password-hash"
+                    user.password = "changed-password-hash"  # noqa: S105
                 else:
                     user.deleted_at = datetime.now(UTC)
             await session.commit()
@@ -513,7 +513,7 @@ async def test_oauth_mcp_session_discovers_and_calls_real_sdk_tools(
 
     # Make the approved Solution ready without deploying external Kubernetes resources.
     solution, _, exchange = authorization
-    secret = "test-oauth-mcp-identity-secret-01234567890"
+    secret = "test-oauth-mcp-identity-secret-01234567890"  # noqa: S105
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
         assert persisted is not None
@@ -570,7 +570,7 @@ async def mcp_gateway(users: tuple[User, User, User], tmp_path: Path, monkeypatc
     """Route the external gateway transport into a real isolated Solution runtime."""
 
     # Create valid persisted runtime state without contacting Kubernetes.
-    secret = "test-mcp-gateway-secret-01234567890"
+    secret = "test-mcp-gateway-secret-01234567890"  # noqa: S105
     organization = await create_organization(users[0])
     solution = await create_solution(organization, runtime_secrets={"LONGLINK_IDENTITY_SECRET": secret}, catalog=IDENTITY_CATALOG)
     async with session_scope() as session:

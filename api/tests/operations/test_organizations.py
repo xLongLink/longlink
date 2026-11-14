@@ -32,7 +32,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     calls: list[str] = []
 
     class Database(DatabasePostgres):
-        async def prepare_organization_database(self, organization: UUID) -> None:
+        async def prepare_organization_database(self, _organization: UUID) -> None:
             """Record database preparation."""
 
             calls.append("database")
@@ -44,13 +44,13 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             await super().apply(organization, quota_bytes=quota_bytes)
 
-    async def apply(client: object, organization_id: UUID) -> None:
+    async def apply(_client: object, organization_id: UUID) -> None:
         """Record namespace reconciliation."""
 
         assert organization_id == organization.id
         calls.append("namespace")
 
-    async def synchronize(client: object, organization_id: UUID) -> None:
+    async def synchronize(_client: object, organization_id: UUID) -> None:
         """Record pull-secret reconciliation at the external-system boundary."""
 
         assert organization_id == organization.id
@@ -81,7 +81,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
     organization = await create_organization(users[0])
 
     class Storage(StorageKubernetes):
-        async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
+        async def apply(self, _organization: UUID, *, quota_bytes: int) -> None:  # noqa: ARG002 - Called by keyword.
             """Fail bucket creation."""
 
             raise RuntimeError("storage failed")
@@ -173,7 +173,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         # Commit deletion eligibility before observing external cleanup calls.
         await session.commit()
 
-    async def delete(client: object, name: str) -> None:
+    async def delete(_client: object, name: str) -> None:
         """Fail namespace deletion before destructive provider cleanup."""
 
         assert name == f"longlink-compute-{organization.id.hex}"
@@ -217,7 +217,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert list(solutions) == [solution.id]
             calls.append("bucket")
 
-    async def delete(client: object, name: str) -> None:
+    async def delete(_client: object, name: str) -> None:
         """Record compute and database namespace deletion."""
 
         if name == f"longlink-compute-{organization.id.hex}":
@@ -257,20 +257,20 @@ async def test_delete_retains_tombstones_and_releases_lease_after_storage_failur
     compute_namespace = f"longlink-compute-{organization.id.hex}"
     database_namespace = f"longlink-database-{organization.id.hex}"
 
-    async def delete_namespace(client: object, name: str) -> None:
+    async def delete_namespace(_client: object, name: str) -> None:
         """Accept repeat deletion of already-absent external namespaces."""
 
         assert name in (compute_namespace, database_namespace)
         calls.append(name)
 
-    async def delete_storage(self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
+    async def delete_storage(_self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
         """Accept bucket cleanup once its external boundary recovers."""
 
         assert organization_id == organization.id
         assert list(solutions) == [solution.id]
         calls.append("storage")
 
-    async def fail_storage(self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
+    async def fail_storage(_self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
         """Fail after namespace teardown under a real committed deletion lease."""
 
         assert organization_id == organization.id
@@ -331,7 +331,7 @@ async def test_delete_expires_only_open_checkouts_across_pages_before_namespaces
     calls: list[str] = []
 
     async def request(
-        self: stripe.HTTPXClient, method: str, url: str, headers: object, post_data: str | None = None
+        _self: stripe.HTTPXClient, method: str, url: str, _headers: object, _post_data: str | None = None
     ) -> tuple[bytes, int, dict[str, str]]:
         """Return two fixed Stripe pages through the real SDK's HTTP boundary."""
 
@@ -367,12 +367,12 @@ async def test_delete_expires_only_open_checkouts_across_pages_before_namespaces
             raise AssertionError(f"Unexpected Stripe request: {method} {url}")
         return json.dumps(payload).encode(), 200, {}
 
-    async def delete_namespace(client: object, name: str) -> None:
+    async def delete_namespace(_client: object, name: str) -> None:
         """Record external namespace deletion after checkout expiration."""
 
         calls.append(name)
 
-    async def delete_storage(self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
+    async def delete_storage(_self: object, organization_id: UUID, solutions: Sequence[UUID]) -> None:
         """Accept external storage cleanup for the customer-backed Organization."""
 
         assert organization_id == organization.id

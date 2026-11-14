@@ -109,7 +109,7 @@ def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytes
     # Arrange
     loaded_certificates: list[tuple[str, str | None]] = []
 
-    def load_cert_chain(self: ssl.SSLContext, certfile: str, keyfile: str | None = None) -> None:
+    def load_cert_chain(_self: ssl.SSLContext, certfile: str, keyfile: str | None = None) -> None:
         """Capture the configured certificate paths without reading certificate files."""
 
         loaded_certificates.append((certfile, keyfile))

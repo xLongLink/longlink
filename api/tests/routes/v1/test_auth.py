@@ -377,13 +377,9 @@ async def test_oauth_callback_rejects_token_shaped_http_error_without_profile_fe
         ("//attacker.example/mcp/authorize", "/user/organizations"),
     ],
 )
+@pytest.mark.usefixtures("oauth_responses")
 async def test_oauth_callback_links_existing_email_and_authenticates_browser(
-    client: AsyncClient,
-    users: tuple[User, User, User],
-    oauth_responses: dict[str, object],
-    provider: oauth.OAuthProvider,
-    return_to: str,
-    destination: str,
+    client: AsyncClient, users: tuple[User, User, User], provider: oauth.OAuthProvider, return_to: str, destination: str
 ) -> None:
     """Link a verified provider identity to its existing canonical account."""
 
@@ -582,8 +578,9 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
 
 
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.usefixtures("oauth_responses")
 async def test_oauth_callback_rejects_deleted_account_without_browser_session(
-    client: AsyncClient, users: tuple[User, User, User], oauth_responses: dict[str, object], provider: oauth.OAuthProvider
+    client: AsyncClient, users: tuple[User, User, User], provider: oauth.OAuthProvider
 ) -> None:
     """Reject OAuth login for a soft-deleted account without linking its provider identity."""
 

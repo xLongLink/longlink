@@ -48,7 +48,7 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
     class Resource:
         """Provide current package, Secret, and Deployment observations without mutation methods."""
 
-        def __init__(self, name: str, namespace: str, api: object) -> None:
+        def __init__(self, name: str, namespace: str, api: object) -> None:  # noqa: ARG002 - Called by keyword.
             """Record the resource selected by the verifier."""
 
             observed.append((namespace, name))

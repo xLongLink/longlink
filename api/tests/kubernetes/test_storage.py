@@ -1,5 +1,6 @@
 import httpx2
 import pytest
+import secrets
 from uuid import uuid4
 from types import SimpleNamespace
 from contextlib import asynccontextmanager
@@ -16,7 +17,7 @@ def storage_compute() -> SimpleNamespace:
     return SimpleNamespace(
         storage_endpoint="https://public-storage.example",
         storage_access_key="controller",
-        storage_secret_key="secret",
+        storage_secret_key=secrets.token_urlsafe(32),
         storage_certificate=None,
     )
 

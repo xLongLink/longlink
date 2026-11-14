@@ -1,5 +1,6 @@
 import docker
 import pytest
+import secrets
 from uuid import uuid4
 from contextlib import closing
 from sqlalchemy import text, create_engine
@@ -20,7 +21,6 @@ def require_docker_daemon() -> None:
         with closing(client):
             client.ping()
     except (DockerException, OSError) as exc:
-
         # Container-backed tests are optional when the daemon is unavailable.
         pytest.skip(f"Docker daemon is not available: {exc}")
 
@@ -31,7 +31,9 @@ def postgres_server() -> Iterator[PostgresContainer]:
 
     # Probe Docker before delegating server startup and cleanup to Testcontainers.
     require_docker_daemon()
-    container = PostgresContainer("postgres:16-alpine", username="longlink", password="sec@ret", dbname="postgres", driver="psycopg")
+    container = PostgresContainer(
+        "postgres:16-alpine", username="longlink", password=f"{secrets.token_urlsafe(24)}@test", dbname="postgres", driver="psycopg"
+    )
 
     with container:
         yield container
@@ -44,7 +46,12 @@ def mysql_server() -> Iterator[MySqlContainer]:
     # Keep root credentials confined to test-local database provisioning and cleanup.
     require_docker_daemon()
     container = MySqlContainer(
-        "mysql:8.4", username="longlink", password="sec@ret", root_password="test-root-password", dbname="longlink", dialect="pymysql"
+        "mysql:8.4",
+        username="longlink",
+        password=f"{secrets.token_urlsafe(24)}@test",
+        root_password=secrets.token_urlsafe(32),
+        dbname="longlink",
+        dialect="pymysql",
     )
 
     with container:
@@ -95,15 +102,12 @@ def mysql_url(mysql_server: MySqlContainer) -> Iterator[URL]:
             try:
                 connection.execute(text(f"GRANT ALL PRIVILEGES ON {name}.* TO 'longlink'@'%'"))
                 try:
-
                     # Keep granted access alive until the requesting test completes.
                     yield server_url.set(database=database)
                 finally:
-
                     # Revoke only after the grant succeeds, even when the test fails.
                     connection.execute(text(f"REVOKE ALL PRIVILEGES ON {name}.* FROM 'longlink'@'%'"))
             finally:
-
                 # Remove the database even if granting or revoking its access fails.
                 connection.exec_driver_sql(f"DROP DATABASE {name}")
     finally:
