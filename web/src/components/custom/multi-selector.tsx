@@ -1,5 +1,5 @@
+import { Picker } from './picker';
 import type { ReactNode } from 'react';
-import { Picker } from '@/components/custom/picker';
 import { useValue } from '@/components/custom/value';
 import { FormField } from '@/components/custom/form-field';
 import type { FieldProps } from '@/components/custom/types';
@@ -23,8 +23,19 @@ export function MultiSelector(
     const field = useValue(props.value, props.defaultValue ?? [], props.onChange);
 
     return (
-        <FormField {...props} fieldRef={field.ref} values={field.value} serialize>
+        <FormField
+            name={props.name}
+            required={props.required}
+            disabled={props.disabled}
+            fieldRef={field.ref}
+            values={field.value}
+            serialize
+            className="view-picker"
+            data-multiple
+            data-disabled={props.disabled || undefined}
+        >
             <Picker
+                unwrapped
                 label={props.label}
                 description={props.description}
                 required={props.required}

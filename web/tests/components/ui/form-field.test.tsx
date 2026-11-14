@@ -11,7 +11,7 @@ it('serializes each authored string once and excludes disabled carriers', () => 
         const ref = useRef<HTMLElement>(null);
 
         return (
-            <FormField label="Tags" name="tags" fieldRef={ref} values={['red', 'blue']} serialize disabled>
+            <FormField name="tags" fieldRef={ref} values={['red', 'blue']} serialize disabled>
                 Tags
             </FormField>
         );
@@ -30,6 +30,7 @@ it('serializes each authored string once and excludes disabled carriers', () => 
 
 it('retains custom-field validation and canceled reset feedback through the native root', async () => {
     const submitted: FormData[] = [];
+    let root: HTMLDivElement | null = null;
 
     function Probe() {
         const field = useRef<HTMLElement>(null);
@@ -41,7 +42,19 @@ it('retains custom-field validation and canceled reset feedback through the nati
                     submitted.push(data);
                 }}
             >
-                <FormField label="Tags" name="tags" required fieldRef={field} values={values} serialize>
+                <FormField
+                    ref={(element) => {
+                        root = element;
+                    }}
+                    name="tags"
+                    required
+                    fieldRef={field}
+                    values={values}
+                    serialize
+                    orientation="horizontal"
+                    className="tags-field"
+                    aria-label="Tags"
+                >
                     <button type="button" onClick={() => setValues(['red', 'blue'])}>
                         Choose tags
                     </button>
@@ -56,11 +69,19 @@ it('retains custom-field validation and canceled reset feedback through the nati
 
         if (!form || !choose) throw new Error('Expected the tags form');
 
+        expect(root).toBe(choose.parentElement);
+        expect(root).toHaveProperty('dataset.orientation', 'horizontal');
+        expect(root?.classList.contains('tags-field')).toBe(true);
+        expect(root?.getAttribute('aria-label')).toBe('Tags');
+        expect(root?.hasAttribute('name')).toBe(false);
+        expect(root?.hasAttribute('required')).toBe(false);
+
         await act(async () => {
             form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
         });
         expect(submitted).toHaveLength(0);
         expect(output.querySelector('[role="alert"]')?.textContent).toBe('Please complete this field.');
+        expect(root?.querySelector(':scope > [data-slot="field-error"]')).toBe(output.querySelector('[role="alert"]'));
         expect(document.activeElement).toBe(choose);
 
         const cancelReset = (event: Event) => event.preventDefault();
@@ -93,13 +114,13 @@ it('collects the latest attachment once and excludes fields disabled by their an
 
         return (
             <form>
-                <FormField label="Attachment" name="attachment" fieldRef={field} values={['reference', file]} serialize>
+                <FormField name="attachment" fieldRef={field} values={['reference', file]} serialize>
                     <button type="button" onClick={() => setFile(replacement)}>
                         Replace attachment
                     </button>
                 </FormField>
                 <fieldset disabled>
-                    <FormField label="Disabled" name="disabled" fieldRef={disabled} values={[file]} serialize>
+                    <FormField name="disabled" fieldRef={disabled} values={[file]} serialize>
                         Disabled attachment
                     </FormField>
                 </fieldset>

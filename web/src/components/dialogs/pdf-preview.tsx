@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Dialog } from '@/components/dialogs/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 
 /** Displays only host-fetched PDF bytes in the browser's native viewer. */
 export function PdfPreview({ body, title, onClose }: { body: Blob; title: string; onClose: () => void }) {
@@ -21,15 +21,15 @@ export function PdfPreview({ body, title, onClose }: { body: Blob; title: string
 
     // Render outside the Solution sandbox without granting it navigation or plugin permissions.
     return (
-        <Dialog
+        <FramedDialog
             title={title}
             variant="fullscreen"
-            isOpen
+            open
             onOpenChange={(open) => !open && onClose()}
             paddingInline={0}
             gap={0}
         >
             <iframe ref={frame} title={title} className="h-full min-h-0 w-full flex-1 border-0" />
-        </Dialog>
+        </FramedDialog>
     );
 }

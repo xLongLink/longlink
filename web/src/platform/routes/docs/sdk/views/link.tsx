@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
-import { Dialog } from '@/components/dialogs/dialog';
+import { ActionButton } from '@/components/custom/action-button';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
@@ -13,27 +14,34 @@ export default function LinkPage() {
             name="Link"
             properties={[
                 {
-                    name: 'to',
+                    name: 'href',
                     type: 'string',
-                    description: 'Optional link destination. Omit for a link-styled button action.'
+                    description: 'Navigation destination. Solution-relative paths stay within the Solution.'
                 },
                 {
-                    name: 'preview',
+                    name: 'AttachmentLink.preview',
                     type: 'string',
                     description: 'Open a scoped Solution file in a preview dialog using this filename as its title.'
                 },
                 {
-                    name: 'download',
+                    name: 'AttachmentLink.download',
                     type: 'string',
                     description: 'Download filename for a scoped Solution attachment instead of navigation.'
                 },
-                { name: 'disabled', type: 'boolean', description: 'Disables navigation, downloads, and actions.' },
+                { name: 'AttachmentLink.href', type: 'string', description: 'Scoped Solution file path.' },
+                { name: 'AttachmentLink.disabled', type: 'boolean', description: 'Disables the attachment action.' },
                 {
                     name: 'onClick',
-                    type: '(event: ViewMouseEvent) => void | Promise<void>',
-                    description: 'Runs an action with automatic async loading and duplicate-click prevention.'
+                    type: 'MouseEventHandler<HTMLAnchorElement>',
+                    description: 'Native click handler. Call preventDefault() to cancel navigation.'
                 },
-                { name: 'children', type: 'ReactNode', description: 'Link content' }
+                { name: 'children', type: 'ReactNode', description: 'Caller-owned link content.' },
+                {
+                    name: '...props',
+                    type: 'ComponentPropsWithRef<"a">',
+                    description:
+                        'Native anchor props and ref, except download. Use AttachmentLink for scoped files and ActionButton variant="link" for actions.'
+                }
             ]}
             example={{
                 title: 'Link',
@@ -43,19 +51,19 @@ export default function LinkPage() {
 
   return (
     <Stack>
-      <Link to="/orders">Orders</Link>
-      <Link to="/api/documents/sample" preview="sample-document.txt">
+      <Link href="/orders">Orders</Link>
+      <AttachmentLink href="/api/documents/sample" preview="sample-document.txt">
         sample-document.txt
-      </Link>
-      <Link to="/api/documents/sample" download="sample-document.txt">
+      </AttachmentLink>
+      <AttachmentLink href="/api/documents/sample" download="sample-document.txt">
         sample-document.txt
-      </Link>
-      <Link onClick={() => setIsOpen(true)}>Document details</Link>
-      <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+      </AttachmentLink>
+      <ActionButton variant="link" onClick={() => setIsOpen(true)}>Document details</ActionButton>
+      <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
         <Stack padding={4}>
           <Text>Document details opened without navigation.</Text>
         </Stack>
-      </Dialog>
+      </FramedDialog>
     </Stack>
   );
 }`
@@ -71,13 +79,15 @@ export function LinkExample() {
     // Keep navigation separate from the action that opens the dialog.
     return (
         <Stack>
-            <Link to="/docs/sdk/views">Docs</Link>
-            <Link onClick={() => setIsOpen(true)}>Document details</Link>
-            <Dialog title="Document details" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <Link href="/docs/sdk/views">Docs</Link>
+            <ActionButton variant="link" onClick={() => setIsOpen(true)}>
+                Document details
+            </ActionButton>
+            <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
                     <Text>Document details opened without navigation.</Text>
                 </Stack>
-            </Dialog>
+            </FramedDialog>
         </Stack>
     );
 }

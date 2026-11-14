@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { ApiProvider } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import userEvent from '@testing-library/user-event';
-import { Dialog } from '@/components/dialogs/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { act, StrictMode, useEffect, useRef, useState } from 'react';
 
@@ -154,9 +154,9 @@ it.each(['native', 'base'] as const)(
                             {content}
                         </dialog>
                     ) : (
-                        <Dialog title="Membership" isOpen={open} onOpenChange={setOpen}>
+                        <FramedDialog title="Membership" open={open} onOpenChange={setOpen}>
                             {content}
-                        </Dialog>
+                        </FramedDialog>
                     )}
                 </>
             );

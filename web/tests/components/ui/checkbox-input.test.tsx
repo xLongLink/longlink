@@ -110,8 +110,8 @@ it.each([
 
             if (!description) throw new Error('Expected the agreement description');
             await act(async () => user.click(description));
-            expect(new FormData(form).get('accepted')).toBe('on');
-            expect(form.checkValidity()).toBe(true);
+            expect(new FormData(form).has('accepted')).toBe(false);
+            expect(form.checkValidity()).toBe(false);
             expect(document.getElementById(control.getAttribute('aria-labelledby') ?? '')?.textContent).not.toContain(
                 'Required agreement'
             );

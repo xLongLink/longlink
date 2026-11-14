@@ -34,6 +34,8 @@ type PickerProps = Omit<FieldProps, 'name'> & {
     hasSearch?: boolean;
     hasClear?: boolean;
     labelHidden?: boolean;
+    /** Form adapters provide the field root alongside validation and submission carriers. */
+    unwrapped?: boolean;
 } & (
         | { multiple?: false; value: string | null; onChange: (value: string | null) => void }
         | {
@@ -173,11 +175,7 @@ export function Picker(props: PickerProps) {
     );
 
     const contents = (
-        <Field
-            className="view-picker"
-            data-multiple={props.multiple || undefined}
-            data-disabled={props.disabled || undefined}
-        >
+        <>
             <FieldContent className={props.labelHidden ? 'sr-only' : undefined}>
                 <FieldLabel htmlFor={id} id={`${id}-label`}>
                     {props.label}
@@ -319,6 +317,18 @@ export function Picker(props: PickerProps) {
                     )}
                 </List>
             </Content>
+        </>
+    );
+
+    const field = props.unwrapped ? (
+        contents
+    ) : (
+        <Field
+            className="view-picker"
+            data-multiple={props.multiple || undefined}
+            data-disabled={props.disabled || undefined}
+        >
+            {contents}
         </Field>
     );
 
@@ -341,7 +351,7 @@ export function Picker(props: PickerProps) {
                 filteredItems={[...(hasSelectAll ? [selectAllValue] : []), ...visibleItems.map((item) => item.value)]}
                 itemToStringLabel={(value) => items.find((item) => item.value === value)?.label ?? value}
             >
-                {contents}
+                {field}
             </Combobox.Root>
         );
 
@@ -357,7 +367,7 @@ export function Picker(props: PickerProps) {
             modal={false}
             items={items.map((item) => ({ value: item.value, label: item.label ?? item.value }))}
         >
-            {contents}
+            {field}
         </Select.Root>
     );
 }

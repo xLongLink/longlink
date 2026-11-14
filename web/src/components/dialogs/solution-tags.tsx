@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { FormDialog } from './form-dialog';
 import { Form } from '@/components/custom/form';
-import { MultiSelector } from '@/components/ui/multi-selector';
+import { MultiSelector } from '@/components/custom/multi-selector';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';

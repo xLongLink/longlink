@@ -1,12 +1,12 @@
+import { Icon } from './icon';
+import { Heading } from './heading';
+import type { Spacing } from './types';
 import type { ReactNode } from 'react';
-import { Icon } from '@/components/custom/icon';
+import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
-import { Heading } from '@/components/custom/heading';
-import type { Spacing } from '@/components/custom/types';
-import { use, useEffect, useRef, useState } from 'react';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
-import { Dialog as NativeDialog, DialogContent, DialogTitle } from '@/components/shadcn/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 type FramedDialogProps = {
     children?: ReactNode;
@@ -14,50 +14,31 @@ type FramedDialogProps = {
     title?: string;
     /** Fullscreen fills about 95% of the screen, including over Platform navigation. */
     variant?: 'standard' | 'fullscreen';
-    isOpen: boolean;
+    open: boolean;
     onOpenChange: (open: boolean) => void;
     /** Spacing between the title and content; defaults to 3. */
     gap?: Spacing;
     paddingInline?: Spacing;
 };
 
-/** Composes a native dialog or a controlled frame with isolated View host coordination. */
-export function Dialog(props: FramedDialogProps): ReactNode;
-export function Dialog(props: BaseDialog.Root.Props & { isOpen?: never }): ReactNode;
-export function Dialog(props: FramedDialogProps | (BaseDialog.Root.Props & { isOpen?: never })) {
+/** Provides a controlled modal frame with isolated View host coordination. */
+export function FramedDialog(props: FramedDialogProps) {
     const activity = use(DialogActivityContext);
-    const framed = props.isOpen !== undefined;
-    const fullscreen = framed && props.variant === 'fullscreen';
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(!framed && Boolean(props.defaultOpen));
-    const open = framed ? props.isOpen : (props.open ?? uncontrolledOpen);
+    const fullscreen = props.variant === 'fullscreen';
     const title = useRef<HTMLDivElement>(null);
     const popup = useRef<HTMLDivElement>(null);
 
-    // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
+    // Let an isolated runtime extend the backdrop without moving the dialog out of its document.
     useEffect(() => {
-        if (!open || !activity) return;
+        if (!props.open || !activity) return;
         activity(true, fullscreen);
 
         return () => activity(false, fullscreen);
-    }, [open, activity, fullscreen]);
-
-    // Preserve native composition and track uncontrolled visibility for the isolated host.
-    if (!framed) {
-        return (
-            <NativeDialog
-                {...props}
-                onOpenChange={(open, details) => {
-                    props.onOpenChange?.(open, details);
-
-                    if (!details.isCanceled) setUncontrolledOpen(open);
-                }}
-            />
-        );
-    }
+    }, [props.open, activity, fullscreen]);
 
     // Keep the header fixed while bounding the content to the available viewport height.
     return (
-        <BaseDialog.Root open={props.isOpen} onOpenChange={(open) => props.onOpenChange(open)} disablePointerDismissal>
+        <BaseDialog.Root open={props.open} onOpenChange={(open) => props.onOpenChange(open)} disablePointerDismissal>
             <DialogContent
                 ref={popup}
                 className="flex min-h-0 flex-col gap-0 overflow-hidden overscroll-contain p-0 text-start forced-colors:border forced-colors:border-[CanvasText]"

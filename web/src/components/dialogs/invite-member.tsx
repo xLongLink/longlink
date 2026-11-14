@@ -1,8 +1,8 @@
-import { Dialog } from './dialog';
 import { Form } from '@/components/custom/form';
-import { Selector } from '@/components/ui/selector';
-import { TextInput } from '@/components/ui/text-input';
+import { Selector } from '@/components/custom/selector';
+import { TextInput } from '@/components/custom/text-input';
 import { Illustration } from '@/components/ui/illustration';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { IllustratedDialogContent } from './illustrated-dialog-content';
@@ -21,7 +21,7 @@ export function InviteMember({
     onSubmit: (data: FormData) => Promise<void>;
 }) {
     return (
-        <Dialog isOpen={isOpen} paddingInline={0} onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog open={isOpen} paddingInline={0} onOpenChange={(open) => !open && onClose()}>
             <IllustratedDialogContent
                 illustration={
                     <Illustration
@@ -83,6 +83,6 @@ export function InviteMember({
                     </Form>
                 </Stack>
             </IllustratedDialogContent>
-        </Dialog>
+        </FramedDialog>
     );
 }

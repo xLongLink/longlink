@@ -1,11 +1,78 @@
-// @vitest-environment happy-dom
-import { act } from 'react';
 import { it, expect } from 'vitest';
+import { Form } from '@/components/custom/form';
+// @vitest-environment happy-dom
+import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/text-input';
 import { renderStatic, withMounted } from '../../render';
+import { TextInput } from '@/components/custom/text-input';
+import { NativeTextArea } from '@/components/ui/native-text-area';
 
-it('focuses the text input from its description without adding that description to its name', async () => {
+it('forwards native textarea events, required validation, refs, and disabled state', async () => {
+    const user = userEvent.setup();
+    const ref = createRef<HTMLTextAreaElement>();
+    const submissions: FormData[] = [];
+
+    function Example() {
+        const [notes, setNotes] = useState('');
+
+        return (
+            <Form
+                action={(data) => {
+                    submissions.push(data);
+                }}
+            >
+                <p id="notes-help">Preserve indentation</p>
+                <NativeTextArea
+                    ref={ref}
+                    id="notes"
+                    name="notes"
+                    label="Notes"
+                    description="Internal notes"
+                    aria-describedby="notes-help"
+                    value={notes}
+                    onChange={(event) => setNotes(event.currentTarget.value)}
+                    required
+                />
+                <NativeTextArea label="Excluded" defaultValue="Private" disabled required />
+            </Form>
+        );
+    }
+
+    await withMounted(<Example />, async (output) => {
+        const form = output.querySelector('form');
+        const input = ref.current;
+        const label = output.querySelector('label');
+
+        if (!form || !input || !label) throw new Error('Expected the native notes form');
+        const disabled = output.querySelector<HTMLTextAreaElement>('textarea:disabled');
+
+        if (!disabled) throw new Error('Expected a natively disabled textarea');
+
+        await act(async () => user.type(disabled, 'must not change'));
+        expect(disabled.value).toBe('Private');
+        await act(async () => {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toHaveLength(0);
+        await act(async () => user.click(label));
+        expect(document.activeElement).toBe(input);
+        expect(
+            input
+                .getAttribute('aria-describedby')
+                ?.split(' ')
+                .map((id) => document.getElementById(id)?.textContent)
+        ).toEqual(['Preserve indentation', 'Internal notes']);
+
+        await act(async () => user.type(input, 'Notes:\n  keep indentation'));
+        await act(async () => {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toHaveLength(1);
+        expect([...submissions[0].entries()]).toEqual([['notes', 'Notes:\n  keep indentation']]);
+    });
+});
+
+it('focuses the text input from its label while keeping its description separate', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -16,13 +83,16 @@ it('focuses the text input from its description without adding that description 
         async (output) => {
             const control = output.querySelector('input');
             const other = output.querySelector('button');
+            const label = output.querySelector('label');
 
-            if (!control || !other) throw new Error('Expected the editable control');
+            if (!control || !other || !label) throw new Error('Expected the editable control');
             const description = document.getElementById(control.getAttribute('aria-describedby') ?? '');
 
             if (!description) throw new Error('Expected the notes description');
             await act(async () => user.click(other));
             await act(async () => user.click(description));
+            expect(document.activeElement).not.toBe(control);
+            await act(async () => user.click(label));
             expect(document.activeElement).toBe(control);
             expect(document.getElementById(control.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Notes');
         }

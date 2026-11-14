@@ -102,10 +102,13 @@ export {
     DialogDescription
 } from '@/components/shadcn/dialog';
 
-/** Native composition or a modal frame with isolated View host coordination. @category Layouts */
-export { Dialog } from '@/components/dialogs/dialog';
+/** Native Dialog root props with isolated View host coordination. @category Layouts */
+export { Dialog } from '@/components/custom/dialog';
 
-/** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
+/** Custom fixed or fullscreen modal frame with isolated View host coordination. @category Layouts */
+export { FramedDialog } from '@/components/custom/framed-dialog';
+
+/** Custom scoped submission and Wizard validation with native form properties and caller-owned layout. @category Form */
 export { Form } from '@/components/custom/form';
 
 /** @category Form */
@@ -116,6 +119,35 @@ export { Calendar } from '@/components/shadcn/calendar';
 
 /** @category Form */
 export { TimeInput } from '@/components/custom/time-input';
+
+/** @category Form */
+export { TimePicker } from '@/components/reui/time-picker';
+
+/** @category Form @group TimePicker */
+export {
+    TimePickerTrigger,
+    TimePickerValue,
+    TimePickerInput,
+    TimePickerContent,
+    TimePickerPanel,
+    TimePickerColumns,
+    TimePickerColumn,
+    TimePickerFooter,
+    TimePickerNow,
+    TimePickerClear,
+    TimePickerConfirm,
+    useTimePicker
+} from '@/components/reui/time-picker';
+
+export {
+    DEFAULT_TIME_PICKER_I18N,
+    mergeTimePickerI18n,
+    parseTimeValue,
+    formatTimeValue,
+    parseTimeInput
+} from '@/components/reui/time-picker';
+
+export type * from '@/components/reui/time-picker';
 
 /** @category Form */
 export { Input } from '@/components/shadcn/input';
@@ -326,6 +358,9 @@ export { Icon } from '@/components/custom/icon';
 
 /** @category Action */
 export { Link } from '@/components/custom/link';
+
+/** Custom scoped attachment preview and download actions. @category Action */
+export { AttachmentLink } from '@/components/custom/attachment-link';
 
 /** @category Display */
 export { Currency } from '@/components/custom/currency';

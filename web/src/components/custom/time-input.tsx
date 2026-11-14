@@ -1,81 +1,7 @@
-import { useState } from 'react';
-import { Picker } from './picker';
 import type { FieldProps } from './types';
 import { TemporalField } from './temporal-field';
+import { TimePicker, TimePickerColumns, TimePickerPanel } from '@/components/reui/time-picker';
 import { displayTime, readTime, timeSeconds, timeFromSeconds, type ISOTimeString } from './temporal';
-
-/** Selects a precise time with keyboard-operable hour, minute and optional second controls. */
-function TimePicker({
-    value,
-    seconds,
-    hourFormat,
-    select
-}: {
-    value?: ISOTimeString;
-    seconds: boolean;
-    hourFormat: '12h' | '24h';
-    select: (value: ISOTimeString) => void;
-}) {
-    const [fallback] = useState(() => {
-        const now = new Date();
-
-        return [now.getHours(), now.getMinutes(), now.getSeconds()].join(':');
-    });
-
-    const parts = (value ?? fallback).split(':');
-    const hour = Number(parts[0]);
-
-    // Reuse the trusted themed picker without giving display parts submission names.
-    return (
-        <div className="flex max-w-[calc(var(--spacing)*80)] flex-wrap gap-2 [&>.view-text-field]:w-auto [&>.view-text-field]:min-w-[calc(var(--spacing)*16)] [&>.view-text-field]:flex-1">
-            {['Hour', 'Minute', ...(seconds ? ['Second'] : [])].map((label, index) => (
-                <Picker
-                    key={label}
-                    label={label}
-                    value={
-                        index === 0 && hourFormat === '12h'
-                            ? String(hour % 12 || 12)
-                            : String(Number(parts[index] ?? 0))
-                    }
-                    onChange={(value) => {
-                        if (value === null) return;
-                        const next = [...parts];
-                        const number = Number(value);
-                        next[index] = String(
-                            index === 0 && hourFormat === '12h' ? (number % 12) + (hour >= 12 ? 12 : 0) : number
-                        ).padStart(2, '0');
-                        const candidate = readTime(next.join(':'), seconds);
-
-                        if (candidate) select(candidate);
-                    }}
-                    options={Array.from(
-                        { length: index === 0 ? (hourFormat === '12h' ? 12 : 24) : 60 },
-                        (_, number) => {
-                            const option = index === 0 && hourFormat === '12h' ? number + 1 : number;
-
-                            return { value: String(option), label: String(option).padStart(2, '0') };
-                        }
-                    )}
-                />
-            ))}
-            {hourFormat === '12h' && (
-                <Picker
-                    label="Period"
-                    value={hour >= 12 ? 'PM' : 'AM'}
-                    onChange={(value) => {
-                        if (value === null) return;
-                        const next = [...parts];
-                        next[0] = String((hour % 12) + (value === 'PM' ? 12 : 0)).padStart(2, '0');
-                        const candidate = readTime(next.join(':'), seconds);
-
-                        if (candidate) select(candidate);
-                    }}
-                    options={['AM', 'PM']}
-                />
-            )}
-        </div>
-    );
-}
 
 /** Edits canonical times with inclusive second-aware bounds and minute arrow-key increments. */
 export function TimeInput(
@@ -134,16 +60,22 @@ export function TimeInput(
             }}
             picker={(value, select) => (
                 <TimePicker
-                    value={value}
-                    seconds={seconds}
-                    hourFormat={hourFormat}
-                    select={(candidate) => {
-                        const total = Math.min(max, Math.max(min, timeSeconds(candidate)));
-                        const next = timeFromSeconds(total, seconds);
+                    value={value ?? null}
+                    hourCycle={hourFormat === '12h' ? 12 : 24}
+                    granularity={seconds ? 'second' : 'minute'}
+                    min={props.min}
+                    max={props.max}
+                    disabled={props.disabled}
+                    onValueChange={(candidate) => {
+                        const next = candidate ? readTime(candidate, seconds) : null;
 
                         if (next) select(next, false);
                     }}
-                />
+                >
+                    <TimePickerPanel>
+                        <TimePickerColumns />
+                    </TimePickerPanel>
+                </TimePicker>
             )}
         />
     );

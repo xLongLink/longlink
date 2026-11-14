@@ -5,8 +5,8 @@ import { withMounted } from '../../render';
 import { Form } from '@/components/custom/form';
 import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/text-input';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { TextInput } from '@/components/custom/text-input';
 
 /** Lets the owner accept navigation independently of the wizard's request. */
 function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {

@@ -22,9 +22,9 @@ export default function Files() {
                         header: 'File',
                         width: proportional(2),
                         renderCell: (file) => (
-                            <Link to={`/assets/${file.filename}`} preview={file.filename}>
+                            <AttachmentLink href={`/assets/${file.filename}`} preview={file.filename}>
                                 {file.filename}
-                            </Link>
+                            </AttachmentLink>
                         )
                     },
                     { key: 'format', header: 'Format', width: proportional(1) }

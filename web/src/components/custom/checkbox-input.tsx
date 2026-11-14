@@ -2,7 +2,7 @@ import { useValue } from './value';
 import { useId, useRef } from 'react';
 import type { FieldProps } from './types';
 import { Checkbox } from '../shadcn/checkbox';
-import { Field, FieldLabel } from '@/components/shadcn/field';
+import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/shadcn/field';
 
 /** Custom labeled adapter with mixed values, reset support, and focusable disabled controls. */
 export function CheckboxInput(
@@ -47,21 +47,17 @@ export function CheckboxInput(
                 aria-labelledby={labelId}
                 aria-describedby={props.description ? descriptionId : undefined}
             />
-            <FieldLabel htmlFor={id} className="flex-col items-start gap-0.5">
-                <span id={labelId}>
+            <FieldContent>
+                <FieldLabel htmlFor={id} id={labelId}>
                     {props.label}
                     {props.required && (
                         <span className="font-normal text-muted-foreground">
                             <span aria-hidden="true"> · </span>Required
                         </span>
                     )}
-                </span>
-                {props.description && (
-                    <span id={descriptionId} className="font-normal text-muted-foreground">
-                        {props.description}
-                    </span>
-                )}
-            </FieldLabel>
+                </FieldLabel>
+                {props.description && <FieldDescription id={descriptionId}>{props.description}</FieldDescription>}
+            </FieldContent>
         </Field>
     );
 }

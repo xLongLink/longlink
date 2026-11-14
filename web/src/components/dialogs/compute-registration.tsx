@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { Dialog } from './dialog';
 import { useEffect, useState } from 'react';
 import { Form } from '@/components/custom/form';
-import { TextInput } from '@/components/ui/text-input';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { TextInput } from '@/components/custom/text-input';
 import { NativeFileInput } from '@/components/custom/file-input';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeTextArea } from '@/components/ui/native-text-area';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/ui/native-button';
@@ -70,7 +70,7 @@ export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => P
     }
 
     return (
-        <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
             <Form action={registerCompute} submitDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
                 <Wizard height="min(560px, calc(100dvh - var(--spacing) * 40))" backVariant="ghost">
                     <Step label="Metadata">
@@ -127,7 +127,7 @@ export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => P
                                     disabled={fileRead.kind === 'reading'}
                                     loading={fileRead.kind === 'reading'}
                                     spellCheck={false}
-                                    onChange={setKubeconfig}
+                                    onChange={(event) => setKubeconfig(event.target.value)}
                                 />
                             </Stack>
                         </Stack>
@@ -140,6 +140,6 @@ export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => P
                     </Step>
                 </Wizard>
             </Form>
-        </Dialog>
+        </FramedDialog>
     );
 }

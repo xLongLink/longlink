@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { Dialog } from './dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -15,7 +15,7 @@ export function ComputeMetadata({
     onDelete: () => void;
 }) {
     return (
-        <Dialog title="Compute metadata" isOpen onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog title="Compute metadata" open onOpenChange={(open) => !open && onClose()}>
             <Stack gap={2} padding={8}>
                 <Text>
                     <b>Gateway</b> {metadata.gateway_url}
@@ -33,6 +33,6 @@ export function ComputeMetadata({
                     <Button label="Delete" variant="destructive" onClick={onDelete} />
                 </Stack>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }

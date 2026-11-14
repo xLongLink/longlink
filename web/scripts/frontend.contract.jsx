@@ -3,6 +3,8 @@ const anchor = useComboboxAnchor();
 const [selected, setSelected] = useState('one');
 const remembered = useRef(/** @type {HTMLButtonElement | null} */ (null));
 const textRef = useRef(/** @type {HTMLElement | null} */ (null));
+const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
+const linkRef = useRef(/** @type {HTMLAnchorElement | null} */ (null));
 useEffect(() => {}, []);
 const label = useMemo(() => selected.toUpperCase(), [selected]);
 const confirmation = useConfirm();
@@ -53,6 +55,20 @@ const nativeComposition = (
             </Stack>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <Divider label={<a href="/login">Sign in</a>} />
+            <Link
+                ref={linkRef}
+                href="/orders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+                aria-label="Orders"
+                onClick={(event) => event.currentTarget.href.trim()}
+            >
+                <span>Orders</span>
+            </Link>
+            <AttachmentLink href="/api/report" download="report.pdf">
+                Download report
+            </AttachmentLink>
             <ButtonGroup aria-label="Actions" orientation="vertical">
                 <Button>Save</Button>
                 <Button>Cancel</Button>
@@ -105,6 +121,30 @@ const nativeComposition = (
                 size="sm"
             />
             <SwitchField label="Notifications" defaultChecked />
+            <Field>
+                <FieldLabel htmlFor="appointment-time">Appointment time</FieldLabel>
+                <TimePicker
+                    id="appointment-time"
+                    name="appointment"
+                    defaultValue="09:30"
+                    hourCycle={24}
+                    granularity="minute"
+                    min="09:00"
+                    max="17:00"
+                    required
+                    onValueChange={(value) => value?.trim()}
+                >
+                    <TimePickerInput onBlur={(event) => event.currentTarget.checkValidity()} />
+                    <TimePickerContent>
+                        <TimePickerColumns />
+                        <TimePickerFooter>
+                            <TimePickerNow />
+                            <TimePickerClear />
+                            <TimePickerConfirm />
+                        </TimePickerFooter>
+                    </TimePickerContent>
+                </TimePicker>
+            </Field>
             <RadioGroup
                 name="plan"
                 value={selected}
@@ -278,12 +318,36 @@ const nativeComposition = (
     </Card>
 );
 
+const nativeForm = (
+    <Form
+        ref={formRef}
+        action="/api/orders"
+        method="patch"
+        id="order"
+        className="w-full"
+        style={{ maxWidth: 640 }}
+        aria-label="Order"
+        onSubmit={(event) => {
+            event.currentTarget.checkValidity();
+            event.preventDefault();
+        }}
+        onReset={(event) => event.preventDefault()}
+    >
+        <FieldGroup>
+            <Field>
+                <FieldLabel htmlFor="order-name">Name</FieldLabel>
+                <Input id="order-name" name="name" required />
+            </Field>
+        </FieldGroup>
+    </Form>
+);
+
 const _adapters = (
     <InteractiveCard size="sm" className="w-full" style={{ minHeight: 100 }} isSelected onChange={() => {}}>
         <CardContent>
-            <Dialog isOpen onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
+            <FramedDialog open onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
                 {nativeComposition}
-            </Dialog>
+            </FramedDialog>
         </CardContent>
     </InteractiveCard>
 );
@@ -298,8 +362,8 @@ const _unlabeledDivider = <Divider />;
 const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error Dialog visibility changes require a controlled callback.
-const _legacyDialog = <Dialog isOpen title="Title" />;
+// @ts-expect-error FramedDialog visibility changes require a controlled callback.
+const _uncontrolledFrame = <FramedDialog open title="Title" />;
 
 // @ts-expect-error ActionButtonGroup no longer accepts the legacy medium size.
 const _legacyGroupSize = <ActionButtonGroup label="Actions" size="md" />;
@@ -314,8 +378,12 @@ const _legacyMenu = <DropdownMenu items={[]} />;
 
 // @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
 const _customGroupProps = <ButtonGroup isDisabled />;
-// @ts-expect-error Framed and native visibility cannot be combined.
+// @ts-expect-error Native Dialog does not accept the framed visibility contract.
 const _customDialogProps = <Dialog isOpen open onOpenChange={() => {}} />;
+// @ts-expect-error Ordinary links use the native href property.
+const _legacyLink = <Link to="/orders">Orders</Link>;
+// @ts-expect-error Scoped previews belong to AttachmentLink.
+const _customLinkProps = <Link href="/api/report" preview="report.pdf">Preview</Link>;
 // @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
 const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
 

@@ -4,8 +4,8 @@ import { FormField } from './form-field';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
 import { CalendarDays, Clock, X } from 'lucide-react';
+import { FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react';
-import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/shadcn/popover';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
@@ -116,181 +116,166 @@ export function TemporalField<T extends string>(
     // Draft validation is separate from the sole canonical submission carrier.
     return (
         <FormField
-            {...props}
+            name={props.name}
+            disabled={props.disabled}
+            className="view-text-field"
+            data-disabled={props.disabled || undefined}
             required={false}
             fieldRef={field.ref}
             values={[field.value && validValue ? field.value : '']}
             serialize
             error={error}
         >
-            <Field className="view-text-field" data-disabled={props.disabled || undefined}>
-                <FieldContent>
-                    <FieldLabel htmlFor={id} id={`${id}-label`}>
-                        {props.label}
-                        {props.required && <span className="text-muted-foreground">Required</span>}
-                    </FieldLabel>
-                    {props.description && (
-                        <FieldDescription
-                            id={`${id}-description`}
-                            onClick={(event) => {
-                                if (event.target === event.currentTarget) input.current?.focus();
-                            }}
-                        >
-                            <label htmlFor={id}>{props.description}</label>
-                        </FieldDescription>
-                    )}
-                </FieldContent>
-                <Popover
-                    open={open}
-                    onOpenChange={(next, details) => {
-                        if (next && blocked()) return;
-                        restoreFocus.current = details.reason !== 'outside-press' && details.reason !== 'focus-out';
-                        setOpen(next);
-                    }}
-                    modal={props.kind === 'date' ? false : coarse ? true : 'trap-focus'}
-                >
-                    <InputGroup className="data-disabled:opacity-50" data-disabled={props.disabled || undefined}>
-                        <InputGroupInput
-                            ref={input}
-                            id={id}
-                            value={text}
-                            autoComplete="off"
-                            aria-labelledby={`${id}-label`}
-                            aria-describedby={props.description ? `${id}-description` : undefined}
-                            aria-disabled={props.disabled || undefined}
-                            readOnly={props.disabled || coarse || undefined}
-                            aria-required={props.required || undefined}
-                            aria-invalid={invalid || undefined}
-                            placeholder={props.placeholder}
-                            onClick={() => {
-                                if (coarse && !blocked()) {
-                                    restoreFocus.current = true;
-                                    setOpen(true);
+            <FieldContent>
+                <FieldLabel htmlFor={id} id={`${id}-label`}>
+                    {props.label}
+                    {props.required && <span className="text-muted-foreground">Required</span>}
+                </FieldLabel>
+                {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
+            </FieldContent>
+            <Popover
+                open={open}
+                onOpenChange={(next, details) => {
+                    if (next && blocked()) return;
+                    restoreFocus.current = details.reason !== 'outside-press' && details.reason !== 'focus-out';
+                    setOpen(next);
+                }}
+                modal={props.kind === 'date' ? false : coarse ? true : 'trap-focus'}
+            >
+                <InputGroup className="data-disabled:opacity-50" data-disabled={props.disabled || undefined}>
+                    <InputGroupInput
+                        ref={input}
+                        id={id}
+                        value={text}
+                        autoComplete="off"
+                        aria-labelledby={`${id}-label`}
+                        aria-describedby={props.description ? `${id}-description` : undefined}
+                        aria-disabled={props.disabled || undefined}
+                        readOnly={props.disabled || coarse || undefined}
+                        aria-required={props.required || undefined}
+                        aria-invalid={invalid || undefined}
+                        placeholder={props.placeholder}
+                        onClick={() => {
+                            if (coarse && !blocked()) {
+                                restoreFocus.current = true;
+                                setOpen(true);
+                            }
+                        }}
+                        onChange={(event) => {
+                            if (blocked() || coarse) return;
+                            const text = event.target.value;
+                            const next = props.parse(text);
+
+                            const composing = event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing;
+
+                            const complete = !composing && (props.isComplete?.(text) ?? true);
+                            const accepted = complete && next !== null && props.accepts(next);
+
+                            // Complete edits notify immediately; incomplete text remains an editable draft.
+                            if (accepted && next !== field.value) field.onChange(next);
+                            setDraft({ source: accepted && !props.controlled ? next : field.value, text });
+                        }}
+                        onBlur={commit}
+                        onKeyDown={(event) => {
+                            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
+
+                            if (blocked()) {
+                                if (event.key === 'Enter') event.preventDefault();
+
+                                return;
+                            }
+
+                            if (coarse && (event.key === 'Enter' || event.key === ' ')) {
+                                event.preventDefault();
+                                restoreFocus.current = true;
+                                setOpen(true);
+
+                                return;
+                            }
+
+                            if (event.key === 'Escape') setDraft(null);
+
+                            if (event.key === 'Enter') {
+                                if (invalid) event.preventDefault();
+                                else flushSync(commit);
+                            }
+
+                            if (event.key === 'ArrowDown' && (props.kind === 'date' || event.altKey)) {
+                                event.preventDefault();
+                                restoreFocus.current = true;
+                                setOpen(true);
+                            } else if (props.step && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+                                event.preventDefault();
+                                const next = props.step(field.value, event.key === 'ArrowUp' ? 1 : -1);
+
+                                if (next && props.accepts(next)) {
+                                    setDraft(null);
+                                    field.onChange(next);
                                 }
-                            }}
-                            onChange={(event) => {
-                                if (blocked() || coarse) return;
-                                const text = event.target.value;
-                                const next = props.parse(text);
-
-                                const composing =
-                                    event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing;
-
-                                const complete = !composing && (props.isComplete?.(text) ?? true);
-                                const accepted = complete && next !== null && props.accepts(next);
-
-                                // Complete edits notify immediately; incomplete text remains an editable draft.
-                                if (accepted && next !== field.value) field.onChange(next);
-                                setDraft({ source: accepted && !props.controlled ? next : field.value, text });
-                            }}
-                            onBlur={commit}
-                            onKeyDown={(event) => {
-                                if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
-
-                                if (blocked()) {
-                                    if (event.key === 'Enter') event.preventDefault();
-
-                                    return;
-                                }
-
-                                if (coarse && (event.key === 'Enter' || event.key === ' ')) {
-                                    event.preventDefault();
-                                    restoreFocus.current = true;
-                                    setOpen(true);
-
-                                    return;
-                                }
-
-                                if (event.key === 'Escape') setDraft(null);
-
-                                if (event.key === 'Enter') {
-                                    if (invalid) event.preventDefault();
-                                    else flushSync(commit);
-                                }
-
-                                if (event.key === 'ArrowDown' && (props.kind === 'date' || event.altKey)) {
-                                    event.preventDefault();
-                                    restoreFocus.current = true;
-                                    setOpen(true);
-                                } else if (props.step && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-                                    event.preventDefault();
-                                    const next = props.step(field.value, event.key === 'ArrowUp' ? 1 : -1);
-
-                                    if (next && props.accepts(next)) {
-                                        setDraft(null);
-                                        field.onChange(next);
-                                    }
-                                }
-                            }}
-                        />
-                        <InputGroupAddon align="inline-end">
-                            {(text || field.value) && !props.disabled && (
-                                <InputGroupButton
-                                    type="button"
-                                    size="icon-xs"
-                                    aria-label={`Clear ${props.label}`}
-                                    onMouseDown={(event) => event.preventDefault()}
-                                    onClick={() => {
-                                        if (blocked()) return;
-                                        setDraft(null);
-                                        field.onChange(undefined);
-                                        input.current?.focus({ preventScroll: true });
-                                    }}
-                                >
-                                    <X aria-hidden="true" />
-                                </InputGroupButton>
-                            )}
-                            <PopoverTrigger
+                            }
+                        }}
+                    />
+                    <InputGroupAddon align="inline-end">
+                        {(text || field.value) && !props.disabled && (
+                            <InputGroupButton
                                 type="button"
-                                render={<InputGroupButton size="icon-xs" />}
-                                aria-label={`Choose ${props.label}`}
-                                aria-disabled={props.disabled || undefined}
-                                onClick={(event) => {
-                                    if (blocked()) event.preventDefault();
+                                size="icon-xs"
+                                aria-label={`Clear ${props.label}`}
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    if (blocked()) return;
+                                    setDraft(null);
+                                    field.onChange(undefined);
+                                    input.current?.focus({ preventScroll: true });
                                 }}
                             >
-                                {props.kind === 'date' ? (
-                                    <CalendarDays aria-hidden="true" />
-                                ) : (
-                                    <Clock aria-hidden="true" />
-                                )}
-                            </PopoverTrigger>
-                        </InputGroupAddon>
-                    </InputGroup>
-                    <PopoverContent
-                        align="start"
-                        className={
-                            props.kind === 'date'
-                                ? 'w-auto p-0'
-                                : 'w-fit max-w-[calc(100vw-1rem)] max-h-[var(--available-height)] overflow-auto'
-                        }
-                        initialFocus={props.kind === 'date' ? false : true}
-                        finalFocus={() => (restoreFocus.current && !blocked() ? input.current : false)}
-                        aria-label={`Choose ${props.label}`}
-                    >
-                        <PopoverTitle className={props.kind === 'date' ? 'sr-only' : undefined}>
-                            {props.label}
-                        </PopoverTitle>
-                        {/* eslint-disable-next-line react/refs -- The factory renders controls; selection runs only from their event handlers. */}
-                        {props.picker(validValue ? field.value : undefined, select)}
-                        {props.kind === 'time' && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="view-temporal-close"
-                                onClick={() => setOpen(false)}
-                            >
-                                Save
-                            </Button>
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
                         )}
-                    </PopoverContent>
-                </Popover>
-                {props.kind === 'time' && (
-                    <span className="sr-only" role="status">
-                        {validValue && field.value ? props.format(field.value) : ''}
-                    </span>
-                )}
-            </Field>
+                        <PopoverTrigger
+                            type="button"
+                            render={<InputGroupButton size="icon-xs" />}
+                            aria-label={`Choose ${props.label}`}
+                            aria-disabled={props.disabled || undefined}
+                            onClick={(event) => {
+                                if (blocked()) event.preventDefault();
+                            }}
+                        >
+                            {props.kind === 'date' ? <CalendarDays aria-hidden="true" /> : <Clock aria-hidden="true" />}
+                        </PopoverTrigger>
+                    </InputGroupAddon>
+                </InputGroup>
+                <PopoverContent
+                    align="start"
+                    className={
+                        props.kind === 'date'
+                            ? 'w-auto p-0'
+                            : 'w-fit max-w-[calc(100vw-1rem)] max-h-[var(--available-height)] overflow-auto'
+                    }
+                    initialFocus={props.kind === 'date' ? false : true}
+                    finalFocus={() => (restoreFocus.current && !blocked() ? input.current : false)}
+                    aria-label={`Choose ${props.label}`}
+                >
+                    <PopoverTitle className={props.kind === 'date' ? 'sr-only' : undefined}>{props.label}</PopoverTitle>
+                    {/* eslint-disable-next-line react/refs -- The factory renders controls; selection runs only from their event handlers. */}
+                    {props.picker(validValue ? field.value : undefined, select)}
+                    {props.kind === 'time' && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="view-temporal-close"
+                            onClick={() => setOpen(false)}
+                        >
+                            Save
+                        </Button>
+                    )}
+                </PopoverContent>
+            </Popover>
+            {props.kind === 'time' && (
+                <span className="sr-only" role="status">
+                    {validValue && field.value ? props.format(field.value) : ''}
+                </span>
+            )}
         </FormField>
     );
 }
