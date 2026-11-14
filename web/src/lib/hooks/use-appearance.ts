@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
-import { defaultAppearance } from '@/lib/appearance';
+import { defaultAppearance, type Appearance } from '@/lib/appearance';
 
-export const AppearanceContext = createContext({ appearance: defaultAppearance });
+export const AppearanceContext = createContext<Appearance>(defaultAppearance);
 
 /** Reads the current appearance and supports immediate previews while saving. */
 export function useAppearance() {

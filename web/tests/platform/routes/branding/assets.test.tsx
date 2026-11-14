@@ -43,7 +43,7 @@ it('keeps both preview modes isolated while document and account appearance chan
         const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
         return (
-            <AppearanceContext value={{ appearance: { theme, accent: 'neutral' } }}>
+            <AppearanceContext value={{ theme, accent: 'neutral' }}>
                 <Wordmark />
                 <Assets />
                 <button
@@ -75,12 +75,10 @@ it('keeps both preview modes isolated while document and account appearance chan
                     'light',
                     'dark'
                 ]);
-                expect(output.querySelector('img')?.getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
 
-                // The ambient wordmark must change; the two sibling previews must not.
+                // CSS selects ambient assets without replacing them or changing explicit previews.
                 await act(async () => output.querySelector<HTMLButtonElement>('#change-appearance')?.click());
                 document.documentElement.dataset.theme = 'dark';
-                expect(output.querySelector('img')?.getAttribute('src')).toBe('/images/longlink-wordmark-dark.png');
                 expect(images.map((image) => image?.getAttribute('src'))).toEqual(sources);
                 expect([...output.querySelectorAll('a[download]')].map((link) => link.getAttribute('href'))).toEqual(
                     downloads
@@ -99,7 +97,6 @@ it('keeps both preview modes isolated while document and account appearance chan
 
                 await act(async () => output.querySelector<HTMLButtonElement>('#change-appearance')?.click());
                 document.documentElement.dataset.theme = 'light';
-                expect(output.querySelector('img')?.getAttribute('src')).toBe('/images/longlink-wordmark-light.png');
                 expect(images.map((image) => image?.getAttribute('src'))).toEqual(sources);
             },
             '/branding/assets'

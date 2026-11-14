@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { appearanceSchema } from '@/lib/appearance';
 
-export const viewAppearanceSchema = appearanceSchema.pick({ theme: true, accent: true });
+export const viewAppearanceSchema = appearanceSchema;
 
 export type ViewAppearance = z.output<typeof viewAppearanceSchema>;
 

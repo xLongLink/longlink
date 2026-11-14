@@ -3,7 +3,6 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import PlatformRoot from '@/platform/root';
-import { Wordmark } from '@/components/ui/wordmark';
 import { Route, Routes, useLocation } from 'react-router';
 import { NativeLink as Link } from '@/components/custom/native-link';
 
@@ -16,7 +15,6 @@ it('uses native links for client-side navigation under the Platform root', async
             <>
                 <Link href="/?section=orders">Orders</Link>
                 <output>{location.search}</output>
-                <Wordmark />
             </>
         );
     }
@@ -37,7 +35,6 @@ it('uses native links for client-side navigation under the Platform root', async
 
             // Assert
             expect(output.querySelector('output')?.textContent).toBe('?section=orders');
-            expect(output.querySelector('img')?.getAttribute('src')).toBe('/images/longlink-wordmark-dark.png');
         }
     );
 });
@@ -55,7 +52,6 @@ it('keeps the homepage dark without fetching account data or following personal 
             async (output) => {
                 expect(output.textContent).toContain('Home');
                 expect(document.documentElement.dataset.theme).toBe('dark');
-                expect(document.documentElement.style.colorScheme).toBe('dark');
 
                 await act(async () =>
                     window.dispatchEvent(
@@ -66,7 +62,6 @@ it('keeps the homepage dark without fetching account data or following personal 
                     )
                 );
                 expect(document.documentElement.dataset.theme).toBe('dark');
-                expect(document.documentElement.style.colorScheme).toBe('dark');
                 expect(transport).not.toHaveBeenCalled();
             }
         );

@@ -5,7 +5,6 @@ import { useId, useRef, useState } from 'react';
 import Content from '@/components/layouts/content';
 import { Separator } from '@/components/shadcn/separator';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
 import { TypographyTooltip } from '@/components/custom/typography-tooltip';
@@ -44,9 +43,6 @@ export default function Platform({
 }: PlatformProps) {
     const { pathname } = useLocation();
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
-    const { appearance } = useAppearance();
-    const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
-    const mode = appearance.theme === 'system' ? (prefersDark ? 'dark' : 'light') : appearance.theme;
     const isSmallScreen = useMediaQuery('(width < 1024px)');
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
     const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
@@ -82,17 +78,20 @@ export default function Platform({
                                     className="flex w-full px-6 py-1.5 text-inherit no-underline group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
                                     to={homeHref}
                                 >
-                                    <img
-                                        alt="LongLink"
-                                        className={isCollapsed ? 'size-8 object-contain' : 'block h-auto w-full'}
-                                        height={isCollapsed ? 32 : 291}
-                                        src={
-                                            isCollapsed
-                                                ? `/longlink-logo-${mode}.png`
-                                                : `/images/longlink-wordmark-${mode}.png`
-                                        }
-                                        width={isCollapsed ? 32 : 1939}
-                                    />
+                                    {(['light', 'dark'] as const).map((mode) => (
+                                        <img
+                                            key={mode}
+                                            alt="LongLink"
+                                            className={`${isCollapsed ? 'size-8 object-contain' : 'h-auto w-full'} ${mode === 'light' ? 'block dark:hidden' : 'hidden dark:block'}`}
+                                            height={isCollapsed ? 32 : 291}
+                                            src={
+                                                isCollapsed
+                                                    ? `/longlink-logo-${mode}.png`
+                                                    : `/images/longlink-wordmark-${mode}.png`
+                                            }
+                                            width={isCollapsed ? 32 : 1939}
+                                        />
+                                    ))}
                                 </RouterLink>
                             )}
                         </section>

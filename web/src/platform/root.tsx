@@ -5,8 +5,8 @@ import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { IconRequestContext } from '@/components/custom/contexts';
-import { useDocumentTheme } from '@/lib/hooks/use-document-theme';
 import { AccountAppearanceProvider } from '@/components/appearance';
+import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
 
@@ -20,7 +20,7 @@ export function HydrateFallback() {
 export default function PlatformRoot() {
     const { pathname } = useLocation();
     const isHome = pathname === '/';
-    useDocumentTheme(isHome ? 'dark' : undefined);
+    useDocumentAppearance(isHome ? 'dark' : undefined);
 
     // The public landing page has no account queries or personal appearance synchronization.
     const content = (
@@ -40,7 +40,7 @@ export default function PlatformRoot() {
     );
 
     return isHome ? (
-        <AppearanceContext value={{ appearance: { theme: 'dark', accent: 'neutral' } }}>{content}</AppearanceContext>
+        <AppearanceContext value={{ theme: 'dark', accent: 'neutral' }}>{content}</AppearanceContext>
     ) : (
         content
     );

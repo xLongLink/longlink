@@ -44,9 +44,7 @@ export function JsxView({
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
 
-    const {
-        appearance: { theme, accent }
-    } = useAppearance();
+    const { theme, accent } = useAppearance();
 
     const currentAppearance = useRef<ViewAppearance>({ theme, accent });
 
