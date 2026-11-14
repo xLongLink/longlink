@@ -62,7 +62,7 @@
     },
     "devDependencies": {
         "@hey-api/openapi-ts": "0.99.0",
-        "@oxlint/plugins": "1.92.0",
+        "@oxlint/plugins": "1.93.0",
         "@react-router/dev": "8.5.1",
         "@tailwindcss/vite": "^4.3.5",
         "@testing-library/user-event": "14.6.8",
