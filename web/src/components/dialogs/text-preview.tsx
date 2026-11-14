@@ -1,5 +1,5 @@
 import { textLanguage } from '@/lib/files';
-import { Dialog } from '@/components/custom/dialog';
+import { Dialog } from '@/components/dialogs/dialog';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 /** Displays text attachments with filename-based syntax highlighting, never executing their contents. */

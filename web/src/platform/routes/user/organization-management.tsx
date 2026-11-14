@@ -3,9 +3,7 @@ import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
-import { Dialog } from '@/components/custom/dialog';
 import { apiQueryOptions } from '@/lib/react-query';
-import CreateOrganization from './create-organization';
 import { Separator } from '@/components/shadcn/separator';
 import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -15,8 +13,10 @@ import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { InvitationResponse } from '@/components/dialogs/invitation-response';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -219,50 +219,29 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 />
             )}
             {selected && selected.type !== 'create' && (
-                <Dialog
-                    isOpen
-                    title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
-                    onOpenChange={(open) => {
-                        if (!open) closeSelected();
+                <InvitationResponse
+                    invitation={selected}
+                    onClose={closeSelected}
+                    onConfirm={async () => {
+                        // Apply only the confirmed invitation action and report server failures.
+                        try {
+                            if (selected.type === 'accept') {
+                                await api.post(`/api/v1/me/invitations/${selected.id}/accept`);
+                            } else {
+                                await api.delete(`/api/v1/me/invitations/${selected.id}`);
+                            }
+                        } catch (failure) {
+                            reportError(failure);
+                        } finally {
+                            // Refresh even when the invitation expired or was revoked before confirmation.
+                            await Promise.all([
+                                client.invalidateQueries({ queryKey: invitationsQuery.queryKey, exact: true }),
+                                ...(selected.type === 'accept' ? [invalidateMemberships()] : [])
+                            ]);
+                            closeSelected();
+                        }
                     }}
-                >
-                    <Stack gap={3}>
-                        <Text className="text-muted-foreground">
-                            {selected.type === 'accept'
-                                ? `Accept the invitation to join ${selected.name}?`
-                                : `Decline the invitation to ${selected.name}? You will need a new invitation to join.`}
-                        </Text>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button label="Cancel" variant="ghost" onClick={closeSelected} />
-                            <Button
-                                label={selected.type === 'accept' ? 'Accept' : 'Decline'}
-                                variant={selected.type === 'accept' ? 'default' : 'destructive'}
-                                clickAction={async () => {
-                                    // Apply only the confirmed invitation action and report server failures.
-                                    try {
-                                        if (selected.type === 'accept') {
-                                            await api.post(`/api/v1/me/invitations/${selected.id}/accept`);
-                                        } else {
-                                            await api.delete(`/api/v1/me/invitations/${selected.id}`);
-                                        }
-                                    } catch (failure) {
-                                        reportError(failure);
-                                    } finally {
-                                        // Refresh even when the invitation expired or was revoked before confirmation.
-                                        await Promise.all([
-                                            client.invalidateQueries({
-                                                queryKey: invitationsQuery.queryKey,
-                                                exact: true
-                                            }),
-                                            ...(selected.type === 'accept' ? [invalidateMemberships()] : [])
-                                        ]);
-                                        closeSelected();
-                                    }
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                />
             )}
         </>
     );

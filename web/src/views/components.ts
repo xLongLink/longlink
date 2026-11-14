@@ -103,7 +103,7 @@ export {
 } from '@/components/shadcn/dialog';
 
 /** Native composition or a modal frame with isolated View host coordination. @category Layouts */
-export { Dialog } from '@/components/custom/dialog';
+export { Dialog } from '@/components/dialogs/dialog';
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 export { Form } from '@/components/custom/form';

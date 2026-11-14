@@ -1,6 +1,6 @@
 import { ReportedError } from '@/lib/reported';
-import { ConfirmationDialog } from './confirmation-dialog';
 import { useCallback, useRef, useState, useTransition } from 'react';
+import { ConfirmationDialog } from '@/components/dialogs/confirmation-dialog';
 
 export type ConfirmOptions = {
     title: string;

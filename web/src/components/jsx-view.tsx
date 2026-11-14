@@ -6,17 +6,16 @@ import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog } from '@/components/custom/dialog';
 import type { ViewRuntime } from '@/views/manifest';
-import { PdfPreview } from '@/components/pdf-preview';
-import { TextPreview } from '@/components/text-preview';
 import { SolutionFile } from '@/components/solution-file';
 import { ViewBackdrop } from '@/components/view-backdrop';
 import type { FileViewerCommand } from '@/views/protocol';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { NativeFile } from '@/components/custom/native-file';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
+import { PdfPreview } from '@/components/dialogs/pdf-preview';
 import { PageError, PageLoading } from '@/components/ui/utils';
+import { TextPreview } from '@/components/dialogs/text-preview';
+import { MediaPreview } from '@/components/dialogs/media-preview';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
 
@@ -489,14 +488,11 @@ export function JsxView({
                 />
             )}
             {filePreview?.type === 'media' && (
-                <Dialog
+                <MediaPreview
+                    body={filePreview.body}
                     title={filePreview.title}
-                    variant="fullscreen"
-                    isOpen
-                    onOpenChange={(open) => !open && setFilePreview(undefined)}
-                >
-                    <NativeFile body={filePreview.body} title={filePreview.title} />
-                </Dialog>
+                    onClose={() => setFilePreview(undefined)}
+                />
             )}
         </div>
     );

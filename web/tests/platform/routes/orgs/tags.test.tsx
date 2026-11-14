@@ -5,8 +5,8 @@ import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
-import { SolutionTags } from '@/platform/routes/orgs/tags';
 import { IconRequestContext } from '@/components/custom/contexts';
+import { SolutionTags } from '@/components/dialogs/solution-tags';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const tags = [

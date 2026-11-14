@@ -4,9 +4,8 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Badge } from '@/components/reui/badge';
-import { Dialog } from '@/components/custom/dialog';
 import { TextInput } from '@/components/ui/text-input';
-import { DeletionDialog } from '@/components/ui/deletion';
+import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -15,6 +14,7 @@ import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -92,31 +92,11 @@ export default function Organizations() {
                 </Stack>
             </Stack>
             {metadata && (
-                <Dialog
-                    title="Organization metadata"
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) setDialog(null);
-                    }}
-                >
-                    <Stack gap={2} padding={8}>
-                        <Text>
-                            <b>Status</b> {metadata.status}
-                        </Text>
-                        <Text>
-                            <b>ID</b> {metadata.id}
-                        </Text>
-                        <Stack direction="horizontal" justify="end">
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                onClick={() =>
-                                    setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
-                                }
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                <OrganizationMetadata
+                    metadata={metadata}
+                    onClose={() => setDialog(null)}
+                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
+                />
             )}
             <DeletionDialog
                 confirmation={

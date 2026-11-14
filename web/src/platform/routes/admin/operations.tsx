@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Dialog } from '@/components/custom/dialog';
 import { TextInput } from '@/components/ui/text-input';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -98,43 +98,7 @@ export default function Operations() {
                     <DataPagination {...pagination} totalItems={operations.total} />
                 </Stack>
             </Stack>
-            {metadata && (
-                <Dialog
-                    title="Operation metadata"
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) setMetadataId(null);
-                    }}
-                >
-                    <Stack gap={2} padding={8}>
-                        <Text>
-                            <b>Operation</b> {metadata.kind}
-                        </Text>
-                        <Text>
-                            <b>Status</b> {metadata.status}
-                        </Text>
-                        <Text>
-                            <b>ID</b> {metadata.id}
-                        </Text>
-                        <Text>
-                            <b>Target</b> {metadata.target_id}
-                        </Text>
-                        <Text>
-                            <b>Created</b> {metadata.created_at}
-                        </Text>
-                        {metadata.finished_at && (
-                            <Text>
-                                <b>Finished</b> {metadata.finished_at}
-                            </Text>
-                        )}
-                        {metadata.failed && (
-                            <Text>
-                                <b>Reason</b> {metadata.failed}
-                            </Text>
-                        )}
-                    </Stack>
-                </Dialog>
-            )}
+            {metadata && <OperationMetadata metadata={metadata} onClose={() => setMetadataId(null)} />}
         </Stack>
     );
 }

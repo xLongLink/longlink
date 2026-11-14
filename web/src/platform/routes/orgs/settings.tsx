@@ -9,17 +9,14 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
-import { Form } from '@/components/custom/form';
-import { Dialog } from '@/components/custom/dialog';
-import { Selector } from '@/components/ui/selector';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
-import { TextInput } from '@/components/ui/text-input';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
-import { DeletionDialog } from '@/components/ui/deletion';
-import { Illustration } from '@/components/ui/illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { DeletionDialog } from '@/components/dialogs/deletion';
+import { InviteMember } from '@/components/dialogs/invite-member';
+import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Button as ShadcnButton } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -30,7 +27,6 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
-import { IllustratedDialogContent } from '@/components/ui/illustrated-dialog-content';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
 import {
@@ -342,66 +338,46 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 />
             </Stack>
             {canManageSelectedMember && member && (
-                <Dialog
-                    isOpen
-                    title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
-                    onOpenChange={(open) => {
-                        if (!open) setMember(null);
+                <MemberAccess
+                    name={selectedMember.user.name}
+                    action={member.action}
+                    onClose={() => setMember(null)}
+                    onConfirm={async () => {
+                        // Update access on the server before refreshing the member list.
+                        if (member.action.kind === 'remove') {
+                            await api.delete(`${base}/members/${member.id}`);
+
+                            // Leave before clearing revoked access, without refetching an inaccessible member list.
+                            if (member.id === user.id) {
+                                await navigate('/user/organizations', { replace: true });
+                                client.removeQueries({ queryKey: ['api', base], exact: true });
+                                await client.invalidateQueries({
+                                    queryKey: ['api', '/api/v1/me/organizations'],
+                                    exact: true
+                                });
+
+                                return;
+                            }
+                        } else {
+                            await api.patch(`${base}/members/${member.id}`, {
+                                json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role })
+                            });
+                        }
+
+                        // Refresh access-dependent controls after changing the current user's role.
+                        const refreshes = [invalidateMembers()];
+
+                        if (member.action.kind === 'role' && member.id === user.id) {
+                            refreshes.push(
+                                client.invalidateQueries({ queryKey: ['api', base], exact: true }),
+                                client.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'], exact: true })
+                            );
+                        }
+
+                        await Promise.all(refreshes);
+                        setMember((current) => (current === member ? null : current));
                     }}
-                >
-                    <Stack gap={3}>
-                        <Text className="text-muted-foreground">
-                            {member.action.kind === 'remove'
-                                ? `Remove ${selectedMember.user.name} from this organization? Access is revoked immediately.`
-                                : `Change ${selectedMember.user.name} to ${member.action.role}?`}
-                        </Text>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button label="Cancel" variant="ghost" onClick={() => setMember(null)} />
-                            <Button
-                                label={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                                variant={member.action.kind === 'remove' ? 'destructive' : 'default'}
-                                clickAction={async () => {
-                                    // Update access on the server before refreshing the member list.
-                                    if (member.action.kind === 'remove') {
-                                        await api.delete(`${base}/members/${member.id}`);
-
-                                        // Leave before clearing revoked access, without refetching an inaccessible member list.
-                                        if (member.id === user.id) {
-                                            await navigate('/user/organizations', { replace: true });
-                                            client.removeQueries({ queryKey: ['api', base], exact: true });
-                                            await client.invalidateQueries({
-                                                queryKey: ['api', '/api/v1/me/organizations'],
-                                                exact: true
-                                            });
-
-                                            return;
-                                        }
-                                    } else {
-                                        await api.patch(`${base}/members/${member.id}`, {
-                                            json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role })
-                                        });
-                                    }
-
-                                    // Refresh access-dependent controls after changing the current user's role.
-                                    const refreshes = [invalidateMembers()];
-
-                                    if (member.action.kind === 'role' && member.id === user.id) {
-                                        refreshes.push(
-                                            client.invalidateQueries({ queryKey: ['api', base], exact: true }),
-                                            client.invalidateQueries({
-                                                queryKey: ['api', '/api/v1/me/organizations'],
-                                                exact: true
-                                            })
-                                        );
-                                    }
-
-                                    await Promise.all(refreshes);
-                                    setMember((current) => (current === member ? null : current));
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                />
             )}
         </>
     );
@@ -496,83 +472,12 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     ]}
                 />
             </Stack>
-            {/* Match organization creation with a centered form and a desktop-only illustration. */}
-            <Dialog
+            <InviteMember
                 isOpen={invitationAttempt !== null}
-                paddingInline={0}
-                onOpenChange={(open) => {
-                    if (!open) closeInvitation();
-                }}
-            >
-                <IllustratedDialogContent
-                    illustration={
-                        <Illustration
-                            src="/images/invitation.png"
-                            alt="Hand-drawn envelopes."
-                            className="h-full w-full object-contain"
-                            width={1223}
-                            height={1286}
-                            decoding="async"
-                        />
-                    }
-                >
-                    <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
-                        <Form action={inviteMember}>
-                            <Stack gap={10}>
-                                <Stack gap={2} align="center">
-                                    <Illustration
-                                        src="/images/organization.png"
-                                        alt=""
-                                        className="size-20 object-contain"
-                                        width={1254}
-                                        height={1254}
-                                        decoding="async"
-                                    />
-                                    <Stack gap={0}>
-                                        <Heading level={2} className="text-center">
-                                            Invite user
-                                        </Heading>
-                                        <Text as="p" className="text-muted-foreground text-center">
-                                            Send an invitation to join this organization.
-                                        </Text>
-                                    </Stack>
-                                </Stack>
-                                {/* Let the subtitle size the column, then stretch the controls to match. */}
-                                <Stack gap={4} width={0} className="min-w-full">
-                                    <TextInput
-                                        label="Email"
-                                        type="email"
-                                        name="email"
-                                        placeholder="user@example.com"
-                                        required
-                                    />
-                                    <Selector
-                                        label="Role"
-                                        name="role"
-                                        defaultValue="write"
-                                        hasClear={false}
-                                        options={[
-                                            { value: 'read', label: 'read', icon: 'lucide:eye-off' },
-                                            { value: 'write', label: 'write', icon: 'lucide:arrow-up' },
-                                            { value: 'maintain', label: 'maintain', icon: 'lucide:wrench' },
-                                            ...(canInviteAdmin
-                                                ? [
-                                                      {
-                                                          value: 'admin',
-                                                          label: 'admin',
-                                                          icon: 'lucide:check-check' as const
-                                                      }
-                                                  ]
-                                                : [])
-                                        ]}
-                                    />
-                                    <Button label="Invite" variant="default" type="submit" style={{ width: '100%' }} />
-                                </Stack>
-                            </Stack>
-                        </Form>
-                    </Stack>
-                </IllustratedDialogContent>
-            </Dialog>
+                canInviteAdmin={canInviteAdmin}
+                onClose={closeInvitation}
+                onSubmit={inviteMember}
+            />
         </>
     );
 }

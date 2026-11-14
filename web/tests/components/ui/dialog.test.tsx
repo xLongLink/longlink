@@ -2,8 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
+import { Dialog } from '@/components/dialogs/dialog';
 import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {

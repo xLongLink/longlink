@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 // @vitest-environment happy-dom
 import { act, useState, useTransition } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { DeletionDialog } from '@/components/ui/deletion';
+import { DeletionDialog } from '@/components/dialogs/deletion';
 
 it('does not invent a confirmation or action when no resource is selected', () => {
     // Act

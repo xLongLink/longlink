@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Dialog } from '@/components/custom/dialog';
+import { Dialog } from '@/components/dialogs/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Frames single-step organization forms in a centered, scrolling dialog column. */

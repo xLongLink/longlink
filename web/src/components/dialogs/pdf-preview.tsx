@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Dialog } from '@/components/custom/dialog';
+import { Dialog } from '@/components/dialogs/dialog';
 
 /** Displays only host-fetched PDF bytes in the browser's native viewer. */
 export function PdfPreview({ body, title, onClose }: { body: Blob; title: string; onClose: () => void }) {
