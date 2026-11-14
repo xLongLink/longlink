@@ -19,7 +19,7 @@ function Location() {
 
 /** Finds the actionable profile control, including controls rendered in a portal. */
 function button(label: string) {
-    const control = Array.from(document.querySelectorAll('button')).find(
+    const control = Array.from(document.querySelectorAll<HTMLElement>('button, [role="menuitem"]')).find(
         (element) => element.getAttribute('aria-label') === label || element.textContent === label
     );
 
@@ -42,7 +42,7 @@ it.each([false, true])(
             </AuthenticatedUserContext>,
             async (output) => {
                 await act(async () => await events.click(button('Owner')));
-                const popup = document.querySelector('[role="dialog"]');
+                const popup = document.querySelector('[role="menu"]');
                 expect(popup).not.toBeNull();
                 expect(Boolean(popup?.querySelector('[aria-label="Administration"]'))).toBe(administrator);
                 expect(Boolean(popup?.querySelector('a[href="/admin/users"]'))).toBe(administrator);
@@ -88,9 +88,9 @@ it('dismisses by keyboard and outside interaction and restores trigger focus', a
                 button('Owner').focus();
                 await events.keyboard('{Enter}');
             });
-            expect(document.querySelector('[role="dialog"]')?.contains(document.activeElement)).toBe(true);
-            await act(async () => await events.tab({ shift: true }));
-            expect(document.querySelector('[role="dialog"]')?.contains(document.activeElement)).toBe(true);
+            expect(document.querySelector('[role="menu"]')?.contains(document.activeElement)).toBe(true);
+            await act(async () => await events.keyboard('{ArrowDown}'));
+            expect(document.activeElement?.textContent).toBe('Settings');
             await act(async () => await events.keyboard('{Escape}'));
             expect(button('Owner').getAttribute('aria-expanded')).toBe('false');
             expect(document.activeElement).toBe(button('Owner'));
@@ -106,7 +106,7 @@ it('dismisses by keyboard and outside interaction and restores trigger focus', a
                 ]);
             });
             expect(button('Owner').getAttribute('aria-expanded')).toBe('true');
-            await act(async () => button('Close profile menu').click());
+            await act(async () => await events.keyboard('{Escape}'));
             expect(button('Owner').getAttribute('aria-expanded')).toBe('false');
         }
     );
@@ -150,7 +150,7 @@ it('closes logout urgently, retains the session preference on denial, and retrie
                 expect(localStorage.getItem('longlink:appearance')).toBe(appearance);
 
                 await act(async () => await events.click(button('Owner')));
-                expect(button('Signing out…').disabled).toBe(true);
+                expect(button('Signing out…').getAttribute('aria-disabled')).toBe('true');
                 await act(async () => respond(Response.json({ detail: 'Logout denied' }, { status: 403 })));
                 await vi.waitFor(() =>
                     expect(document.querySelector('[role="alert"]')?.textContent).toContain('Sign out failed')
