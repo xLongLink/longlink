@@ -1,7 +1,7 @@
 [project]
 name = "__PROJECT_NAME__"
 version = "0.0.0"
-description = "LongLink building project and construction phase demo."
+description = "LongLink sample Solution."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
