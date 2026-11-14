@@ -8,6 +8,7 @@ import { useContext, useRef, useState } from 'react';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
@@ -56,9 +57,14 @@ export function ProfileMenu() {
         window.location.assign('/user/organizations');
     }
 
+    // Keep the same avatar size in expanded and collapsed sidebar controls.
+    const avatar = (
+        <GeneratedAvatar size={sidebar === null ? 'sm' : 'default'} src={user.avatar} name={user.name} seed={user.id} />
+    );
+
     const identity = (
         <>
-            <GeneratedAvatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
+            {avatar}
             <span className="flex min-w-0 flex-1 flex-col text-start leading-tight">
                 <span className="truncate text-sm font-medium">{user.name}</span>
                 <span className="truncate text-xs text-muted-foreground">{user.email}</span>
@@ -72,11 +78,19 @@ export function ProfileMenu() {
                 type="button"
                 aria-label={user.name}
                 render={
-                    <Button
-                        variant="ghost"
-                        size={sidebar === 'expanded' ? 'lg' : 'icon-lg'}
-                        className={cn(sidebar === 'expanded' && 'w-full min-w-0 justify-start text-start')}
-                    />
+                    sidebar === null ? (
+                        <Button variant="ghost" size="icon-lg" />
+                    ) : (
+                        <ButtonPrimitive
+                            className={cn(
+                                buttonVariants({ variant: 'ghost', size: null }),
+                                'border-0',
+                                sidebar === 'expanded'
+                                    ? 'w-full min-w-0 justify-start gap-2 p-2 text-start'
+                                    : 'size-10 p-1'
+                            )}
+                        />
+                    )
                 }
                 data-expanded={sidebar === 'expanded' || undefined}
             >
@@ -86,7 +100,7 @@ export function ProfileMenu() {
                         <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
                     </>
                 ) : (
-                    <GeneratedAvatar size="sm" src={user.avatar} name={user.name} seed={user.id} />
+                    avatar
                 )}
             </PopoverTrigger>
             <PopoverContent

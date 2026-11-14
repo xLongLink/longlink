@@ -58,7 +58,7 @@ export default function Platform({
     return (
         <SidebarContext value={isCollapsed ? 'collapsed' : 'expanded'}>
             <section
-                className="group/platform relative flex min-h-dvh overflow-clip bg-background"
+                className="group/platform relative flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px))] overflow-clip bg-background"
                 data-collapsed={isCollapsed || undefined}
             >
                 <a
@@ -73,8 +73,8 @@ export default function Platform({
                     className="sticky top-[var(--\_app-shell-header-height,0px)] flex h-[calc(100dvh-var(--\_app-shell-header-height,0px))] min-h-0 w-[260px] flex-[0_0_260px] flex-col overflow-hidden bg-inherit group-data-collapsed/platform:w-12 group-data-collapsed/platform:basis-12"
                     id={navId}
                 >
-                    <header className="flex flex-none flex-col gap-3 p-2">
-                        <section className="flex h-14 w-full flex-none flex-col justify-center">
+                    <header className="flex flex-none flex-col gap-3 p-2 group-data-collapsed/platform:gap-2 group-data-collapsed/platform:px-1 group-data-collapsed/platform:pb-0">
+                        <section className="flex h-14 w-full flex-none flex-col justify-center group-data-collapsed/platform:h-auto">
                             {sidebarHeader ?? (
                                 <RouterLink
                                     aria-label="LongLink home"
@@ -97,7 +97,7 @@ export default function Platform({
                         </section>
                         <Separator />
                     </header>
-                    <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-1">
+                    <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-1 group-data-collapsed/platform:py-2">
                         {tabs.map((tab) => (
                             <TypographyTooltip
                                 key={tab.href}
@@ -142,8 +142,8 @@ export default function Platform({
                             </TypographyTooltip>
                         ))}
                     </section>
-                    <footer className="flex-none px-2 pt-1 pb-2 group-data-collapsed/platform:flex group-data-collapsed/platform:justify-center group-data-collapsed/platform:pt-0">
-                        <section className="flex flex-col gap-3 p-1 group-data-collapsed/platform:flex-none">
+                    <footer className="flex-none px-2 pt-1 pb-2 group-data-collapsed/platform:flex group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-1 group-data-collapsed/platform:pt-0">
+                        <section className="flex flex-col gap-3 group-data-collapsed/platform:flex-none group-data-collapsed/platform:gap-2">
                             <Separator />
                             {action}
                         </section>
