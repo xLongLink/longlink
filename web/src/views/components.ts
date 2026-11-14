@@ -13,6 +13,12 @@ export { GridSpan } from '@/components/custom/grid';
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. @category Layouts */
 export { Disclosure } from '@/components/custom/disclosure';
 
+/** @category Layouts */
+export { Collapsible } from '@/components/shadcn/collapsible';
+
+/** @category Layouts @group Collapsible */
+export { CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
+
 /** @category Display */
 export { Heading } from '@/components/custom/heading';
 
@@ -96,8 +102,11 @@ export {
     DialogDescription
 } from '@/components/shadcn/dialog';
 
-/** Native composition or a modal frame with isolated View host coordination. @category Layouts */
+/** Native dialog composition with isolated View host coordination. @category Layouts */
 export { Dialog } from '@/components/custom/dialog';
+
+/** Custom fixed or fullscreen modal frame with isolated View host coordination. @category Layouts */
+export { FramedDialog } from '@/components/custom/framed-dialog';
 
 /** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
 export { Form } from '@/components/custom/form';

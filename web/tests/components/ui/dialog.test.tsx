@@ -4,6 +4,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
@@ -13,12 +14,12 @@ import {
     DropdownMenuTrigger
 } from '@/components/shadcn/dropdown-menu';
 
-it('dismisses the custom Dialog without submitting its form', async () => {
+it('dismisses the FramedDialog without submitting its form', async () => {
     // Arrange
     const close = vi.fn();
 
     // Act
-    await withMounted(<Dialog isOpen onOpenChange={close} />, async () => {
+    await withMounted(<FramedDialog isOpen onOpenChange={close} />, async () => {
         const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
         await act(async () => button?.click());
 
@@ -42,9 +43,9 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
                     Hide
                 </button>
                 {!hidden && (
-                    <Dialog title="Edit order" isOpen onOpenChange={change}>
+                    <FramedDialog title="Edit order" isOpen onOpenChange={change}>
                         Draft
-                    </Dialog>
+                    </FramedDialog>
                 )}
             </>
         );
@@ -82,9 +83,9 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
                 </button>
                 <ButtonGroupContext value={{ orientation: 'vertical', isDisabled: true }}>
                     <ControlSizeContext value="lg">
-                        <Dialog title="Edit order" isOpen={open} onOpenChange={setOpen}>
+                        <FramedDialog title="Edit order" isOpen={open} onOpenChange={setOpen}>
                             <input aria-label="Order name" />
-                        </Dialog>
+                        </FramedDialog>
                     </ControlSizeContext>
                 </ButtonGroupContext>
             </DialogActivityContext>
@@ -140,7 +141,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
 
     await withMounted(
         <DialogActivityContext value={activity}>
-            <Dialog title="Preview" variant="fullscreen" isOpen onOpenChange={() => {}} />
+            <FramedDialog title="Preview" variant="fullscreen" isOpen onOpenChange={() => {}} />
         </DialogActivityContext>,
         async () => {
             expect(activity).toHaveBeenCalledExactlyOnceWith(true, true);
@@ -206,14 +207,14 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         const [open, setOpen] = useState(true);
 
         return (
-            <Dialog title="Actions" isOpen={open} onOpenChange={setOpen}>
+            <FramedDialog title="Actions" isOpen={open} onOpenChange={setOpen}>
                 <DropdownMenu>
                     <DropdownMenuTrigger>More</DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <DropdownMenuItem onClick={action}>Archive</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            </Dialog>
+            </FramedDialog>
         );
     }
 

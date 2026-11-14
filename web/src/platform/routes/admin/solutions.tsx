@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Dialog } from '@/components/custom/dialog';
 import { DeletionDialog } from '@/components/deletion';
 import { TextInput } from '@/components/custom/text-input';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -127,7 +127,7 @@ export default function Solutions() {
                 </Stack>
             </Stack>
             {metadata && (
-                <Dialog
+                <FramedDialog
                     title="Solution metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -171,7 +171,7 @@ export default function Solutions() {
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </FramedDialog>
             )}
             <DeletionDialog
                 confirmation={

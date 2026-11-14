@@ -83,7 +83,7 @@ export default function Tasks() {
                     },
                 ]}
             />
-            <Dialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <FramedDialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
                         <Field>
@@ -97,7 +97,7 @@ export default function Tasks() {
                         </Stack>
                     </Form>
                 )}
-            </Dialog>
+            </FramedDialog>
         </Stack>
     );
 }

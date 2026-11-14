@@ -9,9 +9,9 @@ import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { createRoot } from 'react-dom/client';
 import { ApiProvider } from '@/components/api';
-import { Dialog } from '@/components/custom/dialog';
 import { apiQueryOptions } from '@/lib/react-query';
 import userEvent from '@testing-library/user-event';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { act, StrictMode, useEffect, useRef, useState } from 'react';
 
@@ -154,9 +154,9 @@ it.each(['native', 'base'] as const)(
                             {content}
                         </dialog>
                     ) : (
-                        <Dialog title="Membership" isOpen={open} onOpenChange={setOpen}>
+                        <FramedDialog title="Membership" isOpen={open} onOpenChange={setOpen}>
                             {content}
-                        </Dialog>
+                        </FramedDialog>
                     )}
                 </>
             );

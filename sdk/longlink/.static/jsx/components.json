@@ -916,6 +916,35 @@
             "source": "reui"
         },
         {
+            "name": "Collapsible",
+            "category": "Layouts",
+            "source": "shadcn",
+            "introduction": "Native shadcn collapsible composition with Base UI props.",
+            "guidance": "Compose CollapsibleTrigger and CollapsibleContent. Use Disclosure only for initially-open persistent content and controlled-close focus recovery.",
+            "properties": [
+                {
+                    "name": "open / defaultOpen / disabled",
+                    "type": "boolean",
+                    "description": "Controlled visibility, initial visibility, and disabled state."
+                },
+                {
+                    "name": "onOpenChange",
+                    "type": "(open, details) => void",
+                    "description": "Receives visibility changes and native cancellation details."
+                },
+                {
+                    "name": "CollapsibleTrigger.render",
+                    "type": "ReactElement",
+                    "description": "Compose the trigger with a Button."
+                },
+                {
+                    "name": "CollapsibleContent.keepMounted",
+                    "type": "boolean",
+                    "description": "Retains hidden content in the DOM."
+                }
+            ]
+        },
+        {
             "name": "Disclosure",
             "category": "Layouts",
             "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery.",
@@ -1054,8 +1083,8 @@
         {
             "name": "Dialog",
             "category": "Layouts",
-            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose, or use isOpen with onOpenChange for a built-in frame. Set variant to fullscreen on the built-in frame for isolated-host fullscreen coordination.",
-            "introduction": "Displays an accessible modal using native composition or a built-in frame. The built-in frame closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
+            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose. Use FramedDialog for a built-in fixed or fullscreen frame.",
+            "introduction": "Displays an accessible modal using native composition with isolated View host coordination.",
             "keywords": [
                 "modal",
                 "confirmation",
@@ -1072,6 +1101,31 @@
                     "type": "ReactElement",
                     "description": "Base UI trigger composition."
                 },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Dialog content."
+                },
+                {
+                    "name": "onOpenChange",
+                    "type": "(open, details) => void",
+                    "description": "Receives visibility changes; details.cancel() prevents the change."
+                }
+            ],
+            "source": "custom",
+            "reference": "https://ui.shadcn.com/docs/components/base/dialog",
+            "justification": "Preserves native shadcn composition while coordinating isolated View host activity."
+        },
+        {
+            "name": "FramedDialog",
+            "category": "Layouts",
+            "guidance": "Control isOpen with onOpenChange. Set variant to fullscreen for isolated-host fullscreen coordination.",
+            "introduction": "Displays an accessible built-in modal frame. It closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
+            "keywords": [
+                "modal",
+                "fullscreen"
+            ],
+            "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
@@ -1112,7 +1166,7 @@
             ],
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/dialog",
-            "justification": "Combines native shadcn composition and built-in fixed or fullscreen frames with isolated View host coordination."
+            "justification": "Composes built-in fixed or fullscreen frames with isolated View host coordination."
         },
         {
             "name": "Separator",

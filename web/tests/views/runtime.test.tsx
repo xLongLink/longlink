@@ -541,14 +541,14 @@ it('edits and resets composed native text fields through the authored View bound
     }
 });
 
-it('controls the LongLink Dialog with public Buttons inside an authored View', async () => {
+it('controls the LongLink FramedDialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <Dialog title="Order details" isOpen={open} onOpenChange={setOpen}>
+            <FramedDialog title="Order details" isOpen={open} onOpenChange={setOpen}>
                 <p>Review the order</p>
-            </Dialog>
+            </FramedDialog>
         </>;
     }`);
 

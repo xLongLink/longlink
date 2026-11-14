@@ -5,11 +5,11 @@ import { Info, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Form } from '@/components/custom/form';
-import { Dialog } from '@/components/custom/dialog';
 import { DeletionDialog } from '@/components/deletion';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { TextInput } from '@/components/custom/text-input';
 import { NativeFileInput } from '@/components/custom/file-input';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -109,7 +109,7 @@ export default function Compute() {
                 />
             )}
             {metadata && (
-                <Dialog
+                <FramedDialog
                     title="Compute metadata"
                     isOpen
                     onOpenChange={(open) => {
@@ -139,7 +139,7 @@ export default function Compute() {
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </FramedDialog>
             )}
             {dialog?.kind === 'deletion' && (
                 <DeletionDialog
@@ -223,7 +223,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
 
     // Let the shared wizard own navigation, validation, and persistent fields within the creation dialog shell.
     return (
-        <Dialog
+        <FramedDialog
             isOpen
             onOpenChange={(open) => {
                 if (!open) onClose();
@@ -298,6 +298,6 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                     </Step>
                 </Wizard>
             </Form>
-        </Dialog>
+        </FramedDialog>
     );
 }

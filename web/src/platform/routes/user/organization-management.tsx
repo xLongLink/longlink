@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
-import { Dialog } from '@/components/custom/dialog';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './create-organization';
 import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -219,7 +219,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 />
             )}
             {selected && selected.type !== 'create' && (
-                <Dialog
+                <FramedDialog
                     isOpen
                     title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
                     onOpenChange={(open) => {
@@ -262,7 +262,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             />
                         </Stack>
                     </Stack>
-                </Dialog>
+                </FramedDialog>
             )}
         </>
     );
