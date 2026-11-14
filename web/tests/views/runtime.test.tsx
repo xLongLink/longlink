@@ -1,7 +1,19 @@
 // @vitest-environment happy-dom
-import { it, expect, vi } from 'vitest';
+import { it, expect, vi, beforeAll } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { commandSchema, REQUEST_TIMEOUT, type ViewReply } from '@/views/protocol';
+
+// Finish cold module loading before any test can replace the session or reset the module cache.
+beforeAll(async () => {
+    const previousSession = window.__VIEW_SESSION__;
+    window.__VIEW_SESSION__ = 'runtime-test-session';
+
+    try {
+        await import('@/views/runtime');
+    } finally {
+        window.__VIEW_SESSION__ = previousSession;
+    }
+}, 30_000);
 
 it('ignores a mismatched session and releases an admitted port when its mount is absent', async () => {
     // Arrange
@@ -12,8 +24,6 @@ it('ignores a mismatched session and releases an admitted port when its mount is
 
     // Act
     try {
-        await import('@/views/runtime');
-
         const proof = {
             source: 'export default function View() { return null; }',
             params: {},
