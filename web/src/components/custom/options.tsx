@@ -1,12 +1,13 @@
+import { Icon } from './icon';
 import { isString } from 'es-toolkit';
 import type { ReactNode } from 'react';
-import { Icon, type StoneIconName } from './icon';
+import type { IconName } from 'lucide-react/dynamic';
 
 export type SelectorOptionData = {
     value: string;
     label?: string;
     description?: ReactNode;
-    icon?: StoneIconName;
+    icon?: IconName;
     disabled?: boolean;
 };
 
@@ -24,13 +25,13 @@ export type PickerOptionType =
     | { type: 'divider' }
     | { type: 'section'; title?: string; options: PickerOption[] };
 
-/** Adapts LongLink icon names for both single and multiple option pickers. */
+/** Adapts Lucide icon names for both single and multiple option pickers. */
 export function selectorOptions(options: SelectorOptionType[]): PickerOptionType[] {
     return options.map((option) => {
         // Preserve plain labels and dividers without adding a glyph.
         if (isString(option) || ('type' in option && option.type === 'divider')) return option;
 
-        // Adapt section glyphs through the same immediate-or-deferred LongLink renderer.
+        // Load section glyphs through the shared icon renderer.
         if ('type' in option)
             return {
                 ...option,

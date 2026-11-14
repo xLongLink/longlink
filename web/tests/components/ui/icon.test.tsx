@@ -2,20 +2,11 @@
 import { act } from 'react';
 import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import { Icon } from '@/components/custom/icon';
-import { renderStatic, withMounted } from '../../render';
 import { IconRequestContext } from '@/components/custom/contexts';
 
-it('renders bundled aliases without requesting an external glyph', () => {
-    // Act
-    const output = renderStatic(<Icon icon="search" size="md" />);
-
-    // Assert
-    expect(output.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
-    expect(output.querySelector('svg path')).not.toBeNull();
-});
-
-it('shares deferred glyph loading while preserving decorative slots and explicit alias bypass', async () => {
+it('shares glyph loading while preserving decorative slots', async () => {
     // A delayed glyph must not duplicate requests or remove either action's icon slot.
     let release: () => void = () => {};
 
@@ -32,8 +23,8 @@ it('shares deferred glyph loading while preserving decorative slots and explicit
     try {
         await withMounted(
             <IconRequestContext value={load}>
-                <Icon icon="lucide:search" size="sm" />
-                <Icon icon="lucide:search" size="lg" />
+                <Icon icon="search" size="sm" />
+                <Icon icon="search" size="lg" />
             </IconRequestContext>,
             async (output) => {
                 expect(load).toHaveBeenCalledExactlyOnceWith('search');
@@ -70,11 +61,14 @@ it('keeps a decorative warning glyph after deferred loading fails', async () => 
 
     await withMounted(
         <IconRequestContext value={load}>
-            <Icon icon="lucide:search" size="md" />
+            <Icon icon="search" size="md" />
         </IconRequestContext>,
         async (output) => {
             await vi.waitFor(
-                () => expect(output.querySelector('svg')?.classList.contains('lucide-alert-triangle')).toBe(true),
+                () =>
+                    expect(output.querySelector('svg')?.classList.contains('lucide-triangle-exclamation-point')).toBe(
+                        true
+                    ),
                 { timeout: 3000 }
             );
             expect(output.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');

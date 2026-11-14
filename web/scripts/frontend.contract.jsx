@@ -19,6 +19,13 @@ const table = useTable({
 });
 const query = createFilterQuery();
 const downloads = useDownload();
+const icon = <Icon icon="triangle-exclamation-point" size="sm" />;
+const token = <Token icon="user-round" label="Owner" />;
+const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;
+// @ts-expect-error LongLink aliases are not Lucide names.
+const legacyIcon = <Icon icon="close" size="sm" />;
+// @ts-expect-error Icon names do not accept a provider prefix.
+const prefixedIcon = <Icon icon="lucide:search" size="sm" />;
 const nativeGrid = (
     <DataGrid table={table} recordCount={records.length}>
         <Frame>

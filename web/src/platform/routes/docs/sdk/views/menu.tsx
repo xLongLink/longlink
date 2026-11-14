@@ -40,8 +40,8 @@ export default function MenuPage() {
                 },
                 {
                     name: 'MenuItem.icon',
-                    type: 'StoneIconName',
-                    description: 'Optional LongLink icon name displayed beside the label.'
+                    type: 'IconName',
+                    description: 'Optional Lucide icon name displayed beside the label.'
                 },
                 {
                     name: 'MenuItem.label',
@@ -55,8 +55,8 @@ export default function MenuPage() {
                 },
                 {
                     name: 'MenuSubSection.icon',
-                    type: 'StoneIconName',
-                    description: 'Optional LongLink icon name displayed beside the group label.'
+                    type: 'IconName',
+                    description: 'Optional Lucide icon name displayed beside the group label.'
                 },
                 {
                     name: 'MenuSubSection.label',
@@ -72,18 +72,18 @@ export default function MenuPage() {
     <Stack padding={4}>
       <Menu>
         <MenuSection title="Settings">
-          <MenuItem label="Profile" icon="userRound">
+          <MenuItem label="Profile" icon="user-round">
             <Text>Profile settings</Text>
           </MenuItem>
           <MenuSubSection label="Workflow" icon="wrench">
-            <MenuItem label="Automation" icon="refresh">
+            <MenuItem label="Automation" icon="refresh-cw">
               <Text>Automation settings</Text>
             </MenuItem>
             <MenuItem label="Schedule" icon="calendar">
               <Text>Schedule settings</Text>
             </MenuItem>
           </MenuSubSection>
-          <MenuSubSection label="Workspace" icon="building2">
+          <MenuSubSection label="Workspace" icon="building-complex">
             <MenuItem label="Members" icon="users">
               <Text>Workspace members</Text>
             </MenuItem>
@@ -119,18 +119,18 @@ function MenuExample() {
             <Stack padding={4}>
                 <Menu>
                     <MenuSection title="Settings">
-                        <MenuItem label="Profile" icon="userRound">
+                        <MenuItem label="Profile" icon="user-round">
                             <Text>Profile settings</Text>
                         </MenuItem>
                         <MenuSubSection label="Workflow" icon="wrench">
-                            <MenuItem label="Automation" icon="refresh">
+                            <MenuItem label="Automation" icon="refresh-cw">
                                 <Text>Automation settings</Text>
                             </MenuItem>
                             <MenuItem label="Schedule" icon="calendar">
                                 <Text>Schedule settings</Text>
                             </MenuItem>
                         </MenuSubSection>
-                        <MenuSubSection label="Workspace" icon="building2">
+                        <MenuSubSection label="Workspace" icon="building-complex">
                             <MenuItem label="Members" icon="users">
                                 <Text>Workspace members</Text>
                             </MenuItem>

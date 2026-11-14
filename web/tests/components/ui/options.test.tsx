@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { MultiSelector } from '@/components/custom/multi-selector';
@@ -18,8 +18,8 @@ it.each([false, true])(
                 type: 'section',
                 title: 'People',
                 options: [
-                    { value: 'owner-id', label: 'Owner', icon: 'userRound' },
-                    { value: 'blocked-id', label: 'Blocked', icon: 'warning', disabled: true }
+                    { value: 'owner-id', label: 'Owner', icon: 'user-round' },
+                    { value: 'blocked-id', label: 'Blocked', icon: 'triangle-exclamation-point', disabled: true }
                 ]
             }
         ];
@@ -51,9 +51,9 @@ it.each([false, true])(
                 const owner = rows.find((row) => row.textContent?.includes('Owner'));
                 const blocked = rows.find((row) => row.textContent?.includes('Blocked'));
 
-                expect(database?.querySelector('svg.lucide-database')).toBeTruthy();
+                await vi.waitFor(() => expect(database?.querySelector('svg.lucide-database')).toBeTruthy());
                 expect(database?.textContent).toContain('Primary storage');
-                expect(owner?.querySelector('svg.lucide-user-round')).toBeTruthy();
+                await vi.waitFor(() => expect(owner?.querySelector('svg.lucide-user-round')).toBeTruthy());
                 expect(blocked?.getAttribute('aria-disabled')).toBe('true');
                 expect(rows.some((row) => row.textContent === 'Plain')).toBe(true);
                 expect(new FormData(form).getAll('records')).toEqual(['database-id']);

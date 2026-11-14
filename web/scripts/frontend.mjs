@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { generateDtsBundle } from 'dts-bundle-generator';
 import ts from 'typescript';
+import iconImports from 'lucide-react/dynamicIconImports.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const target = new URL('../../sdk/longlink/.static/jsx/frontend.d.ts', import.meta.url);
@@ -135,7 +136,9 @@ const aliases = names
             : `declare const ${name}: typeof NativeFrontend.${name};`
     )
     .join('\n');
-const output = `${retained.trimEnd()}\n\n${marker}declare namespace NativeFrontend {\n${namespace}\n}\n\n${aliases}\n`;
+// Publish the installed Lucide catalog without bundling its component and React declarations.
+const iconName = `type IconName = ${Object.keys(iconImports).map((name) => JSON.stringify(name)).join(' | ')};`;
+const output = `${retained.trimEnd()}\n\n${marker}${iconName}\n\ndeclare namespace NativeFrontend {\n${namespace}\n}\n\n${aliases}\n`;
 
 if (process.argv.includes('--check')) {
     if (output !== original) throw new Error('Frontend declarations are stale. Run bun run generate:frontend.');

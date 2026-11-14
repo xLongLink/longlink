@@ -1544,12 +1544,12 @@
         {
             "name": "Icon",
             "category": "Display",
-            "introduction": "Renders any Lucide icon by its kebab-case name. Existing LongLink aliases remain immediate; other icons load on demand and are cached without blocking the View or changing icon dimensions.",
+            "introduction": "Loads and caches Lucide icons by kebab-case name without blocking the View or changing icon dimensions.",
             "properties": [
                 {
                     "name": "icon",
-                    "type": "StoneIconName",
-                    "description": "Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases."
+                    "type": "IconName",
+                    "description": "Lucide kebab-case icon name."
                 },
                 {
                     "name": "size",
@@ -1558,7 +1558,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Resolves LongLink icon aliases and loads Lucide icons through the isolated runtime's icon capability."
+            "justification": "Loads Lucide icons through the isolated runtime's icon capability."
         },
         {
             "name": "Image",
@@ -1662,8 +1662,8 @@
                 },
                 {
                     "name": "MenuItem.icon",
-                    "type": "StoneIconName",
-                    "description": "Optional LongLink icon name displayed beside the label."
+                    "type": "IconName",
+                    "description": "Optional Lucide icon name displayed beside the label."
                 },
                 {
                     "name": "MenuItem.label",
@@ -1677,8 +1677,8 @@
                 },
                 {
                     "name": "MenuSubSection.icon",
-                    "type": "StoneIconName",
-                    "description": "Optional LongLink icon name displayed beside the group label."
+                    "type": "IconName",
+                    "description": "Optional Lucide icon name displayed beside the group label."
                 },
                 {
                     "name": "MenuSubSection.label",
@@ -2589,7 +2589,7 @@
                     "description": "Native ReUI Badge size.",
                     "default": "lg"
                 },
-                { "name": "icon", "type": "StoneIconName", "description": "Optional icon rendered before the label." },
+                { "name": "icon", "type": "IconName", "description": "Optional icon rendered before the label." },
                 { "name": "disabled", "type": "boolean", "description": "Disables the token." },
                 {
                     "name": "description",
@@ -2608,7 +2608,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Combines LongLink icon lookup with selectable or removable tokens and scoped action controls."
+            "justification": "Combines Lucide icons with selectable or removable tokens and scoped action controls."
         },
         {
             "name": "ButtonGroup",
