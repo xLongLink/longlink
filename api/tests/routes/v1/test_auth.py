@@ -225,7 +225,6 @@ async def test_oauth_login_rejects_unconfigured_provider_without_state_cookie(cl
         pytest.param("github", "expected-state", id="cross-provider-state"),
     ],
 )
-
 # Invalid browser state must fail before any provider code exchange.
 async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch, callback_provider: str, state: str
@@ -1149,7 +1148,6 @@ async def test_logout_rejects_untrusted_origin_without_browser_session(client: A
         pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
     ],
 )
-
 # Authenticated cross-origin requests must not clear the browser session.
 async def test_authenticated_logout_rejects_untrusted_origin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, public_origin: str | None, origin: str

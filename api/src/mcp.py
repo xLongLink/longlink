@@ -21,13 +21,14 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
     # Bearer proof is meaningful only at the selected Solution's MCP endpoint.
     is_mcp = path.rstrip("/") == "mcp"
     authorization = request.headers.get("authorization")
-    challenge = f'Bearer resource_metadata="{env.PUBLIC_URL}/.well-known/oauth-protected-resource/api/v1/solutions/{solution_id}/proxy/mcp", scope="mcp"'
+    challenge = (
+        f'Bearer resource_metadata="{env.PUBLIC_URL}/.well-known/oauth-protected-resource'
+        f'/api/v1/solutions/{solution_id}/proxy/mcp", scope="mcp"'
+    )
     if is_mcp and authorization is not None:
         scheme, _, credential = authorization.partition(" ")
         user = (
-            await mcp.authenticate(session, credential, solution_id)
-            if scheme.lower() == "bearer" and 0 < len(credential) <= 128
-            else None
+            await mcp.authenticate(session, credential, solution_id) if scheme.lower() == "bearer" and 0 < len(credential) <= 128 else None
         )
 
         # Invalid bearer proof must retain the resource discovery challenge.

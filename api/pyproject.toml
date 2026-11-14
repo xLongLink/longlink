@@ -77,11 +77,13 @@ skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 preview = true
-select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN", "B", "E302", "E305", "PGH", "PT", "RUF100", "S324", "S506"]
+select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN", "B", "E", "PGH", "PT", "RUF100", "S324", "S506"]
 ignore = ["D100", "D104", "D202"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG", "N803", "S"]
+# Test settings must be seeded before importing application modules.
+"tests/conftest.py" = ["E402"]
 # FastAPI dependencies and streaming responses own these generators' cleanup.
 "src/auth.py" = ["ASYNC119"]
 "src/mcp.py" = ["ASYNC119"]
