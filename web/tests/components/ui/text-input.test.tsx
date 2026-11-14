@@ -5,7 +5,7 @@ import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { TextInput } from '@/components/custom/text-input';
-import { NativeTextArea } from '@/components/ui/native-text-area';
+import { NativeTextArea } from '@/components/custom/native-text-area';
 
 it('forwards native textarea events, required validation, refs, and disabled state', async () => {
     const user = userEvent.setup();

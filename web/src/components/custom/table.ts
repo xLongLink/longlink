@@ -7,6 +7,7 @@ export type TableColumn<T extends Record<string, unknown>> = {
     header?: ReactNode;
     width?: ColumnWidth;
     align?: 'start' | 'center' | 'end';
+    sortable?: boolean;
     renderCell?: (row: T) => ReactNode;
 };
 

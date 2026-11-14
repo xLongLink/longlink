@@ -1,17 +1,22 @@
-// @vitest-environment happy-dom
 import { act } from 'react';
+// @vitest-environment happy-dom
+import * as React from 'react';
+import { transform } from 'sucrase';
+import * as icons from '@/lib/icons';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
+import * as components from '@/views/components';
 import userEvent from '@testing-library/user-event';
 import { traceFlow } from '@/components/custom/flow';
 import { UsageChart } from '@/components/custom/analytics';
 import type { RevenueQuarter } from '@/components/custom/flow';
 import { RevenueFlow } from '@/components/custom/revenue-flow';
-import type { DirectoryModel } from '@/components/custom/models';
 import { FileRequestContext } from '@/components/custom/preview';
-import { CatalogDirectory } from '@/components/custom/catalog-directory';
+import { IconRequestContext } from '@/components/custom/contexts';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
 
-const models: DirectoryModel[] = [
+const models = [
     {
         id: 'aster',
         name: 'Aster Vision',
@@ -53,13 +58,52 @@ const models: DirectoryModel[] = [
     }))
 ];
 
+// Exercise the shipped View against the real shared components and scoped download boundary.
+const code = transform(source, {
+    transforms: ['jsx', 'imports'],
+    jsxRuntime: 'classic',
+    jsxPragma: '__jsx',
+    production: true
+}).code;
+
+const bindings = {
+    __jsx: React.createElement,
+    useState: React.useState,
+    useEffect: React.useEffect,
+    useMemo: React.useMemo,
+    useRef: React.useRef,
+    ...components,
+    useApi: () => [models]
+};
+
+const module = { exports: {} };
+
+// oxlint-disable-next-line typescript/no-implied-eval -- Evaluate the bundled View with its sandbox's explicit bindings.
+const evaluate = new Function('module', 'exports', ...Object.keys(bindings), `${code}\nreturn module.exports.default;`);
+
+// SAFETY: The source is the repository-owned starter View, not an external module.
+const List = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
+
+/** Supplies the real icon loader while the fixture owns its model response. */
+function CatalogDirectory() {
+    const [client] = React.useState(() => new QueryClient());
+
+    return (
+        <QueryClientProvider client={client}>
+            <IconRequestContext value={icons.load}>
+                <List />
+            </IconRequestContext>
+        </QueryClientProvider>
+    );
+}
+
 it('recovers filtering from a later page and exports every matching row in numeric price order', async () => {
     const user = userEvent.setup();
     const download = vi.fn(async (_path: string, _filename: string) => {});
 
     await withMounted(
         <FileRequestContext value={{ download, preview: async () => null }}>
-            <CatalogDirectory models={models} exportPath="/api/models/export" />
+            <CatalogDirectory />
         </FileRequestContext>,
         async (output) => {
             const secondPage = output.querySelector<HTMLButtonElement>('button[aria-label="Go to page 2"]');
@@ -121,7 +165,7 @@ it('recovers filtering from a later page and exports every matching row in numer
 it('retains a bookmark across detail navigation without treating Save as navigation', async () => {
     const user = userEvent.setup();
 
-    await withMounted(<CatalogDirectory models={models} exportPath="/api/models/export" />, async (output) => {
+    await withMounted(<CatalogDirectory />, async (output) => {
         const save = output.querySelector<HTMLButtonElement>('button[aria-label="Save Aster Vision"]');
 
         if (!save) throw new Error('Expected bookmark control');
@@ -163,7 +207,7 @@ it('applies the provider is-not operator rather than treating every provider rul
         await act(async () => user.click(option));
     }
 
-    await withMounted(<CatalogDirectory models={models} exportPath="/api/models/export" />, async (output) => {
+    await withMounted(<CatalogDirectory />, async (output) => {
         const add = [...output.querySelectorAll('button')].find(
             (button) => button.textContent?.trim() === 'Add filter'
         );
@@ -298,24 +342,40 @@ it('changes the plotted model usage period and displays its human-readable selec
     });
 
     try {
-        await withMounted(<UsageChart data={data} />, async (output) => {
-            expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
+        await withMounted(
+            <UsageChart
+                data={data}
+                config={{
+                    claude: { label: 'Claude', color: 'var(--chart-1)' },
+                    gpt: { label: 'GPT', color: 'var(--chart-2)' },
+                    gemini: { label: 'Gemini', color: 'var(--chart-3)' }
+                }}
+                periods={[
+                    { value: 7, label: 'Last 7 days' },
+                    { value: 30, label: 'Last 30 days' }
+                ]}
+                title="Model usage"
+                label="Model usage over time"
+            />,
+            async (output) => {
+                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
 
-            const option = [...output.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-                (item) => item.textContent === 'Last 7 days'
-            );
+                const option = [...output.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+                    (item) => item.textContent === 'Last 7 days'
+                );
 
-            if (!option) throw new Error('Expected seven-day tab');
+                if (!option) throw new Error('Expected seven-day tab');
 
-            await act(async () => user.click(option));
-            expect(option.getAttribute('aria-selected')).toBe('true');
-            expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24');
-            expect(output.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-02');
-            option.focus();
-            await act(async () => user.keyboard('{ArrowRight}'));
-            expect(output.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('Last 30 days');
-            expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
-        });
+                await act(async () => user.click(option));
+                expect(option.getAttribute('aria-selected')).toBe('true');
+                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24');
+                expect(output.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-02');
+                option.focus();
+                await act(async () => user.keyboard('{ArrowRight}'));
+                expect(output.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('Last 30 days');
+                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
+            }
+        );
     } finally {
         bounds.mockRestore();
     }

@@ -6,7 +6,7 @@ import { withMounted } from '../../render';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { NativeLink } from '@/components/custom/native-link';
-import { NativeButton } from '@/components/ui/native-button';
+import { NativeButton } from '@/components/custom/native-button';
 
 /** Exposes actual router state after clicks without replacing navigation. */
 function Location() {

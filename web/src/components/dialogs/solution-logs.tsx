@@ -3,8 +3,8 @@ import { RefreshCw } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 export function SolutionLogsDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {

@@ -1,9 +1,21 @@
 import type { TableColumn } from './table';
+import { useState, type ReactNode } from 'react';
 import { renderTableValue, tableColumns, tableWidths } from './table';
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/shadcn/empty';
-import { DataGridTable } from '@/components/reui/data-grid/data-grid-table';
-import { useTable, type CellContext, type ColumnDef } from '@tanstack/react-table';
 import { DataGridScrollArea } from '@/components/reui/data-grid/data-grid-scroll-area';
+import { DataGridColumnHeader } from '@/components/reui/data-grid/data-grid-column-header';
+import {
+    DataGridTable,
+    DataGridTableRowSelect,
+    DataGridTableRowSelectAll
+} from '@/components/reui/data-grid/data-grid-table';
+import {
+    useTable,
+    type CellContext,
+    type ColumnDef,
+    type SortingState,
+    type RowSelectionState
+} from '@tanstack/react-table';
 import {
     DataGrid,
     DataGridContainer,
@@ -40,6 +52,12 @@ export function DataTable<T extends Record<string, unknown>>({
     isStriped = false,
     idKey,
     density,
+    sorting,
+    onSortingChange,
+    enableRowSelection = false,
+    rowSelection,
+    onRowSelectionChange,
+    emptyMessage,
     verticalAlign = 'middle'
 }: {
     data: T[];
@@ -48,8 +66,22 @@ export function DataTable<T extends Record<string, unknown>>({
     isStriped?: boolean;
     idKey?: keyof T | ((row: T) => string | number);
     density?: 'compact';
+    sorting?: SortingState;
+    onSortingChange?: (sorting: SortingState) => void;
+    enableRowSelection?: boolean;
+    rowSelection?: RowSelectionState;
+    onRowSelectionChange?: (selection: RowSelectionState) => void;
+    emptyMessage?: ReactNode;
     verticalAlign?: 'top' | 'middle' | 'bottom';
 }) {
+    const [localSorting, setSorting] = useState<SortingState>([]);
+    const [localSelection, setSelection] = useState<RowSelectionState>({});
+    const currentSorting = sorting ?? localSorting;
+    const currentSelection = rowSelection ?? localSelection;
+
+    // Selection must follow domain identities rather than transient row positions.
+    if (enableRowSelection && idKey === undefined) throw new Error('Selectable DataTable requires idKey');
+
     const resolvedColumns = tableColumns(data, columns);
     const widths = tableWidths(resolvedColumns);
 
@@ -58,16 +90,24 @@ export function DataTable<T extends Record<string, unknown>>({
         const alignment =
             column.align === 'center' ? 'text-center' : column.align === 'end' ? 'text-end' : 'text-start';
 
+        const label = column.key.charAt(0).toUpperCase() + column.key.slice(1);
+
+        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- ReactNode headers need a plain-text sorting label.
+        const headerTitle = typeof column.header === 'string' ? column.header : label;
+
         const meta: DataTableColumnMeta<T> = {
             renderCell: column.renderCell,
             headerClassName: alignment,
-            cellClassName: alignment
+            cellClassName: alignment,
+            headerTitle
         };
 
         return {
             id: column.key,
             accessorFn: (row) => row[column.key],
-            header: () => column.header ?? column.key.charAt(0).toUpperCase() + column.key.slice(1),
+            header: ({ column: nativeColumn }) =>
+                column.sortable ? <DataGridColumnHeader column={nativeColumn} /> : (column.header ?? label),
+            enableSorting: column.sortable ?? false,
             cell: DataTableCell,
             size: widths[index],
             minSize: widths[index],
@@ -75,13 +115,46 @@ export function DataTable<T extends Record<string, unknown>>({
         };
     });
 
+    // Reuse registry selection controls and their subscription and keyboard behavior.
+    if (enableRowSelection) {
+        definitions.unshift({
+            id: '__selection',
+            header: () => <DataGridTableRowSelectAll />,
+            cell: ({ row }) => <DataGridTableRowSelect row={row} />,
+            size: 44,
+            minSize: 44,
+            enableSorting: false
+        });
+    }
+
     const table = useTable({
         features: dataGridFeatures,
         manualPagination: true,
         data,
         columns: definitions,
-        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Native callers choose a domain key or identity callback.
-        getRowId: idKey ? (row) => String(typeof idKey === 'function' ? idKey(row) : row[idKey]) : undefined
+        enableRowSelection,
+        state: { sorting: currentSorting, rowSelection: currentSelection },
+        onSortingChange: (update) => {
+            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- TanStack accepts values or functional updates.
+            const next = typeof update === 'function' ? update(currentSorting) : update;
+
+            if (sorting === undefined) setSorting(next);
+            onSortingChange?.(next);
+        },
+        onRowSelectionChange: (update) => {
+            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- TanStack accepts values or functional updates.
+            const next = typeof update === 'function' ? update(currentSelection) : update;
+
+            if (rowSelection === undefined) setSelection(next);
+            onRowSelectionChange?.(next);
+        },
+        getRowId:
+            idKey !== undefined
+                ? (row) => {
+                      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Callers choose a domain key or identity callback.
+                      return String(typeof idKey === 'function' ? idKey(row) : row[idKey]);
+                  }
+                : undefined
     });
 
     return (
@@ -89,11 +162,13 @@ export function DataTable<T extends Record<string, unknown>>({
             table={table}
             recordCount={data.length}
             emptyMessage={
-                <Empty role="status">
-                    <EmptyHeader>
-                        <EmptyTitle>No data</EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                emptyMessage ?? (
+                    <Empty role="status">
+                        <EmptyHeader>
+                            <EmptyTitle>No data</EmptyTitle>
+                        </EmptyHeader>
+                    </Empty>
+                )
             }
             tableLayout={{ dense: density === 'compact', stripped: isStriped, rowBorder: true, headerBorder: true }}
             tableClassNames={{
@@ -108,7 +183,11 @@ export function DataTable<T extends Record<string, unknown>>({
         >
             <DataGridContainer>
                 <DataGridScrollArea orientation="horizontal">
-                    <div style={{ minWidth: widths.reduce((total, width) => total + width, 0) }}>
+                    <div
+                        style={{
+                            minWidth: widths.reduce((total, width) => total + width, enableRowSelection ? 44 : 0)
+                        }}
+                    >
                         <DataGridTable renderHeader={resolvedColumns.length > 0} />
                     </div>
                 </DataGridScrollArea>

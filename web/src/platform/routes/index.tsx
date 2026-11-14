@@ -12,8 +12,8 @@ import { Typescript } from '@/components/svg/typescript';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const homeDescription =
