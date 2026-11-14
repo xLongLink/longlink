@@ -21,7 +21,7 @@ jobs:
         steps:
             # Use only GitHub metadata; never check out or execute pull request code.
             - name: Apply change-type label from title
-              uses: bcoe/conventional-release-labels@886f696738527c7be444262c327c89436dfb95a8 # v1.3.1
+              uses: bcoe/conventional-release-labels@v1.3.1
               # The upstream release declares a legacy Node runtime.
               env:
                   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"

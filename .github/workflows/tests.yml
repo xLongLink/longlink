@@ -14,6 +14,26 @@ concurrency:
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+    verify-lockfile:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7.0.1
+              with:
+                  persist-credentials: false
+
+            - name: Install workflow lockfile extension
+              run: gh extension install github/gh-actions-lock --pin v0.4.1
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+            - name: Verify workflow lockfile
+              run: gh actions-lock --verify
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
     # Only run Compute checks for Compute changes in pull requests and merge queues.
     compute-changes:
         runs-on: ubuntu-24.04
@@ -24,14 +44,14 @@ jobs:
         steps:
             - name: Checkout repository
               if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
               with:
                   fetch-depth: 0
 
             - name: Detect Compute changes
               if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
               id: changes
-              uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+              uses: dorny/paths-filter@v4.0.3
               with:
                   token: ''
                   base: ${{ github.event.merge_group.base_sha }}
@@ -46,15 +66,24 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Setup Python environment
-              uses: ./.github/actions/setup-python
+              uses: astral-sh/setup-uv@v9.0.0
               with:
+                  enable-cache: true
                   cache-dependency-glob: api/uv.lock
+                  version: '0.13.4'
+                  python-version: '3.14.6'
 
             - name: Setup web environment
-              uses: ./.github/actions/setup-vite
+              uses: voidzero-dev/setup-vp@v1.15.0
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
             - name: Install dependencies
               working-directory: api
@@ -65,7 +94,7 @@ jobs:
               run: uv run --locked ruff check .
 
             - name: Set up Helm
-              uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5
+              uses: azure/setup-helm@v5.1.0
               with:
                   version: v4.3.0
 
@@ -110,16 +139,24 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Setup Python environment
-              uses: ./.github/actions/setup-python
+              uses: astral-sh/setup-uv@v9.0.0
               with:
+                  enable-cache: true
                   cache-dependency-glob: sdk/uv.lock
+                  version: '0.13.4'
                   python-version: ${{ matrix.python-version }}
 
             - name: Setup web environment
-              uses: ./.github/actions/setup-vite
+              uses: voidzero-dev/setup-vp@v1.15.0
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
             - name: Install dependencies
               working-directory: sdk
@@ -177,10 +214,10 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Set up Helm
-              uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5
+              uses: azure/setup-helm@v5.1.0
               with:
                   version: v4.3.0
 
@@ -188,10 +225,10 @@ jobs:
               run: helm package k8s/chart --version 0.0.0 --destination .
 
             - name: Setup Docker Buildx
-              uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+              uses: docker/setup-buildx-action@v4.4.1
 
             - name: Build API image
-              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              uses: docker/build-push-action@v7.4.0
               with:
                   context: .
                   file: api/Dockerfile
@@ -236,10 +273,16 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Setup web environment
-              uses: ./.github/actions/setup-vite
+              uses: voidzero-dev/setup-vp@v1.15.0
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
             - name: Check web formatting
               working-directory: web
@@ -266,15 +309,15 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              uses: actions/checkout@v7.0.1
 
             - name: Setup kubectl
-              uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
+              uses: azure/setup-kubectl@v5.2.0
               with:
                   version: v1.37.2
 
             - name: Set up Helm
-              uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5
+              uses: azure/setup-helm@v5.1.0
               with:
                   version: v4.3.0
 
