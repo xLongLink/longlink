@@ -87,7 +87,6 @@ def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, messag
         pytest.param("?ssl-mode=VERIFY_CA", False, ssl.CERT_REQUIRED, id="verify-ca"),
     ],
 )
-
 # Verify actual SSLContext behavior for each supported MySQL verification mode.
 def test_mysql_database_url_builds_tls_context_for_verification_mode(query: str, check_hostname: bool, verify_mode: ssl.VerifyMode) -> None:
     """Build the configured TLS context without passing mode options to the driver."""
