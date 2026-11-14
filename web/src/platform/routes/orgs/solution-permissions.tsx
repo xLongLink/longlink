@@ -121,7 +121,7 @@ function MemberPermissions({
                                 <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
                                 <Stack gap={0}>
                                     <Text>{member.name}</Text>
-                                    <Text type="supporting">{member.email}</Text>
+                                    <Text className="text-xs text-muted-foreground">{member.email}</Text>
                                 </Stack>
                             </Stack>
                         )

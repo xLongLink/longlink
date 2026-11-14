@@ -23,13 +23,13 @@ export default function Assets() {
         <PublicArticle article={article}>
             <section className="flex flex-col gap-4">
                 <h1
-                    className="m-0 font-(family-name:--font-family-heading) text-[length:var(--text-heading-1-size)] leading-(--text-heading-1-leading) font-(--text-heading-1-weight) text-foreground"
+                    className="m-0 font-sans text-4xl leading-(--text-4xl--line-height) font-semibold text-foreground"
                     id="brand-assets"
                 >
                     Brand assets
                 </h1>
                 <h2
-                    className="m-0 font-(family-name:--font-family-heading) text-[length:var(--text-heading-2-size)] leading-(--text-heading-2-leading) font-(--text-heading-2-weight) text-foreground"
+                    className="m-0 font-sans text-3xl leading-(--text-3xl--line-height) font-semibold text-foreground"
                     id="logo"
                 >
                     Logo
@@ -37,11 +37,11 @@ export default function Assets() {
                 <div className="flex flex-wrap gap-4">
                     {(['light', 'dark'] as const).map((mode) => (
                         <figure
-                            className="m-0 flex w-full max-w-80 min-w-0 flex-col gap-2 [&_a]:text-inherit [&_a]:no-underline [&_a]:hover:underline [&_a:active]:bg-(--color-overlay-pressed) [&_a:focus-visible]:outline-(length:--focus-outline-width) [&_a:focus-visible]:outline-(--focus-outline-color) [&_a:focus-visible]:[outline-style:var(--focus-outline-style)] [&_a:focus-visible]:outline-offset-(--focus-outline-offset)"
+                            className="m-0 flex w-full max-w-80 min-w-0 flex-col gap-2 [&_a]:text-inherit [&_a]:no-underline [&_a]:hover:underline [&_a:active]:bg-accent [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-ring [&_a:focus-visible]:outline-solid [&_a:focus-visible]:outline-offset-2"
                             key={mode}
                         >
                             <div
-                                className="brand-assets-preview box-border w-full rounded-none bg-surface text-foreground"
+                                className="brand-assets-preview box-border w-full rounded-none bg-card text-foreground"
                                 data-theme-scope="stone"
                                 data-theme={mode}
                             >
@@ -51,7 +51,7 @@ export default function Assets() {
                                     alt={`${mode === 'light' ? 'Dark' : 'White'} LongLink logo with a transparent background`}
                                 />
                             </div>
-                            <figcaption className="font-sans text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) wrap-break-word text-muted-foreground opacity-90">
+                            <figcaption className="font-sans text-sm leading-(--text-sm--line-height) font-normal wrap-break-word text-muted-foreground opacity-90">
                                 {mode === 'light' ? 'Light mode' : 'Dark mode'}
                                 {(['svg', 'png', 'ico'] as const).map((format) => (
                                     <Fragment key={format}>
@@ -72,7 +72,7 @@ export default function Assets() {
             </section>
             <section className="flex flex-col gap-4">
                 <h2
-                    className="m-0 font-(family-name:--font-family-heading) text-[length:var(--text-heading-2-size)] leading-(--text-heading-2-leading) font-(--text-heading-2-weight) text-foreground"
+                    className="m-0 font-sans text-3xl leading-(--text-3xl--line-height) font-semibold text-foreground"
                     id="wordmark"
                 >
                     Wordmark
@@ -80,17 +80,17 @@ export default function Assets() {
                 <div className="flex flex-wrap gap-4">
                     {(['light', 'dark'] as const).map((mode) => (
                         <figure
-                            className="m-0 flex w-full max-w-80 min-w-0 flex-col gap-2 [&_a]:text-inherit [&_a]:no-underline [&_a]:hover:underline [&_a:active]:bg-(--color-overlay-pressed) [&_a:focus-visible]:outline-(length:--focus-outline-width) [&_a:focus-visible]:outline-(--focus-outline-color) [&_a:focus-visible]:[outline-style:var(--focus-outline-style)] [&_a:focus-visible]:outline-offset-(--focus-outline-offset)"
+                            className="m-0 flex w-full max-w-80 min-w-0 flex-col gap-2 [&_a]:text-inherit [&_a]:no-underline [&_a]:hover:underline [&_a:active]:bg-accent [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-ring [&_a:focus-visible]:outline-solid [&_a:focus-visible]:outline-offset-2"
                             key={mode}
                         >
                             <div
-                                className="brand-assets-preview box-border flex w-full flex-col items-center rounded-none bg-surface p-8 text-foreground"
+                                className="brand-assets-preview box-border flex w-full flex-col items-center rounded-none bg-card p-8 text-foreground"
                                 data-theme-scope="stone"
                                 data-theme={mode}
                             >
                                 <Wordmark size="heading" mode={mode} />
                             </div>
-                            <figcaption className="font-sans text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) wrap-break-word text-muted-foreground opacity-90">
+                            <figcaption className="font-sans text-sm leading-(--text-sm--line-height) font-normal wrap-break-word text-muted-foreground opacity-90">
                                 {mode === 'light' ? 'Light mode' : 'Dark mode'} ·{' '}
                                 <a
                                     download={`longlink-wordmark-${mode}.png`}
@@ -106,7 +106,7 @@ export default function Assets() {
             </section>
             <section className="flex flex-col gap-4">
                 <h2
-                    className="m-0 font-(family-name:--font-family-heading) text-[length:var(--text-heading-2-size)] leading-(--text-heading-2-leading) font-(--text-heading-2-weight) text-foreground"
+                    className="m-0 font-sans text-3xl leading-(--text-3xl--line-height) font-semibold text-foreground"
                     id="images"
                 >
                     Images

@@ -42,7 +42,7 @@ const mapDataSchema = z.discriminatedUnion('type', [
     })
 ]);
 
-export type MapData = z.infer<ReturnType<typeof z.json>>;
+export type MapData = string | number | boolean | null | MapData[] | { [key: string]: MapData };
 
 export type MapProperties = Record<string, MapData>;
 

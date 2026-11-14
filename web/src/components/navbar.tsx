@@ -69,7 +69,7 @@ export function Navbar({
                         <RouterLink
                             to="/"
                             aria-label="LongLink home"
-                            className="flex min-w-fit flex-1 items-center text-inherit no-underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                            className="flex min-w-fit flex-1 items-center text-inherit no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
                         >
                             <Wordmark size="heading" />
                         </RouterLink>
@@ -110,7 +110,7 @@ export function Navbar({
 function PublicLinks({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
     // Keep shared link states identical while preserving the desktop's muted emphasis.
     const linkClassName = cn(
-        'inline-flex items-center gap-0.5 font-sans text-[length:var(--text-body-size)] leading-(--text-body-leading) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset) [&>svg]:size-3 [&>svg]:shrink-0',
+        'inline-flex items-center gap-0.5 font-sans text-sm leading-(--text-sm--line-height) no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2 [&>svg]:size-3 [&>svg]:shrink-0',
         mobile ? 'text-inherit' : 'font-medium text-muted-foreground'
     );
 

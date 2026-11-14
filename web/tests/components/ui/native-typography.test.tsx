@@ -17,8 +17,30 @@ it('preserves heading targets while separating the accessible level from visual 
 
     expect(heading?.tagName).toBe('H4');
     expect(heading?.getAttribute('aria-level')).toBe('1');
-    expect(heading?.getAttribute('data-level')).toBe('4');
     expect(output.querySelectorAll('h1, h2, h3, h4, h5, h6')).toHaveLength(1);
+});
+
+it('forwards native heading refs and focus without introducing a wrapper', async () => {
+    const ref = createRef<HTMLHeadingElement>();
+    const onFocus = vi.fn();
+    const user = userEvent.setup();
+
+    await withMounted(
+        <NativeHeading ref={ref} level={3} accessibilityLevel={2} tabIndex={0} onFocus={onFocus}>
+            Account
+        </NativeHeading>,
+        async (output) => {
+            const heading = output.querySelector('h3');
+
+            expect(ref.current).toBe(heading);
+            await user.tab();
+            expect(document.activeElement).toBe(heading);
+            expect(onFocus).toHaveBeenCalledOnce();
+            expect(heading?.getAttribute('aria-level')).toBe('2');
+        }
+    );
+
+    expect(ref.current).toBeNull();
 });
 
 it('keeps native refs, focus and caller handlers working with truncation details', async () => {

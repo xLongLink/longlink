@@ -14,12 +14,12 @@ export default function AppearanceSettings() {
     const userUpdate = useUpdateUser();
 
     return (
-        <div className="flex flex-col gap-(--spacing-6)">
-            <div className="flex flex-col gap-(--spacing-3)" role="group" aria-label="Theme">
+        <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3" role="group" aria-label="Theme">
                 <Heading level={4} accessibilityLevel={3}>
                     Theme
                 </Heading>
-                <div className="flex flex-wrap gap-(--spacing-3)">
+                <div className="flex flex-wrap gap-3">
                     {(
                         [
                             { value: 'system', label: 'System', image: 'theme_auto.png' },
@@ -52,14 +52,14 @@ export default function AppearanceSettings() {
                     ))}
                 </div>
             </div>
-            <div className="flex flex-col gap-(--spacing-3)">
+            <div className="flex flex-col gap-3">
                 <Heading level={4} accessibilityLevel={3}>
                     Appearance
                 </Heading>
                 <Card size="sm">
                     <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
                         <Text>Accent color</Text>
-                        <div className="flex flex-wrap gap-(--spacing-2)">
+                        <div className="flex flex-wrap gap-2">
                             {accentColors.map((accent) => (
                                 <Button
                                     key={accent}
@@ -90,7 +90,7 @@ export default function AppearanceSettings() {
                 </Card>
             </div>
             {userUpdate.isPending && (
-                <Text type="supporting" color="secondary" role="status">
+                <Text role="status" className="text-xs text-muted-foreground">
                     Saving appearance…
                 </Text>
             )}

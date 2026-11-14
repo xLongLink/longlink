@@ -19,8 +19,8 @@ export default function Usage({ base }: { base: string }) {
     // Retain the existing settings shell and its spacing.
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="var(--size-element-md)">
-                <Heading level={2} hasCapsize>
+            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Usage
                 </Heading>
             </Stack>
@@ -31,7 +31,7 @@ export default function Usage({ base }: { base: string }) {
                         <Heading level={4} accessibilityLevel={3}>
                             Monthly usage
                         </Heading>
-                        <Text color="secondary">
+                        <Text className="text-muted-foreground">
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
                         </Text>
                     </Stack>
@@ -56,10 +56,10 @@ export default function Usage({ base }: { base: string }) {
                     {(['storage', 'database'] as const).map((resource) => (
                         <ApiBoundary
                             key={resource}
-                            fallback={<Text color="secondary">Loading {resource} usage…</Text>}
+                            fallback={<Text className="text-muted-foreground">Loading {resource} usage…</Text>}
                             fallbackRender={({ resetErrorBoundary }) => (
                                 <Stack direction="horizontal" align="center" justify="between" gap={4}>
-                                    <Text color="secondary">
+                                    <Text className="text-muted-foreground">
                                         {resource === 'storage' ? 'File storage' : 'Database storage'} usage
                                         unavailable.
                                     </Text>

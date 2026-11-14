@@ -28,7 +28,20 @@ const nativeComposition = (
             >
                 Ready to publish
             </Text>
-            <Avatar name="Account" src="/account.png" />
+            <Avatar size="sm" aria-label="Account">
+                <AvatarImage src="/account.png" alt="Account" />
+                <AvatarFallback>AC</AvatarFallback>
+                <AvatarBadge />
+            </Avatar>
+            <GeneratedAvatar name="Account" src="/account.png" />
+            <Stack
+                aria-label="Preview"
+                className="gap-4"
+                style={{ gap: 16 }}
+                onFocus={(event) => event.currentTarget.focus()}
+            >
+                <Grid id="preview" style={{ gridTemplateColumns: '1fr' }} />
+            </Stack>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <Divider label={<a href="/login">Sign in</a>} />
             <ButtonGroup aria-label="Actions" orientation="vertical">

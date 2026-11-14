@@ -22,7 +22,7 @@ export default function Impressum() {
     // Keep the legal notice within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <Stack className="[&_.native-heading]:tracking-wide" gap={5}>
+            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
                 <Heading id="impressum" level={1}>
                     Impressum
                 </Heading>
@@ -42,7 +42,7 @@ export default function Impressum() {
                     </Heading>
                     <Text as="p">
                         Email:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                     </Text>

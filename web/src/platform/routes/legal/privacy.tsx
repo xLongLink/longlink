@@ -32,7 +32,7 @@ export default function Privacy() {
     // Keep the privacy policy within the shared public shell and legal reading order.
     return (
         <PublicArticle article={article} paths={legalPaths}>
-            <Stack className="[&_.native-heading]:tracking-wide" gap={5}>
+            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
                 <Heading id="privacy-policy" level={1}>
                     Privacy Policy
                 </Heading>
@@ -50,7 +50,7 @@ export default function Privacy() {
                     <Text as="p">
                         The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent
                         to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         .
@@ -354,7 +354,7 @@ export default function Privacy() {
                     </Text>
                     <Text as="p">
                         Send requests to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         . We may verify your identity before responding. We generally respond within 30 days. Access is
@@ -385,11 +385,11 @@ export default function Privacy() {
                     <Text as="p">LongLink SAGL, UID CHE-150.642.313.</Text>
                     <Text as="p">
                         Privacy enquiries and data-rights requests:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         . Security, technical, and account support:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                        <Link href="mailto:info@longlink.dev" hasUnderline>
                             info@longlink.dev
                         </Link>
                         .

@@ -24,12 +24,12 @@ function ExampleWindow({ example }: { example: ViewExample }) {
     return (
         <Card className="py-0" style={{ height: 480 }}>
             <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-                <div className="shrink-0 border-b-(length:--border-width) border-(--color-border) bg-surface p-2">
+                <div className="shrink-0 border-b border-border bg-card p-2">
                     <Stack direction="horizontal" justify="between" align="center" gap={3} paddingInline={2}>
                         <Stack direction="horizontal" gap={2} aria-hidden="true" className="shrink-0">
-                            <Circle size={12} fill="currentColor" className="text-(--color-window-close)" />
-                            <Circle size={12} fill="currentColor" className="text-(--color-window-minimize)" />
-                            <Circle size={12} fill="currentColor" className="text-(--color-window-maximize)" />
+                            <Circle size={12} fill="currentColor" className="text-red-500 dark:text-red-400" />
+                            <Circle size={12} fill="currentColor" className="text-amber-500 dark:text-amber-400" />
+                            <Circle size={12} fill="currentColor" className="text-green-500 dark:text-green-400" />
                         </Stack>
                         <Switch
                             size="sm"
@@ -46,7 +46,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     data-code={showCode || undefined}
                 >
                     <Stack
-                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(.native-heading,.view-heading)]:mt-0'}
+                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0'}
                         align="center"
                         aria-label={`${example.title} preview`}
                     >
@@ -128,7 +128,7 @@ export default function ViewLayout({
                         {component.label}
                     </Heading>
                     {!runtime && (
-                        <Text as="p" type="supporting">
+                        <Text as="p" className="text-xs text-muted-foreground">
                             {component.reference ? (
                                 <a
                                     href={component.reference}
@@ -183,7 +183,9 @@ export default function ViewLayout({
                                             renderCell: (property) => (
                                                 <Stack gap={0}>
                                                     <Text>{property.name}</Text>
-                                                    <Text type="supporting">{property.description}</Text>
+                                                    <Text className="text-xs text-muted-foreground">
+                                                        {property.description}
+                                                    </Text>
                                                 </Stack>
                                             )
                                         }

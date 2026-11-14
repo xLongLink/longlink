@@ -21,10 +21,10 @@ export default function Communication() {
                 <Heading id="communication" level={1}>
                     Communication
                 </Heading>
-                <blockquote className="m-0 border-s-2 border-s-(--color-text-orange) ps-4 wrap-break-word text-(--color-text-orange)">
+                <blockquote className="m-0 border-s-2 border-orange-600 ps-4 wrap-break-word text-orange-600 dark:border-orange-400 dark:text-orange-400">
                     <Stack gap={0}>
-                        <Text type="inherit">Beta notice: This page is being built.</Text>
-                        <Link color="inherit" href={article.editUrl} hasUnderline isExternalLink type="inherit">
+                        <Text>Beta notice: This page is being built.</Text>
+                        <Link href={article.editUrl} hasUnderline isExternalLink className="text-inherit">
                             Edit on GitHub
                         </Link>
                     </Stack>

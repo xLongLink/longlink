@@ -67,10 +67,10 @@ export function Dialog(props: FramedDialogProps | (BaseDialog.Root.Props & { isO
                         ? '50dvh'
                         : 'calc(var(--view-viewport-top, 0px) + var(--view-viewport-height, 100dvh) / 2)',
                     width: fullscreen ? '95dvw' : 960,
-                    maxWidth: 'calc(100dvw - var(--spacing-4) * 2)',
+                    maxWidth: 'calc(100dvw - var(--spacing) * 8)',
                     height: fullscreen
                         ? '95dvh'
-                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing-10) * 4))'
+                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing) * 40))'
                 }}
                 data-fullscreen={fullscreen || undefined}
                 aria-label={props.title ? undefined : 'Dialog'}
@@ -102,8 +102,8 @@ export function Dialog(props: FramedDialogProps | (BaseDialog.Root.Props & { isO
                         <div
                             className="min-h-0 flex-1 overflow-auto"
                             style={{
-                                paddingInline: `calc(var(--spacing-1) * ${props.paddingInline ?? 4})`,
-                                paddingBlockStart: props.title ? `calc(var(--spacing-1) * ${props.gap ?? 3})` : 0
+                                paddingInline: `calc(var(--spacing) * ${props.paddingInline ?? 4})`,
+                                paddingBlockStart: props.title ? `calc(var(--spacing) * ${props.gap ?? 3})` : 0
                             }}
                         >
                             {props.children}

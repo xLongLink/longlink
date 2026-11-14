@@ -4459,89 +4459,8 @@ type FieldProps = {
     disabled?: boolean;
 };
 
-/** @category Layouts */
-declare function Stack(props: {
-    children?: ViewNode;
-    /** Container width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Container height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum container width; numbers are pixels and strings are CSS sizes. */
-    maxWidth?: number | string;
-    /** Minimum container height; numbers are pixels and strings are CSS sizes. */
-    minHeight?: number | string;
-    /** Spacing between items. */
-    gap?: Spacing;
-    padding?: Spacing;
-    /** Horizontal padding, overriding padding on the inline axis. */
-    paddingInline?: Spacing;
-    /** Vertical padding, overriding padding on the block axis. */
-    paddingBlock?: Spacing;
-    /** Optional muted surface background; omitted stacks remain transparent. */
-    background?: 'muted';
-    direction?: 'horizontal' | 'vertical';
-    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-    align?: 'start' | 'center' | 'end' | 'stretch';
-    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-}): React.JSX.Element;
-
-/** @category Layouts @group Stack */
-declare function StackItem(props: {
-    /** Content rendered inside the stack item. */
-    children?: ViewNode;
-    size?: 'static' | 'fill';
-    isScrollable?: boolean;
-    /** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
-    crossAlignSelf?: 'start' | 'center' | 'end' | 'stretch';
-}): React.JSX.Element;
-
-/** @category Layouts */
-declare function Grid(props: {
-    children?: ViewNode;
-    /** Fixed column count or responsive columns with minWidth and an optional max. */
-    columns?: number | { minWidth: number; max?: number; repeat?: 'fill' | 'fit' };
-    /** View width in pixels at or below which all items use one column. */
-    collapseBelow?: number;
-    gap?: Spacing;
-    rowGap?: Spacing;
-    columnGap?: Spacing;
-    align?: 'start' | 'center' | 'end' | 'stretch';
-    justify?: 'start' | 'center' | 'end' | 'stretch';
-    width?: number | string;
-    height?: number | string;
-    maxWidth?: number | string;
-    minHeight?: number | string;
-}): React.JSX.Element;
-
-/** @category Layouts @group Grid */
-declare function GridSpan(props: {
-    /** Content rendered inside the grid item. */
-    children?: ViewNode;
-    /** Number of columns to occupy, or full to span the entire grid. */
-    columns?: number | 'full';
-}): React.JSX.Element;
-
-/** @category Display */
-declare function Heading(props: { children?: ViewNode; level?: 1 | 2 | 3 | 4 | 5 | 6 }): React.JSX.Element;
-
 /** @category Display */
 declare function Text(props: Parameters<typeof NativeFrontend.Text>[0]): React.JSX.Element;
-
-/** @category Display */
-declare function Avatar(
-    props: {
-        shape?: undefined | 'circle' | 'rounded' | 'square';
-    } & {
-        name?: string;
-        /** Stable identity for generated avatars, independent of the display name. */
-        seed?: string;
-        /** Avatar style for a user or organization. */
-        kind?: 'user' | 'organization';
-        src?: string | null;
-        alt?: string;
-        size?: 'sm' | 'md' | 'lg';
-    }
-): React.JSX.Element;
 
 /** @category Display */
 declare function Image(props: Parameters<typeof NativeFrontend.Image>[0]): React.JSX.Element;
@@ -10323,6 +10242,39 @@ interface UseComboboxFilterOptions extends GetFilterParameters {
 }
 function useComboboxFilter(options?: UseComboboxFilterOptions): Filter;
 function useFilteredItems<T>(): T[];
+const AvatarRoot: React$1.ForwardRefExoticComponent<Omit<AvatarRootProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error";
+interface AvatarRootState {
+    imageLoadingStatus: ImageLoadingStatus;
+}
+interface AvatarRootProps extends BaseUIComponentProps<"span", AvatarRootState> {
+}
+namespace AvatarRoot {
+    type State = AvatarRootState;
+    type Props = AvatarRootProps;
+}
+const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarImageProps, "ref"> & React$1.RefAttributes<HTMLImageElement>>;
+interface AvatarImageState extends AvatarRootState {
+    transitionStatus: TransitionStatus;
+}
+interface AvatarImageProps extends BaseUIComponentProps<"img", AvatarImageState, React$1.ComponentPropsWithRef<"img">> {
+    onLoadingStatusChange?: ((status: ImageLoadingStatus) => void) | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace AvatarImage {
+    type State = AvatarImageState;
+    type Props = AvatarImageProps;
+}
+const AvatarFallback: React$1.ForwardRefExoticComponent<Omit<AvatarFallbackProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
+interface AvatarFallbackState extends AvatarRootState {
+}
+interface AvatarFallbackProps extends BaseUIComponentProps<"span", AvatarFallbackState> {
+    delay?: number | undefined;
+}
+namespace AvatarFallback {
+    type State = AvatarFallbackState;
+    type Props = AvatarFallbackProps;
+}
 const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface ButtonState {
     disabled: boolean;
@@ -12637,28 +12589,88 @@ type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     dangerouslySetInnerHTML?: never;
 };
 function Image$1(props: ImageProps): React$1.JSX.Element;
-type TextProps = {
-    children?: React$1.ReactNode;
-    color?: "primary" | "secondary" | "disabled" | "placeholder" | "accent" | "inherit";
-    type?: "body" | "large" | "label" | "supporting" | "code" | "display-1" | "display-2" | "display-3" | "inherit";
-    size?: "4xs" | "3xs" | "2xs" | "xsm" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
-    weight?: "normal" | "medium" | "semibold" | "bold";
-    display?: "inline" | "block";
-    as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3";
+type NativeTextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
+    as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
     maxLines?: number;
     hasTruncateTooltip?: boolean | "above" | "below" | "start" | "end";
-    wordBreak?: "break-word" | "break-all";
-    textWrap?: "wrap" | "nowrap" | "balance" | "pretty";
-    justify?: "start" | "center" | "end";
-    hasCapsize?: boolean;
-    hasStrikethrough?: boolean;
-    hasTabularNumbers?: boolean;
-};
-type NativeTextProps = Omit<TextProps, "as"> & Omit<React$1.HTMLAttributes<HTMLElement>, keyof TextProps> & {
-    as?: TextProps["as"] | "h4" | "h5" | "h6";
     ref?: React$1.Ref<HTMLElement>;
 };
-function NativeText({ children, type, color, size, weight, display, as: Component, maxLines, hasTruncateTooltip, wordBreak, textWrap, justify, hasCapsize, hasStrikethrough, hasTabularNumbers, className, style, ref, ...props }: NativeTextProps): React$1.JSX.Element;
+function NativeText({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: NativeTextProps): React$1.JSX.Element;
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+function NativeHeading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
+    level?: HeadingLevel;
+    accessibilityLevel?: HeadingLevel;
+    ref?: React$1.Ref<HTMLHeadingElement>;
+}): React$1.JSX.Element;
+type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+type FieldProps = {
+    label: string;
+    description?: string;
+    name?: string;
+    required?: boolean;
+    disabled?: boolean;
+};
+type StackLayoutProps = {
+    direction?: "horizontal" | "vertical";
+    justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
+    align?: "start" | "center" | "end" | "stretch";
+    wrap?: "nowrap" | "wrap" | "wrap-reverse";
+    gap?: Spacing;
+    padding?: Spacing;
+    paddingInline?: Spacing;
+    paddingBlock?: Spacing;
+    width?: React$1.CSSProperties["width"];
+    height?: React$1.CSSProperties["height"];
+    maxWidth?: React$1.CSSProperties["maxWidth"];
+    minHeight?: React$1.CSSProperties["minHeight"];
+    background?: "muted";
+};
+export function Stack({ className, ...props }: React$1.ComponentPropsWithRef<"div"> & StackLayoutProps): React$1.JSX.Element;
+export function StackItem(props: {
+    children?: React$1.ReactNode;
+    size?: "static" | "fill";
+    isScrollable?: boolean;
+    crossAlignSelf?: "start" | "center" | "end" | "stretch";
+}): React$1.JSX.Element;
+export function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, columnGap, align, justify, width, height, maxWidth, minHeight, className, style, ref, children, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+    columns?: number | {
+        minWidth: number;
+        max?: number;
+        repeat?: "fill" | "fit";
+    };
+    collapseBelow?: number;
+    gap?: Spacing;
+    rowGap?: Spacing;
+    columnGap?: Spacing;
+    align?: "start" | "center" | "end" | "stretch";
+    justify?: "start" | "center" | "end" | "stretch";
+    width?: number | string;
+    height?: number | string;
+    maxWidth?: number | string;
+    minHeight?: number | string;
+}): React$1.JSX.Element;
+export function GridSpan({ columns, className, style, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+    columns?: number | "full";
+}): React$1.JSX.Element;
+type AvatarProps = {
+    shape?: undefined | "circle" | "rounded" | "square";
+} & {
+    name?: string;
+    seed?: string;
+    kind?: "user" | "organization";
+    src?: string | null;
+    alt?: string;
+    size?: "sm" | "default" | "lg";
+};
+export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps): React$1.JSX.Element;
+export function Avatar({ className, size, ...props }: AvatarRoot.Props & {
+    size?: "default" | "sm" | "lg";
+}): React$1.JSX.Element;
+function AvatarImage$1({ className, ...props }: AvatarImage.Props): React$1.JSX.Element;
+function AvatarFallback$1({ className, ...props }: AvatarFallback.Props): React$1.JSX.Element;
+export function AvatarBadge({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function AvatarGroupCount({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 interface Data {
 }
 interface Point {
@@ -13787,14 +13799,6 @@ export function Disclosure(props: {
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
-type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-type FieldProps = {
-    label: string;
-    description?: string;
-    name?: string;
-    required?: boolean;
-    disabled?: boolean;
-};
 export function SwitchField(props: FieldProps & {
     value?: boolean;
     defaultChecked?: boolean;
@@ -13976,7 +13980,7 @@ type Props = PresentationAttributesWithProps<DotProps, SVGCircleElement> & DotPr
 type TextAnchor = "start" | "middle" | "end" | "inherit";
 type TextVerticalAnchor = "start" | "middle" | "end";
 type RenderableText = string | number | boolean | null | undefined;
-interface TextProps$1 {
+interface TextProps {
     scaleToFit?: boolean;
     angle?: number;
     textAnchor?: TextAnchor;
@@ -13988,7 +13992,7 @@ interface TextProps$1 {
     maxLines?: number;
     width?: number | string;
 }
-type Props$1 = Omit<React$1.SVGProps<SVGTextElement>, "textAnchor" | "verticalAnchor"> & TextProps$1;
+type Props$1 = Omit<React$1.SVGProps<SVGTextElement>, "textAnchor" | "verticalAnchor"> & TextProps;
 interface ZIndexable {
     zIndex?: number;
 }
@@ -16088,13 +16092,19 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeHeading as Heading, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
 declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
 declare const Area: typeof NativeFrontend.Area;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
+declare const Avatar: typeof NativeFrontend.Avatar;
+declare const AvatarBadge: typeof NativeFrontend.AvatarBadge;
+declare const AvatarFallback: typeof NativeFrontend.AvatarFallback;
+declare const AvatarGroup: typeof NativeFrontend.AvatarGroup;
+declare const AvatarGroupCount: typeof NativeFrontend.AvatarGroupCount;
+declare const AvatarImage: typeof NativeFrontend.AvatarImage;
 declare const Badge: typeof NativeFrontend.Badge;
 declare const Bar: typeof NativeFrontend.Bar;
 declare const BarChart: typeof NativeFrontend.BarChart;
@@ -16190,6 +16200,10 @@ declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
 type FrontendElementType = NativeFrontend.FrontendElementType;
+declare const GeneratedAvatar: typeof NativeFrontend.GeneratedAvatar;
+declare const Grid: typeof NativeFrontend.Grid;
+declare const GridSpan: typeof NativeFrontend.GridSpan;
+declare const Heading: typeof NativeFrontend.Heading;
 declare const Input: typeof NativeFrontend.Input;
 declare const InputGroup: typeof NativeFrontend.InputGroup;
 declare const InputGroupAddon: typeof NativeFrontend.InputGroupAddon;
@@ -16246,6 +16260,8 @@ declare const SliderField: typeof NativeFrontend.SliderField;
 declare const SliderRange: typeof NativeFrontend.SliderRange;
 declare const SliderThumb: typeof NativeFrontend.SliderThumb;
 declare const SliderTrack: typeof NativeFrontend.SliderTrack;
+declare const Stack: typeof NativeFrontend.Stack;
+declare const StackItem: typeof NativeFrontend.StackItem;
 declare const Step: typeof NativeFrontend.Step;
 declare const Stepper: typeof NativeFrontend.Stepper;
 declare const StepperContent: typeof NativeFrontend.StepperContent;

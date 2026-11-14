@@ -1,38 +1,53 @@
 import ViewLayout from './view-layout';
-import { GeneratedAvatar as Avatar } from '@/components/custom/generated-avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/shadcn/avatar';
+import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyline.jpg?inline';
 
-/** Documents Avatar in LongLink Views. */
+/** Documents native Avatar composition in LongLink Views. */
 export default function AvatarPage() {
     // Render this component's authored examples in the shared documentation layout.
     return (
         <ViewLayout
             name="Avatar"
             properties={[
+                { name: 'size', type: '"sm" | "default" | "lg"', description: 'Avatar size; defaults to default.' },
                 {
-                    name: 'shape',
-                    type: '"circle" | "square" | "rounded"',
-                    description: 'Avatar shape: circle, rounded, or square.'
+                    name: 'children',
+                    type: 'ReactNode',
+                    description: 'Compose AvatarImage, AvatarFallback, and AvatarBadge.'
                 },
-                { name: 'name', type: 'string', description: 'User name for initials and alt text.' },
+                { name: 'AvatarImage.src', type: 'string', description: 'Image source URL.' },
+                { name: 'AvatarImage.alt', type: 'string', description: 'Accessible image description.' },
                 {
-                    name: 'seed',
-                    type: 'string',
-                    description: 'Stable identity for generated avatars, independent of the display name.'
+                    name: 'AvatarImage.onLoadingStatusChange',
+                    type: '(status: "idle" | "loading" | "loaded" | "error") => void',
+                    description: 'Receives image loading status changes.'
                 },
                 {
-                    name: 'kind',
-                    type: '"user" | "organization"',
-                    description: 'Avatar style for a user or organization.'
+                    name: 'AvatarFallback.children',
+                    type: 'ReactNode',
+                    description: 'Content shown when the image is unavailable.'
                 },
-                { name: 'src', type: 'string | null', description: 'Primary image source URL.' },
-                { name: 'alt', type: 'string', description: 'Alt text (falls back to name).' },
-                { name: 'size', type: '"sm" | "lg" | "md"', description: 'Avatar size.' }
+                {
+                    name: 'AvatarFallback.delay',
+                    type: 'number',
+                    description: 'Delay in milliseconds before showing the fallback.'
+                },
+                {
+                    name: 'AvatarGroup.children',
+                    type: 'ReactNode',
+                    description: 'Avatars and an optional AvatarGroupCount.'
+                }
             ]}
             example={{
                 title: 'Avatar',
                 preview: <AvatarExample />,
                 code: `function Example() {
-  return <Avatar name="Ada Lovelace" />;
+  return (
+    <Avatar size="lg">
+      <AvatarImage src="/assets/skyline.jpg" alt="Skyline office towers" />
+      <AvatarFallback>SL</AvatarFallback>
+    </Avatar>
+  );
 }`
             }}
         />
@@ -41,6 +56,11 @@ export default function AvatarPage() {
 
 /** Renders the page's avatar example for documentation and the catalog. */
 export function AvatarExample() {
-    // Display the sample user's generated avatar.
-    return <Avatar name="Ada Lovelace" size="lg" />;
+    // Keep the preview self-contained while showing native image and fallback composition.
+    return (
+        <Avatar size="lg">
+            <AvatarImage src={photo} alt="Skyline office towers" />
+            <AvatarFallback>SL</AvatarFallback>
+        </Avatar>
+    );
 }

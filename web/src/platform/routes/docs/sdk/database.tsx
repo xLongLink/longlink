@@ -27,7 +27,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     Define your data with standard{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink>
                         SQLModel
                     </Link>{' '}
                     models. The database session and connection are already available through{' '}
@@ -35,7 +35,7 @@ export default function DocsArticleRoute() {
                     setup.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         The interface stays the same in every environment: an in-memory SQLite database for isolated
                         tests, a local dev.db file during development, and a solution-scoped schema in the

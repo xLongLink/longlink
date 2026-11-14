@@ -203,7 +203,7 @@ function TagForm({
 
     return (
         <FormDialog gap={6} onClose={onCancel}>
-            <Heading level={2} justify="center">
+            <Heading level={2} className="text-center">
                 {tag ? 'Edit tab' : 'New tab'}
             </Heading>
             <Form action={save}>
@@ -254,7 +254,7 @@ export function SolutionTags({
 
     return (
         <FormDialog gap={6} onClose={onClose}>
-            <Heading level={2} justify="center">
+            <Heading level={2} className="text-center">
                 Tags for {solution.name}
             </Heading>
             <Form action={save}>

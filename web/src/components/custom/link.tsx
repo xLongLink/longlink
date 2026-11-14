@@ -134,7 +134,7 @@ export function Link({
     }
 
     const content = (
-        <Text color="inherit">
+        <Text className="text-inherit">
             {isPending && (
                 <span role="status" aria-label="Loading" className="inline-flex align-middle">
                     <Spinner aria-hidden="true" className="motion-reduce:animate-none" />

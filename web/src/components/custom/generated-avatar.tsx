@@ -28,7 +28,7 @@ type AvatarProps = { shape?: undefined | 'circle' | 'rounded' | 'square' } & {
     kind?: 'user' | 'organization';
     src?: string | null;
     alt?: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'default' | 'lg';
 };
 /* oxlint-enable anti-slop/no-shape-in-symbol-names */
 
@@ -86,17 +86,10 @@ export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps
             role={accessibleName ? 'img' : 'presentation'}
             aria-label={accessibleName}
             aria-hidden={accessibleName ? undefined : true}
+            size={props.size}
             className={[
-                props.size === 'sm'
-                    ? 'size-6 text-[9.6px]'
-                    : props.size === 'lg'
-                      ? 'size-12 text-[19.2px]'
-                      : 'size-9 text-[14.4px]',
-                props.shape === 'circle'
-                    ? 'rounded-full'
-                    : props.shape === 'rounded'
-                      ? 'rounded-(--radius-element)'
-                      : 'rounded-(--radius-none)'
+                'overflow-hidden [&>[data-slot=avatar-image]]:rounded-[inherit] [&>[data-slot=avatar-fallback]]:rounded-[inherit] after:rounded-[inherit]',
+                props.shape === 'circle' ? 'rounded-full' : props.shape === 'rounded' ? 'rounded-lg' : 'rounded-none'
             ].join(' ')}
         >
             {imageSrc ? (

@@ -32,25 +32,25 @@ export default function DocsArticleRoute() {
                     decisions, coordinating people, and correcting mistakes.
                 </Text>
                 <Stack direction="horizontal" gap={6} justify="center" paddingBlock={6} align="center" width="100%">
-                    <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
+                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Problem
                     </Text>
                     <MoveRight aria-hidden className="text-muted-foreground" size={32} />
-                    <Text className="text-sm sm:text-xl md:text-2xl" hasCapsize type="display-3" weight="semibold">
+                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Solution
                     </Text>
                 </Stack>
                 <Text as="p">
                     Build dedicated tools with established Python libraries: use{' '}
-                    <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink>
                         FastAPI
                     </Link>{' '}
                     for routes,{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink>
                         SQLModel
                     </Link>{' '}
                     for data, and{' '}
-                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink>
                         Pydantic
                     </Link>{' '}
                     for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
@@ -83,7 +83,7 @@ export default function DocsArticleRoute() {
                 </CodeBlock>
                 <Text as="p">
                     Open{' '}
-                    <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
+                    <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink>
                         http://127.0.0.1:1707
                     </Link>{' '}
                     to preview your Solution.

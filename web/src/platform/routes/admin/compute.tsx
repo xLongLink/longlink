@@ -70,7 +70,7 @@ export default function Compute() {
                             renderCell: (row) => (
                                 <Stack align="start">
                                     <Text>{row.name}</Text>
-                                    <Text type="supporting">{row.gateway_url}</Text>
+                                    <Text className="text-xs text-muted-foreground">{row.gateway_url}</Text>
                                 </Stack>
                             )
                         },
@@ -230,10 +230,10 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
             }}
         >
             <Form action={registerCompute} submitDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
-                <Wizard height="min(560px, calc(100dvh - var(--spacing-10) * 4))" backVariant="ghost">
+                <Wizard height="min(560px, calc(100dvh - var(--spacing) * 40))" backVariant="ghost">
                     <Step label="Metadata">
                         <Stack gap={8}>
-                            <Heading level={2} justify="center">
+                            <Heading level={2} className="text-center">
                                 Register Compute
                             </Heading>
                             <Stack gap={3}>
@@ -255,7 +255,7 @@ function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<
                     </Step>
                     <Step label="Kubeconfig">
                         <Stack gap={8}>
-                            <Heading level={2} justify="center">
+                            <Heading level={2} className="text-center">
                                 Connect your cluster
                             </Heading>
                             <Stack gap={3}>

@@ -8,7 +8,7 @@ export default function Projects() {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack gap={0}>
                 <Heading level={1}>Projects</Heading>
-                <Text color="secondary">This can be used for tracking projects in a gallery.</Text>
+                <Text className="text-muted-foreground">This can be used for tracking projects in a gallery.</Text>
             </Stack>
             <Grid columns={{ minWidth: 240, max: 3 }} gap={4} align="stretch">
                 {projects.slice(0, 6).map((project) => (
@@ -21,7 +21,7 @@ export default function Projects() {
                                     ratio={16 / 9}
                                 />
                                 <Stack gap={2} align="start">
-                                    <Text as="h2" type="label" maxLines={1}>
+                                    <Text as="h2" maxLines={1} className="text-sm font-medium">
                                         {project.name}
                                     </Text>
                                     <Badge
@@ -36,7 +36,7 @@ export default function Projects() {
                                         {project.status}
                                     </Badge>
                                 </Stack>
-                                <Text type="supporting" maxLines={2}>
+                                <Text maxLines={2} className="text-xs text-muted-foreground">
                                     {project.description}
                                 </Text>
                             </Stack>

@@ -11,6 +11,11 @@ export { Separator } from '../src/components/shadcn/separator';
 export { Divider } from '../src/components/custom/divider';
 export { Image } from '../src/components/custom/image';
 export { Text } from '../src/components/custom/text';
+export { Heading } from '../src/components/custom/heading';
+export { Stack, StackItem } from '../src/components/custom/stack';
+export { Grid, GridSpan } from '../src/components/custom/grid';
+export { GeneratedAvatar } from '../src/components/custom/generated-avatar';
+export { Avatar, AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount } from '../src/components/shadcn/avatar';
 export {
     CodeBlock,
     CodeBlockContent,

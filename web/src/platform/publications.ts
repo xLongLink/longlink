@@ -93,6 +93,7 @@ export const componentDocumentation = [
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
+    { name: 'GeneratedAvatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
     { name: 'Button', category: 'Action', icon: MousePointer2 },
     { name: 'Card', category: 'Layouts', icon: PanelTop },

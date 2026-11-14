@@ -38,7 +38,7 @@ export default function FunctionsPage() {
                         renderCell: (functionEntry) => (
                             <Stack gap={0}>
                                 <Text>{functionEntry.name}</Text>
-                                <Text type="supporting">{functionEntry.description}</Text>
+                                <Text className="text-xs text-muted-foreground">{functionEntry.description}</Text>
                             </Stack>
                         )
                     }

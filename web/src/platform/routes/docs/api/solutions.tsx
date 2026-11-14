@@ -42,7 +42,7 @@ export default function Solutions() {
                     automatically scale to zero.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">User permissions</Text>
+                    <Text className="font-semibold">User permissions</Text>
                     <DataTable
                         data={solutionRoles}
                         idKey="name"
@@ -55,11 +55,9 @@ export default function Solutions() {
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" gap={2} align="center">
                                             <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                            <Text className="capitalize" weight="semibold">
-                                                {name}
-                                            </Text>
+                                            <Text className="font-semibold capitalize">{name}</Text>
                                         </Stack>
-                                        <Text type="supporting">{access}</Text>
+                                        <Text className="text-xs text-muted-foreground">{access}</Text>
                                     </Stack>
                                 )
                             }

@@ -17,7 +17,7 @@ export function ViewBackdrop({ bounds, depth }: { bounds: DOMRectReadOnly; depth
                 key={level}
                 aria-hidden="true"
                 className="pointer-events-none fixed inset-0 z-40"
-                style={{ clipPath, backgroundColor: 'var(--color-overlay)', backdropFilter: 'blur(2px)' }}
+                style={{ clipPath, backgroundColor: 'rgb(0 0 0 / 50%)', backdropFilter: 'blur(2px)' }}
             />
         );
     }

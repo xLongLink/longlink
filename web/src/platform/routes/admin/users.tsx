@@ -39,11 +39,11 @@ export default function Users() {
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Text>{row.name}</Text>
-                                            <Text type="supporting">
+                                            <Text className="text-xs text-muted-foreground">
                                                 {row.administrator ? 'Administrator' : 'User'}
                                             </Text>
                                         </Stack>
-                                        <Text type="supporting">{row.email}</Text>
+                                        <Text className="text-xs text-muted-foreground">{row.email}</Text>
                                     </Stack>
                                 </Stack>
                             )
@@ -57,7 +57,7 @@ export default function Users() {
                                     <Text>
                                         Created: <Timestamp value={row.created_at} format="date_time" />
                                     </Text>
-                                    <Text type="supporting">ID: {row.id}</Text>
+                                    <Text className="text-xs text-muted-foreground">ID: {row.id}</Text>
                                 </Stack>
                             )
                         }

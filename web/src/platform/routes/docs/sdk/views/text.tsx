@@ -10,34 +10,9 @@ export default function TextPage() {
             properties={[
                 { name: 'children', type: 'ReactNode', description: 'Text content.' },
                 {
-                    name: 'color',
-                    type: '"primary" | "secondary" | "disabled" | "placeholder" | "accent" | "inherit"',
-                    description: 'Text color; defaults to secondary for supporting text and primary otherwise.'
-                },
-                {
-                    name: 'type',
-                    type: '"code" | "inherit" | "body" | "large" | "label" | "supporting" | "display-1" | "display-2" | "display-3"',
-                    description: 'Theme text style, or inherit to match surrounding text.'
-                },
-                {
-                    name: 'size',
-                    type: '"4xs" | "3xs" | "2xs" | "xsm" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl"',
-                    description: 'Font size override for the selected text style.'
-                },
-                {
-                    name: 'weight',
-                    type: '"bold" | "normal" | "medium" | "semibold"',
-                    description: 'Font weight override.'
-                },
-                {
-                    name: 'display',
-                    type: '"inline" | "block"',
-                    description: "Display type. Silently overridden to 'block' when maxLines > 0 or hasCapsize is true."
-                },
-                {
                     name: 'as',
-                    type: '"label" | "span" | "p" | "div" | "h1" | "h2" | "h3"',
-                    description: 'HTML element to render.'
+                    type: '"label" | "span" | "p" | "div" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6"',
+                    description: 'HTML element to render; defaults to span.'
                 },
                 {
                     name: 'maxLines',
@@ -49,39 +24,15 @@ export default function TextPage() {
                     type: 'boolean | "start" | "end" | "above" | "below"',
                     description: 'Enables, disables, or positions the tooltip for truncated text.'
                 },
-                {
-                    name: 'wordBreak',
-                    type: '"break-word" | "break-all"',
-                    description: 'Word breaking for truncated text.'
-                },
-                {
-                    name: 'textWrap',
-                    type: '"nowrap" | "wrap" | "balance" | "pretty"',
-                    description: 'Text wrapping behavior.'
-                },
-                {
-                    name: 'justify',
-                    type: '"start" | "center" | "end"',
-                    description:
-                        'Text alignment (justification). Uses logical values (start/end) for i18n/RTL compatibility.'
-                },
-                {
-                    name: 'hasCapsize',
-                    type: 'boolean',
-                    description: 'Enable optical alignment using text-box-trim. Forces block display.'
-                },
-                { name: 'hasStrikethrough', type: 'boolean', description: 'Apply strikethrough text decoration.' },
-                {
-                    name: 'hasTabularNumbers',
-                    type: 'boolean',
-                    description: 'Use tabular (monospace) numbers for aligned numeric data.'
-                }
+                { name: 'className', type: 'string', description: 'Tailwind utilities for typography and appearance.' },
+                { name: 'style', type: 'CSSProperties', description: 'Native inline styles.' },
+                { name: 'ref', type: 'Ref<HTMLElement>', description: 'Reference to the rendered text element.' }
             ]}
             example={{
                 title: 'Text',
                 preview: <TextExample />,
                 code: `function Example() {
-  return <Text>Order details</Text>;
+  return <Text className="text-sm text-muted-foreground">Order details</Text>;
 }`
             }}
         />
@@ -92,7 +43,7 @@ export default function TextPage() {
 export function TextExample() {
     // Show normal text alongside bold and italic emphasis.
     return (
-        <Text>
+        <Text className="text-sm text-muted-foreground">
             Normal <b>bold</b> and <i>italic</i>
         </Text>
     );

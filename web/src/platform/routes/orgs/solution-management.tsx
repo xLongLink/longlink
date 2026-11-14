@@ -97,7 +97,7 @@ export default function SolutionManagement({
                 justify={onboarding ? 'center' : undefined}
                 minHeight={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing-2) * 4)'
+                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing) * 8)'
                         : undefined
                 }
             >
@@ -108,9 +108,12 @@ export default function SolutionManagement({
                             justify="between"
                             align="end"
                             wrap="wrap"
-                            minHeight="var(--size-element-md)"
+                            minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading level={2} hasCapsize>
+                            <Heading
+                                level={2}
+                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
+                            >
                                 Solutions
                             </Heading>
                             {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
@@ -124,7 +127,7 @@ export default function SolutionManagement({
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
-                    <Text as="p" color="secondary">
+                    <Text as="p" className="text-muted-foreground">
                         No tabs configured. Add tabs in organization settings under General.
                     </Text>
                 ) : onboarding ? (
@@ -138,10 +141,10 @@ export default function SolutionManagement({
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} justify="center">
+                            <Heading level={1} className="text-center">
                                 Your Solutions
                             </Heading>
-                            <Text as="p" color="secondary" justify="center">
+                            <Text as="p" className="text-muted-foreground text-center">
                                 Bring your business processes to life
                             </Text>
                         </Stack>
@@ -165,7 +168,7 @@ export default function SolutionManagement({
                         </Stack>
                     </Stack>
                 ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
-                    <Text as="p" color="secondary">
+                    <Text as="p" className="text-muted-foreground">
                         No Solutions in this category.
                     </Text>
                 ) : (
@@ -190,10 +193,9 @@ export default function SolutionManagement({
                                                     <Text
                                                         className={
                                                             row.status === 'creating'
-                                                                ? 'text-(--color-text-blue)'
-                                                                : 'text-destructive-foreground'
+                                                                ? 'text-xs text-info-foreground'
+                                                                : 'text-xs text-destructive-foreground'
                                                         }
-                                                        type="supporting"
                                                     >
                                                         {row.status === 'creating' ? 'Creating' : 'Failed'}
                                                     </Text>
@@ -204,7 +206,9 @@ export default function SolutionManagement({
                                                 {row.name}
                                             </Link>
                                         )}
-                                        {row.description && <Text type="supporting">{row.description}</Text>}
+                                        {row.description && (
+                                            <Text className="text-xs text-muted-foreground">{row.description}</Text>
+                                        )}
                                     </Stack>
                                 )
                             },
@@ -354,7 +358,7 @@ export default function SolutionManagement({
                         if (!open) closeSelected();
                     }}
                 >
-                    <Stack height="min(560px, calc(100dvh - var(--spacing-10) * 4))" paddingInline={8} paddingBlock={4}>
+                    <Stack height="min(560px, calc(100dvh - var(--spacing) * 40))" paddingInline={8} paddingBlock={4}>
                         <ApiBoundary key={selected.id}>
                             <SolutionLogs solutionId={selected.id} onClose={closeSelected} />
                         </ApiBoundary>
@@ -392,10 +396,10 @@ export default function SolutionManagement({
                             <Stack gap={2} align="center">
                                 <Plug className="size-20 text-muted-foreground" aria-hidden="true" />
                                 <Stack gap={0}>
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Model Context Protocol
                                     </Heading>
-                                    <Text as="p" color="secondary" justify="center">
+                                    <Text as="p" className="text-muted-foreground text-center">
                                         Connect your solution to AI tools
                                     </Text>
                                 </Stack>

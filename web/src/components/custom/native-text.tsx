@@ -1,30 +1,20 @@
-import type { TextProps } from './typography';
+import { cn } from 'cn';
 import { TypographyTooltip } from './typography-tooltip';
 import { useCallback, useEffect, useRef, useState, type HTMLAttributes, type Ref } from 'react';
 
-export type NativeTextProps = Omit<TextProps, 'as'> &
-    Omit<HTMLAttributes<HTMLElement>, keyof TextProps> & {
-        as?: TextProps['as'] | 'h4' | 'h5' | 'h6';
-        ref?: Ref<HTMLElement>;
-    };
+export type NativeTextProps = Omit<HTMLAttributes<HTMLElement>, 'color'> & {
+    as?: 'span' | 'p' | 'div' | 'label' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+    maxLines?: number;
+    hasTruncateTooltip?: boolean | 'above' | 'below' | 'start' | 'end';
+    ref?: Ref<HTMLElement>;
+};
 
-/** Displays trusted native text with typography and optional truncation details. */
+/** Displays native text with optional truncation details, inheriting surrounding typography. */
 export function NativeText({
     children,
-    type = 'body',
-    color = type === 'supporting' ? 'secondary' : type === 'inherit' ? 'inherit' : 'primary',
-    size,
-    weight,
-    display = 'inline',
     as: Component = 'span',
     maxLines = 0,
     hasTruncateTooltip = true,
-    wordBreak = maxLines === 1 ? 'break-all' : 'break-word',
-    textWrap,
-    justify = 'start',
-    hasCapsize = false,
-    hasStrikethrough = false,
-    hasTabularNumbers = false,
     className,
     style,
     ref,
@@ -97,25 +87,13 @@ export function NativeText({
         };
     }, [maxLines, hasTruncateTooltip, Component]);
 
-    // Preserve single-line clipping and the capsize override of multi-line display.
+    // Keep clipping on the semantic element rather than introducing a wrapper.
     const content = (
         <Component
             {...props}
             ref={mergedRef}
-            className={className ? `view-text ${className}` : 'view-text'}
-            data-type={type}
-            data-color={color}
-            data-size={size}
-            data-weight={weight}
-            data-display={maxLines > 0 || hasCapsize ? 'block' : display}
-            data-clamp={maxLines === 1 ? 'single' : maxLines > 1 ? 'multiple' : undefined}
-            data-word-break={maxLines > 0 ? wordBreak : undefined}
-            data-text-wrap={textWrap}
-            data-justify={justify === 'start' ? undefined : justify}
-            data-capsize={hasCapsize || undefined}
-            data-strikethrough={hasStrikethrough || undefined}
-            data-tabular={hasTabularNumbers || undefined}
-            style={maxLines > 1 ? { ...style, WebkitLineClamp: maxLines } : style}
+            className={cn(maxLines === 1 && 'block truncate', maxLines > 1 && 'line-clamp-1', className)}
+            style={maxLines > 1 ? { WebkitLineClamp: maxLines, ...style } : style}
         >
             {children}
         </Component>

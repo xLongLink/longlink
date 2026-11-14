@@ -1,7 +1,5 @@
 import { cn } from 'cn';
-import { NativeText } from './native-text';
 import { ArrowUpRight } from 'lucide-react';
-import type { TextProps } from './typography';
 import type { ComponentPropsWithRef } from 'react';
 import { buttonVariants } from '@/components/shadcn/button';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
@@ -31,23 +29,12 @@ export function NativeLink({
     rel,
     download,
     children,
-    type = 'body',
-    color = 'inherit',
-    weight,
-    size,
     hasUnderline = false,
     isExternalLink = false,
     className,
     ...props
-}: Omit<NativeAnchorProps, 'type' | 'color'> &
-    Pick<TextProps, 'type' | 'color' | 'weight' | 'size'> & { hasUnderline?: boolean; isExternalLink?: boolean }) {
+}: Omit<NativeAnchorProps, 'type' | 'color'> & { hasUnderline?: boolean; isExternalLink?: boolean }) {
     const linkTarget = isExternalLink ? '_blank' : target;
-
-    const content = (
-        <NativeText type={type} color={color} weight={weight} size={size}>
-            {children}
-        </NativeText>
-    );
 
     const attributes = {
         ...props,
@@ -64,7 +51,7 @@ export function NativeLink({
 
     return (
         <NativeNavigationLink {...attributes} href={href}>
-            {content}
+            {children}
             {isExternalLink && <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0" />}
             {isExternalLink && <span className="sr-only">(opens in new tab)</span>}
         </NativeNavigationLink>

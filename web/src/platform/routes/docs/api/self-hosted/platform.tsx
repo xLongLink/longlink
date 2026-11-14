@@ -163,7 +163,7 @@ export default function Platform() {
                                             <Text>{environment.name}</Text>
                                             <InlineCode>{environment.type}</InlineCode>
                                         </Stack>
-                                        <Text type="supporting">{environment.description}</Text>
+                                        <Text className="text-xs text-muted-foreground">{environment.description}</Text>
                                     </Stack>
                                 )
                             }

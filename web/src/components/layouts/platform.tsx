@@ -62,7 +62,7 @@ export default function Platform({
                 data-collapsed={isCollapsed || undefined}
             >
                 <a
-                    className="absolute -m-px size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:m-0 focus:h-auto focus:w-auto focus:overflow-visible focus:bg-surface focus:px-4 focus:py-2 focus:text-foreground focus:[clip-path:none] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                    className="absolute -m-px size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:m-0 focus:h-auto focus:w-auto focus:overflow-visible focus:bg-card focus:px-4 focus:py-2 focus:text-foreground focus:[clip-path:none] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
                     href={`#${mainId}`}
                     onClick={() => mainRef.current?.focus()}
                 >
@@ -78,7 +78,7 @@ export default function Platform({
                             {sidebarHeader ?? (
                                 <RouterLink
                                     aria-label="LongLink home"
-                                    className="flex w-full px-6 py-1.5 text-inherit no-underline group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                                    className="flex w-full px-6 py-1.5 text-inherit no-underline group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
                                     to={homeHref}
                                 >
                                     <img
@@ -108,7 +108,7 @@ export default function Platform({
                                 <RouterLink
                                     aria-current={selectedTab === tab.href ? 'page' : undefined}
                                     aria-label={tab.label}
-                                    className="box-border flex min-h-(--size-element-md) w-full items-center gap-2 rounded-(--radius-element) px-2 text-(length:--text-label-size) leading-(--text-label-leading) text-muted-foreground no-underline [&[aria-current]]:bg-secondary [&[aria-current]]:font-medium [&[aria-current]]:text-foreground [&[hidden]]:hidden group-data-collapsed/platform:size-(--size-element-md) group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset) [&:not([aria-current]):hover]:[@media(hover:hover)]:bg-[linear-gradient(var(--color-overlay-hover),var(--color-overlay-hover))] [&:not([aria-current]):active]:bg-[linear-gradient(var(--color-overlay-pressed),var(--color-overlay-pressed))] forced-colors:[&[aria-current]]:bg-[Highlight] forced-colors:[&[aria-current]]:text-[HighlightText]"
+                                    className="box-border flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-sm leading-(--text-sm--line-height) text-muted-foreground no-underline [&[aria-current]]:bg-secondary [&[aria-current]]:font-medium [&[aria-current]]:text-foreground [&[hidden]]:hidden group-data-collapsed/platform:size-8 group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not([aria-current]):hover]:[@media(hover:hover)]:bg-muted [&:not([aria-current]):active]:bg-accent forced-colors:[&[aria-current]]:bg-[Highlight] forced-colors:[&[aria-current]]:text-[HighlightText]"
                                     hidden={isCollapsed && !tab.icon}
                                     tabIndex={isCollapsed && !tab.icon ? -1 : undefined}
                                     to={tab.href}
@@ -162,7 +162,7 @@ export default function Platform({
                                     aria-controls={navId}
                                     aria-expanded={!isCollapsed}
                                     aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                                    className="inline-flex size-(--size-element-md) flex-none cursor-pointer items-center justify-center rounded-(--radius-element) border-0 bg-transparent p-0 text-foreground hover:bg-[linear-gradient(var(--color-overlay-hover),var(--color-overlay-hover))] active:bg-[linear-gradient(var(--color-overlay-pressed),var(--color-overlay-pressed))] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-(--focus-outline-offset)"
+                                    className="inline-flex size-8 flex-none cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-foreground hover:bg-muted active:bg-accent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
                                     onClick={() => onCollapsedChange(!isCollapsed)}
                                     type="button"
                                 >
@@ -171,7 +171,7 @@ export default function Platform({
                                 <Separator className="h-5" orientation="vertical" />
                                 {breadcrumb ?? (
                                     <nav aria-label="Breadcrumb">
-                                        <ol className="m-0 list-none p-0 text-(length:--text-body-size) leading-(--text-body-leading) font-semibold">
+                                        <ol className="m-0 list-none p-0 text-sm leading-(--text-sm--line-height) font-semibold">
                                             <li aria-current="page">
                                                 {tabs.find((tab) => tab.href === selectedTab)?.label}
                                             </li>

@@ -62,16 +62,17 @@ export default function Solutions() {
                                             <Text
                                                 className={
                                                     row.status === 'creating'
-                                                        ? 'text-(--color-text-blue)'
-                                                        : 'text-destructive-foreground'
+                                                        ? 'text-xs text-info-foreground'
+                                                        : 'text-xs text-destructive-foreground'
                                                 }
-                                                type="supporting"
                                             >
                                                 {row.status === 'creating' ? 'Creating' : 'Failed'}
                                             </Text>
                                         )}
                                     </Stack>
-                                    {row.description && <Text type="supporting">{row.description}</Text>}
+                                    {row.description && (
+                                        <Text className="text-xs text-muted-foreground">{row.description}</Text>
+                                    )}
                                 </Stack>
                             )
                         },
@@ -84,7 +85,7 @@ export default function Solutions() {
                                     <GeneratedAvatar kind="organization" name={row.organization.name} />
                                     <Stack align="start">
                                         <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
-                                        <Text type="supporting">Organization</Text>
+                                        <Text className="text-xs text-muted-foreground">Organization</Text>
                                     </Stack>
                                 </Stack>
                             )
@@ -98,7 +99,9 @@ export default function Solutions() {
                                     <Text>
                                         {row.image_desired.replace(/@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/, '@sha25...$1')}
                                     </Text>
-                                    <Text type="supporting">Revision: {row.desired_revision_id ?? 'Not selected'}</Text>
+                                    <Text className="text-xs text-muted-foreground">
+                                        Revision: {row.desired_revision_id ?? 'Not selected'}
+                                    </Text>
                                 </Stack>
                             )
                         },

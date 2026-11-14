@@ -27,33 +27,42 @@
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-info: var(--info);
     --color-info-foreground: var(--info-foreground);
-    --color-info-muted: var(--info-muted);
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
-    --color-success-muted: var(--success-muted);
     --color-warning: var(--warning);
     --color-warning-foreground: var(--warning-foreground);
-    --color-warning-muted: var(--warning-muted);
-    --color-destructive-muted: var(--destructive-muted);
-    --color-badge-neutral: var(--badge-neutral);
-    --color-badge-neutral-foreground: var(--badge-neutral-foreground);
     --color-invert: var(--invert);
     --color-invert-foreground: var(--invert-foreground);
     --color-focus: var(--ring);
     --color-focus-foreground: var(--foreground);
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-    --font-sans: var(--font-family-body);
-    --font-serif: var(--font-family-body);
-    --font-mono: var(--font-family-code);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+    --font-sans: 'Geist Variable', sans-serif;
+    --font-mono: 'Geist Mono Variable', monospace;
 }
 
 @layer application-theme {
@@ -77,8 +86,6 @@
         --accent: var(--accent-muted, light-dark(#25252a14, #f3f3f520));
         --accent-foreground: var(--accent-text, var(--foreground));
         --destructive: light-dark(#58413e, #dcc0bc);
-        --destructive-foreground: light-dark(#58413e, #f9dcd7);
-        --destructive-muted: light-dark(#f9dcd7, #644d49);
         --border: light-dark(#e2e2e8, #f3f3f51a);
         --input: light-dark(#83838a, #5e5e61);
         --ring: var(--primary);
@@ -87,17 +94,21 @@
         --chart-3: light-dark(#7c3aed, #a78bfa);
         --chart-4: light-dark(#b45309, #fbbf24);
         --chart-5: light-dark(#be185d, #f472b6);
+        --sidebar: var(--surface);
+        --sidebar-foreground: var(--foreground);
+        --sidebar-primary: var(--primary);
+        --sidebar-primary-foreground: var(--primary-foreground);
+        --sidebar-accent: var(--accent);
+        --sidebar-accent-foreground: var(--accent-foreground);
+        --sidebar-border: var(--border);
+        --sidebar-ring: var(--ring);
+        --destructive-foreground: light-dark(#58413e, #f9dcd7);
         --info: #0064e0;
         --info-foreground: light-dark(#3c4856, #d7e4f5);
-        --info-muted: light-dark(#d7e4f5, #485362);
         --success: light-dark(#374c36, #b4cdb2);
         --success-foreground: light-dark(#374c36, #d0e9ce);
-        --success-muted: light-dark(#d0e9ce, #425841);
         --warning: light-dark(#524622, #d7c59c);
         --warning-foreground: light-dark(#524622, #f4e1b7);
-        --warning-muted: light-dark(#f4e1b7, #5e512d);
-        --badge-neutral: light-dark(#e2e2e8, #525257);
-        --badge-neutral-foreground: light-dark(#46464b, #e2e2e8);
         --invert: var(--foreground);
         --invert-foreground: light-dark(#ffffff, #25252a);
     }
@@ -113,33 +124,148 @@
     [data-theme='system'] {
         color-scheme: light dark;
     }
-}
 
-@layer application-theme {
-    :root,
-    [data-theme-scope='stone'] {
-        --color-background-body: var(--background);
-        --color-background-surface: var(--surface);
-        --color-background-card: var(--card);
-        --color-background-popover: var(--popover);
-        --color-background-muted: var(--muted);
-        --color-background-inverted: var(--invert);
-        --color-text-primary: var(--foreground);
-        --color-text-secondary: var(--muted-foreground);
-        --color-text-accent: var(--accent-text, var(--primary));
-        --color-icon-primary: var(--foreground);
-        --color-icon-secondary: var(--muted-foreground);
-        --color-icon-accent: var(--primary);
-        --color-accent: var(--primary);
-        --color-accent-muted: var(--accent);
-        --color-on-accent: var(--primary-foreground);
-        --color-border: var(--border);
-        --color-border-emphasized: var(--input);
-        --color-info: var(--info);
-        --color-success: var(--success);
-        --color-warning: var(--warning);
-        --color-error: var(--destructive);
-        --radius-element: calc(var(--radius) - 2px);
-        --radius-container: calc(var(--radius) + 2px);
+    [data-accent='red'],
+    [data-accent-swatch='red'] {
+        --accent-fill: light-dark(#b91c1c, #f87171);
+        --accent-muted: light-dark(#b91c1c14, #f8717120);
+        --accent-text: light-dark(#991b1b, #fca5a5);
+        --brand-foreground: light-dark(#ffffff, #450a0a);
+    }
+
+    [data-accent='orange'],
+    [data-accent-swatch='orange'] {
+        --accent-fill: light-dark(#c2410c, #fb923c);
+        --accent-muted: light-dark(#c2410c14, #fb923c20);
+        --accent-text: light-dark(#9a3412, #fdba74);
+        --brand-foreground: light-dark(#ffffff, #431407);
+    }
+
+    [data-accent='amber'],
+    [data-accent-swatch='amber'] {
+        --accent-fill: light-dark(#b45309, #fbbf24);
+        --accent-muted: light-dark(#b4530914, #fbbf2420);
+        --accent-text: light-dark(#92400e, #fcd34d);
+        --brand-foreground: light-dark(#ffffff, #451a03);
+    }
+
+    [data-accent='yellow'],
+    [data-accent-swatch='yellow'] {
+        --accent-fill: light-dark(#a16207, #facc15);
+        --accent-muted: light-dark(#a1620714, #facc1520);
+        --accent-text: light-dark(#854d0e, #fde047);
+        --brand-foreground: light-dark(#ffffff, #422006);
+    }
+
+    [data-accent='lime'],
+    [data-accent-swatch='lime'] {
+        --accent-fill: light-dark(#4d7c0f, #a3e635);
+        --accent-muted: light-dark(#4d7c0f14, #a3e63520);
+        --accent-text: light-dark(#3f6212, #bef264);
+        --brand-foreground: light-dark(#ffffff, #1a2e05);
+    }
+
+    [data-accent='green'],
+    [data-accent-swatch='green'] {
+        --accent-fill: light-dark(#15803d, #4ade80);
+        --accent-muted: light-dark(#15803d14, #4ade8020);
+        --accent-text: light-dark(#166534, #86efac);
+        --brand-foreground: light-dark(#ffffff, #052e16);
+    }
+
+    [data-accent='emerald'],
+    [data-accent-swatch='emerald'] {
+        --accent-fill: light-dark(#047857, #34d399);
+        --accent-muted: light-dark(#04785714, #34d39920);
+        --accent-text: light-dark(#065f46, #6ee7b7);
+        --brand-foreground: light-dark(#ffffff, #022c22);
+    }
+
+    [data-accent='teal'],
+    [data-accent-swatch='teal'] {
+        --accent-fill: light-dark(#0f766e, #2dd4bf);
+        --accent-muted: light-dark(#0f766e14, #2dd4bf20);
+        --accent-text: light-dark(#115e59, #5eead4);
+        --brand-foreground: light-dark(#ffffff, #042f2e);
+    }
+
+    [data-accent='cyan'],
+    [data-accent-swatch='cyan'] {
+        --accent-fill: light-dark(#0e7490, #22d3ee);
+        --accent-muted: light-dark(#0e749014, #22d3ee20);
+        --accent-text: light-dark(#155e75, #67e8f9);
+        --brand-foreground: light-dark(#ffffff, #083344);
+    }
+
+    [data-accent='sky'],
+    [data-accent-swatch='sky'] {
+        --accent-fill: light-dark(#0369a1, #38bdf8);
+        --accent-muted: light-dark(#0369a114, #38bdf820);
+        --accent-text: light-dark(#075985, #7dd3fc);
+        --brand-foreground: light-dark(#ffffff, #082f49);
+    }
+
+    [data-accent='blue'],
+    [data-accent-swatch='blue'] {
+        --accent-fill: light-dark(#1d4ed8, #60a5fa);
+        --accent-muted: light-dark(#1d4ed814, #60a5fa20);
+        --accent-text: light-dark(#1e40af, #93c5fd);
+        --brand-foreground: light-dark(#ffffff, #172554);
+    }
+
+    [data-accent='indigo'],
+    [data-accent-swatch='indigo'] {
+        --accent-fill: light-dark(#4338ca, #818cf8);
+        --accent-muted: light-dark(#4338ca14, #818cf820);
+        --accent-text: light-dark(#3730a3, #a5b4fc);
+        --brand-foreground: light-dark(#ffffff, #1e1b4b);
+    }
+
+    [data-accent='violet'],
+    [data-accent-swatch='violet'] {
+        --accent-fill: light-dark(#6d28d9, #a78bfa);
+        --accent-muted: light-dark(#6d28d914, #a78bfa20);
+        --accent-text: light-dark(#5b21b6, #c4b5fd);
+        --brand-foreground: light-dark(#ffffff, #2e1065);
+    }
+
+    [data-accent='purple'],
+    [data-accent-swatch='purple'] {
+        --accent-fill: light-dark(#7e22ce, #c084fc);
+        --accent-muted: light-dark(#7e22ce14, #c084fc20);
+        --accent-text: light-dark(#6b21a8, #d8b4fe);
+        --brand-foreground: light-dark(#ffffff, #3b0764);
+    }
+
+    [data-accent='fuchsia'],
+    [data-accent-swatch='fuchsia'] {
+        --accent-fill: light-dark(#a21caf, #e879f9);
+        --accent-muted: light-dark(#a21caf14, #e879f920);
+        --accent-text: light-dark(#86198f, #f0abfc);
+        --brand-foreground: light-dark(#ffffff, #4a044e);
+    }
+
+    [data-accent='pink'],
+    [data-accent-swatch='pink'] {
+        --accent-fill: light-dark(#be185d, #f472b6);
+        --accent-muted: light-dark(#be185d14, #f472b620);
+        --accent-text: light-dark(#9d174d, #f9a8d4);
+        --brand-foreground: light-dark(#ffffff, #500724);
+    }
+
+    [data-accent='rose'],
+    [data-accent-swatch='rose'] {
+        --accent-fill: light-dark(#be123c, #fb7185);
+        --accent-muted: light-dark(#be123c14, #fb718520);
+        --accent-text: light-dark(#9f1239, #fda4af);
+        --brand-foreground: light-dark(#ffffff, #4c0519);
+    }
+
+    [data-accent-swatch] {
+        color: var(--accent-text);
+    }
+
+    [data-accent-swatch='neutral'] {
+        color: var(--foreground);
     }
 }

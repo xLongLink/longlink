@@ -3,9 +3,7 @@ import { spacing } from './layout';
 import type { Spacing } from './types';
 import { createElement, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 
-type NativeStackProps = HTMLAttributes<HTMLElement> & {
-    as?: 'div' | 'main' | 'section' | 'aside' | 'figure' | 'footer';
-    ref?: Ref<HTMLElement>;
+export type StackLayoutProps = {
     direction?: 'horizontal' | 'vertical';
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     align?: 'start' | 'center' | 'end' | 'stretch';
@@ -18,9 +16,13 @@ type NativeStackProps = HTMLAttributes<HTMLElement> & {
     height?: CSSProperties['height'];
     maxWidth?: CSSProperties['maxWidth'];
     minHeight?: CSSProperties['minHeight'];
+    background?: 'muted';
 };
 
-/** Arranges trusted Platform content without the isolated View API's default gap. */
+type NativeStackProps = HTMLAttributes<HTMLElement> &
+    StackLayoutProps & { as?: 'div' | 'main' | 'section' | 'aside' | 'figure' | 'footer'; ref?: Ref<HTMLElement> };
+
+/** Arranges native content without View spacing defaults; caller styles override layout props. */
 export function NativeStack({
     as: Component = 'div',
     ref,
@@ -36,6 +38,7 @@ export function NativeStack({
     height,
     maxWidth,
     minHeight,
+    background,
     className,
     style,
     children,
@@ -48,22 +51,32 @@ export function NativeStack({
             ...props,
             ref,
             className: cn(
-                'flex flex-col data-[direction=horizontal]:flex-row data-[justify=start]:justify-start data-[justify=center]:justify-center data-[justify=end]:justify-end data-[justify=between]:justify-between data-[justify=around]:justify-around data-[justify=evenly]:justify-evenly data-[align=start]:items-start data-[align=center]:items-center data-[align=end]:items-end data-[align=stretch]:items-stretch',
+                'flex',
+                direction === 'horizontal' ? 'flex-row' : 'flex-col',
+                justify &&
+                    {
+                        start: 'justify-start',
+                        center: 'justify-center',
+                        end: 'justify-end',
+                        between: 'justify-between',
+                        around: 'justify-around',
+                        evenly: 'justify-evenly'
+                    }[justify],
+                align &&
+                    { start: 'items-start', center: 'items-center', end: 'items-end', stretch: 'items-stretch' }[align],
+                background === 'muted' && 'bg-muted',
                 className
             ),
-            'data-direction': direction,
-            'data-justify': justify,
-            'data-align': align,
             style: {
-                ...style,
-                width: width ?? style?.width,
-                height: height ?? style?.height,
-                maxWidth: maxWidth ?? style?.maxWidth,
-                minHeight: minHeight ?? style?.minHeight,
-                gap: gap === undefined ? style?.gap : spacing(gap),
-                paddingInline: paddingInline === undefined ? style?.paddingInline : spacing(paddingInline),
-                paddingBlock: paddingBlock === undefined ? style?.paddingBlock : spacing(paddingBlock),
-                flexWrap: wrap ?? style?.flexWrap
+                width,
+                height,
+                maxWidth,
+                minHeight,
+                gap: gap === undefined ? undefined : spacing(gap),
+                paddingInline: paddingInline === undefined ? undefined : spacing(paddingInline),
+                paddingBlock: paddingBlock === undefined ? undefined : spacing(paddingBlock),
+                flexWrap: wrap,
+                ...style
             }
         },
         children

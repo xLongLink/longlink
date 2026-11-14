@@ -76,7 +76,7 @@ export default function CreateSolution({
         >
             <Form action={createSolution}>
                 <Wizard
-                    height="min(560px, calc(100dvh - var(--spacing-10) * 4))"
+                    height="min(560px, calc(100dvh - var(--spacing) * 40))"
                     onCancel={onClose}
                     next={(step) => (step === 0 ? { label: 'Inspect', action: inspectImage } : undefined)}
                 >
@@ -92,10 +92,10 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Choose a Solution image
                                     </Heading>
-                                    <Text as="p" color="secondary" justify="center">
+                                    <Text as="p" className="text-muted-foreground text-center">
                                         Start with a container image or try the sample Solution
                                     </Text>
                                 </Stack>
@@ -116,9 +116,7 @@ export default function CreateSolution({
                                     )}
                                     onClick={() => setImage('ghcr.io/xlonglink/sample:latest')}
                                 >
-                                    <Text size="base" color="secondary">
-                                        Use sample image
-                                    </Text>
+                                    <Text className="text-muted-foreground text-base">Use sample image</Text>
                                 </button>
                             </Stack>
                         </Stack>
@@ -135,10 +133,10 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Make it yours
                                     </Heading>
-                                    <Text as="p" color="secondary" justify="center">
+                                    <Text as="p" className="text-muted-foreground text-center">
                                         Give your Solution a name and description
                                     </Text>
                                 </Stack>
@@ -167,10 +165,10 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} justify="center">
+                                    <Heading level={2} className="text-center">
                                         Configure your environment
                                     </Heading>
-                                    <Text as="p" color="secondary" justify="center">
+                                    <Text as="p" className="text-muted-foreground text-center">
                                         Set the values your Solution needs to run
                                     </Text>
                                 </Stack>

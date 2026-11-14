@@ -82,7 +82,7 @@ export default function OrganizationSolution() {
                     <Stack gap={6} maxWidth={1200} width="100%">
                         {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
-                                fallback={<Text color="secondary">Loading pod logs…</Text>}
+                                fallback={<Text className="text-muted-foreground">Loading pod logs…</Text>}
                                 fallbackRender={() => notice}
                             >
                                 <DeploymentLogs key={solutionAccess.id} solutionId={solutionAccess.id} />
@@ -123,7 +123,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
                     </div>
                 </CodeBlock>
             ) : (
-                <Text color="secondary">No pod logs are available for this deployment.</Text>
+                <Text className="text-muted-foreground">No pod logs are available for this deployment.</Text>
             )}
         </Stack>
     );

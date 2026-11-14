@@ -17,29 +17,26 @@ export default function Blog() {
                     <Stack className="mx-auto" maxWidth={1000} width="100%" gap={10} align="center">
                         <Stack className="text-center" gap={3} align="center" width="100%">
                             <Heading
-                                className="tracking-wide"
-                                justify="center"
                                 level={1}
-                                textWrap="balance"
-                                type="display-2"
+                                className="text-5xl font-semibold text-balance text-center tracking-wide"
                             >
                                 Blog
                             </Heading>
-                            <Text as="p" className="text-lg sm:text-xl" color="secondary" textWrap="pretty">
+                            <Text as="p" className="text-muted-foreground text-pretty text-lg sm:text-xl">
                                 Ideas, stories, and updates from LongLink
                             </Text>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
-                            <div className="min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]">
+                            <div className="min-w-0 overflow-clip rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*3)-1px)]">
                                 <Stack className="min-h-80" gap={0} paddingBlock={8} align="center">
                                     <Stack gap={2} align="center">
                                         <BookOpen aria-hidden="true" className="text-primary" size={20} />
-                                        <Heading level={2} justify="center">
+                                        <Heading level={2} className="text-center">
                                             Why LongLink
                                         </Heading>
                                     </Stack>
                                     <Separator className="my-10 data-[orientation=horizontal]:w-1/3 self-center" />
-                                    <Text as="p" color="secondary" justify="center" textWrap="pretty">
+                                    <Text as="p" className="text-muted-foreground text-pretty text-center">
                                         The idea behind LongLink
                                     </Text>
                                     <Stack className="mt-auto pt-8" align="center">
@@ -49,11 +46,11 @@ export default function Blog() {
                             </div>
                             <div
                                 aria-hidden="true"
-                                className="min-h-80 min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]"
+                                className="min-h-80 min-w-0 overflow-clip rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*3)-1px)]"
                             />
                             <div
                                 aria-hidden="true"
-                                className="min-h-80 min-w-0 overflow-clip rounded-none border-(length:--border-width) border-(--color-border) bg-transparent p-[calc(var(--spacing-3)-var(--border-width))]"
+                                className="min-h-80 min-w-0 overflow-clip rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*3)-1px)]"
                             />
                         </Grid>
                     </Stack>

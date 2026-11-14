@@ -1,68 +1,10 @@
-import { spacing } from './layout';
-import type { Spacing } from './types';
-import { useCallback, useState, type ReactNode } from 'react';
+import { cn } from 'cn';
+import { NativeStack, type StackLayoutProps } from './native-stack';
+import { useCallback, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 
-type StackProps = {
-    children?: ReactNode;
-    /** Container width; numbers are pixels and strings are CSS sizes. */
-    width?: number | string;
-    /** Container height; numbers are pixels and strings are CSS sizes. */
-    height?: number | string;
-    /** Maximum container width; numbers are pixels and strings are CSS sizes. */
-    maxWidth?: number | string;
-    /** Minimum container height; numbers are pixels and strings are CSS sizes. */
-    minHeight?: number | string;
-    /** Spacing between items. */
-    gap?: Spacing;
-    padding?: Spacing;
-    /** Horizontal padding, overriding padding on the inline axis. */
-    paddingInline?: Spacing;
-    /** Vertical padding, overriding padding on the block axis. */
-    paddingBlock?: Spacing;
-    /** Optional muted surface background; omitted stacks remain transparent. */
-    background?: 'muted';
-    direction?: 'horizontal' | 'vertical';
-    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-    align?: 'start' | 'center' | 'end' | 'stretch';
-    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-};
-
-/** Arranges View content using the LongLink spacing scale. */
-export function Stack({ background, ...props }: StackProps) {
-    // Resolve logical padding independently so axis overrides retain precedence.
-    return (
-        <div
-            className="flex flex-col"
-            style={{
-                width: props.width,
-                height: props.height,
-                maxWidth: props.maxWidth,
-                minHeight: props.minHeight,
-                gap: spacing(props.gap ?? 3),
-                paddingInline: spacing(props.paddingInline ?? props.padding ?? 0),
-                paddingBlock: spacing(props.paddingBlock ?? props.padding ?? 0),
-                backgroundColor: background === 'muted' ? 'var(--muted)' : undefined,
-                flexDirection: props.direction === 'horizontal' ? 'row' : 'column',
-                justifyContent: {
-                    start: 'flex-start',
-                    center: 'center',
-                    end: 'flex-end',
-                    between: 'space-between',
-                    around: 'space-around',
-                    evenly: 'space-evenly'
-                }[props.justify ?? 'start'],
-                alignItems:
-                    props.align === 'start'
-                        ? 'flex-start'
-                        : props.align === 'end'
-                          ? 'flex-end'
-                          : (props.align ?? 'stretch'),
-                flexWrap: props.wrap ?? 'nowrap'
-            }}
-        >
-            {props.children}
-        </div>
-    );
+/** Arranges View content with a three-step gap; caller classes and styles override defaults. */
+export function Stack({ className, ...props }: ComponentPropsWithRef<'div'> & StackLayoutProps) {
+    return <NativeStack {...props} className={cn('gap-3', className)} />;
 }
 
 /** Controls how one item participates in its surrounding Stack. */

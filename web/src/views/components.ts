@@ -20,7 +20,13 @@ export { Heading } from '@/components/custom/heading';
 export { Text } from '@/components/custom/text';
 
 /** Custom generated artwork and owner-specific avatar fallbacks. @category Display */
-export { GeneratedAvatar as Avatar } from '@/components/custom/generated-avatar';
+export { GeneratedAvatar } from '@/components/custom/generated-avatar';
+
+/** @category Display */
+export { Avatar } from '@/components/shadcn/avatar';
+
+/** @category Display @group Avatar */
+export { AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount } from '@/components/shadcn/avatar';
 
 /** @category Display */
 export { Image } from '@/components/custom/image';

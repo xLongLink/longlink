@@ -79,11 +79,7 @@ export default function Login() {
 
     return (
         <AuthLayout
-            title={
-                <Text display="block" justify="center" size="2xl" textWrap="nowrap" type="inherit">
-                    Welcome to LongLink
-                </Text>
-            }
+            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
             description={null}
         >
             <title>Sign In | LongLink</title>
@@ -112,15 +108,15 @@ export default function Login() {
                     >
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-col gap-1">
-                                <Text type="label">Email</Text>
+                                <Text className="text-sm font-medium">Email</Text>
                                 <TextField control={form.control} name="email" labelHidden label="Email" type="email" />
                             </div>
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between">
-                                    <Text type="label">Password</Text>
+                                    <Text className="text-sm font-medium">Password</Text>
                                     <Link
                                         to="/auth/forgot-password"
-                                        className="text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-(--text-supporting-weight) text-(--color-text-accent) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                                        className="text-sm leading-(--text-sm--line-height) font-normal text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
                                     >
                                         Forgot password?
                                     </Link>
@@ -136,7 +132,7 @@ export default function Login() {
                                         type={isPasswordVisible ? 'text' : 'password'}
                                     />
                                     <button
-                                        className="absolute start-auto end-0 top-0 inline-flex size-(--size-element-md) cursor-pointer items-center justify-center rounded-(--radius-element) border-0 bg-transparent p-0 text-(--color-text-primary) hover:bg-(--color-overlay-hover) active:bg-(--color-overlay-pressed) focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                                        className="absolute start-auto end-0 top-0 inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-foreground hover:bg-muted active:bg-accent focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
                                         aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
                                         onClick={() => {
                                             // Toggle visibility without changing the password value.
@@ -190,7 +186,7 @@ export default function Login() {
                             New to LongLink?{' '}
                             <Link
                                 to={`/auth/register${registerSearch}`}
-                                className="font-medium text-(--color-text-accent) no-underline hover:underline focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-(--focus-outline-color) focus-visible:outline-solid focus-visible:outline-offset-(--focus-outline-offset)"
+                                className="font-medium text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
                             >
                                 Create account
                             </Link>

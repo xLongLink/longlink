@@ -1,10 +1,27 @@
+import { cn } from 'cn';
 import type { Spacing } from './types';
 import { GridCollapseContext, spacing } from './layout';
-import { useCallback, useContext, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useContext, useSyncExternalStore, type ComponentPropsWithRef } from 'react';
 
-/** Arranges View content into fixed or width-responsive columns. */
-export function Grid(props: {
-    children?: ReactNode;
+/** Arranges fixed or width-responsive columns; caller styles override layout props. */
+export function Grid({
+    columns: configuredColumns,
+    collapseBelow,
+    gap,
+    rowGap,
+    columnGap,
+    align,
+    justify,
+    width,
+    height,
+    maxWidth,
+    minHeight,
+    className,
+    style,
+    ref,
+    children,
+    ...props
+}: ComponentPropsWithRef<'div'> & {
     /** Fixed columns or responsive tracks with a minimum width in pixels and optional column cap. Use one-column or full spans with responsive tracks. */
     columns?: number | { minWidth: number; max?: number; repeat?: 'fill' | 'fit' };
     /** Collapse to one column at or below this View viewport width in pixels, including all GridSpan children. */
@@ -22,28 +39,28 @@ export function Grid(props: {
     // Subscribe only while a viewport collapse threshold is configured; SSR retains desktop geometry.
     const subscribe = useCallback(
         (onChange: () => void) => {
-            if (props.collapseBelow === undefined || !window.matchMedia) return () => {};
+            if (collapseBelow === undefined || !window.matchMedia) return () => {};
 
-            const media = window.matchMedia(`(max-width: ${props.collapseBelow}px)`);
+            const media = window.matchMedia(`(max-width: ${collapseBelow}px)`);
             media.addEventListener('change', onChange);
 
             return () => media.removeEventListener('change', onChange);
         },
-        [props.collapseBelow]
+        [collapseBelow]
     );
 
     const collapsed = useSyncExternalStore(
         subscribe,
         () =>
-            props.collapseBelow !== undefined &&
+            collapseBelow !== undefined &&
             Boolean(window.matchMedia) &&
-            window.matchMedia(`(max-width: ${props.collapseBelow}px)`).matches,
+            window.matchMedia(`(max-width: ${collapseBelow}px)`).matches,
         () => false
     );
 
     // Cap the track count with a minimum, leaving present tracks free to fill the row.
-    const columns = collapsed ? 1 : (props.columns ?? 1);
-    let template = '1fr';
+    const columns = collapsed ? 1 : configuredColumns;
+    let template: string | undefined;
 
     // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The public columns contract is a number or responsive track configuration.
     if (typeof columns === 'object') {
@@ -51,40 +68,47 @@ export function Grid(props: {
 
         const minimum =
             columns.max !== undefined && columns.max > 0
-                ? `min(100%, max(${columns.minWidth}px, calc((100% - ${columns.max - 1} * ${spacing(props.columnGap ?? props.gap ?? 3)}) / ${columns.max})))`
+                ? `min(100%, max(${columns.minWidth}px, calc((100% - ${columns.max - 1} * ${spacing(columnGap ?? gap ?? 3)}) / ${columns.max})))`
                 : `${columns.minWidth}px`;
 
         template = `repeat(${repeat}, minmax(${minimum}, 1fr))`;
-    } else if (columns > 0) {
+    } else if (columns !== undefined && columns > 0) {
         template = `repeat(${columns}, 1fr)`;
     }
 
     return (
         <GridCollapseContext value={collapsed}>
             <div
-                className="grid"
+                {...props}
+                ref={ref}
+                className={cn('grid grid-cols-1 gap-3', className)}
                 style={{
                     gridTemplateColumns: template,
-                    rowGap: spacing(props.rowGap ?? props.gap ?? 3),
-                    columnGap: spacing(props.columnGap ?? props.gap ?? 3),
-                    alignItems: props.align,
-                    justifyItems: props.justify,
-                    width: props.width,
-                    height: props.height,
-                    maxWidth: props.maxWidth,
-                    minHeight: props.minHeight
+                    rowGap: rowGap !== undefined || gap !== undefined ? spacing(rowGap ?? gap ?? 3) : undefined,
+                    columnGap:
+                        columnGap !== undefined || gap !== undefined ? spacing(columnGap ?? gap ?? 3) : undefined,
+                    alignItems: align,
+                    justifyItems: justify,
+                    width,
+                    height,
+                    maxWidth,
+                    minHeight,
+                    ...style
                 }}
             >
-                {props.children}
+                {children}
             </div>
         </GridCollapseContext>
     );
 }
 
 /** Spans a View item across grid columns. */
-export function GridSpan(props: {
-    /** Content rendered inside the grid item. */
-    children?: ReactNode;
+export function GridSpan({
+    columns,
+    className,
+    style,
+    ...props
+}: ComponentPropsWithRef<'div'> & {
     /** Number of columns to occupy, or full to span the entire grid. */
     columns?: number | 'full';
 }) {
@@ -93,10 +117,13 @@ export function GridSpan(props: {
 
     return (
         <div
-            className="view-grid-span grid h-full min-w-0 grid-cols-[minmax(0,1fr)]"
-            style={{ gridColumn: collapsed || props.columns === 'full' ? '1 / -1' : `span ${props.columns ?? 1}` }}
-        >
-            {props.children}
-        </div>
+            {...props}
+            className={cn('view-grid-span col-span-1 grid h-full min-w-0 grid-cols-[minmax(0,1fr)]', className)}
+            style={{
+                gridColumn:
+                    collapsed || columns === 'full' ? '1 / -1' : columns === undefined ? undefined : `span ${columns}`,
+                ...style
+            }}
+        />
     );
 }

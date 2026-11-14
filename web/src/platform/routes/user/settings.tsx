@@ -51,14 +51,14 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
 
     // Keep account editing independent of organization loading and failures.
     return (
-        <div className="flex flex-col gap-(--spacing-8)">
-            <div className="flex items-center gap-(--spacing-3)">
+        <div className="flex flex-col gap-8">
+            <div className="flex items-center gap-3">
                 <GeneratedAvatar name={name} src={user.avatar} seed={user.id} />
                 <div className="flex flex-col gap-0">
                     <Heading level={4} accessibilityLevel={1}>
                         {name}
                     </Heading>
-                    <Text type="supporting">{user.email}</Text>
+                    <Text className="text-xs text-muted-foreground">{user.email}</Text>
                 </div>
             </div>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
@@ -78,16 +78,19 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                         Organizations
                     </Link>
                 </nav>
-                <div className="flex min-w-0 flex-col gap-(--spacing-3)">
+                <div className="flex min-w-0 flex-col gap-3">
                     {section === 'organizations' ? (
                         <ApiBoundary>
                             <OrganizationManagement presentation="settings" />
                         </ApiBoundary>
                     ) : (
-                        <div className="flex flex-col gap-(--spacing-8)">
-                            <div className="flex flex-col gap-(--spacing-4)">
-                                <div className="flex min-h-(--size-element-md) flex-col justify-end">
-                                    <Heading level={2} hasCapsize>
+                        <div className="flex flex-col gap-8">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex min-h-8 flex-col justify-end">
+                                    <Heading
+                                        level={2}
+                                        className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
+                                    >
                                         Account
                                     </Heading>
                                 </div>

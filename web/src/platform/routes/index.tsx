@@ -52,29 +52,25 @@ export default function Home() {
                     >
                         <Stack className="max-w-xl text-left" gap={6} align="start">
                             <Heading
-                                className="text-4xl tracking-tight text-white sm:text-6xl"
-                                justify="start"
                                 level={1}
-                                textWrap="balance"
-                                type="display-2"
+                                className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl"
                             >
                                 Your business.
                                 <br />
                                 Defined as code.
                             </Heading>
-                            <Text as="p" className="max-w-md text-lg text-white/80 sm:text-xl" textWrap="pretty">
+                            <Text as="p" className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
                                 Design, build, operate, and improve.
                                 <br />
                                 One source of truth for how work gets done.
                             </Text>
-                            <Text as="p" className="text-white/80" type="supporting">
+                            <Text as="p" className="text-xs text-white/80">
                                 Currently in testing Beta.{' '}
                                 <Link
-                                    color="inherit"
                                     href="https://github.com/xLongLink/longlink"
                                     hasUnderline
                                     isExternalLink
-                                    type="inherit"
+                                    className="text-inherit"
                                 >
                                     Star LongLink on GitHub.
                                 </Link>
@@ -95,10 +91,7 @@ export default function Home() {
                         />
                         <Text
                             as="p"
-                            className="max-w-3xl text-center text-xl sm:text-2xl"
-                            color="secondary"
-                            textWrap="pretty"
-                            type="large"
+                            className="text-muted-foreground text-pretty max-w-3xl text-center text-xl sm:text-2xl"
                         >
                             Think about how easy it is to find a book in a library.
                             <br />
@@ -129,10 +122,10 @@ export default function Home() {
                                 🇨🇭
                             </Text>
                             <Stack gap={0} align="center">
-                                <Heading className="tracking-wide" level={2} textWrap="balance" justify="center">
+                                <Heading level={2} className="text-balance text-center tracking-wide">
                                     Made in Switzerland
                                 </Heading>
-                                <Text as="p" color="secondary" textWrap="balance">
+                                <Text as="p" className="text-muted-foreground text-balance">
                                     Using open-source technologies
                                 </Text>
                             </Stack>

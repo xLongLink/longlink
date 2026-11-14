@@ -20,15 +20,12 @@ export default function Pricing() {
                     <Stack className="mx-auto" width="100%" maxWidth={1000} gap={10} align="center">
                         <Stack gap={3} align="center">
                             <Heading
-                                className="tracking-wide"
-                                justify="center"
                                 level={1}
-                                textWrap="balance"
-                                type="display-2"
+                                className="text-5xl font-semibold text-balance text-center tracking-wide"
                             >
                                 Pricing
                             </Heading>
-                            <Text as="p" color="secondary">
+                            <Text as="p" className="text-muted-foreground">
                                 Billed per Organization
                             </Text>
                         </Stack>
@@ -49,25 +46,25 @@ export default function Pricing() {
                                         <Stack gap={6} paddingBlock={10} align="center">
                                             <Stack gap={3} align="center">
                                                 <ResourceIcon aria-hidden className="text-primary" size={20} />
-                                                <Heading level={2} justify="center">
+                                                <Heading level={2} className="text-center">
                                                     {resource.resource}
                                                 </Heading>
                                             </Stack>
                                             <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
-                                                <Text as="p" justify="center" weight="semibold">
+                                                <Text as="p" className="font-semibold text-center">
                                                     {resource.publicIncluded}
                                                 </Text>
-                                                <Text as="p" color="secondary" justify="center">
+                                                <Text as="p" className="text-muted-foreground text-center">
                                                     Included free
                                                 </Text>
                                             </Stack>
                                             <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
-                                                <Text as="p" justify="center" weight="semibold">
+                                                <Text as="p" className="font-semibold text-center">
                                                     {resource.rate}
                                                 </Text>
-                                                <Text as="p" type="supporting" justify="center">
+                                                <Text as="p" className="text-xs text-center text-muted-foreground">
                                                     Per month, above included usage
                                                 </Text>
                                             </Stack>
@@ -77,7 +74,7 @@ export default function Pricing() {
                             })}
                         </Grid>
                         <Button href="/user/organizations/" label="Get started" variant="default" />
-                        <Text as="p" type="supporting" justify="center">
+                        <Text as="p" className="text-xs text-center text-muted-foreground">
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
                         </Text>
                     </Stack>

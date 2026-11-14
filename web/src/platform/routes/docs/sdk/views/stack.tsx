@@ -10,6 +10,18 @@ export default function StackPage() {
             properties={[
                 { name: 'children', type: 'ReactNode', description: 'Stack content.' },
                 {
+                    name: 'className',
+                    type: 'string',
+                    description: 'Tailwind utilities overriding the default flex column and gap-3 layout.'
+                },
+                { name: 'style', type: 'CSSProperties', description: 'Native inline styles; override layout props.' },
+                {
+                    name: 'ref',
+                    type: 'Ref<HTMLDivElement>',
+                    description:
+                        'Reference to the stack container. Native div attributes and event handlers are supported.'
+                },
+                {
                     name: 'width',
                     type: 'string | number',
                     description: 'Container width; numbers are pixels and strings are CSS sizes.'
@@ -32,7 +44,7 @@ export default function StackPage() {
                 {
                     name: 'gap',
                     type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Spacing between items.'
+                    description: 'Explicit spacing between items; otherwise gap-3 can be overridden with className.'
                 },
                 {
                     name: 'padding',

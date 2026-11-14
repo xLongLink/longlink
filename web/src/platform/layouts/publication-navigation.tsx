@@ -6,7 +6,7 @@ import { useId, type KeyboardEvent, type ReactNode } from 'react';
 type PublicationPage = { path: string; label: string; icon: LucideIcon; children?: readonly PublicationPage[] };
 
 const rowClassName =
-    'publication-navigation-row flex box-border w-full min-h-(--size-element-md) cursor-pointer items-center gap-2 rounded-(--radius-element) border-0 bg-transparent px-2 py-0 font-[inherit] text-[length:var(--text-label-size)] leading-(--text-label-leading) font-normal text-start text-foreground no-underline hover:bg-(--color-overlay-hover) aria-[current]:bg-(--color-neutral) aria-[current]:font-medium focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-(--focus-outline-width) forced-colors:aria-[current]:bg-[Highlight] forced-colors:aria-[current]:text-[HighlightText] [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>svg]:flex-none [&>svg]:text-muted-foreground aria-[current]:[&>svg]:text-inherit';
+    'publication-navigation-row flex box-border w-full min-h-8 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2 py-0 font-[inherit] text-sm leading-(--text-sm--line-height) font-normal text-start text-foreground no-underline hover:bg-muted aria-[current]:bg-muted aria-[current]:font-medium focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-2 forced-colors:aria-[current]:bg-[Highlight] forced-colors:aria-[current]:text-[HighlightText] [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>svg]:flex-none [&>svg]:text-muted-foreground aria-[current]:[&>svg]:text-inherit';
 
 /** Adds optional arrow shortcuts without changing native link activation or Tab order. */
 function moveNavigationFocus(event: KeyboardEvent<HTMLElement>) {
@@ -54,7 +54,7 @@ export function PublicationSectionLinks({
             {groups.map((group) => (
                 <Link
                     key={group.path}
-                    className="relative flex min-h-(--size-element-md) flex-none items-center rounded-(--radius-element) px-3 text-[length:var(--text-label-size)] leading-(--text-label-leading) font-normal whitespace-nowrap text-muted-foreground no-underline hover:bg-(--color-overlay-hover) aria-[current]:font-semibold aria-[current]:text-foreground aria-[current]:after:absolute aria-[current]:after:inset-x-3 aria-[current]:after:bottom-0 aria-[current]:after:h-0.5 aria-[current]:after:rounded-full aria-[current]:after:bg-(--color-accent) aria-[current]:after:content-[''] focus-visible:outline-(length:--focus-outline-width) focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-(--focus-outline-width)"
+                    className="relative flex min-h-8 flex-none items-center rounded-lg px-3 text-sm leading-(--text-sm--line-height) font-normal whitespace-nowrap text-muted-foreground no-underline hover:bg-muted aria-[current]:font-semibold aria-[current]:text-foreground aria-[current]:after:absolute aria-[current]:after:inset-x-3 aria-[current]:after:bottom-0 aria-[current]:after:h-0.5 aria-[current]:after:rounded-full aria-[current]:after:bg-primary aria-[current]:after:content-[''] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-2"
                     to={`${group.path}/`}
                     aria-current={activePath === group.path ? 'page' : undefined}
                 >
@@ -81,7 +81,7 @@ export function PublicationNavigationSection({ title, children }: { title: strin
     return (
         <section className="flex flex-col py-1" aria-labelledby={headingId}>
             <h2
-                className="m-0 px-2 py-1 text-[length:var(--text-supporting-size)] leading-(--text-supporting-leading) font-semibold text-muted-foreground"
+                className="m-0 px-2 py-1 text-sm leading-(--text-sm--line-height) font-semibold text-muted-foreground"
                 id={headingId}
             >
                 {title}

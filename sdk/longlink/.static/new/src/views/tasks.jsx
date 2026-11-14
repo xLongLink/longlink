@@ -30,7 +30,7 @@ export default function Tasks() {
                                         title={task.attachment}
                                     />
                                 ) : (
-                                    <Text color="secondary">No attachment</Text>
+                                    <Text className="text-muted-foreground">No attachment</Text>
                                 )}
                             </Stack>
                         ),
@@ -41,7 +41,7 @@ export default function Tasks() {
                         width: proportional(1),
                         renderCell: (task) => (
                             <Stack direction="horizontal" align="center" gap={2}>
-                                <Avatar
+                                <GeneratedAvatar
                                     name={task.created_by.name}
                                     seed={task.created_by.id}
                                     src={task.created_by.avatar}
@@ -49,7 +49,7 @@ export default function Tasks() {
                                 />
                                 <Stack gap={0}>
                                     <Text>{task.created_by.name}</Text>
-                                    <Text type="supporting">{task.created_by.email}</Text>
+                                    <Text className="text-xs text-muted-foreground">{task.created_by.email}</Text>
                                 </Stack>
                             </Stack>
                         ),

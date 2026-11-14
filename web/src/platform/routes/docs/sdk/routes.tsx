@@ -33,14 +33,14 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     Implement your application logic using standard{' '}
-                    <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
+                    <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink>
                         FastAPI routes
                     </Link>
                     . LongLink provides the current user and common services such as the database and storage through{' '}
                     <InlineCode>Context</InlineCode>, so you can use them directly without additional configuration.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text weight="semibold">Why?</Text>
+                    <Text className="font-semibold">Why?</Text>
                     <Text as="p">
                         FastAPI is widely used, documented, and well represented in AI training data, making it easier
                         for AI models to understand, navigate, and modify the code. The logic is built as a headless

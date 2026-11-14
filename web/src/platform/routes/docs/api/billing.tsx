@@ -70,7 +70,7 @@ export default function Billing() {
                 </Text>
                 <Text as="p">
                     Contact{' '}
-                    <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
+                    <Link href="mailto:info@longlink.dev" hasUnderline>
                         info@longlink.dev
                     </Link>{' '}
                     if you need help with a payment or invoice.
