@@ -15,22 +15,20 @@ data:
             fastcgi_temp_path /tmp/fastcgi_temp;
             uwsgi_temp_path /tmp/uwsgi_temp;
             scgi_temp_path /tmp/scgi_temp;
-            include /etc/nginx/conf.d/default.conf;
-        }
-    default.conf: |
-        server {
-            listen 8443 ssl;
-            ssl_certificate /etc/nginx/tls/tls.crt;
-            ssl_certificate_key /etc/nginx/tls/tls.key;
-            client_max_body_size 0;
-            proxy_request_buffering off;
-            location ^~ /rustfs/admin {
-                return 404;
-            }
-            location / {
-                proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;
-                proxy_set_header Host $http_host;
-                proxy_set_header X-Forwarded-Proto https;
+            server {
+                listen 8443 ssl;
+                ssl_certificate /etc/nginx/tls/tls.crt;
+                ssl_certificate_key /etc/nginx/tls/tls.key;
+                client_max_body_size 0;
+                proxy_request_buffering off;
+                location ^~ /rustfs/admin {
+                    return 404;
+                }
+                location / {
+                    proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;
+                    proxy_set_header Host $http_host;
+                    proxy_set_header X-Forwarded-Proto https;
+                }
             }
         }
 ---

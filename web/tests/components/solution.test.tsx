@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { Dialog } from '@base-ui/react/dialog';
+import { manifestSchema } from '@/views/manifest';
 import { MessagePort } from 'node:worker_threads';
 import { SolutionPage } from '@/components/solution-page';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -232,6 +233,58 @@ describe('SolutionPage', () => {
             port.close();
         }
     });
+
+    it.each(['navigation labels', 'other Views'])(
+        'keeps the connected capability channel when %s refresh',
+        async (change) => {
+            // Arrange
+            stubFetch((url) => {
+                if (url.endsWith('/views.json')) return manifestResponse([{ path: 'home.jsx', route: '/home' }]);
+
+                if (url.endsWith('/home.jsx')) return sourceResponse('export default function Home() { return null; }');
+
+                return Response.json({ value: 'still connected' });
+            });
+            const output = await renderPage('/home');
+            const port = await connectView(output);
+            const frame = output.querySelector('iframe');
+            const document = frame?.srcdoc;
+            const replies: unknown[] = [];
+            port.on('message', replies.push.bind(replies));
+
+            try {
+                // Refresh the manifest while retaining the same View and route.
+                await act(async () => {
+                    mountedClient?.setQueryData<ReturnType<typeof manifestSchema.parse>>(
+                        ['api', '/views.json'],
+                        (manifest) =>
+                            manifest && {
+                                ...manifest,
+                                views:
+                                    change === 'other Views'
+                                        ? [...manifest.views, { path: 'reports.jsx', route: '/reports' }]
+                                        : manifest.views,
+                                tabs: [{ route: '/home', label: 'Updated navigation' }]
+                            }
+                    );
+                });
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.textContent).toContain('Updated navigation');
+                });
+                port.postMessage({ type: 'request', id: 1, path: 'items', method: 'GET' });
+
+                // The original channel must still deliver replies without reloading the document.
+                await vi.waitFor(() =>
+                    expect(replies).toEqual([{ id: 1, ok: true, data: { value: 'still connected' } }])
+                );
+                expect(output.querySelector('iframe')).toBe(frame);
+                expect(frame?.srcdoc).toBe(document);
+            } finally {
+                port.close();
+            }
+        }
+    );
 
     it('aborts an outstanding request and delivers no reply after unmount', async () => {
         // Arrange

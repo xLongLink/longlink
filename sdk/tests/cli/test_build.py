@@ -1006,7 +1006,7 @@ def test_generated_python_build_is_available_in_uv_catalog(build_project: Path, 
     metadata = build.read_pyproject(build_project)
     build.build_solution(build_project, context, pyproject_data=metadata)
     instructions = context.joinpath("Dockerfile").read_text(encoding="utf-8").splitlines()
-    python_version = next(line.removeprefix("RUN uv python install ") for line in instructions if line.startswith("RUN uv python install "))
+    python_version = next(line.removeprefix("ENV UV_PYTHON=") for line in instructions if line.startswith("ENV UV_PYTHON="))
     python_build = next(
         line.removeprefix("ENV UV_PYTHON_CPYTHON_BUILD=") for line in instructions if line.startswith("ENV UV_PYTHON_CPYTHON_BUILD=")
     )

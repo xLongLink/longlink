@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import * as host from '@/views/host';
+import { isEqual } from 'es-toolkit';
 import type { ReactNode } from 'react';
 import { startCase } from 'es-toolkit/compat';
 import { PageError } from '@/components/utils';
@@ -82,6 +84,17 @@ export function SolutionPage({
         `/${routePath}`
     )?.[0];
 
+    // Preserve the active View's channel when manifest updates leave parameter values unchanged.
+    const matchedParams = Object.fromEntries(
+        Object.entries(match?.params ?? {}).filter((entry): entry is [string, string] => entry[1] != null)
+    );
+
+    const [params, setParams] = useState(matchedParams);
+
+    if (!isEqual(params, matchedParams)) {
+        setParams(matchedParams);
+    }
+
     // Let nested and dynamic detail Views share their parent tab.
     const navigationTabs = manifest?.tabs ?? EMPTY_VIEWS;
     const activeView = routePath || navigationTabs.length === 0 ? match?.route.view : undefined;
@@ -147,9 +160,7 @@ export function SolutionPage({
                     routePath
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
-                params={Object.fromEntries(
-                    Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
-                )}
+                params={params}
                 requestBaseUrl={requestBaseUrl}
                 runtime={manifest.runtime}
             />

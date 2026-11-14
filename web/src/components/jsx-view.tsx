@@ -111,8 +111,6 @@ export function JsxView({
         | { status: 'failed'; stage: keyof typeof STARTUP_FAILURES }
     >({ status: 'preparing' });
 
-    const parameters = JSON.stringify(params);
-
     // Update the mounted View without replacing its document or losing authored state.
     useEffect(() => {
         currentAppearance.current = { theme, accent };
@@ -243,7 +241,7 @@ export function JsxView({
                     {
                         session,
                         source,
-                        params: parametersSchema.parse(JSON.parse(parameters)),
+                        params: parametersSchema.parse(params),
                         navigationBaseUrl: new URL(navigationBaseUrl, window.location.origin).href,
                         appearance: currentAppearance.current
                     },
@@ -420,7 +418,7 @@ export function JsxView({
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
         return dispose;
-    }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel]);
+    }, [source, params, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel]);
 
     if (runtimeError) return <PageError title="Unable to load this View" description={STARTUP_FAILURES.assets} />;
 
