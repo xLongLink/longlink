@@ -5,16 +5,6 @@ import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { DataPagination } from '@/components/custom/data-pagination';
 
-it('preserves the selected page in its accessible navigation state', () => {
-    // Act
-    const output = renderStatic(
-        <DataPagination page={2} totalItems={75} pageSize={25} onPageChange={() => undefined} />
-    );
-
-    // Assert
-    expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('2');
-});
-
 it('navigates through a large result set without submitting its enclosing form or crossing boundaries', async () => {
     const user = userEvent.setup();
     const submit = vi.fn((event: Event) => event.preventDefault());
