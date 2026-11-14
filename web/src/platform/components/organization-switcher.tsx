@@ -8,8 +8,15 @@ import { Link as RouterLink } from 'react-router';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 export type OrganizationIdentity = { id: string; name?: string };
 
@@ -37,8 +44,8 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         'Organization';
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger
                 type="button"
                 render={
                     <ButtonPrimitive
@@ -63,15 +70,16 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                         <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
                     </>
                 )}
-            </PopoverTrigger>
-            <PopoverContent
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
                 side="bottom"
                 align="start"
                 sideOffset={4}
-                className="max-h-(--available-height) max-w-(--available-width) overflow-y-auto"
+                className="min-w-56"
                 aria-label="Switch organization"
             >
-                <section className="flex flex-col gap-2">
+                <DropdownMenuGroup aria-label="Organizations">
+                    <DropdownMenuLabel>Organizations</DropdownMenuLabel>
                     {error ? (
                         <>
                             <p className="text-xs text-muted-foreground" role="alert">
@@ -88,33 +96,22 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                     ) : memberships.length === 0 ? (
                         <p className="text-xs text-muted-foreground">No organizations available.</p>
                     ) : (
-                        <nav className="flex flex-col gap-1" aria-label="Organizations">
+                        <>
                             {memberships.map(({ organization: item }) => (
-                                <RouterLink
-                                    className={buttonVariants({
-                                        variant: 'ghost',
-                                        size: null,
-                                        className:
-                                            'w-full min-w-0 justify-start gap-2 border-0 p-2 text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50'
-                                    })}
-                                    to={`/orgs/${item.id}`}
+                                <DropdownMenuItem
+                                    render={<RouterLink to={`/orgs/${item.id}`} />}
                                     aria-current={item.id === organization.id ? 'page' : undefined}
                                     key={item.id}
                                     onClickCapture={() => setIsOpen(false)}
                                 >
-                                    <GeneratedAvatar kind="organization" name={item.name} />
-                                    <span className="flex min-w-0 flex-1 flex-col">
-                                        <span className="truncate text-sm leading-4">{item.name}</span>
-                                        <span className="truncate text-xs leading-4 text-muted-foreground">
-                                            Organization
-                                        </span>
-                                    </span>
-                                </RouterLink>
+                                    <GeneratedAvatar kind="organization" size="sm" name={item.name} />
+                                    <span className="truncate">{item.name}</span>
+                                </DropdownMenuItem>
                             ))}
-                        </nav>
+                        </>
                     )}
-                </section>
-            </PopoverContent>
-        </Popover>
+                </DropdownMenuGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

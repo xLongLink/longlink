@@ -6,16 +6,22 @@ import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
 import { clearAppearanceCache } from '@/lib/appearance';
-import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
-import { BookOpen, Building2, ChevronsUpDown, ExternalLink, Settings2 } from 'lucide-react';
+import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
-/** Renders a user profile popover with authentication and navigation actions. */
+/** Renders a user profile menu with authentication and navigation actions. */
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
     const sidebar = useContext(SidebarContext);
@@ -73,8 +79,8 @@ export function ProfileMenu() {
     );
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
-            <PopoverTrigger
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger
                 type="button"
                 aria-label={user.name}
                 render={
@@ -102,88 +108,66 @@ export function ProfileMenu() {
                 ) : (
                     avatar
                 )}
-            </PopoverTrigger>
-            <PopoverContent
-                className="max-h-(--available-height) max-w-(--available-width) overflow-y-auto"
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                className="min-w-56"
                 side={sidebar === null ? 'bottom' : 'top'}
                 align={sidebar === null ? 'end' : 'start'}
                 sideOffset={4}
                 aria-label={user.name}
             >
-                <section className="flex min-w-0 items-center gap-2">{identity}</section>
-                <Separator />
-                <nav aria-label="Account" className="flex flex-col gap-1">
-                    <p className="text-xs font-medium text-muted-foreground">Account</p>
-                    <RouterLink
-                        className={cn(buttonVariants({ variant: 'ghost' }), 'w-full justify-start')}
-                        to="/user/organizations"
-                        onClickCapture={closeMenu}
-                    >
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel className="flex min-w-0 items-center gap-2">{identity}</DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup aria-label="Account">
+                    <DropdownMenuLabel>Account</DropdownMenuLabel>
+                    <DropdownMenuItem render={<RouterLink to="/user/organizations" />} onClickCapture={closeMenu}>
                         <Building2 aria-hidden="true" className="text-muted-foreground" size={16} />
                         Organizations
-                    </RouterLink>
-                    <RouterLink
-                        className={cn(buttonVariants({ variant: 'ghost' }), 'w-full justify-start')}
-                        to="/user/settings"
-                        onClickCapture={closeMenu}
-                    >
+                    </DropdownMenuItem>
+                    <DropdownMenuItem render={<RouterLink to="/user/settings" />} onClickCapture={closeMenu}>
                         <Settings2 aria-hidden="true" className="text-muted-foreground" size={16} />
                         Settings
-                    </RouterLink>
-                    <a
-                        className={cn(buttonVariants({ variant: 'ghost' }), 'w-full justify-start')}
-                        href="/docs/"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        render={<a href="/docs/" target="_blank" rel="noopener noreferrer" />}
                         onClickCapture={closeMenu}
                     >
                         <BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />
                         Documentation
                         <ExternalLink aria-hidden="true" className="ms-auto text-muted-foreground" size={12} />
-                    </a>
-                </nav>
+                    </DropdownMenuItem>
+                </DropdownMenuGroup>
                 {user.administrator ? (
                     <>
-                        <Separator />
-                        <nav aria-label="Administration" className="flex flex-col gap-1">
-                            <p className="text-xs font-medium text-muted-foreground">Administration</p>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup aria-label="Administration">
+                            <DropdownMenuLabel>Administration</DropdownMenuLabel>
                             {adminNavigation.map(({ href, icon: Icon, label }) => (
-                                <RouterLink
+                                <DropdownMenuItem
                                     key={href}
-                                    className={cn(buttonVariants({ variant: 'ghost' }), 'w-full justify-start')}
-                                    to={href}
+                                    render={<RouterLink to={href} />}
                                     onClickCapture={closeMenu}
                                 >
                                     <Icon aria-hidden="true" className="text-muted-foreground" size={16} />
                                     {label}
-                                </RouterLink>
+                                </DropdownMenuItem>
                             ))}
-                        </nav>
-                        <Separator />
+                        </DropdownMenuGroup>
                     </>
                 ) : null}
+                <DropdownMenuSeparator />
                 {error && (
                     <p role="alert" className="text-sm text-destructive">
                         {error}
                     </p>
                 )}
-                <Button
-                    variant="destructive"
-                    type="button"
-                    disabled={pending}
-                    aria-busy={pending || undefined}
-                    onClick={() => void signOut()}
-                >
+                <DropdownMenuItem disabled={pending} aria-busy={pending || undefined} onClick={() => void signOut()}>
+                    <LogOut aria-hidden="true" />
                     {pending ? 'Signing out…' : error ? 'Retry sign out' : 'Sign out'}
-                </Button>
-                <PopoverPrimitive.Close
-                    type="button"
-                    render={<Button variant="ghost" />}
-                    className="sr-only focus:not-sr-only"
-                >
-                    Close profile menu
-                </PopoverPrimitive.Close>
-            </PopoverContent>
-        </Popover>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
