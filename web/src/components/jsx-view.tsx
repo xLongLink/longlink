@@ -6,6 +6,7 @@ import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
+import { Dialog } from '@/components/custom/dialog';
 import type { ViewRuntime } from '@/views/manifest';
 import { PdfPreview } from '@/components/pdf-preview';
 import { TextPreview } from '@/components/text-preview';
@@ -14,6 +15,7 @@ import { ViewBackdrop } from '@/components/view-backdrop';
 import type { FileViewerCommand } from '@/views/protocol';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { PageError, PageLoading } from '@/components/utils';
+import { NativeFile } from '@/components/custom/native-file';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
@@ -58,7 +60,7 @@ export function JsxView({
     const [fileViewers, setFileViewers] = useState<FileViewerCommand[]>([]);
 
     const [filePreview, setFilePreview] = useState<
-        { title: string } & ({ type: 'pdf'; body: Blob } | { type: 'text'; text: string })
+        { title: string } & ({ type: 'pdf' | 'media'; body: Blob } | { type: 'text'; text: string })
     >();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
@@ -376,7 +378,8 @@ export function JsxView({
                         setFilePreview({ type: 'text', text, title: command.title });
                         data = null;
                     } else {
-                        data = body;
+                        setFilePreview({ type: 'media', body, title: command.title });
+                        data = null;
                     }
                 } else {
                     data = await host.request(requestBaseUrl, command, controller.signal);
@@ -484,6 +487,16 @@ export function JsxView({
                     title={filePreview.title}
                     onClose={() => setFilePreview(undefined)}
                 />
+            )}
+            {filePreview?.type === 'media' && (
+                <Dialog
+                    title={filePreview.title}
+                    variant="fullscreen"
+                    isOpen
+                    onOpenChange={(open) => !open && setFilePreview(undefined)}
+                >
+                    <NativeFile body={filePreview.body} title={filePreview.title} />
+                </Dialog>
             )}
         </div>
     );

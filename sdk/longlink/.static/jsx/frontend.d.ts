@@ -4625,6 +4625,8 @@ declare function Link(props: {
     to?: string;
     /** Downloads a scoped Solution attachment with this filename instead of navigating. */
     download?: string;
+    /** Opens a scoped Solution attachment in a preview dialog with this filename as its title. */
+    preview?: string;
     /** Disables navigation, downloads, and actions. */
     disabled?: boolean;
     /** Runs an action with automatic async loading and duplicate-click prevention. */

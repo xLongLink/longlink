@@ -20,4 +20,5 @@ app.include_view(
 app.include_view("list.jsx", label="List", icon="list", width="wide")
 app.include_view("projects.jsx", label="Projects", icon="folder-kanban")
 app.include_view("tasks.jsx", label="Tasks", icon="list-todo")
+app.include_view("files.jsx", label="Files", icon="files")
 app.include_view("settings.jsx", label="Settings", icon="settings")

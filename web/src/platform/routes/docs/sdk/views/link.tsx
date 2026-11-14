@@ -18,6 +18,11 @@ export default function LinkPage() {
                     description: 'Optional link destination. Omit for a link-styled button action.'
                 },
                 {
+                    name: 'preview',
+                    type: 'string',
+                    description: 'Open a scoped Solution file in a preview dialog using this filename as its title.'
+                },
+                {
                     name: 'download',
                     type: 'string',
                     description: 'Download filename for a scoped Solution attachment instead of navigation.'
@@ -39,6 +44,9 @@ export default function LinkPage() {
   return (
     <Stack>
       <Link to="/orders">Orders</Link>
+      <Link to="/api/documents/sample" preview="sample-document.txt">
+        sample-document.txt
+      </Link>
       <Link to="/api/documents/sample" download="sample-document.txt">
         sample-document.txt
       </Link>

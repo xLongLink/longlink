@@ -1,10 +1,10 @@
 import { cn } from 'cn';
 import { Text } from './text';
-import { useDownload } from './preview';
 import { ReportedError } from '@/lib/reported';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
 import { Spinner } from '@/components/shadcn/spinner';
+import { FileRequestContext, useDownload } from './preview';
 import { buttonVariants } from '@/components/shadcn/button';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 
@@ -66,22 +66,26 @@ export function NavigationLink({ href, target, onClick, ...props }: ComponentPro
     );
 }
 
-/** Navigates, downloads an attachment, or runs a link-styled button action. */
+/** Navigates, previews or downloads an attachment, or runs a link-styled action. */
 export function Link({
     to,
     download,
+    preview,
     disabled = false,
     onClick,
     children
 }: {
     to?: string;
     download?: string;
+    /** Opens a scoped file in a preview dialog using this filename as its title. */
+    preview?: string;
     disabled?: boolean;
     /** Runs an action with automatic async loading and duplicate-click prevention. Omit to for button semantics. */
     onClick?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void | Promise<void>;
     children?: ReactNode;
 }) {
     const attachment = useDownload();
+    const files = useContext(FileRequestContext);
     const actionInFlight = useRef(false);
     const [isPending, startTransition] = useTransition();
     const blocked = disabled || isPending;
@@ -95,16 +99,16 @@ export function Link({
             return;
         }
 
-        // Download links use the scoped host capability instead of native navigation.
-        if (download !== undefined && to !== undefined) event.preventDefault();
+        // File actions use the scoped host capability instead of native navigation.
+        if ((download !== undefined || preview !== undefined) && to !== undefined) event.preventDefault();
 
-        if (!onClick && download === undefined) return;
+        if (!onClick && download === undefined && preview === undefined) return;
         actionInFlight.current = true;
 
         try {
             const result = onClick?.(event);
 
-            if (!result && (download === undefined || to === undefined)) {
+            if (!result && ((download === undefined && preview === undefined) || to === undefined)) {
                 actionInFlight.current = false;
 
                 return;
@@ -114,7 +118,12 @@ export function Link({
                 try {
                     await result;
 
-                    if (download !== undefined && to !== undefined) await attachment.download(to, download);
+                    if (preview !== undefined && to !== undefined) {
+                        if (!files) throw new Error('Previews require the Solution runtime');
+                        await files.preview(to, preview);
+                    } else if (download !== undefined && to !== undefined) {
+                        await attachment.download(to, download);
+                    }
                 } catch (error) {
                     // Already-reported request failures must not replace the View.
                     if (!(error instanceof ReportedError)) throw error;
@@ -151,6 +160,7 @@ export function Link({
         ),
         'aria-disabled': blocked || undefined,
         'aria-busy': isPending || undefined,
+        'aria-haspopup': preview !== undefined ? ('dialog' as const) : undefined,
         onClick: activate,
         onKeyDown: (event: React.KeyboardEvent<HTMLAnchorElement | HTMLButtonElement>) => {
             if (blocked && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
