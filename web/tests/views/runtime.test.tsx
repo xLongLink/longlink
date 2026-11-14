@@ -359,6 +359,86 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
+it('preserves native Collapsible composition and cancellable authored visibility changes', async () => {
+    // Adapter substitution must not discard native trigger composition or cancellation details.
+    const runtime = await initializeRuntime(`export default function View() {
+        const [locked, setLocked] = useState(true);
+        const [open, setOpen] = useState(false);
+        return <>
+            <Collapsible open={open} onOpenChange={(next, details) => {
+                if (locked) details.cancel();
+                else setOpen(next);
+            }}>
+                <CollapsibleTrigger render={<Button variant="outline" />}>Order details</CollapsibleTrigger>
+                <CollapsibleContent><p>PO-871</p></CollapsibleContent>
+            </Collapsible>
+            <button onClick={() => setLocked(false)}>Unlock</button>
+        </>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="collapsible-trigger"]')).not.toBeNull());
+        const trigger = runtime.mount.querySelector('[data-slot="collapsible-trigger"]');
+
+        if (!trigger) throw new Error('Expected composed Collapsible trigger');
+
+        const unlock = Array.from(runtime.mount.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Unlock'
+        );
+
+        if (!unlock) throw new Error('Expected authored unlock action');
+        const user = userEvent.setup();
+        await user.click(trigger);
+        expect(trigger.getAttribute('aria-expanded')).toBe('false');
+        expect(runtime.mount.textContent).not.toContain('PO-871');
+        await user.click(unlock);
+        await user.click(trigger);
+        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
+        expect(runtime.mount.querySelector('[data-slot="collapsible-content"]')?.textContent).toBe('PO-871');
+        await user.click(trigger);
+        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
+        await vi.waitFor(() => expect(runtime.mount.textContent).not.toContain('PO-871'));
+    } finally {
+        runtime.close();
+    }
+});
+
+it('returns native Calendar ranges to authored state without selecting disabled dates', async () => {
+    // DateInput's string adapter cannot replace range selection and native Date callbacks.
+    const runtime = await initializeRuntime(`export default function View() {
+        const [range, setRange] = useState(undefined);
+        return <>
+            <Calendar mode="range" defaultMonth={new Date(2026, 0, 1)}
+                selected={range} onSelect={setRange} disabled={new Date(2026, 0, 12)} />
+            <output>{range?.from?.getDate() ?? '-'}:{range?.to?.getDate() ?? '-'}</output>
+        </>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="calendar"]')).not.toBeNull());
+        const start = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 10th"]');
+
+        if (!start) throw new Error('Expected January 10 range start');
+        const user = userEvent.setup();
+        await user.click(start);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10'));
+        const disabled = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 12th"]');
+
+        if (!disabled) throw new Error('Expected disabled January 12');
+        expect(disabled.disabled).toBe(true);
+        await user.click(disabled);
+        expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10');
+        const end = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 14th"]');
+
+        if (!end) throw new Error('Expected January 14 range end');
+        await user.click(end);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:14'));
+        expect(runtime.mount.querySelector('button[data-range-middle="true"]')).not.toBeNull();
+    } finally {
+        runtime.close();
+    }
+});
+
 it('exposes native Progress composition inside the isolated View runtime', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [value, setValue] = useState(25);

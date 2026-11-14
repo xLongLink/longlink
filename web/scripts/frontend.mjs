@@ -38,6 +38,8 @@ const [bundle] = generateDtsBundle(
                     'victory-vendor',
                     '@types/d3-shape',
                     '@types/d3-path',
+                    'react-day-picker',
+                    'date-fns',
                 ],
                 allowedTypesLibraries: [],
             },

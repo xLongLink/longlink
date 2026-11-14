@@ -13,6 +13,12 @@ export { GridSpan } from '@/components/custom/grid';
 /** Custom initially-open disclosure with persistent content and controlled-close focus recovery. @category Layouts */
 export { Disclosure } from '@/components/custom/disclosure';
 
+/** @category Layouts */
+export { Collapsible } from '@/components/shadcn/collapsible';
+
+/** @category Layouts @group Collapsible */
+export { CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
+
 /** @category Display */
 export { Heading } from '@/components/custom/heading';
 
@@ -104,6 +110,9 @@ export { Form } from '@/components/custom/form';
 
 /** @category Form */
 export { DateInput } from '@/components/custom/date-input';
+
+/** @category Form */
+export { Calendar } from '@/components/shadcn/calendar';
 
 /** @category Form */
 export { TimeInput } from '@/components/custom/time-input';

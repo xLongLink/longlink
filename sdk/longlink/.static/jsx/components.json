@@ -916,6 +916,22 @@
             "source": "reui"
         },
         {
+            "name": "Collapsible",
+            "category": "Layouts",
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/collapsible",
+            "introduction": "Native collapsible composition using CollapsibleTrigger and CollapsibleContent.",
+            "properties": [
+                { "name": "open", "type": "boolean", "description": "Controlled visibility." },
+                { "name": "defaultOpen", "type": "boolean", "description": "Initial uncontrolled visibility.", "default": false },
+                { "name": "disabled", "type": "boolean", "description": "Prevents trigger interaction." },
+                { "name": "onOpenChange", "type": "(open, details) => void", "description": "Receives visibility changes and cancellable native event details." },
+                { "name": "CollapsibleTrigger.render", "type": "ReactElement | function", "description": "Customizes the trigger element, including native Button composition." },
+                { "name": "CollapsibleContent.keepMounted", "type": "boolean", "description": "Retains closed content in the DOM.", "default": false },
+                { "name": "children", "type": "ReactNode", "description": "Compose CollapsibleTrigger and CollapsibleContent; parts support native DOM attributes and refs." }
+            ]
+        },
+        {
             "name": "Disclosure",
             "category": "Layouts",
             "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery.",
@@ -979,6 +995,22 @@
             ],
             "source": "custom",
             "justification": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter."
+        },
+        {
+            "name": "Calendar",
+            "category": "Form",
+            "source": "shadcn",
+            "reference": "https://ui.shadcn.com/docs/components/base/calendar",
+            "introduction": "Native calendar with single, multiple, and date-range selection.",
+            "properties": [
+                { "name": "mode", "type": "\"single\" | \"multiple\" | \"range\"", "description": "Enables the corresponding selection mode." },
+                { "name": "selected", "type": "Date | Date[] | DateRange", "description": "Controlled selection matching the mode." },
+                { "name": "onSelect", "type": "(selected, triggerDate, modifiers, event) => void", "description": "Receives native Date selections matching the mode." },
+                { "name": "defaultMonth", "type": "Date", "description": "Initial displayed month." },
+                { "name": "disabled", "type": "Matcher | Matcher[]", "description": "Dates unavailable for selection." },
+                { "name": "min / max", "type": "number", "description": "Selection bounds for multiple dates or range nights." },
+                { "name": "numberOfMonths", "type": "number", "description": "Number of displayed months." }
+            ]
         },
         {
             "name": "DateInput",

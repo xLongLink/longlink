@@ -15,6 +15,15 @@ const nativeComposition = (
             <CardDescription>Settings</CardDescription>
         </CardHeader>
         <CardContent>
+            <Collapsible onOpenChange={(open, details) => {
+                open.valueOf();
+                details.cancel();
+            }}>
+                <CollapsibleTrigger render={<Button />}>Details</CollapsibleTrigger>
+                <CollapsibleContent keepMounted>Order details</CollapsibleContent>
+            </Collapsible>
+            <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
+            <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
             <Text
                 as="h4"
                 id="publication-status"

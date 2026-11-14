@@ -49,7 +49,8 @@ async function withOrganizationSettings(
     access: UserOrganizationMembership,
     memberRows: OrganizationMemberAccessResponse[],
     check: (output: HTMLElement, client: QueryClient) => Promise<void>,
-    fragment = 'members'
+    fragment = 'members',
+    search = ''
 ) {
     const errors: unknown[] = [];
 
@@ -85,7 +86,7 @@ async function withOrganizationSettings(
                 </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => check(output, client),
-            `/orgs/${access.organization.id}/settings#${fragment}`
+            `/orgs/${access.organization.id}/settings${search}#${fragment}`
         );
         expect(errors).toEqual([]);
     } finally {
@@ -279,24 +280,58 @@ it('keeps a replacement member confirmation open when an older action completes'
 it.each([
     { fragment: 'general', group: 'Organization' },
     { fragment: 'members', group: 'People' }
-])('keeps the selected $fragment settings link visible on arrival', async ({ fragment, group }) => {
+])('keeps $fragment accessible through keyboard collapse and navigation', async ({ fragment, group }) => {
     // Act
     await withOrganizationSettings(
         membership,
         members,
-        async (output) => {
-            const disclosure = Array.from(output.querySelectorAll('summary')).find(
-                (summary) => summary.textContent === group
+        async (output, client) => {
+            // Keep the destination resource cached until keyboard navigation mounts its section.
+            client.setQueryDefaults(['api', `${base}/invitations`], { gcTime: Infinity });
+            client.setQueryData(['api', `${base}/invitations`], []);
+            const events = userEvent.setup();
+
+            const disclosure = Array.from(output.querySelectorAll<HTMLButtonElement>('nav button')).find(
+                (button) => button.textContent === group
             );
+
+            if (!disclosure) throw new Error(`Expected the ${group} navigation group`);
 
             const selected = output.querySelector(`a[href$="#${fragment}"][aria-current="location"]`);
 
             // Assert
-            expect(disclosure?.parentElement?.hasAttribute('open')).toBe(true);
+            expect(disclosure.getAttribute('aria-expanded')).toBe('true');
             expect(selected).not.toBeNull();
             expect(selected?.closest('[inert], [hidden]')).toBeNull();
+
+            // Collapse and reopen with the keyboard before navigating to another section.
+            await act(async () => {
+                disclosure.focus();
+                await events.keyboard('{Enter}');
+            });
+            expect(disclosure.getAttribute('aria-expanded')).toBe('false');
+            const panel = document.getElementById(disclosure.getAttribute('aria-controls') ?? '');
+            expect(panel === null || panel.hidden).toBe(true);
+
+            await act(async () => events.keyboard(' '));
+            expect(disclosure.getAttribute('aria-expanded')).toBe('true');
+
+            const invitations = output.querySelector<HTMLAnchorElement>('nav a[href$="#invitations"]');
+
+            if (!invitations) throw new Error('Expected the invitations settings link');
+            expect(invitations.getAttribute('href')).toBe(
+                `/orgs/${membership.organization.id}/settings?source=directory#invitations`
+            );
+            await act(async () => {
+                invitations.focus();
+                await events.keyboard('{Enter}');
+            });
+            expect(invitations.getAttribute('aria-current')).toBe('location');
+            await vi.waitFor(() => expect(output.querySelector('h2')?.textContent).toBe('Invitations'));
+            expect(output.querySelectorAll('nav a[aria-current="location"]')).toHaveLength(1);
         },
-        fragment
+        fragment,
+        '?source=directory'
     );
 });
 

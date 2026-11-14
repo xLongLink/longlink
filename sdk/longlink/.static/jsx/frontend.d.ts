@@ -9809,6 +9809,35 @@ type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactS
 type PayloadChildRenderFunction<Payload> = (arg: {
     payload: Payload | undefined;
 }) => React$1.ReactNode;
+const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
+}
+interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
+    open?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
+    disabled?: boolean | undefined;
+}
+type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
+type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
+namespace CollapsibleRoot {
+    type State = CollapsibleRootState;
+    type Props = CollapsibleRootProps;
+    type ChangeEventReason = CollapsibleRootChangeEventReason;
+    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
+}
+interface UseCollapsibleRootReturnValue {
+    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
+    disabled: boolean;
+    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
+    mounted: boolean;
+    open: boolean;
+    panelId: React$1.HTMLAttributes<Element>["id"];
+    setMounted: (nextMounted: boolean) => void;
+    setOpen: (open: boolean) => void;
+    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
+    transitionStatus: TransitionStatus;
+}
 const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
 interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
 }
@@ -10336,6 +10365,27 @@ interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIn
 namespace CheckboxIndicator {
     type State = CheckboxIndicatorState;
     type Props = CheckboxIndicatorProps;
+}
+const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface CollapsibleTriggerState extends CollapsibleRootState {
+}
+interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
+}
+namespace CollapsibleTrigger {
+    type State = CollapsibleTriggerState;
+    type Props = CollapsibleTriggerProps;
+}
+const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface CollapsiblePanelState extends CollapsibleRootState {
+    transitionStatus: TransitionStatus;
+}
+interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
+    hiddenUntilFound?: boolean | undefined;
+    keepMounted?: boolean | undefined;
+}
+namespace CollapsiblePanel {
+    type State = CollapsiblePanelState;
+    type Props = CollapsiblePanelProps;
 }
 function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
 type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
@@ -13804,6 +13854,535 @@ export function Disclosure(props: {
     disabled?: boolean;
     onOpenChange?: (isOpen: boolean) => void;
 }): React$1.JSX.Element;
+function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
+function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
+export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
+interface Locale {
+    code: string;
+    formatDistance: FormatDistanceFn;
+    formatRelative: FormatRelativeFn;
+    localize: Localize;
+    formatLong: FormatLong;
+    match: Match;
+    options?: LocaleOptions;
+}
+interface LocaleOptions extends WeekOptions, FirstWeekContainsDateOptions {
+}
+type FormatDistanceFn = (token: FormatDistanceToken, count: number, options?: FormatDistanceFnOptions) => string;
+interface FormatDistanceFnOptions {
+    addSuffix?: boolean;
+    comparison?: -1 | 0 | 1;
+}
+type FormatDistanceToken = "lessThanXSeconds" | "xSeconds" | "halfAMinute" | "lessThanXMinutes" | "xMinutes" | "aboutXHours" | "xHours" | "xDays" | "aboutXWeeks" | "xWeeks" | "aboutXMonths" | "xMonths" | "aboutXYears" | "xYears" | "overXYears" | "almostXYears";
+type FormatRelativeFn = <DateType extends Date>(token: FormatRelativeToken, date: DateType, baseDate: DateType, options?: FormatRelativeFnOptions) => string;
+interface FormatRelativeFnOptions extends WeekOptions, LocalizedOptions<"options" | "formatRelative"> {
+}
+type FormatRelativeToken = "lastWeek" | "yesterday" | "today" | "tomorrow" | "nextWeek" | "other";
+interface FormatPart {
+    isToken: boolean;
+    value: string;
+}
+interface Localize {
+    ordinalNumber: LocalizeFn<number>;
+    era: LocalizeFn<Era>;
+    quarter: LocalizeFn<Quarter>;
+    month: LocalizeFn<Month>;
+    day: LocalizeFn<Day>;
+    dayPeriod: LocalizeFn<LocaleDayPeriod>;
+    preprocessor?: <DateType extends Date>(date: DateType, parts: FormatPart[]) => FormatPart[];
+}
+type LocalizeFn<Value extends LocaleUnitValue | number> = (value: Value, options?: LocalizeFnOptions) => string;
+interface LocalizeFnOptions {
+    width?: LocaleWidth;
+    context?: "formatting" | "standalone";
+    unit?: LocaleUnit;
+}
+interface Match {
+    ordinalNumber: MatchFn<number, {
+        unit: LocaleUnit;
+    }>;
+    era: MatchFn<Era>;
+    quarter: MatchFn<Quarter>;
+    month: MatchFn<Month>;
+    day: MatchFn<Day>;
+    dayPeriod: MatchFn<LocaleDayPeriod>;
+}
+type MatchFn<Result, ExtraOptions = Record<string, unknown>> = (str: string, options?: MatchFnOptions<Result> & ExtraOptions) => MatchFnResult<Result> | null;
+interface MatchFnOptions<Result> {
+    width?: LocaleWidth;
+    valueCallback?: MatchValueCallback<string, Result>;
+}
+type MatchValueCallback<Arg, Result> = (value: Arg) => Result;
+interface MatchFnResult<Result> {
+    value: Result;
+    rest: string;
+}
+interface FormatLong {
+    date: FormatLongFn;
+    time: FormatLongFn;
+    dateTime: FormatLongFn;
+}
+type FormatLongFn = (options: FormatLongFnOptions) => string;
+interface FormatLongFnOptions {
+    width?: FormatLongWidth;
+}
+type FormatLongWidth = "full" | "long" | "medium" | "short" | "any";
+type LocaleUnitValue = Era | Quarter | Month | Day | LocaleDayPeriod;
+type LocaleWidth = "narrow" | "short" | "abbreviated" | "wide" | "any";
+type LocaleDayPeriod = "am" | "pm" | "midnight" | "noon" | "morning" | "afternoon" | "evening" | "night";
+type LocaleUnit = "second" | "minute" | "hour" | "day" | "dayOfYear" | "date" | "week" | "month" | "quarter" | "year";
+type DateArg<DateType extends Date> = DateType | number | string;
+interface Interval<StartType extends DateArg<Date> = DateArg<Date>, EndType extends DateArg<Date> = DateArg<Date>> {
+    start: StartType;
+    end: EndType;
+}
+type Era = 0 | 1;
+type Quarter = 1 | 2 | 3 | 4;
+type Day = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type Month = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+type FirstWeekContainsDate = 1 | 4;
+interface WeekOptions {
+    weekStartsOn?: Day;
+}
+interface FirstWeekContainsDateOptions {
+    firstWeekContainsDate?: FirstWeekContainsDate;
+}
+interface LocalizedOptions<LocaleFields extends keyof Locale> {
+    locale?: Pick<Locale, LocaleFields>;
+}
+interface AdditionalTokensOptions {
+    useAdditionalWeekYearTokens?: boolean;
+    useAdditionalDayOfYearTokens?: boolean;
+}
+interface ContextOptions<DateType extends Date> {
+    in?: ContextFn<DateType> | undefined;
+}
+type ContextFn<DateType extends Date> = (value: DateArg<Date> & {}) => DateType;
+interface EndOfWeekOptions<DateType extends Date = Date> extends WeekOptions, LocalizedOptions<"options">, ContextOptions<DateType> {
+}
+interface FormatOptions extends LocalizedOptions<"options" | "localize" | "formatLong">, WeekOptions, FirstWeekContainsDateOptions, AdditionalTokensOptions, ContextOptions<Date> {
+}
+interface GetMonthOptions extends ContextOptions<Date> {
+}
+interface GetWeekOptions extends LocalizedOptions<"options">, WeekOptions, FirstWeekContainsDateOptions, ContextOptions<Date> {
+}
+interface GetYearOptions extends ContextOptions<Date> {
+}
+interface StartOfWeekOptions<DateType extends Date = Date> extends LocalizedOptions<"options">, WeekOptions, ContextOptions<DateType> {
+}
+function CaptionLabel(props: React$1.HTMLAttributes<HTMLSpanElement>): React$1.JSX.Element;
+function Chevron(props: {
+    className?: string;
+    style?: React$1.CSSProperties;
+    size?: number;
+    disabled?: boolean;
+    orientation?: "up" | "down" | "left" | "right";
+}): React$1.JSX.Element;
+type DayPickerProps = PropsBase & (PropsSingle | PropsSingleRequired | PropsMulti | PropsMultiRequired | PropsRange | PropsRangeRequired | {
+    mode?: undefined;
+    required?: undefined;
+});
+interface PropsBase {
+    mode?: Mode | undefined;
+    required?: boolean | undefined;
+    className?: string;
+    classNames?: Partial<ClassNames>;
+    modifiersClassNames?: ModifiersClassNames;
+    style?: React$1.CSSProperties;
+    styles?: Partial<Styles>;
+    modifiersStyles?: ModifiersStyles;
+    id?: string;
+    defaultMonth?: Date;
+    month?: Date;
+    numberOfMonths?: number;
+    startMonth?: Date | undefined;
+    endMonth?: Date;
+    pagedNavigation?: boolean;
+    reverseMonths?: boolean;
+    hideNavigation?: boolean;
+    disableNavigation?: boolean;
+    captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years";
+    reverseYears?: boolean;
+    navLayout?: "around" | "after" | undefined;
+    fixedWeeks?: boolean;
+    hideWeekdays?: boolean;
+    showOutsideDays?: boolean;
+    showWeekNumber?: boolean;
+    animate?: boolean;
+    broadcastCalendar?: boolean;
+    ISOWeek?: boolean;
+    timeZone?: string | undefined;
+    noonSafe?: boolean | undefined;
+    components?: Partial<CustomComponents>;
+    footer?: React$1.ReactNode | string;
+    autoFocus?: boolean;
+    disabled?: Matcher | Matcher[] | undefined;
+    hidden?: Matcher | Matcher[] | undefined;
+    today?: Date;
+    modifiers?: Record<string, Matcher | Matcher[] | undefined> | undefined;
+    labels?: Partial<Labels>;
+    formatters?: Partial<Formatters>;
+    dir?: HTMLDivElement["dir"];
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+    role?: "application" | "dialog" | undefined;
+    nonce?: HTMLDivElement["nonce"];
+    title?: HTMLDivElement["title"];
+    lang?: HTMLDivElement["lang"];
+    locale?: Partial<DayPickerLocale> | undefined;
+    numerals?: Numerals | undefined;
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined;
+    firstWeekContainsDate?: 1 | 4;
+    useAdditionalWeekYearTokens?: boolean | undefined;
+    useAdditionalDayOfYearTokens?: boolean | undefined;
+    onMonthChange?: MonthChangeEventHandler;
+    onNextClick?: MonthChangeEventHandler;
+    onPrevClick?: MonthChangeEventHandler;
+    onDayClick?: DayEventHandler<React$1.MouseEvent>;
+    onDayFocus?: DayEventHandler<React$1.FocusEvent>;
+    onDayBlur?: DayEventHandler<React$1.FocusEvent>;
+    onDayKeyDown?: DayEventHandler<React$1.KeyboardEvent>;
+    onDayMouseEnter?: DayEventHandler<React$1.MouseEvent>;
+    onDayMouseLeave?: DayEventHandler<React$1.MouseEvent>;
+    dateLib?: Partial<typeof DateLib.prototype> | undefined;
+}
+type OnSelectHandler<T> = (selected: T, triggerDate: Date, modifiers: Modifiers, e: React$1.MouseEvent | React$1.KeyboardEvent) => void;
+interface PropsSingleRequired {
+    mode: "single";
+    required: true;
+    selected: Date | undefined;
+    onSelect?: OnSelectHandler<Date>;
+}
+interface PropsSingle {
+    mode: "single";
+    required?: false | undefined;
+    selected?: Date | undefined;
+    onSelect?: OnSelectHandler<Date | undefined>;
+}
+interface PropsMultiRequired {
+    mode: "multiple";
+    required: true;
+    selected: Date[] | undefined;
+    onSelect?: OnSelectHandler<Date[]>;
+    min?: number;
+    max?: number;
+}
+interface PropsMulti {
+    mode: "multiple";
+    required?: false | undefined;
+    selected?: Date[] | undefined;
+    onSelect?: OnSelectHandler<Date[] | undefined>;
+    min?: number;
+    max?: number;
+}
+interface PropsRangeRequired {
+    mode: "range";
+    required: true;
+    disabled?: Matcher | Matcher[] | undefined;
+    excludeDisabled?: boolean | undefined;
+    resetOnSelect?: boolean | undefined;
+    selected: DateRange | undefined;
+    onSelect?: OnSelectHandler<DateRange>;
+    min?: number;
+    max?: number;
+}
+interface PropsRange {
+    mode: "range";
+    required?: false | undefined;
+    disabled?: Matcher | Matcher[] | undefined;
+    excludeDisabled?: boolean | undefined;
+    resetOnSelect?: boolean | undefined;
+    selected?: DateRange | undefined;
+    onSelect?: OnSelectHandler<DateRange | undefined>;
+    min?: number;
+    max?: number;
+}
+function Day$1(props: {
+    day: CalendarDay;
+    modifiers: Modifiers;
+} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function DayButton(props: {
+    day: CalendarDay;
+    modifiers: Modifiers;
+} & React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
+type DropdownOption = {
+    value: number;
+    label: string;
+    disabled: boolean;
+};
+function Dropdown(props: {
+    options?: DropdownOption[] | undefined;
+} & Omit<React$1.SelectHTMLAttributes<HTMLSelectElement>, "children">): React$1.JSX.Element;
+type DropdownProps = Parameters<typeof Dropdown>[0];
+function DropdownNav(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function Footer(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+class CalendarWeek {
+    constructor(weekNumber: number, days: CalendarDay[]);
+    weekNumber: number;
+    days: CalendarDay[];
+}
+class CalendarMonth {
+    constructor(month: Date, weeks: CalendarWeek[]);
+    date: Date;
+    weeks: CalendarWeek[];
+}
+function Month$1(props: {
+    calendarMonth: CalendarMonth;
+    displayIndex: number;
+} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function MonthCaption(props: {
+    calendarMonth: CalendarMonth;
+    displayIndex: number;
+} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function MonthGrid(props: React$1.TableHTMLAttributes<HTMLTableElement>): React$1.JSX.Element;
+function Months(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function MonthsDropdown(props: DropdownProps): React$1.JSX.Element;
+function Nav(props: {
+    onPreviousClick?: React$1.MouseEventHandler<HTMLButtonElement>;
+    onNextClick?: React$1.MouseEventHandler<HTMLButtonElement>;
+    previousMonth?: Date | undefined;
+    nextMonth?: Date | undefined;
+} & React$1.HTMLAttributes<HTMLElement>): React$1.JSX.Element;
+function NextMonthButton(props: React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
+function Option$1(props: React$1.OptionHTMLAttributes<HTMLOptionElement>): React$1.JSX.Element;
+function PreviousMonthButton(props: React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
+function Root$1(props: {
+    rootRef?: React$1.Ref<HTMLDivElement>;
+} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
+function Select(props: React$1.SelectHTMLAttributes<HTMLSelectElement>): React$1.JSX.Element;
+function Week(props: {
+    week: CalendarWeek;
+} & React$1.HTMLAttributes<HTMLTableRowElement>): React$1.JSX.Element;
+function Weekday(props: React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
+function Weekdays(props: React$1.HTMLAttributes<HTMLTableRowElement>): React$1.JSX.Element;
+function WeekNumber(props: {
+    week: CalendarWeek;
+} & React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
+function WeekNumberHeader(props: React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
+function Weeks(props: React$1.HTMLAttributes<HTMLTableSectionElement>): React$1.JSX.Element;
+function YearsDropdown(props: DropdownProps): React$1.JSX.Element;
+function formatCaption(month: Date, options?: DateLibOptions, dateLib?: DateLib): string;
+function formatDay(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
+function formatMonthDropdown(month: Date, dateLib?: DateLib): string;
+function formatWeekdayName(weekday: Date, options?: DateLibOptions, dateLib?: DateLib): string;
+function formatWeekNumber(weekNumber: number, dateLib?: DateLib): string;
+function formatWeekNumberHeader(): string;
+function formatYearDropdown(year: Date, dateLib?: DateLib): string;
+function labelDayButton(date: Date, modifiers: Modifiers, options?: DateLibOptions, dateLib?: DateLib): string;
+function labelGrid(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
+function labelGridcell(date: Date, modifiers?: Modifiers, options?: DateLibOptions, dateLib?: DateLib): string;
+function labelMonthDropdown(_options?: DateLibOptions): string;
+function labelNav(): string;
+function labelNext(_month: Date | undefined, _options?: DateLibOptions): string;
+function labelPrevious(_month: Date | undefined): string;
+function labelWeekday(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
+function labelWeekNumber(weekNumber: number, _options?: DateLibOptions): string;
+function labelWeekNumberHeader(_options?: DateLibOptions): string;
+function labelYearDropdown(_options?: DateLibOptions): string;
+enum UI {
+    Root = "root",
+    Chevron = "chevron",
+    Day = "day",
+    DayButton = "day_button",
+    CaptionLabel = "caption_label",
+    Dropdowns = "dropdowns",
+    Dropdown = "dropdown",
+    DropdownRoot = "dropdown_root",
+    Footer = "footer",
+    MonthGrid = "month_grid",
+    MonthCaption = "month_caption",
+    MonthsDropdown = "months_dropdown",
+    Month = "month",
+    Months = "months",
+    Nav = "nav",
+    NextMonthButton = "button_next",
+    PreviousMonthButton = "button_previous",
+    Week = "week",
+    Weeks = "weeks",
+    Weekday = "weekday",
+    Weekdays = "weekdays",
+    WeekNumber = "week_number",
+    WeekNumberHeader = "week_number_header",
+    YearsDropdown = "years_dropdown"
+}
+enum DayFlag {
+    disabled = "disabled",
+    hidden = "hidden",
+    outside = "outside",
+    focused = "focused",
+    today = "today"
+}
+enum SelectionState {
+    range_end = "range_end",
+    range_middle = "range_middle",
+    range_start = "range_start",
+    selected = "selected"
+}
+enum Animation$1 {
+    weeks_before_enter = "weeks_before_enter",
+    weeks_before_exit = "weeks_before_exit",
+    weeks_after_enter = "weeks_after_enter",
+    weeks_after_exit = "weeks_after_exit",
+    caption_after_enter = "caption_after_enter",
+    caption_after_exit = "caption_after_exit",
+    caption_before_enter = "caption_before_enter",
+    caption_before_exit = "caption_before_exit"
+}
+type Mode = "single" | "multiple" | "range";
+type CustomComponents = {
+    Chevron: typeof Chevron;
+    CaptionLabel: typeof CaptionLabel;
+    Day: typeof Day$1;
+    DayButton: typeof DayButton;
+    Dropdown: typeof Dropdown;
+    DropdownNav: typeof DropdownNav;
+    Footer: typeof Footer;
+    Month: typeof Month$1;
+    MonthCaption: typeof MonthCaption;
+    MonthGrid: typeof MonthGrid;
+    Months: typeof Months;
+    Nav: typeof Nav;
+    Option: typeof Option$1;
+    PreviousMonthButton: typeof PreviousMonthButton;
+    NextMonthButton: typeof NextMonthButton;
+    Root: typeof Root$1;
+    Select: typeof Select;
+    Weeks: typeof Weeks;
+    Week: typeof Week;
+    Weekday: typeof Weekday;
+    Weekdays: typeof Weekdays;
+    WeekNumber: typeof WeekNumber;
+    WeekNumberHeader: typeof WeekNumberHeader;
+    MonthsDropdown: typeof MonthsDropdown;
+    YearsDropdown: typeof YearsDropdown;
+};
+type Formatters = {
+    formatCaption: typeof formatCaption;
+    formatDay: typeof formatDay;
+    formatMonthDropdown: typeof formatMonthDropdown;
+    formatWeekNumber: typeof formatWeekNumber;
+    formatWeekNumberHeader: typeof formatWeekNumberHeader;
+    formatWeekdayName: typeof formatWeekdayName;
+    formatYearDropdown: typeof formatYearDropdown;
+};
+type Labels = {
+    labelNav: typeof labelNav;
+    labelGrid: typeof labelGrid;
+    labelGridcell: typeof labelGridcell;
+    labelMonthDropdown: typeof labelMonthDropdown;
+    labelYearDropdown: typeof labelYearDropdown;
+    labelNext: typeof labelNext;
+    labelPrevious: typeof labelPrevious;
+    labelDayButton: typeof labelDayButton;
+    labelWeekday: typeof labelWeekday;
+    labelWeekNumber: typeof labelWeekNumber;
+    labelWeekNumberHeader: typeof labelWeekNumberHeader;
+};
+type Matcher = boolean | ((date: Date) => boolean) | Date | Date[] | DateRange | DateBefore | DateAfter | DateInterval | DayOfWeek;
+type DateAfter = {
+    after: Date;
+};
+type DateBefore = {
+    before: Date;
+};
+type DateInterval = {
+    before: Date;
+    after: Date;
+};
+type DateRange = {
+    from: Date | undefined;
+    to?: Date | undefined;
+};
+type DayOfWeek = {
+    dayOfWeek: number | number[];
+};
+type DayEventHandler<EventType> = (date: Date, modifiers: Modifiers, e: EventType) => void;
+type MonthChangeEventHandler = (month: Date) => void;
+type ClassNames = {
+    [key in UI | SelectionState | DayFlag | Animation$1]: string;
+};
+type Styles = {
+    [key in UI | SelectionState | DayFlag]: React$1.CSSProperties | undefined;
+};
+type Modifiers = Record<string, boolean>;
+type ModifiersStyles = Record<string, React$1.CSSProperties>;
+type ModifiersClassNames = Record<string, string>;
+type Numerals = "latn" | "arab" | "arabext" | "deva" | "geez" | "beng" | "guru" | "gujr" | "orya" | "tamldec" | "telu" | "knda" | "mlym" | "thai" | "mymr" | "khmr" | "laoo" | "tibt";
+type DayPickerLocaleLabels = {
+    [K in keyof Labels]?: string | Labels[K];
+};
+interface DayPickerLocale extends Locale {
+    labels?: DayPickerLocaleLabels;
+}
+type MonthYearOrder = "month-first" | "year-first";
+interface DateLibOptions extends FormatOptions, StartOfWeekOptions, EndOfWeekOptions {
+    Date?: typeof Date;
+    locale?: DayPickerLocale;
+    timeZone?: string;
+    numerals?: Numerals;
+}
+class DateLib {
+    readonly options: DateLibOptions;
+    readonly overrides?: Partial<typeof DateLib.prototype>;
+    constructor(options?: DateLibOptions, overrides?: Partial<typeof DateLib.prototype>);
+    private getDigitMap;
+    private replaceDigits;
+    formatNumber(value: number | string): string;
+    getMonthYearOrder(): MonthYearOrder;
+    formatMonthYear(date: Date): string;
+    private static readonly yearFirstLocales;
+    today: () => Date;
+    newDate: (year: number, monthIndex: number, date: number) => Date;
+    addDays: (date: Date, amount: number) => Date;
+    addMonths: (date: Date, amount: number) => Date;
+    addWeeks: (date: Date, amount: number) => Date;
+    addYears: (date: Date, amount: number) => Date;
+    differenceInCalendarDays: (dateLeft: Date, dateRight: Date) => number;
+    differenceInCalendarMonths: (dateLeft: Date, dateRight: Date) => number;
+    eachMonthOfInterval: (interval: Interval) => Date[];
+    eachYearOfInterval: (interval: Interval) => Date[];
+    endOfBroadcastWeek: (date: Date) => Date;
+    endOfISOWeek: (date: Date) => Date;
+    endOfMonth: (date: Date) => Date;
+    endOfWeek: (date: Date, options?: EndOfWeekOptions<Date>) => Date;
+    endOfYear: (date: Date) => Date;
+    format: (date: Date, formatStr: string, _options?: FormatOptions) => string;
+    getISOWeek: (date: Date) => number;
+    getMonth: (date: Date, _options?: GetMonthOptions) => number;
+    getYear: (date: Date, _options?: GetYearOptions) => number;
+    getWeek: (date: Date, _options?: GetWeekOptions) => number;
+    isAfter: (date: Date, dateToCompare: Date) => boolean;
+    isBefore: (date: Date, dateToCompare: Date) => boolean;
+    isDate: (value: unknown) => value is Date;
+    isSameDay: (dateLeft: Date, dateRight: Date) => boolean;
+    isSameMonth: (dateLeft: Date, dateRight: Date) => boolean;
+    isSameYear: (dateLeft: Date, dateRight: Date) => boolean;
+    max: (dates: Date[]) => Date;
+    min: (dates: Date[]) => Date;
+    setMonth: (date: Date, month: number) => Date;
+    setYear: (date: Date, year: number) => Date;
+    startOfBroadcastWeek: (date: Date, _dateLib: DateLib) => Date;
+    startOfDay: (date: Date) => Date;
+    startOfISOWeek: (date: Date) => Date;
+    startOfMonth: (date: Date) => Date;
+    startOfWeek: (date: Date, _options?: StartOfWeekOptions) => Date;
+    startOfYear: (date: Date) => Date;
+}
+class CalendarDay {
+    constructor(date: Date, displayMonth: Date, dateLib?: DateLib);
+    readonly dateLib: DateLib;
+    readonly outside: boolean;
+    readonly displayMonth: Date;
+    readonly date: Date;
+    readonly isoDate: string;
+    readonly displayMonthId: string;
+    readonly dateMonthId: string;
+    isEqualTo(day: CalendarDay): boolean;
+}
+function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
+export function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
+    buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
+}): React$1.JSX.Element;
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
@@ -13926,7 +14505,7 @@ export function Dialog(props: FramedDialogProps): React$1.ReactNode;
 export function Dialog(props: DialogRoot.Props & {
     isOpen?: never;
 }): React$1.ReactNode;
-export const Select: typeof SelectRoot;
+const Select$1: typeof SelectRoot;
 function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
 function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
 function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
@@ -16249,6 +16828,9 @@ namespace CSS$1 {
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
 }
+namespace Collapsible {
+    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
+}
 namespace Progress {
     export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
 }
@@ -16264,7 +16846,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeHeading as Heading, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeHeading as Heading, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
@@ -16284,6 +16866,7 @@ declare const Button: typeof NativeFrontend.Button;
 declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;
 declare const ButtonGroupSeparator: typeof NativeFrontend.ButtonGroupSeparator;
 declare const ButtonGroupText: typeof NativeFrontend.ButtonGroupText;
+declare const Calendar: typeof NativeFrontend.Calendar;
 declare const Card: typeof NativeFrontend.Card;
 declare const CardAction: typeof NativeFrontend.CardAction;
 declare const CardContent: typeof NativeFrontend.CardContent;
@@ -16311,6 +16894,9 @@ declare const CodeBlockLanguage: typeof NativeFrontend.CodeBlockLanguage;
 declare const CodeBlockLineActions: typeof NativeFrontend.CodeBlockLineActions;
 declare const CodeBlockTitle: typeof NativeFrontend.CodeBlockTitle;
 declare const CodeBlockWrapToggle: typeof NativeFrontend.CodeBlockWrapToggle;
+declare const Collapsible: typeof NativeFrontend.Collapsible;
+declare const CollapsibleContent: typeof NativeFrontend.CollapsibleContent;
+declare const CollapsibleTrigger: typeof NativeFrontend.CollapsibleTrigger;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const ComboboxChip: typeof NativeFrontend.ComboboxChip;
 declare const ComboboxChips: typeof NativeFrontend.ComboboxChips;

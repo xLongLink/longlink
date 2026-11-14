@@ -37,6 +37,8 @@ export { Textarea } from '../src/components/shadcn/textarea';
 export * from '../src/components/shadcn/field';
 export * from '../src/components/shadcn/input-group';
 export { Disclosure } from '../src/components/custom/disclosure';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../src/components/shadcn/collapsible';
+export { Calendar } from '../src/components/shadcn/calendar';
 export { Switch } from '../src/components/shadcn/switch';
 export { SwitchField } from '../src/components/custom/switch-field';
 export { Checkbox } from '../src/components/shadcn/checkbox';

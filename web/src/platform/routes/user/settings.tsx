@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
 import { Link, useLocation } from 'react-router';
+import { Button } from '@/components/shadcn/button';
 import { UserRound, Building2 } from 'lucide-react';
 import { Separator } from '@/components/shadcn/separator';
 import OrganizationManagement from './organization-management';
@@ -13,7 +14,6 @@ import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import '@/components/ui/settings-navigation.css';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -62,21 +62,29 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                 </div>
             </div>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
-                <nav aria-label="Settings sections" className="settings-navigation">
-                    <Link
-                        to={`${location.pathname}${location.search}#account`}
+                <nav aria-label="Settings sections" className="flex min-w-0 flex-col gap-0.5 pe-4">
+                    <Button
+                        nativeButton={false}
+                        render={<Link to={`${location.pathname}${location.search}#account`} />}
+                        variant={section === 'account' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start"
                         aria-current={section === 'account' ? 'location' : undefined}
                     >
                         <UserRound className="size-4" aria-hidden="true" />
                         Account
-                    </Link>
-                    <Link
-                        to={`${location.pathname}${location.search}#organizations`}
+                    </Button>
+                    <Button
+                        nativeButton={false}
+                        render={<Link to={`${location.pathname}${location.search}#organizations`} />}
+                        variant={section === 'organizations' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start"
                         aria-current={section === 'organizations' ? 'location' : undefined}
                     >
                         <Building2 className="size-4" aria-hidden="true" />
                         Organizations
-                    </Link>
+                    </Button>
                 </nav>
                 <div className="flex min-w-0 flex-col gap-3">
                     {section === 'organizations' ? (
