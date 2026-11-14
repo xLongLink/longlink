@@ -650,7 +650,7 @@ async def test_malformed_browser_session_is_rejected_before_database_lookup(clie
     """Reject malformed browser credentials without opening an identity lookup."""
 
     # Arrange
-    async def get_session():
+    async def get_session() -> AsyncIterator[object]:
         """Provide an unused dependency session for the rejected credential."""
 
         yield object()
@@ -1206,7 +1206,7 @@ async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
 
 
 async def test_password_login_sets_production_session_security_and_cache_attributes(
-    client: AsyncClient, users: tuple[User, User, User], monkeypatch
+    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Issue a production browser session only as a secure, private credential."""
 

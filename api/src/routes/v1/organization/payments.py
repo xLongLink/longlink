@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.get("/organizations/{organization_id}/cards", response_model=list[PaymentCard])
-async def get_cards(session: auth.Session, membership: auth.OrganizationOwner):
+async def get_cards(session: auth.Session, membership: auth.OrganizationOwner) -> list[dict[str, str | int | bool]]:
     """List masked saved cards for the current Organization owner."""
 
     # Resolve ownership before accessing the Organization's Stripe customer.
@@ -54,7 +54,7 @@ async def get_cards(session: auth.Session, membership: auth.OrganizationOwner):
 
 
 @router.get("/organizations/{organization_id}/invoices", response_model=list[PaymentInvoice])
-async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner):
+async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner) -> list[dict[str, str | int | bool | datetime | None]]:
     """List issued invoices and hosted documents for the current Organization owner."""
 
     # Keep accounting documents private to owners of the mapped Organization.
@@ -94,7 +94,7 @@ async def get_invoices(session: auth.Session, membership: auth.OrganizationOwner
     response_model=None,
     responses={200: {"content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}}},
 )
-async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: auth.OrganizationOwner):
+async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: auth.OrganizationOwner) -> Response:
     """Display an owner's invoice PDF inline without forwarding Stripe's download headers."""
 
     # Authorize the invoice against this Organization's Stripe customer.
@@ -150,7 +150,7 @@ async def get_invoice_pdf(invoice_id: str, session: auth.Session, membership: au
 
 
 @router.post("/organizations/{organization_id}/cards/checkout", response_model=PaymentRedirect)
-async def create_checkout(session: auth.Session, membership: auth.OrganizationOwner):
+async def create_checkout(session: auth.Session, membership: auth.OrganizationOwner) -> dict[str, str]:
     """Save an invoice payment method without taking an immediate payment."""
 
     # The service serializes card registration and revalidates ownership across its commits.

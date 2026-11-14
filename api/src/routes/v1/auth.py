@@ -65,7 +65,7 @@ def registration_email(credential: str) -> Email:
 
 
 @router.get("/auth/oauth", response_model=OAuthAvailability)
-async def get_oauth_availability():
+async def get_oauth_availability() -> dict[str, bool]:
     """Return which external sign-in providers have complete configuration."""
 
     # Expose provider availability without disclosing any confidential client credentials.
@@ -73,7 +73,9 @@ async def get_oauth_availability():
 
 
 @router.get("/auth/oauth/{provider}", include_in_schema=False)
-async def start_oauth_login(provider: oauth.OAuthProvider, return_to: Annotated[str | None, Query(max_length=8192)] = None):
+async def start_oauth_login(
+    provider: oauth.OAuthProvider, return_to: Annotated[str | None, Query(max_length=8192)] = None
+) -> RedirectResponse:
     """Start one provider sign-in flow with browser-bound state and PKCE proof."""
 
     # Enabled providers require their complete server-only confidential client configuration.
@@ -97,7 +99,7 @@ async def complete_oauth_login(
     state: Annotated[str | None, Query(max_length=512)] = None,
     error: Annotated[str | None, Query(max_length=128)] = None,
     oauth_state: str | None = Cookie(default=None, alias=cookies.OAUTH_STATE_COOKIE),
-):
+) -> RedirectResponse:
     """Complete one verified provider sign-in and issue a LongLink browser session."""
 
     # Validate the provider callback before processing a provider-declared cancellation or failure.
@@ -146,7 +148,7 @@ async def complete_oauth_login(
 
 # Deployment rate limiting bounds unauthenticated credential work before it reaches the API.
 @router.post("/auth/password/login", status_code=204)
-async def password_login(session: auth.Session, response: Response, payload: PasswordLogin):
+async def password_login(session: auth.Session, response: Response, payload: PasswordLogin) -> None:
     """Authenticate a local account and create one signed browser session."""
 
     # Load the canonical account identity before verifying its credential.
@@ -165,7 +167,7 @@ async def password_login(session: auth.Session, response: Response, payload: Pas
 
 
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
-async def logout(response: Response, origin: str | None = Header(default=None)):
+async def logout(response: Response, origin: str | None = Header(default=None)) -> None:
     """Remove the active browser credential."""
 
     # Block cross-origin requests from clearing an authenticated browser session.
@@ -178,7 +180,9 @@ async def logout(response: Response, origin: str | None = Header(default=None)):
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/forgot-password", response_model=None, status_code=202)
-async def request_password_reset(session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
+async def request_password_reset(
+    session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks
+) -> None:
     """Queue password reset delivery without disclosing account existence."""
 
     # Missing and inactive accounts receive the same response as eligible accounts.
@@ -192,7 +196,7 @@ async def request_password_reset(session: auth.Session, email: Annotated[Email, 
 
 
 @router.post("/auth/reset-password/verify", status_code=204)
-async def verify_password_reset_token(session: auth.Session, response: Response, payload: TokenPayload):
+async def verify_password_reset_token(session: auth.Session, response: Response, payload: TokenPayload) -> None:
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
@@ -203,7 +207,7 @@ async def verify_password_reset_token(session: auth.Session, response: Response,
 @router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
     session: auth.Session, response: Response, password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE)
-):
+) -> None:
     """Restore password reset state from browser-only proof."""
 
     # Refreshes validate only the restricted cookie, never an exposed URL credential.
@@ -217,7 +221,7 @@ async def reset_password(
     response: Response,
     payload: PasswordResetComplete,
     password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
-):
+) -> None:
     """Replace a password using browser-only reset proof."""
 
     # Resolve the active account from one valid, current password-reset credential.
@@ -235,7 +239,7 @@ async def reset_password(
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/register", response_model=None, status_code=202)
-async def request_registration(session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks):
+async def request_registration(session: auth.Session, email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks) -> None:
     """Send a stateless registration link when the email has no account."""
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
@@ -248,7 +252,7 @@ async def request_registration(session: auth.Session, email: Annotated[Email, Bo
 
 
 @router.post("/auth/verify", response_model=EmailPayload)
-async def verify_registration_token(response: Response, payload: TokenPayload):
+async def verify_registration_token(response: Response, payload: TokenPayload) -> dict[str, Email]:
     """Validate an emailed registration token without creating an account."""
 
     # Convert invalid and expired tokens into one stable authentication error.
@@ -260,7 +264,7 @@ async def verify_registration_token(response: Response, payload: TokenPayload):
 @router.get("/auth/register/setup", response_model=EmailPayload)
 async def get_registration_setup(
     response: Response, registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE)
-):
+) -> dict[str, Email]:
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.
@@ -275,7 +279,7 @@ async def complete_registration(
     response: Response,
     payload: RegistrationComplete,
     registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE),
-):
+) -> User:
     """Create and authenticate an account after stateless email verification."""
 
     # Bind account creation to the signed email rather than any client-supplied identity.

@@ -597,7 +597,10 @@ async def test_solution_proxy_propagates_timed_out_response_stream(
     "content_type", ["image/svg+xml; charset=utf-8", "application/xhtml+xml; charset=utf-8", "application/json, text/html; charset=utf-8"]
 )
 async def test_solution_proxy_rejects_active_content(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch, content_type: str
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    content_type: str,
 ) -> None:
     """Reject active upstream documents and close their gateway resources."""
 
@@ -794,7 +797,7 @@ async def test_solution_proxy_rejects_membership_revoked_before_access_lookup(
 
 
 async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return unavailable when the authenticated cluster gateway request fails."""
 

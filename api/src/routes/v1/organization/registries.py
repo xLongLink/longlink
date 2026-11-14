@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from sqlmodel import col
 from sqlalchemy import select
 from sqlalchemy.orm import defer
+from collections.abc import Sequence
 from src.database.types import attr
 from src.database.services import registries
 from src.models.registries import RegistryCreate, RegistryResponse
@@ -13,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/organizations/{organization_id}/registries", response_model=list[RegistryResponse])
-async def list_registries(session: auth.Session, membership: auth.OrganizationMember):
+async def list_registries(session: auth.Session, membership: auth.OrganizationMember) -> Sequence[RegistryConnection]:
     """List connection identities visible to organization members."""
 
     # Load only connection metadata belonging to the authorized Organization.

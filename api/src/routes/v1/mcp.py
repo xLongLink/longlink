@@ -4,13 +4,13 @@ from typing import Annotated
 from fastapi import Form, Query, Request, Response, APIRouter
 from src.models import mcp as models
 from urllib.parse import urlencode
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Sequence, Coroutine
 from fastapi.routing import APIRoute
 from src.environments import env
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from src.database.services import mcp
-from src.database.models.mcp import MCPClient
+from src.database.models.mcp import MCPToken, MCPClient
 
 
 class OAuthRoute(APIRoute):
@@ -120,7 +120,7 @@ async def revoke(session: auth.Session, token: Annotated[str, Form(max_length=12
 
 
 @router.get("/tokens", response_model=list[models.TokenSummary])
-async def tokens(session: auth.Session, user: auth.CurrentUser):
+async def tokens(session: auth.Session, user: auth.CurrentUser) -> Sequence[MCPToken]:
     """List the current user's revocation handles without exposing credentials."""
 
     return await mcp.tokens(session, user.id)

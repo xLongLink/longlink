@@ -37,7 +37,7 @@ async def test_registry_synchronization_updates_active_secret_and_removes_stale_
 
         applied.append(secret.to_dict())
 
-    async def listed(**kwargs: object):
+    async def listed(**kwargs: object) -> AsyncIterator[registries.Secret]:
         """Return only credentials managed by this Organization's synchronization."""
 
         assert kwargs["namespace"] == f"longlink-compute-{organization.id.hex}"
