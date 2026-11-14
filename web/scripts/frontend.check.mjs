@@ -30,6 +30,8 @@ test('published component provenance matches the implementation exposed to Views
         assert.ok(
             component.source === 'recharts'
                 ? filename?.includes('/node_modules/recharts/')
+                : component.source === 'custom'
+                  ? filename?.includes('/components/custom/') || filename?.includes('/components/dialogs/')
                 : filename?.includes(`/components/${component.source}/`),
             `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
         );

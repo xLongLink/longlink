@@ -1,12 +1,12 @@
-import { Icon } from './icon';
-import { Heading } from './heading';
-import type { Spacing } from './types';
 import type { ReactNode } from 'react';
+import { Icon } from '@/components/custom/icon';
 import { Button } from '@/components/shadcn/button';
+import { Heading } from '@/components/custom/heading';
+import type { Spacing } from '@/components/custom/types';
 import { use, useEffect, useRef, useState } from 'react';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 import { Dialog as NativeDialog, DialogContent, DialogTitle } from '@/components/shadcn/dialog';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 
 type FramedDialogProps = {
     children?: ReactNode;

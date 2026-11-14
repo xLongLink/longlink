@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import DeploymentReview from '@/platform/routes/orgs/deployment-review';
+import DeploymentReview from '@/components/dialogs/deployment-review';
 
 const solutionId = '00000000-0000-4000-8000-000000000002';
 

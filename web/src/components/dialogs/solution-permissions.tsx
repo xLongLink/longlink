@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Dialog } from './dialog';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { Picker } from '@/components/custom/picker';
@@ -14,6 +15,24 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+
+export function SolutionPermissionsDialog({
+    solutionId,
+    organizationId,
+    onClose
+}: {
+    solutionId: string;
+    organizationId: string;
+    onClose: () => void;
+}) {
+    return (
+        <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+            <ApiBoundary key={solutionId}>
+                <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
+            </ApiBoundary>
+        </Dialog>
+    );
+}
 
 /** Assigns SDK-defined Solution roles without changing organization roles. */
 export default function SolutionPermissions({

@@ -51,7 +51,7 @@ export { ActionButtonGroup } from '../src/components/custom/action-button-group'
 export { FileViewer } from '../src/components/custom/file-viewer';
 export * from '../src/components/shadcn/card';
 export * from '../src/components/custom/interactive-card';
-export { Dialog } from '../src/components/custom/dialog';
+export { Dialog } from '../src/components/dialogs/dialog';
 export * from '../src/components/shadcn/select';
 export * from '../src/components/shadcn/combobox';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/components/shadcn/tabs';

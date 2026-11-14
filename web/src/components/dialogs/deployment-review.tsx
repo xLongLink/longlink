@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/custom/form';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog } from '@/components/custom/dialog';
+import { Dialog } from '@/components/dialogs/dialog';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { CheckboxInput } from '@/components/custom/checkbox-input';

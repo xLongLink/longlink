@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
-import { Dialog } from '@/components/custom/dialog';
+import { Dialog } from '@/components/dialogs/dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 

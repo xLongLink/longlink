@@ -1,8 +1,8 @@
 import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
-import type { ConfirmOptions } from './confirmation';
 import { CircleX, LoaderCircle } from 'lucide-react';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
+import type { ConfirmOptions } from '@/components/custom/confirmation';
+import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
     AlertDialog,
     AlertDialogContent,

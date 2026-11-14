@@ -2,13 +2,9 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
-import { FormDialog } from './form-dialog';
 import { useApiError } from '@/lib/errors';
-import { Form } from '@/components/custom/form';
-import { Selector } from '@/components/ui/selector';
-import { TextInput } from '@/components/ui/text-input';
-import { DeletionDialog } from '@/components/ui/deletion';
-import { MultiSelector } from '@/components/ui/multi-selector';
+import { TagForm } from '@/components/dialogs/tag-form';
+import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -170,113 +166,5 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                 onClose={() => setAction(null)}
             />
         </>
-    );
-}
-
-/** Creates or edits a category while retaining failed drafts. */
-function TagForm({
-    base,
-    tag,
-    onSuccess,
-    onCancel
-}: {
-    base: string;
-    tag: Tag | null;
-    onSuccess: () => Promise<void>;
-    onCancel: () => void;
-}) {
-    /** Saves presentation without changing the tab's filtering or assignments. */
-    async function save(data: FormData) {
-        const json = schemas.zOrganizationTagWrite.parse({
-            name: z.string().trim().parse(data.get('name')),
-            icon: data.get('icon')
-        });
-
-        if (tag) {
-            await api.patch(`${base}/tags/${tag.id}`, { json });
-        } else {
-            await api.post(`${base}/tags`, { json });
-        }
-
-        await onSuccess();
-    }
-
-    return (
-        <FormDialog gap={6} onClose={onCancel}>
-            <Heading level={2} className="text-center">
-                {tag ? 'Edit tab' : 'New tab'}
-            </Heading>
-            <Form action={save}>
-                <Stack gap={3}>
-                    <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
-                    <Selector
-                        label="Icon"
-                        name="icon"
-                        defaultValue={tag?.icon ?? 'tag'}
-                        options={Object.entries(tabs.icons).map(([value, option]) => ({
-                            value,
-                            label: option.label,
-                            icon: schemas.zTagIcon.parse(value)
-                        }))}
-                        hasSearch
-                        hasClear={false}
-                    />
-                    <Stack direction="horizontal" gap={2}>
-                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
-                        <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
-                    </Stack>
-                </Stack>
-            </Form>
-        </FormDialog>
-    );
-}
-
-/** Replaces a Solution's tags only after explicit submission. */
-export function SolutionTags({
-    base,
-    tags,
-    solution,
-    onSuccess,
-    onClose
-}: {
-    base: string;
-    tags: Tag[];
-    solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
-    onSuccess: () => Promise<void>;
-    onClose: () => void;
-}) {
-    /** Submits the complete selection so clearing all tags is supported. */
-    async function save(data: FormData) {
-        const json = schemas.zSolutionTagsWrite.parse({ tag_ids: data.getAll('tag_ids') });
-        await api.patch(`${base}/solutions/${solution.id}/tags`, { json });
-        await onSuccess();
-    }
-
-    return (
-        <FormDialog gap={6} onClose={onClose}>
-            <Heading level={2} className="text-center">
-                Tags for {solution.name}
-            </Heading>
-            <Form action={save}>
-                <Stack gap={4}>
-                    <MultiSelector
-                        label="Tags"
-                        name="tag_ids"
-                        defaultValue={solution.tag_ids ?? []}
-                        options={tags
-                            .filter((tag) => tag.kind === 'tag')
-                            .map((tag) => ({ value: tag.id, label: tag.name, icon: tag.icon }))}
-                        triggerDisplay="labels"
-                        placeholder="Select tags"
-                        hasSearch
-                        emptyText="Create tabs in organization settings under General first."
-                    />
-                    <Stack direction="horizontal" gap={2} justify="end">
-                        <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
-                        <Button label="Save" type="submit" variant="default" />
-                    </Stack>
-                </Stack>
-            </Form>
-        </FormDialog>
     );
 }

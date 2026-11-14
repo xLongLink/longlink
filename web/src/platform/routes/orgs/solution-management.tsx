@@ -1,31 +1,27 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { SolutionTags } from './tags';
 import { useApi } from '@/lib/hooks/use-api';
-import CreateSolution from './create-solution';
-import { ApiBoundary } from '@/components/api';
-import { OpenAI } from '@/components/svg/open-ai';
-import DeploymentReview from './deployment-review';
-import { Dialog } from '@/components/custom/dialog';
-import { useNotification } from '@/lib/notifications';
 import * as permissions from '@/platform/permissions';
-import SolutionPermissions from './solution-permissions';
 import { Separator } from '@/components/shadcn/separator';
-import { DeletionDialog } from '@/components/ui/deletion';
 import { Illustration } from '@/components/ui/illustration';
+import { DeletionDialog } from '@/components/dialogs/deletion';
+import CreateSolution from '@/components/dialogs/create-solution';
+import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
+import DeploymentReview from '@/components/dialogs/deployment-review';
+import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { IllustratedDialogContent } from '@/components/ui/illustrated-dialog-content';
+import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
-import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -318,20 +314,11 @@ export default function SolutionManagement({
                 <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
-                <Dialog
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) closeSelected();
-                    }}
-                >
-                    <ApiBoundary key={selected.id}>
-                        <SolutionPermissions
-                            solutionId={selected.id}
-                            organizationId={organization.id}
-                            onClose={closeSelected}
-                        />
-                    </ApiBoundary>
-                </Dialog>
+                <SolutionPermissionsDialog
+                    solutionId={selected.id}
+                    organizationId={organization.id}
+                    onClose={closeSelected}
+                />
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
@@ -351,77 +338,9 @@ export default function SolutionManagement({
                     onClose={closeSelected}
                 />
             )}
-            {selected?.kind === 'logs' && (
-                <Dialog
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) closeSelected();
-                    }}
-                >
-                    <Stack height="min(560px, calc(100dvh - var(--spacing) * 40))" paddingInline={8} paddingBlock={4}>
-                        <ApiBoundary key={selected.id}>
-                            <SolutionLogs solutionId={selected.id} onClose={closeSelected} />
-                        </ApiBoundary>
-                    </Stack>
-                </Dialog>
-            )}
+            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onClose={closeSelected} />}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
-            {selected?.kind === 'mcp' && (
-                <Dialog
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) closeSelected();
-                    }}
-                >
-                    <IllustratedDialogContent
-                        illustration={
-                            <Illustration
-                                src="/images/mcp.png"
-                                alt="Hand-drawn globe surrounded by orbiting spheres."
-                                className="h-full w-full object-contain"
-                                width={941}
-                                height={1672}
-                                decoding="async"
-                            />
-                        }
-                    >
-                        <Stack
-                            minHeight="100%"
-                            justify="center"
-                            width="max-content"
-                            maxWidth="100%"
-                            gap={6}
-                            className="mx-auto"
-                        >
-                            <Stack gap={2} align="center">
-                                <Plug className="size-20 text-muted-foreground" aria-hidden="true" />
-                                <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Model Context Protocol
-                                    </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
-                                        Connect your solution to AI tools
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                            {/* Match the creation dialog's content-sized column and control width. */}
-                            <Stack gap={4} width={0} className="min-w-full">
-                                <ApiBoundary key={selected.id}>
-                                    <SolutionMcpUrl solutionId={selected.id} onClose={closeSelected} />
-                                </ApiBoundary>
-                                <Button
-                                    download
-                                    href={`/api/v1/solutions/${selected.id}/plugin`}
-                                    label="Download plugin ZIP"
-                                    variant="default"
-                                    style={{ width: '100%' }}
-                                    icon={<OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />}
-                                />
-                            </Stack>
-                        </Stack>
-                    </IllustratedDialogContent>
-                </Dialog>
-            )}
+            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onClose={closeSelected} />}
             <DeletionDialog
                 confirmation={
                     selected?.kind === 'delete'
@@ -439,64 +358,5 @@ export default function SolutionManagement({
                 onClose={closeSelected}
             />
         </>
-    );
-}
-
-/** Reads the canonical public connection URL without guessing the deployment's origin. */
-function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const showNotification = useNotification();
-
-    // Reuse OAuth discovery so the copied URL matches the plugin's configured public address.
-    const [{ resource }] = useApi(
-        `/.well-known/oauth-protected-resource/api/v1/solutions/${solutionId}/proxy/mcp`,
-        schemas.zResourceMetadata
-    );
-
-    return (
-        <Button
-            label="Copy MCP server URL"
-            style={{ width: '100%' }}
-            clickAction={async () => {
-                // Copy only the canonical connection URL, without credentials.
-                await navigator.clipboard.writeText(resource);
-
-                // Confirm a successful copy and dismiss the MCP dialog.
-                showNotification('Copied');
-                onClose();
-            }}
-        />
-    );
-}
-
-/** Loads pod logs only while their dialog is open. */
-function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const [logs, invalidate] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
-
-    // Keep log scrolling inside CodeBlock while dismissal and refresh remain visible.
-    return (
-        <Stack gap={3} height="100%">
-            <div className="min-h-0 min-w-0 grow">
-                <CodeBlock code={logs.join('\n')} showLineNumbers wrap className="h-full">
-                    <CodeBlockCopyButton />
-                    <div
-                        className="min-h-0 flex-1 overflow-auto"
-                        role="region"
-                        aria-label="Deployment logs"
-                        tabIndex={0}
-                    >
-                        <CodeBlockContent />
-                    </div>
-                </CodeBlock>
-            </div>
-            <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                <Button label="Close" variant="ghost" onClick={onClose} />
-                <Button
-                    label="Refresh logs"
-                    variant="outline"
-                    icon={<RefreshCw className="size-4" aria-hidden="true" />}
-                    clickAction={invalidate}
-                />
-            </Stack>
-        </Stack>
     );
 }

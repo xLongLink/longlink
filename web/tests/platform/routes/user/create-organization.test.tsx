@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../../render';
-import CreateOrganization from '@/platform/routes/user/create-organization';
+import CreateOrganization from '@/components/dialogs/create-organization';
 
 it('validates a required Organization name before creation', async () => {
     // Act

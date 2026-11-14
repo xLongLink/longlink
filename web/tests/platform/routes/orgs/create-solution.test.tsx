@@ -4,7 +4,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import userEvent from '@testing-library/user-event';
-import CreateSolution from '@/platform/routes/orgs/create-solution';
+import CreateSolution from '@/components/dialogs/create-solution';
 
 it('waits for image inspection before advancing to metadata without creating a Solution', async () => {
     // Arrange

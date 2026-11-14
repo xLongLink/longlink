@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Dialog } from '@/components/custom/dialog';
 import { TextInput } from '@/components/ui/text-input';
-import { DeletionDialog } from '@/components/ui/deletion';
+import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
@@ -13,6 +12,7 @@ import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -127,51 +127,11 @@ export default function Solutions() {
                 </Stack>
             </Stack>
             {metadata && (
-                <Dialog
-                    title="Solution metadata"
-                    isOpen
-                    onOpenChange={(open) => {
-                        if (!open) setDialog(null);
-                    }}
-                >
-                    <Stack gap={2} padding={8}>
-                        <Text>
-                            <b>Status</b> {metadata.status}
-                        </Text>
-                        <Text>
-                            <b>Organization</b> {metadata.organization.name}
-                        </Text>
-                        <Text>
-                            <b>Desired image</b> {metadata.image_desired}
-                        </Text>
-                        <Text>
-                            <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
-                        </Text>
-                        <Text>
-                            <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
-                        </Text>
-                        <Text>
-                            <b>ID</b> {metadata.id}
-                        </Text>
-                        {metadata.description && (
-                            <Text>
-                                <b>Description</b> {metadata.description}
-                            </Text>
-                        )}
-                        <Text>
-                            <b>Created</b> {metadata.created_at}
-                        </Text>
-                        <Stack direction="horizontal" justify="end">
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                onClick={() =>
-                                    setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
-                                }
-                            />
-                        </Stack>
-                    </Stack>
-                </Dialog>
+                <SolutionMetadata
+                    metadata={metadata}
+                    onClose={() => setDialog(null)}
+                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
+                />
             )}
             <DeletionDialog
                 confirmation={
