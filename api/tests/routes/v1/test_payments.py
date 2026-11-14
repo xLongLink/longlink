@@ -35,10 +35,7 @@ def configured_stripe(monkeypatch: pytest.MonkeyPatch) -> str:
 
 
 @pytest_asyncio.fixture
-async def card_organization(
-    users: tuple[User, User, User],
-    configured_stripe: str,  # noqa: ARG001 - Fixture dependency; usefixtures does not apply to fixtures.
-) -> Organization:
+async def card_organization(users: tuple[User, User, User]) -> Organization:
     """Persist an owned Organization with a real customer and checkout mapping."""
 
     organization = await create_organization(users[1])
@@ -83,6 +80,7 @@ PAYMENT_ENDPOINTS = [
 
 
 @pytest.mark.parametrize(("method", "endpoint", "expected"), PAYMENT_ENDPOINTS)
+@pytest.mark.usefixtures("configured_stripe")
 async def test_payment_endpoints_require_the_organizations_owner_before_stripe(
     method: str,
     endpoint: str,
@@ -354,6 +352,7 @@ WEBHOOK_SIZES = [(1024 * 1024, 400, "Invalid Stripe signature"), (1024 * 1024 + 
 
 
 @pytest.mark.parametrize(("size", "status", "detail"), WEBHOOK_SIZES)
+@pytest.mark.usefixtures("configured_stripe")
 async def test_webhook_enforces_one_mebibyte_limit_before_signature_verification(
     size: int, status: int, detail: str, client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -75,12 +75,16 @@ async def replace_password(session: AsyncSession, user: User, password: str) -> 
     # Keep expensive credential hashing outside the request event loop.
     hashed_password = await asyncio.to_thread(PASSWORD_HASH.hash, password)
 
+    # Preserve ORM autoflush while using the transaction's connection for a portable affected-row count.
+    if session.autoflush:
+        await session.flush()
+    connection = await session.connection()
+
     # Consume proof atomically and preserve audit fields that bulk updates do not populate.
-    result = await session.execute(
+    result = await connection.execute(
         update(User)
         .where(col(User.id) == user.id, col(User.password) == user.password, col(User.deleted_at).is_(None))
         .values(password=hashed_password, updated_at=datetime.now(UTC), updated_id=user.id)
-        .execution_options(synchronize_session=False)
     )
     return result.rowcount == 1
 

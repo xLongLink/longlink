@@ -1254,7 +1254,7 @@ async def test_expired_browser_session_is_rejected_at_http(client: AsyncClient, 
         {
             "sub": str(user.id),
             "password_fingerprint": token.password_fingerprint(user.password),
-            "aud": token.AUTH_TOKEN_AUDIENCE,
+            "aud": token.AUTH_AUDIENCE,
             "iat": datetime.now(UTC) - timedelta(days=30, seconds=60),
             "exp": datetime.now(UTC) - timedelta(seconds=60),
         },

@@ -18,7 +18,7 @@ async def load_solution(session: AsyncSession, solution_id: UUID, user_id: UUID)
 
     # Serialize administrative edits with membership revocation and Solution commands.
     organization_id = await session.scalar(
-        select(col(Solution.organization_id)).where(Solution.id == solution_id, Solution.deleted_at.is_(None))
+        select(col(Solution.organization_id)).where(col(Solution.id) == solution_id, col(Solution.deleted_at).is_(None))
     )
     if organization_id is None:
         raise HTTPException(status_code=404, detail="Solution not found")
@@ -31,7 +31,7 @@ async def load_solution(session: AsyncSession, solution_id: UUID, user_id: UUID)
     statement = (
         select(Solution)
         .options(defer(attr(Solution.secrets)))
-        .where(Solution.id == solution_id, Solution.deleted_at.is_(None))
+        .where(col(Solution.id) == solution_id, col(Solution.deleted_at).is_(None))
         .execution_options(populate_existing=True)
         .with_for_update()
     )

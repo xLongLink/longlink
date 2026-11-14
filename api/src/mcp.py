@@ -3,7 +3,6 @@ from src import auth
 from uuid import UUID
 from typing import Annotated
 from fastapi import Depends, Request, HTTPException
-from contextlib import aclosing
 from collections.abc import AsyncIterator
 from starlette.types import Send, Scope, ASGIApp, Message, Receive
 from src.environments import env
@@ -37,19 +36,17 @@ async def proxyuser(request: Request, solution_id: UUID, session: auth.Session, 
                 status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": f'{challenge}, error="invalid_token"'}
             )
 
-        # Keep the admitted identity bound until FastAPI finishes the dependency's request lifetime.
-        request.state.user = user
-        with audit.actor(user.id):
-            yield user  # noqa: ASYNC119
-        return
+    else:
+        # Resolve browser credentials without opening a second dependency-owned audit scope.
+        credential = request.cookies.get(AUTH_COOKIE)
+        if is_mcp and credential is None:
+            raise HTTPException(status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": challenge})
+        user = await auth.browseruser(session, credential)
 
-    # Delegate browser sessions with deterministic cleanup; never fall back after invalid bearer proof.
-    credential = request.cookies.get(AUTH_COOKIE)
-    if is_mcp and credential is None:
-        raise HTTPException(status_code=401, detail="Not authenticated", headers={"WWW-Authenticate": challenge})
-    async with aclosing(auth.authuser(request, session, credential)) as authenticated:
-        async for user in authenticated:
-            yield user  # noqa: ASYNC119
+    # Own one audit scope for either credential through FastAPI's complete request lifetime.
+    request.state.user = user
+    with audit.actor(user.id):
+        yield user  # noqa: ASYNC119
 
 
 # Share the browser-or-bearer authentication dependency with proxy routes.

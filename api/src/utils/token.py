@@ -12,10 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 JWT_ALGORITHM = "HS256"
-AUTH_TOKEN_AUDIENCE = "longlink:auth"  # noqa: S105
-REGISTRATION_TOKEN_AUDIENCE = "longlink:register"  # noqa: S105
-PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"  # noqa: S105
-OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"  # noqa: S105
+AUTH_AUDIENCE = "longlink:auth"
+REGISTRATION_AUDIENCE = "longlink:register"
+RESET_AUDIENCE = "longlink:reset-password"
+OAUTH_STATE_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 AUTH_SESSION_LIFETIME_SECONDS = 2592000
@@ -46,7 +46,7 @@ def create_registration_token(email: Email) -> str:
 
     # Sign the request identity into immutable registration proof.
     return jwt.encode(
-        {"email": email, "aud": REGISTRATION_TOKEN_AUDIENCE, "exp": datetime.now(UTC) + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS)},
+        {"email": email, "aud": REGISTRATION_AUDIENCE, "exp": datetime.now(UTC) + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS)},
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
     )
@@ -56,7 +56,7 @@ def registration_claims(token: str) -> Email:
     """Return the identity carried by one registration token."""
 
     # Reject invalid, expired, or wrong-purpose tokens before account setup.
-    data = jwt.decode(token, env.SESSION_KEY, audience=REGISTRATION_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
+    data = jwt.decode(token, env.SESSION_KEY, audience=REGISTRATION_AUDIENCE, algorithms=[JWT_ALGORITHM])
 
     email = data.get("email")
     if not isinstance(email, str) or not email:
@@ -77,7 +77,7 @@ def create_password_reset_token(user: User) -> str:
         {
             "sub": str(user.id),
             "password_fingerprint": password_fingerprint(user.password),
-            "aud": PASSWORD_RESET_TOKEN_AUDIENCE,
+            "aud": RESET_AUDIENCE,
             "exp": datetime.now(UTC) + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
@@ -96,7 +96,7 @@ def create_oauth_state_token(provider: OAuthProvider, state: str, verifier: str,
             "verifier": verifier,
             "return_to": return_to,
             # OAuth proof cannot be reused as a browser session or email token.
-            "aud": OAUTH_STATE_TOKEN_AUDIENCE,
+            "aud": OAUTH_STATE_AUDIENCE,
             "exp": datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
@@ -108,7 +108,7 @@ def oauth_state_claims(token: str, provider: OAuthProvider) -> tuple[str, str, s
     """Decode and validate OAuth callback proof and its optional continuation once."""
 
     # Bind callbacks to their initiating provider before exchanging an authorization code.
-    data = jwt.decode(token, env.SESSION_KEY, audience=OAUTH_STATE_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
+    data = jwt.decode(token, env.SESSION_KEY, audience=OAUTH_STATE_AUDIENCE, algorithms=[JWT_ALGORITHM])
     state = data.get("state")
     verifier = data.get("verifier")
     if data.get("provider") != provider or not isinstance(state, str) or not isinstance(verifier, str):
@@ -141,10 +141,7 @@ async def password_reset_user(session: AsyncSession, token: str) -> User:
 
     # Decode and validate the reset credential before loading its account.
     user_id, fingerprint = _password_bound_claims(
-        token,
-        audience=PASSWORD_RESET_TOKEN_AUDIENCE,
-        claims_error="Invalid password reset token claims",
-        user_error="Invalid password reset user",
+        token, audience=RESET_AUDIENCE, claims_error="Invalid password reset token claims", user_error="Invalid password reset user"
     )
 
     # Require an active account and the exact credential version that received the link.
@@ -163,7 +160,7 @@ def create_auth_token(user: User) -> str:
         {
             "sub": str(user.id),
             "password_fingerprint": password_fingerprint(user.password),
-            "aud": AUTH_TOKEN_AUDIENCE,
+            "aud": AUTH_AUDIENCE,
             # Browser sessions remain bounded even when the password does not change.
             "iat": issued_at,
             "exp": issued_at + timedelta(seconds=AUTH_SESSION_LIFETIME_SECONDS),
@@ -178,5 +175,5 @@ def auth_token_claims(token: str) -> tuple[UUID, str]:
 
     # Validate the signature, lifetime, and token purpose before accepting its identity claims.
     return _password_bound_claims(
-        token, audience=AUTH_TOKEN_AUDIENCE, claims_error="Invalid browser session claims", user_error="Invalid browser session user"
+        token, audience=AUTH_AUDIENCE, claims_error="Invalid browser session claims", user_error="Invalid browser session user"
     )
