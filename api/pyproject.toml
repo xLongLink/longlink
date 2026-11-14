@@ -97,8 +97,6 @@ extra-paths = ["../sdk"]
 
 [tool.ty.src]
 include = ["main.py", "scripts", "src", "alembic"]
-# Keep SQLModel descriptor diagnostics out of the gate while checking callers.
-exclude = ["src/database/models"]
 
 [tool.pytest.ini_options]
 addopts = "-p bootstrap"
