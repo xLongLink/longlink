@@ -9,8 +9,8 @@ import { useAnnouncement } from '@/components/custom/announcement';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {

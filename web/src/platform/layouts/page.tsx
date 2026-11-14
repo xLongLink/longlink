@@ -1,5 +1,5 @@
-import { Footer } from '@/components/footer';
-import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/ui/footer';
+import { Navbar } from '@/components/ui/navbar';
 import { Outlet, useLocation } from 'react-router';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 

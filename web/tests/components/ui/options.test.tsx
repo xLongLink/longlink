@@ -3,8 +3,8 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { MultiSelector } from '@/components/custom/multi-selector';
-import { Selector, type SelectorOptionType } from '@/components/custom/selector';
+import { MultiSelector } from '@/components/ui/multi-selector';
+import { Selector, type SelectorOptionType } from '@/components/ui/selector';
 
 it.each([false, true])(
     'renders direct and grouped option icons without changing submitted values (multiple: %s)',

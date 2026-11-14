@@ -2,8 +2,8 @@ import { it, expect } from 'vitest';
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { withMounted } from '../render';
-import { Wordmark } from '@/components/wordmark';
-import { Illustration } from '@/components/illustration';
+import { Wordmark } from '@/components/ui/wordmark';
+import { Illustration } from '@/components/ui/illustration';
 import { AppearanceProvider } from '@/components/appearance';
 
 it('updates account branding without changing an explicitly scoped preview', async () => {

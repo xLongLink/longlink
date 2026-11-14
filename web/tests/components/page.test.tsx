@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../render';
-import { Page } from '@/components/page';
+import { Page } from '@/components/ui/page';
 
 it('renders the page title and description', () => {
     // Act

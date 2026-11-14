@@ -11,28 +11,28 @@ import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
 import { Form } from '@/components/custom/form';
 import { Dialog } from '@/components/custom/dialog';
+import { Selector } from '@/components/ui/selector';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
-import { DeletionDialog } from '@/components/deletion';
+import { TextInput } from '@/components/ui/text-input';
 import { useQueryClient } from '@tanstack/react-query';
-import { Selector } from '@/components/custom/selector';
-import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
-import { TextInput } from '@/components/custom/text-input';
+import { DeletionDialog } from '@/components/ui/deletion';
+import { Illustration } from '@/components/ui/illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { Button as MenuTriggerButton } from '@/components/shadcn/button';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Boxes, Building2, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
-import { IllustratedDialogContent } from '@/platform/components/illustrated-dialog-content';
-import '@/platform/components/settings-navigation.css';
+import { IllustratedDialogContent } from '@/components/ui/illustrated-dialog-content';
+import '@/components/ui/settings-navigation.css';
 import {
     DropdownMenu,
     DropdownMenuContent,

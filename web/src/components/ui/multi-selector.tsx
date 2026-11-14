@@ -1,9 +1,9 @@
-import { Picker } from './picker';
-import { useValue } from './value';
 import type { ReactNode } from 'react';
-import { FormField } from './form-field';
-import type { FieldProps } from './types';
-import { selectorOptions, type SelectorOptionType } from './options';
+import { Picker } from '@/components/custom/picker';
+import { useValue } from '@/components/custom/value';
+import { FormField } from '@/components/custom/form-field';
+import type { FieldProps } from '@/components/custom/types';
+import { selectorOptions, type SelectorOptionType } from '@/components/custom/options';
 
 /** Selects multiple values while preserving repeated native form entries. */
 export function MultiSelector(

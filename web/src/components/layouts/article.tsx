@@ -1,12 +1,11 @@
-import { Page } from '@/components/page';
+import { Page } from '@/components/ui/page';
 import { Separator } from '@/components/shadcn/separator';
 import { documentationPaths } from '@/platform/publications';
-import { PathBreadcrumb } from '@/components/breadcrumb/path';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
-import { BreadcrumbItem } from '@/components/breadcrumb/breadcrumbs';
 import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
+import { PathBreadcrumb, type BreadcrumbItem } from '@/components/ui/breadcrumbs';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 const articleRouteLabels = {
@@ -63,7 +62,7 @@ export function PublicArticle({
 }) {
     // Keep public navigation Home-rooted without imposing typography or a reading collection.
     return (
-        <ArticleRenderer article={article} paths={paths} root={<BreadcrumbItem href="/">Home</BreadcrumbItem>}>
+        <ArticleRenderer article={article} paths={paths} root={{ label: 'Home', href: '/' }}>
             {children}
         </ArticleRenderer>
     );
@@ -81,7 +80,7 @@ function ArticleRenderer({
     children: ReactNode;
     className?: string;
     paths?: readonly string[];
-    root?: ReactNode;
+    root?: BreadcrumbItem;
 }) {
     // Keep public articles and documentation in the same flat reading columns.
     return (
@@ -90,11 +89,7 @@ function ArticleRenderer({
                 <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
                     <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
                         <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                            <PathBreadcrumb
-                                className="min-w-0 overflow-hidden"
-                                labels={articleRouteLabels}
-                                root={root}
-                            />
+                            <PathBreadcrumb labels={articleRouteLabels} root={root} />
                         </div>
                         {article.toc.length ? (
                             <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />

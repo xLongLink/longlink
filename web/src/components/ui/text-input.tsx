@@ -1,8 +1,8 @@
 import { X } from 'lucide-react';
-import { useValue } from './value';
-import { FormField } from './form-field';
-import type { FieldProps } from './types';
+import { useValue } from '@/components/custom/value';
 import { useId, useRef, type ReactNode } from 'react';
+import { FormField } from '@/components/custom/form-field';
+import type { FieldProps } from '@/components/custom/types';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 

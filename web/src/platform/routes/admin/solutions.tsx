@@ -4,15 +4,15 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Dialog } from '@/components/custom/dialog';
-import { DeletionDialog } from '@/components/deletion';
-import { TextInput } from '@/components/custom/text-input';
+import { TextInput } from '@/components/ui/text-input';
+import { DeletionDialog } from '@/components/ui/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 

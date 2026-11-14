@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { Wordmark } from '@/components/wordmark';
+import { Wordmark } from '@/components/ui/wordmark';
 import { PublicArticle } from '@/components/layouts/article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 

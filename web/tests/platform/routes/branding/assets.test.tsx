@@ -4,7 +4,7 @@ import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { access } from 'node:fs/promises';
 import { withMounted } from '../../../render';
-import { Wordmark } from '@/components/wordmark';
+import { Wordmark } from '@/components/ui/wordmark';
 import Assets from '@/platform/routes/branding/assets';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 

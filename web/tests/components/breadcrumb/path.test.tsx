@@ -2,9 +2,8 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { renderStatic, withMounted } from '../../render';
-import { PathBreadcrumb } from '@/components/breadcrumb/path';
+import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { Link as RouterLink, useNavigate } from 'react-router';
-import { BreadcrumbItem } from '@/components/breadcrumb/breadcrumbs';
 
 /** Exposes history traversal without replacing router behavior. */
 function HistoryBack() {
@@ -31,7 +30,7 @@ it('updates the mounted trail after ancestor navigation, history traversal, and 
     // Keep the same breadcrumb mounted throughout real router transitions.
     await withMounted(
         <>
-            <PathBreadcrumb labels={{ docs: 'Documentation' }} root={<BreadcrumbItem href="/">Home</BreadcrumbItem>} />
+            <PathBreadcrumb labels={{ docs: 'Documentation' }} root={{ label: 'Home', href: '/' }} />
             <RouterLink to="/docs/hello%20world/">Another article</RouterLink>
             <HistoryBack />
         </>,

@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
-import { Footer } from '@/components/footer';
+import { Footer } from '@/components/ui/footer';
 import { useLocation, useNavigate } from 'react-router';
 
 /** Exposes the real router location and history while the footer stays mounted. */

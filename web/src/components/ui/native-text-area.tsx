@@ -1,7 +1,7 @@
 import { useId } from 'react';
-import type { FieldProps } from './types';
 import { LoaderCircle } from 'lucide-react';
 import { Textarea } from '@/components/shadcn/textarea';
+import type { FieldProps } from '@/components/custom/types';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 
 /** Renders the shared textarea surface with trusted native-only editing options. */

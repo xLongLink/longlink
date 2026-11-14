@@ -4,6 +4,7 @@ import { Button } from '@base-ui/react/button';
 import { useId, useRef, useState } from 'react';
 import Content from '@/components/layouts/content';
 import { Separator } from '@/components/shadcn/separator';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
@@ -170,13 +171,9 @@ export default function Platform({
                                 </Button>
                                 <Separator className="h-5" orientation="vertical" />
                                 {breadcrumb ?? (
-                                    <nav aria-label="Breadcrumb">
-                                        <ol className="m-0 list-none p-0 text-sm leading-(--text-sm--line-height) font-semibold">
-                                            <li aria-current="page">
-                                                {tabs.find((tab) => tab.href === selectedTab)?.label}
-                                            </li>
-                                        </ol>
-                                    </nav>
+                                    <Breadcrumbs
+                                        items={[{ label: tabs.find((tab) => tab.href === selectedTab)?.label }]}
+                                    />
                                 )}
                             </section>
                         }

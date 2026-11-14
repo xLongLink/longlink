@@ -3,7 +3,7 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { afterEach, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { Foundation } from '@/components/foundation';
+import { Foundation } from '@/components/ui/foundation';
 
 const intersections: VisibilityObserver[] = [];
 

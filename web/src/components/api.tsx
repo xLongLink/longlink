@@ -1,7 +1,7 @@
 import { CircleX } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { PageLoading } from '@/components/utils';
 import { Button } from '@/components/shadcn/button';
+import { PageLoading } from '@/components/ui/utils';
 import { createQueryRuntime } from '@/lib/react-query';
 import { NativeToaster } from '@/components/native-toaster';
 import { ApiErrorContext, useApiError } from '@/lib/errors';

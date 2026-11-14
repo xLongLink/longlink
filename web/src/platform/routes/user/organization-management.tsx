@@ -6,15 +6,15 @@ import { ExternalLink, Plus } from 'lucide-react';
 import { Dialog } from '@/components/custom/dialog';
 import { apiQueryOptions } from '@/lib/react-query';
 import CreateOrganization from './create-organization';
-import { Illustration } from '@/components/illustration';
 import { Separator } from '@/components/shadcn/separator';
+import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 

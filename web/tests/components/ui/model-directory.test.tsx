@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { ModelDirectory } from '@/components/custom/model-directory';
+import { ModelDirectory } from '@/components/ui/model-directory';
 
 it('retains bookmarks across pages without opening the model when a bookmark or link is clicked', async () => {
     const user = userEvent.setup();

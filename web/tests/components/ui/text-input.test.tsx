@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { TextInput } from '@/components/ui/text-input';
 import { renderStatic, withMounted } from '../../render';
-import { TextInput } from '@/components/custom/text-input';
 
 it('focuses the text input from its description without adding that description to its name', async () => {
     const user = userEvent.setup();

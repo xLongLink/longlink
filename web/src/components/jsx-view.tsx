@@ -14,9 +14,9 @@ import { SolutionFile } from '@/components/solution-file';
 import { ViewBackdrop } from '@/components/view-backdrop';
 import type { FileViewerCommand } from '@/views/protocol';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { PageError, PageLoading } from '@/components/utils';
 import { NativeFile } from '@/components/custom/native-file';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
+import { PageError, PageLoading } from '@/components/ui/utils';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
 

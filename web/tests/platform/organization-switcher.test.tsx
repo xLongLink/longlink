@@ -6,7 +6,7 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import { OrganizationSwitcher } from '@/platform/components/organization-switcher';
+import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 
 /** Observes actual Router navigation. */
 function Location() {

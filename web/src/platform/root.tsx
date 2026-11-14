@@ -1,6 +1,6 @@
 import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
-import { PageLoading } from '@/components/utils';
+import { PageLoading } from '@/components/ui/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';

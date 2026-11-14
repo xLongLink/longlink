@@ -6,8 +6,8 @@ import { it, expect, vi } from 'vitest';
 import { user } from '../platform/render';
 import { useLocation } from 'react-router';
 import { SidebarContext } from '@/lib/sidebar';
-import { ProfileMenu } from '@/components/profile';
 import userEvent from '@testing-library/user-event';
+import { ProfileMenu } from '@/components/ui/profile';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 
 /** Observes real Router navigation without replacing its link behavior. */
