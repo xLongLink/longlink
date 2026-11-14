@@ -114,7 +114,7 @@ exclude = ["src/database/models"]
 [tool.ty.rules]
 invalid-argument-type = "ignore"
 no-matching-overload = "ignore"
-unresolved-attribute = "ignore"
+missing-attribute = "ignore"
 
 [tool.pytest.ini_options]
 pythonpath = [".."]
