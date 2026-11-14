@@ -62,10 +62,12 @@ TESTING:
 VIEWS:
 - PREFER explicit async/await.
 - DO add JSDoc to JavaScript functions.
+- MINIMIZE comment to the bare minimun.
 - DO keep each page simple and standalone.
 - DON'T wrap individual table rows in `Card`.
 - DO use concurrency only for independent operations.
 - DO extract components only for meaningful UI boundaries.
+- AVOID unnecessary UI microcopy or decorative text elements.
 - Each view IDEALLY have one scope and one primary presentation
   - Table view: one table for one dataset.
   - Menu view: one menu for related options or sections.

@@ -37,6 +37,7 @@
 ## Python Guidelines
 
 - AVOID renaming imports.
+- DO FOLLOW the zen of python.
 - PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
 - PREFER idiomatic Python and readability over efficiency.
@@ -87,33 +88,27 @@
 
 ## UI / LongLink components
 
-LongLink expose components so that the `.jsx` views can use them directly
+LongLink exposes shared UI components for `.jsx` Views to use directly.
 
-- DO ALIGN the LongLink Views components with the reui or shadcn
-- ANY custon component shall be placed in a `custom` folder
-- for reui check https://reui.io/llms.txt
-- for shadcn/ui check https://ui.shadcn.com/llms.txt 
+- ReUI reference: https://reui.io/llms.txt.
+- shadcn/ui reference: https://ui.shadcn.com/llms.txt.
+- DO reuse existing LongLink, ReUI, or shadcn/ui components before building equivalents.
+- DO place custom components in a `custom` folder.
+- DO preserve ReUI or shadcn/ui APIs, composition patterns, and accessibility conventions.
+- DO keep reusable interactions, keyboard navigation, and focus management inside components.
+- DO expose clear props, events, and composition slots so Views don't rebuild component internals.
+- DO support controlled state when Views need coordination; otherwise, prefer component-owned state.
+- DO centralize shared appearance through theme tokens and component variants.
+- DO keep View-level styling focused on layout and application-specific presentation.
+- DO keep data loading, business rules, permissions, and application-specific actions outside generic UI components.
+- DO handle applicable loading, empty, error, disabled, and pending states.
+- DON'T add pass-through wrappers, speculative options, or abstractions for one-off layouts.
 
-## Commit Message Structure
+## Commit and Merge Structure
 
-DO use Conventional Commits for commit messages: type, optional scope in parentheses, a colon, a space, and a short imperative description.
-
-DO choose a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. Optional scopes are `api`, `sdk`, and `web`; omit the scope for cross-area changes.
-
-DO write plain text only. NEVER include XML/HTML tags, Markdown wrappers, or literal template placeholders in commit messages or pull request titles.
-
-Valid examples:
-
-```text
-refactor: Make resource and workflow ownership explicit
-fix(api): Preserve invitation permissions
-```
-
-## Merge Request Structure
-
-DO format the pull request title exactly like a commit message, following the rules and examples above.
-
-DO use these Markdown headings in the pull request body, replacing the example bullets with the actual changes and results:
+- USE Conventional Commits for commit messages: type, optional scope in parentheses, a colon, a space, and a short imperative description.
+- CHOSE a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`.
+- Optional scopes are `api`, `sdk`, and `web`; omit the scope for cross-area changes.
 
 ```markdown
 ## Summary
@@ -124,5 +119,3 @@ DO use these Markdown headings in the pull request body, replacing the example b
 
 - Checks run and results, or why not run.
 ```
-
-DO apply change-type labels from `.github/release.yml` and applicable area labels (`api`, `sdk`, `web`) through GitHub labels, not as tags in the title or body.
