@@ -1,3 +1,4 @@
+import secrets
 from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import select
@@ -98,7 +99,7 @@ async def create_compute() -> ComputeRegistry:
             storage_endpoint="https://storage.example",
             # Fixture credentials are scoped to the synthetic storage endpoint.
             storage_access_key="controller",
-            storage_secret_key="controller-secret",  # noqa: S106
+            storage_secret_key=secrets.token_urlsafe(32),
         )
         session.add(compute)
         await session.commit()

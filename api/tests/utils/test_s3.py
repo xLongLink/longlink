@@ -1,4 +1,5 @@
 import pytest
+import secrets
 from typing import cast
 from contextlib import asynccontextmanager
 from src.utils.s3 import S3, Credentials
@@ -16,17 +17,17 @@ async def s3(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[S3, AioStub
     """Supply one local S3 client with validated responses and no network requests."""
 
     # Keep explicit dummy credentials and a loopback endpoint independent of host AWS settings.
+    credentials = Credentials("access", secrets.token_urlsafe(32))
     session = get_session()
     async with session.create_client(
         "s3",
         region_name="us-east-1",
         endpoint_url="http://127.0.0.1:1",
-        aws_access_key_id="access",
-        aws_secret_access_key="secret",  # noqa: S106
-        aws_session_token="dummy",  # noqa: S106
+        aws_access_key_id=credentials.access_key,
+        aws_secret_access_key=credentials.secret_key,
     ) as client:
         # Keep the real storage adapter while replacing its network client.
-        storage = S3("http://127.0.0.1:1", Credentials("access", "secret"))
+        storage = S3("http://127.0.0.1:1", credentials)
 
         # Stub S3 operations while retaining the real botocore request contract.
         stubber = AioStubber(client)

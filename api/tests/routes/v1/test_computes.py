@@ -1,4 +1,5 @@
 import pytest
+import secrets
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from conftest import RegistryKubernetes
@@ -54,7 +55,7 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         cluster_uid="beta-cluster",
         kubeconfig={"apiVersion": "v1", "clusters": []},
         storage_access_key="controller",
-        storage_secret_key="controller-secret",  # noqa: S106
+        storage_secret_key=secrets.token_urlsafe(32),
         **expected_item,
     )
 
@@ -64,7 +65,7 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         cluster_uid="alpha-cluster",
         kubeconfig={"apiVersion": "v1", "clusters": []},
         storage_access_key="controller",
-        storage_secret_key="controller-secret",  # noqa: S106
+        storage_secret_key=secrets.token_urlsafe(32),
         **expected_item,
     )
     async with session_scope() as session:

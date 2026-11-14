@@ -1013,7 +1013,7 @@ async def test_solution_proxy_forwards_error_negotiation_headers(
 
 
 @pytest.fixture
-def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+def request_scope(monkeypatch: pytest.MonkeyPatch, password_hash: str) -> SimpleNamespace:
     """Supply authorized runtime boundaries while exercising the real proxy resource ownership."""
 
     # Keep HTTP cleanup observable through the production runtime scope.
@@ -1026,7 +1026,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         deployed_revision_id=uuid4(),
     )
     registry = SimpleNamespace(gateway_url="https://gateway.example/", gateway_certificate=None)
-    user = User(id=uuid4(), name="Gateway User", email="gateway@example.com", password="unused-test-password")  # noqa: S106
+    user = User(id=uuid4(), name="Gateway User", email="gateway@example.com", password=password_hash)
 
     async def access(*_args: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Return the authorized running Solution before and after admission."""

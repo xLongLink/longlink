@@ -1,4 +1,5 @@
 import pytest
+import secrets
 from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from longlink import User
@@ -41,9 +42,9 @@ async def test_postgres_creates_idempotent_runtime_schema_with_local_users(
     active_user = {"id": UUID(int=1), "name": "Owner User", "email": "owner@example.com", "avatar": "", "updated_at": datetime.now(UTC)}
     await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
-    runtime_password = "stable-runtime-password"  # noqa: S105
+    runtime_password = secrets.token_urlsafe(32)
     sibling_id = UUID("55555555-5555-5555-5555-555555555555")
-    sibling_password = "sibling-runtime-password"  # noqa: S105
+    sibling_password = secrets.token_urlsafe(32)
     sibling_username = await adapter.solution_schema(organization_id, sibling_id, sibling_password)
 
     # Connect independently with the actual runtime credentials.
@@ -136,9 +137,9 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
     # Arrange
     adapter, organization_id, solution_id = postgres_database
     await adapter.prepare_organization_database(organization_id)
-    runtime_password = "stable-runtime-password"  # noqa: S105
+    runtime_password = secrets.token_urlsafe(32)
     sibling_id = UUID("55555555-5555-5555-5555-555555555555")
-    sibling_password = "sibling-runtime-password"  # noqa: S105
+    sibling_password = secrets.token_urlsafe(32)
     runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
     sibling_username = await adapter.solution_schema(organization_id, sibling_id, sibling_password)
     url = URL.create(

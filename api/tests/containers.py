@@ -1,5 +1,6 @@
 import docker
 import pytest
+import secrets
 from uuid import uuid4
 from contextlib import closing
 from sqlalchemy import text, create_engine
@@ -30,7 +31,9 @@ def postgres_server() -> Iterator[PostgresContainer]:
 
     # Probe Docker before delegating server startup and cleanup to Testcontainers.
     require_docker_daemon()
-    container = PostgresContainer("postgres:16-alpine", username="longlink", password="sec@ret", dbname="postgres", driver="psycopg")  # noqa: S106
+    container = PostgresContainer(
+        "postgres:16-alpine", username="longlink", password=f"{secrets.token_urlsafe(24)}@test", dbname="postgres", driver="psycopg"
+    )
 
     with container:
         yield container
@@ -45,8 +48,8 @@ def mysql_server() -> Iterator[MySqlContainer]:
     container = MySqlContainer(
         "mysql:8.4",
         username="longlink",
-        password="sec@ret",  # noqa: S106
-        root_password="test-root-password",  # noqa: S106
+        password=f"{secrets.token_urlsafe(24)}@test",
+        root_password=secrets.token_urlsafe(32),
         dbname="longlink",
         dialect="pymysql",
     )
