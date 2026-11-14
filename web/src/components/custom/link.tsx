@@ -1,15 +1,11 @@
 import { cn } from 'cn';
-import { Text } from './text';
-import { ReportedError } from '@/lib/reported';
 import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
-import { Spinner } from '@/components/shadcn/spinner';
-import { FileRequestContext, useDownload } from './preview';
 import { buttonVariants } from '@/components/shadcn/button';
-import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
+import { useContext, type ComponentPropsWithRef } from 'react';
 
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
-export function NavigationLink({ href, target, onClick, ...props }: ComponentPropsWithRef<'a'>) {
+export function NavigationLink({ href, target, rel, download, onClick, ...props }: ComponentPropsWithRef<'a'>) {
     const navigation = useContext(LinkNavigationContext);
     const internalHref = navigation && href ? resolveNavigationUrl(navigation.baseUrl, href) : '';
     let destination = navigation ? internalHref || undefined : href;
@@ -34,8 +30,13 @@ export function NavigationLink({ href, target, onClick, ...props }: ComponentPro
         <a
             {...props}
             href={destination}
+            download={navigation ? undefined : download}
             target={navigation && !internalHref ? '_blank' : target}
-            rel="noopener noreferrer"
+            rel={
+                navigation || target === '_blank'
+                    ? [...new Set(`${rel ?? ''} noopener noreferrer`.trim().split(/\s+/))].join(' ')
+                    : rel
+            }
             onClick={(event) => {
                 onClick?.(event);
 
@@ -66,123 +67,16 @@ export function NavigationLink({ href, target, onClick, ...props }: ComponentPro
     );
 }
 
-/** Navigates, previews or downloads an attachment, or runs a link-styled action. */
-export function Link({
-    to,
-    download,
-    preview,
-    disabled = false,
-    onClick,
-    children
-}: {
-    to?: string;
-    download?: string;
-    /** Opens a scoped file in a preview dialog using this filename as its title. */
-    preview?: string;
-    disabled?: boolean;
-    /** Runs an action with automatic async loading and duplicate-click prevention. Omit to for button semantics. */
-    onClick?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void | Promise<void>;
-    children?: ReactNode;
-}) {
-    const attachment = useDownload();
-    const files = useContext(FileRequestContext);
-    const actionInFlight = useRef(false);
-    const [isPending, startTransition] = useTransition();
-    const blocked = disabled || isPending;
-
-    // Keep synchronous state updates urgent; only a returned promise enters a transition.
-    function activate(event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) {
-        if (blocked || actionInFlight.current) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            return;
-        }
-
-        // File actions use the scoped host capability instead of native navigation.
-        if ((download !== undefined || preview !== undefined) && to !== undefined) event.preventDefault();
-
-        if (!onClick && download === undefined && preview === undefined) return;
-        actionInFlight.current = true;
-
-        try {
-            const result = onClick?.(event);
-
-            if (!result && ((download === undefined && preview === undefined) || to === undefined)) {
-                actionInFlight.current = false;
-
-                return;
-            }
-
-            startTransition(async () => {
-                try {
-                    await result;
-
-                    if (preview !== undefined && to !== undefined) {
-                        if (!files) throw new Error('Previews require the Solution runtime');
-                        await files.preview(to, preview);
-                    } else if (download !== undefined && to !== undefined) {
-                        await attachment.download(to, download);
-                    }
-                } catch (error) {
-                    // Already-reported request failures must not replace the View.
-                    if (!(error instanceof ReportedError)) throw error;
-                } finally {
-                    actionInFlight.current = false;
-                }
-            });
-        } catch (error) {
-            actionInFlight.current = false;
-
-            if (!(error instanceof ReportedError)) {
-                startTransition(async () => {
-                    throw error;
-                });
-            }
-        }
-    }
-
-    const content = (
-        <Text className="text-inherit">
-            {isPending && (
-                <span role="status" aria-label="Loading" className="inline-flex align-middle">
-                    <Spinner aria-hidden="true" className="motion-reduce:animate-none" />
-                </span>
-            )}
-            {children}
-        </Text>
-    );
-
-    const interaction = {
-        className: cn(
-            buttonVariants({ variant: 'link', size: null }),
-            'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
-        ),
-        'aria-disabled': blocked || undefined,
-        'aria-busy': isPending || undefined,
-        'aria-haspopup': preview !== undefined ? ('dialog' as const) : undefined,
-        onClick: activate,
-        onKeyDown: (event: React.KeyboardEvent<HTMLAnchorElement | HTMLButtonElement>) => {
-            if (blocked && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
-        }
-    };
-
+/** Adds link styling while preserving native anchor props, content and scoped navigation. */
+export function Link({ className, ...props }: Omit<ComponentPropsWithRef<'a'>, 'download'>) {
     return (
-        <>
-            {to === undefined || blocked ? (
-                <button {...interaction} type="button">
-                    {content}
-                </button>
-            ) : (
-                <NavigationLink {...interaction} href={to} download={download}>
-                    {content}
-                </NavigationLink>
+        <NavigationLink
+            {...props}
+            className={cn(
+                buttonVariants({ variant: 'link', size: null }),
+                'align-baseline whitespace-normal',
+                className
             )}
-            {attachment.error && (
-                <span role="alert">
-                    <Text>{attachment.error}</Text>
-                </span>
-            )}
-        </>
+        />
     );
 }

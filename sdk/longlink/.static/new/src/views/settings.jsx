@@ -91,10 +91,10 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <Dialog
+            <FramedDialog
                 variant="fullscreen"
                 title="Fullscreen settings"
-                isOpen={isFullscreenOpen}
+                open={isFullscreenOpen}
                 onOpenChange={setIsFullscreenOpen}
             >
                 <Stack gap={4}>
@@ -131,7 +131,7 @@ export default function ProjectSettings() {
                     />
                     <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
                 </Stack>
-            </Dialog>
+            </FramedDialog>
         </Stack>
     );
 }

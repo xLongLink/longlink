@@ -5,7 +5,7 @@ import { Button } from '@/components/shadcn/button';
 import { useEffect, useId, useRef, useState, type DragEvent } from 'react';
 import { InputGroup, InputGroupButton } from '@/components/shadcn/input-group';
 import { CircleAlert, CircleCheck, TriangleAlert, Upload, X } from 'lucide-react';
-import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type FileInputProps = FieldProps & {
     value?: File | File[] | null;
@@ -162,146 +162,133 @@ export function NativeFileInput({
 
     return (
         <FormField
-            label={label}
             name={name}
             required={required}
             disabled={disabled}
             fieldRef={field.ref}
             values={files}
             serialize
+            className="view-text-field view-file-field group/file"
+            data-disabled={disabled || undefined}
+            data-mode={mode}
+            data-status={statusType}
         >
-            <Field
-                className="view-text-field view-file-field group/file"
-                data-disabled={disabled || undefined}
+            <FieldContent>
+                <FieldLabel htmlFor={id} id={`${id}-label`}>
+                    {label}
+                    {required && <span className="text-muted-foreground">Required</span>}
+                </FieldLabel>
+                {description && <FieldDescription id={`${id}-description`}>{description}</FieldDescription>}
+            </FieldContent>
+            <InputGroup
+                className="view-file-input data-[mode=dropzone]:h-auto data-[mode=dropzone]:flex-col data-[mode=dropzone]:gap-2 data-[mode=dropzone]:border-dashed data-[mode=dropzone]:px-4 data-[mode=dropzone]:py-6 data-dragging:border-ring data-dragging:bg-muted group-data-disabled/file:opacity-50"
                 data-mode={mode}
+                data-dragging={(!disabled && dragging) || undefined}
                 data-status={statusType}
-            >
-                <FieldContent>
-                    <FieldLabel htmlFor={id} id={`${id}-label`}>
-                        {label}
-                        {required && <span className="text-muted-foreground">Required</span>}
-                    </FieldLabel>
-                    {description && (
-                        <FieldDescription
-                            id={`${id}-description`}
-                            onClick={(event) => {
-                                if (event.target === event.currentTarget) trigger.current?.click();
-                            }}
-                        >
-                            <label htmlFor={id}>{description}</label>
-                        </FieldDescription>
-                    )}
-                </FieldContent>
-                <InputGroup
-                    className="view-file-input data-[mode=dropzone]:h-auto data-[mode=dropzone]:flex-col data-[mode=dropzone]:gap-2 data-[mode=dropzone]:border-dashed data-[mode=dropzone]:px-4 data-[mode=dropzone]:py-6 data-dragging:border-ring data-dragging:bg-muted group-data-disabled/file:opacity-50"
-                    data-mode={mode}
-                    data-dragging={(!disabled && dragging) || undefined}
-                    data-status={statusType}
-                    onClick={(event) => {
-                        if (event.target === event.currentTarget) open();
-                    }}
-                    onDragEnter={mode === 'dropzone' ? dragOver : undefined}
-                    onDragOver={mode === 'dropzone' ? dragOver : undefined}
-                    onDragLeave={
-                        mode === 'dropzone'
-                            ? (event) => {
-                                  if (
-                                      event.relatedTarget instanceof Node &&
-                                      event.currentTarget.contains(event.relatedTarget)
-                                  )
-                                      return;
-                                  setDragging(false);
-                              }
-                            : undefined
-                    }
-                    onDrop={
-                        mode === 'dropzone'
-                            ? (event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  setDragging(false);
+                onClick={(event) => {
+                    if (event.target === event.currentTarget) open();
+                }}
+                onDragEnter={mode === 'dropzone' ? dragOver : undefined}
+                onDragOver={mode === 'dropzone' ? dragOver : undefined}
+                onDragLeave={
+                    mode === 'dropzone'
+                        ? (event) => {
+                              if (
+                                  event.relatedTarget instanceof Node &&
+                                  event.currentTarget.contains(event.relatedTarget)
+                              )
+                                  return;
+                              setDragging(false);
+                          }
+                        : undefined
+                }
+                onDrop={
+                    mode === 'dropzone'
+                        ? (event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setDragging(false);
 
-                                  if (event.dataTransfer.files.length) select(Array.from(event.dataTransfer.files));
-                              }
-                            : undefined
-                    }
+                              if (event.dataTransfer.files.length) select(Array.from(event.dataTransfer.files));
+                          }
+                        : undefined
+                }
+            >
+                <Button
+                    ref={trigger}
+                    id={id}
+                    className="view-file-trigger min-w-0 flex-1 justify-start aria-disabled:cursor-default"
+                    variant="ghost"
+                    type="button"
+                    aria-label={fileNames ? `${label}, ${fileNames}` : label}
+                    aria-disabled={disabled || undefined}
+                    aria-invalid={invalid || undefined}
+                    aria-describedby={describedBy}
+                    onClick={open}
+                    onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        open();
+                    }}
                 >
-                    <Button
-                        ref={trigger}
-                        id={id}
-                        className="view-file-trigger min-w-0 flex-1 justify-start aria-disabled:cursor-default"
-                        variant="ghost"
+                    {(mode === 'input' || !files.length) && <Upload aria-hidden="true" />}
+                    <span
+                        className="min-w-0 truncate data-placeholder:text-muted-foreground"
+                        data-placeholder={!files.length || undefined}
+                    >
+                        {fileNames || (dragging && !disabled ? 'Drop files here' : placeholder)}
+                    </span>
+                </Button>
+                {statusType && mode === 'input' && (
+                    <StatusIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+                <input
+                    ref={input}
+                    type="file"
+                    className="sr-only [clip-path:inset(50%)]"
+                    accept={accept}
+                    multiple={multiple}
+                    disabled={disabled}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    onChange={(event) => {
+                        select(Array.from(event.currentTarget.files ?? []));
+                        event.currentTarget.value = '';
+                    }}
+                />
+                {!!files.length && !disabled && (
+                    <InputGroupButton
                         type="button"
-                        aria-label={fileNames ? `${label}, ${fileNames}` : label}
-                        aria-disabled={disabled || undefined}
-                        aria-invalid={invalid || undefined}
-                        aria-describedby={describedBy}
-                        onClick={open}
-                        onKeyDown={(event) => {
-                            if (event.key !== 'Enter' && event.key !== ' ') return;
-                            event.preventDefault();
-                            open();
+                        size="icon-xs"
+                        aria-label={`Clear ${label}`}
+                        onClick={() => {
+                            setError(undefined);
+                            field.onChange(null);
+                            trigger.current?.focus({ preventScroll: true });
                         }}
                     >
-                        {(mode === 'input' || !files.length) && <Upload aria-hidden="true" />}
-                        <span
-                            className="min-w-0 truncate data-placeholder:text-muted-foreground"
-                            data-placeholder={!files.length || undefined}
-                        >
-                            {fileNames || (dragging && !disabled ? 'Drop files here' : placeholder)}
-                        </span>
-                    </Button>
-                    {statusType && mode === 'input' && (
-                        <StatusIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    )}
-                    <input
-                        ref={input}
-                        type="file"
-                        className="sr-only [clip-path:inset(50%)]"
-                        accept={accept}
-                        multiple={multiple}
-                        disabled={disabled}
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        onChange={(event) => {
-                            select(Array.from(event.currentTarget.files ?? []));
-                            event.currentTarget.value = '';
-                        }}
-                    />
-                    {!!files.length && !disabled && (
-                        <InputGroupButton
-                            type="button"
-                            size="icon-xs"
-                            aria-label={`Clear ${label}`}
-                            onClick={() => {
-                                setError(undefined);
-                                field.onChange(null);
-                                trigger.current?.focus({ preventScroll: true });
-                            }}
-                        >
-                            <X aria-hidden="true" />
-                        </InputGroupButton>
-                    )}
-                </InputGroup>
-                {required && (
-                    <span id={`${id}-required`} className="sr-only [clip-path:inset(50%)]">
-                        Required
-                    </span>
+                        <X aria-hidden="true" />
+                    </InputGroupButton>
                 )}
-                {message &&
-                    (invalid ? (
-                        <FieldError id={`${id}-status`} className="view-file-status">
-                            {message}
-                        </FieldError>
-                    ) : (
-                        <FieldDescription id={`${id}-status`} className="view-file-status" role="status">
-                            {message}
-                        </FieldDescription>
-                    ))}
-                <span className="sr-only [clip-path:inset(50%)]" role="status">
-                    {!message && fileNames ? `Selected: ${fileNames}` : ''}
+            </InputGroup>
+            {required && (
+                <span id={`${id}-required`} className="sr-only [clip-path:inset(50%)]">
+                    Required
                 </span>
-            </Field>
+            )}
+            {message &&
+                (invalid ? (
+                    <FieldError id={`${id}-status`} className="view-file-status">
+                        {message}
+                    </FieldError>
+                ) : (
+                    <FieldDescription id={`${id}-status`} className="view-file-status" role="status">
+                        {message}
+                    </FieldDescription>
+                ))}
+            <span className="sr-only [clip-path:inset(50%)]" role="status">
+                {!message && fileNames ? `Selected: ${fileNames}` : ''}
+            </span>
         </FormField>
     );
 }

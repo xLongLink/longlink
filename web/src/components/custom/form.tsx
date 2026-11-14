@@ -1,24 +1,29 @@
-import { Stack } from './stack';
 import { ReportedError } from '@/lib/reported';
 import type { ViewData } from '@/views/protocol';
 import type { FormValidation } from './form-field';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { FormValidationContext, FormRequestContext } from './contexts';
-import { use, useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
+import { use, useEffect, useRef, useState, useTransition, type ComponentProps } from 'react';
 
 const methods = { post: 'POST', put: 'PUT', patch: 'PATCH', delete: 'DELETE' } as const;
 
 /** Validates named fields and submits through a Platform callback or the Solution bridge. */
-export function Form(props: {
-    /** Named controls and layout, including an independent custom Wizard. */
-    children?: ReactNode;
+export function Form({
+    action,
+    method = 'post',
+    submitDisabled,
+    onSuccess,
+    onSubmit,
+    onReset,
+    noValidate = true,
+    children,
+    ref,
+    ...props
+}: Omit<ComponentProps<'form'>, 'action' | 'method'> & {
     /** Solution-relative API path or a Platform callback receiving the complete form data. */
     action: string | ((data: FormData) => void | Promise<void>);
     /** Write method used to submit the form; defaults to post. */
     method?: 'post' | 'put' | 'patch' | 'delete';
-    /** Native form ID for associating external submit or reset buttons. */
-    id?: string;
-    /** Bounds the form height. Wizard owns its panel layout. */
-    height?: number | string;
     /** Prevents submission when Platform workflow requirements are not satisfied. */
     submitDisabled?: boolean;
     /** Runs after a successful write and automatic cached-data refresh. */
@@ -26,6 +31,7 @@ export function Form(props: {
 }) {
     const request = use(FormRequestContext);
     const formRef = useRef<HTMLFormElement>(null);
+    const rootRef = useMergedRefs(ref, formRef);
     const pending = useRef(false);
     const [isSubmitting, startSubmission] = useTransition();
     const [failure, setFailure] = useState<{ control: HTMLElement } | null>(null);
@@ -51,12 +57,16 @@ export function Form(props: {
         if (!form) return false;
         const invalid: HTMLElement[] = [];
 
-        // Collect native failures without asking the browser to focus hidden panels.
-        const controls = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-            'input, select, textarea'
-        );
+        // Validate owned controls, including external fields, without focusing hidden panels.
+        for (const control of form.elements) {
+            if (
+                !(control instanceof HTMLInputElement) &&
+                !(control instanceof HTMLSelectElement) &&
+                !(control instanceof HTMLTextAreaElement)
+            ) {
+                continue;
+            }
 
-        for (const control of controls) {
             const owner = control.closest<HTMLElement>('[data-step-panel]');
 
             if (panel && owner && owner !== panel) continue;
@@ -90,16 +100,15 @@ export function Form(props: {
 
                 // Platform callbacks own their requests; Solution paths use the scoped bridge.
                 // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The action contract is a callback or scoped path.
-                if (typeof props.action === 'function') {
-                    await props.action(data);
+                if (typeof action === 'function') {
+                    await action(data);
                 } else {
                     if (!request) throw new Error('Forms require the Solution runtime');
-                    const method = props.method ?? 'post';
 
                     if (!Object.hasOwn(methods, method)) throw new Error('Forms support post, put, patch, or delete');
 
-                    const result = await request(props.action, { method: methods[method], form: [...data.entries()] });
-                    await props.onSuccess?.(result);
+                    const result = await request(action, { method: methods[method], form: [...data.entries()] });
+                    await onSuccess?.(result);
                 }
             } catch (failure) {
                 if (!(failure instanceof ReportedError)) throw failure;
@@ -113,13 +122,14 @@ export function Form(props: {
     return (
         <FormValidationContext value={validate}>
             <form
-                ref={formRef}
-                id={props.id}
+                {...props}
+                ref={rootRef}
                 method="post"
-                noValidate
+                noValidate={noValidate}
                 data-longlink-form=""
-                aria-busy={isSubmitting || undefined}
+                aria-busy={isSubmitting || props['aria-busy']}
                 onReset={(event) => {
+                    onReset?.(event);
                     const nativeEvent = event.nativeEvent;
 
                     // Respect canceled native resets and clear feedback after controls reset.
@@ -130,18 +140,18 @@ export function Form(props: {
                     });
                 }}
                 onSubmit={(event) => {
+                    onSubmit?.(event);
+
                     if (event.defaultPrevented) return;
                     event.preventDefault();
 
                     // Wizard intercepts intermediate submits before the final form validation.
-                    if (pending.current || props.submitDisabled || !validate()) return;
+                    if (pending.current || submitDisabled || !validate()) return;
                     submit(event.currentTarget, event.nativeEvent.submitter);
                 }}
             >
                 <fieldset disabled={isSubmitting} className="m-0 min-w-0 border-0 p-0">
-                    <Stack gap={3} height={props.height}>
-                        {props.children}
-                    </Stack>
+                    {children}
                 </fieldset>
             </form>
         </FormValidationContext>

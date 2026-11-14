@@ -1,21 +1,21 @@
 import { z } from 'zod';
-import { Dialog } from './dialog';
 import { RefreshCw } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 export function SolutionLogsDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     return (
-        <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
             <Stack height="min(560px, calc(100dvh - var(--spacing) * 40))" paddingInline={8} paddingBlock={4}>
                 <ApiBoundary key={solutionId}>
                     <SolutionLogs solutionId={solutionId} onClose={onClose} />
                 </ApiBoundary>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }
 

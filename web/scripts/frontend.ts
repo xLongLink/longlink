@@ -39,6 +39,7 @@ export * from '../src/components/shadcn/input-group';
 export { Disclosure } from '../src/components/custom/disclosure';
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../src/components/shadcn/collapsible';
 export { Calendar } from '../src/components/shadcn/calendar';
+export * from '../src/components/reui/time-picker';
 export { Switch } from '../src/components/shadcn/switch';
 export { SwitchField } from '../src/components/custom/switch-field';
 export { Checkbox } from '../src/components/shadcn/checkbox';
@@ -51,7 +52,10 @@ export { ActionButtonGroup } from '../src/components/custom/action-button-group'
 export { FileViewer } from '../src/components/custom/file-viewer';
 export * from '../src/components/shadcn/card';
 export * from '../src/components/custom/interactive-card';
-export { Dialog } from '../src/components/dialogs/dialog';
+export { Dialog } from '../src/components/custom/dialog';
+export { FramedDialog } from '../src/components/custom/framed-dialog';
+export { Link } from '../src/components/custom/link';
+export { AttachmentLink } from '../src/components/custom/attachment-link';
 export * from '../src/components/shadcn/select';
 export * from '../src/components/shadcn/combobox';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/components/shadcn/tabs';
@@ -59,6 +63,7 @@ export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '..
 export { SliderField } from '../src/components/custom/slider-field';
 export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '../src/components/shadcn/progress';
 export type FrontendElement = JSX.Element;
+export type FrontendFormProps = JSX.IntrinsicElements['form'];
 export type FrontendElementType = JSX.ElementType;
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/components/shadcn/chart';
 export type { ChartConfig } from '../src/components/shadcn/chart';

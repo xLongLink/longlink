@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../../../render';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/ui/text-input';
+import { TextInput } from '@/components/custom/text-input';
 import { FormRequestContext } from '@/components/custom/contexts';
 import FormPreview from '@/platform/routes/docs/sdk/views/form-preview';
 

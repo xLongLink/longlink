@@ -111,7 +111,7 @@ async def report(
                 </Text>
                 <CodeBlock
                     code={`<FileViewer src="/reports/latest" title="report.pdf" />
-<Link to="/reports/latest" download="report.pdf">Download report</Link>`}
+<AttachmentLink href="/reports/latest" download="report.pdf">Download report</AttachmentLink>`}
                     language="jsx"
                 >
                     <CodeBlockCopyButton />

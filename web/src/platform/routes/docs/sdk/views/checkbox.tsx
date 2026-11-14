@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import FormPreview from './form-preview';
-import { Label } from '@/components/shadcn/label';
+import { FieldLabel } from '@/components/shadcn/field';
 import { Checkbox } from '@/components/shadcn/checkbox';
 
 /** Documents Checkbox in LongLink Views. */
@@ -74,10 +74,10 @@ export default function CheckboxPage() {
 export default function ApprovalForm() {
   return (
     <Form action="/api/example" method="post">
-      <Label>
+      <FieldLabel>
         <Checkbox name="approved" defaultChecked />
         Approved
-      </Label>
+      </FieldLabel>
     </Form>
   );
 }`
@@ -90,9 +90,9 @@ export default function ApprovalForm() {
 export function CheckboxExample() {
     // Restore the initial checked state with native form reset behavior.
     return (
-        <Label>
+        <FieldLabel>
             <Checkbox name="approved" defaultChecked />
             Approved
-        </Label>
+        </FieldLabel>
     );
 }

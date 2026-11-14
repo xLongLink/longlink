@@ -37,6 +37,7 @@ export default function Usage({ base }: { base: string }) {
                     </Stack>
                     <Button
                         label="See prices"
+                        variant="outline"
                         size="sm"
                         href="/pricing/"
                         target="_blank"

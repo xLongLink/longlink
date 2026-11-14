@@ -79,13 +79,12 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 if (!textarea || !upload || !submit) throw new Error('Expected the kubeconfig controls');
                 expect(textarea.getAttribute('rows')).toBe('8');
                 expect(textarea.getAttribute('spellcheck')).toBe('false');
-                expect(textarea.getAttribute('aria-required')).toBe('true');
+                expect(textarea.required).toBe(true);
                 expect(textarea.hasAttribute('name')).toBe(false);
                 await act(async () => user.type(textarea, 'previous draft'));
                 await act(async () => user.upload(upload, file));
                 expect(textarea.value).toBe('');
-                expect(textarea.readOnly).toBe(true);
-                expect(textarea.getAttribute('aria-disabled')).toBe('true');
+                expect(textarea.disabled).toBe(true);
                 expect(textarea.getAttribute('aria-busy')).toBe('true');
                 expect(
                     [...document.querySelectorAll('[role="status"]')].some((status) => status.textContent === 'Loading')
@@ -97,7 +96,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 // The read result retains indentation and trailing newlines, with spellcheck still suppressed.
                 await act(async () => resolveRead(yaml));
                 expect(textarea.value).toBe(yaml);
-                expect(textarea.readOnly).toBe(false);
+                expect(textarea.disabled).toBe(false);
                 expect(textarea.hasAttribute('aria-busy')).toBe(false);
                 expect(textarea.getAttribute('spellcheck')).toBe('false');
                 expect(
@@ -160,7 +159,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 await act(async () => user.click(clear));
                 await act(async () => finishObsolete('obsolete credentials'));
                 expect(textarea.value).toBe('');
-                expect(textarea.readOnly).toBe(false);
+                expect(textarea.disabled).toBe(false);
                 expect(submit.getAttribute('aria-disabled')).toBe('true');
             },
             '/admin/compute'

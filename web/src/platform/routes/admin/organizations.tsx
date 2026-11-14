@@ -4,7 +4,7 @@ import { useAdminList } from './use-list';
 import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Badge } from '@/components/reui/badge';
-import { TextInput } from '@/components/ui/text-input';
+import { TextInput } from '@/components/custom/text-input';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';

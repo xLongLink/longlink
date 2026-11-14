@@ -631,14 +631,125 @@ it('edits and resets composed native text fields through the authored View bound
     }
 });
 
-it('controls the LongLink Dialog with public Buttons inside an authored View', async () => {
+it('toggles and resets checkbox form data through the FieldLabel exposed to authored Views', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <form>
+            <FieldLabel>
+                <Checkbox name="approved" defaultChecked />
+                Approved
+            </FieldLabel>
+            <button type="reset">Reset</button>
+        </form>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('label')).not.toBeNull());
+        const form = runtime.mount.querySelector('form');
+        const label = runtime.mount.querySelector('label');
+        const reset = runtime.mount.querySelector<HTMLButtonElement>('button[type="reset"]');
+
+        if (!form || !label || !reset) throw new Error('Expected the authored approval form');
+
+        const user = userEvent.setup();
+
+        expect(new FormData(form).getAll('approved')).toEqual(['on']);
+        await user.click(label);
+        expect(new FormData(form).has('approved')).toBe(false);
+        await user.click(reset);
+        await vi.waitFor(() => expect(new FormData(form).getAll('approved')).toEqual(['on']));
+    } finally {
+        runtime.close();
+    }
+});
+
+it('edits and resets native ReUI time picker values through the authored View boundary', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <form>
+            <FieldLabel htmlFor="native-time">Appointment</FieldLabel>
+            <TimePicker id="native-time" name="appointment" defaultValue="09:30" hourCycle={24}>
+                <TimePickerInput />
+                <TimePickerContent />
+            </TimePicker>
+            <button type="reset">Reset</button>
+        </form>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('#native-time')).not.toBeNull());
+        const form = runtime.mount.querySelector('form');
+        const input = runtime.mount.querySelector<HTMLInputElement>('#native-time');
+        const reset = runtime.mount.querySelector<HTMLButtonElement>('button[type="reset"]');
+
+        if (!form || !input || !reset) throw new Error('Expected the authored appointment form');
+
+        const user = userEvent.setup();
+
+        await user.clear(input);
+        await user.type(input, '10:15');
+        await user.tab();
+        expect(new FormData(form).getAll('appointment')).toEqual(['10:15']);
+        await user.click(reset);
+        await vi.waitFor(() => expect(new FormData(form).getAll('appointment')).toEqual(['09:30']));
+        expect(input.value).toBe('09:30');
+    } finally {
+        runtime.close();
+    }
+});
+
+it('keeps navigation and attachment downloads on distinct scoped capabilities in authored Views', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <>
+            <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
+            <AttachmentLink href="/api/report" download="report.pdf">Download report</AttachmentLink>
+        </>;
+    }`);
+
+    const navigation = vi.fn();
+    const downloads = vi.fn();
+
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+
+        if (command.type === 'navigate') navigation(command.path);
+
+        if (command.type === 'download') {
+            downloads(command.path, command.filename);
+            runtime.send({ id: command.id, ok: true, data: null });
+        }
+    };
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('a')).toHaveLength(2));
+        const orders = runtime.mount.querySelector<HTMLAnchorElement>('a[aria-label="Orders"]');
+
+        const report = Array.from(runtime.mount.querySelectorAll('a')).find(
+            (anchor) => anchor.textContent === 'Download report'
+        );
+
+        if (!orders || !report) throw new Error('Expected the authored navigation and attachment links');
+
+        const user = userEvent.setup();
+
+        await user.click(orders);
+        await vi.waitFor(() => expect(navigation).toHaveBeenCalledExactlyOnceWith('/orders'));
+        expect(downloads).not.toHaveBeenCalled();
+        expect(report.hasAttribute('download')).toBe(false);
+        await user.click(report);
+        await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'report.pdf'));
+        expect(navigation).toHaveBeenCalledTimes(1);
+    } finally {
+        runtime.close();
+    }
+});
+
+it('controls the LongLink FramedDialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <Dialog title="Order details" isOpen={open} onOpenChange={setOpen}>
+            <FramedDialog title="Order details" open={open} onOpenChange={setOpen}>
                 <p>Review the order</p>
-            </Dialog>
+            </FramedDialog>
         </>;
     }`);
 

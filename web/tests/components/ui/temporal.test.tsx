@@ -40,13 +40,25 @@ it.each(['date', 'time'] as const)('opens the coarse-pointer %s picker without s
     try {
         await withMounted(
             <form onSubmit={submissions}>
-                {kind === 'date' ? <DateInput label="When" name="when" /> : <TimeInput label="When" name="when" />}
+                {kind === 'date' ? (
+                    <DateInput label="When" name="when" description="Choose a delivery date" />
+                ) : (
+                    <TimeInput label="When" name="when" description="Choose a delivery time" />
+                )}
                 <button type="submit">Submit</button>
             </form>,
             async (output) => {
                 const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
                 expect(input.readOnly).toBe(kind === 'time');
                 const trigger = find<HTMLButtonElement>(output, 'button[aria-label="Choose When"]');
+
+                find<HTMLButtonElement>(output, 'button[type=submit]').focus();
+                await act(async () => user.click(find(output, '[data-slot=field-description]')));
+                expect(document.activeElement).not.toBe(input);
+                expect(document.querySelector('[role=dialog]')).toBeNull();
+                expect(document.getElementById(input.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+                    kind === 'date' ? 'Choose a delivery date' : 'Choose a delivery time'
+                );
 
                 if (kind === 'date') {
                     await act(async () => user.type(input, '2028-02-29'));
@@ -69,16 +81,16 @@ it.each(['date', 'time'] as const)('opens the coarse-pointer %s picker without s
     }
 });
 
-/** Chooses a themed picker option through its label and real portalled list. */
+/** Chooses a native time column option through its accessible label. */
 async function choose(user: ReturnType<typeof userEvent.setup>, root: ParentNode, label: string, value: string) {
-    const field = [...root.querySelectorAll('label')].find((element) => element.textContent === label);
-    const control = field?.control;
+    const control = [...root.querySelectorAll<HTMLElement>('[role=listbox]')].find(
+        (element) => document.getElementById(element.getAttribute('aria-labelledby') ?? '')?.textContent === label
+    );
 
     if (!control) throw new Error(`Missing picker: ${label}`);
-    await act(async () => user.click(control));
 
-    const option = [...document.querySelectorAll<HTMLElement>('[role=listbox] [role=option]')].find(
-        (element) => !element.closest('[data-closed]') && element.textContent === value
+    const option = [...control.querySelectorAll<HTMLElement>('[role=option]')].find(
+        (element) => element.textContent === value
     );
 
     if (!option) throw new Error(`Missing option: ${value}`);
@@ -367,7 +379,7 @@ it('lets a calendar keyboard selection honor disabled constraints and restores f
     );
 });
 
-it('commits time columns live, clamps bounds, and retains column focus without applying changes on Save', async () => {
+it('commits native time columns live within bounds without applying changes on Save', async () => {
     // A selected column is a live edit; saving must only close the sheet.
     const changes: (ISOTimeString | undefined)[] = [];
 
@@ -398,7 +410,10 @@ it('commits time columns live, clamps bounds, and retains column focus without a
     await withMounted(<Example />, async (output) => {
         await act(async () => user.click(find<HTMLButtonElement>(output, 'button[aria-label="Choose Start"]')));
         const dialog = find<HTMLElement>(document, '[role=dialog]');
-        const hour = await choose(user, dialog, 'Hour', '11');
+        const hourList = find<HTMLElement>(dialog, '[data-type=hour] [role=listbox]');
+        const forbidden = [...hourList.querySelectorAll('[role=option]')].find((option) => option.textContent === '11');
+        expect(forbidden?.getAttribute('aria-disabled')).toBe('true');
+        const hour = await choose(user, dialog, 'Hour', '10');
         expect(document.activeElement).toBe(hour);
         expect(new FormData(find<HTMLFormElement>(output, 'form')).get('start')).toBe('10:00:00');
         expect(document.querySelector('[role=dialog]')).toBe(dialog);
@@ -407,9 +422,9 @@ it('commits time columns live, clamps bounds, and retains column focus without a
         await choose(user, dialog, 'Second', '30');
         expect(new FormData(find<HTMLFormElement>(output, 'form')).getAll('start')).toEqual(['09:07:30']);
         expect(find<HTMLInputElement>(output, 'input:not([type=hidden])').value).toBe('09:07:30');
-        expect(changes).toEqual(['10:00:00', '09:00:00', '09:07:00', '09:07:30']);
+        expect(changes).toEqual(['10:00:00', '09:30:15', '09:07:15', '09:07:30']);
         await act(async () => user.click(find<HTMLButtonElement>(dialog, '.view-temporal-close')));
-        expect(changes).toEqual(['10:00:00', '09:00:00', '09:07:00', '09:07:30']);
+        expect(changes).toEqual(['10:00:00', '09:30:15', '09:07:15', '09:07:30']);
         expect(document.querySelector('[role=dialog]')).toBeNull();
         expect(document.activeElement).toBe(find<HTMLInputElement>(output, 'input:not([type=hidden])'));
     });
@@ -517,7 +532,7 @@ it('keeps rejected time columns caller-owned and does not commit a fallback when
             const dialog = find<HTMLElement>(document, '[role=dialog]');
             const minute = await choose(user, dialog, 'Minute', '31');
             expect(changes).toEqual(['09:31']);
-            expect(minute.textContent).toBe('30');
+            expect(minute.querySelector('[aria-selected=true]')?.textContent).toBe('30');
             expect(new FormData(find<HTMLFormElement>(output, 'form')).get('start')).toBe('09:30');
             await act(async () => user.click(find<HTMLButtonElement>(dialog, '.view-temporal-close')));
             await act(async () => user.click(find<HTMLButtonElement>(output, 'button[aria-label="Choose Empty"]')));
@@ -528,6 +543,49 @@ it('keeps rejected time columns caller-owned and does not commit a fallback when
         }
     );
 });
+
+it.each(['25:00', '09:60', '08:30'])(
+    'blocks an invalid external time %s and recovers through native column selection',
+    async (invalid) => {
+        const submissions: FormData[] = [];
+        const user = userEvent.setup();
+
+        function Example() {
+            // SAFETY: Intentionally invalid runtime data exercises the controlled-value boundary.
+            const [value, setValue] = useState<ISOTimeString | undefined>(invalid as ISOTimeString);
+
+            return (
+                <Form
+                    action={(data) => {
+                        submissions.push(data);
+                    }}
+                >
+                    <TimeInput
+                        label="Start"
+                        name="start"
+                        value={value}
+                        onChange={setValue}
+                        min={time('09:00')}
+                        max={time('10:00')}
+                        hourFormat="24h"
+                    />
+                </Form>
+            );
+        }
+
+        await withMounted(<Example />, async (output) => {
+            const form = find<HTMLFormElement>(output, 'form');
+            await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+            expect(submissions).toEqual([]);
+            expect(new FormData(form).getAll('start')).toEqual(['']);
+            await act(async () => user.click(find<HTMLButtonElement>(output, 'button[aria-label="Choose Start"]')));
+            await choose(user, find<HTMLElement>(document, '[role=dialog]'), 'Hour', '09');
+            await act(async () => user.keyboard('{Escape}'));
+            await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+            expect(submissions.map((data) => data.getAll('start'))).toEqual([['09:00']]);
+        });
+    }
+);
 
 it('submits ASCII ISO times after typing Unicode digits, RTL marks, and spaced separators', async () => {
     // Locale-formatted pasted clocks must not become invalid or leak display glyphs into submission.

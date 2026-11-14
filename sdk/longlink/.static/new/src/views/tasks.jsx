@@ -25,9 +25,9 @@ export default function Tasks() {
                             <Stack gap={0}>
                                 <Text>{task.title}</Text>
                                 {task.attachment ? (
-                                    <Link to={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
+                                    <AttachmentLink href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
                                         {task.attachment}
-                                    </Link>
+                                    </AttachmentLink>
                                 ) : (
                                     <Text className="text-muted-foreground">No attachment</Text>
                                 )}
@@ -55,21 +55,25 @@ export default function Tasks() {
                     }
                 ]}
             />
-            <Dialog title="Add task" isOpen={isOpen} onOpenChange={setIsOpen}>
+            <FramedDialog title="Add task" open={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && (
                     <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
-                        <Field>
-                            <FieldLabel htmlFor="task-title">Title</FieldLabel>
-                            <Input id="task-title" name="title" maxLength={255} required />
-                        </Field>
-                        <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
-                        <Stack direction="horizontal" justify="end" gap={2}>
-                            <Button onClick={() => setIsOpen(false)}>Cancel</Button>
-                            <Button type="submit">Create task</Button>
-                        </Stack>
+                        <FieldGroup>
+                            <Field>
+                                <FieldLabel htmlFor="task-title">Title</FieldLabel>
+                                <Input id="task-title" name="title" maxLength={255} required />
+                            </Field>
+                            <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
+                            <Stack direction="horizontal" justify="end" gap={2}>
+                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit">Create task</Button>
+                            </Stack>
+                        </FieldGroup>
                     </Form>
                 )}
-            </Dialog>
+            </FramedDialog>
         </Stack>
     );
 }

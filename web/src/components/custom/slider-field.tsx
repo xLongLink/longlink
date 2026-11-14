@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import type { FieldProps } from './types';
 import type { Slider as SliderPrimitive } from '@base-ui/react/slider';
-import { FieldContent, FieldDescription, FieldTitle } from '@/components/shadcn/field';
+import { Field, FieldContent, FieldDescription, FieldTitle } from '@/components/shadcn/field';
 import { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '@/components/shadcn/slider';
 
 /** Adds field labeling to the native slider without replacing its interaction or form behavior. */
@@ -21,12 +21,7 @@ export function SliderField<Value extends number | readonly number[]>({
     const count = Array.isArray(values) ? values.length : 1;
 
     return (
-        <div
-            className="flex min-w-0 flex-col gap-1"
-            role="group"
-            aria-labelledby={`${id}-label`}
-            aria-describedby={description ? `${id}-description` : undefined}
-        >
+        <Field aria-labelledby={`${id}-label`} aria-describedby={description ? `${id}-description` : undefined}>
             <FieldContent>
                 <FieldTitle id={`${id}-label`}>
                     {label}
@@ -61,6 +56,6 @@ export function SliderField<Value extends number | readonly number[]>({
                     </SliderControl>
                 )}
             </Slider>
-        </div>
+        </Field>
     );
 }

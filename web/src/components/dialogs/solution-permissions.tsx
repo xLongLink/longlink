@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Dialog } from './dialog';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { Picker } from '@/components/custom/picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
@@ -26,11 +26,11 @@ export function SolutionPermissionsDialog({
     onClose: () => void;
 }) {
     return (
-        <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
             <ApiBoundary key={solutionId}>
                 <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
             </ApiBoundary>
-        </Dialog>
+        </FramedDialog>
     );
 }
 

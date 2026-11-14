@@ -1,10 +1,10 @@
-import { Dialog } from './dialog';
 import { Plug } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import { useNotification } from '@/lib/notifications';
 import { Illustration } from '@/components/ui/illustration';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeButton as Button } from '@/components/ui/native-button';
@@ -14,7 +14,7 @@ import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function SolutionMcpDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     return (
-        <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
             <IllustratedDialogContent
                 illustration={
                     <Illustration
@@ -61,7 +61,7 @@ export function SolutionMcpDialog({ solutionId, onClose }: { solutionId: string;
                     </Stack>
                 </Stack>
             </IllustratedDialogContent>
-        </Dialog>
+        </FramedDialog>
     );
 }
 
@@ -76,6 +76,7 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
     return (
         <Button
             label="Copy MCP server URL"
+            variant="outline"
             style={{ width: '100%' }}
             clickAction={async () => {
                 await navigator.clipboard.writeText(resource);

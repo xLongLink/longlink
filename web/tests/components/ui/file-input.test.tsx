@@ -248,8 +248,7 @@ it('retains trusted Platform read failures as blocking, associated validation st
     );
 });
 
-it.each([false, true])('forwards description clicks to the guarded picker when disabled=%s', async (disabled) => {
-    // Description clicks retain the label hit target without becoming part of the trigger name.
+it.each([false, true])('opens files from the label but not its description when disabled=%s', async (disabled) => {
     const user = userEvent.setup();
     const saved = new File(['saved'], 'saved.pdf');
 
@@ -269,6 +268,8 @@ it.each([false, true])('forwards description clicks to the guarded picker when d
             input.addEventListener('click', () => opens++);
 
             await act(async () => user.click(description));
+            expect(opens).toBe(0);
+            await act(async () => user.click(control(output, 'label')));
             expect(opens).toBe(disabled ? 0 : 1);
             expect(trigger.getAttribute('aria-label')).toBe('Attachment, saved.pdf');
             expect(trigger.getAttribute('aria-describedby')?.split(' ')).toContain(description.id);

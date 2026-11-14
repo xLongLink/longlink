@@ -1086,24 +1086,28 @@
         {
             "name": "Dialog",
             "category": "Layouts",
-            "guidance": "Compose DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose, or use isOpen with onOpenChange for a built-in frame. Set variant to fullscreen on the built-in frame for isolated-host fullscreen coordination.",
-            "introduction": "Displays an accessible modal using native composition or a built-in frame. The built-in frame closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
+            "source": "custom",
+            "reference": "https://ui.shadcn.com/docs/components/base/dialog",
+            "justification": "Tracks native dialog visibility for isolated View host coordination without adding frame styling.",
+            "guidance": "Compose the native DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose components. Use FramedDialog for the custom fixed or fullscreen frame.",
+            "introduction": "Native Dialog root properties with isolated View host coordination.",
+            "properties": [
+                { "name": "open / defaultOpen", "type": "boolean", "description": "Controlled or initial visibility." },
+                { "name": "onOpenChange", "type": "(open, eventDetails) => void", "description": "Native visibility callback; eventDetails.cancel() cancels the change." },
+                { "name": "children", "type": "ReactNode", "description": "Native dialog composition." }
+            ]
+        },
+        {
+            "name": "FramedDialog",
+            "category": "Layouts",
+            "guidance": "Use open with onOpenChange for the custom frame. Set variant to fullscreen for isolated-host fullscreen coordination. Use Dialog for native composition.",
+            "introduction": "Custom modal frame that closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
             "keywords": [
                 "modal",
                 "confirmation",
                 "confirm"
             ],
             "properties": [
-                {
-                    "name": "open / defaultOpen",
-                    "type": "boolean",
-                    "description": "Controlled or initial visibility for native composition."
-                },
-                {
-                    "name": "DialogTrigger.render",
-                    "type": "ReactElement",
-                    "description": "Base UI trigger composition."
-                },
                 {
                     "name": "children",
                     "type": "ReactNode",
@@ -1121,7 +1125,7 @@
                     "default": "standard"
                 },
                 {
-                    "name": "isOpen",
+                    "name": "open",
                     "type": "boolean",
                     "description": "Whether the dialog is open."
                 },
@@ -1144,7 +1148,7 @@
             ],
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/dialog",
-            "justification": "Combines native shadcn composition and built-in fixed or fullscreen frames with isolated View host coordination."
+            "justification": "Owns fixed or fullscreen viewport-aware frames, scrolling, focus recovery, and isolated View host coordination."
         },
         {
             "name": "Separator",
@@ -1343,7 +1347,7 @@
                 "validation",
                 "fields"
             ],
-            "guidance": "Inspect the submission contract and field names before wiring a form. Validate and authorize mutations on the server.",
+            "guidance": "Compose layout explicitly with FieldGroup or native classes. Standard form properties and cancelable submit/reset handlers are supported. Validate and authorize mutations on the server.",
             "properties": [
                 {
                     "name": "children",
@@ -1352,8 +1356,8 @@
                 },
                 {
                     "name": "action",
-                    "type": "string",
-                    "description": "Solution-relative API path; external URLs are not supported."
+                    "type": "string | ((data: FormData) => void | Promise<void>)",
+                    "description": "Solution-relative API path or a callback owning submission."
                 },
                 {
                     "name": "method",
@@ -1366,9 +1370,19 @@
                     "description": "Native form ID for associating external submit or reset buttons."
                 },
                 {
-                    "name": "height",
-                    "type": "string | number",
-                    "description": "Optional form height. Wizard owns its panel layout."
+                    "name": "submitDisabled",
+                    "type": "boolean",
+                    "description": "Prevents submission while workflow requirements are not satisfied."
+                },
+                {
+                    "name": "className / style / ref",
+                    "type": "native form props",
+                    "description": "Native presentation and form ref. Form does not provide an implicit field layout."
+                },
+                {
+                    "name": "onSubmit / onReset",
+                    "type": "native form event handlers",
+                    "description": "Calling preventDefault cancels the managed submission or reset."
                 },
                 {
                     "name": "onSuccess",
@@ -1607,12 +1621,31 @@
         {
             "name": "Link",
             "category": "Action",
-            "introduction": "Navigates within the Solution, opens an external HTTP(S) URL in a new tab, or downloads a scoped Solution attachment without navigating. Omit to and provide onClick for a link-styled button with automatic async loading and duplicate-click prevention.",
+            "source": "custom",
+            "justification": "Validates destinations and coordinates Solution-relative navigation with the isolated host while forwarding native anchor properties.",
+            "introduction": "Native-shaped anchor for scoped Solution navigation and safe external HTTP(S) destinations.",
+            "guidance": "Use href and caller-owned content and classes. Use AttachmentLink for scoped preview/download capabilities and ActionButton variant=\"link\" for actions.",
+            "properties": [
+                { "name": "href", "type": "string", "description": "Solution-relative or safe external HTTP(S) destination." },
+                { "name": "target / rel / className / ref / aria-*", "type": "native anchor props", "description": "Native anchor composition subject to runtime URL and navigation policy." },
+                { "name": "onClick", "type": "native anchor click handler", "description": "Receives the DOM-shaped React event; preventDefault cancels managed navigation." },
+                { "name": "children", "type": "ReactNode", "description": "Caller-owned anchor content." }
+            ]
+        },
+        {
+            "name": "AttachmentLink",
+            "category": "Action",
+            "introduction": "Previews or downloads an attachment through scoped Solution file capabilities without navigating.",
             "properties": [
                 {
-                    "name": "to",
+                    "name": "href",
                     "type": "string",
-                    "description": "Optional link destination. Omit for a link-styled button action."
+                    "description": "Scoped Solution attachment destination."
+                },
+                {
+                    "name": "preview",
+                    "type": "string",
+                    "description": "Opens the attachment in a preview dialog using this filename."
                 },
                 {
                     "name": "download",
@@ -1622,7 +1655,7 @@
                 {
                     "name": "disabled",
                     "type": "boolean",
-                    "description": "Disables navigation, downloads, and actions."
+                    "description": "Disables attachment actions."
                 },
                 {
                     "name": "onClick",
@@ -1636,7 +1669,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Resolves Solution-relative navigation and attachment downloads through scoped runtime capabilities."
+            "justification": "Uses scoped preview and download capabilities with pending feedback, duplicate-action protection, and reported-error recovery."
         },
         {
             "name": "Menu",
@@ -2615,9 +2648,29 @@
             "justification": "Measures overflow and shows current truncated content in an accessible tooltip; presentation remains native HTML and Tailwind."
         },
         {
+            "name": "TimePicker",
+            "category": "Form",
+            "source": "reui",
+            "reference": "https://reui.io/docs/components/base/time-picker",
+            "introduction": "Native ReUI time picker with composable input, columns, and footer.",
+            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use custom TimeInput when invalid drafts must block LongLink Form submission.",
+            "properties": [
+                { "name": "value / defaultValue", "type": "string | null", "description": "Canonical HH:mm or HH:mm:ss value; null is empty." },
+                { "name": "onValueChange", "type": "(value: string | null) => void", "description": "Receives a changed canonical value or null when cleared." },
+                { "name": "hourCycle", "type": "12 | 24", "description": "Displayed hour cycle.", "default": 24 },
+                { "name": "granularity", "type": "\"hour\" | \"minute\" | \"second\"", "description": "Finest displayed and submitted unit.", "default": "minute" },
+                { "name": "min / max", "type": "string", "description": "Inclusive selectable bounds; min after max represents an overnight window." },
+                { "name": "hourStep / minuteStep / secondStep", "type": "number", "description": "Available steps counted from zero in each unit.", "default": 1 },
+                { "name": "name / form", "type": "string", "description": "Native form submission name and optional external form association." },
+                { "name": "required / disabled / readOnly", "type": "boolean", "description": "Native validation and editing constraints." },
+                { "name": "requireConfirm", "type": "boolean", "description": "Retains picker selections as drafts until confirmed.", "default": false },
+                { "name": "children", "type": "ReactNode", "description": "Native TimePickerTrigger, TimePickerInput, TimePickerContent, TimePickerPanel, TimePickerColumns, TimePickerColumn, TimePickerFooter, TimePickerNow, TimePickerClear, TimePickerConfirm, and TimePickerValue composition." }
+            ]
+        },
+        {
             "name": "TimeInput",
             "category": "Form",
-            "introduction": "Selects a constrained time using the standard picker.",
+            "introduction": "Custom validated time input composed with native ReUI time columns.",
             "properties": [
                 {
                     "name": "label",
@@ -2695,7 +2748,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Coordinates constrained time selection, incomplete input drafts, and LongLink Form validation and reset."
+            "justification": "Keeps malformed or forbidden drafts visible and blocks submission instead of snapping or silently restoring them; preserves ISO validation, controlled ownership, and LongLink Form integration."
         },
         {
             "name": "Timestamp",

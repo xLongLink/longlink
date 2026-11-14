@@ -4,11 +4,11 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Form } from '@/components/custom/form';
 import { Button } from '@/components/shadcn/button';
-import { Dialog } from '@/components/dialogs/dialog';
-import { TextInput } from '@/components/ui/text-input';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { TextInput } from '@/components/custom/text-input';
 import { buttonVariants } from '@/components/shadcn/button';
 import { Illustration } from '@/components/ui/illustration';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -68,8 +68,8 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <Dialog
-            isOpen
+        <FramedDialog
+            open
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
@@ -191,6 +191,6 @@ export default function CreateSolution({
                     </Step>
                 </Wizard>
             </Form>
-        </Dialog>
+        </FramedDialog>
     );
 }

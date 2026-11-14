@@ -1,6 +1,6 @@
-import { Text } from './text';
-import type { FieldProps } from './types';
-import { useEffect, useEffectEvent, useState, type ReactNode, type RefObject } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
+import { Field, FieldError } from '@/components/shadcn/field';
+import { useEffect, useEffectEvent, useState, type ComponentProps, type RefObject } from 'react';
 
 /** Shares a scoped validation pass between Form and its non-native controls. */
 export type FormValidation = { panel?: HTMLElement; invalid: HTMLElement[] };
@@ -14,9 +14,13 @@ export function FormField({
     error: fieldError,
     name,
     required,
-    disabled
-}: FieldProps & {
-    children: ReactNode;
+    disabled,
+    ref,
+    ...props
+}: ComponentProps<typeof Field> & {
+    name?: string;
+    required?: boolean;
+    disabled?: boolean;
     fieldRef: RefObject<HTMLElement | null>;
     values: (string | Blob)[];
     serialize?: boolean;
@@ -24,6 +28,7 @@ export function FormField({
 }) {
     // Keep validation feedback separate from the control's editable value.
     const [failure, setFailure] = useState<{ values: (string | Blob)[]; message: string }>();
+    const rootRef = useMergedRefs(ref, fieldRef);
 
     const error =
         fieldError ??
@@ -109,12 +114,7 @@ export function FormField({
 
     // Keep the actual field root available to validation, serialization, and reset listeners.
     return (
-        <div
-            ref={(element) => {
-                fieldRef.current = element;
-            }}
-            className="flex w-full flex-col gap-2"
-        >
+        <Field {...props} ref={rootRef}>
             {children}
             {serialize &&
                 name &&
@@ -129,10 +129,8 @@ export function FormField({
                 !disabled &&
                 failure.values.length === values.length &&
                 failure.values.every((value, index) => value === values[index]) && (
-                    <div role="alert">
-                        <Text>{failure.message}</Text>
-                    </div>
+                    <FieldError>{failure.message}</FieldError>
                 )}
-        </div>
+        </Field>
     );
 }

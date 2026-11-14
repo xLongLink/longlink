@@ -4480,18 +4480,14 @@ declare function Token(props: {
     onRemove?: () => void;
 }): React.JSX.Element;
 
-/** Submits named themed fields and ordinary HTML inputs to a Solution API endpoint. @category Form */
-declare function Form(props: {
-    /** Named fields and layout, including a Stepper in wizard mode. */
-    children?: ViewNode;
-    /** Solution-relative API path; external URLs are not supported. */
-    action: string;
+/** Custom scoped submission and Wizard validation with native form properties and caller-owned layout. @category Form */
+declare function Form(props: Omit<NativeFrontend.FrontendFormProps, 'action' | 'method'> & {
+    /** Solution-relative API path or a callback receiving the complete form data. */
+    action: string | ((data: FormData) => void | Promise<void>);
     /** Write method used to submit the form; defaults to post. */
     method?: 'post' | 'put' | 'patch' | 'delete';
-    /** Native form ID for associating external submit or reset buttons. */
-    id?: string;
-    /** Optional form height. Stepper owns its wizard panel layout. */
-    height?: number | string;
+    /** Prevents submission when workflow requirements are not satisfied. */
+    submitDisabled?: boolean;
     /** Runs after a successful write and automatic cached-data refresh. */
     onSuccess?: (data: ViewData) => void | Promise<void>;
 }): React.JSX.Element;
@@ -4617,21 +4613,6 @@ declare function Icon(props: {
     /** Lucide icon name or LongLink alias; prefix with lucide: to bypass aliases. */
     icon: StoneIconName;
     size: 'sm' | 'md' | 'lg';
-}): React.JSX.Element;
-
-/** @category Action */
-declare function Link(props: {
-    /** Omit for a link-styled button action. */
-    to?: string;
-    /** Downloads a scoped Solution attachment with this filename instead of navigating. */
-    download?: string;
-    /** Opens a scoped Solution attachment in a preview dialog with this filename as its title. */
-    preview?: string;
-    /** Disables navigation, downloads, and actions. */
-    disabled?: boolean;
-    /** Runs an action with automatic async loading and duplicate-click prevention. */
-    onClick?: (event: ViewMouseEvent) => void | Promise<void>;
-    children?: ViewNode;
 }): React.JSX.Element;
 
 /** @category Display */
@@ -11495,6 +11476,580 @@ namespace ContextMenuRoot {
     type ChangeEventReason = ContextMenuRootChangeEventReason;
     type ChangeEventDetails = ContextMenuRootChangeEventDetails;
 }
+type TimeoutId = number;
+class Timeout {
+    static create(): Timeout;
+    currentId: TimeoutId;
+    start(delay: number, fn: Function): void;
+    isStarted(): boolean;
+    clear: () => void;
+    disposeEffect: () => () => void;
+}
+type State$1<Payload> = PopupStoreState<Payload> & {
+    disabled: boolean;
+    instantType: "dismiss" | "click" | "focus" | "trigger-change" | undefined;
+    modal: boolean | "trap-focus";
+    focusManagerModal: boolean;
+    openMethod: InteractionType | null;
+    openChangeReason: PopoverRoot.ChangeEventReason | null;
+    titleElementId: string | undefined;
+    descriptionElementId: string | undefined;
+    openOnHover: boolean;
+    closeDelay: number;
+    adaptiveOrigin: AdaptiveOriginMiddleware | undefined;
+};
+type Context$1 = PopupStoreContext<PopoverRoot.ChangeEventDetails> & {
+    readonly popupRef: React$1.RefObject<HTMLElement | null>;
+    readonly triggerFocusTargetRef: React$1.RefObject<HTMLElement | null>;
+    readonly beforeTriggerFocusGuardRef: React$1.RefObject<HTMLElement | null>;
+    readonly beforeContentFocusGuardRef: React$1.RefObject<HTMLElement | null>;
+    readonly stickIfOpenTimeout: Timeout;
+    stickIfOpen: boolean;
+};
+const selectors$2: {
+    open: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    mounted: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    transitionStatus: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => TransitionStatus;
+    floatingRootContext: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => FloatingRootStore;
+    triggerCount: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => number;
+    preventUnmountingOnClose: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => boolean;
+    payload: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => unknown;
+    activeTriggerId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | null;
+    activeTriggerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => Element | null;
+    popupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => string | undefined;
+    isTriggerActive: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isOpenedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    isMountedByTrigger: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => boolean;
+    triggerProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, isActive: boolean) => HTMLProps;
+    triggerPopupId: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }, triggerId: string | undefined) => string | undefined;
+    popupProps: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLProps;
+    popupElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    positionerElement: (state: {
+        open: boolean;
+        readonly openProp: boolean | undefined;
+        mounted: boolean;
+        transitionStatus: TransitionStatus;
+        floatingRootContext: FloatingRootContext;
+        floatingId: string | undefined;
+        triggerCount: number;
+        preventUnmountingOnClose: boolean;
+        payload: unknown;
+        activeTriggerId: string | null;
+        activeTriggerElement: Element | null;
+        openedWithoutTrigger: boolean;
+        readonly triggerIdProp: string | null | undefined;
+        popupElement: HTMLElement | null;
+        positionerElement: HTMLElement | null;
+        activeTriggerProps: HTMLProps;
+        inactiveTriggerProps: HTMLProps;
+        popupProps: HTMLProps;
+    }) => HTMLElement | null;
+    disabled: (state: State$1<unknown>) => boolean;
+    instantType: (state: State$1<unknown>) => "click" | "dismiss" | "focus" | "trigger-change" | undefined;
+    openMethod: (state: State$1<unknown>) => InteractionType | null;
+    openChangeReason: (state: State$1<unknown>) => PopoverRootChangeEventReason | null;
+    isPressOpenedByTrigger: (state: State$1<unknown>, triggerId: string | undefined) => boolean;
+    isTouchPressOpen: (state: State$1<unknown>, openOnHover: boolean) => boolean;
+    hasTriggerFocusGuards: (state: State$1<unknown>, triggerId: string | undefined) => boolean;
+    modal: (state: State$1<unknown>) => "trap-focus" | boolean;
+    titleElementId: (state: State$1<unknown>) => string | undefined;
+    descriptionElementId: (state: State$1<unknown>) => string | undefined;
+    openOnHover: (state: State$1<unknown>) => boolean;
+    closeDelay: (state: State$1<unknown>) => number;
+    adaptiveOrigin: (state: State$1<unknown>) => AdaptiveOriginMiddleware | undefined;
+};
+type Selectors$1 = typeof selectors$2;
+type PopoverHandleStore<Payload> = Pick<PopoverStore<Payload>, PopupTriggerStoreKeys | "setOpen">;
+class PopoverStore<Payload> extends ReactStore<Readonly<State$1<Payload>>, Context$1, Selectors$1> {
+    constructor(initialState: Partial<State$1<Payload>>, floatingId: string | undefined, nested: boolean);
+    setOpen: (nextOpen: boolean, eventDetails: Omit<PopoverRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
+}
+class PopoverHandle<Payload> extends BasePopupHandle<PopoverHandleStore<Payload>, PopoverStore<Payload>> {
+    constructor();
+    open(triggerId: string): void;
+    close(): void;
+    get isOpen(): boolean;
+}
+function createPopoverHandle<Payload>(): PopoverHandle<Payload>;
+function PopoverRoot<Payload = unknown>(props: PopoverRoot.Props<Payload>): React$1.JSX.Element;
+interface PopoverRootState {
+}
+interface PopoverRootProps<Payload = unknown> {
+    defaultOpen?: boolean | undefined;
+    open?: boolean | undefined;
+    onOpenChange?: ((open: boolean, eventDetails: PopoverRoot.ChangeEventDetails) => void) | undefined;
+    onOpenChangeComplete?: ((open: boolean) => void) | undefined;
+    actionsRef?: React$1.RefObject<PopoverRoot.Actions | null> | undefined;
+    modal?: boolean | "trap-focus" | undefined;
+    triggerId?: string | null | undefined;
+    defaultTriggerId?: string | null | undefined;
+    handle?: PopoverHandle<Payload> | undefined;
+    children?: React$1.ReactNode | PayloadChildRenderFunction<Payload>;
+}
+interface PopoverRootActions {
+    unmount: () => void;
+    close: () => void;
+}
+type PopoverRootChangeEventReason = typeof triggerHover | typeof triggerFocus | typeof triggerPress | typeof outsidePress | typeof escapeKey | typeof closePress | typeof focusOut | typeof imperativeAction | typeof none;
+type PopoverRootChangeEventDetails = BaseUIChangeEventDetails<PopoverRoot.ChangeEventReason> & {
+    preventUnmountOnClose: () => void;
+};
+namespace PopoverRoot {
+    type State = PopoverRootState;
+    type Props<Payload = unknown> = PopoverRootProps<Payload>;
+    type Actions = PopoverRootActions;
+    type ChangeEventReason = PopoverRootChangeEventReason;
+    type ChangeEventDetails = PopoverRootChangeEventDetails;
+}
+const PopoverTrigger: PopoverTrigger;
+interface PopoverTrigger {
+    <Payload>(componentProps: PopoverTriggerProps<Payload> & React$1.RefAttributes<HTMLElement>): React$1.JSX.Element;
+}
+interface PopoverTriggerState {
+    disabled: boolean;
+    open: boolean;
+}
+type PopoverTriggerProps<Payload = unknown> = NativeButtonProps & BaseUIComponentProps<"button", PopoverTriggerState> & {
+    nativeButton?: boolean | undefined;
+    handle?: PopoverHandle<Payload> | undefined;
+    payload?: Payload | undefined;
+    id?: string | undefined;
+    openOnHover?: boolean | undefined;
+    delay?: number | undefined;
+    closeDelay?: number | undefined;
+};
+namespace PopoverTrigger {
+    type State = PopoverTriggerState;
+    type Props<Payload = unknown> = PopoverTriggerProps<Payload>;
+}
+const PopoverPortal: React$1.ForwardRefExoticComponent<Omit<PopoverPortalProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverPortalState {
+}
+interface PopoverPortalProps extends BaseUIComponentProps<"div", PopoverPortalState> {
+    keepMounted?: boolean | undefined;
+    container?: HTMLElement | ShadowRoot | React$1.RefObject<HTMLElement | ShadowRoot | null> | null | undefined;
+}
+namespace PopoverPortal {
+    type State = PopoverPortalState;
+    type Props = PopoverPortalProps;
+}
+const PopoverPositioner: React$1.ForwardRefExoticComponent<Omit<PopoverPositionerProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverPositionerState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    anchorHidden: boolean;
+    instant: string | undefined;
+}
+interface PopoverPositionerProps extends UseAnchorPositioningSharedParameters, BaseUIComponentProps<"div", PopoverPositionerState> {
+}
+namespace PopoverPositioner {
+    type State = PopoverPositionerState;
+    type Props = PopoverPositionerProps;
+}
+const PopoverPopup: React$1.ForwardRefExoticComponent<Omit<PopoverPopupProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverPopupState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    transitionStatus: TransitionStatus;
+    instant: "dismiss" | "click" | "focus" | "trigger-change" | undefined;
+}
+interface PopoverPopupProps extends BaseUIComponentProps<"div", PopoverPopupState> {
+    initialFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((openType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+    finalFocus?: boolean | React$1.RefObject<HTMLElement | null> | ((closeType: InteractionType) => void | boolean | HTMLElement | null) | undefined;
+}
+namespace PopoverPopup {
+    type State = PopoverPopupState;
+    type Props = PopoverPopupProps;
+}
+const PopoverArrow: React$1.ForwardRefExoticComponent<Omit<PopoverArrowProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverArrowState {
+    open: boolean;
+    side: Side$1;
+    align: Align;
+    uncentered: boolean;
+}
+interface PopoverArrowProps extends BaseUIComponentProps<"div", PopoverArrowState> {
+}
+namespace PopoverArrow {
+    type State = PopoverArrowState;
+    type Props = PopoverArrowProps;
+}
+const PopoverBackdrop: React$1.ForwardRefExoticComponent<Omit<PopoverBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverBackdropState {
+    open: boolean;
+    transitionStatus: TransitionStatus;
+}
+interface PopoverBackdropProps extends BaseUIComponentProps<"div", PopoverBackdropState> {
+}
+namespace PopoverBackdrop {
+    type State = PopoverBackdropState;
+    type Props = PopoverBackdropProps;
+}
+const PopoverTitle: React$1.ForwardRefExoticComponent<Omit<PopoverTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
+interface PopoverTitleState {
+}
+interface PopoverTitleProps extends BaseUIComponentProps<"h1" | "h2" | "h3" | "h4" | "h5" | "h6", PopoverTitleState> {
+}
+namespace PopoverTitle {
+    type State = PopoverTitleState;
+    type Props = PopoverTitleProps;
+}
+const PopoverDescription: React$1.ForwardRefExoticComponent<Omit<PopoverDescriptionProps, "ref"> & React$1.RefAttributes<HTMLParagraphElement>>;
+interface PopoverDescriptionState {
+}
+interface PopoverDescriptionProps extends BaseUIComponentProps<"p", PopoverDescriptionState> {
+}
+namespace PopoverDescription {
+    type State = PopoverDescriptionState;
+    type Props = PopoverDescriptionProps;
+}
+const PopoverClose: React$1.ForwardRefExoticComponent<Omit<PopoverCloseProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+interface PopoverCloseState {
+}
+interface PopoverCloseProps extends NativeButtonProps, BaseUIComponentProps<"button", PopoverCloseState> {
+}
+namespace PopoverClose {
+    type State = PopoverCloseState;
+    type Props = PopoverCloseProps;
+}
+const PopoverViewport: React$1.ForwardRefExoticComponent<Omit<PopoverViewportProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
+interface PopoverViewportState {
+    activationDirection: string | undefined;
+    transitioning: boolean;
+    instant: "dismiss" | "click" | "focus" | "trigger-change" | undefined;
+}
+interface PopoverViewportProps extends BaseUIComponentProps<"div", PopoverViewportState> {
+    children?: React$1.ReactNode;
+}
+namespace PopoverViewport {
+    type Props = PopoverViewportProps;
+    type State = PopoverViewportState;
+}
 const ProgressRoot: React$1.ForwardRefExoticComponent<Omit<ProgressRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 type ProgressStatus = "indeterminate" | "progressing" | "complete";
 interface ProgressRootState {
@@ -12123,7 +12678,7 @@ namespace TabsList {
     type State = TabsListState;
     type Props = TabsListProps;
 }
-type State$1<Payload> = PopupStoreState<Payload> & {
+type State$2<Payload> = PopupStoreState<Payload> & {
     modal: boolean | "trap-focus";
     disablePointerDismissal: boolean;
     openMethod: InteractionType | null;
@@ -12135,14 +12690,14 @@ type State$1<Payload> = PopupStoreState<Payload> & {
     viewportElement: HTMLElement | null;
     role: "dialog" | "alertdialog";
 };
-type Context$1 = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
+type Context$2 = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
     readonly popupRef: React$1.RefObject<HTMLElement | null>;
     readonly backdropRef: React$1.RefObject<HTMLDivElement | null>;
     readonly internalBackdropRef: React$1.RefObject<HTMLDivElement | null>;
     readonly outsidePressEnabledRef: React$1.MutableRefObject<boolean>;
     readonly onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
 };
-const selectors$2: {
+const selectors$3: {
     open: (state: {
         open: boolean;
         readonly openProp: boolean | undefined;
@@ -12503,20 +13058,20 @@ const selectors$2: {
         inactiveTriggerProps: HTMLProps;
         popupProps: HTMLProps;
     }) => HTMLElement | null;
-    modal: (state: State$1<unknown>) => "trap-focus" | boolean;
-    nested: (state: State$1<unknown>) => boolean;
-    nestedOpenDialogCount: (state: State$1<unknown>) => number;
-    nestedOpenDrawerCount: (state: State$1<unknown>) => number;
-    disablePointerDismissal: (state: State$1<unknown>) => boolean;
-    openMethod: (state: State$1<unknown>) => InteractionType | null;
-    descriptionElementId: (state: State$1<unknown>) => string | undefined;
-    titleElementId: (state: State$1<unknown>) => string | undefined;
-    viewportElement: (state: State$1<unknown>) => HTMLElement | null;
-    role: (state: State$1<unknown>) => "alertdialog" | "dialog";
+    modal: (state: State$2<unknown>) => "trap-focus" | boolean;
+    nested: (state: State$2<unknown>) => boolean;
+    nestedOpenDialogCount: (state: State$2<unknown>) => number;
+    nestedOpenDrawerCount: (state: State$2<unknown>) => number;
+    disablePointerDismissal: (state: State$2<unknown>) => boolean;
+    openMethod: (state: State$2<unknown>) => InteractionType | null;
+    descriptionElementId: (state: State$2<unknown>) => string | undefined;
+    titleElementId: (state: State$2<unknown>) => string | undefined;
+    viewportElement: (state: State$2<unknown>) => HTMLElement | null;
+    role: (state: State$2<unknown>) => "alertdialog" | "dialog";
 };
-type DialogHandleStore<Payload> = PopupTriggerDataStore<State$1<Payload>>;
-class DialogStore<Payload> extends ReactStore<Readonly<State$1<Payload>>, Context$1, typeof selectors$2> {
-    constructor(initialState: Partial<State$1<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
+type DialogHandleStore<Payload> = PopupTriggerDataStore<State$2<Payload>>;
+class DialogStore<Payload> extends ReactStore<Readonly<State$2<Payload>>, Context$2, typeof selectors$3> {
+    constructor(initialState: Partial<State$2<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
     setOpen: (nextOpen: boolean, eventDetails: Omit<DialogRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
 }
 class DialogHandle<Payload> extends BasePopupHandle<DialogHandleStore<Payload>, DialogStore<Payload>> {
@@ -14383,6 +14938,133 @@ function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
 export function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
     buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
 }): React$1.JSX.Element;
+function PopoverContent({ className, align, alignOffset, side, sideOffset, ...props }: PopoverPopup.Props & Pick<PopoverPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
+export type TimePickerTime = {
+    hour: number;
+    minute: number;
+    second: number;
+};
+export type TimePickerGranularity = "hour" | "minute" | "second";
+export type TimePickerHourCycle = 12 | 24;
+export type TimePickerPeriod = "am" | "pm";
+export type TimePickerPeriodPosition = "start" | "end";
+export type TimePickerUnit = "hour" | "minute" | "second";
+export type TimePickerColumnType = TimePickerUnit | "period";
+export type TimePickerLabels = {
+    placeholder: string;
+    hour: string;
+    minute: string;
+    second: string;
+    period: string;
+    am: string;
+    pm: string;
+    now: string;
+    clear: string;
+    confirm: string;
+    panelLabel: string;
+    openPicker: string;
+};
+export type TimePickerFormatContext = {
+    hourCycle: TimePickerHourCycle;
+    granularity: TimePickerGranularity;
+    periodPosition: TimePickerPeriodPosition;
+    labels: TimePickerLabels;
+    formatSegment: TimePickerFunctions["formatSegment"];
+};
+export type TimePickerFunctions = {
+    formatSegment: (value: number, unit: TimePickerUnit) => string;
+    formatValue: (time: TimePickerTime, context: TimePickerFormatContext) => string;
+};
+export type TimePickerI18nConfig = {
+    labels: TimePickerLabels;
+    functions: TimePickerFunctions;
+};
+export type TimePickerI18nOverrides = {
+    labels?: Partial<TimePickerLabels>;
+    functions?: Partial<TimePickerFunctions>;
+};
+export const DEFAULT_TIME_PICKER_I18N: TimePickerI18nConfig;
+export function mergeTimePickerI18n(overrides?: TimePickerI18nOverrides): TimePickerI18nConfig;
+export function parseTimeValue(value: string | null | undefined): TimePickerTime | null;
+export function formatTimeValue(time: TimePickerTime, granularity?: TimePickerGranularity): string;
+export function parseTimeInput(text: string, options?: {
+    hourCycle?: TimePickerHourCycle;
+    period?: TimePickerPeriod;
+    labels?: Pick<TimePickerLabels, "am" | "pm">;
+}): TimePickerTime | null;
+export type TimePickerApi = {
+    value: string | null;
+    time: TimePickerTime | null;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    setValue: (value: string | null) => void;
+    now: () => void;
+    clear: () => void;
+    confirm: () => void;
+};
+export function useTimePicker(): TimePickerApi;
+export type TimePickerProps = {
+    value?: string | null;
+    defaultValue?: string | null;
+    onValueChange?: (value: string | null) => void;
+    open?: boolean;
+    defaultOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    hourCycle?: TimePickerHourCycle;
+    granularity?: TimePickerGranularity;
+    periodPosition?: TimePickerPeriodPosition;
+    hourStep?: number;
+    minuteStep?: number;
+    secondStep?: number;
+    min?: string;
+    max?: string;
+    isTimeDisabled?: (value: string, time: TimePickerTime) => boolean;
+    requireConfirm?: boolean;
+    fade?: boolean;
+    disabled?: boolean;
+    readOnly?: boolean;
+    invalid?: boolean;
+    name?: string;
+    form?: string;
+    required?: boolean;
+    inputRef?: React$1.Ref<HTMLInputElement>;
+    id?: string;
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+    "aria-describedby"?: string;
+    i18n?: TimePickerI18nOverrides;
+    placeholder?: string;
+    className?: string;
+    children?: React$1.ReactNode;
+};
+export function TimePicker({ value, defaultValue, onValueChange, open: openProp, defaultOpen, onOpenChange, hourCycle, granularity, periodPosition, hourStep, minuteStep, secondStep, min, max, isTimeDisabled, requireConfirm, fade, disabled, readOnly, invalid, name, form, required, inputRef, id: idProp, "aria-label": label, "aria-labelledby": labelledBy, "aria-describedby": describedBy, i18n: i18nProp, placeholder, className, children }: TimePickerProps): React$1.JSX.Element;
+export type TimePickerValueProps = Omit<React$1.ComponentProps<"span">, "children"> & {
+    placeholder?: React$1.ReactNode;
+};
+export function TimePickerValue({ placeholder, className, ...props }: TimePickerValueProps): React$1.JSX.Element;
+export type TimePickerTriggerProps = React$1.ComponentProps<typeof Button$1> & {
+    placeholder?: React$1.ReactNode;
+};
+export function TimePickerTrigger({ className, variant, placeholder, children, ref, ...props }: TimePickerTriggerProps): React$1.JSX.Element;
+export type TimePickerInputProps = Omit<React$1.ComponentProps<typeof InputGroupInput>, "value" | "defaultValue">;
+export function TimePickerInput({ className, placeholder, onBlur, onKeyDown, onChange, ref, ...props }: TimePickerInputProps): React$1.JSX.Element;
+export type TimePickerContentProps = React$1.ComponentProps<typeof PopoverContent>;
+export function TimePickerContent({ className, align, onKeyDown, children, ...props }: TimePickerContentProps): React$1.JSX.Element;
+export type TimePickerPanelProps = React$1.ComponentProps<"div">;
+export function TimePickerPanel({ className, children, ...props }: TimePickerPanelProps): React$1.JSX.Element;
+export type TimePickerColumnsProps = React$1.ComponentProps<"div">;
+export function TimePickerColumns({ className, children, ref, ...props }: TimePickerColumnsProps): React$1.JSX.Element;
+export type TimePickerColumnProps = Omit<React$1.ComponentProps<"div">, "children"> & {
+    type: TimePickerColumnType;
+    label?: React$1.ReactNode;
+};
+export function TimePickerColumn({ type, label, className, ...props }: TimePickerColumnProps): React$1.JSX.Element | null;
+export type TimePickerFooterProps = React$1.ComponentProps<"div">;
+export function TimePickerFooter({ className, children, ...props }: TimePickerFooterProps): React$1.JSX.Element;
+export type TimePickerActionProps = React$1.ComponentProps<typeof Button$1>;
+export function TimePickerNow({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+export function TimePickerClear({ variant, size, className, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+export function TimePickerConfirm({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
@@ -14492,19 +15174,31 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     onChange?: (isSelected: boolean) => void;
 };
 export function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
+export function Dialog(props: DialogRoot.Props): React$1.JSX.Element;
 type FramedDialogProps = {
     children?: React$1.ReactNode;
     title?: string;
     variant?: "standard" | "fullscreen";
-    isOpen: boolean;
+    open: boolean;
     onOpenChange: (open: boolean) => void;
     gap?: Spacing;
     paddingInline?: Spacing;
 };
-export function Dialog(props: FramedDialogProps): React$1.ReactNode;
-export function Dialog(props: DialogRoot.Props & {
-    isOpen?: never;
-}): React$1.ReactNode;
+export function FramedDialog(props: FramedDialogProps): React$1.JSX.Element;
+export function Link({ className, ...props }: Omit<React$1.ComponentPropsWithRef<"a">, "download">): React$1.JSX.Element;
+type AttachmentLinkProps = {
+    href: string;
+    disabled?: boolean;
+    onClick?: (event: React$1.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void | Promise<void>;
+    children?: React$1.ReactNode;
+} & ({
+    preview: string;
+    download?: never;
+} | {
+    download: string;
+    preview?: never;
+});
+export function AttachmentLink({ href, download, preview, disabled, onClick, children }: AttachmentLinkProps): React$1.JSX.Element;
 const Select$1: typeof SelectRoot;
 function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
 function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
@@ -16821,6 +17515,7 @@ export function CatalogDirectory({ models, exportPath }: {
     exportPath: string;
 }): React$1.JSX.Element;
 export type FrontendElement = React$1.JSX.Element;
+export type FrontendFormProps = React$1.JSX.IntrinsicElements["form"];
 export type FrontendElementType = React$1.JSX.ElementType;
 namespace CSS$1 {
     export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
@@ -16853,6 +17548,7 @@ declare const ActionButton: typeof NativeFrontend.ActionButton;
 declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
 declare const Area: typeof NativeFrontend.Area;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
+declare const AttachmentLink: typeof NativeFrontend.AttachmentLink;
 declare const Avatar: typeof NativeFrontend.Avatar;
 declare const AvatarBadge: typeof NativeFrontend.AvatarBadge;
 declare const AvatarFallback: typeof NativeFrontend.AvatarFallback;
@@ -16914,6 +17610,7 @@ declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
 declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
 declare const ComposedChart: typeof NativeFrontend.ComposedChart;
 declare const CountryChart: typeof NativeFrontend.CountryChart;
+declare const DEFAULT_TIME_PICKER_I18N: typeof NativeFrontend.DEFAULT_TIME_PICKER_I18N;
 declare const DataTable: typeof NativeFrontend.DataTable;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const DialogClose: typeof NativeFrontend.DialogClose;
@@ -16959,7 +17656,9 @@ declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
 declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
+declare const FramedDialog: typeof NativeFrontend.FramedDialog;
 type FrontendElementType = NativeFrontend.FrontendElementType;
+type FrontendFormProps = NativeFrontend.FrontendFormProps;
 declare const GeneratedAvatar: typeof NativeFrontend.GeneratedAvatar;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridSpan: typeof NativeFrontend.GridSpan;
@@ -16976,6 +17675,7 @@ declare const Label: typeof NativeFrontend.Label;
 declare const LabelList: typeof NativeFrontend.LabelList;
 declare const Line: typeof NativeFrontend.Line;
 declare const LineChart: typeof NativeFrontend.LineChart;
+declare const Link: typeof NativeFrontend.Link;
 declare const MetricCard: typeof NativeFrontend.MetricCard;
 declare const MetricGrid: typeof NativeFrontend.MetricGrid;
 declare const Pagination: typeof NativeFrontend.Pagination;
@@ -17052,11 +17752,51 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
+declare const TimePicker: typeof NativeFrontend.TimePicker;
+type TimePickerActionProps = NativeFrontend.TimePickerActionProps;
+type TimePickerApi = NativeFrontend.TimePickerApi;
+declare const TimePickerClear: typeof NativeFrontend.TimePickerClear;
+declare const TimePickerColumn: typeof NativeFrontend.TimePickerColumn;
+type TimePickerColumnProps = NativeFrontend.TimePickerColumnProps;
+type TimePickerColumnType = NativeFrontend.TimePickerColumnType;
+declare const TimePickerColumns: typeof NativeFrontend.TimePickerColumns;
+type TimePickerColumnsProps = NativeFrontend.TimePickerColumnsProps;
+declare const TimePickerConfirm: typeof NativeFrontend.TimePickerConfirm;
+declare const TimePickerContent: typeof NativeFrontend.TimePickerContent;
+type TimePickerContentProps = NativeFrontend.TimePickerContentProps;
+declare const TimePickerFooter: typeof NativeFrontend.TimePickerFooter;
+type TimePickerFooterProps = NativeFrontend.TimePickerFooterProps;
+type TimePickerFormatContext = NativeFrontend.TimePickerFormatContext;
+type TimePickerFunctions = NativeFrontend.TimePickerFunctions;
+type TimePickerGranularity = NativeFrontend.TimePickerGranularity;
+type TimePickerHourCycle = NativeFrontend.TimePickerHourCycle;
+type TimePickerI18nConfig = NativeFrontend.TimePickerI18nConfig;
+type TimePickerI18nOverrides = NativeFrontend.TimePickerI18nOverrides;
+declare const TimePickerInput: typeof NativeFrontend.TimePickerInput;
+type TimePickerInputProps = NativeFrontend.TimePickerInputProps;
+type TimePickerLabels = NativeFrontend.TimePickerLabels;
+declare const TimePickerNow: typeof NativeFrontend.TimePickerNow;
+declare const TimePickerPanel: typeof NativeFrontend.TimePickerPanel;
+type TimePickerPanelProps = NativeFrontend.TimePickerPanelProps;
+type TimePickerPeriod = NativeFrontend.TimePickerPeriod;
+type TimePickerPeriodPosition = NativeFrontend.TimePickerPeriodPosition;
+type TimePickerProps = NativeFrontend.TimePickerProps;
+type TimePickerTime = NativeFrontend.TimePickerTime;
+declare const TimePickerTrigger: typeof NativeFrontend.TimePickerTrigger;
+type TimePickerTriggerProps = NativeFrontend.TimePickerTriggerProps;
+type TimePickerUnit = NativeFrontend.TimePickerUnit;
+declare const TimePickerValue: typeof NativeFrontend.TimePickerValue;
+type TimePickerValueProps = NativeFrontend.TimePickerValueProps;
 declare const UsageChart: typeof NativeFrontend.UsageChart;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const XAxis: typeof NativeFrontend.XAxis;
 declare const YAxis: typeof NativeFrontend.YAxis;
+declare const formatTimeValue: typeof NativeFrontend.formatTimeValue;
+declare const mergeTimePickerI18n: typeof NativeFrontend.mergeTimePickerI18n;
+declare const parseTimeInput: typeof NativeFrontend.parseTimeInput;
+declare const parseTimeValue: typeof NativeFrontend.parseTimeValue;
 declare const useCodeBlockConfig: typeof NativeFrontend.useCodeBlockConfig;
 declare const useCodeBlockFolding: typeof NativeFrontend.useCodeBlockFolding;
 declare const useCodeBlockSelection: typeof NativeFrontend.useCodeBlockSelection;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;
+declare const useTimePicker: typeof NativeFrontend.useTimePicker;
