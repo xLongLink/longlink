@@ -55,7 +55,7 @@ async def test_cluster_uid_rejects_unavailable_namespace_identity(monkeypatch: p
     class SystemNamespace:
         """Provide a namespace with the configured API metadata."""
 
-        def __init__(self, name: str, api: object) -> None:  # noqa: ARG002 - Called by keyword.
+        def __init__(self, name: str, **_kwargs: object) -> None:
             """Validate that the cluster identity comes from kube-system."""
 
             assert name == "kube-system"
@@ -110,7 +110,7 @@ async def test_kubernetes_clients_leave_shared_http_session_to_lifespan(monkeypa
             """Accept the database Service refresh."""
 
         @asynccontextmanager
-        async def portforward(self, _port: int, *, local_port: str) -> AsyncGenerator[int]:  # noqa: ARG002 - Called by keyword.
+        async def portforward(self, _port: int, **_kwargs: object) -> AsyncGenerator[int]:
             """Record tunnel cleanup before lifespan transport disposal."""
 
             try:

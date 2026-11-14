@@ -4,16 +4,17 @@ from pydantic import TypeAdapter, ValidationError
 from dataclasses import dataclass
 from longlink.types import Email
 from src.environments import env
+from authlib.oauth2.auth import encode_client_secret_post
 from authlib.oauth2.client import OAuth2Client
 from authlib.integrations.base_client import OAuthError
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 OAuthProvider = Literal["google", "github"]
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105
+GOOGLE_TOKEN_URL = httpx2.URL("https://oauth2.googleapis.com/token")
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 GITHUB_AUTHORIZATION_URL = "https://github.com/login/oauth/authorize"
-GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"  # noqa: S105
+GITHUB_TOKEN_URL = httpx2.URL("https://github.com/login/oauth/access_token")
 GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 
@@ -87,7 +88,7 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
         async with AsyncOAuth2Client(
             client_id=env.GOOGLE_OAUTH_CLIENT_ID if provider == "google" else env.GITHUB_OAUTH_CLIENT_ID,
             client_secret=env.GOOGLE_OAUTH_CLIENT_SECRET if provider == "google" else env.GITHUB_OAUTH_CLIENT_SECRET,
-            token_endpoint_auth_method="client_secret_post",  # noqa: S106
+            token_endpoint_auth_method=encode_client_secret_post,
             redirect_uri=redirect_uri(provider),
             follow_redirects=False,
             # Bound provider I/O without inheriting redirect behavior.

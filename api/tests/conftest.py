@@ -2,7 +2,8 @@ import os
 import yaml
 import pytest
 import shutil
-import subprocess  # noqa: S404
+import asyncio
+import secrets
 import pytest_asyncio
 from uuid import UUID, uuid4
 from httpx2 import Cookies, Response, AsyncClient, ASGITransport
@@ -15,7 +16,7 @@ from kr8s.asyncio import Api
 from collections.abc import AsyncIterator, AsyncGenerator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-TEST_PASSWORD = "longlink-test-password"  # noqa: S105
+TEST_PASSWORD = secrets.token_urlsafe(32)
 
 pytest_plugins = ["containers"]
 
@@ -31,12 +32,16 @@ os.environ["SMTP_PORT"] = "587"
 os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ["SMTP_PASSWORD"] = "null"  # noqa: S105
-os.environ["SMTP_USERNAME"] = "null"
-os.environ["GITHUB_OAUTH_CLIENT_ID"] = "null"
-os.environ["GOOGLE_OAUTH_CLIENT_ID"] = "null"
-os.environ["GITHUB_OAUTH_CLIENT_SECRET"] = "null"  # noqa: S105
-os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = "null"  # noqa: S105
+os.environ.update(
+    {
+        "SMTP_PASSWORD": "null",
+        "SMTP_USERNAME": "null",
+        "GITHUB_OAUTH_CLIENT_ID": "null",
+        "GOOGLE_OAUTH_CLIENT_ID": "null",
+        "GITHUB_OAUTH_CLIENT_SECRET": "null",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "null",
+    }
+)
 
 from src.utils import mail, token
 from src.database import models, session
@@ -46,6 +51,8 @@ from src.kubernetes import databases as database_resources
 from src.environments import env
 from src.kubernetes.client import Kubernetes
 from src.database.models.users import User
+
+CONTROLLER_CREDENTIALS = Credentials("controller", secrets.token_urlsafe(32))
 
 
 class StorageKubernetes:
@@ -58,7 +65,7 @@ class StorageKubernetes:
     async def controller_credentials(_cluster: object) -> Credentials:
         """Return stable chart-managed credentials without cluster I/O."""
 
-        return Credentials("controller", "controller-secret")
+        return CONTROLLER_CREDENTIALS
 
     async def verify(self) -> None:
         """Accept public S3 and private tunnel readiness verification."""
@@ -110,38 +117,46 @@ class DatabasePostgres:
         """Accept Organization database provisioning."""
 
 
-@pytest.fixture(scope="session")
-def rendered_chart() -> list[dict]:
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def rendered_chart() -> list[dict]:
     """Render the real Compute chart with fixed gateway and storage addresses."""
 
     # Render the production chart with the gateway test's infrastructure settings.
-    chart = Path(__file__).resolve().parents[2] / "k8s/chart"
-    executable = shutil.which("helm")
+    chart = Path(__file__).parents[2] / "k8s/chart"
+    executable = await asyncio.to_thread(shutil.which, "helm")
     if executable is None:
         pytest.fail("Helm is required to render the Compute chart")
-    release = subprocess.run(  # noqa: S603
-        [
-            executable,
-            "template",
-            "longlink-compute",
-            str(chart),
-            "--namespace",
-            "longlink-system",
-            "--set",
-            # Use documentation-only addresses in rendered integration manifests.
-            "gateway.address=203.0.113.10",
-            "--set",
-            "storage.address=203.0.113.11",
-            "--set",
-            "gatewayAllowedSourceCidr=203.0.113.0/24",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
+    process = await asyncio.create_subprocess_exec(
+        executable,
+        "template",
+        "longlink-compute",
+        str(chart),
+        "--namespace",
+        "longlink-system",
+        "--set",
+        # Use documentation-only addresses in rendered integration manifests.
+        "gateway.address=203.0.113.10",
+        "--set",
+        "storage.address=203.0.113.11",
+        "--set",
+        "gatewayAllowedSourceCidr=203.0.113.0/24",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
 
+    # Bound rendering and reap the child even when the fixture is cancelled.
+    try:
+        async with asyncio.timeout(30):
+            output, error = await process.communicate()
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+    if process.returncode:
+        pytest.fail(error.decode())
+
     # Inspect the Helm-rendered resources, not a second copy of the chart logic.
-    return list(yaml.safe_load_all(release.stdout))
+    return list(yaml.safe_load_all(output))
 
 
 @pytest.fixture
@@ -160,7 +175,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
             """Accept the database Service refresh."""
 
         @asynccontextmanager
-        async def portforward(self, _port: int, *, local_port: str) -> AsyncGenerator[int]:  # noqa: ARG002 - Called by keyword.
+        async def portforward(self, _port: int, **_kwargs: object) -> AsyncGenerator[int]:
             """Supply a local transport port consumed only by the SQL fake."""
 
             yield 15432

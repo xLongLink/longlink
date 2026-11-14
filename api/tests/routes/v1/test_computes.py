@@ -2,7 +2,7 @@ import pytest
 import secrets
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
-from conftest import RegistryKubernetes
+from conftest import CONTROLLER_CREDENTIALS, RegistryKubernetes
 from factories import create_compute, fetch_operations, create_organization
 from sqlalchemy import select
 from src.database.session import session_scope
@@ -119,8 +119,8 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     # Verified gateway and storage trust material must survive persistence.
     assert registry.gateway_certificate == "gateway-certificate"
     assert registry.storage_certificate == "storage-certificate"
-    assert registry.storage_access_key == "controller"
-    assert registry.storage_secret_key == "controller-secret"  # noqa: S105
+    assert registry.storage_access_key == CONTROLLER_CREDENTIALS.access_key
+    assert registry.storage_secret_key == CONTROLLER_CREDENTIALS.secret_key
     assert await fetch_operations() == []
 
     # Reject a duplicate after checking the successful registration's persisted outcome.

@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from uuid import UUID
+from uuid import UUID, uuid4
 from conftest import kubernetes_client
 from src.utils import templates
 from src.kubernetes import solutions
@@ -55,7 +55,7 @@ def test_solution_template_constrains_workloads() -> None:
         namespace="acme",
         runtime_revision="revision",
         migration_id="solution-migration",
-        secret_id="solution-revision",  # noqa: S106
+        secret_id=f"revision-{uuid4().hex}",
         pull_secrets="[]",
     )
 

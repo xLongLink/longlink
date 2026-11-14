@@ -81,7 +81,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
     organization = await create_organization(users[0])
 
     class Storage(StorageKubernetes):
-        async def apply(self, _organization: UUID, *, quota_bytes: int) -> None:  # noqa: ARG002 - Called by keyword.
+        async def apply(self, _organization: UUID, **_kwargs: object) -> None:
             """Fail bucket creation."""
 
             raise RuntimeError("storage failed")
