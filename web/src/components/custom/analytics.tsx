@@ -2,7 +2,6 @@ import { useId, useState } from 'react';
 import { Badge } from '@/components/reui/badge';
 import { IconTile } from '@/components/reui/icon-tile';
 import { Activity, Globe, MessageSquare, Sparkles } from 'lucide-react';
-import './analytics.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/shadcn/chart';
@@ -43,11 +42,11 @@ export function MetricGrid({ metrics }: { metrics: AnalyticsMetric[] }) {
 export function MetricCard({ metric, index = 0 }: { metric: AnalyticsMetric; index?: number }) {
     const id = useId().replaceAll(':', '');
     const Glyph = metricIcons[metric.icon];
-    const color = metric.change.startsWith('-') ? 'var(--analytics-negative)' : 'var(--chart-2)';
+    const color = metric.change.startsWith('-') ? 'var(--destructive)' : 'var(--chart-2)';
     const iconColor = `var(--chart-${(index % 5) + 1})`;
 
     return (
-        <Card size="sm" className="analytics-card min-w-0 gap-6 overflow-hidden pb-0">
+        <Card size="sm" className="min-w-0 gap-6 overflow-hidden pb-0">
             <CardHeader className="flex flex-row items-center gap-3">
                 <IconTile size="lg" variant="soft" style={{ color: iconColor }}>
                     <Glyph />
@@ -64,7 +63,7 @@ export function MetricCard({ metric, index = 0 }: { metric: AnalyticsMetric; ind
             </CardHeader>
             <ChartContainer
                 config={{ value: { label: metric.label, color } }}
-                className="h-24 w-full aspect-auto bg-[radial-gradient(var(--analytics-grid-dot)_1px,transparent_1px)] bg-size-[6px_6px]"
+                className="h-24 w-full aspect-auto"
                 aria-label={`${metric.label} trend`}
             >
                 <AreaChart
@@ -103,7 +102,7 @@ export function ProviderChart({ providers, total }: { providers: ProviderShare[]
         .reduce((sum, provider) => sum + provider.value, 0);
 
     return (
-        <Card className="analytics-card @container/provider h-full min-w-0">
+        <Card className="@container/provider h-full min-w-0">
             <CardHeader className="gap-0 border-b">
                 <CardTitle>Top providers</CardTitle>
                 <CardDescription>Share of community messages this month</CardDescription>
@@ -227,7 +226,7 @@ export function UsageChart({ data }: { data: UsagePoint[] }) {
                 if (value === '7' || value === '30') setPeriod(value);
             }}
         >
-            <Card className="analytics-card min-w-0">
+            <Card className="min-w-0">
                 <CardHeader className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
                     <div className="flex min-w-0 flex-col gap-0">
                         <CardTitle>Intelligence in motion</CardTitle>

@@ -47,7 +47,6 @@ import {
     CodeBlockHeader,
     CodeBlockTitle
 } from '@/components/reui/code-block/code-block';
-import '@/components/ui/settings-navigation.css';
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
@@ -159,11 +158,26 @@ const previews = new Map(
         Link: <span className="underline">Link</span>,
         // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
         Menu: (
-            <nav aria-label="Settings" className="settings-navigation w-full">
-                <a href="#profile" aria-current="location">
+            <nav aria-label="Settings" className="flex w-full flex-col gap-0.5">
+                <Button
+                    nativeButton={false}
+                    render={<a href="#profile" />}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full justify-start"
+                    aria-current="location"
+                >
                     Profile
-                </a>
-                <a href="#workflow">Workflow</a>
+                </Button>
+                <Button
+                    nativeButton={false}
+                    render={<a href="#workflow" />}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                >
+                    Workflow
+                </Button>
             </nav>
         ),
         Progress: <ProgressExample />,

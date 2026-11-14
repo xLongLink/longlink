@@ -21,18 +21,18 @@ import { DeletionDialog } from '@/components/ui/deletion';
 import { Illustration } from '@/components/ui/illustration';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button as ShadcnButton } from '@/components/shadcn/button';
 import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { Boxes, Building2, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { IllustratedDialogContent } from '@/components/ui/illustrated-dialog-content';
-import '@/components/ui/settings-navigation.css';
+import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -85,59 +85,50 @@ export default function OrganizationSettings() {
                 </Stack>
             </Stack>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
-                <nav aria-label="Settings sections" className="settings-navigation">
-                    <details open>
-                        <summary>
-                            <Building2 className="size-4" aria-hidden="true" />
-                            Organization
-                        </summary>
-                        {organizationSections.map((item) => (
-                            <Link
-                                to={`${location.pathname}${location.search}#${item.id}`}
-                                aria-current={section === item.id ? 'location' : undefined}
-                                key={item.id}
+                <nav aria-label="Settings sections" className="flex min-w-0 flex-col gap-0.5 pe-4">
+                    {[
+                        { label: 'Organization', icon: Building2, sections: organizationSections },
+                        { label: 'Billing', icon: CreditCard, sections: billingSections },
+                        { label: 'People', icon: Users, sections: peopleSections }
+                    ].map((group) => (
+                        <Collapsible key={group.label} defaultOpen>
+                            <CollapsibleTrigger
+                                render={<ShadcnButton variant="ghost" size="sm" className="w-full justify-start" />}
                             >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </details>
-                    <details open>
-                        <summary>
-                            <CreditCard className="size-4" aria-hidden="true" />
-                            Billing
-                        </summary>
-                        {billingSections.map((item) => (
-                            <Link
-                                to={`${location.pathname}${location.search}#${item.id}`}
-                                aria-current={section === item.id ? 'location' : undefined}
-                                key={item.id}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </details>
-                    <details open>
-                        <summary>
-                            <Users className="size-4" aria-hidden="true" />
-                            People
-                        </summary>
-                        {peopleSections.map((item) => (
-                            <Link
-                                to={`${location.pathname}${location.search}#${item.id}`}
-                                aria-current={section === item.id ? 'location' : undefined}
-                                key={item.id}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </details>
-                    <Link
-                        to={`${location.pathname}${location.search}#solutions`}
+                                <group.icon aria-hidden="true" />
+                                {group.label}
+                                <ChevronDown className="ms-auto in-data-open:rotate-180" aria-hidden="true" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <div className="flex flex-col gap-0.5 ps-6">
+                                    {group.sections.map((item) => (
+                                        <ShadcnButton
+                                            nativeButton={false}
+                                            render={<Link to={`${location.pathname}${location.search}#${item.id}`} />}
+                                            variant={section === item.id ? 'secondary' : 'ghost'}
+                                            size="sm"
+                                            className="w-full justify-start"
+                                            aria-current={section === item.id ? 'location' : undefined}
+                                            key={item.id}
+                                        >
+                                            {item.label}
+                                        </ShadcnButton>
+                                    ))}
+                                </div>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    ))}
+                    <ShadcnButton
+                        nativeButton={false}
+                        render={<Link to={`${location.pathname}${location.search}#solutions`} />}
+                        variant={section === 'solutions' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start"
                         aria-current={section === 'solutions' ? 'location' : undefined}
                     >
                         <Boxes className="size-4" aria-hidden="true" />
                         Solutions
-                    </Link>
+                    </ShadcnButton>
                 </nav>
                 <Stack gap={3} className="min-w-0">
                     <ApiBoundary key={section}>
@@ -308,14 +299,14 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                               <DropdownMenu>
                                                   <DropdownMenuTrigger
                                                       render={
-                                                          <MenuTriggerButton
+                                                          <ShadcnButton
                                                               type="button"
                                                               variant="ghost"
                                                               size="icon"
                                                               aria-label={`Actions for ${row.user.name}`}
                                                           >
                                                               <Ellipsis aria-hidden="true" />
-                                                          </MenuTriggerButton>
+                                                          </ShadcnButton>
                                                       }
                                                   />
                                                   <DropdownMenuContent align="end">
