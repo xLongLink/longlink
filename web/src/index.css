@@ -5,7 +5,6 @@
 @import 'tailwindcss';
 @import 'shadcn/tailwind.css';
 @import './components/custom/styles.css';
-@import './components/layouts/publication.css';
 @import './views/runtime.css';
 
 @custom-variant dark {
