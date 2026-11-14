@@ -1,6 +1,81 @@
 {
     "components": [
         {
+            "name": "MetricGrid",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Owns the responsive one/two/four-column composition of MetricCard instances.",
+            "introduction": "Responsive KPI row with compact gutters.",
+            "properties": [
+                { "name": "metrics", "type": "AnalyticsMetric[]", "description": "Metric records passed to MetricCard in display order." }
+            ]
+        },
+        {
+            "name": "MetricCard",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Composes a shadcn Card, ReUI IconTile, and Recharts sparkline with bounded metric geometry.",
+            "introduction": "Displays a labeled KPI, change Badge, and full-width angular sparkline.",
+            "properties": [
+                { "name": "metric", "type": "AnalyticsMetric", "description": "Label, formatted value, change, icon (models/reviews/messages/providers), and numeric trend." },
+                { "name": "index", "type": "number", "description": "Categorical icon color index.", "default": 0 }
+            ]
+        },
+        {
+            "name": "CountryChart",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Composes the boundary map and a keyboard-selectable country leaderboard inside a shadcn Card.",
+            "introduction": "Country usage leaderboard and selectable World Atlas boundary map.",
+            "properties": [
+                { "name": "countries", "type": "CountryUsage[]", "description": "ID, name, flag, messages, people, most-used model, share, geographic center, and optional zoom for each leaderboard row." },
+                { "name": "geography", "type": "GeoJSON | TopoJSON", "description": "Parsed local polygon boundaries with matching country IDs." },
+                { "name": "summary", "type": "{ countries: number; messages: number }", "description": "Totals for the complete geographic dataset, including countries outside the leaderboard." }
+            ]
+        },
+        {
+            "name": "ProviderChart",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Composes a Recharts donut, centered total, and aligned share legend inside a shadcn Card.",
+            "introduction": "Provider doughnut chart with percentage legend and total.",
+            "properties": [
+                { "name": "providers", "type": "ProviderShare[]", "description": "Segment name, percentage value, and optional providerCount for grouped providers." },
+                { "name": "total", "type": "number", "description": "Total community messages, compactly formatted inside the ring." }
+            ]
+        },
+        {
+            "name": "UsageChart",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Owns bounded responsive geometry, period selection, and footer readouts for a three-series Recharts area chart.",
+            "introduction": "Claude, GPT, and Gemini community message usage with keyboard-accessible 7/30-day tabs.",
+            "properties": [
+                { "name": "data", "type": "UsagePoint[]", "description": "Date and cumulative claude, gpt, and gemini message counts in chronological order." }
+            ]
+        },
+        {
+            "name": "RevenueFlow",
+            "category": "Charts",
+            "source": "custom",
+            "justification": "Adds accessible directed tracing, category isolation, quarter selection, and bounded scrolling to a native Recharts Sankey.",
+            "introduction": "Balanced revenue Sankey with keyboard node tracing and quarter controls.",
+            "properties": [
+                { "name": "quarters", "type": "RevenueQuarter[]", "description": "Newest first: label, revenue/grossProfit/operatingIncome/netIncome metrics, and acyclic nodes/links. Margin and change badges compare against the next quarter. Node categories are revenue, profit, or expense." }
+            ]
+        },
+        {
+            "name": "CatalogDirectory",
+            "category": "Display",
+            "source": "custom",
+            "justification": "Composes ReUI Frame, Filters, and DataGrid with model discovery and detail navigation.",
+            "introduction": "Model table with search, provider filters, numeric sorting, bookmarks, details, and scoped CSV download.",
+            "properties": [
+                { "name": "models", "type": "DirectoryModel[]", "description": "Shared records with IDs, names, providers, descriptions, ratings, review counts, context, prices, modalities, and tags." },
+                { "name": "exportPath", "type": "string", "description": "Solution-relative CSV endpoint accepting a comma-separated ids query in the requested order." }
+            ]
+        },
+        {
             "name": "Input",
             "category": "Form",
             "introduction": "Native shadcn Input with HTML input attributes and DOM change events.",
@@ -133,6 +208,11 @@
                     "description": "Controlled selection matching the string form of a feature ID."
                 },
                 {
+                    "name": "selectableIds",
+                    "type": "string[]",
+                    "description": "Optional list restricting interactive features to IDs that have selectable data."
+                },
+                {
                     "name": "onSelect",
                     "type": "(id: string) => void",
                     "description": "Click, Enter or Space selection for features with IDs."
@@ -159,10 +239,21 @@
                     "default": 140
                 },
                 {
-                    "name": "height",
+                    "name": "zoom",
                     "type": "number",
-                    "description": "Height in pixels; width follows the parent.",
+                    "description": "Optional viewport zoom (1–4). Enables dragging and smooth focus on center while preserving wheel scrolling and reduced motion."
+                },
+                {
+                    "name": "height",
+                    "type": "number | string",
+                    "description": "Height in pixels or a CSS size; width follows the parent.",
                     "default": 320
+                },
+                {
+                    "name": "fit",
+                    "type": "\"contain\" | \"cover\"",
+                    "description": "Contain the boundaries or fill and crop the viewport.",
+                    "default": "contain"
                 }
             ],
             "source": "custom",

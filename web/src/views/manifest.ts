@@ -37,7 +37,8 @@ const viewSchema = z.object({
                 return false;
             }
         }, 'View path must be solution-relative'),
-    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path')
+    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path'),
+    width: z.enum(['wide', 'compact']).optional()
 });
 
 export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {

@@ -1,5 +1,8 @@
 import pytest
+from pathlib import Path
+from longlink import LongLink
 from longlink.views import view_stem_route
+from longlink.testclient import TestClient
 
 
 def test_view_stem_route_preserves_nested_index_parent() -> None:
@@ -36,3 +39,26 @@ def test_view_stem_route_rejects_invalid_route_segments(view_stem: str, message:
 
     with pytest.raises(ValueError, match=message):
         view_stem_route(view_stem)
+
+
+def test_view_width_is_published_per_registered_view(solution_source: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Carry per-View widths through the actual manifest response without widening other pages."""
+
+    # Arrange
+    monkeypatch.setenv("LONGLINK_ENV", "testing")
+    for name in ("dashboard", "settings"):
+        (solution_source / "views" / f"{name}.jsx").write_text("export default function Page() { return <Text>Content</Text>; }")
+    app = LongLink()
+    app.include_view("dashboard.jsx", width="wide")
+    app.include_view("settings.jsx")
+    client = TestClient(app)
+
+    # Act
+    with client:
+        response = client.get("/views.json")
+
+    # Assert
+    assert response.status_code == 200
+    definitions = {view["route"]: view for view in response.json()["views"]}
+    assert definitions["/dashboard"]["width"] == "wide"
+    assert definitions["/settings"]["width"] == "compact"

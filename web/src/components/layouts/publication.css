@@ -51,6 +51,8 @@
         min-height: 0;
         min-width: 0;
         overflow: clip;
+        background: var(--card);
+        color: var(--card-foreground);
         outline: none;
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -101,7 +103,7 @@
         min-height: 0;
         overflow: hidden;
         border-inline-end: 1px solid var(--border);
-        background: var(--surface);
+        background: var(--sidebar);
         color: var(--foreground);
         outline: none;
         padding-top: env(safe-area-inset-top, 0px);
