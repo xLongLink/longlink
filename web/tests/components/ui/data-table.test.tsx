@@ -351,3 +351,114 @@ function RowSelection({ name }: { name: string }) {
         />
     );
 }
+
+it('sorts numeric values through the registry controls and accepts a caller-owned reset', async () => {
+    const user = userEvent.setup();
+
+    function Results() {
+        const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([]);
+
+        return (
+            <>
+                <button type="button" onClick={() => setSorting([])}>
+                    Reset order
+                </button>
+                <DataTable
+                    data={[
+                        { name: 'Pallet', price: 10 },
+                        { name: 'Crate', price: 2 }
+                    ]}
+                    columns={[{ key: 'name' }, { key: 'price', header: 'Price', sortable: true }]}
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                />
+            </>
+        );
+    }
+
+    await withMounted(<Results />, async (output) => {
+        const sort = output.querySelector<HTMLButtonElement>('thead button');
+        const reset = output.querySelector<HTMLButtonElement>('button');
+
+        if (!sort || !reset) throw new Error('Expected sorting controls');
+
+        await act(async () => user.click(sort));
+        expect(output.querySelector('tbody tr')?.textContent).toBe('Crate2');
+        await act(async () => user.click(reset));
+        expect(output.querySelector('tbody tr')?.textContent).toBe('Pallet10');
+    });
+});
+
+it('keeps selected domain IDs stable when data is reordered', async () => {
+    const user = userEvent.setup();
+    const changed = vi.fn();
+
+    const rows = [
+        { id: 'north', name: 'North' },
+        { id: 'south', name: 'South' }
+    ];
+
+    function Results() {
+        const [reversed, setReversed] = useState(false);
+
+        return (
+            <>
+                <button type="button" onClick={() => setReversed(!reversed)}>
+                    Reverse rows
+                </button>
+                <DataTable
+                    data={reversed ? [...rows].reverse() : rows}
+                    columns={[{ key: 'name' }]}
+                    idKey="id"
+                    enableRowSelection
+                    onRowSelectionChange={changed}
+                />
+            </>
+        );
+    }
+
+    await withMounted(<Results />, async (output) => {
+        const north = output.querySelector<HTMLElement>('tbody [aria-label="Select row"]');
+        const reverse = output.querySelector<HTMLButtonElement>('button');
+
+        if (!north || !reverse) throw new Error('Expected selection and reorder controls');
+
+        await act(async () => user.click(north));
+        expect(changed).toHaveBeenLastCalledWith({ north: true });
+        await act(async () => user.click(reverse));
+        const reordered = output.querySelectorAll('tbody tr');
+        expect(reordered[0].textContent).toBe('South');
+        expect(reordered[0].querySelector('[aria-label="Select row"]')?.getAttribute('aria-checked')).toBe('false');
+        expect(reordered[1].querySelector('[aria-label="Select row"]')?.getAttribute('aria-checked')).toBe('true');
+    });
+});
+
+it('allows empty-state recovery without retaining stale rows', async () => {
+    const user = userEvent.setup();
+
+    function Results() {
+        const [rows, setRows] = useState<{ name: string }[]>([]);
+
+        return (
+            <DataTable
+                data={rows}
+                emptyMessage={
+                    <button type="button" onClick={() => setRows([{ name: 'Recovered shipment' }])}>
+                        Retry shipments
+                    </button>
+                }
+            />
+        );
+    }
+
+    await withMounted(<Results />, async (output) => {
+        const retry = output.querySelector<HTMLButtonElement>('tbody button');
+
+        if (!retry) throw new Error('Expected caller-owned recovery action');
+
+        expect(output.textContent).not.toContain('No data');
+        await act(async () => user.click(retry));
+        expect(output.querySelector('tbody')?.textContent).toBe('Recovered shipment');
+        expect(output.querySelector('tbody button')).toBeNull();
+    });
+});

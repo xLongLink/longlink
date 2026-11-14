@@ -6,9 +6,9 @@ import { Separator } from '@/components/shadcn/separator';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;

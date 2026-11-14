@@ -1,10 +1,8 @@
 import { Maps } from './maps';
-import { useState } from 'react';
 import type { MapData } from './map-data';
-import { Badge } from '@/components/reui/badge';
+import { useState, type ReactNode } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { IconTile } from '@/components/reui/icon-tile';
-import './analytics.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shadcn/card';
 
@@ -12,25 +10,28 @@ export type CountryUsage = {
     id: string;
     name: string;
     flag: string;
-    messages: number;
-    people: number;
-    model: string;
     share: number;
     center: [number, number];
     zoom?: number;
 };
 
-const compactNumber = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
-
 /** Combines keyboard-selectable country rankings with local atlas boundaries. */
-export function CountryChart({
+export function CountryChart<T extends CountryUsage>({
     countries,
     geography,
-    summary
+    summary,
+    title,
+    description,
+    label,
+    renderDetails
 }: {
-    countries: CountryUsage[];
+    countries: T[];
     geography: MapData;
-    summary: { countries: number; messages: number };
+    summary?: ReactNode;
+    title: ReactNode;
+    description?: ReactNode;
+    label: string;
+    renderDetails?: (country: T) => ReactNode;
 }) {
     const [selectedId, setSelectedId] = useState(countries[0]?.id);
 
@@ -42,7 +43,7 @@ export function CountryChart({
     const selected = countries[position];
 
     return (
-        <Card className="analytics-card @container/country relative isolate h-full min-w-0 overflow-hidden">
+        <Card className="@container/country relative isolate h-full min-w-0 overflow-hidden">
             <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 z-10 hidden bg-linear-to-r from-card from-25% via-card/95 via-42% to-transparent to-70% @min-[640px]/country:block"
@@ -56,8 +57,8 @@ export function CountryChart({
                 className="pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-20 bg-linear-to-t from-card/90 to-transparent @min-[640px]/country:block"
             />
             <CardHeader className="relative z-20 gap-0">
-                <CardTitle>Top countries this month</CardTitle>
-                <CardDescription>Leaderboard · Share of messages</CardDescription>
+                <CardTitle>{title}</CardTitle>
+                {description && <CardDescription>{description}</CardDescription>}
                 <CardAction className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground tabular-nums">
                         {countries.length ? position + 1 : 0} / {countries.length}
@@ -113,7 +114,7 @@ export function CountryChart({
                 </div>
                 <div className="relative h-60 overflow-hidden @min-[640px]/country:absolute @min-[640px]/country:inset-0 @min-[640px]/country:left-[28%] @min-[640px]/country:h-auto">
                     <Maps
-                        label="Community messages by country"
+                        label={label}
                         geography={geography}
                         selectedId={selected?.id}
                         selectableIds={countries.map((country) => country.id)}
@@ -133,16 +134,14 @@ export function CountryChart({
                         <p className="text-sm font-medium">
                             {selected.flag} #{position + 1} {selected.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            {compactNumber.format(selected.messages)} messages · {selected.people.toLocaleString()}{' '}
-                            people
-                        </p>
-                        <Badge variant="info-light">Most used: {selected.model}</Badge>
+                        {renderDetails?.(selected)}
                     </div>
                 )}
-                <p className="relative z-20 mt-auto text-xs text-muted-foreground @min-[640px]/country:w-[48%]">
-                    {summary.countries} countries · {compactNumber.format(summary.messages)} messages · Demo data
-                </p>
+                {summary && (
+                    <p className="relative z-20 mt-auto text-xs text-muted-foreground @min-[640px]/country:w-[48%]">
+                        {summary}
+                    </p>
+                )}
             </CardContent>
         </Card>
     );

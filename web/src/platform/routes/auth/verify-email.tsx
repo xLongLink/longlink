@@ -13,9 +13,9 @@ import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';

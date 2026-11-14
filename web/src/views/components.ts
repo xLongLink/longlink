@@ -421,4 +421,28 @@ export { CountryChart } from '@/components/custom/country-chart';
 export { RevenueFlow } from '@/components/custom/revenue-flow';
 
 /** @category Display */
-export { CatalogDirectory } from '@/components/custom/catalog-directory';
+export { DataGrid, DataGridContainer, dataGridFeatures } from '@/components/reui/data-grid/data-grid';
+
+export { DataGridTable } from '@/components/reui/data-grid/data-grid-table';
+
+export { DataGridColumnHeader } from '@/components/reui/data-grid/data-grid-column-header';
+
+export { DataGridPagination } from '@/components/reui/data-grid/data-grid-pagination';
+
+export { DataGridScrollArea } from '@/components/reui/data-grid/data-grid-scroll-area';
+
+export { useTable } from '@tanstack/react-table';
+
+/** @category Form */
+export { Filters } from '@/components/reui/filters/filters';
+
+export { createFilterQuery, flattenFilterConditions } from '@/components/reui/filters/filters-query';
+
+/** @category Layouts */
+export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from '@/components/reui/frame';
+
+/** @category Display */
+export { IconTile } from '@/components/reui/icon-tile';
+
+/** @category Action */
+export { useDownload } from '@/components/custom/preview';

@@ -10,6 +10,37 @@ const label = useMemo(() => selected.toUpperCase(), [selected]);
 const confirmation = useConfirm();
 confirmation.show({ title: 'Publish changes?', actionLabel: 'Publish', actionVariant: 'default', onAction: async () => {} });
 
+const records = [{ id: 'shipment', name: 'Shipment', price: 2 }];
+const table = useTable({
+    features: dataGridFeatures,
+    data: records,
+    columns: [{ accessorKey: 'name', header: ({ column }) => <DataGridColumnHeader column={column} title="Name" /> }],
+    getRowId: (row) => row.id
+});
+const query = createFilterQuery();
+const downloads = useDownload();
+const nativeGrid = (
+    <DataGrid table={table} recordCount={records.length}>
+        <Frame>
+            <FrameHeader><FrameTitle>Shipments</FrameTitle></FrameHeader>
+            <FramePanel><DataGridScrollArea><DataGridTable /></DataGridScrollArea></FramePanel>
+            <FrameFooter><DataGridPagination /></FrameFooter>
+        </Frame>
+    </DataGrid>
+);
+const configuredTable = (
+    <DataTable
+        data={records}
+        columns={[{ key: 'price', sortable: true }]}
+        idKey="id"
+        enableRowSelection
+        onSortingChange={(sorting) => sorting[0]?.desc.valueOf()}
+        onRowSelectionChange={(selection) => selection.shipment?.valueOf()}
+        emptyMessage={<Button onClick={async () => { await downloads.download('/api/export', 'shipments.csv'); }}>Export</Button>}
+    />
+);
+const filters = <Filters fields={[]} query={query} onQueryChange={(next) => flattenFilterConditions(next)} />;
+
 const nativeComposition = (
     <Card id="settings" onPointerDown={(event) => event.currentTarget.focus()}>
         <CardHeader>

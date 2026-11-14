@@ -7,9 +7,9 @@ import { Illustration } from '@/components/ui/illustration';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { IllustratedDialogContent } from './illustrated-dialog-content';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function SolutionMcpDialog({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {

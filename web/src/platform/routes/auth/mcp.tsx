@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { Navigate, useSearchParams } from 'react-router';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */

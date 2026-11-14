@@ -107,28 +107,8 @@ it('keeps country details, highlights, and map focus together when selection or 
     const user = userEvent.setup();
 
     const countries: CountryUsage[] = [
-        {
-            id: 'west',
-            name: 'West',
-            flag: '🇺🇸',
-            messages: 60,
-            people: 4,
-            model: 'Atlas',
-            share: 60,
-            center: [-10, 10],
-            zoom: 2
-        },
-        {
-            id: 'east',
-            name: 'East',
-            flag: '🇯🇵',
-            messages: 40,
-            people: 3,
-            model: 'Gemini',
-            share: 40,
-            center: [30, 10],
-            zoom: 2
-        }
+        { id: 'west', name: 'West', flag: '🇺🇸', share: 60, center: [-10, 10], zoom: 2 },
+        { id: 'east', name: 'East', flag: '🇯🇵', share: 40, center: [30, 10], zoom: 2 }
     ];
 
     const geography: MapData = {
@@ -160,7 +140,7 @@ it('keeps country details, highlights, and map focus together when selection or 
                 <button type="button" onClick={() => setVisible([countries[0]])}>
                     Refresh countries
                 </button>
-                <CountryChart countries={visible} geography={geography} summary={{ countries: 2, messages: 100 }} />
+                <CountryChart countries={visible} geography={geography} title="Countries" label="Country usage" />
             </>
         );
     }

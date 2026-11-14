@@ -70,7 +70,17 @@ export type { ChartConfig } from '../src/components/shadcn/chart';
 export { MetricCard, MetricGrid, ProviderChart, UsageChart } from '../src/components/custom/analytics';
 export { CountryChart } from '../src/components/custom/country-chart';
 export { RevenueFlow } from '../src/components/custom/revenue-flow';
-export { CatalogDirectory } from '../src/components/custom/catalog-directory';
+export { DataGrid, DataGridContainer, dataGridFeatures } from '../src/components/reui/data-grid/data-grid';
+export { DataGridTable } from '../src/components/reui/data-grid/data-grid-table';
+export { DataGridColumnHeader } from '../src/components/reui/data-grid/data-grid-column-header';
+export { DataGridPagination } from '../src/components/reui/data-grid/data-grid-pagination';
+export { DataGridScrollArea } from '../src/components/reui/data-grid/data-grid-scroll-area';
+export { useTable } from '@tanstack/react-table';
+export { Filters } from '../src/components/reui/filters/filters';
+export { createFilterQuery, flattenFilterConditions } from '../src/components/reui/filters/filters-query';
+export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from '../src/components/reui/frame';
+export { IconTile } from '../src/components/reui/icon-tile';
+export { useDownload } from '../src/components/custom/preview';
 export {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, RadarChart, Radar,
     RadialBarChart, RadialBar, Sankey, CartesianGrid, XAxis, YAxis, PolarGrid, PolarAngleAxis,

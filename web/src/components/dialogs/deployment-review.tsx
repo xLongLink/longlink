@@ -7,10 +7,10 @@ import { Step, Wizard } from '@/components/custom/wizard';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeTextInput } from '@/components/ui/native-text-input';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeTextInput } from '@/components/custom/native-text-input';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 type DeploymentReviewProps = {

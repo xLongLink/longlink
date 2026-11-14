@@ -7,7 +7,11 @@
             "justification": "Owns the responsive one/two/four-column composition of MetricCard instances.",
             "introduction": "Responsive KPI row with compact gutters.",
             "properties": [
-                { "name": "metrics", "type": "AnalyticsMetric[]", "description": "Metric records passed to MetricCard in display order." }
+                {
+                    "name": "metrics",
+                    "type": "AnalyticsMetric[]",
+                    "description": "Metric records passed to MetricCard in display order."
+                }
             ]
         },
         {
@@ -17,7 +21,11 @@
             "justification": "Composes a shadcn Card, ReUI IconTile, and Recharts sparkline with bounded metric geometry.",
             "introduction": "Displays a labeled KPI, change Badge, and full-width angular sparkline.",
             "properties": [
-                { "name": "metric", "type": "AnalyticsMetric", "description": "Label, formatted value, change, icon (models/reviews/messages/providers), and numeric trend." },
+                {
+                    "name": "metric",
+                    "type": "AnalyticsMetric",
+                    "description": "Label, formatted value, change, optional ReUI Badge changeVariant, optional icon element, and numeric trend. The caller chooses icons and change semantics."
+                },
                 { "name": "index", "type": "number", "description": "Categorical icon color index.", "default": 0 }
             ]
         },
@@ -28,9 +36,27 @@
             "justification": "Composes the boundary map and a keyboard-selectable country leaderboard inside a shadcn Card.",
             "introduction": "Country usage leaderboard and selectable World Atlas boundary map.",
             "properties": [
-                { "name": "countries", "type": "CountryUsage[]", "description": "ID, name, flag, messages, people, most-used model, share, geographic center, and optional zoom for each leaderboard row." },
-                { "name": "geography", "type": "GeoJSON | TopoJSON", "description": "Parsed local polygon boundaries with matching country IDs." },
-                { "name": "summary", "type": "{ countries: number; messages: number }", "description": "Totals for the complete geographic dataset, including countries outside the leaderboard." }
+                {
+                    "name": "countries",
+                    "type": "CountryUsage[]",
+                    "description": "ID, name, flag, share, geographic center, and optional zoom for each leaderboard row. Additional caller-owned fields are retained for renderDetails."
+                },
+                {
+                    "name": "geography",
+                    "type": "GeoJSON | TopoJSON",
+                    "description": "Parsed local polygon boundaries with matching country IDs."
+                },
+                {
+                    "name": "title / description / summary",
+                    "type": "ReactNode",
+                    "description": "Caller-owned heading, optional description, and optional summary."
+                },
+                { "name": "label", "type": "string", "description": "Accessible label for the boundary map." },
+                {
+                    "name": "renderDetails",
+                    "type": "(country: T) => ReactNode",
+                    "description": "Optional application-specific details for the selected country."
+                }
             ]
         },
         {
@@ -40,18 +66,67 @@
             "justification": "Composes a Recharts donut, centered total, and aligned share legend inside a shadcn Card.",
             "introduction": "Provider doughnut chart with percentage legend and total.",
             "properties": [
-                { "name": "providers", "type": "ProviderShare[]", "description": "Segment name, percentage value, and optional providerCount for grouped providers." },
-                { "name": "total", "type": "number", "description": "Total community messages, compactly formatted inside the ring." }
+                {
+                    "name": "providers",
+                    "type": "ProviderShare[]",
+                    "description": "Segment name, percentage value, and optional providerCount for grouped providers."
+                },
+                {
+                    "name": "total",
+                    "type": "number",
+                    "description": "Total value, compactly formatted inside the ring."
+                },
+                {
+                    "name": "title / totalLabel",
+                    "type": "ReactNode",
+                    "description": "Required caller-owned heading and total label."
+                },
+                {
+                    "name": "description / footer",
+                    "type": "ReactNode",
+                    "description": "Optional caller-owned description and footer content."
+                }
             ]
         },
         {
             "name": "UsageChart",
             "category": "Charts",
             "source": "custom",
-            "justification": "Owns bounded responsive geometry, period selection, and footer readouts for a three-series Recharts area chart.",
-            "introduction": "Claude, GPT, and Gemini community message usage with keyboard-accessible 7/30-day tabs.",
+            "justification": "Owns responsive geometry, keyboard-accessible period selection, and readouts for caller-defined Recharts series.",
+            "introduction": "Area chart with caller-defined series, labels, and periods.",
             "properties": [
-                { "name": "data", "type": "UsagePoint[]", "description": "Date and cumulative claude, gpt, and gemini message counts in chronological order." }
+                {
+                    "name": "data",
+                    "type": "UsagePoint[]",
+                    "description": "Date and numeric series values in chronological order. Period values select the last N records."
+                },
+                {
+                    "name": "config",
+                    "type": "ChartConfig",
+                    "description": "Series keys, display labels, and semantic chart colors."
+                },
+                {
+                    "name": "periods",
+                    "type": "{ value: number; label: string }[]",
+                    "description": "Available positive record counts and their labels. The last option is initially selected."
+                },
+                {
+                    "name": "title / description",
+                    "type": "ReactNode",
+                    "description": "Required heading and optional description."
+                },
+                { "name": "label", "type": "string", "description": "Accessible chart label." },
+                {
+                    "name": "emptyMessage",
+                    "type": "ReactNode",
+                    "description": "Empty-data feedback.",
+                    "default": "No data"
+                },
+                {
+                    "name": "formatValue",
+                    "type": "(value: number) => string",
+                    "description": "Formats numeric axis values and footer readouts."
+                }
             ]
         },
         {
@@ -61,19 +136,80 @@
             "justification": "Adds accessible directed tracing, category isolation, quarter selection, and bounded scrolling to a native Recharts Sankey.",
             "introduction": "Balanced revenue Sankey with keyboard node tracing and quarter controls.",
             "properties": [
-                { "name": "quarters", "type": "RevenueQuarter[]", "description": "Newest first: label, revenue/grossProfit/operatingIncome/netIncome metrics, and acyclic nodes/links. Margin and change badges compare against the next quarter. Node categories are revenue, profit, or expense." }
+                {
+                    "name": "quarters",
+                    "type": "RevenueQuarter[]",
+                    "description": "Newest first: label, revenue/grossProfit/operatingIncome/netIncome metrics, and acyclic nodes/links. Margin and change badges compare against the next quarter. Node categories are revenue, profit, or expense."
+                }
             ]
         },
         {
-            "name": "CatalogDirectory",
+            "name": "DataGrid",
             "category": "Display",
-            "source": "custom",
-            "justification": "Composes ReUI Frame, Filters, and DataGrid with model discovery and detail navigation.",
-            "introduction": "Model table with search, provider filters, numeric sorting, bookmarks, details, and scoped CSV download.",
+            "source": "reui",
+            "reference": "https://reui.io/docs/components/base/data-grid",
+            "introduction": "Native ReUI data grid with caller-owned TanStack state and columns.",
+            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface.",
             "properties": [
-                { "name": "models", "type": "DirectoryModel[]", "description": "Shared records with IDs, names, providers, descriptions, ratings, review counts, context, prices, modalities, and tags." },
-                { "name": "exportPath", "type": "string", "description": "Solution-relative CSV endpoint accepting a comma-separated ids query in the requested order." }
+                {
+                    "name": "table",
+                    "type": "ReactTable<DataGridFeatures, T>",
+                    "description": "Controller returned by the exposed useTable hook."
+                },
+                { "name": "recordCount", "type": "number", "description": "Total number of matching records." },
+                { "name": "emptyMessage", "type": "ReactNode", "description": "Caller-owned empty-state content." },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native grid composition, including scroll area, table, and pagination."
+                }
             ]
+        },
+        {
+            "name": "Filters",
+            "category": "Form",
+            "source": "reui",
+            "reference": "https://reui.io/docs/components/base/filters",
+            "introduction": "Native ReUI filter builder with caller-owned query state.",
+            "guidance": "Initialize with createFilterQuery(). Use flattenFilterConditions(query) for flat conjunctions; callers own query evaluation.",
+            "properties": [
+                {
+                    "name": "fields",
+                    "type": "FilterField[]",
+                    "description": "Caller-defined fields, choices, and operators."
+                },
+                {
+                    "name": "query / onQueryChange",
+                    "type": "FilterQuery / (query: FilterQuery) => void",
+                    "description": "Controlled filter query."
+                }
+            ]
+        },
+        {
+            "name": "Frame",
+            "category": "Layouts",
+            "source": "reui",
+            "reference": "https://reui.io/docs/components/base/frame",
+            "introduction": "Native ReUI structured surface.",
+            "guidance": "Compose FrameHeader, FrameTitle, FramePanel, and FrameFooter using native variants and spacing.",
+            "properties": []
+        },
+        {
+            "name": "IconTile",
+            "category": "Display",
+            "source": "reui",
+            "reference": "https://reui.io/docs/components/base/icon-tile",
+            "introduction": "Native ReUI icon surface.",
+            "properties": []
+        },
+        {
+            "name": "useDownload",
+            "category": "Action",
+            "source": "custom",
+            "justification": "Connects download actions to the isolated View host capability and shared failure handling.",
+            "introduction": "Returns download(path, filename) and recoverable error feedback.",
+            "guidance": "Keep endpoint selection and export parameters in the View. Await download(path, filename) from an ActionButton and render error feedback when present.",
+            "properties": []
         },
         {
             "name": "Input",
@@ -130,11 +266,7 @@
                     "type": "ChangeEventHandler<HTMLTextAreaElement>",
                     "description": "DOM event; read event.currentTarget.value."
                 },
-                {
-                    "name": "value / defaultValue",
-                    "type": "string",
-                    "description": "Controlled or uncontrolled value."
-                }
+                { "name": "value / defaultValue", "type": "string", "description": "Controlled or uncontrolled value." }
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/textarea"
@@ -149,11 +281,7 @@
                     "type": "boolean",
                     "description": "Controlled or initial checked state."
                 },
-                {
-                    "name": "indeterminate",
-                    "type": "boolean",
-                    "description": "Mixed state."
-                },
+                { "name": "indeterminate", "type": "boolean", "description": "Mixed state." },
                 {
                     "name": "onCheckedChange",
                     "type": "(checked, eventDetails) => void",
@@ -172,20 +300,10 @@
             "name": "Maps",
             "category": "Others",
             "introduction": "Renders generic Polygon and MultiPolygon boundaries from supplied GeoJSON or TopoJSON using React Simple Maps.",
-            "keywords": [
-                "map",
-                "maps",
-                "geography",
-                "geojson",
-                "topojson"
-            ],
+            "keywords": ["map", "maps", "geography", "geojson", "topojson"],
             "guidance": "Load parsed geography through useApi or supply local JSON. The component does not fetch URLs or assume a country dataset. Use stable feature IDs for controlled selection.",
             "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible map name."
-                },
+                { "name": "label", "type": "string", "description": "Accessible map name." },
                 {
                     "name": "geography",
                     "type": "GeoJSON FeatureCollection | TopoJSON Topology",
@@ -227,10 +345,7 @@
                     "name": "center",
                     "type": "[number, number]",
                     "description": "Projection center as longitude and latitude.",
-                    "default": [
-                        0,
-                        0
-                    ]
+                    "default": [0, 0]
                 },
                 {
                     "name": "scale",
@@ -320,11 +435,7 @@
             "name": "PieChart",
             "category": "Charts",
             "introduction": "Native Recharts pie chart. Compose Pie with its own data, dataKey, and nameKey inside a shadcn ChartContainer.",
-            "keywords": [
-                "doughnut",
-                "donut",
-                "pie"
-            ],
+            "keywords": ["doughnut", "donut", "pie"],
             "properties": [
                 {
                     "name": "children",
@@ -377,10 +488,7 @@
             "name": "Sankey",
             "category": "Charts",
             "introduction": "Native Recharts Sankey diagram. Supply valid acyclic nodes and links through the data prop inside a shadcn ChartContainer.",
-            "keywords": [
-                "flow",
-                "sankey"
-            ],
+            "keywords": ["flow", "sankey"],
             "properties": [
                 {
                     "name": "data",
@@ -453,11 +561,7 @@
                     "description": "Avatar shape: circle, rounded, or square.",
                     "default": "circle"
                 },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "User name for initials and alt text."
-                },
+                { "name": "name", "type": "string", "description": "User name for initials and alt text." },
                 {
                     "name": "seed",
                     "type": "string",
@@ -468,16 +572,8 @@
                     "type": "\"user\" | \"organization\"",
                     "description": "Avatar style for a user or organization."
                 },
-                {
-                    "name": "src",
-                    "type": "string | null",
-                    "description": "Primary image source URL."
-                },
-                {
-                    "name": "alt",
-                    "type": "string",
-                    "description": "Alt text (falls back to name)."
-                },
+                { "name": "src", "type": "string | null", "description": "Primary image source URL." },
+                { "name": "alt", "type": "string", "description": "Alt text (falls back to name)." },
                 {
                     "name": "size",
                     "type": "\"sm\" | \"default\" | \"lg\"",
@@ -492,18 +588,10 @@
             "name": "Badge",
             "category": "Display",
             "introduction": "Displays a count or enumerated state.",
-            "keywords": [
-                "status",
-                "count",
-                "state"
-            ],
+            "keywords": ["status", "count", "state"],
             "guidance": "Use for counts or enumerated states, not decoration.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Badge content, including optional icons."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Badge content, including optional icons." },
                 {
                     "name": "size",
                     "type": "\"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
@@ -535,13 +623,7 @@
             "name": "Button",
             "category": "Action",
             "introduction": "Native shadcn Button with Base UI props and default styling.",
-            "keywords": [
-                "action",
-                "approve",
-                "reject",
-                "save",
-                "submit"
-            ],
+            "keywords": ["action", "approve", "reject", "save", "submit"],
             "guidance": "Use ActionButton for automatic asynchronous loading, duplicate-click prevention, or scoped navigation.",
             "properties": [
                 {
@@ -567,31 +649,19 @@
                     "description": "HTML button type attribute.",
                     "default": "button"
                 },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "HTML name attribute for form submission."
-                },
+                { "name": "name", "type": "string", "description": "HTML name attribute for form submission." },
                 {
                     "name": "value",
                     "type": "string | number | readonly string[]",
                     "description": "HTML value attribute for form submission."
                 },
-                {
-                    "name": "form",
-                    "type": "string",
-                    "description": "Associates the button with a form element by ID."
-                },
+                { "name": "form", "type": "string", "description": "Associates the button with a form element by ID." },
                 {
                     "name": "render",
                     "type": "ReactElement | ((props, state) => ReactElement)",
                     "description": "Native element composition. DOM attributes, refs, className, style, and event handlers are supported."
                 },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Disables the button."
-                },
+                { "name": "disabled", "type": "boolean", "description": "Disables the button." },
                 {
                     "name": "focusableWhenDisabled",
                     "type": "boolean",
@@ -618,11 +688,7 @@
                     "type": "(event) => void | Promise<void>",
                     "description": "Awaited action with loading feedback and duplicate-activation protection."
                 },
-                {
-                    "name": "href",
-                    "type": "string",
-                    "description": "Scoped Solution destination."
-                }
+                { "name": "href", "type": "string", "description": "Scoped Solution destination." }
             ],
             "source": "custom",
             "justification": "Awaits Solution actions, blocks duplicate activation, and coordinates scoped navigation and reported-error recovery."
@@ -638,11 +704,7 @@
                     "type": "ReactNode",
                     "description": "ActionButton children for coordinated keyboard navigation."
                 },
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible label for the group (aria-label)."
-                },
+                { "name": "label", "type": "string", "description": "Accessible label for the group (aria-label)." },
                 {
                     "name": "orientation",
                     "type": "\"horizontal\" | \"vertical\"",
@@ -671,16 +733,8 @@
             "introduction": "Native shadcn card composition.",
             "guidance": "Compose CardHeader, CardTitle, CardDescription, CardAction, CardContent, and CardFooter. Use InteractiveCard for surface actions or selection.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Card sections."
-                },
-                {
-                    "name": "size",
-                    "type": "\"default\" | \"sm\"",
-                    "default": "default"
-                },
+                { "name": "children", "type": "ReactNode", "description": "Card sections." },
+                { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" },
                 {
                     "name": "className / style",
                     "type": "Native div props",
@@ -694,18 +748,10 @@
             "name": "InteractiveCard",
             "category": "Layouts",
             "introduction": "Groups dashboard widgets, gallery items, or settings sections.",
-            "keywords": [
-                "widget",
-                "gallery",
-                "settings"
-            ],
+            "keywords": ["widget", "gallery", "settings"],
             "guidance": "Do not wrap dense lists or individual table rows in cards.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Content rendered inside the card."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Content rendered inside the card." },
                 {
                     "name": "padding",
                     "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
@@ -734,16 +780,8 @@
                     "type": "string | number",
                     "description": "Card height; numbers are pixels and strings are CSS sizes."
                 },
-                {
-                    "name": "maxWidth",
-                    "type": "string | number",
-                    "description": "Maximum card width."
-                },
-                {
-                    "name": "minHeight",
-                    "type": "string | number",
-                    "description": "Minimum card height."
-                },
+                { "name": "maxWidth", "type": "string | number", "description": "Maximum card width." },
+                { "name": "minHeight", "type": "string | number", "description": "Minimum card height." },
                 {
                     "name": "inert",
                     "type": "boolean",
@@ -760,11 +798,7 @@
                     "type": "(event: ViewMouseEvent) => void",
                     "description": "Runs when the card surface is activated."
                 },
-                {
-                    "name": "href",
-                    "type": "string",
-                    "description": "Link destination, used when onChange is absent."
-                },
+                { "name": "href", "type": "string", "description": "Link destination, used when onChange is absent." },
                 {
                     "name": "target",
                     "type": "string",
@@ -827,11 +861,7 @@
                     "type": "boolean | \"indeterminate\"",
                     "description": "Whether the checkbox is checked, unchecked, or indeterminate."
                 },
-                {
-                    "name": "defaultChecked",
-                    "type": "boolean",
-                    "description": "Initial checked state."
-                },
+                { "name": "defaultChecked", "type": "boolean", "description": "Initial checked state." },
                 {
                     "name": "onChange",
                     "type": "(value: boolean) => void",
@@ -848,11 +878,7 @@
             "introduction": "Native ReUI CodeBlock composition with syntax highlighting and bounded tokenization.",
             "guidance": "Pass code and language to the root. Compose CodeBlockHeader, CodeBlockTitle, CodeBlockLanguage, CodeBlockCopyButton, CodeBlockWrapToggle, and CodeBlockExpandButton as needed. Use showLineNumbers, highlightedLines, wrap/defaultWrap, and maxLines directly. For an external scroll viewport, compose CodeBlockContent and label the scroll container. Unknown languages and sources over 50,000 characters render as text. Copy buttons strip ReUI notation comments and expose onCopyError for recovery.",
             "properties": [
-                {
-                    "name": "code",
-                    "type": "string",
-                    "description": "The code string to display."
-                },
+                { "name": "code", "type": "string", "description": "The code string to display." },
                 {
                     "name": "language",
                     "type": "string",
@@ -880,27 +906,14 @@
                     "type": "number[] | string",
                     "description": "Source lines to highlight, as line numbers or a range such as 2-4,7."
                 },
-                {
-                    "name": "wrap",
-                    "type": "boolean",
-                    "description": "Controlled soft wrapping."
-                },
-                {
-                    "name": "defaultWrap",
-                    "type": "boolean",
-                    "description": "Initial soft wrapping.",
-                    "default": false
-                },
+                { "name": "wrap", "type": "boolean", "description": "Controlled soft wrapping." },
+                { "name": "defaultWrap", "type": "boolean", "description": "Initial soft wrapping.", "default": false },
                 {
                     "name": "maxLines",
                     "type": "number",
                     "description": "Caps the built-in viewport height. Compose CodeBlockExpandButton to expand it."
                 },
-                {
-                    "name": "expanded",
-                    "type": "boolean",
-                    "description": "Controlled expanded state under maxLines."
-                },
+                { "name": "expanded", "type": "boolean", "description": "Controlled expanded state under maxLines." },
                 {
                     "name": "variant",
                     "type": "\"default\" | \"ghost\"",
@@ -923,12 +936,34 @@
             "introduction": "Native collapsible composition using CollapsibleTrigger and CollapsibleContent.",
             "properties": [
                 { "name": "open", "type": "boolean", "description": "Controlled visibility." },
-                { "name": "defaultOpen", "type": "boolean", "description": "Initial uncontrolled visibility.", "default": false },
+                {
+                    "name": "defaultOpen",
+                    "type": "boolean",
+                    "description": "Initial uncontrolled visibility.",
+                    "default": false
+                },
                 { "name": "disabled", "type": "boolean", "description": "Prevents trigger interaction." },
-                { "name": "onOpenChange", "type": "(open, details) => void", "description": "Receives visibility changes and cancellable native event details." },
-                { "name": "CollapsibleTrigger.render", "type": "ReactElement | function", "description": "Customizes the trigger element, including native Button composition." },
-                { "name": "CollapsibleContent.keepMounted", "type": "boolean", "description": "Retains closed content in the DOM.", "default": false },
-                { "name": "children", "type": "ReactNode", "description": "Compose CollapsibleTrigger and CollapsibleContent; parts support native DOM attributes and refs." }
+                {
+                    "name": "onOpenChange",
+                    "type": "(open, details) => void",
+                    "description": "Receives visibility changes and cancellable native event details."
+                },
+                {
+                    "name": "CollapsibleTrigger.render",
+                    "type": "ReactElement | function",
+                    "description": "Customizes the trigger element, including native Button composition."
+                },
+                {
+                    "name": "CollapsibleContent.keepMounted",
+                    "type": "boolean",
+                    "description": "Retains closed content in the DOM.",
+                    "default": false
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Compose CollapsibleTrigger and CollapsibleContent; parts support native DOM attributes and refs."
+                }
             ]
         },
         {
@@ -936,27 +971,14 @@
             "category": "Layouts",
             "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Content that collapses and expands."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Content that collapses and expands." },
                 {
                     "name": "trigger",
                     "type": "ReactNode",
                     "description": "Content shown in the trigger area (always visible)."
                 },
-                {
-                    "name": "defaultOpen",
-                    "type": "boolean",
-                    "description": "Initial open state.",
-                    "default": true
-                },
-                {
-                    "name": "open",
-                    "type": "boolean",
-                    "description": "Controlled open state."
-                },
+                { "name": "defaultOpen", "type": "boolean", "description": "Initial open state.", "default": true },
+                { "name": "open", "type": "boolean", "description": "Controlled open state." },
                 {
                     "name": "disabled",
                     "type": "boolean",
@@ -977,16 +999,8 @@
             "category": "Display",
             "introduction": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter.",
             "properties": [
-                {
-                    "name": "value",
-                    "type": "number",
-                    "description": "Amount to format in currency units."
-                },
-                {
-                    "name": "currency",
-                    "type": "string",
-                    "description": "ISO 4217 currency code, such as USD or CHF."
-                },
+                { "name": "value", "type": "number", "description": "Amount to format in currency units." },
+                { "name": "currency", "type": "string", "description": "ISO 4217 currency code, such as USD or CHF." },
                 {
                     "name": "locale",
                     "type": "string",
@@ -1003,12 +1017,32 @@
             "reference": "https://ui.shadcn.com/docs/components/base/calendar",
             "introduction": "Native calendar with single, multiple, and date-range selection.",
             "properties": [
-                { "name": "mode", "type": "\"single\" | \"multiple\" | \"range\"", "description": "Enables the corresponding selection mode." },
-                { "name": "selected", "type": "Date | Date[] | DateRange", "description": "Controlled selection matching the mode." },
-                { "name": "onSelect", "type": "(selected, triggerDate, modifiers, event) => void", "description": "Receives native Date selections matching the mode." },
+                {
+                    "name": "mode",
+                    "type": "\"single\" | \"multiple\" | \"range\"",
+                    "description": "Enables the corresponding selection mode."
+                },
+                {
+                    "name": "selected",
+                    "type": "Date | Date[] | DateRange",
+                    "description": "Controlled selection matching the mode."
+                },
+                {
+                    "name": "onSelect",
+                    "type": "(selected, triggerDate, modifiers, event) => void",
+                    "description": "Receives native Date selections matching the mode."
+                },
                 { "name": "defaultMonth", "type": "Date", "description": "Initial displayed month." },
-                { "name": "disabled", "type": "Matcher | Matcher[]", "description": "Dates unavailable for selection." },
-                { "name": "min / max", "type": "number", "description": "Selection bounds for multiple dates or range nights." },
+                {
+                    "name": "disabled",
+                    "type": "Matcher | Matcher[]",
+                    "description": "Dates unavailable for selection."
+                },
+                {
+                    "name": "min / max",
+                    "type": "number",
+                    "description": "Selection bounds for multiple dates or range nights."
+                },
                 { "name": "numberOfMonths", "type": "number", "description": "Number of displayed months." }
             ]
         },
@@ -1017,16 +1051,8 @@
             "category": "Form",
             "introduction": "Selects a constrained date with standard month and week presentation.",
             "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Helper text displayed below the label."
-                },
+                { "name": "label", "type": "string", "description": "Label text." },
+                { "name": "description", "type": "string", "description": "Helper text displayed below the label." },
                 {
                     "name": "name",
                     "type": "string",
@@ -1093,7 +1119,11 @@
             "introduction": "Native Dialog root properties with isolated View host coordination.",
             "properties": [
                 { "name": "open / defaultOpen", "type": "boolean", "description": "Controlled or initial visibility." },
-                { "name": "onOpenChange", "type": "(open, eventDetails) => void", "description": "Native visibility callback; eventDetails.cancel() cancels the change." },
+                {
+                    "name": "onOpenChange",
+                    "type": "(open, eventDetails) => void",
+                    "description": "Native visibility callback; eventDetails.cancel() cancels the change."
+                },
                 { "name": "children", "type": "ReactNode", "description": "Native dialog composition." }
             ]
         },
@@ -1102,33 +1132,17 @@
             "category": "Layouts",
             "guidance": "Use open with onOpenChange for the custom frame. Set variant to fullscreen for isolated-host fullscreen coordination. Use Dialog for native composition.",
             "introduction": "Custom modal frame that closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
-            "keywords": [
-                "modal",
-                "confirmation",
-                "confirm"
-            ],
+            "keywords": ["modal", "confirmation", "confirm"],
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Dialog content."
-                },
-                {
-                    "name": "title",
-                    "type": "string",
-                    "description": "Shows a dialog header when a title is provided."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Dialog content." },
+                { "name": "title", "type": "string", "description": "Shows a dialog header when a title is provided." },
                 {
                     "name": "variant",
                     "type": "\"standard\" | \"fullscreen\"",
                     "description": "Standard uses the fixed frame. Fullscreen fills about 95% of the screen, including over Platform navigation.",
                     "default": "standard"
                 },
-                {
-                    "name": "open",
-                    "type": "boolean",
-                    "description": "Whether the dialog is open."
-                },
+                { "name": "open", "type": "boolean", "description": "Whether the dialog is open." },
                 {
                     "name": "onOpenChange",
                     "type": "(open: boolean) => void",
@@ -1220,17 +1234,9 @@
             "category": "Display",
             "introduction": "Native shadcn empty-state composition with HTML div props.",
             "guidance": "Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia.",
-            "keywords": [
-                "empty list",
-                "no results",
-                "missing data"
-            ],
+            "keywords": ["empty list", "no results", "missing data"],
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native empty-state parts."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Native empty-state parts." },
                 {
                     "name": "className",
                     "type": "string",
@@ -1245,11 +1251,7 @@
             "category": "Form",
             "introduction": "Selects files with explicit upload constraints; uploading remains a Solution operation.",
             "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible label for the file input."
-                },
+                { "name": "label", "type": "string", "description": "Accessible label for the file input." },
                 {
                     "name": "description",
                     "type": "string",
@@ -1285,11 +1287,7 @@
                     "type": "string",
                     "description": "Accepted file types. Uses the HTML accept attribute format (e.g. \"image/*\", \".pdf,.doc\")."
                 },
-                {
-                    "name": "multiple",
-                    "type": "boolean",
-                    "description": "Allows selecting multiple files."
-                },
+                { "name": "multiple", "type": "boolean", "description": "Allows selecting multiple files." },
                 {
                     "name": "maxSize",
                     "type": "number",
@@ -1326,11 +1324,7 @@
                     "type": "string",
                     "description": "Scoped Solution operation path returning the file to preview."
                 },
-                {
-                    "name": "title",
-                    "type": "string",
-                    "description": "Accessible name for the embedded file."
-                }
+                { "name": "title", "type": "string", "description": "Accessible name for the embedded file." }
             ],
             "source": "custom",
             "justification": "Loads scoped attachment bytes and renders supported media inline without exposing host credentials or weakening the Solution sandbox."
@@ -1339,14 +1333,7 @@
             "name": "Form",
             "category": "Form",
             "introduction": "Collects and submits named fields through the Solution runtime.",
-            "keywords": [
-                "editing form",
-                "edit",
-                "create",
-                "submit",
-                "validation",
-                "fields"
-            ],
+            "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
             "guidance": "Compose layout explicitly with FieldGroup or native classes. Standard form properties and cancelable submit/reset handlers are supported. Validate and authorize mutations on the server.",
             "properties": [
                 {
@@ -1397,14 +1384,7 @@
             "name": "Functions",
             "category": "Runtime",
             "introduction": "Scoped Solution requests and navigation capabilities.",
-            "keywords": [
-                "request",
-                "api",
-                "mutation",
-                "navigation",
-                "navigate",
-                "server"
-            ],
+            "keywords": ["request", "api", "mutation", "navigation", "navigate", "server"],
             "guidance": "Requests and scoped navigation target the current Solution. External HTTP(S) navigation requires user activation. Server routes own authorization and business rules.",
             "members": [
                 {
@@ -1424,17 +1404,9 @@
             "category": "Layouts",
             "introduction": "Arranges View content into fixed or width-responsive columns.",
             "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
-            "keywords": [
-                "columns",
-                "layout",
-                "dashboard"
-            ],
+            "keywords": ["columns", "layout", "dashboard"],
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Grid content."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Grid content." },
                 {
                     "name": "columns",
                     "type": "number | { minWidth: number; max?: number; repeat?: \"fill\" | \"fit\"; }",
@@ -1513,11 +1485,7 @@
             "introduction": "Displays a semantic HTML heading with standard Tailwind typography.",
             "guidance": "Accepts native heading attributes, events, refs, className, and style. Use className or style for presentation rather than custom typography props.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Heading content."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Heading content." },
                 {
                     "name": "level",
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
@@ -1542,14 +1510,7 @@
             "name": "Hooks",
             "category": "Runtime",
             "introduction": "React hooks for local state, synchronization, and loading Solution data.",
-            "keywords": [
-                "state",
-                "loading",
-                "query",
-                "fetch",
-                "data",
-                "effect"
-            ],
+            "keywords": ["state", "loading", "query", "fetch", "data", "effect"],
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
                 {
@@ -1609,11 +1570,7 @@
                     "type": "string",
                     "description": "Scoped Solution image path, or an image data/blob URL."
                 },
-                {
-                    "name": "alt",
-                    "type": "string",
-                    "description": "Accessible description of the photo."
-                }
+                { "name": "alt", "type": "string", "description": "Accessible description of the photo." }
             ],
             "source": "custom",
             "justification": "Coordinates failed image states and scoped attachment preview capabilities."
@@ -1626,9 +1583,21 @@
             "introduction": "Native-shaped anchor for scoped Solution navigation and safe external HTTP(S) destinations.",
             "guidance": "Use href and caller-owned content and classes. Use AttachmentLink for scoped preview/download capabilities and ActionButton variant=\"link\" for actions.",
             "properties": [
-                { "name": "href", "type": "string", "description": "Solution-relative or safe external HTTP(S) destination." },
-                { "name": "target / rel / className / ref / aria-*", "type": "native anchor props", "description": "Native anchor composition subject to runtime URL and navigation policy." },
-                { "name": "onClick", "type": "native anchor click handler", "description": "Receives the DOM-shaped React event; preventDefault cancels managed navigation." },
+                {
+                    "name": "href",
+                    "type": "string",
+                    "description": "Solution-relative or safe external HTTP(S) destination."
+                },
+                {
+                    "name": "target / rel / className / ref / aria-*",
+                    "type": "native anchor props",
+                    "description": "Native anchor composition subject to runtime URL and navigation policy."
+                },
+                {
+                    "name": "onClick",
+                    "type": "native anchor click handler",
+                    "description": "Receives the DOM-shaped React event; preventDefault cancels managed navigation."
+                },
                 { "name": "children", "type": "ReactNode", "description": "Caller-owned anchor content." }
             ]
         },
@@ -1637,11 +1606,7 @@
             "category": "Action",
             "introduction": "Previews or downloads an attachment through scoped Solution file capabilities without navigating.",
             "properties": [
-                {
-                    "name": "href",
-                    "type": "string",
-                    "description": "Scoped Solution attachment destination."
-                },
+                { "name": "href", "type": "string", "description": "Scoped Solution attachment destination." },
                 {
                     "name": "preview",
                     "type": "string",
@@ -1652,21 +1617,13 @@
                     "type": "string",
                     "description": "Downloads a scoped Solution attachment with this filename instead of navigating. An empty string uses attachment."
                 },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Disables attachment actions."
-                },
+                { "name": "disabled", "type": "boolean", "description": "Disables attachment actions." },
                 {
                     "name": "onClick",
                     "type": "(event: ViewMouseEvent) => void | Promise<void>",
                     "description": "Runs an action with automatic async loading and duplicate-click prevention."
                 },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Link content"
-                }
+                { "name": "children", "type": "ReactNode", "description": "Link content" }
             ],
             "source": "custom",
             "justification": "Uses scoped preview and download capabilities with pending feedback, duplicate-action protection, and reported-error recovery."
@@ -1675,22 +1632,14 @@
             "name": "Menu",
             "category": "Layouts",
             "introduction": "Groups side navigation and the selected section's content.",
-            "keywords": [
-                "navigation",
-                "sidebar",
-                "sections"
-            ],
+            "keywords": ["navigation", "sidebar", "sections"],
             "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
                     "description": "MenuSection elements defining navigation and content."
                 },
-                {
-                    "name": "gap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "default": 3
-                },
+                { "name": "gap", "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10", "default": 3 },
                 {
                     "name": "MenuSection.children",
                     "type": "ReactNode",
@@ -1746,11 +1695,7 @@
             "guidance": "Renamed from Pagination. Existing Views that use page, pageSize, totalItems, and onPageChange must use DataPagination; Pagination now exposes native shadcn composition.",
             "introduction": "Navigates pages of table or gallery items without owning their data or selection.",
             "properties": [
-                {
-                    "name": "page",
-                    "type": "number",
-                    "description": "Current page number, starting at 1."
-                },
+                { "name": "page", "type": "number", "description": "Current page number, starting at 1." },
                 {
                     "name": "onPageChange",
                     "type": "(page: number) => void",
@@ -1791,38 +1736,20 @@
                     "type": "number | null",
                     "description": "Required current value; null makes progress indeterminate."
                 },
-                {
-                    "name": "max",
-                    "type": "number",
-                    "description": "Maximum value.",
-                    "default": 100
-                },
-                {
-                    "name": "min",
-                    "type": "number",
-                    "description": "Minimum value.",
-                    "default": 0
-                },
+                { "name": "max", "type": "number", "description": "Maximum value.", "default": 100 },
+                { "name": "min", "type": "number", "description": "Minimum value.", "default": 0 },
                 {
                     "name": "format",
                     "type": "Intl.NumberFormatOptions",
                     "description": "Native number formatting options."
                 },
-                {
-                    "name": "locale",
-                    "type": "Intl.LocalesArgument",
-                    "description": "Locale for number formatting."
-                },
+                { "name": "locale", "type": "Intl.LocalesArgument", "description": "Locale for number formatting." },
                 {
                     "name": "getAriaValueText",
                     "type": "(formattedValue: string, value: number | null) => string",
                     "description": "Provides an accessible alternative to the numeric value."
                 },
-                {
-                    "name": "ProgressLabel.children",
-                    "type": "ReactNode",
-                    "description": "Accessible progress label."
-                },
+                { "name": "ProgressLabel.children", "type": "ReactNode", "description": "Accessible progress label." },
                 {
                     "name": "ProgressValue.children",
                     "type": "null | ((formattedValue: string | null, value: number | null) => ReactNode)",
@@ -1843,11 +1770,7 @@
             "introduction": "Selects one value using the native shadcn radio group composition.",
             "guidance": "Compose RadioGroupItem with Field and FieldLabel. Use onValueChange for selection changes and disabled for native disabled behavior.",
             "properties": [
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Form submission name."
-                },
+                { "name": "name", "type": "string", "description": "Form submission name." },
                 {
                     "name": "required",
                     "type": "boolean",
@@ -1858,31 +1781,15 @@
                     "type": "boolean",
                     "description": "Disables all options, including keyboard focus and form submission."
                 },
-                {
-                    "name": "value",
-                    "type": "string",
-                    "description": "Controlled selected value."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "string",
-                    "description": "Initial uncontrolled selected value."
-                },
+                { "name": "value", "type": "string", "description": "Controlled selected value." },
+                { "name": "defaultValue", "type": "string", "description": "Initial uncontrolled selected value." },
                 {
                     "name": "onValueChange",
                     "type": "(value: string, eventDetails) => void",
                     "description": "Called with the next selected value and Base UI event details."
                 },
-                {
-                    "name": "RadioGroupItem.value",
-                    "type": "string",
-                    "description": "Value submitted for this option."
-                },
-                {
-                    "name": "RadioGroupItem.id",
-                    "type": "string",
-                    "description": "Connects the option to its label."
-                },
+                { "name": "RadioGroupItem.value", "type": "string", "description": "Value submitted for this option." },
+                { "name": "RadioGroupItem.id", "type": "string", "description": "Connects the option to its label." },
                 {
                     "name": "RadioGroupItem.disabled",
                     "type": "boolean",
@@ -1899,11 +1806,7 @@
             "introduction": "Native select composition with single or multiple selection.",
             "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. Use multiple with array values for multiple selection and repeated named form entries. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported.",
             "properties": [
-                {
-                    "name": "items",
-                    "type": "Native items",
-                    "description": "Supplies labels for selected values."
-                },
+                { "name": "items", "type": "Native items", "description": "Supplies labels for selected values." },
                 {
                     "name": "value / defaultValue",
                     "type": "Value | Value[] | null",
@@ -1919,11 +1822,7 @@
                     "type": "Native form props",
                     "description": "Native form participation and validation."
                 },
-                {
-                    "name": "SelectTrigger.size",
-                    "type": "\"default\" | \"sm\"",
-                    "default": "default"
-                },
+                { "name": "SelectTrigger.size", "type": "\"default\" | \"sm\"", "default": "default" },
                 {
                     "name": "render / className / style",
                     "type": "Native part props",
@@ -1983,54 +1882,27 @@
                     "type": "ReactNode",
                     "description": "Optional SliderControl, SliderTrack, SliderRange, and SliderThumb composition; default parts are supplied when omitted."
                 },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "default": "horizontal"
-                },
+                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "default": "horizontal" },
                 {
                     "name": "name",
                     "type": "string",
                     "description": "Includes the themed control's value under this form submission name."
                 },
-                {
-                    "name": "form",
-                    "type": "string",
-                    "description": "ID of the form owning the native slider inputs."
-                },
+                { "name": "form", "type": "string", "description": "ID of the form owning the native slider inputs." },
                 {
                     "name": "disabled",
                     "type": "boolean",
                     "description": "Prevents interaction and excludes the field from submission."
                 },
-                {
-                    "name": "min",
-                    "type": "number",
-                    "description": "Minimum value.",
-                    "default": 0
-                },
-                {
-                    "name": "max",
-                    "type": "number",
-                    "description": "Maximum value.",
-                    "default": 100
-                },
-                {
-                    "name": "step",
-                    "type": "number",
-                    "description": "Step increment.",
-                    "default": 1
-                },
+                { "name": "min", "type": "number", "description": "Minimum value.", "default": 0 },
+                { "name": "max", "type": "number", "description": "Maximum value.", "default": 100 },
+                { "name": "step", "type": "number", "description": "Step increment.", "default": 1 },
                 {
                     "name": "value",
                     "type": "number | readonly number[]",
                     "description": "Controlled value, with one value per thumb for arrays."
                 },
-                {
-                    "name": "defaultValue",
-                    "type": "number | readonly number[]",
-                    "description": "Initial value."
-                },
+                { "name": "defaultValue", "type": "number | readonly number[]", "description": "Initial value." },
                 {
                     "name": "onValueChange",
                     "type": "(value: Value, details: SliderChangeEventDetails) => void",
@@ -2059,11 +1931,7 @@
                     "description": "Thumb alignment at the track boundaries.",
                     "default": "edge"
                 },
-                {
-                    "name": "thumbCollisionBehavior",
-                    "type": "\"push\" | \"swap\" | \"none\"",
-                    "default": "push"
-                },
+                { "name": "thumbCollisionBehavior", "type": "\"push\" | \"swap\" | \"none\"", "default": "push" },
                 {
                     "name": "format / locale",
                     "type": "Intl.NumberFormatOptions / Intl.LocalesArgument",
@@ -2093,21 +1961,9 @@
             "category": "Form",
             "introduction": "Adds field labeling and description to the native Slider.",
             "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Visible field label and accessible slider name."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Supporting field description."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Displays the field requirement."
-                },
+                { "name": "label", "type": "string", "description": "Visible field label and accessible slider name." },
+                { "name": "description", "type": "string", "description": "Supporting field description." },
+                { "name": "required", "type": "boolean", "description": "Displays the field requirement." },
                 {
                     "name": "Slider props",
                     "type": "Native Slider props",
@@ -2122,18 +1978,9 @@
             "category": "Layouts",
             "introduction": "Arranges View content using Tailwind spacing steps.",
             "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
-            "keywords": [
-                "spacing",
-                "horizontal",
-                "vertical",
-                "layout"
-            ],
+            "keywords": ["spacing", "horizontal", "vertical", "layout"],
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Stack content."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Stack content." },
                 {
                     "name": "width",
                     "type": "string | number",
@@ -2210,16 +2057,8 @@
                     "type": "ReactNode",
                     "description": "Content rendered inside the stack item."
                 },
-                {
-                    "name": "StackItem.size",
-                    "type": "\"fill\" | \"static\"",
-                    "default": "static"
-                },
-                {
-                    "name": "StackItem.isScrollable",
-                    "type": "boolean",
-                    "default": false
-                },
+                { "name": "StackItem.size", "type": "\"fill\" | \"static\"", "default": "static" },
+                { "name": "StackItem.isScrollable", "type": "boolean", "default": false },
                 {
                     "name": "StackItem.crossAlignSelf",
                     "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
@@ -2240,21 +2079,13 @@
                     "type": "number",
                     "description": "Controlled or initial active step; defaultValue defaults to 1."
                 },
-                {
-                    "name": "onValueChange",
-                    "type": "(value: number) => void",
-                    "description": "Active step callback."
-                },
+                { "name": "onValueChange", "type": "(value: number) => void", "description": "Active step callback." },
                 {
                     "name": "orientation",
                     "type": "\"horizontal\" | \"vertical\"",
                     "description": "Installed ReUI layout."
                 },
-                {
-                    "name": "StepperItem.step",
-                    "type": "number",
-                    "description": "Unique step number."
-                },
+                { "name": "StepperItem.step", "type": "number", "description": "Unique step number." },
                 {
                     "name": "StepperItem.completed / disabled / loading",
                     "type": "boolean",
@@ -2265,11 +2096,7 @@
                     "type": "ReactElement",
                     "description": "Base UI element composition."
                 },
-                {
-                    "name": "StepperContent.value",
-                    "type": "number",
-                    "description": "Step associated with this panel."
-                },
+                { "name": "StepperContent.value", "type": "number", "description": "Step associated with this panel." },
                 {
                     "name": "StepperContent.forceMount",
                     "type": "boolean",
@@ -2284,26 +2111,10 @@
             "category": "Layouts",
             "introduction": "Custom zero-based progress adapter using the default ReUI stepper styling.",
             "properties": [
-                {
-                    "name": "activeStep",
-                    "type": "number",
-                    "description": "Zero-based active index."
-                },
-                {
-                    "name": "onStepClick",
-                    "type": "(index: number) => void",
-                    "description": "Enables step navigation."
-                },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Progress layout."
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Custom Step definitions."
-                }
+                { "name": "activeStep", "type": "number", "description": "Zero-based active index." },
+                { "name": "onStepClick", "type": "(index: number) => void", "description": "Enables step navigation." },
+                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "description": "Progress layout." },
+                { "name": "children", "type": "ReactNode", "description": "Custom Step definitions." }
             ],
             "source": "custom",
             "justification": "Adapts existing zero-based process metadata to the native one-based ReUI Stepper without owning a panel workflow."
@@ -2334,11 +2145,7 @@
                     "description": "Wizard Back button appearance.",
                     "default": "outline"
                 },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Step elements to render in the stepper."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Step elements to render in the stepper." },
                 {
                     "name": "activeStep",
                     "type": "number",
@@ -2361,11 +2168,7 @@
                     "type": "number",
                     "description": "Optional progress index; defaults to child order. Wizards always use child order."
                 },
-                {
-                    "name": "Step.label",
-                    "type": "string",
-                    "description": "Visible label identifying the step."
-                },
+                { "name": "Step.label", "type": "string", "description": "Visible label identifying the step." },
                 {
                     "name": "Step.description",
                     "type": "string",
@@ -2386,36 +2189,20 @@
             "introduction": "Native shadcn Switch with Base UI props and default styling.",
             "guidance": "Use checked, defaultChecked, onCheckedChange(checked, eventDetails), size, and disabled. Compose an accessible label. SwitchField is the custom labeled form adapter.",
             "properties": [
-                {
-                    "name": "checked",
-                    "type": "boolean",
-                    "description": "Controlled checked state."
-                },
-                {
-                    "name": "defaultChecked",
-                    "type": "boolean",
-                    "description": "Initial uncontrolled checked state."
-                },
+                { "name": "checked", "type": "boolean", "description": "Controlled checked state." },
+                { "name": "defaultChecked", "type": "boolean", "description": "Initial uncontrolled checked state." },
                 {
                     "name": "onCheckedChange",
                     "type": "(checked, eventDetails) => void",
                     "description": "Native Base UI callback."
                 },
-                {
-                    "name": "size",
-                    "type": "\"sm\" | \"default\"",
-                    "description": "Installed control size."
-                },
+                { "name": "size", "type": "\"sm\" | \"default\"", "description": "Installed control size." },
                 {
                     "name": "disabled",
                     "type": "boolean",
                     "description": "Disables interaction and excludes the control from submission."
                 },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Native form field name."
-                }
+                { "name": "name", "type": "string", "description": "Native form field name." }
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/switch"
@@ -2450,16 +2237,8 @@
                     "type": "boolean",
                     "description": "Prevents interaction and excludes the field from submission."
                 },
-                {
-                    "name": "value",
-                    "type": "boolean",
-                    "description": "Whether the switch is on or off."
-                },
-                {
-                    "name": "defaultChecked",
-                    "type": "boolean",
-                    "description": "Initial checked state."
-                },
+                { "name": "value", "type": "boolean", "description": "Whether the switch is on or off." },
+                { "name": "defaultChecked", "type": "boolean", "description": "Initial checked state." },
                 {
                     "name": "onChange",
                     "type": "(value: boolean) => void",
@@ -2488,22 +2267,10 @@
             "name": "DataTable",
             "category": "Display",
             "introduction": "Custom data-driven row adapter over ReUI DataGrid with automatic safe value formatting.",
-            "keywords": [
-                "records",
-                "rows",
-                "columns",
-                "data table",
-                "list",
-                "queue",
-                "sorting"
-            ],
+            "keywords": ["records", "rows", "columns", "data table", "list", "queue", "sorting"],
             "guidance": "Present dense records as rows. Keep selection and query state explicit; do not wrap each row in a Card.",
             "properties": [
-                {
-                    "name": "data",
-                    "type": "T[]",
-                    "description": "Data objects displayed as rows."
-                },
+                { "name": "data", "type": "T[]", "description": "Data objects displayed as rows." },
                 {
                     "name": "hasHover",
                     "type": "boolean",
@@ -2518,8 +2285,28 @@
                 },
                 {
                     "name": "columns",
-                    "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; renderCell?: ((row: T) => ReactNode); }[]",
-                    "description": "Columns with custom cells and proportional() or pixel() widths."
+                    "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; sortable?: boolean; renderCell?: ((row: T) => ReactNode); }[]",
+                    "description": "Columns with opt-in native sorting, custom cells, and proportional() or pixel() widths."
+                },
+                {
+                    "name": "sorting / onSortingChange",
+                    "type": "SortingState / (sorting: SortingState) => void",
+                    "description": "Optional controlled sorting. Otherwise the component owns sort state."
+                },
+                {
+                    "name": "enableRowSelection / idKey",
+                    "type": "boolean / keyof T | ((row: T) => string | number)",
+                    "description": "Opt-in native selection controls. Selection requires a stable domain idKey."
+                },
+                {
+                    "name": "rowSelection / onRowSelectionChange",
+                    "type": "RowSelectionState / (selection: RowSelectionState) => void",
+                    "description": "Optional controlled selection keyed by domain IDs. Otherwise the component owns selection."
+                },
+                {
+                    "name": "emptyMessage",
+                    "type": "ReactNode",
+                    "description": "Caller-owned empty-state content, including recovery actions."
                 }
             ],
             "source": "custom",
@@ -2529,22 +2316,14 @@
             "name": "Tabs",
             "category": "Layouts",
             "introduction": "Switches between related content panels.",
-            "keywords": [
-                "tabs",
-                "panels",
-                "sections"
-            ],
+            "keywords": ["tabs", "panels", "sections"],
             "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
                     "description": "TabsList with TabsTrigger buttons, followed by matching TabsContent panels."
                 },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "default": "horizontal"
-                },
+                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "default": "horizontal" },
                 {
                     "name": "defaultValue",
                     "type": "unknown",
@@ -2555,11 +2334,7 @@
                     "type": "(value, details) => void",
                     "description": "Receives selection changes and native change event details, including activationDirection."
                 },
-                {
-                    "name": "value",
-                    "type": "unknown",
-                    "description": "Controlled selection; null selects no tab."
-                },
+                { "name": "value", "type": "unknown", "description": "Controlled selection; null selects no tab." },
                 {
                     "name": "TabsList.variant",
                     "type": "\"default\" | \"line\"",
@@ -2578,11 +2353,7 @@
                     "description": "Wraps keyboard focus at list boundaries.",
                     "default": true
                 },
-                {
-                    "name": "TabsTrigger.disabled",
-                    "type": "boolean",
-                    "description": "Whether the tab is disabled."
-                },
+                { "name": "TabsTrigger.disabled", "type": "boolean", "description": "Whether the tab is disabled." },
                 {
                     "name": "TabsTrigger.value / TabsContent.value",
                     "type": "unknown",
@@ -2615,11 +2386,7 @@
             "introduction": "Adds optional truncation and overflow tooltips to a semantic HTML element.",
             "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, className, style, event handlers, and refs are forwarded to the rendered element. Use ordinary HTML for text that does not need truncation.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Text content."
-                },
+                { "name": "children", "type": "ReactNode", "description": "Text content." },
                 {
                     "name": "as",
                     "type": "\"label\" | \"span\" | \"p\" | \"div\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
@@ -2655,16 +2422,55 @@
             "introduction": "Native ReUI time picker with composable input, columns, and footer.",
             "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use custom TimeInput when invalid drafts must block LongLink Form submission.",
             "properties": [
-                { "name": "value / defaultValue", "type": "string | null", "description": "Canonical HH:mm or HH:mm:ss value; null is empty." },
-                { "name": "onValueChange", "type": "(value: string | null) => void", "description": "Receives a changed canonical value or null when cleared." },
+                {
+                    "name": "value / defaultValue",
+                    "type": "string | null",
+                    "description": "Canonical HH:mm or HH:mm:ss value; null is empty."
+                },
+                {
+                    "name": "onValueChange",
+                    "type": "(value: string | null) => void",
+                    "description": "Receives a changed canonical value or null when cleared."
+                },
                 { "name": "hourCycle", "type": "12 | 24", "description": "Displayed hour cycle.", "default": 24 },
-                { "name": "granularity", "type": "\"hour\" | \"minute\" | \"second\"", "description": "Finest displayed and submitted unit.", "default": "minute" },
-                { "name": "min / max", "type": "string", "description": "Inclusive selectable bounds; min after max represents an overnight window." },
-                { "name": "hourStep / minuteStep / secondStep", "type": "number", "description": "Available steps counted from zero in each unit.", "default": 1 },
-                { "name": "name / form", "type": "string", "description": "Native form submission name and optional external form association." },
-                { "name": "required / disabled / readOnly", "type": "boolean", "description": "Native validation and editing constraints." },
-                { "name": "requireConfirm", "type": "boolean", "description": "Retains picker selections as drafts until confirmed.", "default": false },
-                { "name": "children", "type": "ReactNode", "description": "Native TimePickerTrigger, TimePickerInput, TimePickerContent, TimePickerPanel, TimePickerColumns, TimePickerColumn, TimePickerFooter, TimePickerNow, TimePickerClear, TimePickerConfirm, and TimePickerValue composition." }
+                {
+                    "name": "granularity",
+                    "type": "\"hour\" | \"minute\" | \"second\"",
+                    "description": "Finest displayed and submitted unit.",
+                    "default": "minute"
+                },
+                {
+                    "name": "min / max",
+                    "type": "string",
+                    "description": "Inclusive selectable bounds; min after max represents an overnight window."
+                },
+                {
+                    "name": "hourStep / minuteStep / secondStep",
+                    "type": "number",
+                    "description": "Available steps counted from zero in each unit.",
+                    "default": 1
+                },
+                {
+                    "name": "name / form",
+                    "type": "string",
+                    "description": "Native form submission name and optional external form association."
+                },
+                {
+                    "name": "required / disabled / readOnly",
+                    "type": "boolean",
+                    "description": "Native validation and editing constraints."
+                },
+                {
+                    "name": "requireConfirm",
+                    "type": "boolean",
+                    "description": "Retains picker selections as drafts until confirmed.",
+                    "default": false
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "description": "Native TimePickerTrigger, TimePickerInput, TimePickerContent, TimePickerPanel, TimePickerColumns, TimePickerColumn, TimePickerFooter, TimePickerNow, TimePickerClear, TimePickerConfirm, and TimePickerValue composition."
+                }
             ]
         },
         {
@@ -2702,11 +2508,7 @@
                     "type": "ISOTimeString",
                     "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
                 },
-                {
-                    "name": "defaultValue",
-                    "type": "ISOTimeString",
-                    "description": "Initial value."
-                },
+                { "name": "defaultValue", "type": "ISOTimeString", "description": "Initial value." },
                 {
                     "name": "onChange",
                     "type": "(value: ISOTimeString | undefined) => void",
@@ -2774,12 +2576,7 @@
             "name": "Token",
             "category": "Display",
             "introduction": "Displays a tag, category, or selection with optional click and removal actions.",
-            "keywords": [
-                "tag",
-                "category",
-                "status",
-                "state"
-            ],
+            "keywords": ["tag", "category", "status", "state"],
             "properties": [
                 {
                     "name": "label",
@@ -2792,16 +2589,8 @@
                     "description": "Native ReUI Badge size.",
                     "default": "lg"
                 },
-                {
-                    "name": "icon",
-                    "type": "StoneIconName",
-                    "description": "Optional icon rendered before the label."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Disables the token."
-                },
+                { "name": "icon", "type": "StoneIconName", "description": "Optional icon rendered before the label." },
+                { "name": "disabled", "type": "boolean", "description": "Disables the token." },
                 {
                     "name": "description",
                     "type": "string",
@@ -2832,11 +2621,7 @@
                     "type": "\"horizontal\" | \"vertical\"",
                     "description": "Connected control layout."
                 },
-                {
-                    "name": "aria-label",
-                    "type": "string",
-                    "description": "Accessible group label."
-                }
+                { "name": "aria-label", "type": "string", "description": "Accessible group label." }
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/button-group"
@@ -2847,16 +2632,8 @@
             "introduction": "Native shadcn pagination composition with anchor attributes.",
             "guidance": "Compose PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, and PaginationEllipsis. Use DataPagination for page-count calculations and callbacks.",
             "properties": [
-                {
-                    "name": "PaginationLink.href",
-                    "type": "string",
-                    "description": "Page destination URL."
-                },
-                {
-                    "name": "PaginationLink.isActive",
-                    "type": "boolean",
-                    "description": "Identifies the current page."
-                }
+                { "name": "PaginationLink.href", "type": "string", "description": "Page destination URL." },
+                { "name": "PaginationLink.isActive", "type": "boolean", "description": "Identifies the current page." }
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/pagination"
@@ -2875,17 +2652,8 @@
         {
             "name": "Confirmation",
             "description": "Ask for Continue or Cancel before a scoped Solution operation, without managing dialog-open state.",
-            "keywords": [
-                "confirmation",
-                "confirm",
-                "continue cancel",
-                "alert dialog"
-            ],
-            "components": [
-                "Hooks",
-                "Button",
-                "Functions"
-            ],
+            "keywords": ["confirmation", "confirm", "continue cancel", "alert dialog"],
+            "components": ["Hooks", "Button", "Functions"],
             "steps": [
                 "Call useConfirm() at the top level and render its element once beside the trigger Button.",
                 "Call show({ title, actionLabel, cancelLabel, onAction }) from the trigger. Description is optional; use translated labels when needed.",
@@ -2903,12 +2671,7 @@
                 "data table",
                 "records"
             ],
-            "components": [
-                "Table",
-                "Input",
-                "Hooks",
-                "Empty"
-            ],
+            "components": ["Table", "Input", "Hooks", "Empty"],
             "steps": [
                 "Load records with the documented Hooks API and keep search/filter state local.",
                 "Define Table columns and row actions using supported props; apply filtering or pagination on the server when needed.",
@@ -2918,19 +2681,8 @@
         {
             "name": "Editing form",
             "description": "Collect intent through named fields and persist changes through a validated Solution route.",
-            "keywords": [
-                "edit form",
-                "editing form",
-                "create form",
-                "form",
-                "record editor"
-            ],
-            "components": [
-                "Form",
-                "Input",
-                "Select",
-                "Functions"
-            ],
+            "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
+            "components": ["Form", "Input", "Select", "Functions"],
             "steps": [
                 "Inspect Form's submission contract and initialize fields from the record being edited.",
                 "Choose field components that match the server schema and use documented names and value contracts.",
@@ -2940,20 +2692,8 @@
         {
             "name": "Approval queue",
             "description": "Show pending work and make the next authorized action clear.",
-            "keywords": [
-                "approval",
-                "approval queue",
-                "approve",
-                "review queue",
-                "pending approvals"
-            ],
-            "components": [
-                "Table",
-                "Badge",
-                "Button",
-                "Hooks",
-                "Functions"
-            ],
+            "keywords": ["approval", "approval queue", "approve", "review queue", "pending approvals"],
+            "components": ["Table", "Badge", "Button", "Hooks", "Functions"],
             "steps": [
                 "Load pending records with the documented Hooks API and display their states as Table rows with Badge values.",
                 "Add explicit approve/reject actions through Button callbacks and scoped requests.",

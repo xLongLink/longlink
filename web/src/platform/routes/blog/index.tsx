@@ -3,8 +3,8 @@ import { Page } from '@/components/ui/page';
 import { Grid } from '@/components/custom/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Lists articles about LongLink and building process-specific applications. */

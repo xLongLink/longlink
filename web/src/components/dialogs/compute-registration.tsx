@@ -6,10 +6,10 @@ import { Step, Wizard } from '@/components/custom/wizard';
 import { TextInput } from '@/components/custom/text-input';
 import { NativeFileInput } from '@/components/custom/file-input';
 import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeTextArea } from '@/components/ui/native-text-area';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/native-button';
+import { NativeTextArea } from '@/components/custom/native-text-area';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const registrationSchema = schemas.zComputeRegistryCreate.extend({

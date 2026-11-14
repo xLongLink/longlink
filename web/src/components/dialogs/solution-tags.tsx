@@ -4,8 +4,8 @@ import { FormDialog } from './form-dialog';
 import { Form } from '@/components/custom/form';
 import { MultiSelector } from '@/components/custom/multi-selector';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/ui/native-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function SolutionTags({
