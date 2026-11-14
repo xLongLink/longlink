@@ -103,7 +103,8 @@ it('supports keyboard, outside, and touch dismissal and aborts the request when 
                 expect(document.querySelector('[role="status"]')?.textContent).toContain('Loading');
                 expect(document.querySelector('[role="dialog"]')?.contains(document.activeElement)).toBe(true);
                 await act(async () => await events.tab({ shift: true }));
-                expect(document.querySelector('[role="dialog"]')?.contains(document.activeElement)).toBe(true);
+                expect(document.activeElement).toBe(button('Acme'));
+                expect(button('Acme').getAttribute('aria-expanded')).toBe('true');
                 await act(async () => await events.keyboard('{Escape}'));
                 expect(button('Acme').getAttribute('aria-expanded')).toBe('false');
                 expect(document.activeElement).toBe(button('Acme'));

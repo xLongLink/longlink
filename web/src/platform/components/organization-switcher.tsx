@@ -1,11 +1,12 @@
+import { cn } from 'cn';
 import { api } from '@/lib/api';
 import { useContext, useState } from 'react';
 import { ChevronsUpDown } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
+import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -36,19 +37,23 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         'Organization';
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger
                 type="button"
                 render={
-                    <Button
-                        variant="ghost"
-                        size={sidebar !== 'collapsed' ? 'lg' : 'icon-lg'}
-                        className={sidebar !== 'collapsed' ? 'w-full min-w-0 justify-start text-start' : undefined}
+                    <ButtonPrimitive
+                        className={cn(
+                            buttonVariants({ variant: 'ghost', size: null }),
+                            'border-0',
+                            sidebar !== 'collapsed'
+                                ? 'w-full min-w-0 justify-start gap-2 p-2 text-start'
+                                : 'size-10 p-1'
+                        )}
                     />
                 }
                 aria-label={name}
             >
-                <GeneratedAvatar kind="organization" name={name} size="sm" />
+                <GeneratedAvatar kind="organization" name={name} />
                 {sidebar !== 'collapsed' && (
                     <>
                         <span className="flex min-w-0 flex-1 flex-col">
@@ -88,16 +93,16 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                 <RouterLink
                                     className={buttonVariants({
                                         variant: 'ghost',
-                                        size: 'lg',
+                                        size: null,
                                         className:
-                                            'w-full min-w-0 justify-start text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50'
+                                            'w-full min-w-0 justify-start gap-2 border-0 p-2 text-start font-normal aria-current:bg-muted dark:aria-current:bg-muted/50'
                                     })}
                                     to={`/orgs/${item.id}`}
                                     aria-current={item.id === organization.id ? 'page' : undefined}
                                     key={item.id}
                                     onClickCapture={() => setIsOpen(false)}
                                 >
-                                    <GeneratedAvatar kind="organization" name={item.name} size="sm" />
+                                    <GeneratedAvatar kind="organization" name={item.name} />
                                     <span className="flex min-w-0 flex-1 flex-col">
                                         <span className="truncate text-sm leading-4">{item.name}</span>
                                         <span className="truncate text-xs leading-4 text-muted-foreground">
@@ -109,13 +114,6 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                         </nav>
                     )}
                 </section>
-                <PopoverPrimitive.Close
-                    type="button"
-                    render={<Button variant="ghost" />}
-                    className="sr-only focus:not-sr-only"
-                >
-                    Close organization switcher
-                </PopoverPrimitive.Close>
             </PopoverContent>
         </Popover>
     );
