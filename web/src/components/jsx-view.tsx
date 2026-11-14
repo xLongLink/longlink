@@ -8,7 +8,6 @@ import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/custom/dialog';
 import type { ViewRuntime } from '@/views/manifest';
-import { PdfPreview } from '@/components/pdf-preview';
 import { TextPreview } from '@/components/text-preview';
 import { SolutionFile } from '@/components/solution-file';
 import { ViewBackdrop } from '@/components/view-backdrop';
@@ -60,7 +59,7 @@ export function JsxView({
     const [fileViewers, setFileViewers] = useState<FileViewerCommand[]>([]);
 
     const [filePreview, setFilePreview] = useState<
-        { title: string } & ({ type: 'pdf' | 'media'; body: Blob } | { type: 'text'; text: string })
+        { title: string } & ({ type: 'media'; body: Blob } | { type: 'text'; text: string })
     >();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
@@ -367,20 +366,17 @@ export function JsxView({
 
                     controller.signal.throwIfAborted();
 
-                    if (body.type === 'application/pdf') {
-                        setFilePreview({ type: 'pdf', body, title: command.title });
-                        data = null;
-                    } else if (textLanguage(command.title, body.type) !== undefined) {
+                    if (body.type !== 'application/pdf' && textLanguage(command.title, body.type) !== undefined) {
                         // Render text as inert content, never as a document in the host origin.
                         const bytes = await body.arrayBuffer();
                         const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
                         controller.signal.throwIfAborted();
                         setFilePreview({ type: 'text', text, title: command.title });
-                        data = null;
                     } else {
                         setFilePreview({ type: 'media', body, title: command.title });
-                        data = null;
                     }
+
+                    data = null;
                 } else {
                     data = await host.request(requestBaseUrl, command, controller.signal);
                 }
@@ -474,13 +470,6 @@ export function JsxView({
                         )
                 )}
             </div>
-            {filePreview?.type === 'pdf' && (
-                <PdfPreview
-                    body={filePreview.body}
-                    title={filePreview.title}
-                    onClose={() => setFilePreview(undefined)}
-                />
-            )}
             {filePreview?.type === 'text' && (
                 <TextPreview
                     text={filePreview.text}
@@ -494,6 +483,8 @@ export function JsxView({
                     variant="fullscreen"
                     isOpen
                     onOpenChange={(open) => !open && setFilePreview(undefined)}
+                    paddingInline={filePreview.body.type === 'application/pdf' ? 0 : undefined}
+                    gap={filePreview.body.type === 'application/pdf' ? 0 : undefined}
                 >
                     <NativeFile body={filePreview.body} title={filePreview.title} />
                 </Dialog>

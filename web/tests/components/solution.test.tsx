@@ -313,6 +313,60 @@ describe('SolutionPage', () => {
         }
     });
 
+    it('replaces and closes host-owned binary previews without leaking document URLs or restarting the View', async () => {
+        const create = vi
+            .spyOn(URL, 'createObjectURL')
+            .mockReturnValueOnce('blob:pdf')
+            .mockReturnValueOnce('blob:image');
+
+        const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+        stubFetch((url) => {
+            if (url.endsWith('/views.json')) return manifestResponse([{ path: 'home.jsx', route: '/home' }]);
+
+            if (url.endsWith('/home.jsx')) return sourceResponse('export default function Home() { return null; }');
+
+            if (url.endsWith('/report'))
+                return new Response('%PDF-document', { headers: { 'content-type': 'application/pdf' } });
+
+            return new Response('image', { headers: { 'content-type': 'image/png' } });
+        });
+        const output = await renderPage('/home');
+        const port = await connectView(output);
+        const frame = output.querySelector('iframe');
+
+        try {
+            // The declared PDF must use a host iframe even when its title looks like text.
+            await act(async () => port.postMessage({ type: 'preview', id: 1, path: 'report', title: 'Report.txt' }));
+            await vi.waitFor(() =>
+                expect(document.querySelector('[role="dialog"] iframe')?.getAttribute('src')).toBe('blob:pdf')
+            );
+            const preview = document.querySelector('[role="dialog"] iframe');
+            expect(preview?.getAttribute('title')).toBe('Report.txt');
+            expect(preview?.hasAttribute('sandbox')).toBe(false);
+            expect(output.querySelector('iframe')).toBe(frame);
+
+            // Replacing a PDF with other media releases the old bytes without replacing the sandbox.
+            await act(async () => port.postMessage({ type: 'preview', id: 2, path: 'image', title: 'Image' }));
+            await vi.waitFor(() =>
+                expect(document.querySelector('[role="dialog"] img')?.getAttribute('src')).toBe('blob:image')
+            );
+            expect(document.querySelector('[role="dialog"] iframe')).toBeNull();
+            expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:pdf');
+
+            // Closing the real dialog releases the replacement URL and leaves the View mounted.
+            const close = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
+
+            if (!close) throw new Error('Missing preview close control');
+            await act(async () => close.click());
+            await vi.waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:image'));
+            expect(create).toHaveBeenCalledTimes(2);
+            expect(revoke).toHaveBeenCalledTimes(2);
+            expect(output.querySelector('iframe')).toBe(frame);
+        } finally {
+            port.close();
+        }
+    });
+
     it('keeps a custom manifest URL and fetches JSX beside it without executing it in the host', async () => {
         // Arrange
         const requests: Request[] = [];

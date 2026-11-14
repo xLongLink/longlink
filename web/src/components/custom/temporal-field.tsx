@@ -4,6 +4,7 @@ import { FormField } from './form-field';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
 import { CalendarDays, Clock, X } from 'lucide-react';
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/shadcn/popover';
@@ -30,21 +31,12 @@ export function TemporalField<T extends string>(
     const input = useRef<HTMLInputElement>(null);
     const id = useId();
     const [open, setOpen] = useState(false);
-    const [coarse, setCoarse] = useState(false);
     const restoreFocus = useRef(true);
     const [draft, setDraft] = useState<{ source: T | undefined; text: string } | null>(null);
 
     // Time columns replace the software keyboard on coarse pointers.
-    useEffect(() => {
-        if (props.kind !== 'time') return;
-        const media = window.matchMedia('(pointer: coarse)');
-        const change = () => setCoarse(media.matches);
-
-        change();
-        media.addEventListener('change', change);
-
-        return () => media.removeEventListener('change', change);
-    }, [props.kind]);
+    const coarsePointer = useMediaQuery('(pointer: coarse)');
+    const coarse = props.kind === 'time' && coarsePointer;
 
     // Portalled controls cannot inherit a fieldset disabled after the picker opened.
     const blocked = () =>

@@ -254,6 +254,46 @@ it('lets actions cancel scoped navigation before it reaches the host', async () 
     );
 });
 
+it('dispatches scoped navigation before an asynchronous action settles', async () => {
+    let release: () => void = () => {};
+
+    const pending = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+
+    const navigate = vi.fn();
+    const action = vi.fn(() => pending);
+
+    try {
+        await withMounted(
+            <LinkNavigationContext value={{ baseUrl: 'https://example.com/', navigate }}>
+                <ActionButton href="/orders" onClick={action}>
+                    Open
+                </ActionButton>
+            </LinkNavigationContext>,
+            async (output) => {
+                const control = output.querySelector('button');
+
+                if (!control) throw new Error('Expected the scoped navigation action');
+                await act(async () => {
+                    control.click();
+                    control.click();
+                });
+                expect(navigate).toHaveBeenCalledExactlyOnceWith('/orders');
+                expect(action).toHaveBeenCalledTimes(1);
+                expect(control.getAttribute('aria-busy')).toBe('true');
+                await act(async () => {
+                    release();
+                    await pending;
+                });
+                expect(control.hasAttribute('aria-busy')).toBe(false);
+            }
+        );
+    } finally {
+        release();
+    }
+});
+
 it('keeps a native link outside the scoped host and honors click cancellation', async () => {
     // Native previews retain link semantics; a disabled destination must not remain navigable.
     const prevented: boolean[] = [];

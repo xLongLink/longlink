@@ -895,6 +895,53 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     assert await claim_operation() is None
 
 
+async def test_successful_rollout_does_not_publish_after_solution_deletion(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep a completed rollout from publishing success after deletion wins."""
+
+    # Arrange a valid deployment that needs no external credential provisioning.
+    owner = users[0]
+    organization = await create_organization(owner)
+    solution = await create_solution(
+        organization,
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
+    )
+    revision_id = solution.desired_revision_id
+    assert revision_id is not None
+
+    async def apply(_client: object, _organization_id: UUID, _solution_id: UUID, *_args: object, **_kwargs: object) -> None:
+        """Delete the Solution while its external rollout completes successfully."""
+
+        # Commit deletion through the real lifecycle boundary before publication resumes.
+        async with session_scope() as session:
+            await solutions.delete(session, solution.id, owner.id)
+            await session.commit()
+
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
+
+    # Act after the rollout returns without an infrastructure error.
+    await solution_operations.deploy(revision_id)
+
+    # Assert neither the Solution nor the revision acknowledges deployment success.
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        revision = await session.get(Revision, revision_id)
+        assert current is not None
+        assert revision is not None
+        assert current.deleted_at is not None
+        assert current.deployed_revision_id is None
+        assert current.status != Status.running
+        assert revision.deployed_at is None
+
+
 async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """A newer desired revision cannot change the image or envs of queued work."""
 

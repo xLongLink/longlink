@@ -13877,12 +13877,10 @@ export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Elemen
 export function Wizard(props: WizardProps): React$1.JSX.Element;
 export function Step(props: StepProps): React$1.JSX.Element;
 type ActionClickEvent = Parameters<NonNullable<React$1.ComponentProps<typeof Button$1>["onClick"]>>[0];
-function ActionControl({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
+export function ActionButton({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
     onClick?: (event: ActionClickEvent) => void | Promise<void>;
     href?: string;
 }): React$1.JSX.Element;
-type ButtonProps$1 = React$1.ComponentProps<typeof ActionControl>;
-export function ActionButton({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
 export function ActionButtonGroup({ children, label, orientation, size: requestedSize, isDisabled }: {
     children?: React$1.ReactNode;
     label: string;

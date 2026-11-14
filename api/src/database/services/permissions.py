@@ -52,11 +52,19 @@ async def member(session: AsyncSession, solution: Solution, user_id: UUID) -> di
     """Return the saved role and the deployed revision used to review it."""
 
     await organizations.require_membership(session, user_id, solution.organization_id)
-    definition = await catalog(session, solution)
-    if definition is None or solution.deployed_revision_id is None:
+
+    # Role inspection needs catalog availability, not its endpoint definitions.
+    revision_id = (
+        await session.scalar(select(PermissionCatalog.revision_id).where(PermissionCatalog.revision_id == solution.deployed_revision_id))
+        if solution.deployed_revision_id
+        else None
+    )
+    if revision_id is None:
         raise HTTPException(status_code=409, detail="Rebuild and deploy the Solution to load endpoint permissions")
+
+    # Keep disabled and unassigned members readable without resolving runtime grants.
     access = await session.get(SolutionMemberAccess, (user_id, solution.id), populate_existing=True)
-    return {"role": access.role if access else None, "revision_id": solution.deployed_revision_id}
+    return {"role": access.role if access else None, "revision_id": revision_id}
 
 
 async def update_member(session: AsyncSession, solution: Solution, member_id: UUID, payload: models.AccessUpdate, actor_id: UUID) -> None:

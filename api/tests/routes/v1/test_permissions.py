@@ -9,7 +9,7 @@ from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-from src.database.models.permissions import SolutionMemberAccess
+from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
 
 
 @pytest_asyncio.fixture
@@ -90,6 +90,30 @@ async def test_permission_management_requires_administration_in_the_solution_org
         saved_access = await session.get(SolutionMemberAccess, (member.id, solution.id))
         assert saved_access is not None
         assert saved_access.role == "read"
+
+
+async def test_member_access_requires_the_deployed_permission_catalog(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], permission_solution: tuple[Solution, User, User]
+) -> None:
+    """Reject role inspection after the deployed catalog becomes unavailable."""
+
+    # Arrange an authorized request with a real deployed revision and member.
+    solution, member, _foreign_owner = permission_solution
+    access_url = f"/api/v1/solutions/{solution.id}/members/{member.id}/access"
+    available = await clients[1].get(access_url)
+    assert available.status_code == 200
+
+    # Remove only the catalog, leaving the Solution, revision and membership valid.
+    async with session_scope() as session:
+        catalog = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assert catalog is not None
+        await session.delete(catalog)
+        await session.commit()
+
+    # Act and assert the missing catalog is not mistaken for disabled member access.
+    unavailable = await clients[1].get(access_url)
+    assert unavailable.status_code == 409
+    assert unavailable.json() == {"detail": "Rebuild and deploy the Solution to load endpoint permissions"}
 
 
 async def test_administrator_can_assign_declared_role_and_explicitly_disable_member_access(
