@@ -8,6 +8,7 @@
         "build:views": "vp build --config vite.views.config.ts",
         "build": "vp run build:views && vp run typecheck && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
         "check": "vp check",
+        "lint": "vp lint",
         "typecheck": "tsc -b",
         "build:api": "vp run typecheck && react-router build --mode api",
         "build:api:bundle": "react-router build --mode api",

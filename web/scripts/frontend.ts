@@ -60,6 +60,10 @@ export type FrontendElement = JSX.Element;
 export type FrontendElementType = JSX.ElementType;
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/components/shadcn/chart';
 export type { ChartConfig } from '../src/components/shadcn/chart';
+export { MetricCard, MetricGrid, ProviderChart, UsageChart } from '../src/components/custom/analytics';
+export { CountryChart } from '../src/components/custom/country-chart';
+export { RevenueFlow } from '../src/components/custom/revenue-flow';
+export { CatalogDirectory } from '../src/components/custom/catalog-directory';
 export {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, RadarChart, Radar,
     RadialBarChart, RadialBar, Sankey, CartesianGrid, XAxis, YAxis, PolarGrid, PolarAngleAxis,

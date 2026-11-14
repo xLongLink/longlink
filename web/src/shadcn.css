@@ -70,10 +70,10 @@
     [data-theme-scope='stone'] {
         color-scheme: light dark;
         --radius: 0.625rem;
-        --background: light-dark(#f3f3f5, #111015);
+        --background: light-dark(#ffffff, #242325);
         --surface: light-dark(#ffffff, #1b1b1f);
         --foreground: light-dark(#25252a, #f3f3f5);
-        --card: light-dark(#ffffff, #242325);
+        --card: light-dark(#f3f3f5, #111015);
         --card-foreground: var(--foreground);
         --popover: light-dark(#ffffff, #3b3b3f);
         --popover-foreground: var(--foreground);
@@ -94,7 +94,7 @@
         --chart-3: light-dark(#7c3aed, #a78bfa);
         --chart-4: light-dark(#b45309, #fbbf24);
         --chart-5: light-dark(#be185d, #f472b6);
-        --sidebar: var(--surface);
+        --sidebar: var(--background);
         --sidebar-foreground: var(--foreground);
         --sidebar-primary: var(--primary);
         --sidebar-primary-foreground: var(--primary-foreground);

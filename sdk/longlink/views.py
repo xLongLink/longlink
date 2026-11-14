@@ -1,4 +1,5 @@
 import re
+from typing import Literal
 from pathlib import Path
 from pydantic import Field, BaseModel
 from dataclasses import dataclass
@@ -19,6 +20,7 @@ class ViewDefinition:
 
     path: str
     route: str
+    width: Literal["wide", "compact"] | None = None
 
 
 @dataclass(slots=True)
@@ -63,7 +65,6 @@ def view_stem_route(view_stem: str) -> str:
 
     # Convert filesystem route conventions into React Router-style route patterns.
     for segment in view_stem.split("/"):
-
         # Index segments map to the current route level.
         if segment == "index":
             continue

@@ -117,6 +117,34 @@ describe('SolutionPage', () => {
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
+    it.each([undefined, 'compact'] as const)('restores %s view width after leaving a wide dashboard', async (width) => {
+        stubFetch((url) =>
+            url.endsWith('/views.json')
+                ? manifestResponse([
+                      { path: 'dashboard.jsx', route: '/dashboard', width: 'wide' },
+                      { path: 'settings.jsx', route: '/settings', width }
+                  ])
+                : sourceResponse('export default function Page() { return <Text>Content</Text>; }')
+        );
+
+        const output = await renderPage('/dashboard');
+        await vi.waitFor(() =>
+            expect(output.querySelector<HTMLElement>('.platform-page-container')?.style.maxWidth).toBe('none')
+        );
+
+        const settings = output.querySelector<HTMLAnchorElement>(
+            '[aria-label="Section navigation"] a[href="/settings"]'
+        );
+
+        if (!settings) throw new Error('Expected compact View navigation');
+
+        await act(async () => settings.click());
+        await vi.waitFor(() =>
+            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings')
+        );
+        expect(output.querySelector<HTMLElement>('.platform-page-container')?.style.maxWidth).toBe('1000px');
+    });
+
     it('rejects an external manifest view path before fetching the view', async () => {
         // Arrange
         const fetchRequest = vi.fn((url: string) => {
@@ -699,7 +727,7 @@ function stubFetch(
 }
 
 /** Creates a catalog pinned to the empty runtime assets supplied by the transport fixture. */
-function manifestResponse(views: readonly { path: string; route: string }[]): Response {
+function manifestResponse(views: readonly { path: string; route: string; width?: 'wide' | 'compact' }[]): Response {
     return Response.json({ views, runtime: { version: createHash('sha256').update('\n').digest('hex') } });
 }
 

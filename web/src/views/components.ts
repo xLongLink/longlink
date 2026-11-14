@@ -366,3 +366,15 @@ export type { ChartConfig } from '@/components/shadcn/chart';
 
 /** @category Others */
 export { Maps } from '@/components/custom/maps';
+
+/** @category Charts */
+export { MetricCard, MetricGrid, ProviderChart, UsageChart } from '@/components/custom/analytics';
+
+/** @category Charts */
+export { CountryChart } from '@/components/custom/country-chart';
+
+/** @category Charts */
+export { RevenueFlow } from '@/components/custom/revenue-flow';
+
+/** @category Display */
+export { CatalogDirectory } from '@/components/custom/catalog-directory';

@@ -1,0 +1,135 @@
+{
+    "metrics": [
+        { "label": "Models in the directory", "value": "24", "change": "+13.6%", "icon": "models", "trend": [9, 10, 10, 12, 14, 13, 15, 18, 20, 19, 20, 22, 25, 23, 27, 24] },
+        { "label": "Community reviews", "value": "8,136", "change": "+14.9%", "icon": "reviews", "trend": [42, 39, 48, 43, 56, 51, 60, 57, 65, 72, 66, 79, 76, 85, 80, 91] },
+        { "label": "Messages this month", "value": "15.6M", "change": "-7.4%", "icon": "messages", "trend": [96, 74, 74, 56, 66, 39, 39, 39, 45, 53, 68, 56, 56, 45, 65, 51] },
+        { "label": "Model providers", "value": "7", "change": "+11.1%", "icon": "providers", "trend": [5, 5, 4, 6, 6, 3, 3, 2, 2, 3, 4, 3, 5, 3, 2, 7] }
+    ],
+    "geographySummary": { "countries": 47, "messages": 15600000 },
+    "countries": [
+        { "id": "840", "name": "United States", "flag": "🇺🇸", "messages": 4617600, "people": 1260, "model": "GPT 5.1", "share": 29.6, "center": [-98, 38], "zoom": 1.5 },
+        { "id": "682", "name": "Saudi Arabia", "flag": "🇸🇦", "messages": 2230800, "people": 340, "model": "Claude Sonnet 4.5", "share": 14.3, "center": [45, 24], "zoom": 3 },
+        { "id": "276", "name": "Germany", "flag": "🇩🇪", "messages": 1560000, "people": 270, "model": "Gemini 3", "share": 10, "center": [10, 51], "zoom": 4 },
+        { "id": "250", "name": "France", "flag": "🇫🇷", "messages": 1045200, "people": 212, "model": "Claude Sonnet 4.5", "share": 6.7, "center": [2, 47], "zoom": 4 },
+        { "id": "642", "name": "Romania", "flag": "🇷🇴", "messages": 858000, "people": 156, "model": "GPT 5.1", "share": 5.5, "center": [25, 46], "zoom": 4 }
+    ],
+    "providers": [
+        { "name": "Anthropic", "value": 32.4 },
+        { "name": "OpenAI", "value": 27.1 },
+        { "name": "Google", "value": 20.8 },
+        { "name": "DeepSeek", "value": 12.3 },
+        { "name": "Other", "value": 7.4, "providerCount": 3 }
+    ],
+    "usage": [
+        { "date": "2026-10-01", "claude": 120000, "gpt": 100000, "gemini": 80000 },
+        { "date": "2026-10-02", "claude": 260000, "gpt": 220000, "gemini": 180000 },
+        { "date": "2026-10-03", "claude": 380000, "gpt": 340000, "gemini": 280000 },
+        { "date": "2026-10-04", "claude": 520000, "gpt": 470000, "gemini": 390000 },
+        { "date": "2026-10-05", "claude": 700000, "gpt": 620000, "gemini": 520000 },
+        { "date": "2026-10-06", "claude": 850000, "gpt": 750000, "gemini": 640000 },
+        { "date": "2026-10-07", "claude": 1000000, "gpt": 890000, "gemini": 760000 },
+        { "date": "2026-10-08", "claude": 1200000, "gpt": 1050000, "gemini": 900000 },
+        { "date": "2026-10-09", "claude": 1350000, "gpt": 1190000, "gemini": 1020000 },
+        { "date": "2026-10-10", "claude": 1540000, "gpt": 1360000, "gemini": 1160000 },
+        { "date": "2026-10-11", "claude": 1710000, "gpt": 1510000, "gemini": 1290000 },
+        { "date": "2026-10-12", "claude": 1900000, "gpt": 1680000, "gemini": 1430000 },
+        { "date": "2026-10-13", "claude": 2100000, "gpt": 1860000, "gemini": 1580000 },
+        { "date": "2026-10-14", "claude": 2270000, "gpt": 2010000, "gemini": 1710000 },
+        { "date": "2026-10-15", "claude": 2450000, "gpt": 2170000, "gemini": 1850000 },
+        { "date": "2026-10-16", "claude": 2670000, "gpt": 2360000, "gemini": 2010000 },
+        { "date": "2026-10-17", "claude": 2900000, "gpt": 2560000, "gemini": 2180000 },
+        { "date": "2026-10-18", "claude": 3100000, "gpt": 2730000, "gemini": 2330000 },
+        { "date": "2026-10-19", "claude": 3310000, "gpt": 2910000, "gemini": 2490000 },
+        { "date": "2026-10-20", "claude": 3550000, "gpt": 3120000, "gemini": 2670000 },
+        { "date": "2026-10-21", "claude": 3780000, "gpt": 3320000, "gemini": 2840000 },
+        { "date": "2026-10-22", "claude": 4010000, "gpt": 3520000, "gemini": 3010000 },
+        { "date": "2026-10-23", "claude": 4250000, "gpt": 3730000, "gemini": 3190000 },
+        { "date": "2026-10-24", "claude": 4500000, "gpt": 3950000, "gemini": 3370000 },
+        { "date": "2026-10-25", "claude": 4720000, "gpt": 4140000, "gemini": 3530000 },
+        { "date": "2026-10-26", "claude": 4960000, "gpt": 4350000, "gemini": 3700000 },
+        { "date": "2026-10-27", "claude": 5200000, "gpt": 4560000, "gemini": 3880000 },
+        { "date": "2026-10-28", "claude": 5460000, "gpt": 4780000, "gemini": 4060000 },
+        { "date": "2026-10-29", "claude": 5730000, "gpt": 5000000, "gemini": 4230000 },
+        { "date": "2026-10-30", "claude": 6000000, "gpt": 5200000, "gemini": 4400000 }
+    ],
+    "quarters": [
+        {
+            "label": "Q3 2026",
+            "revenue": 360000, "grossProfit": 252000, "operatingIncome": 144000, "netIncome": 115200,
+            "data": {
+                "nodes": [
+                    { "name": "Subscriptions", "category": "revenue" },
+                    { "name": "API usage", "category": "revenue" },
+                    { "name": "Enterprise", "category": "revenue" },
+                    { "name": "Revenue", "category": "revenue" },
+                    { "name": "Gross profit", "category": "profit" },
+                    { "name": "Costs", "category": "expense" },
+                    { "name": "Operating income", "category": "profit" },
+                    { "name": "Expenses", "category": "expense" },
+                    { "name": "Net income", "category": "profit" },
+                    { "name": "Tax", "category": "expense" },
+                    { "name": "Infrastructure", "category": "expense" },
+                    { "name": "Provider fees", "category": "expense" },
+                    { "name": "Research", "category": "expense" },
+                    { "name": "Sales", "category": "expense" },
+                    { "name": "Operations", "category": "expense" }
+                ],
+                "links": [
+                    { "source": 0, "target": 3, "value": 162000 },
+                    { "source": 1, "target": 3, "value": 126000 },
+                    { "source": 2, "target": 3, "value": 72000 },
+                    { "source": 3, "target": 4, "value": 252000 },
+                    { "source": 3, "target": 5, "value": 108000 },
+                    { "source": 4, "target": 6, "value": 144000 },
+                    { "source": 4, "target": 7, "value": 108000 },
+                    { "source": 6, "target": 8, "value": 115200 },
+                    { "source": 6, "target": 9, "value": 28800 },
+                    { "source": 5, "target": 10, "value": 64800 },
+                    { "source": 5, "target": 11, "value": 43200 },
+                    { "source": 7, "target": 12, "value": 54000 },
+                    { "source": 7, "target": 13, "value": 32400 },
+                    { "source": 7, "target": 14, "value": 21600 }
+                ]
+            }
+        },
+        {
+            "label": "Q2 2026",
+            "revenue": 300000, "grossProfit": 204000, "operatingIncome": 114000, "netIncome": 91200,
+            "data": {
+                "nodes": [
+                    { "name": "Subscriptions", "category": "revenue" },
+                    { "name": "API usage", "category": "revenue" },
+                    { "name": "Enterprise", "category": "revenue" },
+                    { "name": "Revenue", "category": "revenue" },
+                    { "name": "Gross profit", "category": "profit" },
+                    { "name": "Costs", "category": "expense" },
+                    { "name": "Operating income", "category": "profit" },
+                    { "name": "Expenses", "category": "expense" },
+                    { "name": "Net income", "category": "profit" },
+                    { "name": "Tax", "category": "expense" },
+                    { "name": "Infrastructure", "category": "expense" },
+                    { "name": "Provider fees", "category": "expense" },
+                    { "name": "Research", "category": "expense" },
+                    { "name": "Sales", "category": "expense" },
+                    { "name": "Operations", "category": "expense" }
+                ],
+                "links": [
+                    { "source": 0, "target": 3, "value": 135000 },
+                    { "source": 1, "target": 3, "value": 105000 },
+                    { "source": 2, "target": 3, "value": 60000 },
+                    { "source": 3, "target": 4, "value": 204000 },
+                    { "source": 3, "target": 5, "value": 96000 },
+                    { "source": 4, "target": 6, "value": 114000 },
+                    { "source": 4, "target": 7, "value": 90000 },
+                    { "source": 6, "target": 8, "value": 91200 },
+                    { "source": 6, "target": 9, "value": 22800 },
+                    { "source": 5, "target": 10, "value": 57600 },
+                    { "source": 5, "target": 11, "value": 38400 },
+                    { "source": 7, "target": 12, "value": 45000 },
+                    { "source": 7, "target": 13, "value": 27000 },
+                    { "source": 7, "target": 14, "value": 18000 }
+                ]
+            }
+        }
+    ]
+}

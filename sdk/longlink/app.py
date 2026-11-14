@@ -1,7 +1,7 @@
 import re
 import httpx2
 import logging
-from typing import Any
+from typing import Any, Literal
 from fastapi import FastAPI, APIRouter
 from fastmcp import FastMCP
 from pathlib import Path
@@ -221,8 +221,10 @@ class LongLink(RouteDecorators, FastAPI):
             raise ValueError("Solution permissions require FastAPI API routes; only StaticFiles mounts are supported")
         return routes
 
-    def include_view(self, path: str, *, label: str | None = None, icon: str | None = None) -> None:
-        """Include a discovered JSX View as a tab, in registration order, with an optional label and Lucide icon name."""
+    def include_view(
+        self, path: str, *, label: str | None = None, icon: str | None = None, width: Literal["wide", "compact"] = "compact"
+    ) -> None:
+        """Include a View as a tab with optional labeling and full-width or compact content."""
 
         # Accept only canonical JSX paths relative to the Solution's Views directory.
         if not isinstance(path, str) or not path.endswith(".jsx"):
@@ -242,12 +244,16 @@ class LongLink(RouteDecorators, FastAPI):
         if icon is not None and (not isinstance(icon, str) or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", icon) is None):
             raise ValueError("Tab icon must be a Lucide kebab-case name")
 
+        if width not in ("wide", "compact"):
+            raise ValueError("View width must be 'wide' or 'compact'")
+
         # Validate before switching from automatic tabs to explicit navigation.
         tabs = self._view_manifest.tabs
         if tabs is not None and any(tab.route == definition.route for tab in tabs):
             raise ValueError(f"View is already included: {path}")
 
         needs_root_redirect = not self._view_manifest.resolved_tabs()
+        definition.width = width
         if tabs is None:
             tabs = []
             self._view_manifest.tabs = tabs

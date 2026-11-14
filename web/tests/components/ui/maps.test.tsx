@@ -5,6 +5,7 @@ import { withMounted } from '../../render';
 import { Maps } from '@/components/custom/maps';
 import userEvent from '@testing-library/user-event';
 import { prepareMap, type MapData } from '@/components/custom/map-data';
+import { CountryChart, type CountryUsage } from '@/components/custom/country-chart';
 
 it('selects custom regions by stable ID through pointer and keyboard controls', async () => {
     const user = userEvent.setup();
@@ -99,6 +100,102 @@ it('selects custom regions by stable ID through pointer and keyboard controls', 
         expect(west.getAttribute('aria-pressed')).toBe('true');
         expect(unassigned.getAttribute('role')).toBeNull();
         expect(unassigned.getAttribute('tabindex')).toBe('-1');
+    });
+});
+
+it('keeps country details, highlights, and map focus together when selection or results change', async () => {
+    const user = userEvent.setup();
+
+    const countries: CountryUsage[] = [
+        {
+            id: 'west',
+            name: 'West',
+            flag: '🇺🇸',
+            messages: 60,
+            people: 4,
+            model: 'Atlas',
+            share: 60,
+            center: [-10, 10],
+            zoom: 2
+        },
+        {
+            id: 'east',
+            name: 'East',
+            flag: '🇯🇵',
+            messages: 40,
+            people: 3,
+            model: 'Gemini',
+            share: 40,
+            center: [30, 10],
+            zoom: 2
+        }
+    ];
+
+    const geography: MapData = {
+        type: 'FeatureCollection',
+        features: countries.map((country) => ({
+            type: 'Feature',
+            id: country.id,
+            properties: { name: country.name },
+            geometry: {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [country.center[0] - 10, 0],
+                        [country.center[0] - 10, 20],
+                        [country.center[0] + 10, 20],
+                        [country.center[0] + 10, 0],
+                        [country.center[0] - 10, 0]
+                    ]
+                ]
+            }
+        }))
+    };
+
+    function Results() {
+        const [visible, setVisible] = useState(countries);
+
+        return (
+            <>
+                <button type="button" onClick={() => setVisible([countries[0]])}>
+                    Refresh countries
+                </button>
+                <CountryChart countries={visible} geography={geography} summary={{ countries: 2, messages: 100 }} />
+            </>
+        );
+    }
+
+    await withMounted(<Results />, async (output) => {
+        const east = [...output.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find((button) =>
+            button.textContent?.includes('East')
+        );
+
+        const next = output.querySelector<HTMLButtonElement>('[aria-label="Next country"]');
+
+        const refresh = [...output.querySelectorAll('button')].find(
+            (button) => button.textContent === 'Refresh countries'
+        );
+
+        const initialTransform = output.querySelector('.rsm-zoomable-group')?.getAttribute('transform');
+
+        if (!east || !next || !refresh || !initialTransform) throw new Error('Expected country controls and map');
+
+        await act(async () => user.hover(east));
+        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+        expect(output.querySelector('[role="button"][aria-label="East"]')?.getAttribute('aria-pressed')).toBe('true');
+        expect(output.querySelector('.rsm-zoomable-group')?.getAttribute('transform')).not.toBe(initialTransform);
+
+        await act(async () => user.click(next));
+        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
+        expect(output.querySelector('.rsm-zoomable-group')?.getAttribute('transform')).toBe(initialTransform);
+        await act(async () => east.focus());
+        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+
+        await act(async () => user.click(refresh));
+        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
+        expect(output.querySelector('[role="button"][aria-label="West"]')?.getAttribute('aria-pressed')).toBe('true');
+        expect(output.querySelector('[aria-label="East"]')?.getAttribute('role')).toBeNull();
+        expect(output.querySelector('.rsm-zoomable-group')?.getAttribute('transform')).toBe(initialTransform);
     });
 });
 
