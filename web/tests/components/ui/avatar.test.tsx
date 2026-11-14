@@ -5,29 +5,19 @@ import { act, useState } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 
-it('retains a caller-supplied image rather than replacing it with generated artwork', () => {
-    // Act
-    const output = renderStatic(
-        <GeneratedAvatar name="Acme" kind="organization" src="https://images.example/acme.png" />
-    );
-
-    // Assert
-    expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/acme.png');
-});
-
 it('recovers failed URLs to stable artwork and retries a newly supplied source', async () => {
     function Owner() {
         const [src, setSrc] = useState('https://images.example/first.png');
 
         return (
             <>
-                <GeneratedAvatar name="Acme" seed="owner-1" src={src} />
+                <GeneratedAvatar name="Acme" kind="organization" seed="owner-1" src={src} />
                 <button onClick={() => setSrc('https://images.example/second.png')}>Change source</button>
             </>
         );
     }
 
-    const generated = renderStatic(<GeneratedAvatar name="Renamed" seed="owner-1" />)
+    const generated = renderStatic(<GeneratedAvatar name="Renamed" kind="organization" seed="owner-1" />)
         .querySelector('img')
         ?.getAttribute('src');
 
