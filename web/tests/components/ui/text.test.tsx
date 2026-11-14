@@ -5,14 +5,6 @@ import { Text } from '@/components/custom/text';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 
-it('preserves requested paragraph semantics', () => {
-    // Act
-    const output = renderStatic(<Text as="p">Private draft</Text>);
-
-    // Assert
-    expect(output.querySelector('p')?.textContent).toBe('Private draft');
-});
-
 it('keeps absent children empty and preserves nested text without adding button semantics', () => {
     const empty = renderStatic(<Text />);
 

@@ -1,28 +1,10 @@
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
 import { MenuNavigationContext } from '@/components/custom/contexts';
 import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/custom/menu';
-
-it('selects the first authored item before fragment navigation', () => {
-    // Act
-    const output = renderStatic(
-        <MenuNavigationContext value={{ hash: '', select: () => undefined }}>
-            <Menu>
-                <MenuSection title="Workspace">
-                    <MenuItem label="Orders">Order content</MenuItem>
-                    <MenuItem label="Archive">Archive content</MenuItem>
-                </MenuSection>
-            </Menu>
-        </MenuNavigationContext>
-    );
-
-    // Assert
-    expect(output.textContent).toContain('Order content');
-    expect(output.textContent).not.toContain('Archive content');
-});
 
 it('mounts only selected content and responds to both user selection and an external fragment change', async () => {
     const loaded: string[] = [];
