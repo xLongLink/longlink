@@ -1,52 +1,44 @@
 import ViewLayout from './view-layout';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/shadcn/avatar';
-import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyline.jpg?inline';
+import { Stack } from '@/components/custom/stack';
+import { Avatar, AvatarGroup } from '@/components/longlink/avatar';
 
-/** Documents native Avatar composition in LongLink Views. */
+/** Documents the LongLink Avatar in Views. */
 export default function AvatarPage() {
-    // Render this component's authored examples in the shared documentation layout.
+    // Present the avatar's geometry and image fallback properties.
     return (
         <ViewLayout
             name="Avatar"
             properties={[
-                { name: 'size', type: '"sm" | "default" | "lg"', description: 'Avatar size; defaults to default.' },
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'Compose AvatarImage, AvatarFallback, and AvatarBadge.'
-                },
-                { name: 'AvatarImage.src', type: 'string', description: 'Image source URL.' },
-                { name: 'AvatarImage.alt', type: 'string', description: 'Accessible image description.' },
-                {
-                    name: 'AvatarImage.onLoadingStatusChange',
-                    type: '(status: "idle" | "loading" | "loaded" | "error") => void',
-                    description: 'Receives image loading status changes.'
-                },
-                {
-                    name: 'AvatarFallback.children',
-                    type: 'ReactNode',
-                    description: 'Content shown when the image is unavailable.'
-                },
-                {
-                    name: 'AvatarFallback.delay',
-                    type: 'number',
-                    description: 'Delay in milliseconds before showing the fallback.'
-                },
-                {
-                    name: 'AvatarGroup.children',
-                    type: 'ReactNode',
-                    description: 'Avatars and an optional AvatarGroupCount.'
-                }
+                { name: 'shape', type: '"circle" | "square" | "rounded"' },
+                { name: 'name', type: 'string' },
+                { name: 'src', type: 'string | null' },
+                { name: 'size', type: '"sm" | "md" | "lg"' },
+                { name: 'AvatarGroup.children', type: 'ReactNode' }
             ]}
             example={{
                 title: 'Avatar',
                 preview: <AvatarExample />,
                 code: `function Example() {
   return (
-    <Avatar size="lg">
-      <AvatarImage src="/assets/skyline.jpg" alt="Skyline office towers" />
-      <AvatarFallback>SL</AvatarFallback>
-    </Avatar>
+    <Stack direction="horizontal" gap={6} align="center">
+      <AvatarGroup>
+        <Avatar name="Ada Lovelace" shape="circle" size="sm" />
+        <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
+        <Avatar name="Ada Lovelace" shape="square" size="sm" />
+      </AvatarGroup>
+
+      <AvatarGroup>
+        <Avatar name="Ada Lovelace" shape="circle" size="md" />
+        <Avatar name="Ada Lovelace" shape="rounded" size="md" />
+        <Avatar name="Ada Lovelace" shape="square" size="md" />
+      </AvatarGroup>
+
+      <AvatarGroup>
+        <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+        <Avatar name="Ada Lovelace" shape="rounded" size="lg" />
+        <Avatar name="Ada Lovelace" shape="square" size="lg" />
+      </AvatarGroup>
+    </Stack>
   );
 }`
             }}
@@ -56,11 +48,25 @@ export default function AvatarPage() {
 
 /** Renders the page's avatar example for documentation and the catalog. */
 export function AvatarExample() {
-    // Keep the preview self-contained while showing native image and fallback composition.
     return (
-        <Avatar size="lg">
-            <AvatarImage src={photo} alt="Skyline office towers" />
-            <AvatarFallback>SL</AvatarFallback>
-        </Avatar>
+        <Stack direction="horizontal" gap={6} align="center">
+            <AvatarGroup>
+                <Avatar name="Ada Lovelace" shape="circle" size="sm" />
+                <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
+                <Avatar name="Ada Lovelace" shape="square" size="sm" />
+            </AvatarGroup>
+
+            <AvatarGroup>
+                <Avatar name="Ada Lovelace" shape="circle" size="md" />
+                <Avatar name="Ada Lovelace" shape="rounded" size="md" />
+                <Avatar name="Ada Lovelace" shape="square" size="md" />
+            </AvatarGroup>
+
+            <AvatarGroup>
+                <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+                <Avatar name="Ada Lovelace" shape="rounded" size="lg" />
+                <Avatar name="Ada Lovelace" shape="square" size="lg" />
+            </AvatarGroup>
+        </Stack>
     );
 }

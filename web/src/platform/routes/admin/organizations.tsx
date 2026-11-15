@@ -5,9 +5,9 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Badge } from '@/components/reui/badge';
 import { Button } from '@/components/shadcn/button';
+import { Avatar } from '@/components/longlink/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -80,7 +80,7 @@ export default function Organizations() {
                             <TableRow key={row.id}>
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar kind="organization" name={row.name} />
+                                        <Avatar shape="rounded" name={row.name} />
                                         <Stack align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <Link href={`/orgs/${row.id}`}>{row.name}</Link>

@@ -6,10 +6,10 @@ import { Link, useLocation } from 'react-router';
 import { Input } from '@/components/shadcn/input';
 import { Button } from '@/components/shadcn/button';
 import { UserRound, Building2 } from 'lucide-react';
+import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
@@ -52,7 +52,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     return (
         <div className="flex flex-col gap-8">
             <div className="flex items-center gap-3">
-                <GeneratedAvatar name={name} src={user.avatar} seed={user.id} />
+                <Avatar name={name} src={user.avatar} />
                 <div className="flex flex-col gap-0">
                     <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {name}

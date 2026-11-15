@@ -113,12 +113,7 @@ export default function Tasks() {
                 enableSorting: false,
                 cell: ({ row: { original: task } }) => (
                     <Stack direction="horizontal" align="center" gap={2}>
-                        <GeneratedAvatar
-                            name={task.created_by.name}
-                            seed={task.created_by.id}
-                            src={task.created_by.avatar}
-                            size="sm"
-                        />
+                        <Avatar name={task.created_by.name} src={task.created_by.avatar} size="sm" />
                         <Stack gap={0}>
                             <Text>{task.created_by.name}</Text>
                             <Text className="text-xs text-muted-foreground">{task.created_by.email}</Text>

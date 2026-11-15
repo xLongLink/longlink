@@ -4,8 +4,8 @@ import { useApiError } from '@/lib/errors';
 import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
+import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -128,7 +128,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                 <TableRow key={row.kind === 'invitation' ? row.id : row.organization.id}>
                                     <TableCell>
                                         <Stack direction="horizontal" gap={3} align="center">
-                                            <GeneratedAvatar kind="organization" name={row.organization.name} />
+                                            <Avatar shape="rounded" name={row.organization.name} />
                                             <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
                                                 {row.kind === 'invitation' ? (
                                                     <span>{row.organization.name}</span>

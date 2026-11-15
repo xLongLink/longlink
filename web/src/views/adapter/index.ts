@@ -11,15 +11,7 @@ export { Heading } from './display/heading';
 export { Text } from './display/text';
 
 /** @category Display */
-export {
-    GeneratedAvatar,
-    Avatar,
-    AvatarImage,
-    AvatarFallback,
-    AvatarBadge,
-    AvatarGroup,
-    AvatarGroupCount
-} from './display/avatar';
+export { Avatar, AvatarGroup } from './display/avatar';
 
 /** @category Display */
 export { Image } from './display/image';

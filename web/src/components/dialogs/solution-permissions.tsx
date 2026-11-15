@@ -5,9 +5,9 @@ import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
 import { apiQueryOptions } from '@/lib/react-query';
+import { Avatar } from '@/components/longlink/avatar';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import { Dialog } from '@/components/custom/native-dialog';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
@@ -149,7 +149,7 @@ function MemberPermissions({
                         <TableRow key={member.id}>
                             <TableCell>
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
+                                    <Avatar name={member.name} src={member.avatar} />
                                     <Stack gap={0}>
                                         <span>{member.name}</span>
                                         <span className="text-xs text-muted-foreground">{member.email}</span>

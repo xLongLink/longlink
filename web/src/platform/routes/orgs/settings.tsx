@@ -9,6 +9,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
+import { Avatar } from '@/components/longlink/avatar';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,7 +17,6 @@ import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -69,7 +69,7 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <title>Organization Settings | LongLink</title>
             <Stack direction="horizontal" gap={3} align="center">
-                <GeneratedAvatar kind="organization" name={membership.organization.name} />
+                <Avatar shape="rounded" name={membership.organization.name} />
                 <Stack gap={0}>
                     <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {membership.organization.name}
@@ -271,11 +271,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                             <TableRow key={row.user.id}>
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar
-                                            name={row.user.name}
-                                            src={row.user.avatar}
-                                            seed={row.user.id}
-                                        />
+                                        <Avatar name={row.user.name} src={row.user.avatar} />
                                         <Stack align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.user.name}</span>

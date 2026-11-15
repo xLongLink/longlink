@@ -7,9 +7,10 @@ function containsForbiddenSymbolName(name: string): boolean {
   return name.toLowerCase().includes(FORBIDDEN_SYMBOL_NAME);
 }
 
-/** Return whether an identifier names a statically accessed member owned by another value. */
+/** Return whether an identifier names a member or component prop owned by another value. */
 function isBorrowedMemberName(node: ESTree.Node): boolean {
   const parent = node.parent;
+  if (parent?.type === "JSXAttribute") return parent.name === node;
   if (parent === null || parent.type !== "MemberExpression") return false;
   return parent.property === node && parent.computed === false;
 }

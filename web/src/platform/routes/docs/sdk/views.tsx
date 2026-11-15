@@ -4,7 +4,6 @@ import { TextExample } from './views/text';
 import { InputExample } from './views/input';
 import { StackExample } from './views/stack';
 import { TableExample } from './views/table';
-import { AvatarExample } from './views/avatar';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
@@ -26,7 +25,7 @@ import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { componentDocumentation } from '@/platform/publications';
-import { GeneratedAvatarExample } from './views/generated-avatar';
+import { Avatar, AvatarGroup } from '@/components/longlink/avatar';
 import { Heading as ViewHeading } from '@/components/custom/heading';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -71,8 +70,13 @@ const previews = new Map(
                 <MapsExample />
             </div>
         ),
-        Avatar: <AvatarExample />,
-        GeneratedAvatar: <GeneratedAvatarExample />,
+        Avatar: (
+            <AvatarGroup className="items-center">
+                <Avatar name="Ada Lovelace" shape="circle" size="sm" />
+                <Avatar name="Ada Lovelace" shape="circle" size="md" />
+                <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+            </AvatarGroup>
+        ),
         FileType: <FileTypeExample />,
         Badge: (
             <div className="flex flex-wrap items-center justify-center gap-2">

@@ -3,18 +3,15 @@ import { it, expect } from 'vitest';
 import { renderStatic } from '../../../../../render';
 import { componentDocumentation } from '@/platform/publications';
 import AvatarPage from '@/platform/routes/docs/sdk/views/avatar';
-import GeneratedAvatarPage from '@/platform/routes/docs/sdk/views/generated-avatar';
 
-it('renders native and generated avatar documentation through their separate published catalog entries', () => {
-    // Render both published routes using their real component examples.
-    const native = renderStatic(<AvatarPage />, '/docs/sdk/views/avatar');
-    const generated = renderStatic(<GeneratedAvatarPage />, '/docs/sdk/views/generated-avatar');
+it('renders the LongLink avatar example without exposing implementation provenance', () => {
+    const page = renderStatic(<AvatarPage />, '/docs/sdk/views/avatar');
 
-    // Keep the separate API pages without exposing implementation provenance.
-    expect(native.querySelector('h1')?.textContent).toBe('Avatar');
-    expect(native.querySelector('a[href="https://ui.shadcn.com/docs/components/base/avatar"]')).toBeNull();
-    expect(generated.querySelector('h1')?.textContent).toBe('GeneratedAvatar');
-    expect(generated.textContent).not.toContain('Custom:');
-    expect(generated.textContent).not.toContain('Generates deterministic DiceBear artwork');
-    expect(componentDocumentation.find((entry) => entry.name === 'GeneratedAvatar')?.slug).toBe('generated-avatar');
+    // The public Avatar renders deterministic artwork without authored image or fallback children.
+    expect(page.querySelector('h1')?.textContent).toBe('Avatar');
+    expect(page.querySelector('[data-slot="avatar"]')?.getAttribute('aria-label')).toBe('Ada Lovelace');
+    expect(page.querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+    expect(page.querySelector('a[href="https://ui.shadcn.com/docs/components/base/avatar"]')).toBeNull();
+    expect(page.textContent).not.toContain('Custom:');
+    expect(componentDocumentation.find((entry) => entry.name === 'Avatar')?.slug).toBe('avatar');
 });

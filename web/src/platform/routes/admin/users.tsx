@@ -2,9 +2,9 @@ import { useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Avatar } from '@/components/longlink/avatar';
 import { Timestamp } from '@/components/custom/timestamp';
 import { Field, FieldLabel } from '@/components/shadcn/field';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -65,7 +65,7 @@ export default function Users() {
                             <TableRow key={row.id}>
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar name={row.name} src={row.avatar} seed={row.id} />
+                                        <Avatar name={row.name} src={row.avatar} />
                                         <Stack align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.name}</span>

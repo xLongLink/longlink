@@ -32,7 +32,7 @@ export { Text } from '../src/views/adapter/display/text';
 export { Heading } from '../src/views/adapter/display/heading';
 export { Stack, StackItem } from '../src/views/adapter/layouts/stack';
 export { Grid, GridSpan } from '../src/views/adapter/layouts/grid';
-export { GeneratedAvatar, Avatar, AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount } from '../src/views/adapter/display/avatar';
+export { Avatar, AvatarGroup } from '../src/views/adapter/display/avatar';
 export {
     CodeBlock,
     CodeBlockContent,

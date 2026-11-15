@@ -512,53 +512,8 @@
         {
             "name": "Avatar",
             "category": "Display",
-            "introduction": "Native shadcn Avatar composes an image, loading fallback, and optional badge.",
-            "guidance": "Use AvatarImage and AvatarFallback inside Avatar. Compose AvatarGroup and AvatarGroupCount for groups. Use GeneratedAvatar for deterministic artwork and owner-specific geometry.",
-            "properties": [
-                {
-                    "name": "size",
-                    "type": "\"sm\" | \"default\" | \"lg\"",
-                    "description": "Avatar size.",
-                    "default": "default"
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Compose AvatarImage, AvatarFallback, and AvatarBadge."
-                },
-                {
-                    "name": "AvatarImage.src / AvatarImage.alt",
-                    "type": "string",
-                    "description": "Image source URL and accessible description."
-                },
-                {
-                    "name": "AvatarImage.onLoadingStatusChange",
-                    "type": "(status: \"idle\" | \"loading\" | \"loaded\" | \"error\") => void",
-                    "description": "Receives image loading status changes."
-                },
-                {
-                    "name": "AvatarFallback.children",
-                    "type": "ReactNode",
-                    "description": "Content shown when the image is unavailable."
-                },
-                {
-                    "name": "AvatarFallback.delay",
-                    "type": "number",
-                    "description": "Delay in milliseconds before showing the fallback."
-                },
-                {
-                    "name": "AvatarGroup / AvatarGroupCount / AvatarBadge",
-                    "type": "components",
-                    "description": "Native avatar grouping, overflow count, and badge composition."
-                }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/base/avatar"
-        },
-        {
-            "name": "GeneratedAvatar",
-            "category": "Display",
-            "introduction": "Uses local Waves fallbacks for rounded organization avatars and Glyphs for users.",
+            "introduction": "Uses local Waves fallbacks for rounded avatars and Glyphs for circles and squares.",
+            "guidance": "Compose AvatarGroup with Avatar children to display overlapping avatars.",
             "properties": [
                 {
                     "name": "shape",
@@ -566,28 +521,17 @@
                     "description": "Avatar shape: circle, rounded, or square.",
                     "default": "circle"
                 },
-                { "name": "name", "type": "string", "description": "User name for initials and alt text." },
-                {
-                    "name": "seed",
-                    "type": "string",
-                    "description": "Stable identity for generated avatars, independent of the display name."
-                },
-                {
-                    "name": "kind",
-                    "type": "\"user\" | \"organization\"",
-                    "description": "Avatar style for a user or organization."
-                },
+                { "name": "name", "type": "string", "description": "Display name for accessible text." },
                 { "name": "src", "type": "string | null", "description": "Primary image source URL." },
-                { "name": "alt", "type": "string", "description": "Alt text (falls back to name)." },
+                { "name": "size", "type": "\"sm\" | \"md\" | \"lg\"", "description": "Avatar size.", "default": "md" },
                 {
-                    "name": "size",
-                    "type": "\"sm\" | \"default\" | \"lg\"",
-                    "description": "Avatar size.",
-                    "default": "default"
+                    "name": "AvatarGroup.children",
+                    "type": "ReactNode",
+                    "description": "Avatars displayed as an overlapping group."
                 }
             ],
             "source": "custom",
-            "justification": "Generates deterministic DiceBear artwork and owner-specific image fallbacks; native Avatar only composes an image and fallback."
+            "justification": "Generates deterministic DiceBear artwork and image fallbacks; native Avatar only composes an image and fallback."
         },
         {
             "name": "Badge",

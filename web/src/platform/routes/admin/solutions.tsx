@@ -4,9 +4,9 @@ import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
+import { Avatar } from '@/components/longlink/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -103,7 +103,7 @@ export default function Solutions() {
                                 </TableCell>
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar kind="organization" name={row.organization.name} />
+                                        <Avatar shape="rounded" name={row.organization.name} />
                                         <Stack align="start">
                                             <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
                                             <span className="text-xs text-muted-foreground">Organization</span>

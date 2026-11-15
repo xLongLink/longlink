@@ -5,9 +5,9 @@ import { Link as RouterLink } from 'react-router';
 import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
+import { Avatar } from '@/components/longlink/avatar';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
@@ -64,9 +64,7 @@ export function ProfileMenu() {
     }
 
     // Keep the same avatar size in expanded and collapsed sidebar controls.
-    const avatar = (
-        <GeneratedAvatar size={sidebar === null ? 'sm' : 'default'} src={user.avatar} name={user.name} seed={user.id} />
-    );
+    const avatar = <Avatar size={sidebar === null ? 'sm' : 'md'} src={user.avatar} name={user.name} />;
 
     const identity = (
         <>

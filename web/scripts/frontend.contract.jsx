@@ -82,12 +82,10 @@ const nativeComposition = (
             >
                 Ready to publish
             </Text>
-            <Avatar size="sm" aria-label="Account">
-                <AvatarImage src="/account.png" alt="Account" />
-                <AvatarFallback>AC</AvatarFallback>
-                <AvatarBadge />
-            </Avatar>
-            <GeneratedAvatar name="Account" src="/account.png" />
+            <AvatarGroup aria-label="Accounts">
+                <Avatar size="md" name="Account" src="/account.png" />
+                <Avatar shape="rounded" name="Acme" />
+            </AvatarGroup>
             <Stack
                 aria-label="Preview"
                 gap={4}
@@ -469,6 +467,14 @@ const _columnClasses = {
 const _chartStyle = <ChartContainer config={{}} style={{ height: 280 }}><AreaChart /></ChartContainer>;
 // @ts-expect-error Recharts primitives also exclude arbitrary CSS.
 const _seriesStyle = <Area dataKey="total" style={{ opacity: 0 }} />;
+// @ts-expect-error Avatar geometry is selected through shape, not an owner kind.
+const _avatarKind = <Avatar kind="organization" />;
+// @ts-expect-error Avatar artwork uses a fixed internal seed.
+const _avatarSeed = <Avatar seed="account-1" />;
+// @ts-expect-error Avatar accessible text uses name or native ARIA attributes.
+const _avatarAlt = <Avatar alt="Account" />;
+// @ts-expect-error The medium Avatar size is named md.
+const _avatarSize = <Avatar size="default" />;
 // @ts-expect-error Collapsible is not currently exposed to Views.
 const _removedCollapsible = <Collapsible />;
 // @ts-expect-error Stepper is not currently exposed to Views.

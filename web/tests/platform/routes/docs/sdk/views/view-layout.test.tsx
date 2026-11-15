@@ -44,8 +44,12 @@ it('opens the example first and lets readers switch to the property reference an
 
     await withMounted(
         <ViewLayout
-            name="Card"
-            properties={[{ name: 'padding', type: 'number', description: 'Inner spacing.' }]}
+            name="Button"
+            properties={[
+                { name: 'size', type: '"default" | "sm" | "lg"', description: 'Control size.' },
+                { name: 'focusableWhenDisabled', type: 'boolean', description: 'Retain keyboard focus.' },
+                { name: 'children', type: 'ReactNode', description: 'Visible content.' }
+            ]}
             example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,
         async (output) => {
@@ -55,15 +59,31 @@ it('opens the example first and lets readers switch to the property reference an
             expect(exampleTab.textContent).toBe('Example');
             expect(propertiesTab.textContent).toBe('Properties');
             expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
-            expect(output.textContent).not.toContain('Inner spacing.');
+            expect(output.querySelector('table')).toBeNull();
 
             await act(async () => user.click(propertiesTab));
-            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Inner spacing.');
+            expect(Array.from(output.querySelectorAll('thead th'), (cell) => cell.textContent)).toEqual([
+                'Prop',
+                'Type',
+                'Default'
+            ]);
+            expect(
+                Array.from(output.querySelectorAll('tbody tr'), (row) =>
+                    Array.from(row.querySelectorAll('td'), (cell) => cell.textContent)
+                )
+            ).toEqual([
+                ['size', '"default" | "sm" | "lg"', '"default"'],
+                ['focusableWhenDisabled', 'boolean', 'false'],
+                ['children', 'ReactNode', '-']
+            ]);
+            expect(output.textContent).not.toContain('Control size.');
+            expect(output.textContent).not.toContain('Retain keyboard focus.');
+            expect(output.textContent).not.toContain('Visible content.');
             expect(output.textContent).not.toContain('Order details');
 
             await act(async () => user.click(exampleTab));
             expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
-            expect(output.textContent).not.toContain('Inner spacing.');
+            expect(output.querySelector('table')).toBeNull();
         }
     );
 });

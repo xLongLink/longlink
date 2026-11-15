@@ -5,7 +5,7 @@ import { ChevronsUpDown } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
-import { GeneratedAvatar } from '@/components/longlink/avatar';
+import { Avatar } from '@/components/longlink/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -60,7 +60,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                 }
                 aria-label={name}
             >
-                <GeneratedAvatar kind="organization" name={name} />
+                <Avatar shape="rounded" name={name} />
                 {sidebar !== 'collapsed' && (
                     <>
                         <span className="flex min-w-0 flex-1 flex-col">
@@ -104,7 +104,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                                     key={item.id}
                                     onClickCapture={() => setIsOpen(false)}
                                 >
-                                    <GeneratedAvatar kind="organization" size="sm" name={item.name} />
+                                    <Avatar shape="rounded" size="sm" name={item.name} />
                                     <span className="truncate">{item.name}</span>
                                 </DropdownMenuItem>
                             ))}

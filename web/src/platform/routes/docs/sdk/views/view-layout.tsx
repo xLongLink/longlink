@@ -2,11 +2,13 @@ import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
+import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
@@ -87,6 +89,14 @@ export default function ViewLayout({
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
 
+    // Read published defaults without duplicating component configuration in each documentation page.
+    const defaults = new Map(
+        (viewCatalog.components.find((entry) => entry.name === name)?.properties ?? []).map((property) => [
+            property.name,
+            'default' in property ? property.default : undefined
+        ])
+    );
+
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
 
@@ -142,32 +152,45 @@ export default function ViewLayout({
                                 <p>No standalone example is available for this component.</p>
                             )}
                         </TabsContent>
-                        <TabsContent
-                            value="properties"
-                            className="flex flex-col gap-5 [&_td]:border-border/40 [&_td]:py-1 [&_th]:border-border/40"
-                        >
-                            {[...groups].map(([name, properties]) => (
-                                <Table key={name} className="[&_td]:whitespace-normal">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{`${name} - Properties`}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {properties.map((row) => (
-                                            <TableRow key={row.name}>
-                                                <TableCell>
-                                                    <Stack gap={0}>
-                                                        <span>{row.name}</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {row.description}
-                                                        </span>
-                                                    </Stack>
-                                                </TableCell>
+                        <TabsContent value="properties" className="flex flex-col gap-5">
+                            {[...groups].map(([group, properties]) => (
+                                <div key={group} className="flex flex-col gap-3">
+                                    {groups.size > 1 && <h3 className="text-sm font-medium">{group}</h3>}
+                                    <Table aria-label={`${group} properties`} className="[&_td]:whitespace-normal">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead scope="col">Prop</TableHead>
+                                                <TableHead scope="col">Type</TableHead>
+                                                <TableHead scope="col">Default</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {properties.map((row) => {
+                                                const defaultValue = defaults.get(
+                                                    group === name ? row.name : `${group}.${row.name}`
+                                                );
+
+                                                return (
+                                                    <TableRow key={row.name}>
+                                                        <TableCell>
+                                                            <InlineCode>{row.name}</InlineCode>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <InlineCode>{row.type}</InlineCode>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {defaultValue === undefined ? (
+                                                                '-'
+                                                            ) : (
+                                                                <InlineCode>{JSON.stringify(defaultValue)}</InlineCode>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             ))}
                         </TabsContent>
                     </Tabs>
