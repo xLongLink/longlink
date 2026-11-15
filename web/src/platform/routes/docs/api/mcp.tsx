@@ -1,5 +1,5 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DocumentationArticle } from '@/components/layouts/documentation';
 
 const article = {
     title: 'MCP | LongLink Platform Documentation',

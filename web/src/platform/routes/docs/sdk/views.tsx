@@ -32,12 +32,12 @@ import { Disclosure } from '@/components/custom/disclosure';
 import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { componentDocumentation } from '@/platform/publications';
 import { GeneratedAvatarExample } from './views/generated-avatar';
-import { DocumentationArticle } from '@/components/layouts/article';
 import { Heading as ViewHeading } from '@/components/custom/heading';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
+import { DocumentationArticle } from '@/components/layouts/documentation';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import {

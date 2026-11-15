@@ -1,6 +1,6 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DocumentationArticle } from '@/components/layouts/documentation';
 import {
     CodeBlock,
     CodeBlockCopyButton,

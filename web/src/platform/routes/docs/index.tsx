@@ -1,8 +1,8 @@
 import { Link } from 'react-router';
 import { Grid } from '@/components/custom/grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DocumentationArticle } from '@/components/layouts/documentation';
 
 const cardClassName =
     'flex min-h-60 flex-col -me-px -mb-px rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*6)-1px)] text-inherit no-underline hover:border-ring hover:bg-muted active:bg-accent focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2';

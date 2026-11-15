@@ -2,7 +2,6 @@ import { Page } from '@/components/ui/page';
 import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
-import { documentationPaths } from '@/platform/publications';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
@@ -25,27 +24,13 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC'
 });
 
-type ArticleMetadata = {
+export type ArticleMetadata = {
     title: string;
     description: string;
     lastUpdated: string;
     editUrl: string;
     toc: readonly ArticleOutlineItem[];
 };
-
-/** Publishes authored documentation within one shared metadata and navigation shell. */
-export function DocumentationArticle({ article, children }: { article: ArticleMetadata; children: ReactNode }) {
-    // Keep documentation typography and reading order as wrapper-owned policy.
-    return (
-        <ArticleRenderer
-            article={article}
-            className="text-lg [--article-heading-spacing:calc(var(--spacing)*18)] [&_:is(h1,h2,h3,h4,h5,h6):not(dialog_*)]:tracking-wide"
-            paths={documentationPaths}
-        >
-            {children}
-        </ArticleRenderer>
-    );
-}
 
 /** Publishes public articles with Home-rooted navigation and optional collection reading order. */
 export function PublicArticle({
@@ -57,49 +42,23 @@ export function PublicArticle({
     children: ReactNode;
     paths?: readonly string[];
 }) {
-    // Keep public navigation Home-rooted without imposing typography or a reading collection.
-    return (
-        <ArticleRenderer article={article} paths={paths} publicBreadcrumb>
-            {children}
-        </ArticleRenderer>
-    );
-}
-
-/** Renders authored articles with the typography and navigation policy selected by their wrapper. */
-function ArticleRenderer({
-    article,
-    children,
-    className,
-    paths,
-    publicBreadcrumb = false
-}: {
-    article: ArticleMetadata;
-    children: ReactNode;
-    className?: string;
-    paths?: readonly string[];
-    publicBreadcrumb?: boolean;
-}) {
-    // Keep public articles and documentation in the same flat reading columns.
+    // Keep public navigation Home-rooted within the article's reading columns.
     return (
         <Page description={article.description} title={article.title}>
-            {publicBreadcrumb ? (
-                <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
-                    <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
-                        <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                            <PathBreadcrumb labels={articleRouteLabels} root={{ label: 'Home', href: '/' }} />
-                        </div>
-                        {article.toc.length ? (
-                            <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
-                        ) : null}
+            <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
+                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                        <PathBreadcrumb labels={articleRouteLabels} root={{ label: 'Home', href: '/' }} />
                     </div>
-                </header>
-            ) : null}
+                    {article.toc.length ? (
+                        <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
+                    ) : null}
+                </div>
+            </header>
             <div className="p-6">
                 <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
                     <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                        <article
-                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,calc(var(--spacing)*8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
-                        >
+                        <article className="space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:calc(var(--spacing)*8)] [&_p]:opacity-90">
                             {children}
                             <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
                         </article>
