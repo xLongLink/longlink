@@ -128,7 +128,6 @@ it('confirms the canonical MCP URL copy only after the clipboard succeeds and cl
             await vi.waitFor(() => {
                 expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Copied');
                 expect(document.querySelector('[role="dialog"]')).toBeNull();
-                expect(document.querySelector('.native-notification-host')?.parentElement).toBe(document.body);
             });
             expect(document.querySelectorAll('[data-sonner-toaster]')).toHaveLength(1);
         });

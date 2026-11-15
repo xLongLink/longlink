@@ -2,8 +2,8 @@ import { CircleX } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { Button } from '@/components/shadcn/button';
 import { PageLoading } from '@/components/ui/utils';
+import { Toaster } from '@/components/shadcn/sonner';
 import { createQueryRuntime } from '@/lib/react-query';
-import { NativeToaster } from '@/components/native-toaster';
 import { ApiErrorContext, useApiError } from '@/lib/errors';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { Suspense, useEffect, useId, useState, type ReactNode } from 'react';
@@ -34,7 +34,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
             <NotificationContext value={runtime.notifications.showMessage}>
                 <QueryClientProvider client={runtime.client}>{children}</QueryClientProvider>
             </NotificationContext>
-            <NativeToaster id={toasterId} onReady={runtime.notifications.connect} />
+            <Toaster id={toasterId} closeButton />
         </ApiErrorContext>
     );
 }

@@ -24,7 +24,7 @@ it('preserves a supplied email when linking back to sign in', () => {
     expect(output.querySelector('a[href="/login?email=owner%40example.com"]')).not.toBeNull();
 });
 
-it('delivers registration failure and confirmed success through initially empty channels in one queue', async () => {
+it('delivers registration failure and confirmed success through one Sonner queue', async () => {
     let finishRequest: ((response: Response) => void) | undefined;
 
     const response = new Promise<Response>((resolve) => {
@@ -40,24 +40,6 @@ it('delivers registration failure and confirmed success through initially empty 
     document.body.append(output);
     const caughtErrors: unknown[] = [];
     const root = createRoot(output, { onCaughtError: (error) => caughtErrors.push(error) });
-    const deliveries = new Map<Element, string[]>();
-
-    const observer = new MutationObserver(() => {
-        for (const channel of document.querySelectorAll('[data-sonner-toast] [aria-live]')) {
-            const text = channel.textContent ?? '';
-            const history = deliveries.get(channel);
-
-            if (!history) {
-                deliveries.set(channel, [text]);
-
-                continue;
-            }
-
-            if (history.at(-1) !== text) history.push(text);
-        }
-    });
-
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
 
     try {
         flushSync(() =>
@@ -89,12 +71,7 @@ it('delivers registration failure and confirmed success through initially empty 
         ]);
 
         const failure = document.querySelector('[data-sonner-toast]');
-        const failureChannel = failure?.querySelector('[aria-live]');
-
-        if (!failureChannel) throw new Error('Missing failure announcement channel');
-        await vi.waitFor(() =>
-            expect(deliveries.get(failureChannel)).toEqual(['', 'Registration temporarily unavailable'])
-        );
+        expect(failure?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
 
         const retry = Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Retry');
 
@@ -116,17 +93,9 @@ it('delivers registration failure and confirmed success through initially empty 
         );
 
         expect(confirmation).toBeDefined();
-        const confirmationChannel = confirmation?.querySelector('[aria-live]');
-
-        if (!confirmationChannel) throw new Error('Missing registration announcement channel');
-        await vi.waitFor(() =>
-            expect(deliveries.get(confirmationChannel)).toEqual(['', 'Check your inbox for the registration link.'])
-        );
-        expect(confirmationChannel.getAttribute('aria-live')).toBe('polite');
-        expect(failureChannel.getAttribute('aria-live')).toBe('assertive');
-        expect(deliveries.size).toBe(2);
-        expect(confirmation?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('off');
-        expect(failure?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('off');
+        expect(confirmation?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
+        expect(failure?.getAttribute('data-type')).toBe('error');
+        expect(confirmation?.closest('[aria-hidden="true"], [inert]')).toBeNull();
         expect(confirmation?.parentElement).toBe(failure?.parentElement);
         expect(document.querySelectorAll('[data-sonner-toaster]')).toHaveLength(1);
 
@@ -137,7 +106,7 @@ it('delivers registration failure and confirmed success through initially empty 
             ['POST', '/api/v1/auth/register']
         ]);
 
-        const dismiss = confirmation?.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]');
+        const dismiss = confirmation?.querySelector<HTMLButtonElement>('[aria-label="Close toast"]');
 
         if (!dismiss) throw new Error('Missing registration notification dismissal');
         await events.click(dismiss);
@@ -146,7 +115,6 @@ it('delivers registration failure and confirmed success through initially empty 
             expect(document.querySelector('[data-sonner-toast]')).toBe(failure);
         });
     } finally {
-        observer.disconnect();
         root.unmount();
         output.remove();
         finishRequest?.(new Response(null, { status: 204 }));
