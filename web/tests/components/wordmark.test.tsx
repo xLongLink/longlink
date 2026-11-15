@@ -3,7 +3,6 @@ import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../render';
 import { Wordmark } from '@/components/ui/wordmark';
-import { Illustration } from '@/components/ui/illustration';
 import { AppearanceProvider } from '@/components/appearance';
 
 it('keeps ambient assets mounted without changing an explicit wordmark mode during account changes', async () => {
@@ -14,7 +13,11 @@ it('keeps ambient assets mounted without changing an explicit wordmark mode duri
             <AppearanceProvider preference={{ theme, accent: 'neutral' }}>
                 <Wordmark />
                 <Wordmark mode="light" size="heading" />
-                <Illustration src="/images/lock.png" alt="Protected content" className="size-20 object-contain" />
+                <img
+                    src="/images/lock.png"
+                    alt="Protected content"
+                    className="size-20 object-contain invert dark:invert-0"
+                />
                 <button type="button" onClick={() => setTheme((value) => (value === 'light' ? 'dark' : 'light'))}>
                     Change appearance
                 </button>

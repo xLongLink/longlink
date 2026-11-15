@@ -8,7 +8,6 @@ import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { buttonVariants } from '@/components/shadcn/button';
-import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
@@ -100,10 +99,10 @@ export default function CreateSolution({
                         <Step label="Image" fields={['image']}>
                             <Stack gap={8}>
                                 <Stack gap={3} align="center">
-                                    <Illustration
+                                    <img
                                         src="/images/solution.png"
                                         alt=""
-                                        className="size-20 object-contain"
+                                        className="size-20 object-contain invert dark:invert-0"
                                         width={272}
                                         height={279}
                                         decoding="async"
@@ -150,10 +149,10 @@ export default function CreateSolution({
                         <Step label="Metadata" fields={['name', 'description']}>
                             <Stack gap={8}>
                                 <Stack gap={3} align="center">
-                                    <Illustration
+                                    <img
                                         src="/images/nametag.png"
                                         alt=""
-                                        className="size-20 object-contain"
+                                        className="size-20 object-contain invert dark:invert-0"
                                         width={1448}
                                         height={1086}
                                         decoding="async"
@@ -197,10 +196,10 @@ export default function CreateSolution({
                         >
                             <Stack gap={8}>
                                 <Stack gap={3} align="center">
-                                    <Illustration
+                                    <img
                                         src="/images/lock.png"
                                         alt=""
-                                        className="size-20 object-contain"
+                                        className="size-20 object-contain invert dark:invert-0"
                                         width={1327}
                                         height={1186}
                                         decoding="async"

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { Separator } from '@/components/shadcn/separator';
-import { Illustration } from '@/components/ui/illustration';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
@@ -123,10 +122,10 @@ export default function SolutionManagement({
                     </p>
                 ) : onboarding ? (
                     <Stack gap={6} align="center">
-                        <Illustration
+                        <img
                             src="/images/solution.png"
                             alt=""
-                            className="size-20 object-contain"
+                            className="size-20 object-contain invert dark:invert-0"
                             width={272}
                             height={279}
                             decoding="async"

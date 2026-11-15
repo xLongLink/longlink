@@ -3,7 +3,6 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -32,10 +31,10 @@ export function RegistryForm({
             <Stack padding={8} minHeight="100%" justify="center" className="shrink-0">
                 <Stack gap={8} width="100%" maxWidth={640} className="mx-auto">
                     <Stack gap={3} align="center">
-                        <Illustration
+                        <img
                             src="/images/lock.png"
                             alt=""
-                            className="size-20 object-contain"
+                            className="size-20 object-contain invert dark:invert-0"
                             decoding="async"
                         />
                         <Stack gap={0}>

@@ -3,7 +3,6 @@ import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import { useNotification } from '@/lib/notifications';
-import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -48,10 +47,10 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
                 </div>
                 <div className="hidden min-w-0 flex-[0_0_50%] overflow-hidden bg-muted md:flex">
                     <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                        <Illustration
+                        <img
                             src="/images/mcp.png"
                             alt="Hand-drawn globe surrounded by orbiting spheres."
-                            className="h-full w-full object-contain"
+                            className="h-full w-full object-contain invert dark:invert-0"
                             width={941}
                             height={1672}
                             decoding="async"

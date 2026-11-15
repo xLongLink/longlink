@@ -4,7 +4,6 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Illustration } from '@/components/ui/illustration';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -49,10 +48,10 @@ export default function CreateOrganization({
                             <fieldset disabled={form.formState.isSubmitting} className="contents">
                                 <Stack gap={10}>
                                     <Stack gap={2} align="center">
-                                        <Illustration
+                                        <img
                                             src="/images/organization.png"
                                             alt=""
-                                            className="size-20 object-contain"
+                                            className="size-20 object-contain invert dark:invert-0"
                                             width={1254}
                                             height={1254}
                                             decoding="async"
@@ -101,10 +100,10 @@ export default function CreateOrganization({
                 </div>
                 <div className="hidden min-w-0 flex-[0_0_50%] overflow-hidden bg-muted md:flex">
                     <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                        <Illustration
+                        <img
                             src="/images/organization-city.png"
                             alt="Hand-drawn city skyline reflected in water."
-                            className="h-full w-full object-contain"
+                            className="h-full w-full object-contain invert dark:invert-0"
                             width={941}
                             height={1672}
                             decoding="async"

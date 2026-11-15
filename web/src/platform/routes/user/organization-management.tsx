@@ -5,7 +5,6 @@ import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
-import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
@@ -90,10 +89,10 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 ) : null}
                 {onboarding ? (
                     <Stack gap={6} align="center">
-                        <Illustration
+                        <img
                             src="/images/organization.png"
                             alt=""
-                            className="size-20 object-contain"
+                            className="size-20 object-contain invert dark:invert-0"
                             width={1254}
                             height={1254}
                             decoding="async"
