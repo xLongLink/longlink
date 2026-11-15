@@ -138,7 +138,7 @@ export default function Solutions() {
                         {solutions.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -176,3 +176,4 @@ export default function Solutions() {
         </Stack>
     );
 }
+import { Empty } from '@/components/longlink/empty';

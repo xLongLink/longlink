@@ -330,7 +330,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                         {members.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canAdminister ? 2 : 1} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -485,7 +485,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                         {invitations.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -504,3 +504,4 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
         </>
     );
 }
+import { Empty } from '@/components/longlink/empty';

@@ -1,4 +1,5 @@
 import { Badge } from '@/components/longlink/badge';
+import { Empty } from '@/components/longlink/empty';
 import { IconTile } from '@/components/reui/icon-tile';
 import { useId, useState, type ReactNode, type ComponentProps } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
@@ -264,7 +265,7 @@ export function UsageChart({
                 <CardContent>
                     {periods.map((option) => (
                         <TabsContent key={option.value} value={String(option.value)}>
-                            {plot}
+                            {data.length ? plot : <Empty role="status" title={emptyMessage} />}
                         </TabsContent>
                     ))}
                 </CardContent>
@@ -278,7 +279,6 @@ export function UsageChart({
                             </span>
                         </div>
                     ))}
-                    {!data.length && <span role="status">{emptyMessage}</span>}
                 </CardFooter>
             </Card>
         </Tabs>

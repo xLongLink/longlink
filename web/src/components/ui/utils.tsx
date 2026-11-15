@@ -1,5 +1,5 @@
+import { Empty } from '@/components/longlink/empty';
 import { Spinner } from '@/components/shadcn/spinner';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {
@@ -14,16 +14,7 @@ export function PageLoading({ label }: { label: string }) {
 export function PageError({ description, title }: { description: string; title: string }) {
     return (
         <div className="flex min-h-[70dvh] min-w-0 items-center justify-center">
-            <Empty role="status" aria-atomic="true">
-                <EmptyHeader>
-                    <EmptyTitle>
-                        <h1>{title}</h1>
-                    </EmptyTitle>
-                    <EmptyDescription>
-                        <p>{description}</p>
-                    </EmptyDescription>
-                </EmptyHeader>
-            </Empty>
+            <Empty role="status" aria-atomic="true" title={<h1>{title}</h1>} description={description} />
         </div>
     );
 }

@@ -105,6 +105,18 @@ const dom = ts.createSourceFile(
 );
 const standardDomNames = new Set(dom.statements.filter((node) => node.name).map((node) => node.name.text));
 const statements = generated.statements.filter((node) => {
+    // IconName is published from the installed Lucide catalog below.
+    if (
+        ts.isImportDeclaration(node) &&
+        ts.isStringLiteral(node.moduleSpecifier) &&
+        node.moduleSpecifier.text === 'lucide-react/dynamic' &&
+        !node.importClause?.name &&
+        node.importClause?.namedBindings &&
+        ts.isNamedImports(node.importClause.namedBindings) &&
+        node.importClause.namedBindings.elements.every((specifier) => specifier.name.text === 'IconName' && !specifier.propertyName)
+    )
+        return false;
+
     if (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node)) {
         throw new Error(`Frontend declarations must not require external imports: ${node.getText(generated)}`);
     }

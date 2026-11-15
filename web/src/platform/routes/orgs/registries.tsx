@@ -85,7 +85,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                         {connections.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -114,3 +114,4 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
         </>
     );
 }
+import { Empty } from '@/components/longlink/empty';

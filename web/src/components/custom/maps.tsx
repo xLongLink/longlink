@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Empty } from '@/components/longlink/empty';
 import { prepareMap, type MapData } from './map-data';
 import { ZoomableGroup } from 'react-simple-maps/zoom';
-import { Empty, EmptyHeader, EmptyTitle } from '@/components/shadcn/empty';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps/core';
 
 /** Renders generic polygon boundaries from supplied GeoJSON or TopoJSON data. */
@@ -24,13 +24,7 @@ export function Maps(props: {
     const [isMoving, setIsMoving] = useState(false);
 
     if (result.status === 'invalid' || !result.data.features.length) {
-        return (
-            <Empty role="status">
-                <EmptyHeader>
-                    <EmptyTitle>{result.status === 'invalid' ? 'Invalid map data' : 'No map data'}</EmptyTitle>
-                </EmptyHeader>
-            </Empty>
-        );
+        return <Empty role="status" title={result.status === 'invalid' ? 'Invalid map data' : 'No map data'} />;
     }
 
     const boundaries = (

@@ -245,12 +245,7 @@ const nativeComposition = (
                     </TableRow>
                 </TableBody>
             </Table>
-            <Empty aria-label="Search results">
-                <EmptyHeader>
-                    <EmptyTitle>No matching orders</EmptyTitle>
-                    <EmptyDescription>Change the search filters.</EmptyDescription>
-                </EmptyHeader>
-            </Empty>
+            <Empty aria-label="Search results" title="No matching orders" description="Change the search filters." />
             <Wizard>
                 <Step label="Details">Draft</Step>
             </Wizard>
@@ -259,7 +254,7 @@ const nativeComposition = (
             </Badge>
             <Token label="Priority" size="xs" />
             <Token label="Priority" size="sm" />
-            <Token label="Priority" size="default" />
+            <Token label="Priority" size="md" />
             <Token label="Priority" size="lg" />
             <Token label="Priority" size="xl" />
             <Button

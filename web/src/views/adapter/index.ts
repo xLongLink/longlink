@@ -244,7 +244,7 @@ export { Wizard, Step } from './layouts/wizard';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './layouts/tabs';
 
 /** @category Display */
-export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from './display/empty';
+export { Empty } from './display/empty';
 
 /** @category Layouts */
 export { Menu, MenuSection, MenuItem, MenuSubSection } from './layouts/menu';

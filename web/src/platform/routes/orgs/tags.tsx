@@ -127,7 +127,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                         {tags.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canMaintain ? 2 : 1} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -174,3 +174,4 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         </>
     );
 }
+import { Empty } from '@/components/longlink/empty';

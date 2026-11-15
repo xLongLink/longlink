@@ -85,7 +85,7 @@ function InvoiceTable({ base }: { base: string }) {
                 {invoices.length === 0 && (
                     <TableRow>
                         <TableCell colSpan={5} className="text-center">
-                            <span role="status">No data</span>
+                            <Empty role="status" title="No data" />
                         </TableCell>
                     </TableRow>
                 )}
@@ -93,3 +93,4 @@ function InvoiceTable({ base }: { base: string }) {
         </Table>
     );
 }
+import { Empty } from '@/components/longlink/empty';

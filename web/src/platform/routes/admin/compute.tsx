@@ -103,7 +103,7 @@ export default function Compute() {
                         {computes.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={2} className="text-center">
-                                    <span role="status">No data</span>
+                                    <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -153,3 +153,4 @@ export default function Compute() {
         </Stack>
     );
 }
+import { Empty } from '@/components/longlink/empty';

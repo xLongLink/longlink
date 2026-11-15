@@ -191,7 +191,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             {rows.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={invitations.length > 0 ? 2 : 1} className="text-center">
-                                        <span role="status">No data</span>
+                                        <Empty role="status" title="No data" />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -239,3 +239,4 @@ export default function OrganizationManagement({ presentation }: { presentation:
         </>
     );
 }
+import { Empty } from '@/components/longlink/empty';

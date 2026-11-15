@@ -542,12 +542,8 @@ it('uses composed menu actions to transition authored table results to empty and
                 <TableCaption>Open orders</TableCaption>
                 <TableHeader><TableRow><TableHead scope="col">Reference</TableHead></TableRow></TableHeader>
                 <TableBody><TableRow><TableCell>PO-871</TableCell></TableRow></TableBody>
-            </Table> : <Empty aria-label="Order results">
-                <EmptyHeader>
-                    <EmptyTitle>No orders</EmptyTitle>
-                    <EmptyDescription>The order was removed.</EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent><button type="button" onClick={() => setPresent(true)}>Restore order</button></EmptyContent>
+            </Table> : <Empty aria-label="Order results" title="No orders" description="The order was removed.">
+                <button type="button" onClick={() => setPresent(true)}>Restore order</button>
             </Empty>}
         </>;
     }`);

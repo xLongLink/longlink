@@ -294,7 +294,7 @@ export default function SolutionManagement({
                                         }
                                         className="text-center"
                                     >
-                                        <span role="status">No data</span>
+                                        <Empty role="status" title="No data" />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -364,3 +364,4 @@ export default function SolutionManagement({
         </>
     );
 }
+import { Empty } from '@/components/longlink/empty';

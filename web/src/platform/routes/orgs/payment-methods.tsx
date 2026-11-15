@@ -97,7 +97,7 @@ function RegisteredCards({ base }: { base: string }) {
                 {cards.length === 0 && (
                     <TableRow>
                         <TableCell colSpan={3} className="text-center">
-                            <span role="status">No data</span>
+                            <Empty role="status" title="No data" />
                         </TableCell>
                     </TableRow>
                 )}
@@ -105,3 +105,4 @@ function RegisteredCards({ base }: { base: string }) {
         </Table>
     );
 }
+import { Empty } from '@/components/longlink/empty';

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { Empty } from '@/components/longlink/empty';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
 import * as permissions from '@/platform/permissions';
@@ -10,7 +11,6 @@ import { SolutionPage } from '@/components/ui/solution-page';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -60,14 +60,7 @@ export default function OrganizationSolution() {
     if (deploymentNotice) {
         const notice = (
             <div role="alert">
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyTitle>
-                            <h1>{deploymentNotice.title}</h1>
-                        </EmptyTitle>
-                        <EmptyDescription>{deploymentNotice.description}</EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
+                <Empty title={<h1>{deploymentNotice.title}</h1>} description={deploymentNotice.description} />
             </div>
         );
 

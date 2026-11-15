@@ -196,7 +196,7 @@ function MemberPermissions({
                     {rows.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={2} className="text-center">
-                                <span role="status">No data</span>
+                                <Empty role="status" title="No data" />
                             </TableCell>
                         </TableRow>
                     )}
@@ -221,3 +221,4 @@ function MemberPermissions({
         </Stack>
     );
 }
+import { Empty } from '@/components/longlink/empty';

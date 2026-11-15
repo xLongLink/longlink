@@ -14,8 +14,10 @@ import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
+import { FileText, ImageIcon } from 'lucide-react';
 import { FileTypeExample } from './views/file-type';
 import { Badge } from '@/components/longlink/badge';
+import { Empty } from '@/components/longlink/empty';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
@@ -23,7 +25,6 @@ import { RadioGroupExample } from './views/radio-group';
 import { Currency } from '@/components/custom/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
-import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { componentDocumentation } from '@/platform/publications';
 import { Avatar, AvatarGroup } from '@/components/longlink/avatar';
 import { Heading as ViewHeading } from '@/components/custom/heading';
@@ -31,7 +32,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
@@ -109,16 +109,7 @@ const previews = new Map(
             </Card>
         ),
         DropdownMenu: <DropdownMenuExample />,
-        Empty: (
-            <Empty>
-                <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                        <FolderCode aria-hidden="true" />
-                    </EmptyMedia>
-                    <EmptyTitle>No projects</EmptyTitle>
-                </EmptyHeader>
-            </Empty>
-        ),
+        Empty: <Empty icon="folder-code" title="No projects" />,
         FileViewer: (
             <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">
                 <CardHeader>

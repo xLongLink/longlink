@@ -565,7 +565,8 @@
                     "description": "Replaces the default span. Native span attributes, events, and refs are supported; component styling is fixed."
                 }
             ],
-            "source": "reui",
+            "source": "custom",
+            "justification": "Provides fixed badge styling with primary, secondary, destructive, and outline variants.",
             "reference": "https://reui.io/docs/components/base/badge"
         },
         {
@@ -943,18 +944,26 @@
         {
             "name": "Empty",
             "category": "Display",
-            "introduction": "Native shadcn empty-state composition with HTML div props.",
-            "guidance": "Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia.",
+            "introduction": "Displays an empty state with an optional icon, description, and actions.",
+            "guidance": "Provide a title, optional icon and description, and action elements as children.",
             "keywords": ["empty list", "no results", "missing data"],
             "properties": [
-                { "name": "children", "type": "ReactNode", "description": "Native empty-state parts." },
+                {
+                    "name": "icon",
+                    "type": "IconName | URL string",
+                    "description": "Optional Lucide icon name or HTTP(S) or root-relative image URL."
+                },
+                { "name": "title", "type": "ReactNode", "description": "Empty-state title." },
+                { "name": "description", "type": "ReactNode", "description": "Optional empty-state description." },
+                { "name": "children", "type": "ReactNode", "description": "Optional actions below the description." },
                 {
                     "name": "aria-* / data-*",
                     "type": "native element props",
                     "description": "Standard HTML props are forwarded to the root div."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Provides a fixed empty-state layout with icon names or image URLs and action children.",
             "reference": "https://ui.shadcn.com/docs/components/empty"
         },
         {
@@ -2042,7 +2051,7 @@
             "steps": [
                 "Load records with the documented Hooks API and keep search/filter state local.",
                 "Define Table columns and row actions using supported props; apply filtering or pagination on the server when needed.",
-                "Compose Empty with EmptyHeader and EmptyTitle when there are no matching records."
+                "Use Empty with a title and optional description and actions when there are no matching records."
             ]
         },
         {
