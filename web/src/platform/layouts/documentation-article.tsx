@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Page } from '@/components/ui/page';
-import { ArticleOutline } from './article-outline';
 import { documentationPaths } from '@/platform/publications';
-import { ArticleFooter, type ArticleMetadata } from './article';
+import { ArticleOutline } from '@/components/layouts/article-outline';
+import { ArticleFooter, type ArticleMetadata } from '@/components/layouts/article';
 
 /** Renders documentation with its own typography and collection navigation. */
 export function DocumentationArticle({ article, children }: { article: ArticleMetadata; children: ReactNode }) {

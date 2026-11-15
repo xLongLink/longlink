@@ -1,5 +1,5 @@
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DocumentationArticle } from '@/components/layouts/documentation';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const article = {
     description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',

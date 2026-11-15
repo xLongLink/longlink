@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/custom/data-table';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DocumentationArticle } from '@/components/layouts/documentation';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import {
     CodeBlock,
     CodeBlockCopyButton,

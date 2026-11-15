@@ -3,10 +3,10 @@ import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
 import { Circle, ExternalLink } from 'lucide-react';
 import { documentationLastUpdated } from '@/lib/documentation';
-import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { DocumentationArticle } from '@/components/layouts/documentation';
+import { componentDocumentation } from '@/platform/component-documentation';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 

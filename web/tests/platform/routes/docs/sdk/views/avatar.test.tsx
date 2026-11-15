@@ -14,5 +14,6 @@ it('renders native and generated avatar documentation through their separate pub
     expect(native.querySelector('h1')?.textContent).toBe('Avatar');
     expect(native.querySelector('a[href="https://ui.shadcn.com/docs/components/base/avatar"]')).not.toBeNull();
     expect(generated.querySelector('h1')?.textContent).toBe('GeneratedAvatar');
+    expect(generated.querySelector('p')?.textContent).toMatch(/^Custom: .+DiceBear/);
     expect(componentDocumentation.find((entry) => entry.name === 'GeneratedAvatar')?.slug).toBe('generated-avatar');
 });

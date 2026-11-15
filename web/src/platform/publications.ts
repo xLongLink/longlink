@@ -1,5 +1,4 @@
 import { documentationCategories } from '../lib/documentation';
-import viewCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     AppWindow,
     Badge,
@@ -130,41 +129,23 @@ export const componentDocumentation = [
     { name: 'Textarea', category: 'Form', icon: TextAlignStart },
     { name: 'TimeInput', category: 'Form', icon: Clock },
     { name: 'Timestamp', category: 'Display', icon: CalendarClock }
-].map((component) => {
-    // Share component ownership and custom justifications with the packaged SDK documentation.
-    const provenance = viewCatalog.components.find((entry) => entry.name === component.name);
-
-    if (!provenance) throw new Error(`Missing component provenance: ${component.name}`);
-
-    return {
-        ...component,
-        source: provenance.source,
-        sourceLabel:
-            provenance.source === 'recharts'
-                ? 'shadcn/ui + Recharts'
-                : provenance.source === 'shadcn'
-                  ? 'shadcn/ui'
-                  : provenance.source === 'reui'
-                    ? 'ReUI'
-                    : 'Custom',
-        reference: 'reference' in provenance ? provenance.reference : undefined,
-        justification: 'justification' in provenance ? provenance.justification : undefined,
-        label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
-        slug:
-            component.name === 'RadialBarChart'
-                ? 'radial-chart'
-                : component.name === 'Sankey'
-                  ? 'sankey-chart'
-                  : component.name === 'Button'
-                    ? 'buttons'
-                    : component.name === 'Icon'
-                      ? 'icons'
-                      : component.name
-                            .replace(/([a-z])([A-Z])/g, '$1-$2')
-                            .replace(/\s+/g, '-')
-                            .toLowerCase()
-    };
-});
+].map((component) => ({
+    ...component,
+    label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
+    slug:
+        component.name === 'RadialBarChart'
+            ? 'radial-chart'
+            : component.name === 'Sankey'
+              ? 'sankey-chart'
+              : component.name === 'Button'
+                ? 'buttons'
+                : component.name === 'Icon'
+                  ? 'icons'
+                  : component.name
+                        .replace(/([a-z])([A-Z])/g, '$1-$2')
+                        .replace(/\s+/g, '-')
+                        .toLowerCase()
+}));
 
 export const documentationIntroduction: DocumentationSection = {
     title: 'Introduction',

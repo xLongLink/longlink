@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/custom/data-table';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DocumentationArticle } from '@/components/layouts/documentation';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },

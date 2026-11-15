@@ -36,8 +36,7 @@ function ImageContent({
     dangerouslySetInnerHTML: _html,
     ...props
 }: ImageProps) {
-    const inline = src.startsWith('data:image/') || src.startsWith('blob:');
-    const preview = usePreview(src, inline);
+    const preview = usePreview(src);
     const [erroredUrl, setErroredUrl] = useState<string>();
 
     // Keep framing opt-in and prevent native source overrides from bypassing the host.

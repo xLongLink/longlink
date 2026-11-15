@@ -39,8 +39,9 @@ type PreviewState =
     | { status: 'ready'; url: string };
 
 /** Owns a mounted image preview; inline images remain caller-owned. */
-export function usePreview(src: string, inline = false): PreviewState {
+export function usePreview(src: string): PreviewState {
     const request = useContext(FileRequestContext)?.load;
+    const inline = src.startsWith('data:image/') || src.startsWith('blob:');
 
     // Store only scoped previews that wait for their host response.
     const [preview, setPreview] = useState<PreviewState>({ status: 'loading' });

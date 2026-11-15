@@ -1,7 +1,7 @@
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { DocumentationArticle } from '@/components/layouts/documentation';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
