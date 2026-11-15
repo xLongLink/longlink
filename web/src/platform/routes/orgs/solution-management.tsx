@@ -301,36 +301,48 @@ export default function SolutionManagement({
                 )}
             </Stack>
             {selected?.kind === 'create' && (
-                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
+                <CreateSolution
+                    open
+                    organizationId={organization.id}
+                    onSuccess={onSuccess}
+                    onOpenChange={closeSelected}
+                />
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
+                    open
                     solutionId={selected.id}
                     organizationId={organization.id}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
+                    open
                     key={selected.solution.id}
                     base={base}
                     tags={tags}
                     solution={selected.solution}
                     onSuccess={onSuccess}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
             {selected?.kind === 'update' && (
                 <DeploymentReview
+                    open
                     key={selected.item.id}
                     item={selected.item}
                     onSuccess={onSuccess}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
-            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onClose={closeSelected} />}
+            {selected?.kind === 'logs' && (
+                <SolutionLogsDialog open solutionId={selected.id} onOpenChange={closeSelected} />
+            )}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
-            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onClose={closeSelected} />}
+            {selected?.kind === 'mcp' && (
+                <SolutionMcpDialog open solutionId={selected.id} onOpenChange={closeSelected} />
+            )}
             <DeletionDialog
                 confirmation={
                     selected?.kind === 'delete'

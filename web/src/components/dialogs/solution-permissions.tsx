@@ -2,12 +2,13 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
+import type { ComponentProps } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -17,15 +18,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onClose,
+    onOpenChange,
     ...dialogProps
-}: DialogProps & { solutionId: string; organizationId: string }) {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { solutionId: string; organizationId: string }) {
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             <ApiBoundary key={solutionId}>
-                <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
+                <SolutionPermissions
+                    solutionId={solutionId}
+                    organizationId={organizationId}
+                    onClose={() => onOpenChange(false)}
+                />
             </ApiBoundary>
-        </Dialog>
+        </FramedDialog>
     );
 }
 

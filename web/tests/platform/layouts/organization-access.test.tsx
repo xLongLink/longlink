@@ -17,7 +17,7 @@ it('keeps unresolved organization reads behind their loading boundary', () => {
     const output = renderPlatform(<Layout />, '/orgs/00000000-0000-4000-8000-000000000002', [], '/orgs/:organization');
 
     // Assert
-    expect(output.textContent).toContain('Loading organization');
+    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading organization');
 });
 
 it.each([

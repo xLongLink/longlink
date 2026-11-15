@@ -2,22 +2,26 @@ import { z } from 'zod';
 import { RefreshCw } from 'lucide-react';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
-import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
+import { useRef, useTransition, type ComponentProps } from 'react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
-export function SolutionLogsDialog({ solutionId, onClose, ...dialogProps }: DialogProps & { solutionId: string }) {
+export function SolutionLogsDialog({
+    solutionId,
+    onOpenChange,
+    ...dialogProps
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { solutionId: string }) {
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             <Stack height="min(560px, calc(100dvh - var(--spacing) * 40))" paddingInline={8} paddingBlock={4}>
                 <ApiBoundary key={solutionId}>
-                    <SolutionLogs solutionId={solutionId} onClose={onClose} />
+                    <SolutionLogs solutionId={solutionId} onClose={() => onOpenChange(false)} />
                 </ApiBoundary>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }
 

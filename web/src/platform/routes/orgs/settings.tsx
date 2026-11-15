@@ -338,9 +338,10 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
             </Stack>
             {canManageSelectedMember && member && (
                 <MemberAccess
+                    open
                     name={selectedMember.user.name}
                     action={member.action}
-                    onClose={() => setMember(null)}
+                    onOpenChange={() => setMember(null)}
                     onConfirm={async () => {
                         // Update access on the server before refreshing the member list.
                         if (member.action.kind === 'remove') {
@@ -493,7 +494,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
             <InviteMember
                 open={invitationAttempt !== null}
                 canInviteAdmin={canInviteAdmin}
-                onClose={closeInvitation}
+                onOpenChange={closeInvitation}
                 onSubmit={inviteMember}
             />
         </>

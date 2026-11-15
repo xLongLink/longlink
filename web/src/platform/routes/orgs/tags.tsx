@@ -132,10 +132,11 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
             </Stack>
             {action && action.kind !== 'delete' && (
                 <TagForm
+                    open
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
                     tag={action.kind === 'create' ? null : action.tag}
-                    onClose={() => setAction(null)}
+                    onOpenChange={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
                         await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });

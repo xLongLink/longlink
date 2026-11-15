@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -18,7 +19,7 @@ const organizationSchema = zOrganizationCreate.extend({
 export default function CreateOrganization({
     onSuccess,
     ...dialogProps
-}: DialogProps & { onSuccess: () => Promise<void> }) {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { onSuccess: () => Promise<void> }) {
     const form = useForm({ resolver: zodResolver(organizationSchema), defaultValues: { name: '' } });
 
     /** Creates the organization before awaiting the parent's success workflow. */
@@ -34,7 +35,7 @@ export default function CreateOrganization({
 
     // Keep the split dialog compact and within the dynamic viewport.
     return (
-        <Dialog paddingInline={0} {...dialogProps}>
+        <FramedDialog paddingInline={0} {...dialogProps}>
             <div className="flex h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                 <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                     <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
@@ -108,6 +109,6 @@ export default function CreateOrganization({
                     </Stack>
                 </div>
             </div>
-        </Dialog>
+        </FramedDialog>
     );
 }

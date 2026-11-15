@@ -15,18 +15,18 @@ it('preserves loading and failure status content through hydration and recovery 
 
     try {
         await act(async () => {});
-        expect(output.querySelector('[role="status"]')?.textContent).toBe('Preparing View');
+        expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Preparing View');
         await act(async () => root.render(<PageLoading label="Loading View" />));
-        await vi.waitFor(() => expect(output.querySelector('[role="status"]')?.textContent).toBe('Loading View'));
-        const labelId = output.querySelector('[role="progressbar"]')?.getAttribute('aria-labelledby');
-        expect(output.querySelector(`[id="${labelId}"]`)?.textContent).toBe('Loading View');
+        await vi.waitFor(() =>
+            expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading View')
+        );
         await act(async () =>
             root.render(<PageError title="Unable to load this View" description="Runtime assets are unavailable." />)
         );
         await vi.waitFor(() =>
             expect(output.querySelector('[role="status"]')?.textContent).toContain('Runtime assets are unavailable.')
         );
-        expect(output.querySelector('[role="progressbar"]')).toBeNull();
+        expect(output.querySelector('[data-slot="spinner"]')).toBeNull();
         await act(async () =>
             root.render(
                 <PageError

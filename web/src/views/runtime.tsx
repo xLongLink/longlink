@@ -7,8 +7,8 @@ import { createRoot } from 'react-dom/client';
 import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
+import { Spinner } from '@/components/shadcn/spinner';
 import { FileRequestContext } from '@/components/custom/preview';
-import { NativeLoading } from '@/components/custom/native-loading';
 import { FileViewerContext } from '@/components/custom/file-context';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
@@ -414,7 +414,7 @@ function initialize(event: MessageEvent<unknown>): void {
                             <React.Suspense
                                 fallback={
                                     <div className="grid min-h-dvh w-full place-items-center">
-                                        <NativeLoading label="Loading View" />
+                                        <Spinner aria-label="Loading View" className="motion-reduce:animate-none" />
                                     </div>
                                 }
                             >

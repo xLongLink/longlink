@@ -14,7 +14,7 @@ it('does not mount protected content while the identity request is unresolved', 
     const output = renderPlatform(<Layout />, '/user/organizations');
 
     // Assert
-    expect(output.textContent).toContain('Loading account');
+    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading account');
     expect(output.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
 });
 

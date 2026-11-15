@@ -3,14 +3,15 @@ import { useState } from 'react';
 import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
 import { Link, useLocation } from 'react-router';
+import { Input } from '@/components/shadcn/input';
 import { Button } from '@/components/shadcn/button';
 import { UserRound, Building2 } from 'lucide-react';
 import { Separator } from '@/components/shadcn/separator';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
 import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
-import { NativeTextInput } from '@/components/custom/native-text-input';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
@@ -98,14 +99,18 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                     </h2>
                                 </div>
                                 <Separator />
-                                <NativeTextInput
-                                    label="Username"
-                                    value={name}
-                                    required
-                                    readOnly={userUpdate.isPending}
-                                    onChange={(event) => setName(event.target.value)}
-                                    onBlur={() => void saveAccount()}
-                                />
+                                <Field className="min-w-0">
+                                    <FieldLabel htmlFor="account-name">Username</FieldLabel>
+                                    <Input
+                                        id="account-name"
+                                        value={name}
+                                        required
+                                        aria-required
+                                        readOnly={userUpdate.isPending}
+                                        onChange={(event) => setName(event.target.value)}
+                                        onBlur={() => void saveAccount()}
+                                    />
+                                </Field>
                             </div>
                             <AppearanceSettings />
                         </div>

@@ -113,12 +113,13 @@ export default function Compute() {
             </Stack>
             {dialog?.kind === 'registration' && (
                 <ComputeRegistration
+                    open
                     onSuccess={async () => {
                         // Refresh the list before closing only this registration attempt.
                         await invalidate();
                         setDialog((current) => (current === dialog ? null : current));
                     }}
-                    onClose={() => {
+                    onOpenChange={() => {
                         // An obsolete registration cannot dismiss a replacement dialog selection.
                         setDialog((current) => (current === dialog ? null : current));
                     }}
@@ -126,8 +127,9 @@ export default function Compute() {
             )}
             {metadata && (
                 <ComputeMetadata
+                    open
                     metadata={metadata}
-                    onClose={() => setDialog(null)}
+                    onOpenChange={() => setDialog(null)}
                     onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
                 />
             )}

@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
-import { Divider } from '@/components/custom/divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { GoogleIcon } from '@/components/svg/google-icon';
 import { emailSchema, passwordSchema } from './validation';
+import { FieldSeparator } from '@/components/shadcn/field';
 import { GitHubIcon } from '@/components/svg/git-hub-icon';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
@@ -156,7 +156,7 @@ export default function Login() {
                     </form>
                     {availableOAuthProviders.length > 0 ? (
                         <div className="flex flex-col gap-2">
-                            <Divider label="or" />
+                            <FieldSeparator>or</FieldSeparator>
                             <div className="flex flex-col gap-2">
                                 {availableOAuthProviders.map((provider) => (
                                     <Button
@@ -179,19 +179,15 @@ export default function Login() {
                     ) : null}
                 </div>
 
-                <Divider
-                    label={
-                        <>
-                            New to LongLink?{' '}
-                            <Link
-                                to={`/auth/register${registerSearch}`}
-                                className="font-medium text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
-                            >
-                                Create account
-                            </Link>
-                        </>
-                    }
-                />
+                <FieldSeparator>
+                    New to LongLink?{' '}
+                    <Link
+                        to={`/auth/register${registerSearch}`}
+                        className="font-medium text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
+                    >
+                        Create account
+                    </Link>
+                </FieldSeparator>
             </div>
         </AuthLayout>
     );

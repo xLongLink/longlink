@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import {
@@ -27,9 +28,9 @@ export function TagForm({
     base,
     tag,
     onSuccess,
-    onClose,
+    onOpenChange,
     ...dialogProps
-}: DialogProps & {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
@@ -54,7 +55,7 @@ export function TagForm({
     });
 
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             <Stack padding={8} minHeight="100%" justify="center" className="shrink-0">
                 <Stack gap={6} width="100%" maxWidth={640} className="mx-auto">
                     <h2 className="font-semibold tracking-tight text-3xl text-center">
@@ -124,7 +125,7 @@ export function TagForm({
                                 />
                                 <Stack direction="horizontal" gap={2}>
                                     <Button type="submit">{tag ? 'Save' : 'Create tab'}</Button>
-                                    <Button type="button" variant="ghost" onClick={onClose}>
+                                    <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                                         Cancel
                                     </Button>
                                 </Stack>
@@ -134,6 +135,6 @@ export function TagForm({
                     </form>
                 </Stack>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }

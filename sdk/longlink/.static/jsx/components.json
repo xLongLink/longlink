@@ -920,34 +920,6 @@
             ]
         },
         {
-            "name": "Disclosure",
-            "category": "Layouts",
-            "introduction": "Custom LongLink disclosure with initially-open persistent content, fixed trigger composition, and controlled-close focus recovery.",
-            "properties": [
-                { "name": "children", "type": "ReactNode", "description": "Content that collapses and expands." },
-                {
-                    "name": "trigger",
-                    "type": "ReactNode",
-                    "description": "Content shown in the trigger area (always visible)."
-                },
-                { "name": "defaultOpen", "type": "boolean", "description": "Initial open state.", "default": true },
-                { "name": "open", "type": "boolean", "description": "Controlled open state." },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents toggling without changing the open state.",
-                    "default": false
-                },
-                {
-                    "name": "onOpenChange",
-                    "type": "(isOpen: boolean) => void",
-                    "description": "Runs when the open state changes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Keeps disclosure drafts mounted, defaults to open, and restores focus when controlled visibility closes the content."
-        },
-        {
             "name": "Currency",
             "category": "Display",
             "introduction": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter.",
@@ -1073,26 +1045,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/base/separator"
-        },
-        {
-            "name": "Divider",
-            "category": "Display",
-            "introduction": "Custom labeled separator composition. Use Separator for an unlabeled line.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "ReactNode",
-                    "description": "Required label centered between decorative lines."
-                },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Orientation of the divider.",
-                    "default": "horizontal"
-                }
-            ],
-            "source": "custom",
-            "justification": "Composes two decorative shadcn separators around one accessible label; native Separator represents a single line."
         },
         {
             "name": "DropdownMenu",

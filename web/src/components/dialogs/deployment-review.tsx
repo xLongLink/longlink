@@ -1,19 +1,19 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { ArrowRight, RefreshCw } from 'lucide-react';
+import { useState, type ComponentProps } from 'react';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeTextInput } from '@/components/custom/native-text-input';
-import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
-type DeploymentReviewProps = DialogProps & {
+type DeploymentReviewProps = Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
     item: { id: string; name: string };
     onSuccess: () => void | Promise<void>;
 };
@@ -25,7 +25,7 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ item, onSuccess, onClose, ...dialogProps }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onOpenChange, ...dialogProps }: DeploymentReviewProps) {
     // Scope inspection and drafts to one freshly opened review attempt.
     const [attemptId] = useState(() => crypto.randomUUID());
 
@@ -90,7 +90,7 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
 
     // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             {!candidate ? (
                 <div className="h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                     <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
@@ -98,7 +98,7 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                             <h2 className="font-semibold tracking-tight text-3xl">Update {item.name}</h2>
                             <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
                             <Stack direction="horizontal" gap={2}>
-                                <Button variant="ghost" onClick={onClose}>
+                                <Button variant="ghost" onClick={() => onOpenChange(false)}>
                                     Cancel
                                 </Button>
                                 {!isPending && <Button onClick={() => void refetch()}>Retry</Button>}
@@ -193,25 +193,58 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                                                             'Please complete this field.'
                                                     }}
                                                     render={({ field, fieldState }) => (
-                                                        <NativeTextInput
-                                                            {...field}
-                                                            label={environment.name}
-                                                            description={environment.description ?? undefined}
-                                                            type="password"
-                                                            value={field.value ?? ''}
-                                                            error={fieldState.error?.message}
-                                                            disabled={isRemoved}
-                                                            required={
-                                                                environment.required && (!configured || isRemoved)
-                                                            }
-                                                            placeholder={
-                                                                isRemoved
-                                                                    ? 'Will be removed'
-                                                                    : configured
-                                                                      ? 'Configured: preserve existing value'
-                                                                      : environment.description || 'Enter value'
-                                                            }
-                                                        />
+                                                        <Field
+                                                            className="min-w-0"
+                                                            data-disabled={isRemoved || undefined}
+                                                            data-invalid={fieldState.invalid}
+                                                        >
+                                                            <FieldLabel htmlFor={field.name}>
+                                                                {environment.name}
+                                                            </FieldLabel>
+                                                            {environment.description && (
+                                                                <FieldDescription id={`${field.name}-description`}>
+                                                                    {environment.description}
+                                                                </FieldDescription>
+                                                            )}
+                                                            <Input
+                                                                {...field}
+                                                                id={field.name}
+                                                                type="password"
+                                                                value={field.value ?? ''}
+                                                                disabled={isRemoved}
+                                                                required={
+                                                                    environment.required && (!configured || isRemoved)
+                                                                }
+                                                                aria-required={
+                                                                    (environment.required &&
+                                                                        (!configured || isRemoved)) ||
+                                                                    undefined
+                                                                }
+                                                                aria-invalid={fieldState.invalid}
+                                                                aria-describedby={
+                                                                    [
+                                                                        environment.description &&
+                                                                            `${field.name}-description`,
+                                                                        fieldState.error?.message &&
+                                                                            `${field.name}-error`
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(' ') || undefined
+                                                                }
+                                                                placeholder={
+                                                                    isRemoved
+                                                                        ? 'Will be removed'
+                                                                        : configured
+                                                                          ? 'Configured: preserve existing value'
+                                                                          : environment.description || 'Enter value'
+                                                                }
+                                                            />
+                                                            {fieldState.error?.message && (
+                                                                <FieldError id={`${field.name}-error`}>
+                                                                    {fieldState.error.message}
+                                                                </FieldError>
+                                                            )}
+                                                        </Field>
                                                     )}
                                                 />
                                                 {configured && !environment.required && (
@@ -245,6 +278,6 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                     </form>
                 </FormProvider>
             )}
-        </Dialog>
+        </FramedDialog>
     );
 }

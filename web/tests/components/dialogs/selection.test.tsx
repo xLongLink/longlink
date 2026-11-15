@@ -12,7 +12,7 @@ it.each([false, true])('submits the selected invitation role with admin access=%
     const user = userEvent.setup();
 
     await withMounted(
-        <InviteMember canInviteAdmin={canInviteAdmin} onSubmit={submitted} onClose={() => {}} />,
+        <InviteMember open canInviteAdmin={canInviteAdmin} onSubmit={submitted} onOpenChange={() => {}} />,
         async () => {
             const email = document.getElementById('invite-email');
             const role = document.getElementById('invite-role');
@@ -60,7 +60,7 @@ it('saves a searched icon identifier and trimmed name through the controlled tab
 
     try {
         await withMounted(
-            <TagForm base="/api/v1/organizations/test" tag={null} onSuccess={complete} onClose={() => {}} />,
+            <TagForm open base="/api/v1/organizations/test" tag={null} onSuccess={complete} onOpenChange={() => {}} />,
             async () => {
                 const name = document.getElementById('tag-name');
                 const icon = document.getElementById('tag-icon');

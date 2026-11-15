@@ -1,11 +1,11 @@
-import { NativeLoading } from '@/components/custom/native-loading';
+import { Spinner } from '@/components/shadcn/spinner';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {
     return (
         <div className="flex min-h-[70dvh] min-w-0 items-center justify-center">
-            <NativeLoading label={label} />
+            <Spinner aria-label={label} className="motion-reduce:animate-none" />
         </div>
     );
 }

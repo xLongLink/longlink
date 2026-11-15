@@ -15489,10 +15489,6 @@ export function DataTable<T extends Record<string, unknown>>({ data, columns, ha
     emptyMessage?: React$1.ReactNode;
     verticalAlign?: "top" | "middle" | "bottom";
 }): React$1.JSX.Element;
-export function Divider({ label, orientation, className, ...props }: Omit<React$1.ComponentProps<"div">, "children"> & {
-    label: React$1.ReactNode;
-    orientation?: "horizontal" | "vertical";
-}): React$1.JSX.Element;
 type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     src: string;
     alt: string;
@@ -16640,14 +16636,6 @@ export function InputGroupButton({ className, type, variant, size, ...props }: O
 export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
 export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
 export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-export function Disclosure(props: {
-    children?: React$1.ReactNode;
-    trigger: React$1.ReactNode;
-    defaultOpen?: boolean;
-    open?: boolean;
-    disabled?: boolean;
-    onOpenChange?: (isOpen: boolean) => void;
-}): React$1.JSX.Element;
 function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
 function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
 export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
@@ -17361,6 +17349,7 @@ type ProgressStepperProps = {
 type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
     onStepClick?: (index: number) => void;
     height?: number | string;
+    showProgress?: boolean;
     next?: (step: number) => {
         label: string;
         action: () => void | boolean | Promise<void | boolean>;
@@ -20411,8 +20400,6 @@ declare const DialogOverlay: typeof NativeFrontend.DialogOverlay;
 declare const DialogPortal: typeof NativeFrontend.DialogPortal;
 declare const DialogTitle: typeof NativeFrontend.DialogTitle;
 declare const DialogTrigger: typeof NativeFrontend.DialogTrigger;
-declare const Disclosure: typeof NativeFrontend.Disclosure;
-declare const Divider: typeof NativeFrontend.Divider;
 declare const DropdownMenu: typeof NativeFrontend.DropdownMenu;
 declare const DropdownMenuCheckboxItem: typeof NativeFrontend.DropdownMenuCheckboxItem;
 declare const DropdownMenuContent: typeof NativeFrontend.DropdownMenuContent;

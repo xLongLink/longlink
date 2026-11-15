@@ -1,20 +1,20 @@
 import type { z } from 'zod';
-import { Dialog } from '@/components/custom/dialog';
+import type { ComponentProps } from 'react';
 import { Button } from '@/components/shadcn/button';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 export function ComputeMetadata({
     metadata,
     onDelete,
-    onClose
-}: {
+    ...dialogProps
+}: Pick<ComponentProps<typeof FramedDialog>, 'open' | 'onOpenChange'> & {
     metadata: z.output<typeof schemas.zComputeRegistryResponse>;
     onDelete: () => void;
-    onClose: () => void;
 }) {
     return (
-        <Dialog title="Compute metadata" onClose={onClose}>
+        <FramedDialog title="Compute metadata" {...dialogProps}>
             <Stack gap={2} padding={8}>
                 <span>
                     <b>Gateway</b> {metadata.gateway_url}
@@ -34,6 +34,6 @@ export function ComputeMetadata({
                     </Button>
                 </Stack>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }

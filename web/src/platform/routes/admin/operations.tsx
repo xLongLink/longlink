@@ -119,7 +119,7 @@ export default function Operations() {
                     <DataPagination {...pagination} totalItems={operations.total} />
                 </footer>
             </Stack>
-            {metadata && <OperationMetadata metadata={metadata} onClose={() => setMetadataId(null)} />}
+            {metadata && <OperationMetadata open metadata={metadata} onOpenChange={() => setMetadataId(null)} />}
         </Stack>
     );
 }

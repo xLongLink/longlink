@@ -3,8 +3,8 @@ import { TextField } from './field';
 import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { Mail, CircleCheck } from 'lucide-react';
-import { Divider } from '@/components/custom/divider';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FieldSeparator } from '@/components/shadcn/field';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -23,13 +23,11 @@ export default function ForgotPassword() {
             description={null}
         >
             <title>Reset Your Password | LongLink</title>
-            <Divider
-                label={
-                    <Link href="/login" className="font-medium">
-                        Back to sign in
-                    </Link>
-                }
-            />
+            <FieldSeparator>
+                <Link href="/login" className="font-medium">
+                    Back to sign in
+                </Link>
+            </FieldSeparator>
             {form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <div
@@ -75,16 +73,12 @@ export default function ForgotPassword() {
                     </Stack>
                 </form>
             )}
-            <Divider
-                label={
-                    <>
-                        Troubles?{' '}
-                        <Link href="mailto:info@longlink.dev" className="font-medium">
-                            Contact US
-                        </Link>
-                    </>
-                }
-            />
+            <FieldSeparator>
+                Troubles?{' '}
+                <Link href="mailto:info@longlink.dev" className="font-medium">
+                    Contact US
+                </Link>
+            </FieldSeparator>
         </AuthLayout>
     );
 }

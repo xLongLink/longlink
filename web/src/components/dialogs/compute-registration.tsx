@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -20,7 +21,10 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
-export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps & { onSuccess: () => Promise<void> }) {
+export function ComputeRegistration({
+    onSuccess,
+    ...dialogProps
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { onSuccess: () => Promise<void> }) {
     const form = useForm({
         resolver: zodResolver(registrationSchema),
         defaultValues: { name: '', gateway_url: '', storage_endpoint: '', kubeconfig: '' },
@@ -80,7 +84,7 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
     });
 
     return (
-        <Dialog {...dialogProps}>
+        <FramedDialog {...dialogProps}>
             <FormProvider {...form}>
                 <form
                     onSubmit={(event) => {
@@ -200,6 +204,6 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                     <FieldError errors={[form.formState.errors.root]} />
                 </form>
             </FormProvider>
-        </Dialog>
+        </FramedDialog>
     );
 }

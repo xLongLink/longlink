@@ -1,19 +1,23 @@
 import { Plug } from 'lucide-react';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
-import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import { useNotification } from '@/lib/notifications';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useRef, useTransition, type ComponentProps } from 'react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
-export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: DialogProps & { solutionId: string }) {
+export function SolutionMcpDialog({
+    solutionId,
+    onOpenChange,
+    ...dialogProps
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { solutionId: string }) {
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             <div className="flex h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                 <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                     <Stack
@@ -35,7 +39,7 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
                         </Stack>
                         <Stack gap={4} width={0} className="min-w-full">
                             <ApiBoundary key={solutionId}>
-                                <SolutionMcpUrl solutionId={solutionId} onClose={onClose} />
+                                <SolutionMcpUrl solutionId={solutionId} onClose={() => onOpenChange(false)} />
                             </ApiBoundary>
                             <NativeNavigationLink
                                 className={buttonVariants({ className: 'w-full' })}
@@ -61,7 +65,7 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
                     </Stack>
                 </div>
             </div>
-        </Dialog>
+        </FramedDialog>
     );
 }
 

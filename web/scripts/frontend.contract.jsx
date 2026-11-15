@@ -93,7 +93,7 @@ const nativeComposition = (
                 <Grid id="preview" style={{ gridTemplateColumns: '1fr' }} />
             </Stack>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
-            <Divider label={<a href="/login">Sign in</a>} />
+            <FieldSeparator><a href="/login">Sign in</a></FieldSeparator>
             <Link
                 ref={linkRef}
                 href="/orders"
@@ -209,7 +209,10 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <Disclosure trigger="Persistent details" defaultOpen={false} disabled={false} />
+            <Collapsible>
+                <CollapsibleTrigger>Details</CollapsibleTrigger>
+                <CollapsibleContent>Order details</CollapsibleContent>
+            </Collapsible>
             <DropdownMenu
                 open={selected === 'menu'}
                 onOpenChange={(open, details) => {
@@ -429,8 +432,6 @@ const _adapters = (
 const _badVariant = <Badge variant="not-a-variant" />;
 // @ts-expect-error Native Button no longer accepts the legacy label adapter.
 const _legacyButton = <Button label="Save" />;
-// @ts-expect-error Unlabeled lines use native Separator, not custom Divider.
-const _unlabeledDivider = <Divider />;
 // @ts-expect-error Native Separator has no LongLink full-bleed policy.
 const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.

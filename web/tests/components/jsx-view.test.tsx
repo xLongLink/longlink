@@ -21,5 +21,5 @@ it('does not expose an executable frame before its runtime assets are verified',
     // Assert
     expect(output.querySelector('iframe')).toBeNull();
     expect(output.textContent).not.toContain('private source');
-    expect(output.textContent).toContain('Preparing View');
+    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Preparing View');
 });

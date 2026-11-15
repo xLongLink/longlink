@@ -312,17 +312,13 @@ it('bounds request failures and retries the failed query instead of leaving its 
 
     try {
         await vi.waitFor(() => expect(requests).toHaveLength(1));
-        const progress = runtime.mount.querySelector('[role="progressbar"]');
+        const progress = runtime.mount.querySelector('[data-slot="spinner"]');
 
         if (!progress) throw new Error('Expected pending View progress');
-        const labelId = progress.getAttribute('aria-labelledby');
-
-        if (!labelId) throw new Error('Expected visible loading label association');
-        expect(document.getElementById(labelId)?.textContent).toBe('Loading View');
-        expect(progress.closest('[role="status"]')?.textContent).toBe('Loading View');
+        expect(progress.getAttribute('aria-label')).toBe('Loading View');
         runtime.send({ id: requests[0], ok: false, error: failure });
         await vi.waitFor(() => expect(runtime.mount.querySelector('h2')?.textContent).toBe('View could not be loaded'));
-        expect(runtime.mount.querySelector('[role="progressbar"]')).toBeNull();
+        expect(runtime.mount.querySelector('[data-slot="spinner"]')).toBeNull();
         expect(runtime.mount.querySelector('[role="region"], section')?.getAttribute('aria-label')).toBe(
             'Solution View'
         );

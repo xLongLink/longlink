@@ -44,12 +44,18 @@ it.each(['member', 'invitation'] as const)(
         await withMounted(
             <ApiErrorContext value={createErrorReporter(notify)}>
                 {kind === 'member' ? (
-                    <MemberAccess open name="Reader" action={{ kind: 'remove' }} onClose={close} onConfirm={confirm} />
+                    <MemberAccess
+                        open
+                        name="Reader"
+                        action={{ kind: 'remove' }}
+                        onOpenChange={close}
+                        onConfirm={confirm}
+                    />
                 ) : (
                     <InvitationResponse
                         open
                         invitation={{ type: 'accept', name: 'Team' }}
-                        onClose={close}
+                        onOpenChange={close}
                         onConfirm={confirm}
                     />
                 )}

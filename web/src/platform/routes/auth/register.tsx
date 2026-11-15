@@ -5,10 +5,10 @@ import { AuthLayout } from './auth-layout';
 import { useSearchParams } from 'react-router';
 import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
-import { Divider } from '@/components/custom/divider';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
+import { FieldSeparator } from '@/components/shadcn/field';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -59,16 +59,12 @@ export default function Register() {
                         </Button>
                     </Stack>
                 </form>
-                <Divider
-                    label={
-                        <>
-                            Already have an account?{' '}
-                            <Link href={`/login${signInSearch}`} className="font-medium">
-                                Sign In
-                            </Link>
-                        </>
-                    }
-                />
+                <FieldSeparator>
+                    Already have an account?{' '}
+                    <Link href={`/login${signInSearch}`} className="font-medium">
+                        Sign In
+                    </Link>
+                </FieldSeparator>
             </Stack>
         </AuthLayout>
     );

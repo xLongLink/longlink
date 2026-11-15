@@ -1,24 +1,27 @@
 import { useApiError } from '@/lib/errors';
-import { useRef, useTransition } from 'react';
 import { Button } from '@/components/shadcn/button';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
+import { useRef, useTransition, type ComponentProps } from 'react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 export function InvitationResponse({
     invitation,
-    onClose,
+    onOpenChange,
     onConfirm,
     ...dialogProps
-}: DialogProps & { invitation: { type: 'accept' | 'decline'; name: string }; onConfirm: () => Promise<void> }) {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
+    invitation: { type: 'accept' | 'decline'; name: string };
+    onConfirm: () => Promise<void>;
+}) {
     const reportError = useApiError();
     const inFlight = useRef(false);
     const [pending, startConfirmation] = useTransition();
 
     return (
-        <Dialog
+        <FramedDialog
             title={invitation.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
             {...dialogProps}
-            onClose={onClose}
+            onOpenChange={onOpenChange}
         >
             <Stack gap={3}>
                 <span className="text-muted-foreground">
@@ -27,7 +30,7 @@ export function InvitationResponse({
                         : `Decline the invitation to ${invitation.name}? You will need a new invitation to join.`}
                 </span>
                 <Stack direction="horizontal" gap={2} justify="end">
-                    <Button variant="ghost" onClick={onClose}>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     <Button
@@ -56,6 +59,6 @@ export function InvitationResponse({
                     </span>
                 </Stack>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }

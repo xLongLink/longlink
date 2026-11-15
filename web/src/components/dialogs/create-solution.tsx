@@ -2,15 +2,16 @@ import { cn } from 'cn';
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { buttonVariants } from '@/components/shadcn/button';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 
@@ -18,9 +19,12 @@ import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onClose,
+    onOpenChange,
     ...dialogProps
-}: DialogProps & { organizationId: string; onSuccess: () => void | Promise<void> }) {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
+    organizationId: string;
+    onSuccess: () => void | Promise<void>;
+}) {
     const [metadata, setMetadata] = useState<z.output<typeof schemas.zLongLinkMetadata>>();
 
     const schema = schemas.zSolutionCreate
@@ -82,7 +86,7 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <Dialog {...dialogProps} onClose={onClose}>
+        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
             <FormProvider {...form}>
                 <form
                     onSubmit={(event) => {
@@ -94,7 +98,7 @@ export default function CreateSolution({
                     <Wizard
                         showProgress={false}
                         height="min(560px, calc(100dvh - var(--spacing) * 40))"
-                        onCancel={onClose}
+                        onCancel={() => onOpenChange(false)}
                         next={(step) => (step === 0 ? { label: 'Inspect', action: inspectImage } : undefined)}
                     >
                         <Step label="Image" fields={['image']}>
@@ -247,6 +251,6 @@ export default function CreateSolution({
                     <FieldError errors={[form.formState.errors.root]} />
                 </form>
             </FormProvider>
-        </Dialog>
+        </FramedDialog>
     );
 }

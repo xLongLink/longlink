@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -15,7 +16,7 @@ export function InviteMember({
     canInviteAdmin,
     onSubmit,
     ...dialogProps
-}: DialogProps & {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
     canInviteAdmin: boolean;
     onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
@@ -41,7 +42,7 @@ export function InviteMember({
     });
 
     return (
-        <Dialog paddingInline={0} {...dialogProps}>
+        <FramedDialog paddingInline={0} {...dialogProps}>
             <div className="flex h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                 <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                     <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
@@ -148,6 +149,6 @@ export function InviteMember({
                     </Stack>
                 </div>
             </div>
-        </Dialog>
+        </FramedDialog>
     );
 }

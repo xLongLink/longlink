@@ -8,10 +8,10 @@ import { PageError } from '@/components/ui/utils';
 import { manifestSchema } from '@/views/manifest';
 import Platform from '@/components/layouts/platform';
 import type { IconName } from 'lucide-react/dynamic';
+import { Spinner } from '@/components/shadcn/spinner';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { PageContainer } from '@/components/ui/page-container';
 import { matchRoutes, Navigate, useParams } from 'react-router';
-import { NativeLoading } from '@/components/custom/native-loading';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 const EMPTY_VIEWS = [] as const;
@@ -169,7 +169,7 @@ export function SolutionPage({
     } else {
         content = (
             <div className="flex min-h-[calc(100vh-14rem)] w-full min-w-0 items-center justify-center">
-                <NativeLoading label="Loading" />
+                <Spinner className="motion-reduce:animate-none" />
             </div>
         );
     }

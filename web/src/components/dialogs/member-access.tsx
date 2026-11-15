@@ -1,16 +1,16 @@
 import { useApiError } from '@/lib/errors';
-import { useRef, useTransition } from 'react';
 import { Button } from '@/components/shadcn/button';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
+import { useRef, useTransition, type ComponentProps } from 'react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 export function MemberAccess({
     name,
     action,
-    onClose,
+    onOpenChange,
     onConfirm,
     ...dialogProps
-}: DialogProps & {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
     name: string;
     action: { kind: 'role'; role: string } | { kind: 'remove' };
     onConfirm: () => Promise<void>;
@@ -20,7 +20,11 @@ export function MemberAccess({
     const [pending, startConfirmation] = useTransition();
 
     return (
-        <Dialog title={action.kind === 'remove' ? 'Remove member' : 'Change role'} {...dialogProps} onClose={onClose}>
+        <FramedDialog
+            title={action.kind === 'remove' ? 'Remove member' : 'Change role'}
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+        >
             <Stack gap={3}>
                 <span className="text-muted-foreground">
                     {action.kind === 'remove'
@@ -28,7 +32,7 @@ export function MemberAccess({
                         : `Change ${name} to ${action.role}?`}
                 </span>
                 <Stack direction="horizontal" gap={2} justify="end">
-                    <Button variant="ghost" onClick={onClose}>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     <Button
@@ -57,6 +61,6 @@ export function MemberAccess({
                     </span>
                 </Stack>
             </Stack>
-        </Dialog>
+        </FramedDialog>
     );
 }

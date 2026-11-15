@@ -21,11 +21,9 @@ import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
-import { Divider } from '@/components/custom/divider';
 import { RadioGroupExample } from './views/radio-group';
 import { Currency } from '@/components/custom/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
-import { Disclosure } from '@/components/custom/disclosure';
 import { FileText, FolderCode, ImageIcon } from 'lucide-react';
 import { GeneratedAvatarExample } from './views/generated-avatar';
 import { Heading as ViewHeading } from '@/components/custom/heading';
@@ -36,6 +34,7 @@ import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/component-documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import {
     CodeBlock,
@@ -104,7 +103,6 @@ const previews = new Map(
                 </CardFooter>
             </Card>
         ),
-        Divider: <Divider label="or" />,
         DropdownMenu: <DropdownMenuExample />,
         Empty: (
             <Empty>
@@ -226,39 +224,44 @@ export default function Item({ params }) {
                         <CodeBlockCopyButton className="ml-auto" />
                     </CodeBlockHeader>
                 </CodeBlock>
-                <Disclosure trigger="API reference" defaultOpen={false}>
-                    <DataTable
-                        idKey="name"
-                        density="compact"
-                        verticalAlign="top"
-                        data={[
-                            {
-                                name: 'navigate(path)',
-                                description:
-                                    'Navigates within the current Solution or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
-                            },
-                            {
-                                name: 'request(path, options)',
-                                description:
-                                    'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
-                            },
-                            ...viewHooks
-                        ]}
-                        columns={[
-                            {
-                                key: 'name',
-                                header: 'API',
-                                width: proportional(1),
-                                renderCell: (api) => (
-                                    <Stack gap={0}>
-                                        <InlineCode className="self-start">{api.name}</InlineCode>
-                                        <span className="text-xs text-muted-foreground">{api.description}</span>
-                                    </Stack>
-                                )
-                            }
-                        ]}
-                    />
-                </Disclosure>
+                <Collapsible>
+                    <CollapsibleTrigger render={<Button type="button" variant="ghost" />}>
+                        API reference
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                        <DataTable
+                            idKey="name"
+                            density="compact"
+                            verticalAlign="top"
+                            data={[
+                                {
+                                    name: 'navigate(path)',
+                                    description:
+                                        'Navigates within the current Solution or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
+                                },
+                                {
+                                    name: 'request(path, options)',
+                                    description:
+                                        'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
+                                },
+                                ...viewHooks
+                            ]}
+                            columns={[
+                                {
+                                    key: 'name',
+                                    header: 'API',
+                                    width: proportional(1),
+                                    renderCell: (api) => (
+                                        <Stack gap={0}>
+                                            <InlineCode className="self-start">{api.name}</InlineCode>
+                                            <span className="text-xs text-muted-foreground">{api.description}</span>
+                                        </Stack>
+                                    )
+                                }
+                            ]}
+                        />
+                    </CollapsibleContent>
+                </Collapsible>
                 {documentationCategories
                     .filter((category) => category !== 'Runtime')
                     .map((category) => (

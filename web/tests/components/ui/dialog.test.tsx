@@ -2,7 +2,6 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import { Dialog as NativeDialog } from '@/components/custom/native-dialog';
@@ -23,14 +22,14 @@ it.each([undefined, 'fullscreen'] as const)(
         const activity = vi.fn();
         const user = userEvent.setup();
 
-        // Keep visibility caller-owned while exercising the shared close adapter.
+        // Keep visibility caller-owned while exercising the modal close control.
         await withMounted(
             <DialogActivityContext value={activity}>
-                <Dialog title="Edit order" variant={variant} onClose={close}>
+                <FramedDialog title="Edit order" variant={variant} open onOpenChange={close}>
                     <form onSubmit={submit}>
                         <input aria-label="Order name" />
                     </form>
-                </Dialog>
+                </FramedDialog>
             </DialogActivityContext>,
             async () => {
                 const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
@@ -38,7 +37,7 @@ it.each([undefined, 'fullscreen'] as const)(
                 if (!button) throw new Error('Missing close button');
 
                 await act(async () => user.click(button));
-                expect(close).toHaveBeenCalledExactlyOnceWith();
+                expect(close).toHaveBeenCalledExactlyOnceWith(false);
                 expect(submit).not.toHaveBeenCalled();
                 expect(activity).toHaveBeenCalledExactlyOnceWith(true, variant === 'fullscreen');
             }

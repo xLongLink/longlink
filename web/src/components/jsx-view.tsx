@@ -473,17 +473,19 @@ export function JsxView({
             </div>
             {(filePreview?.type === 'pdf' || filePreview?.type === 'media') && (
                 <FilePreview
+                    open
                     type={filePreview.type}
                     body={filePreview.body}
                     title={filePreview.title}
-                    onClose={() => setFilePreview(undefined)}
+                    onOpenChange={() => setFilePreview(undefined)}
                 />
             )}
             {filePreview?.type === 'text' && (
                 <TextPreview
+                    open
                     text={filePreview.text}
                     title={filePreview.title}
-                    onClose={() => setFilePreview(undefined)}
+                    onOpenChange={() => setFilePreview(undefined)}
                 />
             )}
         </div>

@@ -45,6 +45,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
             await withMounted(
                 <IconRequestContext value={icons.load}>
                     <SolutionTags
+                        open
                         base={`/api/v1/organizations/${membership.organization.id}`}
                         tags={tags}
                         solution={{
@@ -56,7 +57,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
                         onSuccess={async () => {
                             completed();
                         }}
-                        onClose={close}
+                        onOpenChange={close}
                     />
                 </IconRequestContext>,
                 async () => {

@@ -26,7 +26,7 @@ export { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 export * from '../src/views/adapter/display/empty';
 export * from '../src/views/adapter/action/dropdown-menu';
 export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption } from '../src/views/adapter/display/table';
-export { Separator, Divider } from '../src/views/adapter/display/separator';
+export { Separator } from '../src/views/adapter/display/separator';
 export { Image } from '../src/views/adapter/display/image';
 export { Text } from '../src/views/adapter/display/text';
 export { Heading } from '../src/views/adapter/display/heading';
@@ -50,7 +50,6 @@ export { Input } from '../src/views/adapter/form/input';
 export { Textarea } from '../src/views/adapter/form/textarea';
 export * from '../src/views/adapter/form/field';
 export * from '../src/views/adapter/form/input-group';
-export { Disclosure } from '../src/views/adapter/layouts/disclosure';
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../src/views/adapter/layouts/collapsible';
 export { Calendar } from '../src/views/adapter/form/calendar';
 export * from '../src/views/adapter/form/time-picker';

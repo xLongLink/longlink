@@ -86,7 +86,9 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     ]}
                 />
             </Stack>
-            {action?.kind === 'create' && <RegistryForm base={base} onSuccess={onSuccess} onClose={closeAction} />}
+            {action?.kind === 'create' && (
+                <RegistryForm open base={base} onSuccess={onSuccess} onOpenChange={closeAction} />
+            )}
             <DeletionDialog
                 confirmation={
                     action?.kind === 'delete'

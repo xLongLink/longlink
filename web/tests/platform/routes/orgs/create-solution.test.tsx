@@ -32,11 +32,12 @@ it('waits for image inspection before advancing to metadata without creating a S
     try {
         await withMounted(
             <CreateSolution
+                open
                 organizationId="organization"
                 onSuccess={() => {
                     completions.push('created');
                 }}
-                onClose={() => undefined}
+                onOpenChange={() => undefined}
             />,
             async () => {
                 const events = userEvent.setup();

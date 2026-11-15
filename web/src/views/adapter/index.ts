@@ -5,9 +5,6 @@ export { Stack, StackItem } from './layouts/stack';
 export { Grid, GridSpan } from './layouts/grid';
 
 /** @category Layouts */
-export { Disclosure } from './layouts/disclosure';
-
-/** @category Layouts */
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './layouts/collapsible';
 
 /** @category Display */
@@ -74,7 +71,7 @@ export {
 } from './action/dropdown-menu';
 
 /** @category Display */
-export { Separator, Divider } from './display/separator';
+export { Separator } from './display/separator';
 
 /** @category Layouts */
 export {

@@ -1,5 +1,6 @@
+import type { ComponentProps } from 'react';
 import { NativeFile } from '@/components/custom/native-file';
-import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { FramedDialog } from '@/components/custom/framed-dialog';
 
 /** Displays host-fetched PDF and media bytes with their native viewer layout. */
 export function FilePreview({
@@ -7,9 +8,9 @@ export function FilePreview({
     title,
     type,
     ...dialogProps
-}: DialogProps & { body: Blob; title: string; type: 'pdf' | 'media' }) {
+}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { body: Blob; title: string; type: 'pdf' | 'media' }) {
     return (
-        <Dialog
+        <FramedDialog
             title={title}
             variant="fullscreen"
             paddingInline={type === 'pdf' ? 0 : undefined}
@@ -23,6 +24,6 @@ export function FilePreview({
             ) : (
                 <NativeFile body={body} title={title} />
             )}
-        </Dialog>
+        </FramedDialog>
     );
 }
