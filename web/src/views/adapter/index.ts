@@ -45,22 +45,22 @@ export { Button, ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from './ac
 
 /** @category Action */
 export {
-    DropdownMenu,
-    DropdownMenuPortal,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuLabel,
-    DropdownMenuItem,
-    DropdownMenuCheckboxItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubTrigger,
-    DropdownMenuSubContent
-} from './action/dropdown-menu';
+    Dropdown,
+    DropdownPortal,
+    DropdownTrigger,
+    DropdownContent,
+    DropdownGroup,
+    DropdownLabel,
+    DropdownItem,
+    DropdownCheckboxItem,
+    DropdownRadioGroup,
+    DropdownRadioItem,
+    DropdownSeparator,
+    DropdownShortcut,
+    DropdownSub,
+    DropdownSubTrigger,
+    DropdownSubContent
+} from './action/dropdown';
 
 /** @category Display */
 export { Separator } from './display/separator';

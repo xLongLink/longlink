@@ -13927,21 +13927,36 @@ function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRad
 }): React$1.JSX.Element;
 function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
 function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-const DropdownMenu$1: ViewComponent<typeof DropdownMenu>;
-const DropdownMenuPortal$1: ViewComponent<typeof DropdownMenuPortal>;
-const DropdownMenuTrigger$1: ViewComponent<typeof DropdownMenuTrigger>;
-const DropdownMenuContent$1: ViewComponent<typeof DropdownMenuContent>;
-const DropdownMenuGroup$1: ViewComponent<typeof DropdownMenuGroup>;
-const DropdownMenuLabel$1: ViewComponent<typeof DropdownMenuLabel>;
-const DropdownMenuItem$1: ViewComponent<typeof DropdownMenuItem>;
-const DropdownMenuCheckboxItem$1: ViewComponent<typeof DropdownMenuCheckboxItem>;
-const DropdownMenuRadioGroup$1: ViewComponent<typeof DropdownMenuRadioGroup>;
-const DropdownMenuRadioItem$1: ViewComponent<typeof DropdownMenuRadioItem>;
-const DropdownMenuSeparator$1: ViewComponent<typeof DropdownMenuSeparator>;
-const DropdownMenuShortcut$1: ViewComponent<typeof DropdownMenuShortcut>;
-const DropdownMenuSub$1: ViewComponent<typeof DropdownMenuSub>;
-const DropdownMenuSubTrigger$1: ViewComponent<typeof DropdownMenuSubTrigger>;
-const DropdownMenuSubContent$1: ViewComponent<typeof DropdownMenuSubContent>;
+function Dropdown(props: React$1.ComponentProps<typeof DropdownMenu>): React$1.JSX.Element;
+function DropdownPortal(props: React$1.ComponentProps<typeof DropdownMenuPortal>): React$1.JSX.Element;
+function DropdownTrigger(props: Omit<React$1.ComponentProps<typeof DropdownMenuTrigger>, "className">): React$1.JSX.Element;
+function DropdownContent(props: Omit<React$1.ComponentProps<typeof DropdownMenuContent>, "className">): React$1.JSX.Element;
+function DropdownGroup(props: Omit<React$1.ComponentProps<typeof DropdownMenuGroup>, "className">): React$1.JSX.Element;
+function DropdownLabel(props: Omit<React$1.ComponentProps<typeof DropdownMenuLabel>, "className">): React$1.JSX.Element;
+function DropdownItem(props: Omit<React$1.ComponentProps<typeof DropdownMenuItem>, "className">): React$1.JSX.Element;
+function DropdownCheckboxItem(props: Omit<React$1.ComponentProps<typeof DropdownMenuCheckboxItem>, "className">): React$1.JSX.Element;
+function DropdownRadioGroup(props: Omit<React$1.ComponentProps<typeof DropdownMenuRadioGroup>, "className">): React$1.JSX.Element;
+function DropdownRadioItem(props: Omit<React$1.ComponentProps<typeof DropdownMenuRadioItem>, "className">): React$1.JSX.Element;
+function DropdownSeparator(props: Omit<React$1.ComponentProps<typeof DropdownMenuSeparator>, "className">): React$1.JSX.Element;
+function DropdownShortcut(props: Omit<React$1.ComponentProps<typeof DropdownMenuShortcut>, "className">): React$1.JSX.Element;
+function DropdownSub(props: React$1.ComponentProps<typeof DropdownMenuSub>): React$1.JSX.Element;
+function DropdownSubTrigger(props: Omit<React$1.ComponentProps<typeof DropdownMenuSubTrigger>, "className">): React$1.JSX.Element;
+function DropdownSubContent(props: Omit<React$1.ComponentProps<typeof DropdownMenuSubContent>, "className">): React$1.JSX.Element;
+const Dropdown$1: ViewComponent<typeof Dropdown>;
+const DropdownPortal$1: ViewComponent<typeof DropdownPortal>;
+const DropdownTrigger$1: ViewComponent<typeof DropdownTrigger>;
+const DropdownContent$1: ViewComponent<typeof DropdownContent>;
+const DropdownGroup$1: ViewComponent<typeof DropdownGroup>;
+const DropdownLabel$1: ViewComponent<typeof DropdownLabel>;
+const DropdownItem$1: ViewComponent<typeof DropdownItem>;
+const DropdownCheckboxItem$1: ViewComponent<typeof DropdownCheckboxItem>;
+const DropdownRadioGroup$1: ViewComponent<typeof DropdownRadioGroup>;
+const DropdownRadioItem$1: ViewComponent<typeof DropdownRadioItem>;
+const DropdownSeparator$1: ViewComponent<typeof DropdownSeparator>;
+const DropdownShortcut$1: ViewComponent<typeof DropdownShortcut>;
+const DropdownSub$1: ViewComponent<typeof DropdownSub>;
+const DropdownSubTrigger$1: ViewComponent<typeof DropdownSubTrigger>;
+const DropdownSubContent$1: ViewComponent<typeof DropdownSubContent>;
 function Table({ wrap, ...props }: Omit<React$1.ComponentProps<"table">, "className" | "style"> & {
     wrap?: boolean;
 }): React$1.JSX.Element;
@@ -15396,10 +15411,10 @@ type DropdownOption = {
     label: string;
     disabled: boolean;
 };
-function Dropdown(props: {
+function Dropdown$2(props: {
     options?: DropdownOption[] | undefined;
 } & Omit<React$1.SelectHTMLAttributes<HTMLSelectElement>, "children">): React$1.JSX.Element;
-type DropdownProps = Parameters<typeof Dropdown>[0];
+type DropdownProps = Parameters<typeof Dropdown$2>[0];
 function DropdownNav(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
 function Footer(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
 class CalendarWeek {
@@ -15520,7 +15535,7 @@ type CustomComponents = {
     CaptionLabel: typeof CaptionLabel;
     Day: typeof Day$1;
     DayButton: typeof DayButton;
-    Dropdown: typeof Dropdown;
+    Dropdown: typeof Dropdown$2;
     DropdownNav: typeof DropdownNav;
     Footer: typeof Footer;
     Month: typeof Month$1;
@@ -20338,7 +20353,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Calendar$1 as Calendar, Card$1 as Card, CardAction$1 as CardAction, CardContent$1 as CardContent, CardDescription$1 as CardDescription, CardFooter$1 as CardFooter, CardHeader$1 as CardHeader, CardTitle$1 as CardTitle, CartesianGrid$1 as CartesianGrid, ChartContainer$1 as ChartContainer, ChartLegendContent$1 as ChartLegendContent, ChartTooltipContent$1 as ChartTooltipContent, Checkbox$2 as Checkbox, CodeBlock$1 as CodeBlock, CodeBlockContent$1 as CodeBlockContent, CodeBlockCopyButton$1 as CodeBlockCopyButton, CodeBlockDownloadButton$1 as CodeBlockDownloadButton, CodeBlockExpandButton$1 as CodeBlockExpandButton, CodeBlockHeader$1 as CodeBlockHeader, CodeBlockLanguage$1 as CodeBlockLanguage, CodeBlockLineActions$1 as CodeBlockLineActions, CodeBlockTitle$1 as CodeBlockTitle, CodeBlockWrapToggle$1 as CodeBlockWrapToggle, ComboboxChip$2 as ComboboxChip, ComboboxChips$2 as ComboboxChips, ComboboxChipsInput$1 as ComboboxChipsInput, ComboboxCollection$2 as ComboboxCollection, ComboboxContent$1 as ComboboxContent, ComboboxEmpty$2 as ComboboxEmpty, ComboboxGroup$2 as ComboboxGroup, ComboboxInput$2 as ComboboxInput, ComboboxItem$2 as ComboboxItem, ComboboxLabel$2 as ComboboxLabel, ComboboxList$2 as ComboboxList, ComboboxSeparator$2 as ComboboxSeparator, ComboboxTrigger$2 as ComboboxTrigger, ComboboxValue$2 as ComboboxValue, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DialogClose$2 as DialogClose, DialogContent$1 as DialogContent, DialogDescription$2 as DialogDescription, DialogFooter$1 as DialogFooter, DialogHeader$1 as DialogHeader, DialogOverlay$1 as DialogOverlay, DialogPortal$2 as DialogPortal, DialogTitle$2 as DialogTitle, DialogTrigger$2 as DialogTrigger, DropdownMenu$1 as DropdownMenu, DropdownMenuCheckboxItem$1 as DropdownMenuCheckboxItem, DropdownMenuContent$1 as DropdownMenuContent, DropdownMenuGroup$1 as DropdownMenuGroup, DropdownMenuItem$1 as DropdownMenuItem, DropdownMenuLabel$1 as DropdownMenuLabel, DropdownMenuPortal$1 as DropdownMenuPortal, DropdownMenuRadioGroup$1 as DropdownMenuRadioGroup, DropdownMenuRadioItem$1 as DropdownMenuRadioItem, DropdownMenuSeparator$1 as DropdownMenuSeparator, DropdownMenuShortcut$1 as DropdownMenuShortcut, DropdownMenuSub$1 as DropdownMenuSub, DropdownMenuSubContent$1 as DropdownMenuSubContent, DropdownMenuSubTrigger$1 as DropdownMenuSubTrigger, DropdownMenuTrigger$1 as DropdownMenuTrigger, Empty$1 as Empty, Field$2 as Field, FieldContent$1 as FieldContent, FieldDescription$1 as FieldDescription, FieldError$2 as FieldError, FieldGroup$1 as FieldGroup, FieldLabel$1 as FieldLabel, FieldLegend$1 as FieldLegend, FieldSeparator$1 as FieldSeparator, FieldSet$1 as FieldSet, FieldTitle$1 as FieldTitle, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$1 as Frame, FrameFooter$1 as FrameFooter, FrameHeader$1 as FrameHeader, FramePanel$1 as FramePanel, FrameTitle$1 as FrameTitle, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, IconTile$1 as IconTile, Image$2 as Image, Input$1 as Input, InputGroup$1 as InputGroup, InputGroupAddon$1 as InputGroupAddon, InputGroupButton$1 as InputGroupButton, InputGroupInput$1 as InputGroupInput, InputGroupText$1 as InputGroupText, InputGroupTextarea$1 as InputGroupTextarea, InteractiveCard$1 as InteractiveCard, Label$2 as Label, LabelList$1 as LabelList, Link$1 as Link, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, PolarAngleAxis$1 as PolarAngleAxis, PolarRadiusAxis$1 as PolarRadiusAxis, Progress$2 as Progress, Radar$1 as Radar, RadialBar$1 as RadialBar, RadioGroup$2 as RadioGroup, RadioGroupItem$1 as RadioGroupItem, ReferenceLine$1 as ReferenceLine, ResponsiveContainer$1 as ResponsiveContainer, Sankey$1 as Sankey, Select$1 as Select, SelectContent$1 as SelectContent, SelectGroup$2 as SelectGroup, SelectItem$2 as SelectItem, SelectLabel$2 as SelectLabel, SelectScrollDownButton$1 as SelectScrollDownButton, SelectScrollUpButton$1 as SelectScrollUpButton, SelectSeparator$2 as SelectSeparator, SelectTrigger$2 as SelectTrigger, SelectValue$2 as SelectValue, Separator$2 as Separator, Slider$2 as Slider, SliderControl$2 as SliderControl, SliderRange$1 as SliderRange, SliderThumb$2 as SliderThumb, SliderTrack$2 as SliderTrack, Stack$1 as Stack, StackItem$1 as StackItem, Step$1 as Step, Switch$2 as Switch, Table$1 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$2 as Tabs, TabsContent$1 as TabsContent, TabsList$2 as TabsList, TabsTrigger$1 as TabsTrigger, Text$2 as Text, Textarea$1 as Textarea, TimePicker$1 as TimePicker, TimePickerActionProps$1 as TimePickerActionProps, TimePickerClear$1 as TimePickerClear, TimePickerColumn$1 as TimePickerColumn, TimePickerColumnProps$1 as TimePickerColumnProps, TimePickerColumns$1 as TimePickerColumns, TimePickerColumnsProps$1 as TimePickerColumnsProps, TimePickerConfirm$1 as TimePickerConfirm, TimePickerContent$1 as TimePickerContent, TimePickerContentProps$1 as TimePickerContentProps, TimePickerFooter$1 as TimePickerFooter, TimePickerFooterProps$1 as TimePickerFooterProps, TimePickerInput$1 as TimePickerInput, TimePickerInputProps$1 as TimePickerInputProps, TimePickerNow$1 as TimePickerNow, TimePickerPanel$1 as TimePickerPanel, TimePickerPanelProps$1 as TimePickerPanelProps, TimePickerProps$1 as TimePickerProps, TimePickerTrigger$1 as TimePickerTrigger, TimePickerTriggerProps$1 as TimePickerTriggerProps, TimePickerValue$1 as TimePickerValue, TimePickerValueProps$1 as TimePickerValueProps, Timestamp$1 as Timestamp, Wizard$1 as Wizard, dataGridFeatures$1 as dataGridFeatures, useTable$1 as useTable, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Calendar$1 as Calendar, Card$1 as Card, CardAction$1 as CardAction, CardContent$1 as CardContent, CardDescription$1 as CardDescription, CardFooter$1 as CardFooter, CardHeader$1 as CardHeader, CardTitle$1 as CardTitle, CartesianGrid$1 as CartesianGrid, ChartContainer$1 as ChartContainer, ChartLegendContent$1 as ChartLegendContent, ChartTooltipContent$1 as ChartTooltipContent, Checkbox$2 as Checkbox, CodeBlock$1 as CodeBlock, CodeBlockContent$1 as CodeBlockContent, CodeBlockCopyButton$1 as CodeBlockCopyButton, CodeBlockDownloadButton$1 as CodeBlockDownloadButton, CodeBlockExpandButton$1 as CodeBlockExpandButton, CodeBlockHeader$1 as CodeBlockHeader, CodeBlockLanguage$1 as CodeBlockLanguage, CodeBlockLineActions$1 as CodeBlockLineActions, CodeBlockTitle$1 as CodeBlockTitle, CodeBlockWrapToggle$1 as CodeBlockWrapToggle, ComboboxChip$2 as ComboboxChip, ComboboxChips$2 as ComboboxChips, ComboboxChipsInput$1 as ComboboxChipsInput, ComboboxCollection$2 as ComboboxCollection, ComboboxContent$1 as ComboboxContent, ComboboxEmpty$2 as ComboboxEmpty, ComboboxGroup$2 as ComboboxGroup, ComboboxInput$2 as ComboboxInput, ComboboxItem$2 as ComboboxItem, ComboboxLabel$2 as ComboboxLabel, ComboboxList$2 as ComboboxList, ComboboxSeparator$2 as ComboboxSeparator, ComboboxTrigger$2 as ComboboxTrigger, ComboboxValue$2 as ComboboxValue, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DialogClose$2 as DialogClose, DialogContent$1 as DialogContent, DialogDescription$2 as DialogDescription, DialogFooter$1 as DialogFooter, DialogHeader$1 as DialogHeader, DialogOverlay$1 as DialogOverlay, DialogPortal$2 as DialogPortal, DialogTitle$2 as DialogTitle, DialogTrigger$2 as DialogTrigger, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, Field$2 as Field, FieldContent$1 as FieldContent, FieldDescription$1 as FieldDescription, FieldError$2 as FieldError, FieldGroup$1 as FieldGroup, FieldLabel$1 as FieldLabel, FieldLegend$1 as FieldLegend, FieldSeparator$1 as FieldSeparator, FieldSet$1 as FieldSet, FieldTitle$1 as FieldTitle, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$1 as Frame, FrameFooter$1 as FrameFooter, FrameHeader$1 as FrameHeader, FramePanel$1 as FramePanel, FrameTitle$1 as FrameTitle, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, IconTile$1 as IconTile, Image$2 as Image, Input$1 as Input, InputGroup$1 as InputGroup, InputGroupAddon$1 as InputGroupAddon, InputGroupButton$1 as InputGroupButton, InputGroupInput$1 as InputGroupInput, InputGroupText$1 as InputGroupText, InputGroupTextarea$1 as InputGroupTextarea, InteractiveCard$1 as InteractiveCard, Label$2 as Label, LabelList$1 as LabelList, Link$1 as Link, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, PolarAngleAxis$1 as PolarAngleAxis, PolarRadiusAxis$1 as PolarRadiusAxis, Progress$2 as Progress, Radar$1 as Radar, RadialBar$1 as RadialBar, RadioGroup$2 as RadioGroup, RadioGroupItem$1 as RadioGroupItem, ReferenceLine$1 as ReferenceLine, ResponsiveContainer$1 as ResponsiveContainer, Sankey$1 as Sankey, Select$1 as Select, SelectContent$1 as SelectContent, SelectGroup$2 as SelectGroup, SelectItem$2 as SelectItem, SelectLabel$2 as SelectLabel, SelectScrollDownButton$1 as SelectScrollDownButton, SelectScrollUpButton$1 as SelectScrollUpButton, SelectSeparator$2 as SelectSeparator, SelectTrigger$2 as SelectTrigger, SelectValue$2 as SelectValue, Separator$2 as Separator, Slider$2 as Slider, SliderControl$2 as SliderControl, SliderRange$1 as SliderRange, SliderThumb$2 as SliderThumb, SliderTrack$2 as SliderTrack, Stack$1 as Stack, StackItem$1 as StackItem, Step$1 as Step, Switch$2 as Switch, Table$1 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$2 as Tabs, TabsContent$1 as TabsContent, TabsList$2 as TabsList, TabsTrigger$1 as TabsTrigger, Text$2 as Text, Textarea$1 as Textarea, TimePicker$1 as TimePicker, TimePickerActionProps$1 as TimePickerActionProps, TimePickerClear$1 as TimePickerClear, TimePickerColumn$1 as TimePickerColumn, TimePickerColumnProps$1 as TimePickerColumnProps, TimePickerColumns$1 as TimePickerColumns, TimePickerColumnsProps$1 as TimePickerColumnsProps, TimePickerConfirm$1 as TimePickerConfirm, TimePickerContent$1 as TimePickerContent, TimePickerContentProps$1 as TimePickerContentProps, TimePickerFooter$1 as TimePickerFooter, TimePickerFooterProps$1 as TimePickerFooterProps, TimePickerInput$1 as TimePickerInput, TimePickerInputProps$1 as TimePickerInputProps, TimePickerNow$1 as TimePickerNow, TimePickerPanel$1 as TimePickerPanel, TimePickerPanelProps$1 as TimePickerPanelProps, TimePickerProps$1 as TimePickerProps, TimePickerTrigger$1 as TimePickerTrigger, TimePickerTriggerProps$1 as TimePickerTriggerProps, TimePickerValue$1 as TimePickerValue, TimePickerValueProps$1 as TimePickerValueProps, Timestamp$1 as Timestamp, Wizard$1 as Wizard, dataGridFeatures$1 as dataGridFeatures, useTable$1 as useTable, z, };
 }
 
 declare const Area: typeof NativeFrontend.Area;
@@ -20424,21 +20439,21 @@ declare const DialogOverlay: typeof NativeFrontend.DialogOverlay;
 declare const DialogPortal: typeof NativeFrontend.DialogPortal;
 declare const DialogTitle: typeof NativeFrontend.DialogTitle;
 declare const DialogTrigger: typeof NativeFrontend.DialogTrigger;
-declare const DropdownMenu: typeof NativeFrontend.DropdownMenu;
-declare const DropdownMenuCheckboxItem: typeof NativeFrontend.DropdownMenuCheckboxItem;
-declare const DropdownMenuContent: typeof NativeFrontend.DropdownMenuContent;
-declare const DropdownMenuGroup: typeof NativeFrontend.DropdownMenuGroup;
-declare const DropdownMenuItem: typeof NativeFrontend.DropdownMenuItem;
-declare const DropdownMenuLabel: typeof NativeFrontend.DropdownMenuLabel;
-declare const DropdownMenuPortal: typeof NativeFrontend.DropdownMenuPortal;
-declare const DropdownMenuRadioGroup: typeof NativeFrontend.DropdownMenuRadioGroup;
-declare const DropdownMenuRadioItem: typeof NativeFrontend.DropdownMenuRadioItem;
-declare const DropdownMenuSeparator: typeof NativeFrontend.DropdownMenuSeparator;
-declare const DropdownMenuShortcut: typeof NativeFrontend.DropdownMenuShortcut;
-declare const DropdownMenuSub: typeof NativeFrontend.DropdownMenuSub;
-declare const DropdownMenuSubContent: typeof NativeFrontend.DropdownMenuSubContent;
-declare const DropdownMenuSubTrigger: typeof NativeFrontend.DropdownMenuSubTrigger;
-declare const DropdownMenuTrigger: typeof NativeFrontend.DropdownMenuTrigger;
+declare const Dropdown: typeof NativeFrontend.Dropdown;
+declare const DropdownCheckboxItem: typeof NativeFrontend.DropdownCheckboxItem;
+declare const DropdownContent: typeof NativeFrontend.DropdownContent;
+declare const DropdownGroup: typeof NativeFrontend.DropdownGroup;
+declare const DropdownItem: typeof NativeFrontend.DropdownItem;
+declare const DropdownLabel: typeof NativeFrontend.DropdownLabel;
+declare const DropdownPortal: typeof NativeFrontend.DropdownPortal;
+declare const DropdownRadioGroup: typeof NativeFrontend.DropdownRadioGroup;
+declare const DropdownRadioItem: typeof NativeFrontend.DropdownRadioItem;
+declare const DropdownSeparator: typeof NativeFrontend.DropdownSeparator;
+declare const DropdownShortcut: typeof NativeFrontend.DropdownShortcut;
+declare const DropdownSub: typeof NativeFrontend.DropdownSub;
+declare const DropdownSubContent: typeof NativeFrontend.DropdownSubContent;
+declare const DropdownSubTrigger: typeof NativeFrontend.DropdownSubTrigger;
+declare const DropdownTrigger: typeof NativeFrontend.DropdownTrigger;
 declare const Empty: typeof NativeFrontend.Empty;
 declare const Field: typeof NativeFrontend.Field;
 declare const FieldContent: typeof NativeFrontend.FieldContent;

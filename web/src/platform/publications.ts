@@ -97,7 +97,7 @@ export const componentDocumentation = [
     { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
-    { name: 'DropdownMenu', category: 'Action', icon: ListCollapse },
+    { name: 'Dropdown', category: 'Action', icon: ListCollapse },
     { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileType', category: 'Display', icon: FileText },
     { name: 'FileViewer', category: 'Display', icon: FileText },

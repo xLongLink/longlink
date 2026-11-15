@@ -6,12 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { DialogActivityContext } from '@/components/custom/contexts';
 import { Dialog as NativeDialog } from '@/components/custom/native-dialog';
 import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
-import {
-    DropdownMenu,
-    DropdownMenuItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger
-} from '@/components/shadcn/dropdown-menu';
+import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
 it.each([false, true])('closes a dialog without submitting its form (fullscreen host: %s)', async (fullscreen) => {
     const close = vi.fn();
@@ -225,6 +220,7 @@ it('keeps native dialog host coordination active after canceled dismissal and re
 it('keeps a portaled menu operable inside the modal and dismisses the innermost layer first', async () => {
     const action = vi.fn();
     const user = userEvent.setup();
+    const overrides = { className: 'hidden' };
 
     function Probe() {
         const [open, setOpen] = useState(true);
@@ -233,12 +229,14 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
             <NativeDialog open={open} onOpenChange={setOpen}>
                 <DialogContent>
                     <DialogTitle>Actions</DialogTitle>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger>More</DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={action}>Archive</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Dropdown>
+                        <DropdownTrigger {...overrides}>More</DropdownTrigger>
+                        <DropdownContent {...overrides}>
+                            <DropdownItem {...overrides} onClick={action}>
+                                Archive
+                            </DropdownItem>
+                        </DropdownContent>
+                    </Dropdown>
                 </DialogContent>
             </NativeDialog>
         );
@@ -248,7 +246,10 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         const trigger = document.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
 
         if (!trigger) throw new Error('Expected the modal menu trigger');
+        expect(trigger.classList.contains('hidden')).toBe(false);
         await act(async () => user.click(trigger));
+        expect(document.querySelector('[role="menu"]')?.classList.contains('hidden')).toBe(false);
+        expect(document.querySelector('[role="menuitem"]')?.classList.contains('hidden')).toBe(false);
         await act(async () => user.keyboard('{ArrowDown}{Enter}'));
         expect(action).toHaveBeenCalledTimes(1);
         expect(document.querySelector('[role="menu"]')).toBeNull();

@@ -24,7 +24,7 @@ export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '../src/views
 export * from '../src/views/adapter/layouts/dialog';
 export { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from '../src/views/adapter/action/pagination';
 export * from '../src/views/adapter/display/empty';
-export * from '../src/views/adapter/action/dropdown-menu';
+export * from '../src/views/adapter/action/dropdown';
 export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption } from '../src/views/adapter/display/table';
 export { Separator } from '../src/views/adapter/display/separator';
 export { Image } from '../src/views/adapter/display/image';

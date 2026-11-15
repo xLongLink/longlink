@@ -212,16 +212,16 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <DropdownMenu
+            <Dropdown
                 open={selected === 'menu'}
                 onOpenChange={(open, details) => {
                     details.cancel();
                     setSelected(open ? 'menu' : 'one');
                 }}
             >
-                <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuCheckboxItem
+                <DropdownTrigger>Actions</DropdownTrigger>
+                <DropdownContent>
+                    <DropdownCheckboxItem
                         checked
                         onCheckedChange={(checked, details) => {
                             checked.valueOf();
@@ -229,9 +229,9 @@ const nativeComposition = (
                         }}
                     >
                         Notifications
-                    </DropdownMenuCheckboxItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    </DropdownCheckboxItem>
+                </DropdownContent>
+            </Dropdown>
             <Button nativeButton={false} render={<Link href="/orders" />}>
                 Open orders
             </Button>
@@ -418,8 +418,8 @@ const _legacySeparator = <Separator isFullBleed />;
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
 // @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
 const _legacyTable = <Table data={[{ name: 'Order' }]} />;
-// @ts-expect-error Native DropdownMenu does not accept data-driven action items.
-const _legacyMenu = <DropdownMenu items={[]} />;
+// @ts-expect-error Dropdown does not accept data-driven action items.
+const _legacyMenu = <Dropdown items={[]} />;
 
 // @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
 const _customGroupProps = <ButtonGroup isDisabled />;
@@ -487,6 +487,10 @@ const _timestampStyle = <Timestamp value={0} style={{ color: 'red' }} />;
 // @ts-expect-error Button uses primary rather than the former default variant.
 const _buttonDefaultVariant = <Button variant="default">Save</Button>;
 const _buttonPrimaryVariant = <Button variant="primary">Save</Button>;
+// @ts-expect-error DropdownContent styling is owned by the component.
+const _dropdownContentClasses = <DropdownContent className="hidden" />;
+// @ts-expect-error DropdownItem styling is owned by the component.
+const _dropdownItemClasses = <DropdownItem className="hidden">Archive</DropdownItem>;
 // @ts-expect-error Text no longer provides truncation tooltips.
 const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
 // @ts-expect-error Heading uses level for both its HTML element and accessible outline.

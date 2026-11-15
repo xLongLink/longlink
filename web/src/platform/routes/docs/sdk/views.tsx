@@ -8,6 +8,7 @@ import { SwitchExample } from './views/switch';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
+import { DropdownExample } from './views/dropdown';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
 import { FileText, ImageIcon } from 'lucide-react';
@@ -21,7 +22,6 @@ import { Grid } from '@/components/longlink/layout/grid';
 import { Icon } from '@/components/longlink/display/icon';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
-import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
@@ -108,7 +108,7 @@ const previews = new Map(
                 </CardFooter>
             </Card>
         ),
-        DropdownMenu: <DropdownMenuExample />,
+        Dropdown: <DropdownExample />,
         Empty: <Empty icon="folder-code" title="No projects" />,
         FileViewer: (
             <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">

@@ -942,10 +942,10 @@
             "reference": "https://ui.shadcn.com/docs/components/base/separator"
         },
         {
-            "name": "DropdownMenu",
+            "name": "Dropdown",
             "category": "Action",
-            "introduction": "Native shadcn DropdownMenu composition with Base UI props.",
-            "guidance": "Compose DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, checkbox and radio items, groups, separators, and submenus.",
+            "introduction": "Dropdown menu composition with Base UI behavior and component-owned styling.",
+            "guidance": "Compose DropdownTrigger, DropdownContent, DropdownItem, checkbox and radio items, groups, separators, and submenus.",
             "properties": [
                 {
                     "name": "open / defaultOpen",
@@ -963,7 +963,8 @@
                     "description": "Native compound menu parts with their documented props."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Exposes the shared shadcn menu parts without className overrides while preserving native menu composition and behavior.",
             "reference": "https://ui.shadcn.com/docs/components/dropdown-menu"
         },
         {
