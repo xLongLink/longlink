@@ -3,7 +3,7 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
-import { OpenAI } from '@/components/svg/open-ai';
+import { OpenAI } from '@/components/svg/openai';
 import { useNotification } from '@/lib/notifications';
 import { Dialog } from '@/components/custom/native-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
