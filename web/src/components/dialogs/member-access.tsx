@@ -37,7 +37,7 @@ export function MemberAccess({
                             Cancel
                         </Button>
                         <Button
-                            variant={action.kind === 'remove' ? 'destructive' : 'default'}
+                            variant={action.kind === 'remove' ? 'destructive' : 'primary'}
                             disabled={pending}
                             aria-busy={pending || undefined}
                             onClick={() => {

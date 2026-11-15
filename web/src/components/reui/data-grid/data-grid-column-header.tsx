@@ -11,7 +11,7 @@ import { Subscribe } from '@tanstack/react-table';
 import type { Column } from '@tanstack/react-table';
 
 import { cn } from 'cn';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,

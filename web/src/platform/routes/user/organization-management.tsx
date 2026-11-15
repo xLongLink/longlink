@@ -171,7 +171,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        variant="default"
+                                                        variant="primary"
                                                         onClick={() =>
                                                             setSelected({
                                                                 type: 'accept',

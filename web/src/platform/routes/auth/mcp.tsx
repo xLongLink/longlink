@@ -86,7 +86,7 @@ export default function McpAuthorization() {
                                 </p>
                             </Stack>
                             <Button
-                                variant="default"
+                                variant="primary"
                                 style={{ width: '100%' }}
                                 type="submit"
                                 name="decision"

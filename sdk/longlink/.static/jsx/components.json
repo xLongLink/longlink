@@ -611,7 +611,7 @@
         {
             "name": "Button",
             "category": "Action",
-            "introduction": "Native shadcn Button with Base UI props and default styling.",
+            "introduction": "Button with Base UI behavior and component-owned styling.",
             "keywords": ["action", "approve", "reject", "save", "submit"],
             "guidance": "Manage asynchronous pending state and error feedback in the View. Compose with Link through render and nativeButton={false} for scoped navigation.",
             "properties": [
@@ -622,9 +622,9 @@
                 },
                 {
                     "name": "variant",
-                    "type": "\"default\" | \"outline\" | \"secondary\" | \"ghost\" | \"destructive\" | \"link\"",
+                    "type": "\"primary\" | \"outline\" | \"secondary\" | \"ghost\" | \"destructive\" | \"link\"",
                     "description": "Visual style variant.",
-                    "default": "default"
+                    "default": "primary"
                 },
                 {
                     "name": "size",
@@ -664,7 +664,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Owns the shared Button implementation in LongLink while preserving the shadcn API and Base UI behavior.",
+            "justification": "Exposes the shared shadcn Button without className overrides while preserving Base UI behavior.",
             "reference": "https://ui.shadcn.com/docs/components/button"
         },
         {

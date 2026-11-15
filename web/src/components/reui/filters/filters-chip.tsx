@@ -39,7 +39,7 @@ import type {
 } from '@/components/reui/filters/filters-types';
 
 import { cn } from 'cn';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 import { ButtonGroup, ButtonGroupText } from '@/components/shadcn/button-group';
 import {
     DropdownMenu,

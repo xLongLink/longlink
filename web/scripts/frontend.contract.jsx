@@ -480,6 +480,9 @@ const _currencyStyle = <Currency value={1} currency="USD" className="text-red-50
 const _timestampRef = <Timestamp value={0} ref={null} />;
 // @ts-expect-error Timestamp styling is owned by the component in Views.
 const _timestampStyle = <Timestamp value={0} style={{ color: 'red' }} />;
+// @ts-expect-error Button uses primary rather than the former default variant.
+const _buttonDefaultVariant = <Button variant="default">Save</Button>;
+const _buttonPrimaryVariant = <Button variant="primary">Save</Button>;
 // @ts-expect-error Text no longer provides truncation tooltips.
 const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
 // @ts-expect-error Heading uses level for both its HTML element and accessible outline.

@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 
 import * as React from 'react';
 import { FiltersAdvanced } from '@/components/reui/filters/filters-advanced';

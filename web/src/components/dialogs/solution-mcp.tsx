@@ -7,10 +7,10 @@ import { OpenAI } from '@/components/svg/openai';
 import { useNotification } from '@/lib/notifications';
 import { Dialog } from '@/components/custom/native-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
 
 export function SolutionMcpDialog({
     solutionId,

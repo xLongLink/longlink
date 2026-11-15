@@ -1,6 +1,6 @@
 import { ReportedError } from '@/lib/reported';
+import { Button } from '@/components/shadcn/button';
 import { CircleX, LoaderCircle } from 'lucide-react';
-import { Button } from '@/components/longlink/action/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
 import { ControlSizeContext, DialogActivityContext } from './contexts';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
@@ -148,7 +148,7 @@ function ConfirmationDialog({
                         </Button>
                         <Button
                             type="button"
-                            variant={options.actionVariant ?? 'default'}
+                            variant={options.actionVariant === 'destructive' ? 'destructive' : 'primary'}
                             className="relative min-w-0"
                             disabled={isPending}
                             focusableWhenDisabled

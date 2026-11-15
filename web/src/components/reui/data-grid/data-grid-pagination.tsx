@@ -7,7 +7,7 @@ import type { JSX, ReactNode } from 'react';
 import { useDataGrid } from '@/components/reui/data-grid/data-grid';
 
 import { cn } from 'cn';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';

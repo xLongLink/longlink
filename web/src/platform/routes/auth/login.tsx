@@ -5,6 +5,7 @@ import { AuthLayout } from './auth-layout';
 import { useApiError } from '@/lib/errors';
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { GitHubIcon } from '@/components/svg/github';
 import { GoogleIcon } from '@/components/svg/google';
@@ -14,7 +15,6 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { emailSchema, passwordSchema } from './validation';
 import { FieldSeparator } from '@/components/shadcn/field';
-import { Button } from '@/components/longlink/action/button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -148,7 +148,7 @@ export default function Login() {
                                     </button>
                                 </div>
                             </div>
-                            <Button className="w-full max-w-full" type="submit" variant="default">
+                            <Button className="w-full max-w-full" type="submit" variant="primary">
                                 <LogIn aria-hidden="true" size={16} />
                                 Sign In
                             </Button>

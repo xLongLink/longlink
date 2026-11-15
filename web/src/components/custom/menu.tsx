@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { Icon } from '@/components/longlink/icon';
 import { MenuNavigationContext } from './contexts';
 import type { IconName } from 'lucide-react/dynamic';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 

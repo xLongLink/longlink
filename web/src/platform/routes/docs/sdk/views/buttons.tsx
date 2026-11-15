@@ -14,7 +14,7 @@ export default function ButtonsPage() {
                 { name: 'children', type: 'ReactNode', description: 'Button text and optional icons.' },
                 {
                     name: 'variant',
-                    type: '"default" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
+                    type: '"primary" | "outline" | "secondary" | "ghost" | "destructive" | "link"',
                     description: 'Visual style variant.'
                 },
                 {
@@ -61,7 +61,7 @@ export default function ButtonsPage() {
   return (
     <Stack gap={4}>
       <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-        <Button>Default</Button>
+        <Button variant="primary">Primary</Button>
         <Button variant="outline">Outline</Button>
         <Button variant="secondary">Secondary</Button>
         <Button variant="ghost">Ghost</Button>
@@ -115,7 +115,7 @@ export function ButtonExample() {
     return (
         <Stack gap={4}>
             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                <Button>Default</Button>
+                <Button variant="primary">Primary</Button>
                 <Button variant="outline">Outline</Button>
                 <Button variant="secondary">Secondary</Button>
                 <Button variant="ghost">Ghost</Button>

@@ -72,7 +72,7 @@ export function ApiBoundary({
                                         Unable to load this page.
                                     </p>
                                 </div>
-                                <Button type="button" variant="default" onClick={resetErrorBoundary}>
+                                <Button type="button" variant="primary" onClick={resetErrorBoundary}>
                                     Retry
                                 </Button>
                             </div>

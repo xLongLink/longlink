@@ -29,7 +29,7 @@ import { getDefaultFilterOperator } from '@/components/reui/filters/filters-oper
 import type { FilterField } from '@/components/reui/filters/filters-types';
 
 import { cn } from 'cn';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { ListFilterPlusIcon } from 'lucide-react';
 

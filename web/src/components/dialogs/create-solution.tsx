@@ -249,7 +249,7 @@ export default function CreateSolution({
                                             ))}
                                         </Stack>
                                     </Stack>
-                                    <Button type="submit" variant="default">
+                                    <Button type="submit" variant="primary">
                                         Create
                                     </Button>
                                 </Step>

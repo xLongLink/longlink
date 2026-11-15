@@ -2,12 +2,12 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { withMounted } from '../../render';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
+import { renderStatic, withMounted } from '../../render';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
-import { buttonVariants } from '@/components/longlink/action/button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
 import { NativeLink, NativeNavigationLink } from '@/components/custom/native-link';
 
@@ -22,6 +22,20 @@ function Location() {
         </output>
     );
 }
+
+it('ignores class overrides supplied outside the typed LongLink Button API', () => {
+    const overrides = { className: 'hidden bg-red-500' };
+    const output = renderStatic(
+        <Button {...overrides} variant="primary">
+            Save
+        </Button>
+    );
+    const button = output.querySelector('button');
+
+    expect(button?.classList.contains('hidden')).toBe(false);
+    expect(button?.classList.contains('bg-red-500')).toBe(false);
+    expect(button?.classList.contains('bg-primary')).toBe(true);
+});
 
 it.each(['member', 'invitation'] as const)(
     'deduplicates %s confirmation, reports failure, and allows retry',

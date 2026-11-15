@@ -37,7 +37,7 @@ export function InvitationResponse({
                             Cancel
                         </Button>
                         <Button
-                            variant={invitation.type === 'accept' ? 'default' : 'destructive'}
+                            variant={invitation.type === 'accept' ? 'primary' : 'destructive'}
                             disabled={pending}
                             aria-busy={pending || undefined}
                             onClick={() => {

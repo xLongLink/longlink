@@ -1,6 +1,6 @@
 import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 import {
     AlertDialog,
     AlertDialogContent,

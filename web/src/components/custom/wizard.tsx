@@ -262,7 +262,7 @@ export function Wizard(props: WizardProps) {
                 </div>
                 {activeStep < steps.length - 1 ? (
                     <Button
-                        variant="default"
+                        variant="primary"
                         type="button"
                         onClick={() => {
                             void advance();

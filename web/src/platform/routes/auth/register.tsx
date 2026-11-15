@@ -3,12 +3,12 @@ import { TextField } from './field';
 import { Mail } from 'lucide-react';
 import { AuthLayout } from './auth-layout';
 import { useSearchParams } from 'react-router';
+import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { FieldSeparator } from '@/components/shadcn/field';
-import { Button } from '@/components/longlink/action/button';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -53,7 +53,7 @@ export default function Register() {
                             label="Email"
                             type="email"
                         />
-                        <Button type="submit" variant="default" className="w-full">
+                        <Button type="submit" variant="primary" className="w-full">
                             <Mail aria-hidden="true" size={16} />
                             Send registration link
                         </Button>

@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@/components/longlink/action/button';
+import { Button } from '@/components/shadcn/button';
 
 // Opted out of React Compiler with the rest of the grid (see data-grid.tsx).
 'use no memo';

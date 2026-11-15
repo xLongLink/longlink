@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { Icon } from '@/components/longlink/icon';
 import { Badge } from '@/components/longlink/badge';
+import { Button } from '@/components/shadcn/button';
 import type { IconName } from 'lucide-react/dynamic';
-import { Button } from '@/components/longlink/action/button';
 
 /** Displays a tag, category, or selection with optional click and removal actions. */
 export function Token({
