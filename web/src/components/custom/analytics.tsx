@@ -1,4 +1,4 @@
-import { Badge } from '@/components/reui/badge';
+import { Badge } from '@/components/longlink/badge';
 import { IconTile } from '@/components/reui/icon-tile';
 import { useId, useState, type ReactNode, type ComponentProps } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';

@@ -9,13 +9,13 @@ import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
 import { Grid } from '@/components/custom/grid';
 import { Icon } from '@/components/custom/icon';
-import { Badge } from '@/components/reui/badge';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
 import { FileTypeExample } from './views/file-type';
+import { Badge } from '@/components/longlink/badge';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
@@ -80,9 +80,10 @@ const previews = new Map(
         FileType: <FileTypeExample />,
         Badge: (
             <div className="flex flex-wrap items-center justify-center gap-2">
-                <Badge variant="secondary">Draft</Badge>
-                <Badge variant="warning-light">Pending</Badge>
-                <Badge variant="success-light">Paid</Badge>
+                <Badge variant="primary">primary</Badge>
+                <Badge variant="secondary">secondary</Badge>
+                <Badge variant="destructive">destructive</Badge>
+                <Badge variant="outline">outline</Badge>
             </div>
         ),
         Button: <Button>Button</Button>,

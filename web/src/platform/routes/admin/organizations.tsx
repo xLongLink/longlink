@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
-import { Badge } from '@/components/reui/badge';
+import { Badge } from '@/components/longlink/badge';
 import { Button } from '@/components/shadcn/button';
 import { Avatar } from '@/components/longlink/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
@@ -87,9 +87,7 @@ export default function Organizations() {
                                                 {row.status !== 'running' && (
                                                     <Badge
                                                         variant={
-                                                            row.status === 'creating'
-                                                                ? 'info-light'
-                                                                : 'destructive-light'
+                                                            row.status === 'creating' ? 'secondary' : 'destructive'
                                                         }
                                                     >
                                                         {row.status === 'creating' ? 'Creating' : 'Failed'}

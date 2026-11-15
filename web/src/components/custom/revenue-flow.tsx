@@ -1,6 +1,6 @@
 import { Sankey } from 'recharts';
 import { useId, useState } from 'react';
-import { Badge } from '@/components/reui/badge';
+import { Badge } from '@/components/longlink/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import { formatFlowValue, traceFlow, type FlowNode, type RevenueQuarter } from './flow';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/shadcn/chart';
@@ -116,9 +116,9 @@ export function RevenueFlow({ quarters }: { quarters: RevenueQuarter[] }) {
                                     <Badge
                                         variant={
                                             metric.change > 0
-                                                ? 'success-light'
+                                                ? 'primary'
                                                 : metric.change < 0
-                                                  ? 'destructive-light'
+                                                  ? 'destructive'
                                                   : 'secondary'
                                         }
                                     >

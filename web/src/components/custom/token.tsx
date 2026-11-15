@@ -2,7 +2,7 @@ import { cn } from 'cn';
 import { Icon } from './icon';
 import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { Badge } from '@/components/reui/badge';
+import { Badge } from '@/components/longlink/badge';
 import { Button } from '@/components/shadcn/button';
 import type { IconName } from 'lucide-react/dynamic';
 
@@ -36,11 +36,15 @@ export function Token({
         <Badge
             variant="secondary"
             size={size}
-            className={cn(
-                'view-token max-w-full transition-colors has-[>.view-token-action:focus-visible]:ring-2 has-[>.view-token-action:focus-visible]:ring-ring has-[>.view-token-action:focus-visible]:ring-offset-1 has-[>.view-token-action:focus-visible]:ring-offset-background',
-                props.disabled && 'opacity-50',
-                props.onClick && !props.disabled && 'hover:bg-secondary/80'
-            )}
+            render={
+                <span
+                    className={cn(
+                        'view-token max-w-full transition-colors has-[>.view-token-action:focus-visible]:ring-2 has-[>.view-token-action:focus-visible]:ring-ring has-[>.view-token-action:focus-visible]:ring-offset-1 has-[>.view-token-action:focus-visible]:ring-offset-background',
+                        props.disabled && 'opacity-50',
+                        props.onClick && !props.disabled && 'hover:bg-secondary/80'
+                    )}
+                />
+            }
             data-disabled={props.disabled || undefined}
             aria-description={props.onClick ? undefined : props.description}
         >

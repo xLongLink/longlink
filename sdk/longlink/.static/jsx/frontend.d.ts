@@ -9378,16 +9378,16 @@ type ClassProp = {
 type OmitUndefined<T> = T extends undefined ? never : T;
 type VariantProps<Component extends (...args: any) => any> = Omit<OmitUndefined<Parameters<Component>[0]>, "class" | "className">;
 const badgeVariants: (props?: ({
-    variant?: "success" | "default" | "outline" | "secondary" | "info" | "warning" | "destructive" | "focus" | "invert" | "primary-light" | "warning-light" | "success-light" | "info-light" | "destructive-light" | "invert-light" | "focus-light" | "primary-outline" | "warning-outline" | "success-outline" | "info-outline" | "destructive-outline" | "invert-outline" | "focus-outline" | null | undefined;
-    size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
-    radius?: "default" | "full" | null | undefined;
+    variant?: "primary" | "outline" | "secondary" | "destructive" | null | undefined;
+    size?: "sm" | "md" | "lg" | "xs" | "xl" | null | undefined;
+    radius?: "sm" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
-interface BadgeProps extends useRender.ComponentProps<"span"> {
+interface BadgeProps extends Omit<useRender.ComponentProps<"span">, "className"> {
     variant?: VariantProps<typeof badgeVariants>["variant"];
     size?: VariantProps<typeof badgeVariants>["size"];
     radius?: VariantProps<typeof badgeVariants>["radius"];
 }
-function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+function Badge({ variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 type StylingProp = "className" | "classNames" | "style" | "styles" | `${string}ClassName` | `${string}ClassNames` | `${string}Style` | `${string}Styles` | "components" | "dangerouslySetInnerHTML";
 type ViewProps<Props> = Props extends unknown ? Omit<Props, StylingProp> : never;
 type ViewComponent<Component extends React$1.ElementType> = (props: ViewProps<React$1.ComponentProps<Component>>) => React$1.ReactNode;

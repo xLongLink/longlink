@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
+import { Badge } from '@/components/longlink/badge';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';

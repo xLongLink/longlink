@@ -543,21 +543,21 @@
                 { "name": "children", "type": "ReactNode", "description": "Badge content, including optional icons." },
                 {
                     "name": "size",
-                    "type": "\"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
+                    "type": "\"xs\" | \"sm\" | \"md\" | \"lg\" | \"xl\"",
                     "description": "Badge size.",
-                    "default": "default"
+                    "default": "md"
                 },
                 {
                     "name": "radius",
-                    "type": "\"default\" | \"full\"",
+                    "type": "\"sm\" | \"full\"",
                     "description": "Style radius or pill shape.",
-                    "default": "default"
+                    "default": "sm"
                 },
                 {
                     "name": "variant",
-                    "type": "\"default\" | \"outline\" | \"secondary\" | \"info\" | \"success\" | \"warning\" | \"destructive\" | \"focus\" | \"invert\" | \"primary-light\" | \"warning-light\" | \"success-light\" | \"info-light\" | \"destructive-light\" | \"invert-light\" | \"focus-light\" | \"primary-outline\" | \"warning-outline\" | \"success-outline\" | \"info-outline\" | \"destructive-outline\" | \"invert-outline\" | \"focus-outline\"",
-                    "description": "Native ReUI badge variant.",
-                    "default": "default"
+                    "type": "\"primary\" | \"secondary\" | \"destructive\" | \"outline\"",
+                    "description": "Badge color variant.",
+                    "default": "primary"
                 },
                 {
                     "name": "render",
