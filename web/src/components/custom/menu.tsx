@@ -1,6 +1,5 @@
 import { cn } from 'cn';
 import { spacing } from './layout';
-import type { Spacing } from './types';
 import { ChevronDown } from 'lucide-react';
 import { Icon } from '@/components/custom/icon';
 import { MenuNavigationContext } from './contexts';
@@ -52,7 +51,7 @@ export function Menu({
 }: {
     /** MenuSection elements defining navigation and content. */
     children?: ReactNode;
-    gap?: Spacing;
+    gap?: number;
 }) {
     const navigation = useContext(MenuNavigationContext);
 

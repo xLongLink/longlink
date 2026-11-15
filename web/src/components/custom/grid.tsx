@@ -1,5 +1,4 @@
 import { cn } from 'cn';
-import type { Spacing } from './types';
 import { GridCollapseContext, spacing } from './layout';
 import { useCallback, useContext, useSyncExternalStore, type ComponentPropsWithRef } from 'react';
 
@@ -26,9 +25,9 @@ export function Grid({
     columns?: number | { minWidth: number; max?: number; repeat?: 'fill' | 'fit' };
     /** Collapse to one column at or below this View viewport width in pixels, including all GridSpan children. */
     collapseBelow?: number;
-    gap?: Spacing;
-    rowGap?: Spacing;
-    columnGap?: Spacing;
+    gap?: number;
+    rowGap?: number;
+    columnGap?: number;
     align?: 'start' | 'center' | 'end' | 'stretch';
     justify?: 'start' | 'center' | 'end' | 'stretch';
     width?: number | string;

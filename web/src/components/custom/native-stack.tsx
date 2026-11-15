@@ -1,6 +1,5 @@
 import { cn } from 'cn';
 import { spacing } from './layout';
-import type { Spacing } from './types';
 import { createElement, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 
 export type StackLayoutProps = {
@@ -8,10 +7,10 @@ export type StackLayoutProps = {
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     align?: 'start' | 'center' | 'end' | 'stretch';
     wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-    gap?: Spacing;
-    padding?: Spacing;
-    paddingInline?: Spacing;
-    paddingBlock?: Spacing;
+    gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
     width?: CSSProperties['width'];
     height?: CSSProperties['height'];
     maxWidth?: CSSProperties['maxWidth'];
