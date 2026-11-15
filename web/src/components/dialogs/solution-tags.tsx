@@ -1,14 +1,26 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import * as tabs from '@/platform/tabs';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { FieldError } from '@/components/shadcn/field';
-import { MultiSelector } from '@/components/custom/multi-selector';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { NativeButton as Button } from '@/components/custom/native-button';
+import {
+    Combobox,
+    ComboboxChip,
+    ComboboxChips,
+    ComboboxChipsInput,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxValue,
+    useComboboxAnchor
+} from '@/components/shadcn/combobox';
 
 export function SolutionTags({
     base,
@@ -23,6 +35,9 @@ export function SolutionTags({
     solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
     onSuccess: () => Promise<void>;
 }) {
+    const anchor = useComboboxAnchor();
+    const availableTags = tags.filter((tag) => tag.kind === 'tag');
+
     const form = useForm({
         resolver: zodResolver(schemas.zSolutionTagsWrite),
         defaultValues: { tag_ids: solution.tag_ids ?? [] }
@@ -55,19 +70,70 @@ export function SolutionTags({
                                     name="tag_ids"
                                     control={form.control}
                                     render={({ field, fieldState }) => (
-                                        <div className="flex flex-col gap-2">
-                                            <MultiSelector
-                                                label="Tags"
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel htmlFor="solution-tags">Tags</FieldLabel>
+                                            <Combobox
+                                                multiple
+                                                items={availableTags.map((tag) => tag.id)}
                                                 value={field.value}
-                                                onChange={field.onChange}
-                                                options={tags
-                                                    .filter((tag) => tag.kind === 'tag')
-                                                    .map((tag) => ({ value: tag.id, label: tag.name, icon: tag.icon }))}
-                                                placeholder="Select tags"
-                                                emptyText="Create tabs in organization settings under General first."
-                                            />
+                                                onValueChange={field.onChange}
+                                                itemToStringLabel={(id) =>
+                                                    availableTags.find((tag) => tag.id === id)?.name ?? id
+                                                }
+                                                disabled={form.formState.isSubmitting}
+                                            >
+                                                <ComboboxChips ref={anchor}>
+                                                    <ComboboxValue>
+                                                        {(ids: string[]) => (
+                                                            <>
+                                                                {ids.map((id) => {
+                                                                    const name =
+                                                                        availableTags.find((tag) => tag.id === id)
+                                                                            ?.name ?? id;
+
+                                                                    return (
+                                                                        <ComboboxChip key={id} aria-label={name}>
+                                                                            {name}
+                                                                        </ComboboxChip>
+                                                                    );
+                                                                })}
+                                                                <ComboboxChipsInput
+                                                                    ref={field.ref}
+                                                                    id="solution-tags"
+                                                                    onBlur={field.onBlur}
+                                                                    placeholder={ids.length ? undefined : 'Select tags'}
+                                                                    aria-invalid={fieldState.invalid}
+                                                                    disabled={form.formState.isSubmitting}
+                                                                />
+                                                            </>
+                                                        )}
+                                                    </ComboboxValue>
+                                                </ComboboxChips>
+                                                <ComboboxContent anchor={anchor}>
+                                                    <ComboboxEmpty>
+                                                        {availableTags.length
+                                                            ? 'No results found'
+                                                            : 'Create tabs in organization settings under General first.'}
+                                                    </ComboboxEmpty>
+                                                    <ComboboxList>
+                                                        {(id: string) => {
+                                                            const tag = availableTags.find((tag) => tag.id === id);
+
+                                                            if (!tag) return null;
+                                                            const Icon = tabs.icons[tag.icon].component;
+
+                                                            return (
+                                                                <ComboboxItem key={id} value={id}>
+                                                                    <Icon aria-hidden="true" />
+                                                                    {tag.name}
+                                                                </ComboboxItem>
+                                                            );
+                                                        }}
+                                                    </ComboboxList>
+                                                </ComboboxContent>
+                                            </Combobox>
                                             <FieldError errors={[fieldState.error]} />
-                                        </div>
+                                        </Field>
                                     )}
                                 />
                                 <Stack direction="horizontal" gap={2} justify="end">

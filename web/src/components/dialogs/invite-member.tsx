@@ -3,17 +3,25 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Selector } from '@/components/custom/selector';
+import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { NativeButton as Button } from '@/components/custom/native-button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function InviteMember({
     canInviteAdmin,
     onSubmit,
     ...dialogProps
 }: DialogProps & { canInviteAdmin: boolean; onSubmit: (data: FormData) => Promise<void> }) {
+    const roles = [
+        { value: 'read', icon: EyeOff },
+        { value: 'write', icon: ArrowUp },
+        { value: 'maintain', icon: Wrench },
+        ...(canInviteAdmin ? [{ value: 'admin', icon: CheckCheck }] : [])
+    ];
+
     const schema = z.object({
         email: z.email(),
         role: z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain'])
@@ -89,29 +97,35 @@ export function InviteMember({
                                             name="role"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
-                                                <div className="flex flex-col gap-2">
-                                                    <Selector
-                                                        label="Role"
+                                                <Field data-invalid={fieldState.invalid}>
+                                                    <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+                                                    <Select
+                                                        name={field.name}
                                                         value={field.value}
-                                                        onChange={(value) => field.onChange(value ?? 'write')}
-                                                        hasClear={false}
-                                                        options={[
-                                                            { value: 'read', label: 'read', icon: 'eye-off' },
-                                                            { value: 'write', label: 'write', icon: 'arrow-up' },
-                                                            { value: 'maintain', label: 'maintain', icon: 'wrench' },
-                                                            ...(canInviteAdmin
-                                                                ? [
-                                                                      {
-                                                                          value: 'admin',
-                                                                          label: 'admin',
-                                                                          icon: 'check-check' as const
-                                                                      }
-                                                                  ]
-                                                                : [])
-                                                        ]}
-                                                    />
+                                                        onValueChange={(value) => field.onChange(value ?? 'write')}
+                                                        disabled={form.formState.isSubmitting}
+                                                        items={roles.map(({ value }) => ({ value, label: value }))}
+                                                    >
+                                                        <SelectTrigger
+                                                            ref={field.ref}
+                                                            id="invite-role"
+                                                            onBlur={field.onBlur}
+                                                            aria-invalid={fieldState.invalid}
+                                                            className="w-full"
+                                                        >
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {roles.map(({ value, icon: Icon }) => (
+                                                                <SelectItem key={value} value={value}>
+                                                                    <Icon aria-hidden="true" />
+                                                                    {value}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                     <FieldError errors={[fieldState.error]} />
-                                                </div>
+                                                </Field>
                                             )}
                                         />
                                         <Button

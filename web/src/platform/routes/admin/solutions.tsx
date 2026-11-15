@@ -1,9 +1,9 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
-import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { TextInput } from '@/components/custom/text-input';
+import { Info, Search, X } from 'lucide-react';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -13,10 +13,12 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
     const { search, pagination, suffix } = useAdminList();
+    const searchInput = useRef<HTMLInputElement>(null);
 
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
@@ -33,12 +35,36 @@ export default function Solutions() {
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Solutions</h1>
-            <TextInput
-                label="Search solutions"
-                placeholder="Search by name, description, or organization"
-                {...search}
-                startIcon={<Search />}
-            />
+            <Field>
+                <FieldLabel htmlFor="search-solutions">Search solutions</FieldLabel>
+                <InputGroup>
+                    <InputGroupInput
+                        ref={searchInput}
+                        id="search-solutions"
+                        placeholder="Search by name, description, or organization"
+                        value={search.value}
+                        onChange={(event) => search.onChange(event.target.value)}
+                    />
+                    <InputGroupAddon aria-hidden="true">
+                        <Search />
+                    </InputGroupAddon>
+                    {search.value !== '' && (
+                        <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                                size="icon-xs"
+                                aria-label="Clear Search solutions"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    search.onChange('');
+                                    searchInput.current?.focus({ preventScroll: true });
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
+                        </InputGroupAddon>
+                    )}
+                </InputGroup>
+            </Field>
             <Stack gap={1}>
                 <DataTable
                     data={solutions.items}

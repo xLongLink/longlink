@@ -5,12 +5,19 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Selector } from '@/components/custom/selector';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { NativeButton as Button } from '@/components/custom/native-button';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList
+} from '@/components/shadcn/combobox';
 
 const tagSchema = schemas.zOrganizationTagWrite.extend({
     name: z.string().trim().pipe(schemas.zOrganizationTagWrite.shape.name)
@@ -77,21 +84,42 @@ export function TagForm({
                                     name="icon"
                                     control={form.control}
                                     render={({ field, fieldState }) => (
-                                        <div className="flex flex-col gap-2">
-                                            <Selector
-                                                label="Icon"
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel htmlFor="tag-icon">Icon</FieldLabel>
+                                            <Combobox
+                                                items={schemas.zTagIcon.options}
                                                 value={field.value}
-                                                onChange={(value) => field.onChange(value ?? 'tag')}
-                                                options={Object.entries(tabs.icons).map(([value, option]) => ({
-                                                    value,
-                                                    label: option.label,
-                                                    icon: schemas.zTagIcon.parse(value)
-                                                }))}
-                                                hasSearch
-                                                hasClear={false}
-                                            />
+                                                onValueChange={(value) => field.onChange(value ?? 'tag')}
+                                                itemToStringLabel={(icon) => tabs.icons[icon].label}
+                                                disabled={form.formState.isSubmitting}
+                                            >
+                                                <ComboboxInput
+                                                    ref={field.ref}
+                                                    id="tag-icon"
+                                                    onBlur={field.onBlur}
+                                                    aria-invalid={fieldState.invalid}
+                                                    disabled={form.formState.isSubmitting}
+                                                    className="w-full"
+                                                />
+                                                <ComboboxContent>
+                                                    <ComboboxEmpty>No results found</ComboboxEmpty>
+                                                    <ComboboxList>
+                                                        {(icon: z.output<typeof schemas.zTagIcon>) => {
+                                                            const option = tabs.icons[icon];
+                                                            const Icon = option.component;
+
+                                                            return (
+                                                                <ComboboxItem key={icon} value={icon}>
+                                                                    <Icon aria-hidden="true" />
+                                                                    {option.label}
+                                                                </ComboboxItem>
+                                                            );
+                                                        }}
+                                                    </ComboboxList>
+                                                </ComboboxContent>
+                                            </Combobox>
                                             <FieldError errors={[fieldState.error]} />
-                                        </div>
+                                        </Field>
                                     )}
                                 />
                                 <Stack direction="horizontal" gap={2}>
