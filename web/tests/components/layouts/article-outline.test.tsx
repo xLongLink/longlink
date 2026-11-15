@@ -132,7 +132,7 @@ it.each([false, true])('follows fragments and moves focus with reduced motion %s
                 expect(scroll).toHaveBeenCalledTimes(1);
                 expect(scroll).toHaveBeenLastCalledWith({ behavior: reduced ? 'instant' : 'smooth', top: 480 });
 
-                // Space retains the incumbent Outline's activation behavior.
+                // Space remains native; an ordinary click still preserves authored focusability.
                 const first = output.querySelector<HTMLAnchorElement>(
                     'nav[aria-label="On this page"] a[href="#first"]'
                 );
@@ -141,9 +141,16 @@ it.each([false, true])('follows fragments and moves focus with reduced motion %s
 
                 heading?.setAttribute('tabindex', '0');
 
-                await act(async () =>
-                    first?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }))
-                );
+                const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+
+                await act(async () => first?.dispatchEvent(space));
+
+                expect(space.defaultPrevented).toBe(false);
+                expect(window.location.hash).toBe('#middle');
+                expect(document.activeElement).toBe(middle);
+
+                await act(async () => first?.click());
+
                 expect(window.location.hash).toBe('#first');
                 expect(document.activeElement).toBe(output.querySelector('#first'));
                 expect(heading?.getAttribute('tabindex')).toBe('0');

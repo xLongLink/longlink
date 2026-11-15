@@ -1,4 +1,5 @@
 import { Page } from '@/components/ui/page';
+import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { documentationPaths } from '@/platform/publications';
@@ -129,9 +130,6 @@ export function ArticleFooter({
     const previousPage = paths[currentPage - 1];
     const nextPage = paths[currentPage + 1];
 
-    const pageLinkClassName =
-        'box-border inline-flex h-[max(calc(var(--spacing)*8),1lh)] cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-muted px-3 py-2 [font-family:inherit] text-sm leading-(--text-sm--line-height) font-medium whitespace-nowrap text-foreground no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--muted))]';
-
     // Keep unmodified arrow shortcuts available outside native text-entry controls.
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
         if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
@@ -177,26 +175,36 @@ export function ArticleFooter({
             {isCollectionPage ? (
                 <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
                     {previousPage === undefined ? (
-                        <button type="button" className={pageLinkClassName} disabled aria-keyshortcuts="ArrowLeft">
+                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowLeft">
                             <ArrowLeft aria-hidden size={16} />
                             Previous
-                        </button>
+                        </Button>
                     ) : (
-                        <RouterLink className={pageLinkClassName} to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
+                        <Button
+                            variant="secondary"
+                            render={<RouterLink to={`${previousPage}/`} />}
+                            nativeButton={false}
+                            aria-keyshortcuts="ArrowLeft"
+                        >
                             <ArrowLeft aria-hidden size={16} />
                             Previous
-                        </RouterLink>
+                        </Button>
                     )}
                     {nextPage === undefined ? (
-                        <button type="button" className={pageLinkClassName} disabled aria-keyshortcuts="ArrowRight">
+                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowRight">
                             Next
                             <ArrowRight aria-hidden size={16} />
-                        </button>
+                        </Button>
                     ) : (
-                        <RouterLink className={pageLinkClassName} to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
+                        <Button
+                            variant="secondary"
+                            render={<RouterLink to={`${nextPage}/`} />}
+                            nativeButton={false}
+                            aria-keyshortcuts="ArrowRight"
+                        >
                             Next
                             <ArrowRight aria-hidden size={16} />
-                        </RouterLink>
+                        </Button>
                     )}
                 </nav>
             ) : null}

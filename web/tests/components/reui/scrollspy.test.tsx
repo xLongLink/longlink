@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { act, useRef } from 'react';
 import { withMounted } from '../../render';
+import { act, useRef, useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Scrollspy } from '@/components/reui/scrollspy';
 
@@ -31,6 +31,85 @@ function Panel() {
 }
 
 afterEach(() => vi.restoreAllMocks());
+
+/** Replaces navigation nodes while retaining the same selected section. */
+function UpdatingNavigation() {
+    const [revision, setRevision] = useState(0);
+
+    return (
+        <>
+            <button type="button" onClick={() => setRevision(revision + 1)}>
+                Refresh navigation
+            </button>
+            <Scrollspy history={false}>
+                <a key={`first-${revision}`} href="#refresh-first" data-scrollspy-anchor="refresh-first">
+                    First
+                </a>
+                <a key={`last-${revision}`} href="#refresh-last" data-scrollspy-anchor="refresh-last">
+                    Last
+                </a>
+            </Scrollspy>
+            <h2 id="refresh-first">First</h2>
+            <h2 id="refresh-last">Last</h2>
+        </>
+    );
+}
+
+it('keeps the active section highlighted after navigation nodes are replaced', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    await withMounted(<UpdatingNavigation />, async (output) => {
+        const first = output.querySelector<HTMLElement>('#refresh-first');
+        const last = output.querySelector<HTMLElement>('#refresh-last');
+        const link = output.querySelector<HTMLAnchorElement>('a[href="#refresh-first"]');
+
+        if (!first || !last || !link) throw new Error('Missing refresh content');
+        vi.spyOn(first, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, -100, 0, 0));
+        vi.spyOn(last, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 500, 0, 0));
+
+        await act(async () => link.click());
+        await act(async () => output.querySelector<HTMLButtonElement>('button')?.click());
+
+        const replacement = output.querySelector('a[href="#refresh-first"]');
+
+        expect(replacement).not.toBe(link);
+        expect(replacement?.getAttribute('aria-current')).toBe('location');
+        expect(replacement?.getAttribute('data-active')).toBe('true');
+
+        await act(async () => {
+            window.dispatchEvent(new Event('scroll'));
+            await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+        });
+
+        expect(output.querySelectorAll('[aria-current="location"]')).toHaveLength(1);
+        expect(replacement?.getAttribute('aria-current')).toBe('location');
+    });
+});
+
+it('focuses a noneditable heading nested inside editable content', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    await withMounted(
+        <>
+            <Scrollspy history={false}>
+                <a href="#noneditable-heading" data-scrollspy-anchor="noneditable-heading">
+                    <span>Heading</span>
+                </a>
+            </Scrollspy>
+            <div contentEditable suppressContentEditableWarning>
+                <h2 id="noneditable-heading" contentEditable={false}>
+                    Heading
+                </h2>
+            </div>
+        </>,
+        async (output) => {
+            await act(async () => output.querySelector<HTMLSpanElement>('a span')?.click());
+
+            expect(document.activeElement).toBe(output.querySelector('#noneditable-heading'));
+            expect(output.querySelector('#noneditable-heading')?.getAttribute('tabindex')).toBe('-1');
+        }
+    );
+});
 
 it('scrolls and tracks the nested viewport without rewriting document history', async () => {
     const documentScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});

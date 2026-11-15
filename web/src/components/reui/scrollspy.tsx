@@ -64,15 +64,18 @@ export function Scrollspy({
     const setActive = useCallback(
         (id: string, source: 'track' | 'click' | 'hash' = 'track') => {
             const changed = activeId.current !== id;
-            selfRef.current?.querySelectorAll(`a[data-${dataAttribute}-anchor]`).forEach((anchor) => {
-                if (anchor.getAttribute(`data-${dataAttribute}-anchor`) === id) {
-                    anchor.setAttribute('data-active', 'true');
-                    anchor.setAttribute('aria-current', 'location');
-                } else {
-                    anchor.removeAttribute('data-active');
-                    anchor.removeAttribute('aria-current');
-                }
-            });
+
+            if (changed || source !== 'track') {
+                selfRef.current?.querySelectorAll(`a[data-${dataAttribute}-anchor]`).forEach((anchor) => {
+                    if (anchor.getAttribute(`data-${dataAttribute}-anchor`) === id) {
+                        anchor.setAttribute('data-active', 'true');
+                        anchor.setAttribute('aria-current', 'location');
+                    } else {
+                        anchor.removeAttribute('data-active');
+                        anchor.removeAttribute('aria-current');
+                    }
+                });
+            }
 
             activeId.current = id;
 
@@ -189,8 +192,10 @@ export function Scrollspy({
                         : null;
                 if (!anchor || !event.currentTarget.contains(anchor)) return;
                 if (anchor.hasAttribute('target') || anchor.hasAttribute('download')) return;
-                const section = getSections().find((item) => item.anchor === anchor);
-                if (!section) return;
+                const id = anchor.getAttribute(`data-${dataAttribute}-anchor`);
+                const heading = id ? document.getElementById(id) : null;
+
+                if (!id || !heading) return;
                 event.preventDefault();
 
                 const viewport = getViewport();
@@ -198,43 +203,16 @@ export function Scrollspy({
                 const scrollTop = viewport ? viewport.scrollTop : window.scrollY || document.documentElement.scrollTop;
                 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 (viewport ?? window).scrollTo({
-                    top: scrollTop + section.heading.getBoundingClientRect().top - top - getOffset(section),
+                    top: scrollTop + heading.getBoundingClientRect().top - top - getOffset({ anchor, heading, id }),
                     behavior: smooth && !reducedMotion ? 'smooth' : 'instant'
                 });
 
                 // Preserve author-supplied focusability when moving sequential focus.
-                const { heading } = section;
                 const needsTabIndex =
-                    !heading.hasAttribute('tabindex') &&
-                    heading.tabIndex < 0 &&
-                    !heading.isContentEditable &&
-                    !heading.closest('[contenteditable=""], [contenteditable="true"]');
+                    !heading.hasAttribute('tabindex') && heading.tabIndex < 0 && !heading.isContentEditable;
                 if (needsTabIndex) heading.setAttribute('tabindex', '-1');
                 heading.focus({ preventScroll: true });
-                setActive(section.id, 'click');
-            }}
-            onKeyDown={(event) => {
-                if (
-                    event.defaultPrevented ||
-                    event.key !== ' ' ||
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.altKey ||
-                    event.shiftKey
-                ) {
-                    return;
-                }
-                const anchor = event.target;
-                if (
-                    !(anchor instanceof HTMLAnchorElement) ||
-                    !anchor.hasAttribute(`data-${dataAttribute}-anchor`) ||
-                    anchor.hasAttribute('target') ||
-                    anchor.hasAttribute('download')
-                ) {
-                    return;
-                }
-                event.preventDefault();
-                anchor.click();
+                setActive(id, 'click');
             }}
         >
             {children}
