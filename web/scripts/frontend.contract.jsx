@@ -70,6 +70,8 @@ const nativeComposition = (
         <CardContent>
             <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
             <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
+            <Currency value={1234.5} currency="USD" locale="en-US" aria-label="Total" onClick={(event) => event.currentTarget.focus()} />
+            <Timestamp value="2026-10-02T12:00:00Z" format="relative" aria-label="Updated" onClick={(event) => event.currentTarget.focus()} />
             <Text
                 id="publication-status"
                 role="status"
@@ -473,6 +475,14 @@ const _avatarSize = <Avatar size="default" />;
 const _textAs = <Text as="h4">Title</Text>;
 // @ts-expect-error Text does not expose a ref.
 const _textRef = <Text ref={null}>Details</Text>;
+// @ts-expect-error Currency formatting cannot be replaced with children.
+const _currencyChildren = <Currency value={1} currency="USD">Other amount</Currency>;
+// @ts-expect-error Currency styling is owned by the component in Views.
+const _currencyStyle = <Currency value={1} currency="USD" className="text-red-500" />;
+// @ts-expect-error Timestamp does not expose a ref.
+const _timestampRef = <Timestamp value={0} ref={null} />;
+// @ts-expect-error Timestamp styling is owned by the component in Views.
+const _timestampStyle = <Timestamp value={0} style={{ color: 'red' }} />;
 // @ts-expect-error Text no longer provides truncation tooltips.
 const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
 // @ts-expect-error Heading uses level for both its HTML element and accessible outline.

@@ -826,6 +826,7 @@
             "name": "Currency",
             "category": "Display",
             "introduction": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter.",
+            "guidance": "Accepts native span attributes and event handlers, without children or refs. Component styling is fixed in Views.",
             "properties": [
                 { "name": "value", "type": "number", "description": "Amount to format in currency units." },
                 { "name": "currency", "type": "string", "description": "ISO 4217 currency code, such as USD or CHF." },
@@ -1916,6 +1917,7 @@
             "name": "Timestamp",
             "category": "Display",
             "introduction": "Formats a date or timestamp using the standard date formats.",
+            "guidance": "Accepts native span attributes and event handlers, without children or refs. Relative timestamps expose copyable absolute-date details. Component styling is fixed in Views.",
             "properties": [
                 {
                     "name": "value",

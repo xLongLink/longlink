@@ -1,6 +1,6 @@
-import { Text } from '@/components/longlink/text';
+import { cn } from 'cn';
 import { TimestampDetails } from './timestamp-details';
-import { useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore, type ComponentPropsWithoutRef } from 'react';
 import { formatTimestamp, formatRelativeTimestamp, type TimestampFormat } from '@/lib/timestamp';
 
 const subscribe = () => () => {};
@@ -10,7 +10,12 @@ const clientClock = () => true;
 const serverClock = () => false;
 
 /** Formats a date or timestamp using the standard date formats. */
-export function Timestamp({ value, format = 'date_time' }: { value: number | string; format?: TimestampFormat }) {
+export function Timestamp({
+    value,
+    format = 'date_time',
+    className,
+    ...props
+}: Omit<ComponentPropsWithoutRef<'span'>, 'children'> & { value: number | string; format?: TimestampFormat }) {
     const canReadClock = useSyncExternalStore(subscribe, clientClock, serverClock);
     const [now, setNow] = useState<number | null>(() => (format === 'relative' && canReadClock ? Date.now() : null));
 
@@ -31,7 +36,7 @@ export function Timestamp({ value, format = 'date_time' }: { value: number | str
 
     // Only relative timestamps expose the copyable absolute-date details.
     return (
-        <Text className="text-xs text-muted-foreground">
+        <span data-slot="timestamp" {...props} className={cn('text-xs text-muted-foreground', className)}>
             {relative ? (
                 <TimestampDetails
                     dateTime={date.toISOString()}
@@ -48,6 +53,6 @@ export function Timestamp({ value, format = 'date_time' }: { value: number | str
             ) : (
                 <time dateTime={date.toISOString()}>{text}</time>
             )}
-        </Text>
+        </span>
     );
 }

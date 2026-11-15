@@ -3,7 +3,7 @@ import { Search, X } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Avatar } from '@/components/longlink/avatar';
-import { Timestamp } from '@/components/custom/timestamp';
+import { Timestamp } from '@/components/longlink/timestamp';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';

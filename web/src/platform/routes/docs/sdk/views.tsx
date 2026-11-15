@@ -22,7 +22,7 @@ import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
 import { RadioGroupExample } from './views/radio-group';
-import { Currency } from '@/components/custom/currency';
+import { Currency } from '@/components/longlink/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { componentDocumentation } from '@/platform/publications';

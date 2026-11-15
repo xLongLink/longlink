@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Currency } from '@/components/custom/currency';
+import { Currency } from '@/components/longlink/currency';
 
 /** Documents locale-aware currency formatting. */
 export default function CurrencyPage() {
@@ -8,13 +8,9 @@ export default function CurrencyPage() {
         <ViewLayout
             name="Currency"
             properties={[
-                { name: 'value', type: 'number', description: 'Amount to format in currency units.' },
-                { name: 'currency', type: 'string', description: 'ISO 4217 currency code, such as USD or CHF.' },
-                {
-                    name: 'locale',
-                    type: 'string',
-                    description: "Locale for formatting; omitted values use the viewer's locale."
-                }
+                { name: 'value', type: 'number' },
+                { name: 'currency', type: 'string' },
+                { name: 'locale', type: 'string' }
             ]}
             example={{
                 title: 'Currency',
@@ -30,9 +26,5 @@ export default function CurrencyPage() {
 /** Renders the page's locale-aware currency example. */
 function CurrencyExample() {
     // Format a sample amount using the real View component.
-    return (
-        <span>
-            <Currency value={1234.5} currency="USD" />
-        </span>
-    );
+    return <Currency value={1234.5} currency="USD" />;
 }
