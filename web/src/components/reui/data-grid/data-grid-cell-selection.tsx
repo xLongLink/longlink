@@ -1,5 +1,4 @@
 'use client';
-import { Button } from '@/components/shadcn/button';
 
 // Opted out of React Compiler with the rest of the grid (see data-grid.tsx).
 'use no memo';
@@ -18,6 +17,7 @@ import type {
 import { Subscribe } from '@tanstack/react-table';
 
 import { cn } from 'cn';
+import { Button } from '@/components/shadcn/button';
 
 /** Where a finished edit sends the focused cell, or null to stay. */
 type DataGridEditorAdvance = 'down' | 'up' | 'right' | 'left' | null;

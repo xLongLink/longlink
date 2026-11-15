@@ -1,5 +1,4 @@
 'use client';
-import { Button } from '@/components/shadcn/button';
 
 import * as React from 'react';
 import { FiltersAdvanced } from '@/components/reui/filters/filters-advanced';
@@ -91,6 +90,7 @@ import type {
 import { cva } from 'class-variance-authority';
 
 import { cn } from 'cn';
+import { Button } from '@/components/shadcn/button';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Variants                                  */
