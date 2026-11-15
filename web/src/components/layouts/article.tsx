@@ -1,21 +1,17 @@
 import { Page } from '@/components/ui/page';
 import { Separator } from '@/components/shadcn/separator';
+import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { documentationPaths } from '@/platform/publications';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
-import { PathBreadcrumb, type BreadcrumbItem } from '@/components/ui/breadcrumbs';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 const articleRouteLabels = {
-    api: 'Platform',
     blog: 'Blog',
     billing: 'Billing',
-    docs: 'Documentation',
     'why-longlink': 'Why LongLink',
-    sdk: 'Solutions',
-    views: 'Views',
     assets: 'Brand assets',
     values: 'Values',
     comunication: 'Communication'
@@ -62,7 +58,7 @@ export function PublicArticle({
 }) {
     // Keep public navigation Home-rooted without imposing typography or a reading collection.
     return (
-        <ArticleRenderer article={article} paths={paths} root={{ label: 'Home', href: '/' }}>
+        <ArticleRenderer article={article} paths={paths} publicBreadcrumb>
             {children}
         </ArticleRenderer>
     );
@@ -74,22 +70,22 @@ function ArticleRenderer({
     children,
     className,
     paths,
-    root
+    publicBreadcrumb = false
 }: {
     article: ArticleMetadata;
     children: ReactNode;
     className?: string;
     paths?: readonly string[];
-    root?: BreadcrumbItem;
+    publicBreadcrumb?: boolean;
 }) {
     // Keep public articles and documentation in the same flat reading columns.
     return (
         <Page description={article.description} title={article.title}>
-            {root ? (
+            {publicBreadcrumb ? (
                 <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
                     <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
                         <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                            <PathBreadcrumb labels={articleRouteLabels} root={root} />
+                            <PathBreadcrumb labels={articleRouteLabels} root={{ label: 'Home', href: '/' }} />
                         </div>
                         {article.toc.length ? (
                             <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
@@ -104,13 +100,7 @@ function ArticleRenderer({
                             className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,calc(var(--spacing)*8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
                         >
                             {children}
-                            <footer className="flex flex-col gap-3 pt-8 pb-30">
-                                <ArticleFooter
-                                    lastUpdated={article.lastUpdated}
-                                    editUrl={article.editUrl}
-                                    paths={paths}
-                                />
-                            </footer>
+                            <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
                         </article>
                     </div>
                     {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
@@ -135,6 +125,7 @@ export function ArticleFooter({
     const navigate = useNavigate();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
     const currentPage = paths.indexOf(pagePath);
+    const isCollectionPage = currentPage >= 0;
     const previousPage = paths[currentPage - 1];
     const nextPage = paths[currentPage + 1];
 
@@ -170,7 +161,7 @@ export function ArticleFooter({
 
     // Scope the document listener to articles that belong to a reading collection.
     useEffect(() => {
-        if (currentPage < 0) {
+        if (!isCollectionPage) {
             return;
         }
 
@@ -178,21 +169,15 @@ export function ArticleFooter({
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [currentPage]);
+    }, [isCollectionPage]);
 
     // Preserve boundary buttons, modification dates, and optional source links.
     return (
-        <>
-            {currentPage >= 0 ? (
+        <footer className="flex flex-col gap-3 pt-8 pb-30">
+            {isCollectionPage ? (
                 <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
                     {previousPage === undefined ? (
-                        <button
-                            type="button"
-                            className={pageLinkClassName}
-                            disabled
-                            aria-disabled="true"
-                            aria-keyshortcuts="ArrowLeft"
-                        >
+                        <button type="button" className={pageLinkClassName} disabled aria-keyshortcuts="ArrowLeft">
                             <ArrowLeft aria-hidden size={16} />
                             Previous
                         </button>
@@ -203,13 +188,7 @@ export function ArticleFooter({
                         </RouterLink>
                     )}
                     {nextPage === undefined ? (
-                        <button
-                            type="button"
-                            className={pageLinkClassName}
-                            disabled
-                            aria-disabled="true"
-                            aria-keyshortcuts="ArrowRight"
-                        >
+                        <button type="button" className={pageLinkClassName} disabled aria-keyshortcuts="ArrowRight">
                             Next
                             <ArrowRight aria-hidden size={16} />
                         </button>
@@ -237,6 +216,6 @@ export function ArticleFooter({
                     </a>
                 ) : null}
             </div>
-        </>
+        </footer>
     );
 }
