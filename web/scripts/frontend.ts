@@ -67,7 +67,6 @@ export { RadioGroup, RadioGroupItem } from '../src/components/shadcn/radio-group
 export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, StepperContent } from '../src/components/reui/stepper';
 export { ProgressStepper, Wizard, Step } from '../src/components/custom/wizard';
 export { Button } from '../src/components/shadcn/button';
-export { ActionButton } from '../src/components/custom/action-button';
 export { FileViewer } from '../src/components/custom/file-viewer';
 export * from '../src/components/shadcn/card';
 export * from '../src/components/custom/interactive-card';

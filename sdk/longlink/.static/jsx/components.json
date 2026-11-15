@@ -208,7 +208,7 @@
             "source": "custom",
             "justification": "Connects download actions to the isolated View host capability and shared failure handling.",
             "introduction": "Returns download(path, filename) and recoverable error feedback.",
-            "guidance": "Keep endpoint selection and export parameters in the View. Await download(path, filename) from an ActionButton and render error feedback when present.",
+            "guidance": "Keep endpoint selection and export parameters in the View. Await download(path, filename) from a Button handler and manage pending state and error feedback in the View.",
             "properties": []
         },
         {
@@ -667,7 +667,7 @@
             "category": "Action",
             "introduction": "Native shadcn Button with Base UI props and default styling.",
             "keywords": ["action", "approve", "reject", "save", "submit"],
-            "guidance": "Use ActionButton for automatic asynchronous loading, duplicate-click prevention, or scoped navigation.",
+            "guidance": "Manage asynchronous pending state and error feedback in the View. Compose with Link through render and nativeButton={false} for scoped navigation.",
             "properties": [
                 {
                     "name": "children",
@@ -719,22 +719,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/button"
-        },
-        {
-            "name": "ActionButton",
-            "category": "Action",
-            "introduction": "Custom asynchronous action adapter using shadcn Button styling.",
-            "guidance": "Use for awaited actions, duplicate-activation protection, reported-error recovery, and scoped navigation. Use Button for the standard shadcn API.",
-            "properties": [
-                {
-                    "name": "onClick",
-                    "type": "(event) => void | Promise<void>",
-                    "description": "Awaited action with loading feedback and duplicate-activation protection."
-                },
-                { "name": "href", "type": "string", "description": "Scoped Solution destination." }
-            ],
-            "source": "custom",
-            "justification": "Awaits Solution actions, blocks duplicate activation, and coordinates scoped navigation and reported-error recovery."
         },
         {
             "name": "Card",
@@ -1581,7 +1565,7 @@
             "source": "custom",
             "justification": "Validates destinations and coordinates Solution-relative navigation with the isolated host while forwarding native anchor properties.",
             "introduction": "Native-shaped anchor for scoped Solution navigation and safe external HTTP(S) destinations.",
-            "guidance": "Use href and caller-owned content and classes. Use AttachmentLink for scoped preview/download capabilities and ActionButton variant=\"link\" for actions.",
+            "guidance": "Use href and caller-owned content and classes. Use AttachmentLink for scoped preview/download capabilities and Button variant=\"link\" for actions.",
             "properties": [
                 {
                     "name": "href",

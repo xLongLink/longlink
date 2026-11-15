@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
-import { ActionButton } from '@/components/custom/action-button';
+import { Button } from '@/components/shadcn/button';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
@@ -39,7 +39,7 @@ export default function LinkPage() {
                     name: '...props',
                     type: 'ComponentPropsWithRef<"a">',
                     description:
-                        'Native anchor props and ref, except download. Use AttachmentLink for scoped files and ActionButton variant="link" for actions.'
+                        'Native anchor props and ref, except download. Use AttachmentLink for scoped files and Button variant="link" for actions.'
                 }
             ]}
             example={{
@@ -57,7 +57,7 @@ export default function LinkPage() {
       <AttachmentLink href="/api/documents/sample" download="sample-document.txt">
         sample-document.txt
       </AttachmentLink>
-      <ActionButton variant="link" onClick={() => setIsOpen(true)}>Document details</ActionButton>
+      <Button variant="link" onClick={() => setIsOpen(true)}>Document details</Button>
       <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
         <Stack padding={4}>
           <Text>Document details opened without navigation.</Text>
@@ -79,9 +79,9 @@ export function LinkExample() {
     return (
         <Stack>
             <Link href="/docs/sdk/views">Docs</Link>
-            <ActionButton variant="link" onClick={() => setIsOpen(true)}>
+            <Button variant="link" onClick={() => setIsOpen(true)}>
                 Document details
-            </ActionButton>
+            </Button>
             <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
                     <span>Document details opened without navigation.</span>

@@ -225,9 +225,9 @@ const nativeComposition = (
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <ActionButton href="/orders" onClick={async (event) => event.preventDefault()}>
-                Save order
-            </ActionButton>
+            <Button nativeButton={false} render={<Link href="/orders" />}>
+                Open orders
+            </Button>
             <Table aria-label="Orders">
                 <TableCaption>Open orders</TableCaption>
                 <TableHeader>
@@ -285,7 +285,7 @@ const nativeComposition = (
                 Save
             </Button>
             <ButtonGroup aria-label="Actions">
-                <ActionButton
+                <Button
                     aria-label="Approve"
                     size="icon-xs"
                     variant="outline"
@@ -294,7 +294,7 @@ const nativeComposition = (
                     }}
                 >
                     <Icon icon="check" size="sm" />
-                </ActionButton>
+                </Button>
             </ButtonGroup>
             <FileViewer src="/attachment" title="Attachment" />
             <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
@@ -425,9 +425,6 @@ const _legacySeparator = <Separator isFullBleed />;
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
 // @ts-expect-error FramedDialog visibility changes require a controlled callback.
 const _uncontrolledFrame = <FramedDialog open title="Title" />;
-
-// @ts-expect-error ActionButton uses native Button variants.
-const _legacyIconVariant = <ActionButton aria-label="Approve" variant="primary"><Icon icon="check" size="sm" /></ActionButton>;
 
 // @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
 const _legacyTable = <Table data={[{ name: 'Order' }]} />;

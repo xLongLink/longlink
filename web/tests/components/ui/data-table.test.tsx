@@ -3,9 +3,6 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import type { TableColumn } from '@/components/custom/table';
-import { ActionButton } from '@/components/custom/action-button';
-import { ControlSizeContext } from '@/components/custom/contexts';
 import { DataTable, pixel, proportional } from '@/components/custom/data-table';
 
 it('renders every supplied row and safely formats automatically generated cells', () => {
@@ -279,52 +276,6 @@ it('keeps native row-local edits attached to domain identities through reorderin
         expect(output.querySelector<HTMLInputElement>('[aria-label="Select North shipment"]')?.checked).toBe(true);
         expect(output.querySelector<HTMLInputElement>('[aria-label="Select South shipment"]')?.checked).toBe(false);
         expect(output.querySelector('[aria-label="Select North shipment"]')).toBe(north);
-    });
-});
-
-it('retains inherited and explicit control sizes without forcing compact cells to small', async () => {
-    const user = userEvent.setup();
-
-    const columns: TableColumn<{ name: string }>[] = [
-        { key: 'inherited', renderCell: (row) => <ActionButton variant="outline">{row.name}</ActionButton> },
-        {
-            key: 'explicit',
-            renderCell: () => (
-                <ActionButton variant="outline" size="sm">
-                    Explicit size
-                </ActionButton>
-            )
-        }
-    ];
-
-    function Results() {
-        const [size, setSize] = useState<'sm' | 'lg'>('sm');
-
-        return (
-            <>
-                <button type="button" onClick={() => setSize('lg')}>
-                    Enlarge controls
-                </button>
-                <DataTable data={[{ name: 'Default action' }]} columns={columns} />
-                <ControlSizeContext value={size}>
-                    <DataTable data={[{ name: 'Inherited action' }]} columns={columns} />
-                </ControlSizeContext>
-            </>
-        );
-    }
-
-    await withMounted(<Results />, async (output) => {
-        const enlarge = output.querySelector<HTMLButtonElement>('button');
-        const tables = output.querySelectorAll('table');
-
-        if (!enlarge || !tables[0] || !tables[1]) throw new Error('Expected both table size boundaries');
-
-        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('default');
-        expect(tables[1].querySelector('td button')?.getAttribute('data-size')).toBe('sm');
-        await act(async () => user.click(enlarge));
-        expect(tables[1].querySelector('td button')?.getAttribute('data-size')).toBe('lg');
-        expect(tables[1].querySelector('td:last-child button')?.getAttribute('data-size')).toBe('sm');
-        expect(tables[0].querySelector('td button')?.getAttribute('data-size')).toBe('default');
     });
 });
 

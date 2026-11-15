@@ -17468,13 +17468,6 @@ type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
 export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Element;
 export function Wizard(props: WizardProps): React$1.JSX.Element;
 export function Step(props: StepProps): React$1.JSX.Element;
-type ActionClickEvent = Parameters<NonNullable<React$1.ComponentProps<typeof Button$1>["onClick"]>>[0];
-function ActionControl({ children, variant, size: requestedSize, type, disabled, onClick, href, name, value, form, className, onClickCapture, onKeyDown, onKeyUp, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "onClick"> & {
-    onClick?: (event: ActionClickEvent) => void | Promise<void>;
-    href?: string;
-}): React$1.JSX.Element;
-type ButtonProps$1 = React$1.ComponentProps<typeof ActionControl>;
-export function ActionButton({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
 export function FileViewer({ src, title }: {
     src: string;
     title: string;
@@ -20436,7 +20429,6 @@ namespace Tabs {
 export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Field$1 as Field, FieldError$1 as FieldError, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, z, };
 }
 
-declare const ActionButton: typeof NativeFrontend.ActionButton;
 declare const Area: typeof NativeFrontend.Area;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
 declare const AttachmentLink: typeof NativeFrontend.AttachmentLink;

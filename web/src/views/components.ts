@@ -59,7 +59,6 @@ export { InteractiveCard } from '@/components/custom/interactive-card';
 export { Button } from '@/components/shadcn/button';
 
 /** Custom asynchronous actions with duplicate-activation protection and scoped navigation. @category Action */
-export { ActionButton } from '@/components/custom/action-button';
 
 /** @category Action */
 export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/shadcn/button-group';
