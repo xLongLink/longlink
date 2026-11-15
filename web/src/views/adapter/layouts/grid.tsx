@@ -1,6 +1,6 @@
 import { viewComponent } from '../props';
-import * as grid from '@/components/custom/grid';
+import * as grid from '@/components/longlink/layout/grid';
 
 export const Grid = viewComponent(grid.Grid);
 
-export const GridSpan = viewComponent(grid.GridSpan);
+export const GridItem = viewComponent(grid.GridItem);

@@ -5,7 +5,7 @@ export { Box } from './layouts/box';
 export { Stack, StackItem } from './layouts/stack';
 
 /** @category Layouts */
-export { Grid, GridSpan } from './layouts/grid';
+export { Grid, GridItem } from './layouts/grid';
 
 /** @category Display */
 export { Heading } from './display/heading';

@@ -91,7 +91,9 @@ const nativeComposition = (
                 gap={4}
                 onFocus={(event) => event.currentTarget.focus()}
             >
-                <Grid id="preview" columns={1} />
+                <Grid id="preview" columns={2}>
+                    <GridItem columns="full"><Text>Preview</Text></GridItem>
+                </Grid>
             </Stack>
             </Box>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />

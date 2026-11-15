@@ -1,5 +1,5 @@
 import { viewComponent } from '../props';
-import * as stack from '@/components/custom/stack';
+import * as stack from '@/components/longlink/layout/stack';
 
 export const Stack = viewComponent(stack.Stack);
 

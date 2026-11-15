@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Grid } from '@/components/custom/grid';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
@@ -35,7 +35,7 @@ export default function DocsIndex() {
                     <h2 className="font-semibold tracking-tight text-3xl" id="start-here">
                         Start here
                     </h2>
-                    <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
+                    <Grid columns={3} gap={0}>
                         <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Lightbulb aria-hidden="true" className="text-muted-foreground" size={24} />

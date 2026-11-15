@@ -1,10 +1,23 @@
-import { cn } from 'cn';
-import { NativeStack, type StackLayoutProps } from './native-stack';
-import { useCallback, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { NativeStack, type StackLayoutProps } from '@/components/custom/native-stack';
+import { useCallback, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-/** Arranges View content with a three-step gap; caller classes and styles override defaults. */
-export function Stack({ className, ...props }: ComponentPropsWithRef<'div'> & StackLayoutProps) {
-    return <NativeStack {...props} className={cn('gap-3', className)} />;
+/** Arranges View content with a three-step gap and explicit layout controls. */
+export function Stack(
+    props: Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style'> &
+        Pick<
+            StackLayoutProps,
+            | 'direction'
+            | 'justify'
+            | 'align'
+            | 'wrap'
+            | 'gap'
+            | 'padding'
+            | 'paddingInline'
+            | 'paddingBlock'
+            | 'background'
+        >
+) {
+    return <NativeStack data-slot="stack" {...props} className="gap-3" />;
 }
 
 /** Controls how one item participates in its surrounding Stack. */
@@ -79,6 +92,7 @@ export function StackItem(props: {
     // Preserve intrinsic flex bases: fill grows without forcing an equal zero basis.
     return (
         <div
+            data-slot="stack-item"
             ref={ref}
             className="view-stack-item min-h-0 min-w-0"
             role={props.isScrollable && overflows ? 'group' : undefined}

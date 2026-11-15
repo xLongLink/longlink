@@ -21,82 +21,90 @@ export default function ProjectSettings() {
             <Menu>
                 <MenuSection title="Projects">
                     <MenuItem label="General" icon="settings">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>General</Heading>
-                            <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
-                            <Field>
-                                <FieldLabel htmlFor="company-name">Company name</FieldLabel>
-                                <Input
-                                    id="company-name"
-                                    value={company}
-                                    onChange={(event) => setCompany(event.currentTarget.value)}
-                                />
-                            </Field>
-                            <Field>
-                                <FieldLabel htmlFor="default-currency">Default currency</FieldLabel>
-                                <Select
-                                    value={currency}
-                                    onValueChange={(value) => {
-                                        if (value !== null) setCurrency(value);
-                                    }}
-                                >
-                                    <SelectTrigger id="default-currency">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CHF">CHF</SelectItem>
-                                        <SelectItem value="EUR">EUR</SelectItem>
-                                        <SelectItem value="USD">USD</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </Field>
-                        </Stack>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>General</Heading>
+                                <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
+                                <Field>
+                                    <FieldLabel htmlFor="company-name">Company name</FieldLabel>
+                                    <Input
+                                        id="company-name"
+                                        value={company}
+                                        onChange={(event) => setCompany(event.currentTarget.value)}
+                                    />
+                                </Field>
+                                <Field>
+                                    <FieldLabel htmlFor="default-currency">Default currency</FieldLabel>
+                                    <Select
+                                        value={currency}
+                                        onValueChange={(value) => {
+                                            if (value !== null) setCurrency(value);
+                                        }}
+                                    >
+                                        <SelectTrigger id="default-currency">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="CHF">CHF</SelectItem>
+                                            <SelectItem value="EUR">EUR</SelectItem>
+                                            <SelectItem value="USD">USD</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                            </Stack>
+                        </Box>
                     </MenuItem>
                     <MenuItem label="Approvals" icon="circle-check">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>Approvals</Heading>
-                            <Field orientation="horizontal">
-                                <Switch
-                                    id="approval-required"
-                                    checked={approvalRequired}
-                                    onCheckedChange={setApprovalRequired}
-                                />
-                                <FieldLabel htmlFor="approval-required">Require project approval</FieldLabel>
-                            </Field>
-                            <Field>
-                                <FieldLabel htmlFor="approval-threshold">Approval threshold ({currency})</FieldLabel>
-                                <Input
-                                    id="approval-threshold"
-                                    type="number"
-                                    value={approvalThreshold}
-                                    onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
-                                    min={0}
-                                    step="any"
-                                    disabled={!approvalRequired}
-                                />
-                            </Field>
-                        </Stack>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>Approvals</Heading>
+                                <Field orientation="horizontal">
+                                    <Switch
+                                        id="approval-required"
+                                        checked={approvalRequired}
+                                        onCheckedChange={setApprovalRequired}
+                                    />
+                                    <FieldLabel htmlFor="approval-required">Require project approval</FieldLabel>
+                                </Field>
+                                <Field>
+                                    <FieldLabel htmlFor="approval-threshold">
+                                        Approval threshold ({currency})
+                                    </FieldLabel>
+                                    <Input
+                                        id="approval-threshold"
+                                        type="number"
+                                        value={approvalThreshold}
+                                        onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
+                                        min={0}
+                                        step="any"
+                                        disabled={!approvalRequired}
+                                    />
+                                </Field>
+                            </Stack>
+                        </Box>
                     </MenuItem>
                     <MenuItem label="Notifications" icon="bell">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>Notifications</Heading>
-                            <Field orientation="horizontal">
-                                <Switch
-                                    id="pending-notifications"
-                                    checked={pendingNotifications}
-                                    onCheckedChange={setPendingNotifications}
-                                />
-                                <FieldLabel htmlFor="pending-notifications">Project awaiting approval</FieldLabel>
-                            </Field>
-                            <Field orientation="horizontal">
-                                <Switch
-                                    id="approved-notifications"
-                                    checked={approvedNotifications}
-                                    onCheckedChange={setApprovedNotifications}
-                                />
-                                <FieldLabel htmlFor="approved-notifications">Project approved</FieldLabel>
-                            </Field>
-                        </Stack>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>Notifications</Heading>
+                                <Field orientation="horizontal">
+                                    <Switch
+                                        id="pending-notifications"
+                                        checked={pendingNotifications}
+                                        onCheckedChange={setPendingNotifications}
+                                    />
+                                    <FieldLabel htmlFor="pending-notifications">Project awaiting approval</FieldLabel>
+                                </Field>
+                                <Field orientation="horizontal">
+                                    <Switch
+                                        id="approved-notifications"
+                                        checked={approvedNotifications}
+                                        onCheckedChange={setApprovedNotifications}
+                                    />
+                                    <FieldLabel htmlFor="approved-notifications">Project approved</FieldLabel>
+                                </Field>
+                            </Stack>
+                        </Box>
                     </MenuItem>
                 </MenuSection>
             </Menu>

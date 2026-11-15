@@ -34,7 +34,7 @@ export { Box } from '../src/views/adapter/layouts/box';
 export { Currency } from '../src/views/adapter/display/currency';
 export { Timestamp } from '../src/views/adapter/display/timestamp';
 export { Stack, StackItem } from '../src/views/adapter/layouts/stack';
-export { Grid, GridSpan } from '../src/views/adapter/layouts/grid';
+export { Grid, GridItem } from '../src/views/adapter/layouts/grid';
 export { Avatar, AvatarGroup } from '../src/views/adapter/display/avatar';
 export {
     CodeBlock,

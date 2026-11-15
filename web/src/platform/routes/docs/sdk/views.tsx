@@ -1,14 +1,10 @@
-import { GridExample } from './views/grid';
 import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
 import { InputExample } from './views/input';
-import { StackExample } from './views/stack';
 import { TableExample } from './views/table';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
-import { Grid } from '@/components/custom/grid';
-import { Icon } from '@/components/longlink/display/icon';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
@@ -16,25 +12,28 @@ import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
 import { FileText, ImageIcon } from 'lucide-react';
 import { FileTypeExample } from './views/file-type';
-import { Badge } from '@/components/longlink/display/badge';
-import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
+import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
-import { Currency } from '@/components/longlink/display/currency';
+import { Grid } from '@/components/longlink/layout/grid';
+import { Icon } from '@/components/longlink/display/icon';
+import { Badge } from '@/components/longlink/display/badge';
+import { Empty } from '@/components/longlink/display/empty';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { componentDocumentation } from '@/platform/publications';
-import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
-import { Heading as ViewHeading } from '@/components/longlink/display/heading';
+import { Currency } from '@/components/longlink/display/currency';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
+import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
+import { Heading as ViewHeading } from '@/components/longlink/display/heading';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -87,7 +86,7 @@ const previews = new Map(
             </div>
         ),
         Button: <Button>Button</Button>,
-        Box: <BoxExample />,
+        Box: <Box width={160} maxWidth="100%" height={96} background="outline" />,
         Card: (
             <Card>
                 <CardContent>Lorem ipsum dolor sit amet.</CardContent>
@@ -125,7 +124,22 @@ const previews = new Map(
                 </CardContent>
             </Card>
         ),
-        Grid: <GridExample />,
+        Grid: (
+            <Grid columns={2} gap={2}>
+                <Badge variant="outline" size="xl">
+                    Grid 1
+                </Badge>
+                <Badge variant="outline" size="xl">
+                    Grid 2
+                </Badge>
+                <Badge variant="outline" size="xl">
+                    Grid 3
+                </Badge>
+                <Badge variant="outline" size="xl">
+                    Grid 4
+                </Badge>
+            </Grid>
+        ),
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
             <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
@@ -175,7 +189,19 @@ const previews = new Map(
         Select: <SelectExample />,
         Combobox: <ComboboxExample />,
         Slider: <SliderExample />,
-        Stack: <StackExample />,
+        Stack: (
+            <Stack direction="horizontal" gap={2}>
+                <Badge variant="outline" size="xl">
+                    Cell 1
+                </Badge>
+                <Badge variant="outline" size="xl">
+                    Cell 2
+                </Badge>
+                <Badge variant="outline" size="xl">
+                    Cell 3
+                </Badge>
+            </Stack>
+        ),
         Switch: <SwitchExample />,
         Table: <TableExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
@@ -268,7 +294,7 @@ export default function Item({ params }) {
                             >
                                 {category}
                             </h2>
-                            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fill' }} gap={4}>
+                            <Grid columns={3} gap={4}>
                                 {componentDocumentation
                                     .filter((component) => component.category === category)
                                     .map((component) => (
@@ -320,4 +346,3 @@ export default function Item({ params }) {
         </DocumentationArticle>
     );
 }
-import { BoxExample } from './views/box';

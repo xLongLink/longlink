@@ -1,9 +1,9 @@
 import type { ComponentProps } from 'react';
 import { spacing } from '@/components/custom/layout';
-import type { Stack } from '@/components/custom/stack';
+import type { NativeStack } from '@/components/custom/native-stack';
 
 type PageContainerProps = Pick<
-    ComponentProps<typeof Stack>,
+    ComponentProps<typeof NativeStack>,
     'children' | 'height' | 'minHeight' | 'maxWidth' | 'gap' | 'padding' | 'paddingInline' | 'justify'
 > & { className?: string };
 

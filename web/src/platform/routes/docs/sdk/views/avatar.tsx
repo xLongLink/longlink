@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Stack } from '@/components/custom/stack';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 
 /** Documents the LongLink Avatar in Views. */

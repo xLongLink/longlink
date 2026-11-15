@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Heading } from '@/components/longlink/display/heading';
-import { Stack } from '@/components/custom/stack';
 
 /** Documents Heading in LongLink Views. */
 export default function HeadingPage() {

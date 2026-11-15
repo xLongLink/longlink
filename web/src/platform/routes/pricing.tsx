@@ -1,5 +1,6 @@
 import { Page } from '@/components/ui/page';
-import { Grid } from '@/components/custom/grid';
+import { Box } from '@/components/longlink/layout/box';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -47,44 +48,48 @@ export default function Pricing() {
                             <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Pricing</h1>
                             <p className="text-muted-foreground">Billed per Organization</p>
                         </Stack>
-                        <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
-                            {resources.map((resource) => {
-                                const ResourceIcon =
-                                    resource.id === 'users'
-                                        ? UsersRound
-                                        : resource.id === 'database'
-                                          ? Database
-                                          : HardDrive;
+                        <Box width="100%">
+                            <Grid columns={3} gap={0}>
+                                {resources.map((resource) => {
+                                    const ResourceIcon =
+                                        resource.id === 'users'
+                                            ? UsersRound
+                                            : resource.id === 'database'
+                                              ? Database
+                                              : HardDrive;
 
-                                return (
-                                    <div
-                                        key={resource.id}
-                                        className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
-                                    >
-                                        <Stack gap={6} paddingBlock={10} align="center">
-                                            <Stack gap={3} align="center">
-                                                <ResourceIcon aria-hidden className="text-primary" size={20} />
-                                                <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                                    {resource.resource}
-                                                </h2>
+                                    return (
+                                        <div
+                                            key={resource.id}
+                                            className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
+                                        >
+                                            <Stack gap={6} paddingBlock={10} align="center">
+                                                <Stack gap={3} align="center">
+                                                    <ResourceIcon aria-hidden className="text-primary" size={20} />
+                                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
+                                                        {resource.resource}
+                                                    </h2>
+                                                </Stack>
+                                                <Separator className="data-[orientation=horizontal]:w-1/3" />
+                                                <Stack gap={2} align="center">
+                                                    <p className="font-semibold text-center">
+                                                        {resource.publicIncluded}
+                                                    </p>
+                                                    <p className="text-muted-foreground text-center">Included free</p>
+                                                </Stack>
+                                                <Separator className="data-[orientation=horizontal]:w-1/3" />
+                                                <Stack gap={2} align="center">
+                                                    <p className="font-semibold text-center">{resource.rate}</p>
+                                                    <p className="text-xs text-center text-muted-foreground">
+                                                        Per month, above included usage
+                                                    </p>
+                                                </Stack>
                                             </Stack>
-                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
-                                            <Stack gap={2} align="center">
-                                                <p className="font-semibold text-center">{resource.publicIncluded}</p>
-                                                <p className="text-muted-foreground text-center">Included free</p>
-                                            </Stack>
-                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
-                                            <Stack gap={2} align="center">
-                                                <p className="font-semibold text-center">{resource.rate}</p>
-                                                <p className="text-xs text-center text-muted-foreground">
-                                                    Per month, above included usage
-                                                </p>
-                                            </Stack>
-                                        </Stack>
-                                    </div>
-                                );
-                            })}
-                        </Grid>
+                                        </div>
+                                    );
+                                })}
+                            </Grid>
+                        </Box>
                         <NativeNavigationLink href="/user/organizations/" className={buttonVariants()}>
                             Get started
                         </NativeNavigationLink>

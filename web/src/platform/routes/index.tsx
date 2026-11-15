@@ -1,11 +1,11 @@
 import { Page } from '@/components/ui/page';
-import { Grid } from '@/components/custom/grid';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Docker } from '@/components/svg/docker';
 import { Python } from '@/components/svg/python';
 import { Fastapi } from '@/components/svg/fastapi';
 import { ReactDark } from '@/components/svg/react-dark';
 import { Foundation } from '@/components/ui/foundation';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';

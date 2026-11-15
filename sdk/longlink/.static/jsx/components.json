@@ -1066,37 +1066,17 @@
         {
             "name": "Grid",
             "category": "Layouts",
-            "introduction": "Arranges View content into fixed or width-responsive columns.",
-            "guidance": "Accepts native div attributes, events, and refs. Configure layout through the supported layout props; component styling is fixed.",
+            "introduction": "Arranges View content into equal-width columns, automatically collapsing to one column on mobile.",
+            "guidance": "Accepts native div attributes and events. Configure layout through the supported layout props; component styling is fixed.",
             "keywords": ["columns", "layout", "dashboard"],
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Grid content." },
                 {
                     "name": "columns",
-                    "type": "number | { minWidth: number; max?: number; repeat?: \"fill\" | \"fit\"; }",
-                    "description": "Fixed column count or responsive columns with minWidth and an optional max."
-                },
-                {
-                    "name": "collapseBelow",
                     "type": "number",
-                    "description": "View width in pixels at or below which all items use one column."
+                    "description": "Number of equal-width columns. Automatically uses one column at viewport widths of 768px or less."
                 },
-                {
-                    "name": "gap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Spacing between all items.",
-                    "default": 3
-                },
-                {
-                    "name": "rowGap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Row spacing; overrides `gap` for the row axis."
-                },
-                {
-                    "name": "columnGap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Column spacing; overrides `gap` for the column axis."
-                },
+                { "name": "gap", "type": "number", "description": "Spacing between all items.", "default": 3 },
                 {
                     "name": "align",
                     "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
@@ -1110,32 +1090,12 @@
                     "default": "stretch"
                 },
                 {
-                    "name": "width",
-                    "type": "string | number",
-                    "description": "Container width. Numbers are treated as pixels, strings are used as-is."
-                },
-                {
-                    "name": "height",
-                    "type": "string | number",
-                    "description": "Container height. Numbers are treated as pixels, strings are used as-is."
-                },
-                {
-                    "name": "maxWidth",
-                    "type": "string | number",
-                    "description": "Maximum container width. Numbers are treated as pixels, strings are used as-is."
-                },
-                {
-                    "name": "minHeight",
-                    "type": "string | number",
-                    "description": "Minimum container height. Numbers are treated as pixels, strings are used as-is."
-                },
-                {
-                    "name": "GridSpan.children",
+                    "name": "GridItem.children",
                     "type": "ReactNode",
                     "description": "Content rendered inside the grid item."
                 },
                 {
-                    "name": "GridSpan.columns",
+                    "name": "GridItem.columns",
                     "type": "number | \"full\"",
                     "description": "Number of columns to occupy, or full to span the entire grid."
                 }
@@ -1598,50 +1558,25 @@
             "name": "Stack",
             "category": "Layouts",
             "introduction": "Arranges View content using Tailwind spacing steps.",
-            "guidance": "Accepts native div attributes, events, and refs. Configure layout through the supported layout props; component styling is fixed.",
+            "guidance": "Accepts native div attributes and events. Configure layout through the supported layout props; parent containers control sizing.",
             "keywords": ["spacing", "horizontal", "vertical", "layout"],
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Stack content." },
-                {
-                    "name": "width",
-                    "type": "string | number",
-                    "description": "Container width; numbers are pixels and strings are CSS sizes."
-                },
-                {
-                    "name": "height",
-                    "type": "string | number",
-                    "description": "Container height; numbers are pixels and strings are CSS sizes."
-                },
-                {
-                    "name": "maxWidth",
-                    "type": "string | number",
-                    "description": "Maximum container width; numbers are pixels and strings are CSS sizes."
-                },
-                {
-                    "name": "minHeight",
-                    "type": "string | number",
-                    "description": "Minimum container height; numbers are pixels and strings are CSS sizes."
-                },
-                {
-                    "name": "gap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Spacing between items.",
-                    "default": 3
-                },
+                { "name": "gap", "type": "number", "description": "Spacing between items.", "default": 3 },
                 {
                     "name": "padding",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
+                    "type": "number",
                     "description": "Inner padding using the spacing scale.",
                     "default": 0
                 },
                 {
                     "name": "paddingInline",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
+                    "type": "number",
                     "description": "Horizontal padding, overriding padding on the inline axis."
                 },
                 {
                     "name": "paddingBlock",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
+                    "type": "number",
                     "description": "Vertical padding, overriding padding on the block axis."
                 },
                 {
