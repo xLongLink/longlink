@@ -46,7 +46,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     data-code={showCode || undefined}
                 >
                     <Stack
-                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0'}
+                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0!'}
                         align="center"
                         aria-label={`${example.title} preview`}
                     >

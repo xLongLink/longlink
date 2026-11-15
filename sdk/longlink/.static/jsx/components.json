@@ -1123,7 +1123,7 @@
             "name": "Heading",
             "category": "Display",
             "introduction": "Displays a semantic HTML heading with standard Tailwind typography.",
-            "guidance": "Accepts native heading attributes, events, and refs. Typography follows the installed component styling.",
+            "guidance": "Accepts native heading attributes and events. Typography follows the installed component styling.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Heading content." },
                 {
@@ -1131,15 +1131,10 @@
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
                     "description": "Heading level from h1 to h6.",
                     "default": 2
-                },
-                {
-                    "name": "accessibilityLevel",
-                    "type": "1 | 2 | 3 | 4 | 5 | 6",
-                    "description": "Accessible heading level when it differs from the rendered heading element."
                 }
             ],
             "source": "custom",
-            "justification": "Maps a numeric heading level to semantic HTML while allowing an independent accessible document outline; no Heading primitive exists in shadcn/ui or ReUI."
+            "justification": "Maps a numeric heading level to matching semantic HTML and typography; no Heading primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "Hooks",
@@ -1844,31 +1839,19 @@
         {
             "name": "Text",
             "category": "Display",
-            "introduction": "Adds optional truncation and overflow tooltips to a semantic HTML element.",
-            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, event handlers, and refs are forwarded to the rendered element; component styling is fixed. Use ordinary HTML for text that does not need truncation.",
+            "introduction": "Adds optional line truncation to a span. Use Heading for titles.",
+            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, and event handlers are forwarded to the rendered element; component styling is fixed. Use ordinary HTML for text that does not need truncation.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Text content." },
-                {
-                    "name": "as",
-                    "type": "\"label\" | \"span\" | \"p\" | \"div\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
-                    "description": "HTML element to render.",
-                    "default": "span"
-                },
                 {
                     "name": "maxLines",
                     "type": "number",
                     "description": "Maximum visible lines before truncation; 0 disables truncation.",
                     "default": 0
-                },
-                {
-                    "name": "hasTruncateTooltip",
-                    "type": "boolean | \"start\" | \"end\" | \"above\" | \"below\"",
-                    "description": "Enables, disables, or positions the tooltip for truncated text.",
-                    "default": true
                 }
             ],
             "source": "custom",
-            "justification": "Measures overflow and shows current truncated content in an accessible tooltip using the installed component styling."
+            "justification": "Provides line-count-based truncation on a span; no Text primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "TimePicker",

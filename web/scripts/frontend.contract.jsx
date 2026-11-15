@@ -2,7 +2,6 @@ const anchor = useComboboxAnchor();
 
 const [selected, setSelected] = useState('one');
 const remembered = useRef(/** @type {HTMLButtonElement | null} */ (null));
-const textRef = useRef(/** @type {HTMLElement | null} */ (null));
 const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
 const linkRef = useRef(/** @type {HTMLAnchorElement | null} */ (null));
 useEffect(() => {}, []);
@@ -72,12 +71,10 @@ const nativeComposition = (
             <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
             <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
             <Text
-                as="h4"
                 id="publication-status"
                 role="status"
                 aria-live="polite"
                 data-publication="current"
-                ref={textRef}
                 onClick={(event) => event.currentTarget.focus()}
             >
                 Ready to publish
@@ -472,6 +469,16 @@ const _avatarSeed = <Avatar seed="account-1" />;
 const _avatarAlt = <Avatar alt="Account" />;
 // @ts-expect-error The medium Avatar size is named md.
 const _avatarSize = <Avatar size="default" />;
+// @ts-expect-error Text always renders a span; use Heading for a title.
+const _textAs = <Text as="h4">Title</Text>;
+// @ts-expect-error Text does not expose a ref.
+const _textRef = <Text ref={null}>Details</Text>;
+// @ts-expect-error Text no longer provides truncation tooltips.
+const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
+// @ts-expect-error Heading uses level for both its HTML element and accessible outline.
+const _headingAccessibilityLevel = <Heading level={2} accessibilityLevel={1}>Title</Heading>;
+// @ts-expect-error Heading does not expose a ref.
+const _headingRef = <Heading ref={null}>Title</Heading>;
 // @ts-expect-error Collapsible is not currently exposed to Views.
 const _removedCollapsible = <Collapsible />;
 // @ts-expect-error Stepper is not currently exposed to Views.

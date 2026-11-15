@@ -1,14 +1,14 @@
 // @vitest-environment happy-dom
-import { act, createRef } from 'react';
+import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Text } from '@/components/custom/text';
+import { Text } from '@/components/longlink/text';
 import userEvent from '@testing-library/user-event';
-import { Heading } from '@/components/custom/heading';
+import { Heading } from '@/components/longlink/heading';
 import { renderStatic, withMounted } from '../../render';
 
-it('preserves heading targets while separating the accessible level from visual sizing', () => {
+it('preserves heading targets with native document outline semantics', () => {
     const output = renderStatic(
-        <Heading id="account" level={4} accessibilityLevel={1}>
+        <Heading id="account" level={4}>
             Account
         </Heading>
     );
@@ -16,65 +16,27 @@ it('preserves heading targets while separating the accessible level from visual 
     const heading = output.querySelector('#account');
 
     expect(heading?.tagName).toBe('H4');
-    expect(heading?.getAttribute('aria-level')).toBe('1');
+    expect(heading?.hasAttribute('aria-level')).toBe(false);
     expect(output.querySelectorAll('h1, h2, h3, h4, h5, h6')).toHaveLength(1);
 });
 
-it('forwards native heading refs and focus without introducing a wrapper', async () => {
-    const ref = createRef<HTMLHeadingElement>();
-    const onFocus = vi.fn();
+it('keeps native focus and caller handlers working on Text', async () => {
     const user = userEvent.setup();
-
-    await withMounted(
-        <Heading ref={ref} level={3} accessibilityLevel={2} tabIndex={0} onFocus={onFocus}>
-            Account
-        </Heading>,
-        async (output) => {
-            const heading = output.querySelector('h3');
-
-            expect(ref.current).toBe(heading);
-            await user.tab();
-            expect(document.activeElement).toBe(heading);
-            expect(onFocus).toHaveBeenCalledOnce();
-            expect(heading?.getAttribute('aria-level')).toBe('2');
-        }
-    );
-
-    expect(ref.current).toBeNull();
-});
-
-it('keeps native refs, focus and caller handlers working with truncation details', async () => {
-    const user = userEvent.setup();
-    const ref = createRef<HTMLElement>();
     const onFocus = vi.fn();
 
     await withMounted(
-        <Text as="p" ref={ref} tabIndex={0} onFocus={onFocus} maxLines={1}>
+        <Text tabIndex={0} onFocus={onFocus} maxLines={1}>
             Account details
         </Text>,
         async (output) => {
-            const paragraph = output.querySelector('p');
+            const text = output.querySelector('[data-slot="text"]');
 
-            if (!paragraph) throw new Error('Missing native text');
+            if (!(text instanceof HTMLElement)) throw new Error('Missing native text');
 
-            expect(ref.current).toBe(paragraph);
-            Object.defineProperty(paragraph, 'offsetWidth', { configurable: true, value: 20 });
-            Object.defineProperty(paragraph, 'scrollWidth', { configurable: true, value: 200 });
-            await act(async () => {
-                paragraph.textContent = 'Updated account details';
-            });
             await act(async () => await user.tab());
-            await vi.waitFor(() =>
-                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe(
-                    'Updated account details'
-                )
-            );
 
-            expect(document.activeElement).toBe(paragraph);
+            expect(document.activeElement).toBe(text);
             expect(onFocus).toHaveBeenCalledOnce();
-            expect(ref.current).toBe(paragraph);
         }
     );
-
-    expect(ref.current).toBeNull();
 });

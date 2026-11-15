@@ -13994,20 +13994,16 @@ type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
 };
 function Image$1(props: ImageProps): React$1.JSX.Element;
 const Image$2: ViewComponent<typeof Image$1>;
-type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
-    as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "color"> {
     maxLines?: number;
-    hasTruncateTooltip?: boolean | "above" | "below" | "start" | "end";
-    ref?: React$1.Ref<HTMLElement>;
-};
-function Text$1({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: TextProps): React$1.JSX.Element;
+}
+function Text$1({ maxLines, className, style, ...props }: TextProps): React$1.JSX.Element;
 const Text$2: ViewComponent<typeof Text$1>;
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
-function Heading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
+interface HeadingProps extends Omit<React$1.ComponentPropsWithoutRef<"h2">, "color"> {
     level?: HeadingLevel;
-    accessibilityLevel?: HeadingLevel;
-    ref?: React$1.Ref<HTMLHeadingElement>;
-}): React$1.JSX.Element;
+}
+function Heading({ level, className, ...props }: HeadingProps): React$1.JSX.Element;
 const Heading$1: ViewComponent<typeof Heading>;
 type StackLayoutProps = {
     direction?: "horizontal" | "vertical";

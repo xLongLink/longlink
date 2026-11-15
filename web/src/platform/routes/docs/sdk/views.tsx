@@ -27,7 +27,7 @@ import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { componentDocumentation } from '@/platform/publications';
 import { Avatar, AvatarGroup } from '@/components/longlink/avatar';
-import { Heading as ViewHeading } from '@/components/custom/heading';
+import { Heading as ViewHeading } from '@/components/longlink/heading';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { viewHooks, documentationCategories } from '@/lib/documentation';

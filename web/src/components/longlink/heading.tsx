@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import type { HTMLAttributes, Ref } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -14,23 +14,18 @@ const headingClasses = {
     6: 'text-base'
 } as const;
 
-/** Keeps visual heading size independent from the accessible document outline. */
-export function Heading({
-    level = 2,
-    accessibilityLevel,
-    className,
-    ...props
-}: Omit<HTMLAttributes<HTMLHeadingElement>, 'color'> & {
+interface HeadingProps extends Omit<ComponentPropsWithoutRef<'h2'>, 'color'> {
     level?: HeadingLevel;
-    accessibilityLevel?: HeadingLevel;
-    ref?: Ref<HTMLHeadingElement>;
-}) {
+}
+
+/** Uses one level for heading typography and native document semantics. */
+export function Heading({ level = 2, className, ...props }: HeadingProps) {
     const Component = headings[level];
 
     return (
         <Component
+            data-slot="heading"
             {...props}
-            aria-level={props['aria-level'] ?? (accessibilityLevel !== level ? accessibilityLevel : undefined)}
             className={cn('font-semibold tracking-tight', headingClasses[level], className)}
         />
     );

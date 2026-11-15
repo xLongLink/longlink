@@ -1,4 +1,4 @@
-import { Text } from './text';
+import { Text } from '@/components/longlink/text';
 import { TimestampDetails } from './timestamp-details';
 import { useState, useSyncExternalStore } from 'react';
 import { formatTimestamp, formatRelativeTimestamp, type TimestampFormat } from '@/lib/timestamp';
