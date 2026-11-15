@@ -41,13 +41,13 @@ it('normalizes file searches and restores results after an empty search', async 
 
         await act(async () => user.type(search, '  PNG  '));
         expect(output.querySelectorAll('tbody tr')).toHaveLength(1);
-        expect(output.querySelector('tbody a')?.textContent).toContain('example.png');
+        expect(output.querySelector('tbody [aria-haspopup="dialog"]')?.textContent).toContain('example.png');
         expect(output.querySelector('tbody')?.textContent).not.toContain('garden.jpg');
 
         await act(async () => user.clear(search));
         await act(async () => user.type(search, 'missing-file'));
         expect(output.querySelector('tbody')?.textContent).toContain('No files found');
-        expect(output.querySelector('tbody a')).toBeNull();
+        expect(output.querySelector('tbody [aria-haspopup="dialog"]')).toBeNull();
 
         const clear = [...output.querySelectorAll('button')].find((button) => button.textContent === 'Clear search');
 
@@ -95,7 +95,7 @@ it('returns to the first page when a search narrows results from a later file pa
 
         await act(async () => user.type(search, '.gif'));
         expect(output.querySelectorAll('tbody tr')).toHaveLength(1);
-        expect(output.querySelector('tbody a')?.textContent).toContain('example.gif');
+        expect(output.querySelector('tbody [aria-haspopup="dialog"]')?.textContent).toContain('example.gif');
         expect(output.querySelector('[data-slot="data-grid-pagination"]')?.textContent).toContain('1 - 1 of 1');
 
         await act(async () => user.clear(search));
@@ -128,7 +128,7 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
             for (const filename of ['garden.jpg', 'example.pdf', 'example.tsx']) {
                 await act(async () => user.clear(search));
                 await act(async () => user.type(search, filename));
-                const attachment = output.querySelector<HTMLAnchorElement>('tbody a');
+                const attachment = output.querySelector<HTMLButtonElement>('tbody [aria-haspopup="dialog"]');
 
                 if (!attachment) throw new Error(`Expected attachment for ${filename}`);
 

@@ -118,9 +118,6 @@ declare function request<T = unknown>(
  */
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
-/** @category Display @group Table */
-type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
-
 /** @category Display */
 declare function Text(props: Parameters<typeof NativeFrontend.Text>[0]): React.JSX.Element;
 
@@ -153,17 +150,6 @@ declare function DataPagination(props: {
     /** Accessible navigation label; defaults to Pagination. */
     label?: string;
 }): React.JSX.Element;
-
-/** @category Display @group Table */
-declare function proportional(
-    value?: number,
-    options?: {
-        minWidth?: number;
-    }
-): Extract<ColumnWidth, { type: 'proportional' }>;
-
-/** @category Display @group Table */
-declare function pixel(value: number): Extract<ColumnWidth, { type: 'pixel' }>;
 
 /** @category Display */
 declare function Timestamp(props: {
@@ -13928,18 +13914,9 @@ namespace DialogRoot {
     type ChangeEventReason = DialogRootChangeEventReason;
     type ChangeEventDetails = DialogRootChangeEventDetails;
 }
-export function Dialog(props: DialogRoot.Props): React$1.JSX.Element;
-type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-type FramedDialogProps = {
-    children?: React$1.ReactNode;
-    title?: string;
-    variant?: "standard" | "fullscreen";
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    gap?: Spacing;
-    paddingInline?: Spacing;
-};
-export function FramedDialog(props: FramedDialogProps): React$1.JSX.Element;
+export function Dialog({ fullscreen, ...props }: DialogRoot.Props & {
+    fullscreen?: boolean;
+}): React$1.JSX.Element;
 function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
 function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
 function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
@@ -14010,1485 +13987,6 @@ export function TableRow({ className, ...props }: React$1.ComponentProps<"tr">):
 export function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
 export function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
 export function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
-type ColumnWidth = {
-    type: "proportional";
-    value: number;
-    minWidth?: number;
-} | {
-    type: "pixel";
-    value: number;
-};
-type TableColumn<T extends Record<string, unknown>> = {
-    key: string;
-    header?: React$1.ReactNode;
-    width?: ColumnWidth;
-    align?: "start" | "center" | "end";
-    sortable?: boolean;
-    renderCell?: (row: T) => React$1.ReactNode;
-};
-type Updater<T> = T | ((old: T) => T);
-type OnChangeFn<T> = (updaterOrValue: Updater<T>) => void;
-type RowData = Record<string, any> | Array<any>;
-type CellData = unknown;
-type TransformDataValueFn = (dataValue: any) => any;
-type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends ((x: infer R) => any) ? R : never;
-type NoInfer$1<T> = [
-    T
-][T extends any ? 0 : never];
-type Getter<TValue> = <TTValue = TValue>() => NoInfer$1<TTValue>;
-const coreColumnsFeature: TableFeature;
-const coreHeadersFeature: TableFeature;
-const coreRowModelsFeature: TableFeature;
-const coreRowsFeature: TableFeature;
-const coreTablesFeature: TableFeature;
-interface InteropSubscribable<T> {
-    subscribe: (observer: Observer$1<T>) => Subscription$1;
-}
-type Observer$1<T> = {
-    next?: (value: T) => void;
-    error?: (err: unknown) => void;
-    complete?: () => void;
-};
-interface Subscription$1 {
-    unsubscribe: () => void;
-}
-interface Subscribable<T> extends InteropSubscribable<T> {
-    subscribe: ((observer: Observer$1<T>) => Subscription$1) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$1);
-}
-interface Readable<T> extends Subscribable<T> {
-    get: () => T;
-}
-interface BaseAtom<T> extends Subscribable<T>, Readable<T> {
-}
-interface Atom<T> extends BaseAtom<T> {
-    set: ((fn: (prevVal: T) => T) => void) & ((value: T) => void);
-}
-interface AtomOptions<T> {
-    compare?: (prev: T, next: T) => boolean;
-}
-interface ReadonlyAtom<T> extends BaseAtom<T> {
-}
-type StoreAction = (...args: Array<any>) => any;
-type StoreActionMap = Record<string, StoreAction>;
-type StoreActionsFactory<T, TActions extends StoreActionMap> = (store: {
-    setState: Store$1<T>["setState"];
-    get: Store$1<T>["get"];
-}) => TActions;
-type NonFunction<T> = T extends ((...args: Array<any>) => any) ? never : T;
-class Store$1<T, TActions extends StoreActionMap = never> {
-    private atom;
-    readonly actions: TActions;
-    constructor(getValue: (prev?: NoInfer<T>) => T);
-    constructor(initialValue: T);
-    constructor(initialValue: NonFunction<T>, actionsFactory: StoreActionsFactory<T, TActions>);
-    setState(updater: (prev: T) => T): void;
-    get state(): T;
-    get(): T;
-    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
-}
-class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
-    private atom;
-    constructor(getValue: (prev?: NoInfer<T>) => T);
-    constructor(initialValue: T);
-    get state(): T;
-    get(): T;
-    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
-}
-interface TableAtomOptions<T> extends AtomOptions<T> {
-    debugName: string;
-}
-interface TableReactivityBindings {
-    createOptionsStore: boolean;
-    wrapExternalAtoms: boolean;
-    commit?: () => void;
-    addSubscription: (subscription: Subscription$1) => void;
-    createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
-    createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
-    untrack: <T>(fn: () => T) => T;
-    batch: (fn: () => void) => void;
-    schedule: (fn: () => void) => void;
-    unmount?: () => void;
-}
-interface CoreFeatures {
-    coreReactivityFeature?: TableReactivityBindings;
-    coreCellsFeature: typeof coreCellsFeature;
-    coreColumnsFeature: typeof coreColumnsFeature;
-    coreHeadersFeature: typeof coreHeadersFeature;
-    coreRowModelsFeature: typeof coreRowModelsFeature;
-    coreRowsFeature: typeof coreRowsFeature;
-    coreTablesFeature: typeof coreTablesFeature;
-}
-const sortFns: {
-    alphanumeric: CreatedSortFn<any, any>;
-    alphanumericCaseSensitive: CreatedSortFn<any, any>;
-    basic: CreatedSortFn<any, any>;
-    datetime: CreatedSortFn<any, any>;
-    text: CreatedSortFn<any, any>;
-    textCaseSensitive: CreatedSortFn<any, any>;
-};
-type BuiltInSortFn = keyof typeof sortFns;
-interface TableState_ColumnSizing {
-    columnSizing: ColumnSizingState;
-}
-type ColumnSizingState = Record<string, number>;
-interface ColumnOffsets {
-    starts: Record<string, number>;
-    afters: Record<string, number>;
-}
-interface ColumnOffsetsByPosition {
-    all: ColumnOffsets;
-    center: ColumnOffsets;
-    start: ColumnOffsets;
-    end: ColumnOffsets;
-}
-interface TableOptions_ColumnSizing {
-    onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
-}
-interface Table_ColumnSizing {
-    getCenterTotalSize: () => number;
-    getColumnOffsets: () => ColumnOffsetsByPosition;
-    getStartTotalSize: () => number;
-    getEndTotalSize: () => number;
-    getTotalSize: () => number;
-    resetColumnSizing: (defaultState?: boolean) => void;
-    setColumnSizing: (updater: Updater<ColumnSizingState>) => void;
-}
-interface ColumnDef_ColumnSizing {
-    maxSize?: number;
-    minSize?: number;
-    size?: number;
-}
-interface Column_ColumnSizing {
-    getAfter: (position?: ColumnPinningPosition | "center") => number;
-    getSize: () => number;
-    getStart: (position?: ColumnPinningPosition | "center") => number;
-    resetSize: () => void;
-}
-interface Header_ColumnSizing {
-    getSize: () => number;
-    getStart: (position?: ColumnPinningPosition) => number;
-}
-interface TableState_ColumnResizing {
-    columnResizing: columnResizingState;
-}
-interface columnResizingState {
-    columnSizingStart: Array<[
-        string,
-        number
-    ]>;
-    deltaOffset: null | number;
-    deltaPercentage: null | number;
-    isResizingColumn: false | string;
-    startOffset: null | number;
-    startSize: null | number;
-}
-type ColumnResizeMode = "onChange" | "onEnd";
-type ColumnResizeDirection = "ltr" | "rtl";
-interface TableOptions_ColumnResizing {
-    columnResizeMode?: ColumnResizeMode;
-    enableColumnResizing?: boolean;
-    columnResizeDirection?: ColumnResizeDirection;
-    onColumnResizingChange?: OnChangeFn<columnResizingState>;
-}
-interface Table_ColumnResizing {
-    resetHeaderSizeInfo: (defaultState?: boolean) => void;
-    setColumnResizing: (updater: Updater<columnResizingState>) => void;
-}
-interface ColumnDef_ColumnResizing {
-    enableResizing?: boolean;
-}
-interface Column_ColumnResizing {
-    getCanResize: () => boolean;
-    getIsResizing: () => boolean;
-}
-interface Header_ColumnResizing {
-    getResizeHandler: (context?: Document) => (event: unknown) => void;
-}
-interface Header_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
-}
-interface Header_FeatureMap {
-    columnSizingFeature: Header_ColumnSizing;
-    columnResizingFeature: Header_ColumnResizing;
-}
-type Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Header_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Header_FeatureMap>;
-type ExpandedState = true | Record<string, boolean>;
-interface TableState_RowExpanding {
-    expanded: ExpandedState;
-}
-interface Row_RowExpanding {
-    getCanExpand: () => boolean;
-    getIsAllParentsExpanded: () => boolean;
-    getIsExpanded: () => boolean;
-    getToggleExpandedHandler: () => () => void;
-    toggleExpanded: (expanded?: boolean) => void;
-}
-interface TableOptions_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
-    autoResetExpanded?: boolean;
-    enableExpanding?: boolean;
-    getIsRowExpanded?: (row: Row<TFeatures, TData>) => boolean;
-    getRowCanExpand?: (row: Row<TFeatures, TData>) => boolean;
-    manualExpanding?: boolean;
-    onExpandedChange?: OnChangeFn<ExpandedState>;
-    paginateExpandedRows?: boolean;
-}
-interface Table_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
-    _expandRows: (rowModel: RowModel<TFeatures, TData>) => RowModel<TFeatures, TData>;
-    autoResetExpanded: () => void;
-    getCanSomeRowsExpand: () => boolean;
-    getExpandedDepth: () => number;
-    getIsAllRowsExpanded: () => boolean;
-    getIsSomeRowsExpanded: () => boolean;
-    getToggleAllRowsExpandedHandler: () => (event: unknown) => void;
-    resetExpanded: (defaultState?: boolean) => void;
-    setExpanded: (updater: Updater<ExpandedState>) => void;
-    toggleAllRowsExpanded: (expanded?: boolean) => void;
-}
-interface Table_RowModels_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
-    getExpandedRowModel: () => RowModel<TFeatures, TData>;
-    getPreExpandedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
-    expandedRowModel: () => RowModel<TFeatures, TData>;
-}
-const filterFns: {
-    arrIncludes: CreatedFilterFn<any, any>;
-    arrIncludesAll: CreatedFilterFn<any, any>;
-    arrHas: CreatedFilterFn<any, any>;
-    arrIncludesSome: CreatedFilterFn<any, any>;
-    between: CreatedFilterFn<any, any>;
-    betweenInclusive: CreatedFilterFn<any, any>;
-    empty: CreatedFilterFn<any, any>;
-    endsWith: CreatedFilterFn<any, any>;
-    equals: CreatedFilterFn<any, any>;
-    equalsString: CreatedFilterFn<any, any>;
-    equalsStringSensitive: CreatedFilterFn<any, any>;
-    inDateRange: CreatedFilterFn<any, any>;
-    inNumberRange: CreatedFilterFn<any, any>;
-    includesString: CreatedFilterFn<any, any>;
-    includesStringSensitive: CreatedFilterFn<any, any>;
-    notEmpty: CreatedFilterFn<any, any>;
-    startsWith: CreatedFilterFn<any, any>;
-    weakEquals: CreatedFilterFn<any, any>;
-};
-type BuiltInFilterFn = keyof typeof filterFns;
-interface FilterMeta {
-}
-type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? FilterMeta : TFeatures extends {
-    filterMeta: infer TFilterMeta extends object;
-} ? TFilterMeta : FilterMeta;
-interface FilterFns {
-}
-interface TableState_ColumnFiltering {
-    columnFilters: ColumnFiltersState;
-}
-type ColumnFiltersState = Array<ColumnFilter>;
-interface ColumnFilter {
-    id: string;
-    value: unknown;
-}
-interface RowModelFns_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
-    filterFns: Record<string, FilterFn<TFeatures, TData>>;
-}
-interface FilterFn<TFeatures extends TableFeatures, TData extends RowData> {
-    (row: Row<TFeatures, TData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void): boolean;
-    autoRemove?: ColumnFilterAutoRemoveTestFn<TFeatures, TData>;
-    resolveFilterValue?: TransformFilterValueFn<TFeatures, TData>;
-    resolveDataValue?: TransformDataValueFn;
-}
-interface FilterFnDef<TFeatures extends TableFeatures, TData extends RowData> {
-    filter: (dataValue: any, filterValue: any, row: Row<TFeatures, TData>, columnId: string, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void) => boolean;
-    autoRemove?: (filterValue: any) => boolean;
-    resolveFilterValue?: (filterValue: any) => any;
-    resolveDataValue?: TransformDataValueFn;
-}
-interface CreatedFilterFn<TFeatures extends TableFeatures, TData extends RowData> extends FilterFnDef<TFeatures, TData> {
-    <TRowFeatures extends TableFeatures, TRowData extends RowData>(row: Row<TRowFeatures, TRowData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TRowFeatures>) => void): boolean;
-}
-type TransformFilterValueFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => TValue;
-type ColumnFilterAutoRemoveTestFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => boolean;
-type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
-    filterFns: infer TFilterFns extends object;
-} ? Extract<keyof TFilterFns, string> : keyof FilterFns;
-type FilterFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractFilterFnKeys<TFeatures> | FilterFn<TFeatures, TData>;
-interface ColumnDef_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
-    enableColumnFilter?: boolean;
-    filterFn?: FilterFnOption<TFeatures, TData>;
-}
-interface Column_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
-    getAutoFilterFn: () => FilterFn<TFeatures, TData>;
-    getCanFilter: () => boolean;
-    getFilterFn: () => FilterFn<TFeatures, TData>;
-    getFilterIndex: () => number;
-    getFilterValue: () => unknown;
-    getIsFiltered: () => boolean;
-    setFilterValue: (updater: Updater<any>) => void;
-}
-interface Row_ColumnFiltering<TFeatures extends TableFeatures, _TData extends RowData> {
-    columnFilters: Record<string, boolean>;
-    columnFiltersMeta: Record<string, ExtractFilterMeta<TFeatures>>;
-}
-interface TableOptions_ColumnFiltering<_TFeatures extends TableFeatures, _TData extends RowData> {
-    enableColumnFilters?: boolean;
-    enableFilters?: boolean;
-    filterFromLeafRows?: boolean;
-    manualFiltering?: boolean;
-    maxLeafRowFilterDepth?: number;
-    onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
-}
-interface Table_ColumnFiltering {
-    resetColumnFilters: (defaultState?: boolean) => void;
-    setColumnFilters: (updater: Updater<ColumnFiltersState>) => void;
-}
-interface Table_RowModels_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
-    getFilteredRowModel: () => RowModel<TFeatures, TData>;
-    getPreFilteredRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
-    filteredRowModel: () => RowModel<TFeatures, TData>;
-}
-interface PaginationState {
-    pageIndex: number;
-    pageSize: number;
-}
-interface TableState_RowPagination {
-    pagination: PaginationState;
-}
-interface TableOptions_RowPagination {
-    autoResetPageIndex?: boolean;
-    manualPagination?: boolean;
-    onPaginationChange?: OnChangeFn<PaginationState>;
-    pageCount?: number;
-    rowCount?: number;
-}
-interface Table_RowPagination<_TFeatures extends TableFeatures, _TData extends RowData> {
-    autoResetPageIndex: () => void;
-    getCanNextPage: () => boolean;
-    getCanLastPage: () => boolean;
-    getCanPreviousPage: () => boolean;
-    getPageCount: () => number;
-    getRowCount: () => number;
-    getPageOptions: () => Array<number>;
-    nextPage: () => void;
-    previousPage: () => void;
-    firstPage: () => void;
-    lastPage: () => void;
-    resetPageIndex: (defaultState?: boolean) => void;
-    resetPageSize: (defaultState?: boolean) => void;
-    resetPagination: (defaultState?: boolean) => void;
-    setPageIndex: (updater: Updater<number>) => void;
-    setPageSize: (updater: Updater<number>) => void;
-    setPagination: (updater: Updater<PaginationState>) => void;
-}
-interface Table_RowModels_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
-    getPaginatedRowModel: () => RowModel<TFeatures, TData>;
-    getPrePaginatedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
-    paginatedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface Column_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
-    getFacetedMinMaxValues: () => undefined | [
-        number,
-        number
-    ];
-    getFacetedRowModel: () => RowModel<TFeatures, TData>;
-    getFacetedUniqueValues: () => Map<any, number>;
-}
-interface Table_RowModels_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
-    getFacetedMinMaxValues: () => undefined | [
-        number,
-        number
-    ];
-    getFacetedRowModel: () => RowModel<TFeatures, TData>;
-    getFacetedUniqueValues: () => Map<any, number>;
-}
-interface CachedRowModel_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
-    facetedRowModels?: Record<string, () => RowModel<TFeatures, TData>>;
-    facetedMinMaxValues?: Record<string, () => undefined | [
-        number,
-        number
-    ]>;
-    facetedUniqueValues?: Record<string, () => Map<any, number>>;
-    globalFacetedRowModel?: () => RowModel<TFeatures, TData>;
-    globalFacetedMinMaxValues?: () => undefined | [
-        number,
-        number
-    ];
-    globalFacetedUniqueValues?: () => Map<any, number>;
-}
-interface Table_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
-    getGlobalFacetedMinMaxValues: () => undefined | [
-        number,
-        number
-    ];
-    getGlobalFacetedRowModel: () => RowModel<TFeatures, TData>;
-    getGlobalFacetedUniqueValues: () => Map<any, number>;
-}
-interface RowModel<TFeatures extends TableFeatures, TData extends RowData> {
-    rows: Array<Row<TFeatures, TData>>;
-    flatRows: Array<Row<TFeatures, TData>>;
-    rowsById: Record<string, Row<TFeatures, TData>>;
-}
-interface CachedRowModel_Core<TFeatures extends TableFeatures, TData extends RowData> {
-    coreRowModel: () => RowModel<TFeatures, TData>;
-}
-interface Table_RowModels_Core<TFeatures extends TableFeatures, TData extends RowData> {
-    getCoreRowModel: () => RowModel<TFeatures, TData>;
-    getRowModel: () => RowModel<TFeatures, TData>;
-}
-type Table_RowModels<TFeatures extends TableFeatures, TData extends RowData> = Table_RowModels_Core<TFeatures, TData> & Table_RowModels_Faceted<TFeatures, TData> & Table_RowModels_Filtered<TFeatures, TData> & Table_RowModels_Grouped<TFeatures, TData> & Table_RowModels_Expanded<TFeatures, TData> & Table_RowModels_Paginated<TFeatures, TData> & Table_RowModels_Sorted<TFeatures, TData>;
-type GroupingState = Array<string>;
-interface TableState_ColumnGrouping {
-    grouping: GroupingState;
-}
-interface ColumnDef_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
-    enableGrouping?: boolean;
-    getGroupingValue?: (originalRow: TData, index: number, row: Row<TFeatures, TData>) => any;
-}
-interface Column_ColumnGrouping {
-    getCanGroup: () => boolean;
-    getGroupedIndex: () => number;
-    getIsGrouped: () => boolean;
-    getToggleGroupingHandler: () => () => void;
-    toggleGrouping: () => void;
-}
-interface Row_ColumnGrouping {
-    _groupingValuesCache: Record<string, any>;
-    getGroupingValue: (columnId: string) => unknown;
-    getIsGrouped: () => boolean;
-    groupingColumnId?: string;
-    groupingValue?: unknown;
-}
-interface Cell_ColumnGrouping {
-    getIsGrouped: () => boolean;
-    getIsPlaceholder: () => boolean;
-}
-interface TableOptions_ColumnGrouping {
-    enableGrouping?: boolean;
-    groupedColumnMode?: false | "reorder" | "remove";
-    manualGrouping?: boolean;
-    onGroupingChange?: OnChangeFn<GroupingState>;
-}
-interface Table_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
-    _orderGroupedColumns: (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
-    resetGrouping: (defaultState?: boolean) => void;
-    setGrouping: (updater: Updater<GroupingState>) => void;
-}
-interface Table_RowModels_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
-    getGroupedRowModel: () => RowModel<TFeatures, TData>;
-    getPreGroupedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
-    groupedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface TableState_GlobalFiltering {
-    globalFilter: any;
-}
-interface ColumnDef_GlobalFiltering {
-    enableGlobalFilter?: boolean;
-}
-interface Column_GlobalFiltering {
-    getCanGlobalFilter: () => boolean;
-}
-interface TableOptions_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
-    enableGlobalFilter?: boolean;
-    getColumnCanGlobalFilter?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => boolean;
-    globalFilterFn?: FilterFnOption<TFeatures, TData>;
-    onGlobalFilterChange?: OnChangeFn<any>;
-}
-interface Table_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
-    getGlobalAutoFilterFn: () => FilterFn<TFeatures, TData> | undefined;
-    getGlobalFilterFn: () => FilterFn<TFeatures, TData> | undefined;
-    resetGlobalFilter: (defaultState?: boolean) => void;
-    setGlobalFilter: (updater: Updater<any>) => void;
-}
-type RangeValue = Date | number;
-const aggregationFns: {
-    sum: AggregationFnDef<any, any, unknown, number>;
-    min: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
-    max: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
-    extent: AggregationFnDef<any, any, unknown, [
-        RangeValue | undefined,
-        RangeValue | undefined
-    ]>;
-    mean: AggregationFnDef<any, any, unknown, number | undefined>;
-    median: AggregationFnDef<any, any, unknown, number | undefined>;
-    unique: AggregationFnDef<any, any, unknown, unknown[]>;
-    uniqueCount: AggregationFnDef<any, any, unknown, number>;
-    count: AggregationFnDef<any, any, unknown, number>;
-    first: AggregationFnDef<any, any, unknown, unknown>;
-    last: AggregationFnDef<any, any, unknown, unknown>;
-};
-type BuiltInAggregationFn = keyof typeof aggregationFns;
-function aggregateColumnValue<TFeatures extends TableFeatures, TData extends RowData>(args: {
-    maxDepth?: number;
-    subRows?: ReadonlyArray<Row<TFeatures, TData>>;
-    column: Column<TFeatures, TData, unknown>;
-    groupingRow?: Row<TFeatures, TData>;
-    rows: ReadonlyArray<Row<TFeatures, TData>>;
-    uniqueRows?: boolean;
-}): unknown;
-interface AggregationFns {
-}
-interface AggregationContext<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> {
-    column: Column<TFeatures, TData, TValue>;
-    columnId: string;
-    maxDepth: number;
-    subRows?: ReadonlyArray<Row<TFeatures, TData>>;
-    getValue: (row: Row<TFeatures, TData>) => TValue;
-    groupingRow?: Row<TFeatures, TData>;
-    rows: ReadonlyArray<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
-}
-interface AggregationMergeContext<TFeatures extends TableFeatures, TData extends RowData, TValue, TResult> extends AggregationContext<TFeatures, TData, TValue> {
-    subRowResults: ReadonlyArray<TResult>;
-    subRows: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface AggregationFnDef<TFeatures extends TableFeatures = any, TData extends RowData = any, TValue = unknown, TResult = unknown> {
-    aggregate: (context: AggregationContext<TFeatures, TData, TValue>) => TResult;
-    merge?: (context: AggregationMergeContext<TFeatures, TData, TValue, TResult>) => TResult;
-}
-interface RowModelFns_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
-    aggregationFns: Record<string, AggregationFnDef<TFeatures, TData, any, any>>;
-}
-type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
-    aggregationFns: infer TAggregationFns extends object;
-} ? Extract<keyof TAggregationFns, string> : keyof AggregationFns;
-type AggregationFnRef<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDef<TFeatures, TData, TValue, TResult>;
-interface AggregationFnDescriptor<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> {
-    aggregationFn: AggregationFnRef<TFeatures, TData, TValue, TResult>;
-    id: string;
-}
-type AggregationFnListItem<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDescriptor<TFeatures, TData, TValue, any>;
-type AggregationFnOption<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = AggregationFnRef<TFeatures, TData, TValue, any> | ReadonlyArray<AggregationFnListItem<TFeatures, TData, TValue>>;
-type AggregationResultOf<TDefinition> = TDefinition extends AggregationFnDef<any, any, any, infer TResult> ? TResult : unknown;
-type RegisteredAggregationResult<TFeatures extends TableFeatures> = TFeatures extends {
-    aggregationFns: infer TRegistry extends Record<string, unknown>;
-} ? AggregationResultOf<TRegistry[keyof TRegistry]> : unknown;
-type ColumnAggregationValue<TFeatures extends TableFeatures> = RegisteredAggregationResult<TFeatures> | Record<string, RegisteredAggregationResult<TFeatures> | undefined> | undefined;
-interface ResolvedAggregationFn<TFeatures extends TableFeatures, TData extends RowData> {
-    aggregationFn: AggregationFnDef<TFeatures, TData, any, any> | undefined;
-    id: string | undefined;
-}
-interface ColumnDef_RowAggregation<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    aggregatedCell?: ColumnDefTemplate<ReturnType<Cell<TFeatures, TData, TValue>["getContext"]>>;
-    aggregationFn?: AggregationFnOption<TFeatures, TData, TValue>;
-    maxAggregationDepth?: number;
-    getAggregationValue?: (context: AggregationValueContext<TFeatures, TData, TValue>) => AggregationValueResult | undefined;
-}
-interface Column_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
-    getAggregationFns: () => ReadonlyArray<ResolvedAggregationFn<TFeatures, TData>>;
-    getAggregationValue: <TResult = ColumnAggregationValue<TFeatures>>(options?: AggregationValueOptions<TFeatures, TData>) => TResult;
-    getAutoAggregationFn: () => AggregationFnDef<TFeatures, TData, any, any> | undefined;
-}
-interface AggregationValueOptions<TFeatures extends TableFeatures, TData extends RowData> {
-    maxDepth?: number;
-    rows?: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface Cell_RowAggregation {
-    getIsAggregated: () => boolean;
-}
-interface Row_RowAggregation {
-    _aggregationValuesCache?: Record<string, unknown>;
-}
-interface Table_RowAggregation {
-    _aggregateColumnValue: typeof aggregateColumnValue;
-}
-interface AggregationValueContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    column: Column<TFeatures, TData, TValue>;
-    maxDepth: number;
-    rows?: ReadonlyArray<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
-}
-interface AggregationValueResult<TResult = unknown> {
-    value: TResult;
-}
-interface TableOptions_RowAggregation {
-    manualAggregation?: boolean;
-}
-type ColumnOrderState = Array<string>;
-interface ColumnIndexes {
-    all: Record<string, number>;
-    center: Record<string, number>;
-    start: Record<string, number>;
-    end: Record<string, number>;
-}
-interface TableState_ColumnOrdering {
-    columnOrder: ColumnOrderState;
-}
-interface TableOptions_ColumnOrdering {
-    onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
-}
-interface Column_ColumnOrdering {
-    getIndex: (position?: ColumnPinningPosition | "center") => number;
-    getIsFirstColumn: (position?: ColumnPinningPosition | "center") => boolean;
-    getIsLastColumn: (position?: ColumnPinningPosition | "center") => boolean;
-}
-interface Table_ColumnOrdering<TFeatures extends TableFeatures, TData extends RowData> {
-    getColumnIndexes: () => ColumnIndexes;
-    getOrderColumnsFn: () => (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
-    resetColumnOrder: (defaultState?: boolean) => void;
-    setColumnOrder: (updater: Updater<ColumnOrderState>) => void;
-}
-interface Column_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    accessorFn?: AccessorFn<TData, TValue>;
-    columnDef: ColumnDef<TFeatures, TData, TValue>;
-    columns: Array<Column<TFeatures, TData, TValue>>;
-    depth: number;
-    id: string;
-    parent?: Column<TFeatures, TData, TValue>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Column_Column<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
-    getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
-    getLeafColumns: () => Array<Column<TFeatures, TData, TValue>>;
-}
-interface TableOptions_Columns<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    columns: ReadonlyArray<ColumnDef<TFeatures, TData, TValue>>;
-    defaultColumn?: Partial<ColumnDef<TFeatures, TData, TValue>>;
-}
-interface Table_Columns<TFeatures extends TableFeatures, TData extends RowData> {
-    getAllFlatColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
-    getDefaultColumnDef: () => Partial<ColumnDef<TFeatures, TData, unknown>>;
-    getAllColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getAllFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getAllLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getAllLeafColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
-    getColumn: (columnId: string) => Column<TFeatures, TData, unknown> | undefined;
-}
-type ColumnVisibilityState = Record<string, boolean>;
-interface TableState_ColumnVisibility {
-    columnVisibility: ColumnVisibilityState;
-}
-interface TableOptions_ColumnVisibility {
-    enableHiding?: boolean;
-    onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
-}
-interface Table_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
-    getIsAllColumnsVisible: () => boolean;
-    getIsSomeColumnsVisible: () => boolean;
-    getToggleAllColumnsVisibilityHandler: () => (event: unknown) => void;
-    getVisibleFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    resetColumnVisibility: (defaultState?: boolean) => void;
-    setColumnVisibility: (updater: Updater<ColumnVisibilityState>) => void;
-    toggleAllColumnsVisible: (value?: boolean) => void;
-}
-interface ColumnDef_ColumnVisibility {
-    enableHiding?: boolean;
-}
-interface Row_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
-    getVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-    getVisibleCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
-}
-interface Column_ColumnVisibility {
-    getCanHide: () => boolean;
-    getIsVisible: () => boolean;
-    getToggleVisibilityHandler: () => (event: unknown) => void;
-    toggleVisibility: (value?: boolean) => void;
-}
-type RowPinningPosition = false | "top" | "bottom";
-interface RowPinningState {
-    bottom: Array<string>;
-    top: Array<string>;
-}
-interface TableState_RowPinning {
-    rowPinning: RowPinningState;
-}
-interface TableOptions_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
-    enableRowPinning?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-    keepPinnedRows?: boolean;
-    onRowPinningChange?: OnChangeFn<RowPinningState>;
-}
-interface Row_RowPinning {
-    getCanPin: () => boolean;
-    getIsPinned: () => RowPinningPosition;
-    getPinnedIndex: () => number;
-    pin: (position: RowPinningPosition, includeLeafRows?: boolean, includeParentRows?: boolean) => void;
-}
-interface Table_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
-    getBottomRows: () => Array<Row<TFeatures, TData>>;
-    getCenterRows: () => Array<Row<TFeatures, TData>>;
-    getIsSomeRowsPinned: (position?: RowPinningPosition) => boolean;
-    getTopRows: () => Array<Row<TFeatures, TData>>;
-    resetRowPinning: (defaultState?: boolean) => void;
-    setRowPinning: (updater: Updater<RowPinningState>) => void;
-}
-type RowSelectionState = Record<string, true>;
-interface ToggleSelectedOptions {
-    selectChildren?: boolean;
-    deselectParents?: boolean;
-}
-interface TableState_RowSelection {
-    rowSelection: RowSelectionState;
-}
-interface TableOptions_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
-    enableRowRangeSelection?: boolean;
-    enableMultiRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-    enableRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-    enableSubRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-    isRowRangeSelectionEvent?: (event: unknown) => boolean;
-    onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-}
-interface Row_RowSelection {
-    getCanMultiSelect: () => boolean;
-    getCanSelect: () => boolean;
-    getCanSelectSubRows: () => boolean;
-    getIsAllSubRowsSelected: () => boolean;
-    getIsSelected: () => boolean;
-    getIsSomeSelected: () => boolean;
-    getToggleSelectedHandler: (opts?: ToggleSelectedOptions) => (event: unknown) => void;
-    toggleSelected: (value?: boolean, opts?: ToggleSelectedOptions) => void;
-}
-interface Table_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
-    _lastSelectedRowId: string | null;
-    getFilteredSelectedRowModel: () => RowModel<TFeatures, TData>;
-    getGroupedSelectedRowModel: () => RowModel<TFeatures, TData>;
-    getSelectedRowIds: () => Array<string>;
-    getIsAllPageRowsSelected: () => boolean;
-    getIsAllRowsSelected: () => boolean;
-    getIsSomePageRowsSelected: () => boolean;
-    getIsSomeRowsSelected: () => boolean;
-    getPreSelectedRowModel: () => RowModel<TFeatures, TData>;
-    getSelectedRowModel: () => RowModel<TFeatures, TData>;
-    getToggleAllPageRowsSelectedHandler: () => (event: unknown) => void;
-    getToggleAllRowsSelectedHandler: () => (event: unknown) => void;
-    resetRowSelection: (defaultState?: boolean) => void;
-    setRowSelection: (updater: Updater<RowSelectionState>) => void;
-    toggleAllPageRowsSelected: (value?: boolean, opts?: {
-        deselectAll?: boolean;
-    }) => void;
-    toggleAllRowsSelected: (value?: boolean, opts?: {
-        deselectAll?: boolean;
-    }) => void;
-}
-interface Row_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
-    _cellsCache?: WeakMap<Column<TFeatures, TData, unknown>, Cell<TFeatures, TData, unknown>>;
-    _displayIndexCache: number;
-    _uniqueValuesCache: Record<string, unknown>;
-    _valuesCache: Record<string, unknown>;
-    depth: number;
-    id: string;
-    index: number;
-    original: TData;
-    originalSubRows?: ReadonlyArray<TData>;
-    parentId?: string;
-    subRows: Array<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Row_Row<TFeatures extends TableFeatures, TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
-    getDisplayIndex: () => number;
-    getAllCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
-    getAllCells: () => Array<Cell<TFeatures, TData, unknown>>;
-    getLeafRows: () => Array<Row<TFeatures, TData>>;
-    getParentRow: () => Row<TFeatures, TData> | undefined;
-    getParentRows: () => Array<Row<TFeatures, TData>>;
-    getUniqueValues: <TValue>(columnId: string) => Array<TValue>;
-    getValue: <TValue>(columnId: string) => TValue;
-    renderValue: <TValue>(columnId: string) => TValue;
-}
-interface TableOptions_Rows<TFeatures extends TableFeatures, TData extends RowData> {
-    getRowId?: (originalRow: TData, index: number, parent?: Row<TFeatures, TData>) => string;
-    getSubRows?: (originalRow: TData, index: number) => undefined | ReadonlyArray<TData>;
-}
-interface Table_Rows<TFeatures extends TableFeatures, TData extends RowData> {
-    getMaxSubRowDepth: () => number;
-    getRowsInDisplayOrder: () => Array<Row<TFeatures, TData>>;
-    getRowId: (_: TData, index: number, parent?: Row<TFeatures, TData>) => string;
-    getRow: (id: string, searchAll?: boolean) => Row<TFeatures, TData>;
-}
-interface CachedRowModels_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    columnFacetingFeature: CachedRowModel_Faceted<TFeatures, TData>;
-    columnFilteringFeature: CachedRowModel_Filtered<TFeatures, TData>;
-    rowExpandingFeature: CachedRowModel_Expanded<TFeatures, TData>;
-    columnGroupingFeature: CachedRowModel_Grouped<TFeatures, TData>;
-    rowPaginationFeature: CachedRowModel_Paginated<TFeatures, TData>;
-    rowSortingFeature: CachedRowModel_Sorted<TFeatures, TData>;
-}
-type CachedRowModels<TFeatures extends TableFeatures, TData extends RowData> = Partial<CachedRowModel_Core<TFeatures, TData>> & ExtractFeatureMapTypes<TFeatures, CachedRowModels_FeatureMap<TFeatures, TData>>;
-interface RowModelFns_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    rowAggregationFeature: RowModelFns_RowAggregation<TFeatures, TData>;
-    columnFilteringFeature: RowModelFns_ColumnFiltering<TFeatures, TData>;
-    rowSortingFeature: RowModelFns_RowSorting<TFeatures, TData>;
-}
-type RowModelFns<TFeatures extends TableFeatures, TData extends RowData> = Partial<ExtractFeatureMapTypes<TFeatures, RowModelFns_FeatureMap<TFeatures, TData>>>;
-interface TableState_FeatureMap {
-    cellSelectionFeature: TableState_CellSelection;
-    columnFilteringFeature: TableState_ColumnFiltering;
-    columnGroupingFeature: TableState_ColumnGrouping;
-    columnOrderingFeature: TableState_ColumnOrdering;
-    columnPinningFeature: TableState_ColumnPinning;
-    columnResizingFeature: TableState_ColumnResizing;
-    columnSizingFeature: TableState_ColumnSizing;
-    columnVisibilityFeature: TableState_ColumnVisibility;
-    globalFilteringFeature: TableState_GlobalFiltering;
-    rowExpandingFeature: TableState_RowExpanding;
-    rowPaginationFeature: TableState_RowPagination;
-    rowPinningFeature: TableState_RowPinning;
-    rowSelectionFeature: TableState_RowSelection;
-    rowSortingFeature: TableState_RowSorting;
-}
-type TableState<TFeatures extends TableFeatures> = ExtractFeatureMapTypes<TFeatures, TableState_FeatureMap>;
-interface TableState_All extends Partial<TableState_CellSelection & TableState_ColumnFiltering & TableState_ColumnGrouping & TableState_ColumnOrdering & TableState_ColumnPinning & TableState_ColumnResizing & TableState_ColumnSizing & TableState_ColumnVisibility & TableState_GlobalFiltering & TableState_RowExpanding & TableState_RowPagination & TableState_RowPinning & TableState_RowSelection & TableState_RowSorting> {
-}
-interface TableMeta<TFeatures extends TableFeatures, TData extends RowData> {
-}
-type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$3<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
-    tableMeta: infer TMeta extends object;
-} ? TMeta : TableMeta<TFeatures, TData>;
-type BaseAtoms<TFeatures extends TableFeatures> = {
-    [K in keyof TableState<TFeatures>]-?: Atom<TableState<TFeatures>[K]>;
-};
-type Atoms<TFeatures extends TableFeatures> = {
-    [K in keyof TableState<TFeatures>]-?: ReadonlyAtom<TableState<TFeatures>[K]>;
-};
-type ExternalAtoms<TFeatures extends TableFeatures> = Partial<{
-    [K in keyof TableState<TFeatures>]: Atom<TableState<TFeatures>[K]>;
-}>;
-interface TableOptions_Table<TFeatures extends TableFeatures, TData extends RowData> {
-    readonly features: TFeatures & ValidateFeatureSlots<TFeatures>;
-    readonly atoms?: ExternalAtoms<TFeatures>;
-    readonly autoResetAll?: boolean;
-    readonly data: ReadonlyArray<TData>;
-    readonly key?: string;
-    readonly initialState?: Partial<TableState<TFeatures>>;
-    readonly mergeOptions?: (defaultOptions: TableOptions<TFeatures, TData>, options: Partial<TableOptions<TFeatures, TData>>) => TableOptions<TFeatures, TData>;
-    readonly meta?: ExtractTableMeta<TFeatures, TData>;
-    readonly state?: Partial<TableState<TFeatures>>;
-}
-interface Table_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
-    readonly _reactivity: TableReactivityBindings;
-    _cellInstanceInitFns: Array<NonNullable<TableFeature["initCellInstanceData"]>>;
-    _cellPrototype?: object;
-    _columnInstanceInitFns: Array<NonNullable<TableFeature["initColumnInstanceData"]>>;
-    _columnPrototype?: object;
-    readonly _features: Partial<CoreFeatures> & TFeatures;
-    _headerGroupInstanceInitFns: Array<NonNullable<TableFeature["initHeaderGroupInstanceData"]>>;
-    _headerInstanceInitFns: Array<NonNullable<TableFeature["initHeaderInstanceData"]>>;
-    _headerPrototype?: object;
-    readonly _rowModelFns: RowModelFns<TFeatures, TData>;
-    readonly _rowModels: CachedRowModels<TFeatures, TData>;
-    _rowPrototype?: object;
-    _rowInstanceInitFns: Array<NonNullable<TableFeature["initRowInstanceData"]>>;
-    readonly atoms: Atoms<TFeatures>;
-    readonly baseAtoms: BaseAtoms<TFeatures>;
-    readonly initialState: TableState<TFeatures>;
-    readonly options: TableOptions<TFeatures, TData>;
-    readonly optionsStore?: Atom<TableOptions<TFeatures, TData>> | undefined;
-    readonly store: ReadonlyStore<TableState<TFeatures>>;
-}
-interface Table_Table<TFeatures extends TableFeatures, TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
-    reset: () => void;
-    setOptions: (newOptions: Updater<TableOptions<TFeatures, TData>>) => void;
-}
-interface CellSpanIndex<TFeatures extends TableFeatures, TData extends RowData> {
-    colSpans: Array<Int32Array | undefined>;
-    columnIndexes: Record<string, number>;
-    rowSpans: Record<string, Int32Array>;
-    rows: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface RowSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    anchorRow: Row<TFeatures, TData>;
-    anchorValue: TValue;
-    column: Column<TFeatures, TData, TValue>;
-    previousRow: Row<TFeatures, TData>;
-    row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
-    value: TValue;
-}
-interface ColSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    column: Column<TFeatures, TData, TValue>;
-    row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
-}
-interface ColumnDef_CellSpanning<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    enableCellSpanning?: boolean;
-    spanColumns?: number | ((context: ColSpanContext<TFeatures, TData, TValue>) => number);
-    spanRows?: boolean | ((context: RowSpanContext<TFeatures, TData, TValue>) => boolean);
-}
-interface TableOptions_CellSpanning {
-    enableCellSpanning?: boolean;
-}
-interface Cell_CellSpanning {
-    getColSpan: () => number;
-    getIsCovered: () => boolean;
-    getRowSpan: () => number;
-}
-interface Table_CellSpanning<TFeatures extends TableFeatures, TData extends RowData> {
-    getCellSpanIndex: () => CellSpanIndex<TFeatures, TData>;
-}
-interface TableOptions_Core<TFeatures extends TableFeatures, TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
-}
-type DebugKeysFor<TFeatures extends TableFeatures> = {
-    [K in Exclude<keyof TFeatures & string, NonFeatureKeys> as `debug${Capitalize<K>}`]?: boolean;
-};
-type DebugOptions<TFeatures extends TableFeatures> = {
-    debugAll?: boolean;
-    debugCache?: boolean;
-    debugCells?: boolean;
-    debugColumns?: boolean;
-    debugHeaders?: boolean;
-    debugRows?: boolean;
-    debugTable?: boolean;
-} & DebugKeysFor<CoreFeatures & TFeatures>;
-interface TableOptions_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    cellSelectionFeature: TableOptions_CellSelection<TFeatures, TData>;
-    cellSpanningFeature: TableOptions_CellSpanning;
-    columnFilteringFeature: TableOptions_ColumnFiltering<TFeatures, TData>;
-    columnGroupingFeature: TableOptions_ColumnGrouping;
-    columnOrderingFeature: TableOptions_ColumnOrdering;
-    columnPinningFeature: TableOptions_ColumnPinning;
-    columnResizingFeature: TableOptions_ColumnResizing;
-    columnSizingFeature: TableOptions_ColumnSizing;
-    columnVisibilityFeature: TableOptions_ColumnVisibility;
-    globalFilteringFeature: TableOptions_GlobalFiltering<TFeatures, TData>;
-    rowAggregationFeature: TableOptions_RowAggregation;
-    rowExpandingFeature: TableOptions_RowExpanding<TFeatures, TData>;
-    rowPaginationFeature: TableOptions_RowPagination;
-    rowPinningFeature: TableOptions_RowPinning<TFeatures, TData>;
-    rowSelectionFeature: TableOptions_RowSelection<TFeatures, TData>;
-    rowSortingFeature: TableOptions_RowSorting;
-}
-type TableOptions_StockFeatureKeys = "cellSelectionFeature" | "cellSpanningFeature" | "columnFilteringFeature" | "columnGroupingFeature" | "columnOrderingFeature" | "columnPinningFeature" | "columnResizingFeature" | "columnSizingFeature" | "columnVisibilityFeature" | "globalFilteringFeature" | "rowAggregationFeature" | "rowExpandingFeature" | "rowPaginationFeature" | "rowPinningFeature" | "rowSelectionFeature" | "rowSortingFeature";
-type TableOptions_PluginFeatureMapTypes<TFeatures extends TableFeatures, TData extends RowData> = [
-    Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>
-] extends [
-    never
-] ? unknown : UnionToIntersection<TableOptions_FeatureMap<TFeatures, TData>[Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>]>;
-type TableOptions<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, TableOptions_FeatureMap<TFeatures, TData>> & DebugOptions<TFeatures>;
-type TableOptions_All<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & Partial<TableOptions_RowAggregation & TableOptions_CellSelection<TFeatures, TData> & TableOptions_CellSpanning & TableOptions_ColumnFiltering<TFeatures, TData> & TableOptions_ColumnGrouping & TableOptions_ColumnOrdering & TableOptions_ColumnPinning & TableOptions_ColumnResizing & TableOptions_ColumnSizing & TableOptions_ColumnVisibility & TableOptions_GlobalFiltering<TFeatures, TData> & TableOptions_RowExpanding<TFeatures, TData> & TableOptions_RowPagination & TableOptions_RowPinning<TFeatures, TData> & TableOptions_RowSelection<TFeatures, TData> & TableOptions_RowSorting & TableOptions_PluginFeatureMapTypes<TFeatures, TData>>;
-interface Table_Core<TFeatures extends TableFeatures, TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
-}
-interface Table_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    cellSelectionFeature: Table_CellSelection<TFeatures, TData>;
-    cellSpanningFeature: Table_CellSpanning<TFeatures, TData>;
-    columnFacetingFeature: Table_ColumnFaceting<TFeatures, TData>;
-    columnFilteringFeature: Table_ColumnFiltering;
-    columnGroupingFeature: Table_ColumnGrouping<TFeatures, TData>;
-    columnOrderingFeature: Table_ColumnOrdering<TFeatures, TData>;
-    columnPinningFeature: Table_ColumnPinning<TFeatures, TData>;
-    columnResizingFeature: Table_ColumnResizing;
-    columnSizingFeature: Table_ColumnSizing;
-    columnVisibilityFeature: Table_ColumnVisibility<TFeatures, TData>;
-    globalFilteringFeature: Table_GlobalFiltering<TFeatures, TData>;
-    rowAggregationFeature: Table_RowAggregation;
-    rowExpandingFeature: Table_RowExpanding<TFeatures, TData>;
-    rowPaginationFeature: Table_RowPagination<TFeatures, TData>;
-    rowPinningFeature: Table_RowPinning<TFeatures, TData>;
-    rowSelectionFeature: Table_RowSelection<TFeatures, TData>;
-    rowSortingFeature: Table_RowSorting<TFeatures, TData>;
-}
-type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
-interface CellContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    cell: Cell<TFeatures, TData, TValue>;
-    column: Column<TFeatures, TData, TValue>;
-    getValue: Getter<TValue>;
-    renderValue: Getter<TValue | null>;
-    row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Cell_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    column: Column<TFeatures, TData, TValue>;
-    id: string;
-    row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Cell_Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
-    getContext: () => CellContext<TFeatures, TData, TValue>;
-    getValue: CellContext<TFeatures, TData, TValue>["getValue"];
-    renderValue: CellContext<TFeatures, TData, TValue>["renderValue"];
-}
-interface TableOptions_Cell {
-    renderFallbackValue?: any;
-}
-interface Cell_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
-}
-interface Cell_FeatureMap {
-    cellSelectionFeature: Cell_CellSelection;
-    cellSpanningFeature: Cell_CellSpanning;
-    columnGroupingFeature: Cell_ColumnGrouping;
-    rowAggregationFeature: Cell_RowAggregation;
-}
-type Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Cell_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Cell_FeatureMap>;
-interface CellSelectionRange {
-    anchorColumnId: string;
-    anchorRowId: string;
-    focusColumnId: string;
-    focusRowId: string;
-    operation?: CellSelectionRangeOperation;
-}
-type CellSelectionRangeOperation = "include" | "exclude";
-type CellSelectionState = Array<CellSelectionRange>;
-interface TableState_CellSelection {
-    cellSelection: CellSelectionState;
-}
-interface CellSelectionBounds {
-    maxColumnIndex: number;
-    maxRowIndex: number;
-    minColumnIndex: number;
-    minRowIndex: number;
-}
-interface CellSelectionEdges {
-    bottom: boolean;
-    left: boolean;
-    right: boolean;
-    top: boolean;
-}
-type CellSelectionDirection = "up" | "down" | "left" | "right";
-type CellSelectionRangeMode = "replace" | "include" | "exclude";
-interface SelectCellRangeOptions {
-    mode?: CellSelectionRangeMode;
-    additive?: boolean;
-}
-interface TableOptions_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
-    autoResetCellSelection?: boolean;
-    enableCellRangeSelection?: boolean;
-    enableCellSelection?: boolean | ((cell: Cell<TFeatures, TData, any>) => boolean);
-    enableCellSelectionDrag?: boolean;
-    enableMultiCellRangeSelection?: boolean;
-    isCellRangeSelectionEvent?: (event: unknown) => boolean;
-    isMultiCellRangeSelectionEvent?: (event: unknown) => boolean;
-    onCellSelectionChange?: OnChangeFn<CellSelectionState>;
-}
-interface ColumnDef_CellSelection {
-    enableCellSelection?: boolean;
-}
-interface Cell_CellSelection {
-    getCanSelect: () => boolean;
-    getIsFocused: () => boolean;
-    getIsSelected: () => boolean;
-    getSelectionEdges: () => CellSelectionEdges;
-    getSelectionExtendHandler: () => (event: unknown) => void;
-    getSelectionStartHandler: (contextDocument?: Document) => (event: unknown) => void;
-    getTabIndex: () => number;
-}
-interface Table_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
-    _isSelectingCells: boolean;
-    autoResetCellSelection: () => void;
-    extendCellSelection: (direction: CellSelectionDirection) => void;
-    getCellSelectionBounds: () => Array<CellSelectionBounds>;
-    getCellSelectionMergeBounds: () => Array<CellSelectionBounds>;
-    getCellSelectionColumnIds: () => Array<string>;
-    getCellSelectionColumnIndexes: () => Record<string, number>;
-    getCellSelectionRowIds: () => Array<string>;
-    getFocusedCell: () => Cell<TFeatures, TData, any> | undefined;
-    getSelectedCellCount: () => number;
-    getSelectedCellIds: () => Array<string>;
-    getSelectedCellRangesData: () => Array<Array<Array<unknown>>>;
-    moveCellSelection: (direction: CellSelectionDirection) => void;
-    resetCellSelection: (defaultState?: boolean) => void;
-    selectAllCells: () => void;
-    selectCellRange: (range: CellSelectionRange, opts?: SelectCellRangeOptions) => void;
-    setCellSelection: (updater: Updater<CellSelectionState>) => void;
-    setFocusedCell: (rowId: string, columnId: string) => void;
-}
-interface ColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-}
-type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$3<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
-    columnMeta: infer TMeta extends object;
-} ? TMeta : ColumnMeta<TFeatures, TData, TValue>;
-type AccessorFn<TData extends RowData, TValue extends CellData = CellData> = (originalRow: TData, index: number) => TValue;
-type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any);
-type StringOrTemplateHeader<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = string | ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
-interface StringHeaderIdentifier {
-    header: string;
-    id?: string;
-}
-interface IdIdentifier<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    id: string;
-    header?: StringOrTemplateHeader<TFeatures, TData, TValue>;
-}
-type ColumnIdentifiers<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IdIdentifier<TFeatures, TData, TValue> | StringHeaderIdentifier;
-interface ColumnDefBase_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    getUniqueValues?: AccessorFn<TData, ReadonlyArray<unknown>>;
-    footer?: ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
-    cell?: ColumnDefTemplate<CellContext<TFeatures, TData, TValue>>;
-    meta?: ExtractColumnMeta<TFeatures, TData, TValue>;
-}
-interface ColumnDef_FeatureMap<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData> {
-    cellSelectionFeature: ColumnDef_CellSelection;
-    cellSpanningFeature: ColumnDef_CellSpanning<TFeatures, TData, TValue>;
-    columnFilteringFeature: ColumnDef_ColumnFiltering<TFeatures, TData>;
-    columnGroupingFeature: ColumnDef_ColumnGrouping<TFeatures, TData>;
-    columnPinningFeature: ColumnDef_ColumnPinning;
-    columnResizingFeature: ColumnDef_ColumnResizing;
-    columnSizingFeature: ColumnDef_ColumnSizing;
-    columnVisibilityFeature: ColumnDef_ColumnVisibility;
-    globalFilteringFeature: ColumnDef_GlobalFiltering;
-    rowAggregationFeature: ColumnDef_RowAggregation<TFeatures, TData, TValue>;
-    rowSortingFeature: ColumnDef_RowSorting<TFeatures, TData>;
-}
-type ColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, ColumnDef_FeatureMap<TFeatures, TData, TValue>>;
-type ColumnDefBase_All<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & Partial<ColumnDef_RowAggregation<TFeatures, TData, TValue> & ColumnDef_CellSelection & ColumnDef_CellSpanning<TFeatures, TData, TValue> & ColumnDef_ColumnVisibility & ColumnDef_ColumnPinning & ColumnDef_ColumnFiltering<TFeatures, TData> & ColumnDef_GlobalFiltering & ColumnDef_RowSorting<TFeatures, TData> & ColumnDef_ColumnGrouping<TFeatures, TData> & ColumnDef_ColumnSizing & ColumnDef_ColumnResizing>;
-type DisplayColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type GroupColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-    columns?: ReadonlyArray<ColumnDef<TFeatures, TData, unknown>>;
-};
-type GroupColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = GroupColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type AccessorFnColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-    accessorFn: AccessorFn<TData, TValue>;
-};
-type AccessorFnColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorFnColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type AccessorKeyColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-    id?: string;
-    accessorKey: (string & {}) | keyof TData;
-};
-type AccessorKeyColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDefBase<TFeatures, TData, TValue> & Partial<ColumnIdentifiers<TFeatures, TData, TValue>>;
-type AccessorColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDef<TFeatures, TData, TValue> | AccessorFnColumnDef<TFeatures, TData, TValue>;
-type ColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = DisplayColumnDef<TFeatures, TData, TValue> | GroupColumnDef<TFeatures, TData, TValue> | AccessorColumnDef<TFeatures, TData, TValue>;
-interface Column_Core<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
-}
-interface Column_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    rowAggregationFeature: Column_RowAggregation<TFeatures, TData>;
-    columnFacetingFeature: Column_ColumnFaceting<TFeatures, TData>;
-    columnFilteringFeature: Column_ColumnFiltering<TFeatures, TData>;
-    columnGroupingFeature: Column_ColumnGrouping;
-    columnOrderingFeature: Column_ColumnOrdering;
-    columnPinningFeature: Column_ColumnPinning;
-    columnResizingFeature: Column_ColumnResizing;
-    columnSizingFeature: Column_ColumnSizing;
-    columnVisibilityFeature: Column_ColumnVisibility;
-    globalFilteringFeature: Column_GlobalFiltering;
-    rowSortingFeature: Column_RowSorting<TFeatures, TData>;
-}
-type Column<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = Column_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Column_FeatureMap<TFeatures, TData>>;
-interface Table_Headers<TFeatures extends TableFeatures, TData extends RowData> {
-    getHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-}
-interface HeaderContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    column: Column<TFeatures, TData, TValue>;
-    header: Header<TFeatures, TData, TValue>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Header_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    colSpan: number;
-    column: Column<TFeatures, TData, TValue>;
-    depth: number;
-    headerGroup: HeaderGroup<TFeatures, TData> | null;
-    id: string;
-    index: number;
-    isPlaceholder: boolean;
-    placeholderId?: string;
-    rowSpan: number;
-    subHeaders: Array<Header<TFeatures, TData, TValue>>;
-    table: Table$1<TFeatures, TData>;
-}
-interface Header_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
-    getContext: () => HeaderContext<TFeatures, TData, TValue>;
-    getLeafHeaders: () => Array<Header<TFeatures, TData, TValue>>;
-}
-interface HeaderGroup_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-    depth: number;
-    headers: Array<Header<TFeatures, TData, TValue>>;
-    id: string;
-}
-interface HeaderGroup_Core<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
-}
-interface HeaderGroup<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
-}
-type ColumnPinningPosition = false | "start" | "end";
-interface ColumnPinningState {
-    start: Array<string>;
-    end: Array<string>;
-}
-interface TableState_ColumnPinning {
-    columnPinning: ColumnPinningState;
-}
-interface TableOptions_ColumnPinning {
-    enableColumnPinning?: boolean;
-    onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
-}
-interface ColumnDef_ColumnPinning {
-    enablePinning?: boolean;
-}
-interface Column_ColumnPinning {
-    getCanPin: () => boolean;
-    getIsPinned: () => ColumnPinningPosition;
-    getPinnedIndex: () => number;
-    pin: (position: ColumnPinningPosition) => void;
-}
-interface Row_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
-    getCenterVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-    getStartVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-    getEndVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-}
-interface Table_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
-    _orderByColumnPinning: <TItem>(items: Array<TItem>, getColumnId: (item: TItem) => string, getItemsByColumnId?: () => Record<string, TItem | undefined>) => Array<TItem>;
-    getCenterFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getCenterFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getCenterHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getCenterLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getCenterLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getCenterVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getIsSomeColumnsPinned: (position?: ColumnPinningPosition) => boolean;
-    getStartFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getStartFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getStartHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getStartLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getStartLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getStartVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getEndFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getEndFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getEndHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-    getEndLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    getEndLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-    getEndVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-    resetColumnPinning: (defaultState?: boolean) => void;
-    setColumnPinning: (updater: Updater<ColumnPinningState>) => void;
-    getPinnedLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
-    getPinnedVisibleLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
-}
-interface Row_Core<TFeatures extends TableFeatures, TData extends RowData> extends Row_Row<TFeatures, TData> {
-}
-interface Row_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
-    rowAggregationFeature: Row_RowAggregation;
-    columnFilteringFeature: Row_ColumnFiltering<TFeatures, TData>;
-    columnGroupingFeature: Row_ColumnGrouping;
-    columnPinningFeature: Row_ColumnPinning<TFeatures, TData>;
-    columnVisibilityFeature: Row_ColumnVisibility<TFeatures, TData>;
-    rowExpandingFeature: Row_RowExpanding;
-    rowPinningFeature: Row_RowPinning;
-    rowSelectionFeature: Row_RowSelection;
-}
-type Row<TFeatures extends TableFeatures, TData extends RowData> = Row_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Row_FeatureMap<TFeatures, TData>>;
-type SortDirection = "asc" | "desc";
-interface ColumnSort {
-    desc: boolean;
-    id: string;
-}
-type SortingState = Array<ColumnSort>;
-interface TableState_RowSorting {
-    sorting: SortingState;
-}
-interface RowModelFns_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
-    sortFns: Record<string, SortFn<TFeatures, TData>>;
-}
-interface SortFns {
-}
-interface SortFn<TFeatures extends TableFeatures, TData extends RowData> {
-    (rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string): number;
-    resolveDataValue?: TransformDataValueFn;
-}
-interface SortFnDef<TFeatures extends TableFeatures, TData extends RowData> {
-    sort: (dataValueA: any, dataValueB: any, rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string) => number;
-    resolveDataValue?: TransformDataValueFn;
-}
-interface CreatedSortFn<TFeatures extends TableFeatures, TData extends RowData> extends SortFnDef<TFeatures, TData> {
-    <TRowFeatures extends TableFeatures, TRowData extends RowData>(rowA: Row<TRowFeatures, TRowData>, rowB: Row<TRowFeatures, TRowData>, columnId: string): number;
-}
-type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
-    sortFns: infer TSortFns extends object;
-} ? Extract<keyof TSortFns, string> : keyof SortFns;
-type SortFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractSortFnKeys<TFeatures> | SortFn<TFeatures, TData>;
-interface ColumnDef_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
-    enableMultiSort?: boolean;
-    enableSorting?: boolean;
-    invertSorting?: boolean;
-    sortDescFirst?: boolean;
-    sortFn?: SortFnOption<TFeatures, TData>;
-    sortUndefined?: false | -1 | 1 | "first" | "last";
-}
-interface Column_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
-    clearSorting: () => void;
-    getAutoSortDir: () => SortDirection;
-    getAutoSortFn: () => SortFn<TFeatures, TData>;
-    getCanMultiSort: () => boolean;
-    getCanSort: () => boolean;
-    getFirstSortDir: () => SortDirection;
-    getIsSorted: () => false | SortDirection;
-    getNextSortingOrder: (multi?: boolean) => SortDirection | false;
-    getSortIndex: () => number;
-    getSortFn: () => SortFn<TFeatures, TData>;
-    getToggleSortingHandler: () => undefined | ((event: unknown) => void);
-    toggleSorting: (desc?: boolean, isMulti?: boolean) => void;
-}
-interface TableOptions_RowSorting {
-    autoResetSorting?: boolean;
-    enableMultiRemove?: boolean;
-    enableMultiSort?: boolean;
-    enableSorting?: boolean;
-    enableSortingRemoval?: boolean;
-    isMultiSortEvent?: (e: unknown) => boolean;
-    manualSorting?: boolean;
-    maxMultiSortColCount?: number;
-    onSortingChange?: OnChangeFn<SortingState>;
-    sortDescFirst?: boolean;
-}
-interface Table_RowSorting<_TFeatures extends TableFeatures, _TData extends RowData> {
-    autoResetSorting: () => void;
-    resetSorting: (defaultState?: boolean) => void;
-    setSorting: (updater: Updater<SortingState>) => void;
-}
-interface Table_RowModels_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
-    getPreSortedRowModel: () => RowModel<TFeatures, TData>;
-    getSortedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
-    sortedRowModel: () => RowModel<TFeatures, TData>;
-}
-const cellSelectionFeature: TableFeature;
-const cellSpanningFeature: TableFeature;
-const columnFacetingFeature: TableFeature;
-const rowAggregationFeature: TableFeature;
-const columnFilteringFeature: TableFeature;
-const columnGroupingFeature: TableFeature;
-const columnOrderingFeature: TableFeature;
-const columnPinningFeature: TableFeature;
-const columnResizingFeature: TableFeature;
-const columnSizingFeature: TableFeature;
-const columnVisibilityFeature: TableFeature;
-const globalFilteringFeature: TableFeature;
-const rowExpandingFeature: TableFeature;
-const rowPaginationFeature: TableFeature;
-const rowPinningFeature: TableFeature;
-const rowSelectionFeature: TableFeature;
-const rowSortingFeature: TableFeature;
-interface StockFeatures {
-    cellSelectionFeature: typeof cellSelectionFeature;
-    cellSpanningFeature: typeof cellSpanningFeature;
-    columnFacetingFeature: typeof columnFacetingFeature;
-    columnFilteringFeature: typeof columnFilteringFeature;
-    columnGroupingFeature: typeof columnGroupingFeature;
-    columnOrderingFeature: typeof columnOrderingFeature;
-    columnPinningFeature: typeof columnPinningFeature;
-    columnResizingFeature: typeof columnResizingFeature;
-    columnSizingFeature: typeof columnSizingFeature;
-    columnVisibilityFeature: typeof columnVisibilityFeature;
-    globalFilteringFeature: typeof globalFilteringFeature;
-    rowAggregationFeature: typeof rowAggregationFeature;
-    rowExpandingFeature: typeof rowExpandingFeature;
-    rowPaginationFeature: typeof rowPaginationFeature;
-    rowPinningFeature: typeof rowPinningFeature;
-    rowSelectionFeature: typeof rowSelectionFeature;
-    rowSortingFeature: typeof rowSortingFeature;
-}
-type IsAny$3<T> = 0 extends 1 & T ? true : false;
-type UnionToIntersectionOrEmpty<T> = [
-    T
-] extends [
-    never
-] ? {} : UnionToIntersection<T> & {};
-type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$3<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
-interface Plugins {
-}
-type NonFeatureKeys = "aggregationFns" | "columnMeta" | "coreRowModel" | "expandedRowModel" | "facetedMinMaxValues" | "facetedRowModel" | "facetedUniqueValues" | "filterFns" | "filterMeta" | "filteredRowModel" | "groupedRowModel" | "paginatedRowModel" | "sortFns" | "sortedRowModel" | "tableMeta";
-interface FeatureSlotPrereqs {
-    aggregationFns: "rowAggregationFeature";
-    columnResizingFeature: "columnSizingFeature";
-    expandedRowModel: "rowExpandingFeature";
-    facetedMinMaxValues: "columnFacetingFeature";
-    facetedRowModel: "columnFacetingFeature";
-    facetedUniqueValues: "columnFacetingFeature";
-    filteredRowModel: "columnFilteringFeature";
-    filterFns: "columnFilteringFeature";
-    filterMeta: "columnFilteringFeature";
-    globalFilteringFeature: "columnFilteringFeature";
-    groupedRowModel: "columnGroupingFeature";
-    paginatedRowModel: "rowPaginationFeature";
-    sortedRowModel: "rowSortingFeature";
-    sortFns: "rowSortingFeature";
-}
-type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? {} : {
-    [K in keyof TFeatures as K extends keyof FeatureSlotPrereqs ? K : never]: K extends keyof FeatureSlotPrereqs ? [
-        Extract<FeatureSlotPrereqs[K], keyof TFeatures>
-    ] extends [
-        never
-    ] ? `Error: '${K & string}' requires '${FeatureSlotPrereqs[K] & string}' to be included in this table's features.` : TFeatures[K] : never;
-};
-interface TableFeatures extends Partial<CoreFeatures>, Partial<StockFeatures>, Partial<Plugins> {
-    aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
-    columnMeta?: object;
-    coreRowModel?: (table: any) => () => RowModel<any, any>;
-    expandedRowModel?: (table: any) => () => RowModel<any, any>;
-    facetedMinMaxValues?: (table: any, columnId: string) => () => [
-        number,
-        number
-    ] | undefined;
-    facetedRowModel?: (table: any, columnId: string) => () => RowModel<any, any>;
-    facetedUniqueValues?: (table: any, columnId: string) => () => Map<any, number>;
-    filteredRowModel?: (table: any) => () => RowModel<any, any>;
-    filterFns?: Record<string, FilterFn<any, any>>;
-    filterMeta?: object;
-    groupedRowModel?: (table: any) => () => RowModel<any, any>;
-    paginatedRowModel?: (table: any) => () => RowModel<any, any>;
-    sortedRowModel?: (table: any) => () => RowModel<any, any>;
-    sortFns?: Record<string, SortFn<any, any>>;
-    tableMeta?: object;
-}
-interface TableFeature {
-    assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-    getDefaultColumnDef?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>() => ColumnDefBase_All<TFeatures, TData, TValue>;
-    getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
-    getInitialState?: (initialState: Partial<TableState_All>) => TableState_All;
-    initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-    initCellInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(cell: Cell<TFeatures, TData, TValue>) => void;
-    initColumnInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => void;
-    initHeaderGroupInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(headerGroup: HeaderGroup<TFeatures, TData>) => void;
-    initHeaderInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(header: Header<TFeatures, TData, TValue>) => void;
-    initRowInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(row: Row<TFeatures, TData>) => void;
-    resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-}
-const coreCellsFeature: TableFeature;
-type FlexRenderProps<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = {
-    cell: Cell<TFeatures, TData, TValue>;
-    header?: never;
-    footer?: never;
-} | {
-    header: Header<TFeatures, TData, TValue>;
-    cell?: never;
-    footer?: never;
-} | {
-    footer: Header<TFeatures, TData, TValue>;
-    cell?: never;
-    header?: never;
-};
-type SubscribeSource<TValue> = Atom<TValue> | ReadonlyAtom<TValue> | Store$1<TValue> | ReadonlyStore<TValue>;
-type SubscribePropsWithStore<TFeatures extends TableFeatures, TSelected> = {
-    source: SubscribeSource<TableState<TFeatures>>;
-    selector: (state: TableState<TFeatures>) => TSelected;
-    children: ((state: TSelected) => React$1.ReactNode) | React$1.ReactNode;
-};
-type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$1<TFeatures, TData>, "store"> & {
-    readonly store: Table$1<TFeatures, TData>["store"];
-    Subscribe: {
-        <TSourceValue>(props: {
-            source: SubscribeSource<TSourceValue>;
-            selector?: undefined;
-            children: ((state: TSourceValue) => React$1.ReactNode) | React$1.ReactNode;
-        }): ReturnType<React$1.FunctionComponent>;
-        <TSourceValue, TSubSelected>(props: {
-            source: SubscribeSource<TSourceValue>;
-            selector: (state: TSourceValue) => TSubSelected;
-            children: ((state: TSubSelected) => React$1.ReactNode) | React$1.ReactNode;
-        }): ReturnType<React$1.FunctionComponent>;
-        <TSubSelected>(props: Omit<SubscribePropsWithStore<TFeatures, TSubSelected>, "source">): ReturnType<React$1.FunctionComponent>;
-    };
-    FlexRender: <TValue extends CellData = CellData>(props: FlexRenderProps<TFeatures, TData, TValue>) => React$1.ReactNode;
-    readonly state: Readonly<TSelected>;
-};
-export function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
-export function DataTable<T extends Record<string, unknown>>({ data, columns, hasHover, isStriped, idKey, density, sorting, onSortingChange, enableRowSelection, rowSelection, onRowSelectionChange, emptyMessage, verticalAlign }: {
-    data: T[];
-    columns?: TableColumn<T>[];
-    hasHover?: boolean;
-    isStriped?: boolean;
-    idKey?: keyof T | ((row: T) => string | number);
-    density?: "compact";
-    sorting?: SortingState;
-    onSortingChange?: (sorting: SortingState) => void;
-    enableRowSelection?: boolean;
-    rowSelection?: RowSelectionState;
-    onRowSelectionChange?: (selection: RowSelectionState) => void;
-    emptyMessage?: React$1.ReactNode;
-    verticalAlign?: "top" | "middle" | "bottom";
-}): React$1.JSX.Element;
 type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     src: string;
     alt: string;
@@ -15512,6 +14010,7 @@ export function Heading({ level, accessibilityLevel, className, ...props }: Omit
     accessibilityLevel?: HeadingLevel;
     ref?: React$1.Ref<HTMLHeadingElement>;
 }): React$1.JSX.Element;
+type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 type StackLayoutProps = {
     direction?: "horizontal" | "vertical";
     justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
@@ -17334,19 +15833,15 @@ interface StepperContentProps extends React$1.ComponentProps<"div"> {
 }
 export function StepperContent({ value, forceMount, children, className, ...props }: StepperContentProps): React$1.JSX.Element | null;
 type StepProps = {
-    step?: number;
     label: string;
     fields?: string[];
     description?: string;
     children?: React$1.ReactNode;
 };
-type ProgressStepperProps = {
+type WizardProps = {
     children?: React$1.ReactNode;
     activeStep?: number;
     orientation?: "horizontal" | "vertical";
-    onStepClick?: (index: number) => void;
-};
-type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
     onStepClick?: (index: number) => void;
     height?: number | string;
     showProgress?: boolean;
@@ -17358,9 +15853,8 @@ type WizardProps = Omit<ProgressStepperProps, "onStepClick"> & {
     finalAction?: React$1.ReactNode;
     backVariant?: "outline" | "ghost";
 };
-export function ProgressStepper(props: ProgressStepperProps): React$1.JSX.Element;
 export function Wizard(props: WizardProps): React$1.JSX.Element;
-export function Step(props: StepProps): React$1.JSX.Element;
+export function Step(props: StepProps): React$1.ReactNode;
 export function FileViewer({ src, title }: {
     src: string;
     title: string;
@@ -19142,7 +17636,7 @@ interface Props$15 extends React$1.SVGProps<SVGElement> {
     fill?: string;
     stroke?: string;
 }
-const Cell$1: React$1.FunctionComponent<Props$15>;
+export const Cell: React$1.FunctionComponent<Props$15>;
 interface SectorProps {
     className?: string;
     cx?: number;
@@ -19754,6 +18248,1454 @@ interface DataGridI18nLabels {
 type DataGridI18nOverrides = {
     labels?: Partial<DataGridI18nLabels>;
 };
+type Updater<T> = T | ((old: T) => T);
+type OnChangeFn<T> = (updaterOrValue: Updater<T>) => void;
+type RowData = Record<string, any> | Array<any>;
+type CellData = unknown;
+type TransformDataValueFn = (dataValue: any) => any;
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends ((x: infer R) => any) ? R : never;
+type NoInfer$1<T> = [
+    T
+][T extends any ? 0 : never];
+type Getter<TValue> = <TTValue = TValue>() => NoInfer$1<TTValue>;
+const coreColumnsFeature: TableFeature;
+const coreHeadersFeature: TableFeature;
+const coreRowModelsFeature: TableFeature;
+const coreRowsFeature: TableFeature;
+const coreTablesFeature: TableFeature;
+interface InteropSubscribable<T> {
+    subscribe: (observer: Observer$1<T>) => Subscription$1;
+}
+type Observer$1<T> = {
+    next?: (value: T) => void;
+    error?: (err: unknown) => void;
+    complete?: () => void;
+};
+interface Subscription$1 {
+    unsubscribe: () => void;
+}
+interface Subscribable<T> extends InteropSubscribable<T> {
+    subscribe: ((observer: Observer$1<T>) => Subscription$1) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$1);
+}
+interface Readable<T> extends Subscribable<T> {
+    get: () => T;
+}
+interface BaseAtom<T> extends Subscribable<T>, Readable<T> {
+}
+interface Atom<T> extends BaseAtom<T> {
+    set: ((fn: (prevVal: T) => T) => void) & ((value: T) => void);
+}
+interface AtomOptions<T> {
+    compare?: (prev: T, next: T) => boolean;
+}
+interface ReadonlyAtom<T> extends BaseAtom<T> {
+}
+type StoreAction = (...args: Array<any>) => any;
+type StoreActionMap = Record<string, StoreAction>;
+type StoreActionsFactory<T, TActions extends StoreActionMap> = (store: {
+    setState: Store$1<T>["setState"];
+    get: Store$1<T>["get"];
+}) => TActions;
+type NonFunction<T> = T extends ((...args: Array<any>) => any) ? never : T;
+class Store$1<T, TActions extends StoreActionMap = never> {
+    private atom;
+    readonly actions: TActions;
+    constructor(getValue: (prev?: NoInfer<T>) => T);
+    constructor(initialValue: T);
+    constructor(initialValue: NonFunction<T>, actionsFactory: StoreActionsFactory<T, TActions>);
+    setState(updater: (prev: T) => T): void;
+    get state(): T;
+    get(): T;
+    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
+}
+class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
+    private atom;
+    constructor(getValue: (prev?: NoInfer<T>) => T);
+    constructor(initialValue: T);
+    get state(): T;
+    get(): T;
+    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
+}
+interface TableAtomOptions<T> extends AtomOptions<T> {
+    debugName: string;
+}
+interface TableReactivityBindings {
+    createOptionsStore: boolean;
+    wrapExternalAtoms: boolean;
+    commit?: () => void;
+    addSubscription: (subscription: Subscription$1) => void;
+    createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
+    createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
+    untrack: <T>(fn: () => T) => T;
+    batch: (fn: () => void) => void;
+    schedule: (fn: () => void) => void;
+    unmount?: () => void;
+}
+interface CoreFeatures {
+    coreReactivityFeature?: TableReactivityBindings;
+    coreCellsFeature: typeof coreCellsFeature;
+    coreColumnsFeature: typeof coreColumnsFeature;
+    coreHeadersFeature: typeof coreHeadersFeature;
+    coreRowModelsFeature: typeof coreRowModelsFeature;
+    coreRowsFeature: typeof coreRowsFeature;
+    coreTablesFeature: typeof coreTablesFeature;
+}
+const sortFns: {
+    alphanumeric: CreatedSortFn<any, any>;
+    alphanumericCaseSensitive: CreatedSortFn<any, any>;
+    basic: CreatedSortFn<any, any>;
+    datetime: CreatedSortFn<any, any>;
+    text: CreatedSortFn<any, any>;
+    textCaseSensitive: CreatedSortFn<any, any>;
+};
+type BuiltInSortFn = keyof typeof sortFns;
+interface TableState_ColumnSizing {
+    columnSizing: ColumnSizingState;
+}
+type ColumnSizingState = Record<string, number>;
+interface ColumnOffsets {
+    starts: Record<string, number>;
+    afters: Record<string, number>;
+}
+interface ColumnOffsetsByPosition {
+    all: ColumnOffsets;
+    center: ColumnOffsets;
+    start: ColumnOffsets;
+    end: ColumnOffsets;
+}
+interface TableOptions_ColumnSizing {
+    onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
+}
+interface Table_ColumnSizing {
+    getCenterTotalSize: () => number;
+    getColumnOffsets: () => ColumnOffsetsByPosition;
+    getStartTotalSize: () => number;
+    getEndTotalSize: () => number;
+    getTotalSize: () => number;
+    resetColumnSizing: (defaultState?: boolean) => void;
+    setColumnSizing: (updater: Updater<ColumnSizingState>) => void;
+}
+interface ColumnDef_ColumnSizing {
+    maxSize?: number;
+    minSize?: number;
+    size?: number;
+}
+interface Column_ColumnSizing {
+    getAfter: (position?: ColumnPinningPosition | "center") => number;
+    getSize: () => number;
+    getStart: (position?: ColumnPinningPosition | "center") => number;
+    resetSize: () => void;
+}
+interface Header_ColumnSizing {
+    getSize: () => number;
+    getStart: (position?: ColumnPinningPosition) => number;
+}
+interface TableState_ColumnResizing {
+    columnResizing: columnResizingState;
+}
+interface columnResizingState {
+    columnSizingStart: Array<[
+        string,
+        number
+    ]>;
+    deltaOffset: null | number;
+    deltaPercentage: null | number;
+    isResizingColumn: false | string;
+    startOffset: null | number;
+    startSize: null | number;
+}
+type ColumnResizeMode = "onChange" | "onEnd";
+type ColumnResizeDirection = "ltr" | "rtl";
+interface TableOptions_ColumnResizing {
+    columnResizeMode?: ColumnResizeMode;
+    enableColumnResizing?: boolean;
+    columnResizeDirection?: ColumnResizeDirection;
+    onColumnResizingChange?: OnChangeFn<columnResizingState>;
+}
+interface Table_ColumnResizing {
+    resetHeaderSizeInfo: (defaultState?: boolean) => void;
+    setColumnResizing: (updater: Updater<columnResizingState>) => void;
+}
+interface ColumnDef_ColumnResizing {
+    enableResizing?: boolean;
+}
+interface Column_ColumnResizing {
+    getCanResize: () => boolean;
+    getIsResizing: () => boolean;
+}
+interface Header_ColumnResizing {
+    getResizeHandler: (context?: Document) => (event: unknown) => void;
+}
+interface Header_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
+}
+interface Header_FeatureMap {
+    columnSizingFeature: Header_ColumnSizing;
+    columnResizingFeature: Header_ColumnResizing;
+}
+type Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Header_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Header_FeatureMap>;
+type ExpandedState = true | Record<string, boolean>;
+interface TableState_RowExpanding {
+    expanded: ExpandedState;
+}
+interface Row_RowExpanding {
+    getCanExpand: () => boolean;
+    getIsAllParentsExpanded: () => boolean;
+    getIsExpanded: () => boolean;
+    getToggleExpandedHandler: () => () => void;
+    toggleExpanded: (expanded?: boolean) => void;
+}
+interface TableOptions_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
+    autoResetExpanded?: boolean;
+    enableExpanding?: boolean;
+    getIsRowExpanded?: (row: Row<TFeatures, TData>) => boolean;
+    getRowCanExpand?: (row: Row<TFeatures, TData>) => boolean;
+    manualExpanding?: boolean;
+    onExpandedChange?: OnChangeFn<ExpandedState>;
+    paginateExpandedRows?: boolean;
+}
+interface Table_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
+    _expandRows: (rowModel: RowModel<TFeatures, TData>) => RowModel<TFeatures, TData>;
+    autoResetExpanded: () => void;
+    getCanSomeRowsExpand: () => boolean;
+    getExpandedDepth: () => number;
+    getIsAllRowsExpanded: () => boolean;
+    getIsSomeRowsExpanded: () => boolean;
+    getToggleAllRowsExpandedHandler: () => (event: unknown) => void;
+    resetExpanded: (defaultState?: boolean) => void;
+    setExpanded: (updater: Updater<ExpandedState>) => void;
+    toggleAllRowsExpanded: (expanded?: boolean) => void;
+}
+interface Table_RowModels_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
+    getExpandedRowModel: () => RowModel<TFeatures, TData>;
+    getPreExpandedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
+    expandedRowModel: () => RowModel<TFeatures, TData>;
+}
+const filterFns: {
+    arrIncludes: CreatedFilterFn<any, any>;
+    arrIncludesAll: CreatedFilterFn<any, any>;
+    arrHas: CreatedFilterFn<any, any>;
+    arrIncludesSome: CreatedFilterFn<any, any>;
+    between: CreatedFilterFn<any, any>;
+    betweenInclusive: CreatedFilterFn<any, any>;
+    empty: CreatedFilterFn<any, any>;
+    endsWith: CreatedFilterFn<any, any>;
+    equals: CreatedFilterFn<any, any>;
+    equalsString: CreatedFilterFn<any, any>;
+    equalsStringSensitive: CreatedFilterFn<any, any>;
+    inDateRange: CreatedFilterFn<any, any>;
+    inNumberRange: CreatedFilterFn<any, any>;
+    includesString: CreatedFilterFn<any, any>;
+    includesStringSensitive: CreatedFilterFn<any, any>;
+    notEmpty: CreatedFilterFn<any, any>;
+    startsWith: CreatedFilterFn<any, any>;
+    weakEquals: CreatedFilterFn<any, any>;
+};
+type BuiltInFilterFn = keyof typeof filterFns;
+interface FilterMeta {
+}
+type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? FilterMeta : TFeatures extends {
+    filterMeta: infer TFilterMeta extends object;
+} ? TFilterMeta : FilterMeta;
+interface FilterFns {
+}
+interface TableState_ColumnFiltering {
+    columnFilters: ColumnFiltersState;
+}
+type ColumnFiltersState = Array<ColumnFilter>;
+interface ColumnFilter {
+    id: string;
+    value: unknown;
+}
+interface RowModelFns_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
+    filterFns: Record<string, FilterFn<TFeatures, TData>>;
+}
+interface FilterFn<TFeatures extends TableFeatures, TData extends RowData> {
+    (row: Row<TFeatures, TData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void): boolean;
+    autoRemove?: ColumnFilterAutoRemoveTestFn<TFeatures, TData>;
+    resolveFilterValue?: TransformFilterValueFn<TFeatures, TData>;
+    resolveDataValue?: TransformDataValueFn;
+}
+interface FilterFnDef<TFeatures extends TableFeatures, TData extends RowData> {
+    filter: (dataValue: any, filterValue: any, row: Row<TFeatures, TData>, columnId: string, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void) => boolean;
+    autoRemove?: (filterValue: any) => boolean;
+    resolveFilterValue?: (filterValue: any) => any;
+    resolveDataValue?: TransformDataValueFn;
+}
+interface CreatedFilterFn<TFeatures extends TableFeatures, TData extends RowData> extends FilterFnDef<TFeatures, TData> {
+    <TRowFeatures extends TableFeatures, TRowData extends RowData>(row: Row<TRowFeatures, TRowData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TRowFeatures>) => void): boolean;
+}
+type TransformFilterValueFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => TValue;
+type ColumnFilterAutoRemoveTestFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => boolean;
+type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
+    filterFns: infer TFilterFns extends object;
+} ? Extract<keyof TFilterFns, string> : keyof FilterFns;
+type FilterFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractFilterFnKeys<TFeatures> | FilterFn<TFeatures, TData>;
+interface ColumnDef_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
+    enableColumnFilter?: boolean;
+    filterFn?: FilterFnOption<TFeatures, TData>;
+}
+interface Column_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
+    getAutoFilterFn: () => FilterFn<TFeatures, TData>;
+    getCanFilter: () => boolean;
+    getFilterFn: () => FilterFn<TFeatures, TData>;
+    getFilterIndex: () => number;
+    getFilterValue: () => unknown;
+    getIsFiltered: () => boolean;
+    setFilterValue: (updater: Updater<any>) => void;
+}
+interface Row_ColumnFiltering<TFeatures extends TableFeatures, _TData extends RowData> {
+    columnFilters: Record<string, boolean>;
+    columnFiltersMeta: Record<string, ExtractFilterMeta<TFeatures>>;
+}
+interface TableOptions_ColumnFiltering<_TFeatures extends TableFeatures, _TData extends RowData> {
+    enableColumnFilters?: boolean;
+    enableFilters?: boolean;
+    filterFromLeafRows?: boolean;
+    manualFiltering?: boolean;
+    maxLeafRowFilterDepth?: number;
+    onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
+}
+interface Table_ColumnFiltering {
+    resetColumnFilters: (defaultState?: boolean) => void;
+    setColumnFilters: (updater: Updater<ColumnFiltersState>) => void;
+}
+interface Table_RowModels_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
+    getFilteredRowModel: () => RowModel<TFeatures, TData>;
+    getPreFilteredRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
+    filteredRowModel: () => RowModel<TFeatures, TData>;
+}
+interface PaginationState {
+    pageIndex: number;
+    pageSize: number;
+}
+interface TableState_RowPagination {
+    pagination: PaginationState;
+}
+interface TableOptions_RowPagination {
+    autoResetPageIndex?: boolean;
+    manualPagination?: boolean;
+    onPaginationChange?: OnChangeFn<PaginationState>;
+    pageCount?: number;
+    rowCount?: number;
+}
+interface Table_RowPagination<_TFeatures extends TableFeatures, _TData extends RowData> {
+    autoResetPageIndex: () => void;
+    getCanNextPage: () => boolean;
+    getCanLastPage: () => boolean;
+    getCanPreviousPage: () => boolean;
+    getPageCount: () => number;
+    getRowCount: () => number;
+    getPageOptions: () => Array<number>;
+    nextPage: () => void;
+    previousPage: () => void;
+    firstPage: () => void;
+    lastPage: () => void;
+    resetPageIndex: (defaultState?: boolean) => void;
+    resetPageSize: (defaultState?: boolean) => void;
+    resetPagination: (defaultState?: boolean) => void;
+    setPageIndex: (updater: Updater<number>) => void;
+    setPageSize: (updater: Updater<number>) => void;
+    setPagination: (updater: Updater<PaginationState>) => void;
+}
+interface Table_RowModels_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
+    getPaginatedRowModel: () => RowModel<TFeatures, TData>;
+    getPrePaginatedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
+    paginatedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface Column_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
+    getFacetedMinMaxValues: () => undefined | [
+        number,
+        number
+    ];
+    getFacetedRowModel: () => RowModel<TFeatures, TData>;
+    getFacetedUniqueValues: () => Map<any, number>;
+}
+interface Table_RowModels_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
+    getFacetedMinMaxValues: () => undefined | [
+        number,
+        number
+    ];
+    getFacetedRowModel: () => RowModel<TFeatures, TData>;
+    getFacetedUniqueValues: () => Map<any, number>;
+}
+interface CachedRowModel_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
+    facetedRowModels?: Record<string, () => RowModel<TFeatures, TData>>;
+    facetedMinMaxValues?: Record<string, () => undefined | [
+        number,
+        number
+    ]>;
+    facetedUniqueValues?: Record<string, () => Map<any, number>>;
+    globalFacetedRowModel?: () => RowModel<TFeatures, TData>;
+    globalFacetedMinMaxValues?: () => undefined | [
+        number,
+        number
+    ];
+    globalFacetedUniqueValues?: () => Map<any, number>;
+}
+interface Table_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
+    getGlobalFacetedMinMaxValues: () => undefined | [
+        number,
+        number
+    ];
+    getGlobalFacetedRowModel: () => RowModel<TFeatures, TData>;
+    getGlobalFacetedUniqueValues: () => Map<any, number>;
+}
+interface RowModel<TFeatures extends TableFeatures, TData extends RowData> {
+    rows: Array<Row<TFeatures, TData>>;
+    flatRows: Array<Row<TFeatures, TData>>;
+    rowsById: Record<string, Row<TFeatures, TData>>;
+}
+interface CachedRowModel_Core<TFeatures extends TableFeatures, TData extends RowData> {
+    coreRowModel: () => RowModel<TFeatures, TData>;
+}
+interface Table_RowModels_Core<TFeatures extends TableFeatures, TData extends RowData> {
+    getCoreRowModel: () => RowModel<TFeatures, TData>;
+    getRowModel: () => RowModel<TFeatures, TData>;
+}
+type Table_RowModels<TFeatures extends TableFeatures, TData extends RowData> = Table_RowModels_Core<TFeatures, TData> & Table_RowModels_Faceted<TFeatures, TData> & Table_RowModels_Filtered<TFeatures, TData> & Table_RowModels_Grouped<TFeatures, TData> & Table_RowModels_Expanded<TFeatures, TData> & Table_RowModels_Paginated<TFeatures, TData> & Table_RowModels_Sorted<TFeatures, TData>;
+type GroupingState = Array<string>;
+interface TableState_ColumnGrouping {
+    grouping: GroupingState;
+}
+interface ColumnDef_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
+    enableGrouping?: boolean;
+    getGroupingValue?: (originalRow: TData, index: number, row: Row<TFeatures, TData>) => any;
+}
+interface Column_ColumnGrouping {
+    getCanGroup: () => boolean;
+    getGroupedIndex: () => number;
+    getIsGrouped: () => boolean;
+    getToggleGroupingHandler: () => () => void;
+    toggleGrouping: () => void;
+}
+interface Row_ColumnGrouping {
+    _groupingValuesCache: Record<string, any>;
+    getGroupingValue: (columnId: string) => unknown;
+    getIsGrouped: () => boolean;
+    groupingColumnId?: string;
+    groupingValue?: unknown;
+}
+interface Cell_ColumnGrouping {
+    getIsGrouped: () => boolean;
+    getIsPlaceholder: () => boolean;
+}
+interface TableOptions_ColumnGrouping {
+    enableGrouping?: boolean;
+    groupedColumnMode?: false | "reorder" | "remove";
+    manualGrouping?: boolean;
+    onGroupingChange?: OnChangeFn<GroupingState>;
+}
+interface Table_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
+    _orderGroupedColumns: (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
+    resetGrouping: (defaultState?: boolean) => void;
+    setGrouping: (updater: Updater<GroupingState>) => void;
+}
+interface Table_RowModels_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
+    getGroupedRowModel: () => RowModel<TFeatures, TData>;
+    getPreGroupedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
+    groupedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface TableState_GlobalFiltering {
+    globalFilter: any;
+}
+interface ColumnDef_GlobalFiltering {
+    enableGlobalFilter?: boolean;
+}
+interface Column_GlobalFiltering {
+    getCanGlobalFilter: () => boolean;
+}
+interface TableOptions_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
+    enableGlobalFilter?: boolean;
+    getColumnCanGlobalFilter?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => boolean;
+    globalFilterFn?: FilterFnOption<TFeatures, TData>;
+    onGlobalFilterChange?: OnChangeFn<any>;
+}
+interface Table_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
+    getGlobalAutoFilterFn: () => FilterFn<TFeatures, TData> | undefined;
+    getGlobalFilterFn: () => FilterFn<TFeatures, TData> | undefined;
+    resetGlobalFilter: (defaultState?: boolean) => void;
+    setGlobalFilter: (updater: Updater<any>) => void;
+}
+type RangeValue = Date | number;
+const aggregationFns: {
+    sum: AggregationFnDef<any, any, unknown, number>;
+    min: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
+    max: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
+    extent: AggregationFnDef<any, any, unknown, [
+        RangeValue | undefined,
+        RangeValue | undefined
+    ]>;
+    mean: AggregationFnDef<any, any, unknown, number | undefined>;
+    median: AggregationFnDef<any, any, unknown, number | undefined>;
+    unique: AggregationFnDef<any, any, unknown, unknown[]>;
+    uniqueCount: AggregationFnDef<any, any, unknown, number>;
+    count: AggregationFnDef<any, any, unknown, number>;
+    first: AggregationFnDef<any, any, unknown, unknown>;
+    last: AggregationFnDef<any, any, unknown, unknown>;
+};
+type BuiltInAggregationFn = keyof typeof aggregationFns;
+function aggregateColumnValue<TFeatures extends TableFeatures, TData extends RowData>(args: {
+    maxDepth?: number;
+    subRows?: ReadonlyArray<Row<TFeatures, TData>>;
+    column: Column<TFeatures, TData, unknown>;
+    groupingRow?: Row<TFeatures, TData>;
+    rows: ReadonlyArray<Row<TFeatures, TData>>;
+    uniqueRows?: boolean;
+}): unknown;
+interface AggregationFns {
+}
+interface AggregationContext<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> {
+    column: Column<TFeatures, TData, TValue>;
+    columnId: string;
+    maxDepth: number;
+    subRows?: ReadonlyArray<Row<TFeatures, TData>>;
+    getValue: (row: Row<TFeatures, TData>) => TValue;
+    groupingRow?: Row<TFeatures, TData>;
+    rows: ReadonlyArray<Row<TFeatures, TData>>;
+    table: Table$1<TFeatures, TData>;
+}
+interface AggregationMergeContext<TFeatures extends TableFeatures, TData extends RowData, TValue, TResult> extends AggregationContext<TFeatures, TData, TValue> {
+    subRowResults: ReadonlyArray<TResult>;
+    subRows: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface AggregationFnDef<TFeatures extends TableFeatures = any, TData extends RowData = any, TValue = unknown, TResult = unknown> {
+    aggregate: (context: AggregationContext<TFeatures, TData, TValue>) => TResult;
+    merge?: (context: AggregationMergeContext<TFeatures, TData, TValue, TResult>) => TResult;
+}
+interface RowModelFns_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
+    aggregationFns: Record<string, AggregationFnDef<TFeatures, TData, any, any>>;
+}
+type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
+    aggregationFns: infer TAggregationFns extends object;
+} ? Extract<keyof TAggregationFns, string> : keyof AggregationFns;
+type AggregationFnRef<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDef<TFeatures, TData, TValue, TResult>;
+interface AggregationFnDescriptor<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> {
+    aggregationFn: AggregationFnRef<TFeatures, TData, TValue, TResult>;
+    id: string;
+}
+type AggregationFnListItem<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDescriptor<TFeatures, TData, TValue, any>;
+type AggregationFnOption<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = AggregationFnRef<TFeatures, TData, TValue, any> | ReadonlyArray<AggregationFnListItem<TFeatures, TData, TValue>>;
+type AggregationResultOf<TDefinition> = TDefinition extends AggregationFnDef<any, any, any, infer TResult> ? TResult : unknown;
+type RegisteredAggregationResult<TFeatures extends TableFeatures> = TFeatures extends {
+    aggregationFns: infer TRegistry extends Record<string, unknown>;
+} ? AggregationResultOf<TRegistry[keyof TRegistry]> : unknown;
+type ColumnAggregationValue<TFeatures extends TableFeatures> = RegisteredAggregationResult<TFeatures> | Record<string, RegisteredAggregationResult<TFeatures> | undefined> | undefined;
+interface ResolvedAggregationFn<TFeatures extends TableFeatures, TData extends RowData> {
+    aggregationFn: AggregationFnDef<TFeatures, TData, any, any> | undefined;
+    id: string | undefined;
+}
+interface ColumnDef_RowAggregation<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    aggregatedCell?: ColumnDefTemplate<ReturnType<Cell$1<TFeatures, TData, TValue>["getContext"]>>;
+    aggregationFn?: AggregationFnOption<TFeatures, TData, TValue>;
+    maxAggregationDepth?: number;
+    getAggregationValue?: (context: AggregationValueContext<TFeatures, TData, TValue>) => AggregationValueResult | undefined;
+}
+interface Column_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
+    getAggregationFns: () => ReadonlyArray<ResolvedAggregationFn<TFeatures, TData>>;
+    getAggregationValue: <TResult = ColumnAggregationValue<TFeatures>>(options?: AggregationValueOptions<TFeatures, TData>) => TResult;
+    getAutoAggregationFn: () => AggregationFnDef<TFeatures, TData, any, any> | undefined;
+}
+interface AggregationValueOptions<TFeatures extends TableFeatures, TData extends RowData> {
+    maxDepth?: number;
+    rows?: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface Cell_RowAggregation {
+    getIsAggregated: () => boolean;
+}
+interface Row_RowAggregation {
+    _aggregationValuesCache?: Record<string, unknown>;
+}
+interface Table_RowAggregation {
+    _aggregateColumnValue: typeof aggregateColumnValue;
+}
+interface AggregationValueContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    column: Column<TFeatures, TData, TValue>;
+    maxDepth: number;
+    rows?: ReadonlyArray<Row<TFeatures, TData>>;
+    table: Table$1<TFeatures, TData>;
+}
+interface AggregationValueResult<TResult = unknown> {
+    value: TResult;
+}
+interface TableOptions_RowAggregation {
+    manualAggregation?: boolean;
+}
+type ColumnOrderState = Array<string>;
+interface ColumnIndexes {
+    all: Record<string, number>;
+    center: Record<string, number>;
+    start: Record<string, number>;
+    end: Record<string, number>;
+}
+interface TableState_ColumnOrdering {
+    columnOrder: ColumnOrderState;
+}
+interface TableOptions_ColumnOrdering {
+    onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
+}
+interface Column_ColumnOrdering {
+    getIndex: (position?: ColumnPinningPosition | "center") => number;
+    getIsFirstColumn: (position?: ColumnPinningPosition | "center") => boolean;
+    getIsLastColumn: (position?: ColumnPinningPosition | "center") => boolean;
+}
+interface Table_ColumnOrdering<TFeatures extends TableFeatures, TData extends RowData> {
+    getColumnIndexes: () => ColumnIndexes;
+    getOrderColumnsFn: () => (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
+    resetColumnOrder: (defaultState?: boolean) => void;
+    setColumnOrder: (updater: Updater<ColumnOrderState>) => void;
+}
+interface Column_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    accessorFn?: AccessorFn<TData, TValue>;
+    columnDef: ColumnDef<TFeatures, TData, TValue>;
+    columns: Array<Column<TFeatures, TData, TValue>>;
+    depth: number;
+    id: string;
+    parent?: Column<TFeatures, TData, TValue>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Column_Column<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
+    getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
+    getLeafColumns: () => Array<Column<TFeatures, TData, TValue>>;
+}
+interface TableOptions_Columns<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    columns: ReadonlyArray<ColumnDef<TFeatures, TData, TValue>>;
+    defaultColumn?: Partial<ColumnDef<TFeatures, TData, TValue>>;
+}
+interface Table_Columns<TFeatures extends TableFeatures, TData extends RowData> {
+    getAllFlatColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
+    getDefaultColumnDef: () => Partial<ColumnDef<TFeatures, TData, unknown>>;
+    getAllColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getAllFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getAllLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getAllLeafColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
+    getColumn: (columnId: string) => Column<TFeatures, TData, unknown> | undefined;
+}
+type ColumnVisibilityState = Record<string, boolean>;
+interface TableState_ColumnVisibility {
+    columnVisibility: ColumnVisibilityState;
+}
+interface TableOptions_ColumnVisibility {
+    enableHiding?: boolean;
+    onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
+}
+interface Table_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
+    getIsAllColumnsVisible: () => boolean;
+    getIsSomeColumnsVisible: () => boolean;
+    getToggleAllColumnsVisibilityHandler: () => (event: unknown) => void;
+    getVisibleFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    resetColumnVisibility: (defaultState?: boolean) => void;
+    setColumnVisibility: (updater: Updater<ColumnVisibilityState>) => void;
+    toggleAllColumnsVisible: (value?: boolean) => void;
+}
+interface ColumnDef_ColumnVisibility {
+    enableHiding?: boolean;
+}
+interface Row_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
+    getVisibleCells: () => Array<Cell$1<TFeatures, TData, unknown>>;
+    getVisibleCellsByColumnId: () => Record<string, Cell$1<TFeatures, TData, unknown>>;
+}
+interface Column_ColumnVisibility {
+    getCanHide: () => boolean;
+    getIsVisible: () => boolean;
+    getToggleVisibilityHandler: () => (event: unknown) => void;
+    toggleVisibility: (value?: boolean) => void;
+}
+type RowPinningPosition = false | "top" | "bottom";
+interface RowPinningState {
+    bottom: Array<string>;
+    top: Array<string>;
+}
+interface TableState_RowPinning {
+    rowPinning: RowPinningState;
+}
+interface TableOptions_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
+    enableRowPinning?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+    keepPinnedRows?: boolean;
+    onRowPinningChange?: OnChangeFn<RowPinningState>;
+}
+interface Row_RowPinning {
+    getCanPin: () => boolean;
+    getIsPinned: () => RowPinningPosition;
+    getPinnedIndex: () => number;
+    pin: (position: RowPinningPosition, includeLeafRows?: boolean, includeParentRows?: boolean) => void;
+}
+interface Table_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
+    getBottomRows: () => Array<Row<TFeatures, TData>>;
+    getCenterRows: () => Array<Row<TFeatures, TData>>;
+    getIsSomeRowsPinned: (position?: RowPinningPosition) => boolean;
+    getTopRows: () => Array<Row<TFeatures, TData>>;
+    resetRowPinning: (defaultState?: boolean) => void;
+    setRowPinning: (updater: Updater<RowPinningState>) => void;
+}
+export type RowSelectionState = Record<string, true>;
+interface ToggleSelectedOptions {
+    selectChildren?: boolean;
+    deselectParents?: boolean;
+}
+interface TableState_RowSelection {
+    rowSelection: RowSelectionState;
+}
+interface TableOptions_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
+    enableRowRangeSelection?: boolean;
+    enableMultiRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+    enableRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+    enableSubRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+    isRowRangeSelectionEvent?: (event: unknown) => boolean;
+    onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+}
+interface Row_RowSelection {
+    getCanMultiSelect: () => boolean;
+    getCanSelect: () => boolean;
+    getCanSelectSubRows: () => boolean;
+    getIsAllSubRowsSelected: () => boolean;
+    getIsSelected: () => boolean;
+    getIsSomeSelected: () => boolean;
+    getToggleSelectedHandler: (opts?: ToggleSelectedOptions) => (event: unknown) => void;
+    toggleSelected: (value?: boolean, opts?: ToggleSelectedOptions) => void;
+}
+interface Table_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
+    _lastSelectedRowId: string | null;
+    getFilteredSelectedRowModel: () => RowModel<TFeatures, TData>;
+    getGroupedSelectedRowModel: () => RowModel<TFeatures, TData>;
+    getSelectedRowIds: () => Array<string>;
+    getIsAllPageRowsSelected: () => boolean;
+    getIsAllRowsSelected: () => boolean;
+    getIsSomePageRowsSelected: () => boolean;
+    getIsSomeRowsSelected: () => boolean;
+    getPreSelectedRowModel: () => RowModel<TFeatures, TData>;
+    getSelectedRowModel: () => RowModel<TFeatures, TData>;
+    getToggleAllPageRowsSelectedHandler: () => (event: unknown) => void;
+    getToggleAllRowsSelectedHandler: () => (event: unknown) => void;
+    resetRowSelection: (defaultState?: boolean) => void;
+    setRowSelection: (updater: Updater<RowSelectionState>) => void;
+    toggleAllPageRowsSelected: (value?: boolean, opts?: {
+        deselectAll?: boolean;
+    }) => void;
+    toggleAllRowsSelected: (value?: boolean, opts?: {
+        deselectAll?: boolean;
+    }) => void;
+}
+interface Row_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
+    _cellsCache?: WeakMap<Column<TFeatures, TData, unknown>, Cell$1<TFeatures, TData, unknown>>;
+    _displayIndexCache: number;
+    _uniqueValuesCache: Record<string, unknown>;
+    _valuesCache: Record<string, unknown>;
+    depth: number;
+    id: string;
+    index: number;
+    original: TData;
+    originalSubRows?: ReadonlyArray<TData>;
+    parentId?: string;
+    subRows: Array<Row<TFeatures, TData>>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Row_Row<TFeatures extends TableFeatures, TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
+    getDisplayIndex: () => number;
+    getAllCellsByColumnId: () => Record<string, Cell$1<TFeatures, TData, unknown>>;
+    getAllCells: () => Array<Cell$1<TFeatures, TData, unknown>>;
+    getLeafRows: () => Array<Row<TFeatures, TData>>;
+    getParentRow: () => Row<TFeatures, TData> | undefined;
+    getParentRows: () => Array<Row<TFeatures, TData>>;
+    getUniqueValues: <TValue>(columnId: string) => Array<TValue>;
+    getValue: <TValue>(columnId: string) => TValue;
+    renderValue: <TValue>(columnId: string) => TValue;
+}
+interface TableOptions_Rows<TFeatures extends TableFeatures, TData extends RowData> {
+    getRowId?: (originalRow: TData, index: number, parent?: Row<TFeatures, TData>) => string;
+    getSubRows?: (originalRow: TData, index: number) => undefined | ReadonlyArray<TData>;
+}
+interface Table_Rows<TFeatures extends TableFeatures, TData extends RowData> {
+    getMaxSubRowDepth: () => number;
+    getRowsInDisplayOrder: () => Array<Row<TFeatures, TData>>;
+    getRowId: (_: TData, index: number, parent?: Row<TFeatures, TData>) => string;
+    getRow: (id: string, searchAll?: boolean) => Row<TFeatures, TData>;
+}
+interface CachedRowModels_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    columnFacetingFeature: CachedRowModel_Faceted<TFeatures, TData>;
+    columnFilteringFeature: CachedRowModel_Filtered<TFeatures, TData>;
+    rowExpandingFeature: CachedRowModel_Expanded<TFeatures, TData>;
+    columnGroupingFeature: CachedRowModel_Grouped<TFeatures, TData>;
+    rowPaginationFeature: CachedRowModel_Paginated<TFeatures, TData>;
+    rowSortingFeature: CachedRowModel_Sorted<TFeatures, TData>;
+}
+type CachedRowModels<TFeatures extends TableFeatures, TData extends RowData> = Partial<CachedRowModel_Core<TFeatures, TData>> & ExtractFeatureMapTypes<TFeatures, CachedRowModels_FeatureMap<TFeatures, TData>>;
+interface RowModelFns_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    rowAggregationFeature: RowModelFns_RowAggregation<TFeatures, TData>;
+    columnFilteringFeature: RowModelFns_ColumnFiltering<TFeatures, TData>;
+    rowSortingFeature: RowModelFns_RowSorting<TFeatures, TData>;
+}
+type RowModelFns<TFeatures extends TableFeatures, TData extends RowData> = Partial<ExtractFeatureMapTypes<TFeatures, RowModelFns_FeatureMap<TFeatures, TData>>>;
+interface TableState_FeatureMap {
+    cellSelectionFeature: TableState_CellSelection;
+    columnFilteringFeature: TableState_ColumnFiltering;
+    columnGroupingFeature: TableState_ColumnGrouping;
+    columnOrderingFeature: TableState_ColumnOrdering;
+    columnPinningFeature: TableState_ColumnPinning;
+    columnResizingFeature: TableState_ColumnResizing;
+    columnSizingFeature: TableState_ColumnSizing;
+    columnVisibilityFeature: TableState_ColumnVisibility;
+    globalFilteringFeature: TableState_GlobalFiltering;
+    rowExpandingFeature: TableState_RowExpanding;
+    rowPaginationFeature: TableState_RowPagination;
+    rowPinningFeature: TableState_RowPinning;
+    rowSelectionFeature: TableState_RowSelection;
+    rowSortingFeature: TableState_RowSorting;
+}
+type TableState<TFeatures extends TableFeatures> = ExtractFeatureMapTypes<TFeatures, TableState_FeatureMap>;
+interface TableState_All extends Partial<TableState_CellSelection & TableState_ColumnFiltering & TableState_ColumnGrouping & TableState_ColumnOrdering & TableState_ColumnPinning & TableState_ColumnResizing & TableState_ColumnSizing & TableState_ColumnVisibility & TableState_GlobalFiltering & TableState_RowExpanding & TableState_RowPagination & TableState_RowPinning & TableState_RowSelection & TableState_RowSorting> {
+}
+interface TableMeta<TFeatures extends TableFeatures, TData extends RowData> {
+}
+type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$3<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
+    tableMeta: infer TMeta extends object;
+} ? TMeta : TableMeta<TFeatures, TData>;
+type BaseAtoms<TFeatures extends TableFeatures> = {
+    [K in keyof TableState<TFeatures>]-?: Atom<TableState<TFeatures>[K]>;
+};
+type Atoms<TFeatures extends TableFeatures> = {
+    [K in keyof TableState<TFeatures>]-?: ReadonlyAtom<TableState<TFeatures>[K]>;
+};
+type ExternalAtoms<TFeatures extends TableFeatures> = Partial<{
+    [K in keyof TableState<TFeatures>]: Atom<TableState<TFeatures>[K]>;
+}>;
+interface TableOptions_Table<TFeatures extends TableFeatures, TData extends RowData> {
+    readonly features: TFeatures & ValidateFeatureSlots<TFeatures>;
+    readonly atoms?: ExternalAtoms<TFeatures>;
+    readonly autoResetAll?: boolean;
+    readonly data: ReadonlyArray<TData>;
+    readonly key?: string;
+    readonly initialState?: Partial<TableState<TFeatures>>;
+    readonly mergeOptions?: (defaultOptions: TableOptions<TFeatures, TData>, options: Partial<TableOptions<TFeatures, TData>>) => TableOptions<TFeatures, TData>;
+    readonly meta?: ExtractTableMeta<TFeatures, TData>;
+    readonly state?: Partial<TableState<TFeatures>>;
+}
+interface Table_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
+    readonly _reactivity: TableReactivityBindings;
+    _cellInstanceInitFns: Array<NonNullable<TableFeature["initCellInstanceData"]>>;
+    _cellPrototype?: object;
+    _columnInstanceInitFns: Array<NonNullable<TableFeature["initColumnInstanceData"]>>;
+    _columnPrototype?: object;
+    readonly _features: Partial<CoreFeatures> & TFeatures;
+    _headerGroupInstanceInitFns: Array<NonNullable<TableFeature["initHeaderGroupInstanceData"]>>;
+    _headerInstanceInitFns: Array<NonNullable<TableFeature["initHeaderInstanceData"]>>;
+    _headerPrototype?: object;
+    readonly _rowModelFns: RowModelFns<TFeatures, TData>;
+    readonly _rowModels: CachedRowModels<TFeatures, TData>;
+    _rowPrototype?: object;
+    _rowInstanceInitFns: Array<NonNullable<TableFeature["initRowInstanceData"]>>;
+    readonly atoms: Atoms<TFeatures>;
+    readonly baseAtoms: BaseAtoms<TFeatures>;
+    readonly initialState: TableState<TFeatures>;
+    readonly options: TableOptions<TFeatures, TData>;
+    readonly optionsStore?: Atom<TableOptions<TFeatures, TData>> | undefined;
+    readonly store: ReadonlyStore<TableState<TFeatures>>;
+}
+interface Table_Table<TFeatures extends TableFeatures, TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
+    reset: () => void;
+    setOptions: (newOptions: Updater<TableOptions<TFeatures, TData>>) => void;
+}
+interface CellSpanIndex<TFeatures extends TableFeatures, TData extends RowData> {
+    colSpans: Array<Int32Array | undefined>;
+    columnIndexes: Record<string, number>;
+    rowSpans: Record<string, Int32Array>;
+    rows: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface RowSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    anchorRow: Row<TFeatures, TData>;
+    anchorValue: TValue;
+    column: Column<TFeatures, TData, TValue>;
+    previousRow: Row<TFeatures, TData>;
+    row: Row<TFeatures, TData>;
+    table: Table$1<TFeatures, TData>;
+    value: TValue;
+}
+interface ColSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    column: Column<TFeatures, TData, TValue>;
+    row: Row<TFeatures, TData>;
+    table: Table$1<TFeatures, TData>;
+}
+interface ColumnDef_CellSpanning<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    enableCellSpanning?: boolean;
+    spanColumns?: number | ((context: ColSpanContext<TFeatures, TData, TValue>) => number);
+    spanRows?: boolean | ((context: RowSpanContext<TFeatures, TData, TValue>) => boolean);
+}
+interface TableOptions_CellSpanning {
+    enableCellSpanning?: boolean;
+}
+interface Cell_CellSpanning {
+    getColSpan: () => number;
+    getIsCovered: () => boolean;
+    getRowSpan: () => number;
+}
+interface Table_CellSpanning<TFeatures extends TableFeatures, TData extends RowData> {
+    getCellSpanIndex: () => CellSpanIndex<TFeatures, TData>;
+}
+interface TableOptions_Core<TFeatures extends TableFeatures, TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
+}
+type DebugKeysFor<TFeatures extends TableFeatures> = {
+    [K in Exclude<keyof TFeatures & string, NonFeatureKeys> as `debug${Capitalize<K>}`]?: boolean;
+};
+type DebugOptions<TFeatures extends TableFeatures> = {
+    debugAll?: boolean;
+    debugCache?: boolean;
+    debugCells?: boolean;
+    debugColumns?: boolean;
+    debugHeaders?: boolean;
+    debugRows?: boolean;
+    debugTable?: boolean;
+} & DebugKeysFor<CoreFeatures & TFeatures>;
+interface TableOptions_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    cellSelectionFeature: TableOptions_CellSelection<TFeatures, TData>;
+    cellSpanningFeature: TableOptions_CellSpanning;
+    columnFilteringFeature: TableOptions_ColumnFiltering<TFeatures, TData>;
+    columnGroupingFeature: TableOptions_ColumnGrouping;
+    columnOrderingFeature: TableOptions_ColumnOrdering;
+    columnPinningFeature: TableOptions_ColumnPinning;
+    columnResizingFeature: TableOptions_ColumnResizing;
+    columnSizingFeature: TableOptions_ColumnSizing;
+    columnVisibilityFeature: TableOptions_ColumnVisibility;
+    globalFilteringFeature: TableOptions_GlobalFiltering<TFeatures, TData>;
+    rowAggregationFeature: TableOptions_RowAggregation;
+    rowExpandingFeature: TableOptions_RowExpanding<TFeatures, TData>;
+    rowPaginationFeature: TableOptions_RowPagination;
+    rowPinningFeature: TableOptions_RowPinning<TFeatures, TData>;
+    rowSelectionFeature: TableOptions_RowSelection<TFeatures, TData>;
+    rowSortingFeature: TableOptions_RowSorting;
+}
+type TableOptions_StockFeatureKeys = "cellSelectionFeature" | "cellSpanningFeature" | "columnFilteringFeature" | "columnGroupingFeature" | "columnOrderingFeature" | "columnPinningFeature" | "columnResizingFeature" | "columnSizingFeature" | "columnVisibilityFeature" | "globalFilteringFeature" | "rowAggregationFeature" | "rowExpandingFeature" | "rowPaginationFeature" | "rowPinningFeature" | "rowSelectionFeature" | "rowSortingFeature";
+type TableOptions_PluginFeatureMapTypes<TFeatures extends TableFeatures, TData extends RowData> = [
+    Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>
+] extends [
+    never
+] ? unknown : UnionToIntersection<TableOptions_FeatureMap<TFeatures, TData>[Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>]>;
+type TableOptions<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, TableOptions_FeatureMap<TFeatures, TData>> & DebugOptions<TFeatures>;
+type TableOptions_All<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & Partial<TableOptions_RowAggregation & TableOptions_CellSelection<TFeatures, TData> & TableOptions_CellSpanning & TableOptions_ColumnFiltering<TFeatures, TData> & TableOptions_ColumnGrouping & TableOptions_ColumnOrdering & TableOptions_ColumnPinning & TableOptions_ColumnResizing & TableOptions_ColumnSizing & TableOptions_ColumnVisibility & TableOptions_GlobalFiltering<TFeatures, TData> & TableOptions_RowExpanding<TFeatures, TData> & TableOptions_RowPagination & TableOptions_RowPinning<TFeatures, TData> & TableOptions_RowSelection<TFeatures, TData> & TableOptions_RowSorting & TableOptions_PluginFeatureMapTypes<TFeatures, TData>>;
+interface Table_Core<TFeatures extends TableFeatures, TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
+}
+interface Table_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    cellSelectionFeature: Table_CellSelection<TFeatures, TData>;
+    cellSpanningFeature: Table_CellSpanning<TFeatures, TData>;
+    columnFacetingFeature: Table_ColumnFaceting<TFeatures, TData>;
+    columnFilteringFeature: Table_ColumnFiltering;
+    columnGroupingFeature: Table_ColumnGrouping<TFeatures, TData>;
+    columnOrderingFeature: Table_ColumnOrdering<TFeatures, TData>;
+    columnPinningFeature: Table_ColumnPinning<TFeatures, TData>;
+    columnResizingFeature: Table_ColumnResizing;
+    columnSizingFeature: Table_ColumnSizing;
+    columnVisibilityFeature: Table_ColumnVisibility<TFeatures, TData>;
+    globalFilteringFeature: Table_GlobalFiltering<TFeatures, TData>;
+    rowAggregationFeature: Table_RowAggregation;
+    rowExpandingFeature: Table_RowExpanding<TFeatures, TData>;
+    rowPaginationFeature: Table_RowPagination<TFeatures, TData>;
+    rowPinningFeature: Table_RowPinning<TFeatures, TData>;
+    rowSelectionFeature: Table_RowSelection<TFeatures, TData>;
+    rowSortingFeature: Table_RowSorting<TFeatures, TData>;
+}
+type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
+export interface CellContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    cell: Cell$1<TFeatures, TData, TValue>;
+    column: Column<TFeatures, TData, TValue>;
+    getValue: Getter<TValue>;
+    renderValue: Getter<TValue | null>;
+    row: Row<TFeatures, TData>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Cell_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    column: Column<TFeatures, TData, TValue>;
+    id: string;
+    row: Row<TFeatures, TData>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Cell_Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
+    getContext: () => CellContext<TFeatures, TData, TValue>;
+    getValue: CellContext<TFeatures, TData, TValue>["getValue"];
+    renderValue: CellContext<TFeatures, TData, TValue>["renderValue"];
+}
+interface TableOptions_Cell {
+    renderFallbackValue?: any;
+}
+interface Cell_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
+}
+interface Cell_FeatureMap {
+    cellSelectionFeature: Cell_CellSelection;
+    cellSpanningFeature: Cell_CellSpanning;
+    columnGroupingFeature: Cell_ColumnGrouping;
+    rowAggregationFeature: Cell_RowAggregation;
+}
+type Cell$1<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Cell_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Cell_FeatureMap>;
+interface CellSelectionRange {
+    anchorColumnId: string;
+    anchorRowId: string;
+    focusColumnId: string;
+    focusRowId: string;
+    operation?: CellSelectionRangeOperation;
+}
+type CellSelectionRangeOperation = "include" | "exclude";
+type CellSelectionState = Array<CellSelectionRange>;
+interface TableState_CellSelection {
+    cellSelection: CellSelectionState;
+}
+interface CellSelectionBounds {
+    maxColumnIndex: number;
+    maxRowIndex: number;
+    minColumnIndex: number;
+    minRowIndex: number;
+}
+interface CellSelectionEdges {
+    bottom: boolean;
+    left: boolean;
+    right: boolean;
+    top: boolean;
+}
+type CellSelectionDirection = "up" | "down" | "left" | "right";
+type CellSelectionRangeMode = "replace" | "include" | "exclude";
+interface SelectCellRangeOptions {
+    mode?: CellSelectionRangeMode;
+    additive?: boolean;
+}
+interface TableOptions_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
+    autoResetCellSelection?: boolean;
+    enableCellRangeSelection?: boolean;
+    enableCellSelection?: boolean | ((cell: Cell$1<TFeatures, TData, any>) => boolean);
+    enableCellSelectionDrag?: boolean;
+    enableMultiCellRangeSelection?: boolean;
+    isCellRangeSelectionEvent?: (event: unknown) => boolean;
+    isMultiCellRangeSelectionEvent?: (event: unknown) => boolean;
+    onCellSelectionChange?: OnChangeFn<CellSelectionState>;
+}
+interface ColumnDef_CellSelection {
+    enableCellSelection?: boolean;
+}
+interface Cell_CellSelection {
+    getCanSelect: () => boolean;
+    getIsFocused: () => boolean;
+    getIsSelected: () => boolean;
+    getSelectionEdges: () => CellSelectionEdges;
+    getSelectionExtendHandler: () => (event: unknown) => void;
+    getSelectionStartHandler: (contextDocument?: Document) => (event: unknown) => void;
+    getTabIndex: () => number;
+}
+interface Table_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
+    _isSelectingCells: boolean;
+    autoResetCellSelection: () => void;
+    extendCellSelection: (direction: CellSelectionDirection) => void;
+    getCellSelectionBounds: () => Array<CellSelectionBounds>;
+    getCellSelectionMergeBounds: () => Array<CellSelectionBounds>;
+    getCellSelectionColumnIds: () => Array<string>;
+    getCellSelectionColumnIndexes: () => Record<string, number>;
+    getCellSelectionRowIds: () => Array<string>;
+    getFocusedCell: () => Cell$1<TFeatures, TData, any> | undefined;
+    getSelectedCellCount: () => number;
+    getSelectedCellIds: () => Array<string>;
+    getSelectedCellRangesData: () => Array<Array<Array<unknown>>>;
+    moveCellSelection: (direction: CellSelectionDirection) => void;
+    resetCellSelection: (defaultState?: boolean) => void;
+    selectAllCells: () => void;
+    selectCellRange: (range: CellSelectionRange, opts?: SelectCellRangeOptions) => void;
+    setCellSelection: (updater: Updater<CellSelectionState>) => void;
+    setFocusedCell: (rowId: string, columnId: string) => void;
+}
+interface ColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+}
+type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$3<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
+    columnMeta: infer TMeta extends object;
+} ? TMeta : ColumnMeta<TFeatures, TData, TValue>;
+type AccessorFn<TData extends RowData, TValue extends CellData = CellData> = (originalRow: TData, index: number) => TValue;
+type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any);
+type StringOrTemplateHeader<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = string | ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
+interface StringHeaderIdentifier {
+    header: string;
+    id?: string;
+}
+interface IdIdentifier<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    id: string;
+    header?: StringOrTemplateHeader<TFeatures, TData, TValue>;
+}
+type ColumnIdentifiers<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IdIdentifier<TFeatures, TData, TValue> | StringHeaderIdentifier;
+interface ColumnDefBase_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    getUniqueValues?: AccessorFn<TData, ReadonlyArray<unknown>>;
+    footer?: ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
+    cell?: ColumnDefTemplate<CellContext<TFeatures, TData, TValue>>;
+    meta?: ExtractColumnMeta<TFeatures, TData, TValue>;
+}
+interface ColumnDef_FeatureMap<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData> {
+    cellSelectionFeature: ColumnDef_CellSelection;
+    cellSpanningFeature: ColumnDef_CellSpanning<TFeatures, TData, TValue>;
+    columnFilteringFeature: ColumnDef_ColumnFiltering<TFeatures, TData>;
+    columnGroupingFeature: ColumnDef_ColumnGrouping<TFeatures, TData>;
+    columnPinningFeature: ColumnDef_ColumnPinning;
+    columnResizingFeature: ColumnDef_ColumnResizing;
+    columnSizingFeature: ColumnDef_ColumnSizing;
+    columnVisibilityFeature: ColumnDef_ColumnVisibility;
+    globalFilteringFeature: ColumnDef_GlobalFiltering;
+    rowAggregationFeature: ColumnDef_RowAggregation<TFeatures, TData, TValue>;
+    rowSortingFeature: ColumnDef_RowSorting<TFeatures, TData>;
+}
+type ColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, ColumnDef_FeatureMap<TFeatures, TData, TValue>>;
+type ColumnDefBase_All<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & Partial<ColumnDef_RowAggregation<TFeatures, TData, TValue> & ColumnDef_CellSelection & ColumnDef_CellSpanning<TFeatures, TData, TValue> & ColumnDef_ColumnVisibility & ColumnDef_ColumnPinning & ColumnDef_ColumnFiltering<TFeatures, TData> & ColumnDef_GlobalFiltering & ColumnDef_RowSorting<TFeatures, TData> & ColumnDef_ColumnGrouping<TFeatures, TData> & ColumnDef_ColumnSizing & ColumnDef_ColumnResizing>;
+type DisplayColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type GroupColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+    columns?: ReadonlyArray<ColumnDef<TFeatures, TData, unknown>>;
+};
+type GroupColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = GroupColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type AccessorFnColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+    accessorFn: AccessorFn<TData, TValue>;
+};
+type AccessorFnColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorFnColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type AccessorKeyColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+    id?: string;
+    accessorKey: (string & {}) | keyof TData;
+};
+type AccessorKeyColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDefBase<TFeatures, TData, TValue> & Partial<ColumnIdentifiers<TFeatures, TData, TValue>>;
+type AccessorColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDef<TFeatures, TData, TValue> | AccessorFnColumnDef<TFeatures, TData, TValue>;
+export type ColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = DisplayColumnDef<TFeatures, TData, TValue> | GroupColumnDef<TFeatures, TData, TValue> | AccessorColumnDef<TFeatures, TData, TValue>;
+interface Column_Core<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
+}
+interface Column_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    rowAggregationFeature: Column_RowAggregation<TFeatures, TData>;
+    columnFacetingFeature: Column_ColumnFaceting<TFeatures, TData>;
+    columnFilteringFeature: Column_ColumnFiltering<TFeatures, TData>;
+    columnGroupingFeature: Column_ColumnGrouping;
+    columnOrderingFeature: Column_ColumnOrdering;
+    columnPinningFeature: Column_ColumnPinning;
+    columnResizingFeature: Column_ColumnResizing;
+    columnSizingFeature: Column_ColumnSizing;
+    columnVisibilityFeature: Column_ColumnVisibility;
+    globalFilteringFeature: Column_GlobalFiltering;
+    rowSortingFeature: Column_RowSorting<TFeatures, TData>;
+}
+type Column<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = Column_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Column_FeatureMap<TFeatures, TData>>;
+interface Table_Headers<TFeatures extends TableFeatures, TData extends RowData> {
+    getHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+}
+interface HeaderContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    column: Column<TFeatures, TData, TValue>;
+    header: Header<TFeatures, TData, TValue>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Header_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    colSpan: number;
+    column: Column<TFeatures, TData, TValue>;
+    depth: number;
+    headerGroup: HeaderGroup<TFeatures, TData> | null;
+    id: string;
+    index: number;
+    isPlaceholder: boolean;
+    placeholderId?: string;
+    rowSpan: number;
+    subHeaders: Array<Header<TFeatures, TData, TValue>>;
+    table: Table$1<TFeatures, TData>;
+}
+interface Header_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
+    getContext: () => HeaderContext<TFeatures, TData, TValue>;
+    getLeafHeaders: () => Array<Header<TFeatures, TData, TValue>>;
+}
+interface HeaderGroup_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+    depth: number;
+    headers: Array<Header<TFeatures, TData, TValue>>;
+    id: string;
+}
+interface HeaderGroup_Core<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
+}
+interface HeaderGroup<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
+}
+type ColumnPinningPosition = false | "start" | "end";
+interface ColumnPinningState {
+    start: Array<string>;
+    end: Array<string>;
+}
+interface TableState_ColumnPinning {
+    columnPinning: ColumnPinningState;
+}
+interface TableOptions_ColumnPinning {
+    enableColumnPinning?: boolean;
+    onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
+}
+interface ColumnDef_ColumnPinning {
+    enablePinning?: boolean;
+}
+interface Column_ColumnPinning {
+    getCanPin: () => boolean;
+    getIsPinned: () => ColumnPinningPosition;
+    getPinnedIndex: () => number;
+    pin: (position: ColumnPinningPosition) => void;
+}
+interface Row_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
+    getCenterVisibleCells: () => Array<Cell$1<TFeatures, TData, unknown>>;
+    getStartVisibleCells: () => Array<Cell$1<TFeatures, TData, unknown>>;
+    getEndVisibleCells: () => Array<Cell$1<TFeatures, TData, unknown>>;
+}
+interface Table_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
+    _orderByColumnPinning: <TItem>(items: Array<TItem>, getColumnId: (item: TItem) => string, getItemsByColumnId?: () => Record<string, TItem | undefined>) => Array<TItem>;
+    getCenterFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getCenterFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getCenterHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getCenterLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getCenterLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getCenterVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getIsSomeColumnsPinned: (position?: ColumnPinningPosition) => boolean;
+    getStartFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getStartFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getStartHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getStartLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getStartLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getStartVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getEndFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getEndFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getEndHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+    getEndLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    getEndLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+    getEndVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+    resetColumnPinning: (defaultState?: boolean) => void;
+    setColumnPinning: (updater: Updater<ColumnPinningState>) => void;
+    getPinnedLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
+    getPinnedVisibleLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
+}
+interface Row_Core<TFeatures extends TableFeatures, TData extends RowData> extends Row_Row<TFeatures, TData> {
+}
+interface Row_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
+    rowAggregationFeature: Row_RowAggregation;
+    columnFilteringFeature: Row_ColumnFiltering<TFeatures, TData>;
+    columnGroupingFeature: Row_ColumnGrouping;
+    columnPinningFeature: Row_ColumnPinning<TFeatures, TData>;
+    columnVisibilityFeature: Row_ColumnVisibility<TFeatures, TData>;
+    rowExpandingFeature: Row_RowExpanding;
+    rowPinningFeature: Row_RowPinning;
+    rowSelectionFeature: Row_RowSelection;
+}
+type Row<TFeatures extends TableFeatures, TData extends RowData> = Row_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Row_FeatureMap<TFeatures, TData>>;
+type SortDirection = "asc" | "desc";
+interface ColumnSort {
+    desc: boolean;
+    id: string;
+}
+export type SortingState = Array<ColumnSort>;
+interface TableState_RowSorting {
+    sorting: SortingState;
+}
+interface RowModelFns_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
+    sortFns: Record<string, SortFn<TFeatures, TData>>;
+}
+interface SortFns {
+}
+interface SortFn<TFeatures extends TableFeatures, TData extends RowData> {
+    (rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string): number;
+    resolveDataValue?: TransformDataValueFn;
+}
+interface SortFnDef<TFeatures extends TableFeatures, TData extends RowData> {
+    sort: (dataValueA: any, dataValueB: any, rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string) => number;
+    resolveDataValue?: TransformDataValueFn;
+}
+interface CreatedSortFn<TFeatures extends TableFeatures, TData extends RowData> extends SortFnDef<TFeatures, TData> {
+    <TRowFeatures extends TableFeatures, TRowData extends RowData>(rowA: Row<TRowFeatures, TRowData>, rowB: Row<TRowFeatures, TRowData>, columnId: string): number;
+}
+type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
+    sortFns: infer TSortFns extends object;
+} ? Extract<keyof TSortFns, string> : keyof SortFns;
+type SortFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractSortFnKeys<TFeatures> | SortFn<TFeatures, TData>;
+interface ColumnDef_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
+    enableMultiSort?: boolean;
+    enableSorting?: boolean;
+    invertSorting?: boolean;
+    sortDescFirst?: boolean;
+    sortFn?: SortFnOption<TFeatures, TData>;
+    sortUndefined?: false | -1 | 1 | "first" | "last";
+}
+interface Column_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
+    clearSorting: () => void;
+    getAutoSortDir: () => SortDirection;
+    getAutoSortFn: () => SortFn<TFeatures, TData>;
+    getCanMultiSort: () => boolean;
+    getCanSort: () => boolean;
+    getFirstSortDir: () => SortDirection;
+    getIsSorted: () => false | SortDirection;
+    getNextSortingOrder: (multi?: boolean) => SortDirection | false;
+    getSortIndex: () => number;
+    getSortFn: () => SortFn<TFeatures, TData>;
+    getToggleSortingHandler: () => undefined | ((event: unknown) => void);
+    toggleSorting: (desc?: boolean, isMulti?: boolean) => void;
+}
+interface TableOptions_RowSorting {
+    autoResetSorting?: boolean;
+    enableMultiRemove?: boolean;
+    enableMultiSort?: boolean;
+    enableSorting?: boolean;
+    enableSortingRemoval?: boolean;
+    isMultiSortEvent?: (e: unknown) => boolean;
+    manualSorting?: boolean;
+    maxMultiSortColCount?: number;
+    onSortingChange?: OnChangeFn<SortingState>;
+    sortDescFirst?: boolean;
+}
+interface Table_RowSorting<_TFeatures extends TableFeatures, _TData extends RowData> {
+    autoResetSorting: () => void;
+    resetSorting: (defaultState?: boolean) => void;
+    setSorting: (updater: Updater<SortingState>) => void;
+}
+interface Table_RowModels_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
+    getPreSortedRowModel: () => RowModel<TFeatures, TData>;
+    getSortedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
+    sortedRowModel: () => RowModel<TFeatures, TData>;
+}
+const cellSelectionFeature: TableFeature;
+const cellSpanningFeature: TableFeature;
+const columnFacetingFeature: TableFeature;
+const rowAggregationFeature: TableFeature;
+const columnFilteringFeature: TableFeature;
+const columnGroupingFeature: TableFeature;
+const columnOrderingFeature: TableFeature;
+const columnPinningFeature: TableFeature;
+const columnResizingFeature: TableFeature;
+const columnSizingFeature: TableFeature;
+const columnVisibilityFeature: TableFeature;
+const globalFilteringFeature: TableFeature;
+const rowExpandingFeature: TableFeature;
+const rowPaginationFeature: TableFeature;
+const rowPinningFeature: TableFeature;
+const rowSelectionFeature: TableFeature;
+const rowSortingFeature: TableFeature;
+interface StockFeatures {
+    cellSelectionFeature: typeof cellSelectionFeature;
+    cellSpanningFeature: typeof cellSpanningFeature;
+    columnFacetingFeature: typeof columnFacetingFeature;
+    columnFilteringFeature: typeof columnFilteringFeature;
+    columnGroupingFeature: typeof columnGroupingFeature;
+    columnOrderingFeature: typeof columnOrderingFeature;
+    columnPinningFeature: typeof columnPinningFeature;
+    columnResizingFeature: typeof columnResizingFeature;
+    columnSizingFeature: typeof columnSizingFeature;
+    columnVisibilityFeature: typeof columnVisibilityFeature;
+    globalFilteringFeature: typeof globalFilteringFeature;
+    rowAggregationFeature: typeof rowAggregationFeature;
+    rowExpandingFeature: typeof rowExpandingFeature;
+    rowPaginationFeature: typeof rowPaginationFeature;
+    rowPinningFeature: typeof rowPinningFeature;
+    rowSelectionFeature: typeof rowSelectionFeature;
+    rowSortingFeature: typeof rowSortingFeature;
+}
+type IsAny$3<T> = 0 extends 1 & T ? true : false;
+type UnionToIntersectionOrEmpty<T> = [
+    T
+] extends [
+    never
+] ? {} : UnionToIntersection<T> & {};
+type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$3<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
+interface Plugins {
+}
+type NonFeatureKeys = "aggregationFns" | "columnMeta" | "coreRowModel" | "expandedRowModel" | "facetedMinMaxValues" | "facetedRowModel" | "facetedUniqueValues" | "filterFns" | "filterMeta" | "filteredRowModel" | "groupedRowModel" | "paginatedRowModel" | "sortFns" | "sortedRowModel" | "tableMeta";
+interface FeatureSlotPrereqs {
+    aggregationFns: "rowAggregationFeature";
+    columnResizingFeature: "columnSizingFeature";
+    expandedRowModel: "rowExpandingFeature";
+    facetedMinMaxValues: "columnFacetingFeature";
+    facetedRowModel: "columnFacetingFeature";
+    facetedUniqueValues: "columnFacetingFeature";
+    filteredRowModel: "columnFilteringFeature";
+    filterFns: "columnFilteringFeature";
+    filterMeta: "columnFilteringFeature";
+    globalFilteringFeature: "columnFilteringFeature";
+    groupedRowModel: "columnGroupingFeature";
+    paginatedRowModel: "rowPaginationFeature";
+    sortedRowModel: "rowSortingFeature";
+    sortFns: "rowSortingFeature";
+}
+type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? {} : {
+    [K in keyof TFeatures as K extends keyof FeatureSlotPrereqs ? K : never]: K extends keyof FeatureSlotPrereqs ? [
+        Extract<FeatureSlotPrereqs[K], keyof TFeatures>
+    ] extends [
+        never
+    ] ? `Error: '${K & string}' requires '${FeatureSlotPrereqs[K] & string}' to be included in this table's features.` : TFeatures[K] : never;
+};
+interface TableFeatures extends Partial<CoreFeatures>, Partial<StockFeatures>, Partial<Plugins> {
+    aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
+    columnMeta?: object;
+    coreRowModel?: (table: any) => () => RowModel<any, any>;
+    expandedRowModel?: (table: any) => () => RowModel<any, any>;
+    facetedMinMaxValues?: (table: any, columnId: string) => () => [
+        number,
+        number
+    ] | undefined;
+    facetedRowModel?: (table: any, columnId: string) => () => RowModel<any, any>;
+    facetedUniqueValues?: (table: any, columnId: string) => () => Map<any, number>;
+    filteredRowModel?: (table: any) => () => RowModel<any, any>;
+    filterFns?: Record<string, FilterFn<any, any>>;
+    filterMeta?: object;
+    groupedRowModel?: (table: any) => () => RowModel<any, any>;
+    paginatedRowModel?: (table: any) => () => RowModel<any, any>;
+    sortedRowModel?: (table: any) => () => RowModel<any, any>;
+    sortFns?: Record<string, SortFn<any, any>>;
+    tableMeta?: object;
+}
+interface TableFeature {
+    assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+    assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+    assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+    assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+    constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+    getDefaultColumnDef?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>() => ColumnDefBase_All<TFeatures, TData, TValue>;
+    getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
+    getInitialState?: (initialState: Partial<TableState_All>) => TableState_All;
+    initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+    initCellInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(cell: Cell$1<TFeatures, TData, TValue>) => void;
+    initColumnInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => void;
+    initHeaderGroupInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(headerGroup: HeaderGroup<TFeatures, TData>) => void;
+    initHeaderInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(header: Header<TFeatures, TData, TValue>) => void;
+    initRowInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(row: Row<TFeatures, TData>) => void;
+    resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+}
+const coreCellsFeature: TableFeature;
+type FlexRenderProps<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = {
+    cell: Cell$1<TFeatures, TData, TValue>;
+    header?: never;
+    footer?: never;
+} | {
+    header: Header<TFeatures, TData, TValue>;
+    cell?: never;
+    footer?: never;
+} | {
+    footer: Header<TFeatures, TData, TValue>;
+    cell?: never;
+    header?: never;
+};
+type SubscribeSource<TValue> = Atom<TValue> | ReadonlyAtom<TValue> | Store$1<TValue> | ReadonlyStore<TValue>;
+type SubscribePropsWithStore<TFeatures extends TableFeatures, TSelected> = {
+    source: SubscribeSource<TableState<TFeatures>>;
+    selector: (state: TableState<TFeatures>) => TSelected;
+    children: ((state: TSelected) => React$1.ReactNode) | React$1.ReactNode;
+};
+type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$1<TFeatures, TData>, "store"> & {
+    readonly store: Table$1<TFeatures, TData>["store"];
+    Subscribe: {
+        <TSourceValue>(props: {
+            source: SubscribeSource<TSourceValue>;
+            selector?: undefined;
+            children: ((state: TSourceValue) => React$1.ReactNode) | React$1.ReactNode;
+        }): ReturnType<React$1.FunctionComponent>;
+        <TSourceValue, TSubSelected>(props: {
+            source: SubscribeSource<TSourceValue>;
+            selector: (state: TSourceValue) => TSubSelected;
+            children: ((state: TSubSelected) => React$1.ReactNode) | React$1.ReactNode;
+        }): ReturnType<React$1.FunctionComponent>;
+        <TSubSelected>(props: Omit<SubscribePropsWithStore<TFeatures, TSubSelected>, "source">): ReturnType<React$1.FunctionComponent>;
+    };
+    FlexRender: <TValue extends CellData = CellData>(props: FlexRenderProps<TFeatures, TData, TValue>) => React$1.ReactNode;
+    readonly state: Readonly<TSelected>;
+};
+export function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
 interface DataGridColumnCellEdit<TData> {
     editable?: boolean | ((row: TData) => boolean);
     parse?: (raw: string, row: TData) => unknown;
@@ -19761,7 +19703,7 @@ interface DataGridColumnCellEdit<TData> {
     clearValue?: unknown;
     control?: "text" | "textarea";
 }
-interface DataGridColumnMeta<TData> {
+export interface DataGridColumnMeta<TData> {
     headerTitle?: string;
     headerClassName?: string;
     cellClassName?: string;
@@ -19803,7 +19745,8 @@ export const dataGridFeatures: {
     };
     columnMeta: DataGridColumnMeta<any>;
 };
-type DataGridFeatures = typeof dataGridFeatures;
+export type DataGridFeatures = typeof dataGridFeatures;
+export type DataGridTableInstance<TData extends object> = ReactTable<DataGridFeatures, TData>;
 type DataGridCellsChangeSource = "paste" | "cut" | "clear" | "fill" | "edit";
 interface DataGridCellChange<TData> {
     rowId: string;
@@ -19852,7 +19795,7 @@ interface DataGridCellsChangeDetails<TData> {
     changes: DataGridCellChange<TData>[];
     rejected: DataGridCellRejection[];
 }
-interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
+export interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
     className?: string;
     table?: Table$1<TFeatures, TData>;
     recordCount: number;
@@ -19923,6 +19866,10 @@ export function DataGridContainer({ children, className }: {
     className?: string;
     border?: boolean;
 }): React$1.JSX.Element;
+export function DataGridTableRowSelect<TData extends object>({ row }: {
+    row: Row<DataGridFeatures, TData>;
+}): React$1.JSX.Element;
+export function DataGridTableRowSelectAll(): React$1.JSX.Element;
 export function DataGridTable<_TData extends object>({ footerContent, renderHeader }: {
     footerContent?: React$1.ReactNode;
     renderHeader?: boolean;
@@ -20316,7 +20263,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Field$1 as Field, FieldError$1 as FieldError, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, z, };
+export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Field$1 as Field, FieldError$1 as FieldError, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, z, };
 }
 
 declare const Area: typeof NativeFrontend.Area;
@@ -20344,7 +20291,8 @@ declare const CardHeader: typeof NativeFrontend.CardHeader;
 declare const CardTitle: typeof NativeFrontend.CardTitle;
 declare const CartesianGrid: typeof NativeFrontend.CartesianGrid;
 declare const Cell: typeof NativeFrontend.Cell;
-type ChartConfig = NativeFrontend.ChartConfig;
+import CellContext = NativeFrontend.CellContext;
+import ChartConfig = NativeFrontend.ChartConfig;
 declare const ChartContainer: typeof NativeFrontend.ChartContainer;
 declare const ChartLegend: typeof NativeFrontend.ChartLegend;
 declare const ChartLegendContent: typeof NativeFrontend.ChartLegendContent;
@@ -20364,6 +20312,7 @@ declare const CodeBlockWrapToggle: typeof NativeFrontend.CodeBlockWrapToggle;
 declare const Collapsible: typeof NativeFrontend.Collapsible;
 declare const CollapsibleContent: typeof NativeFrontend.CollapsibleContent;
 declare const CollapsibleTrigger: typeof NativeFrontend.CollapsibleTrigger;
+import ColumnDef = NativeFrontend.ColumnDef;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const ComboboxChip: typeof NativeFrontend.ComboboxChip;
 declare const ComboboxChips: typeof NativeFrontend.ComboboxChips;
@@ -20385,11 +20334,16 @@ declare const CountryChart: typeof NativeFrontend.CountryChart;
 declare const DEFAULT_TIME_PICKER_I18N: typeof NativeFrontend.DEFAULT_TIME_PICKER_I18N;
 declare const DataGrid: typeof NativeFrontend.DataGrid;
 declare const DataGridColumnHeader: typeof NativeFrontend.DataGridColumnHeader;
+import DataGridColumnMeta = NativeFrontend.DataGridColumnMeta;
 declare const DataGridContainer: typeof NativeFrontend.DataGridContainer;
+import DataGridFeatures = NativeFrontend.DataGridFeatures;
 declare const DataGridPagination: typeof NativeFrontend.DataGridPagination;
+import DataGridProps = NativeFrontend.DataGridProps;
 declare const DataGridScrollArea: typeof NativeFrontend.DataGridScrollArea;
 declare const DataGridTable: typeof NativeFrontend.DataGridTable;
-declare const DataTable: typeof NativeFrontend.DataTable;
+import DataGridTableInstance = NativeFrontend.DataGridTableInstance;
+declare const DataGridTableRowSelect: typeof NativeFrontend.DataGridTableRowSelect;
+declare const DataGridTableRowSelectAll: typeof NativeFrontend.DataGridTableRowSelectAll;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const DialogClose: typeof NativeFrontend.DialogClose;
 declare const DialogContent: typeof NativeFrontend.DialogContent;
@@ -20440,8 +20394,7 @@ declare const FrameFooter: typeof NativeFrontend.FrameFooter;
 declare const FrameHeader: typeof NativeFrontend.FrameHeader;
 declare const FramePanel: typeof NativeFrontend.FramePanel;
 declare const FrameTitle: typeof NativeFrontend.FrameTitle;
-declare const FramedDialog: typeof NativeFrontend.FramedDialog;
-type FrontendElementType = NativeFrontend.FrontendElementType;
+import FrontendElementType = NativeFrontend.FrontendElementType;
 declare const GeneratedAvatar: typeof NativeFrontend.GeneratedAvatar;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridSpan: typeof NativeFrontend.GridSpan;
@@ -20477,7 +20430,6 @@ declare const PolarRadiusAxis: typeof NativeFrontend.PolarRadiusAxis;
 declare const Progress: typeof NativeFrontend.Progress;
 declare const ProgressIndicator: typeof NativeFrontend.ProgressIndicator;
 declare const ProgressLabel: typeof NativeFrontend.ProgressLabel;
-declare const ProgressStepper: typeof NativeFrontend.ProgressStepper;
 declare const ProgressTrack: typeof NativeFrontend.ProgressTrack;
 declare const ProgressValue: typeof NativeFrontend.ProgressValue;
 declare const ProviderChart: typeof NativeFrontend.ProviderChart;
@@ -20490,6 +20442,7 @@ declare const RadioGroupItem: typeof NativeFrontend.RadioGroupItem;
 declare const ReferenceLine: typeof NativeFrontend.ReferenceLine;
 declare const ResponsiveContainer: typeof NativeFrontend.ResponsiveContainer;
 declare const RevenueFlow: typeof NativeFrontend.RevenueFlow;
+import RowSelectionState = NativeFrontend.RowSelectionState;
 declare const Sankey: typeof NativeFrontend.Sankey;
 declare const Select: typeof NativeFrontend.Select;
 declare const SelectContent: typeof NativeFrontend.SelectContent;
@@ -20507,6 +20460,7 @@ declare const SliderControl: typeof NativeFrontend.SliderControl;
 declare const SliderRange: typeof NativeFrontend.SliderRange;
 declare const SliderThumb: typeof NativeFrontend.SliderThumb;
 declare const SliderTrack: typeof NativeFrontend.SliderTrack;
+import SortingState = NativeFrontend.SortingState;
 declare const Stack: typeof NativeFrontend.Stack;
 declare const StackItem: typeof NativeFrontend.StackItem;
 declare const Step: typeof NativeFrontend.Step;
@@ -20535,40 +20489,40 @@ declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
 declare const TimePicker: typeof NativeFrontend.TimePicker;
-type TimePickerActionProps = NativeFrontend.TimePickerActionProps;
-type TimePickerApi = NativeFrontend.TimePickerApi;
+import TimePickerActionProps = NativeFrontend.TimePickerActionProps;
+import TimePickerApi = NativeFrontend.TimePickerApi;
 declare const TimePickerClear: typeof NativeFrontend.TimePickerClear;
 declare const TimePickerColumn: typeof NativeFrontend.TimePickerColumn;
-type TimePickerColumnProps = NativeFrontend.TimePickerColumnProps;
-type TimePickerColumnType = NativeFrontend.TimePickerColumnType;
+import TimePickerColumnProps = NativeFrontend.TimePickerColumnProps;
+import TimePickerColumnType = NativeFrontend.TimePickerColumnType;
 declare const TimePickerColumns: typeof NativeFrontend.TimePickerColumns;
-type TimePickerColumnsProps = NativeFrontend.TimePickerColumnsProps;
+import TimePickerColumnsProps = NativeFrontend.TimePickerColumnsProps;
 declare const TimePickerConfirm: typeof NativeFrontend.TimePickerConfirm;
 declare const TimePickerContent: typeof NativeFrontend.TimePickerContent;
-type TimePickerContentProps = NativeFrontend.TimePickerContentProps;
+import TimePickerContentProps = NativeFrontend.TimePickerContentProps;
 declare const TimePickerFooter: typeof NativeFrontend.TimePickerFooter;
-type TimePickerFooterProps = NativeFrontend.TimePickerFooterProps;
-type TimePickerFormatContext = NativeFrontend.TimePickerFormatContext;
-type TimePickerFunctions = NativeFrontend.TimePickerFunctions;
-type TimePickerGranularity = NativeFrontend.TimePickerGranularity;
-type TimePickerHourCycle = NativeFrontend.TimePickerHourCycle;
-type TimePickerI18nConfig = NativeFrontend.TimePickerI18nConfig;
-type TimePickerI18nOverrides = NativeFrontend.TimePickerI18nOverrides;
+import TimePickerFooterProps = NativeFrontend.TimePickerFooterProps;
+import TimePickerFormatContext = NativeFrontend.TimePickerFormatContext;
+import TimePickerFunctions = NativeFrontend.TimePickerFunctions;
+import TimePickerGranularity = NativeFrontend.TimePickerGranularity;
+import TimePickerHourCycle = NativeFrontend.TimePickerHourCycle;
+import TimePickerI18nConfig = NativeFrontend.TimePickerI18nConfig;
+import TimePickerI18nOverrides = NativeFrontend.TimePickerI18nOverrides;
 declare const TimePickerInput: typeof NativeFrontend.TimePickerInput;
-type TimePickerInputProps = NativeFrontend.TimePickerInputProps;
-type TimePickerLabels = NativeFrontend.TimePickerLabels;
+import TimePickerInputProps = NativeFrontend.TimePickerInputProps;
+import TimePickerLabels = NativeFrontend.TimePickerLabels;
 declare const TimePickerNow: typeof NativeFrontend.TimePickerNow;
 declare const TimePickerPanel: typeof NativeFrontend.TimePickerPanel;
-type TimePickerPanelProps = NativeFrontend.TimePickerPanelProps;
-type TimePickerPeriod = NativeFrontend.TimePickerPeriod;
-type TimePickerPeriodPosition = NativeFrontend.TimePickerPeriodPosition;
-type TimePickerProps = NativeFrontend.TimePickerProps;
-type TimePickerTime = NativeFrontend.TimePickerTime;
+import TimePickerPanelProps = NativeFrontend.TimePickerPanelProps;
+import TimePickerPeriod = NativeFrontend.TimePickerPeriod;
+import TimePickerPeriodPosition = NativeFrontend.TimePickerPeriodPosition;
+import TimePickerProps = NativeFrontend.TimePickerProps;
+import TimePickerTime = NativeFrontend.TimePickerTime;
 declare const TimePickerTrigger: typeof NativeFrontend.TimePickerTrigger;
-type TimePickerTriggerProps = NativeFrontend.TimePickerTriggerProps;
-type TimePickerUnit = NativeFrontend.TimePickerUnit;
+import TimePickerTriggerProps = NativeFrontend.TimePickerTriggerProps;
+import TimePickerUnit = NativeFrontend.TimePickerUnit;
 declare const TimePickerValue: typeof NativeFrontend.TimePickerValue;
-type TimePickerValueProps = NativeFrontend.TimePickerValueProps;
+import TimePickerValueProps = NativeFrontend.TimePickerValueProps;
 declare const UsageChart: typeof NativeFrontend.UsageChart;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const XAxis: typeof NativeFrontend.XAxis;

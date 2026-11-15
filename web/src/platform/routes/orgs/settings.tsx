@@ -21,11 +21,11 @@ import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -259,82 +259,87 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                     </h2>
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={members}
-                    idKey={(row) => row.user.id}
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'user',
-                            header: 'User',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack direction="horizontal" gap={3} align="center">
-                                    <GeneratedAvatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
-                                    <Stack align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <span>{row.user.name}</span>
-                                            <span className="text-xs text-muted-foreground">{row.role}</span>
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>User</TableHead>
+                            {canAdminister && <TableHead className="text-end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {members.map((row) => (
+                            <TableRow key={row.user.id}>
+                                <TableCell>
+                                    <Stack direction="horizontal" gap={3} align="center">
+                                        <GeneratedAvatar
+                                            name={row.user.name}
+                                            src={row.user.avatar}
+                                            seed={row.user.id}
+                                        />
+                                        <Stack align="start">
+                                            <Stack direction="horizontal" gap={1} align="center">
+                                                <span>{row.user.name}</span>
+                                                <span className="text-xs text-muted-foreground">{row.role}</span>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{row.user.email}</span>
                                         </Stack>
-                                        <span className="text-xs text-muted-foreground">{row.user.email}</span>
                                     </Stack>
-                                </Stack>
-                            )
-                        },
-                        ...(canAdminister
-                            ? [
-                                  {
-                                      key: 'role',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(0.5),
-                                      renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) =>
-                                          row.role === 'owner' && !canManageOwners ? null : (
-                                              <DropdownMenu>
-                                                  <DropdownMenuTrigger
-                                                      render={
-                                                          <Button
-                                                              type="button"
-                                                              variant="ghost"
-                                                              size="icon"
-                                                              aria-label={`Actions for ${row.user.name}`}
-                                                          >
-                                                              <Ellipsis aria-hidden="true" />
-                                                          </Button>
-                                                      }
-                                                  />
-                                                  <DropdownMenuContent align="end">
-                                                      {['read', 'write', 'maintain', 'admin'].map((role) =>
-                                                          role === row.role ? null : (
-                                                              <DropdownMenuItem
-                                                                  key={role}
-                                                                  onClick={() =>
-                                                                      setMember({
-                                                                          id: row.user.id,
-                                                                          action: { kind: 'role', role }
-                                                                      })
-                                                                  }
-                                                              >
-                                                                  {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
-                                                              </DropdownMenuItem>
-                                                          )
-                                                      )}
-                                                      <DropdownMenuItem
-                                                          onClick={() =>
-                                                              setMember({ id: row.user.id, action: { kind: 'remove' } })
-                                                          }
-                                                      >
-                                                          Remove member
-                                                      </DropdownMenuItem>
-                                                  </DropdownMenuContent>
-                                              </DropdownMenu>
-                                          )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                                </TableCell>
+                                {canAdminister && (
+                                    <TableCell className="text-end">
+                                        {row.role === 'owner' && !canManageOwners ? null : (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger
+                                                    render={
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            aria-label={`Actions for ${row.user.name}`}
+                                                        >
+                                                            <Ellipsis aria-hidden="true" />
+                                                        </Button>
+                                                    }
+                                                />
+                                                <DropdownMenuContent align="end">
+                                                    {['read', 'write', 'maintain', 'admin'].map((role) =>
+                                                        role === row.role ? null : (
+                                                            <DropdownMenuItem
+                                                                key={role}
+                                                                onClick={() =>
+                                                                    setMember({
+                                                                        id: row.user.id,
+                                                                        action: { kind: 'role', role }
+                                                                    })
+                                                                }
+                                                            >
+                                                                {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
+                                                            </DropdownMenuItem>
+                                                        )
+                                                    )}
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setMember({ id: row.user.id, action: { kind: 'remove' } })
+                                                        }
+                                                    >
+                                                        Remove member
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {members.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canAdminister ? 2 : 1} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
             {canManageSelectedMember && member && (
                 <MemberAccess
@@ -438,55 +443,58 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     )}
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={invitations}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        { key: 'email', header: 'Email', width: proportional(1) },
-                        {
-                            key: 'role',
-                            header: 'Role',
-                            width: proportional(1),
-                            renderCell: (row) => <span className="text-xs text-muted-foreground">{row.role}</span>
-                        },
-                        ...(canMaintain
-                            ? [
-                                  {
-                                      key: 'id',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(0.5),
-                                      renderCell: (row: z.output<typeof schemas.zOrganizationInvitationResponse>) => (
-                                          <Button
-                                              variant="destructive"
-                                              disabled={revoking}
-                                              aria-busy={revoking || undefined}
-                                              onClick={() => {
-                                                  // Serialize revocation until the refreshed list is available.
-                                                  if (revocationInFlight.current) return;
-                                                  revocationInFlight.current = true;
-                                                  startRevocation(async () => {
-                                                      try {
-                                                          await api.delete(`${base}/invitations/${row.id}`);
-                                                          await invalidateInvitations();
-                                                      } catch (cause) {
-                                                          reportError(cause);
-                                                      } finally {
-                                                          revocationInFlight.current = false;
-                                                      }
-                                                  });
-                                              }}
-                                          >
-                                              Revoke
-                                          </Button>
-                                      )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            {canMaintain && <TableHead className="text-end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invitations.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>{row.email}</TableCell>
+                                <TableCell>
+                                    <span className="text-xs text-muted-foreground">{row.role}</span>
+                                </TableCell>
+                                {canMaintain && (
+                                    <TableCell className="text-end">
+                                        <Button
+                                            variant="destructive"
+                                            disabled={revoking}
+                                            aria-busy={revoking || undefined}
+                                            onClick={() => {
+                                                // Serialize revocation until the refreshed list is available.
+                                                if (revocationInFlight.current) return;
+                                                revocationInFlight.current = true;
+                                                startRevocation(async () => {
+                                                    try {
+                                                        await api.delete(`${base}/invitations/${row.id}`);
+                                                        await invalidateInvitations();
+                                                    } catch (cause) {
+                                                        reportError(cause);
+                                                    } finally {
+                                                        revocationInFlight.current = false;
+                                                    }
+                                                });
+                                            }}
+                                        >
+                                            Revoke
+                                        </Button>
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {invitations.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
             <span role="status" className="sr-only">
                 {revoking ? 'Loading' : ''}

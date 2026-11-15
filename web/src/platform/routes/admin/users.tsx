@@ -7,8 +7,8 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists Platform users with server-side pagination. */
@@ -53,46 +53,49 @@ export default function Users() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <DataTable
-                    data={users.items}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'name',
-                            header: 'User',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack direction="horizontal" gap={3} align="center">
-                                    <GeneratedAvatar name={row.name} src={row.avatar} seed={row.id} />
-                                    <Stack align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <span>{row.name}</span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {row.administrator ? 'Administrator' : 'User'}
-                                            </span>
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Metadata</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users.items.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>
+                                    <Stack direction="horizontal" gap={3} align="center">
+                                        <GeneratedAvatar name={row.name} src={row.avatar} seed={row.id} />
+                                        <Stack align="start">
+                                            <Stack direction="horizontal" gap={1} align="center">
+                                                <span>{row.name}</span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {row.administrator ? 'Administrator' : 'User'}
+                                                </span>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{row.email}</span>
                                         </Stack>
-                                        <span className="text-xs text-muted-foreground">{row.email}</span>
                                     </Stack>
-                                </Stack>
-                            )
-                        },
-                        {
-                            key: 'id',
-                            header: 'Metadata',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack align="start">
-                                    <span>
-                                        Created: <Timestamp value={row.created_at} format="date_time" />
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">ID: {row.id}</span>
-                                </Stack>
-                            )
-                        }
-                    ]}
-                />
+                                </TableCell>
+                                <TableCell>
+                                    <Stack align="start">
+                                        <span>
+                                            Created: <Timestamp value={row.created_at} format="date_time" />
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">ID: {row.id}</span>
+                                    </Stack>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {users.items.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={2} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
                 <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={users.total} />
                 </footer>

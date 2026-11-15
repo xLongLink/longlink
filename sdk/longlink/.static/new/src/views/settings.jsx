@@ -100,50 +100,52 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <FramedDialog
-                variant="fullscreen"
-                title="Fullscreen settings"
-                open={isFullscreenOpen}
-                onOpenChange={setIsFullscreenOpen}
-            >
-                <Stack gap={4}>
-                    <Field>
-                        <FieldLabel htmlFor="fullscreen-company-name">Company name</FieldLabel>
-                        <Input
-                            id="fullscreen-company-name"
-                            value={company}
-                            onChange={(event) => setCompany(event.currentTarget.value)}
-                        />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="fullscreen-default-currency">Default currency</FieldLabel>
-                        <Select
-                            value={currency}
-                            onValueChange={(value) => {
-                                if (value !== null) setCurrency(value);
-                            }}
-                        >
-                            <SelectTrigger id="fullscreen-default-currency">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="CHF">CHF</SelectItem>
-                                <SelectItem value="EUR">EUR</SelectItem>
-                                <SelectItem value="USD">USD</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <Field orientation="horizontal">
-                        <Switch
-                            id="fullscreen-approval-required"
-                            checked={approvalRequired}
-                            onCheckedChange={setApprovalRequired}
-                        />
-                        <FieldLabel htmlFor="fullscreen-approval-required">Require project approval</FieldLabel>
-                    </Field>
-                    <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
-                </Stack>
-            </FramedDialog>
+            <Dialog fullscreen open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
+                <DialogContent className="flex h-[95dvh] w-[95dvw] max-w-[95dvw] flex-col sm:max-w-[95dvw]">
+                    <DialogHeader>
+                        <DialogTitle>Fullscreen settings</DialogTitle>
+                    </DialogHeader>
+                    <div className="min-h-0 flex-1 overflow-auto">
+                        <Stack gap={4}>
+                            <Field>
+                                <FieldLabel htmlFor="fullscreen-company-name">Company name</FieldLabel>
+                                <Input
+                                    id="fullscreen-company-name"
+                                    value={company}
+                                    onChange={(event) => setCompany(event.currentTarget.value)}
+                                />
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="fullscreen-default-currency">Default currency</FieldLabel>
+                                <Select
+                                    value={currency}
+                                    onValueChange={(value) => {
+                                        if (value !== null) setCurrency(value);
+                                    }}
+                                >
+                                    <SelectTrigger id="fullscreen-default-currency">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="CHF">CHF</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                            <Field orientation="horizontal">
+                                <Switch
+                                    id="fullscreen-approval-required"
+                                    checked={approvalRequired}
+                                    onCheckedChange={setApprovalRequired}
+                                />
+                                <FieldLabel htmlFor="fullscreen-approval-required">Require project approval</FieldLabel>
+                            </Field>
+                            <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
+                        </Stack>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Stack>
     );
 }

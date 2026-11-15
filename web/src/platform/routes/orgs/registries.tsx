@@ -8,7 +8,7 @@ import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -56,35 +56,41 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     )}
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={connections}
-                    idKey="id"
-                    density="compact"
-                    hasHover
-                    columns={[
-                        { key: 'host', header: 'Registry', width: proportional(1) },
-                        { key: 'username', header: 'Username', width: proportional(1) },
-                        ...(canMaintain
-                            ? [
-                                  {
-                                      key: 'id',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(1),
-                                      renderCell: (row: Registry) => (
-                                          <Button
-                                              size="sm"
-                                              variant="destructive"
-                                              onClick={() => setAction({ kind: 'delete', connection: row })}
-                                          >
-                                              Delete
-                                          </Button>
-                                      )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Registry</TableHead>
+                            <TableHead>Username</TableHead>
+                            {canMaintain && <TableHead className="text-end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {connections.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>{row.host}</TableCell>
+                                <TableCell>{row.username}</TableCell>
+                                {canMaintain && (
+                                    <TableCell className="text-end">
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => setAction({ kind: 'delete', connection: row })}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {connections.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
             {action?.kind === 'create' && (
                 <RegistryForm open base={base} onSuccess={onSuccess} onOpenChange={closeAction} />

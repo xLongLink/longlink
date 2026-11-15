@@ -157,10 +157,8 @@ const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
 const aliases = names
     .filter((name) => name !== 'Image' && name !== 'Text')
     .map((name) =>
-        namespaceExports.has(name)
+        namespaceExports.has(name) || typeExports.has(name)
             ? `import ${name} = NativeFrontend.${name};`
-            : typeExports.has(name)
-            ? `type ${name} = NativeFrontend.${name};`
             : `declare const ${name}: typeof NativeFrontend.${name};`
     )
     .join('\n');

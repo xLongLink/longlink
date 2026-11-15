@@ -11,9 +11,10 @@ import { createRoot } from 'react-dom/client';
 import { ApiProvider } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import userEvent from '@testing-library/user-event';
+import { Dialog } from '@/components/custom/native-dialog';
 import { act, StrictMode, useEffect, useState } from 'react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 
 const orderSchema = z.object({ name: z.string() });
 
@@ -136,9 +137,12 @@ it('keeps API failures in Sonner’s live region while a real dialog opens and c
                 <button type="button" onClick={() => setOpen(true)}>
                     Open membership
                 </button>
-                <FramedDialog title="Membership" open={open} onOpenChange={setOpen}>
-                    {content}
-                </FramedDialog>
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogContent>
+                        <DialogTitle>Membership</DialogTitle>
+                        {content}
+                    </DialogContent>
+                </Dialog>
             </>
         );
     }

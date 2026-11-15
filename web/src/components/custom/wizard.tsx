@@ -4,21 +4,8 @@ import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/shadcn/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
 import {
-    Stepper,
-    StepperDescription,
-    StepperIndicator,
-    StepperItem,
-    StepperNav,
-    StepperSeparator,
-    StepperTitle,
-    StepperTrigger
-} from '@/components/reui/stepper';
-import {
     Children,
-    cloneElement,
-    createContext,
     isValidElement,
-    useContext,
     useEffect,
     useEffectEvent,
     useRef,
@@ -26,31 +13,29 @@ import {
     type ReactElement,
     type ReactNode
 } from 'react';
-
-const ProgressContext = createContext<{ activeStep: number; onStepClick?: ProgressStepperProps['onStepClick'] }>({
-    activeStep: 0
-});
+import {
+    Stepper,
+    StepperDescription,
+    StepperIndicator,
+    StepperItem,
+    StepperNav,
+    StepperSeparator,
+    StepperTitle
+} from '@/components/reui/stepper';
 
 type StepProps = {
-    /** Zero-based progress index; defaults to child order inside ProgressStepper. */
-    step?: number;
     label: string;
     /** React Hook Form field paths validated before leaving this step. */
     fields?: string[];
     description?: string;
-    /** Persistent panel content in wizard mode; inline content in progress mode. */
+    /** Persistent wizard panel content. */
     children?: ReactNode;
 };
 
-type ProgressStepperProps = {
+type WizardProps = {
     children?: ReactNode;
     activeStep?: number;
     orientation?: 'horizontal' | 'vertical';
-    /** Enables progress step activation. */
-    onStepClick?: (index: number) => void;
-};
-
-type WizardProps = Omit<ProgressStepperProps, 'onStepClick'> & {
     /** Receives wizard selection changes. */
     onStepClick?: (index: number) => void;
     /** Bounds a wizard, keeping progress above its independently scrollable panels. */
@@ -62,29 +47,6 @@ type WizardProps = Omit<ProgressStepperProps, 'onStepClick'> & {
     finalAction?: ReactNode;
     backVariant?: 'outline' | 'ghost';
 };
-
-/** Adapts zero-based LongLink progress metadata to ReUI's compound stepper. */
-export function ProgressStepper(props: ProgressStepperProps) {
-    return (
-        <ProgressContext value={{ activeStep: props.activeStep ?? 0, onStepClick: props.onStepClick }}>
-            <Stepper
-                value={(props.activeStep ?? 0) + 1}
-                onValueChange={(value) => props.onStepClick?.(value - 1)}
-                orientation={props.orientation}
-                role="group"
-                aria-orientation={undefined}
-            >
-                <StepperNav aria-label="Progress">
-                    {Children.map(props.children, (child, index) =>
-                        isValidElement<StepProps>(child) && child.type === Step
-                            ? cloneElement(child, { step: child.props.step ?? index })
-                            : child
-                    )}
-                </StepperNav>
-            </Stepper>
-        </ProgressContext>
-    );
-}
 
 /** Keeps drafts mounted and validates declared step fields through React Hook Form. */
 export function Wizard(props: WizardProps) {
@@ -100,7 +62,7 @@ export function Wizard(props: WizardProps) {
     const [advancing, setAdvancing] = useState(false);
     const [error, setError] = useState<string>();
 
-    // Derive panel order from direct Step children, not author-supplied progress indices.
+    // Derive panel order from direct Step children.
     const steps = Children.toArray(props.children).filter(
         (child): child is ReactElement<StepProps> => isValidElement<StepProps>(child) && child.type === Step
     );
@@ -235,11 +197,29 @@ export function Wizard(props: WizardProps) {
 
     // Progress never renders panel children a second time.
     const progress = (
-        <ProgressStepper activeStep={activeStep} orientation={props.orientation ?? 'horizontal'}>
-            {steps.map((child, index) => (
-                <Step key={child.key} step={index} label={child.props.label} description={child.props.description} />
-            ))}
-        </ProgressStepper>
+        <Stepper value={activeStep + 1} orientation={props.orientation} role="group" aria-orientation={undefined}>
+            <StepperNav aria-label="Progress">
+                {steps.map((child, index) => (
+                    <StepperItem
+                        key={child.key}
+                        step={index + 1}
+                        aria-current={index === activeStep ? 'step' : undefined}
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <StepperIndicator aria-hidden="true">{index + 1}</StepperIndicator>
+                            <div className="flex min-w-0 flex-col gap-1">
+                                <StepperTitle>{child.props.label}</StepperTitle>
+                                {child.props.description && (
+                                    <StepperDescription>{child.props.description}</StepperDescription>
+                                )}
+                                {index < activeStep && <span className="sr-only">completed</span>}
+                            </div>
+                        </div>
+                        {index < steps.length - 1 && <StepperSeparator />}
+                    </StepperItem>
+                ))}
+            </StepperNav>
+        </Stepper>
     );
 
     const content = (
@@ -338,44 +318,7 @@ export function Wizard(props: WizardProps) {
     );
 }
 
-/** Defines progress metadata and, in wizard mode, one persistent content panel. */
+/** Declares one persistent Wizard panel and its validation fields. */
 export function Step(props: StepProps) {
-    const { activeStep, onStepClick } = useContext(ProgressContext);
-    const index = props.step ?? 0;
-    const state = index < activeStep ? 'completed' : index === activeStep ? 'active' : 'upcoming';
-
-    const label = (
-        <>
-            <span aria-hidden="true">
-                <StepperIndicator>{index + 1}</StepperIndicator>
-            </span>
-            <span className="flex min-w-0 flex-col gap-1">
-                <StepperTitle>{props.label}</StepperTitle>
-                {props.description && <StepperDescription>{props.description}</StepperDescription>}
-                {state === 'completed' && <span className="sr-only">completed</span>}
-            </span>
-        </>
-    );
-
-    return (
-        <StepperItem step={index + 1} aria-current={state === 'active' ? 'step' : undefined}>
-            <div className="flex min-w-0 flex-col gap-2">
-                {onStepClick ? (
-                    <StepperTrigger
-                        type="button"
-                        role="button"
-                        aria-selected={undefined}
-                        aria-controls={undefined}
-                        tabIndex={0}
-                    >
-                        {label}
-                    </StepperTrigger>
-                ) : (
-                    <div className="inline-flex items-center gap-2.5">{label}</div>
-                )}
-                {props.children && <div>{props.children}</div>}
-            </div>
-            <StepperSeparator className="group-last/step:hidden" />
-        </StepperItem>
-    );
+    return props.children;
 }

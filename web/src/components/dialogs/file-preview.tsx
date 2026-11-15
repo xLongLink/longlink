@@ -1,29 +1,28 @@
-import type { ComponentProps } from 'react';
+import { Dialog } from '@/components/custom/native-dialog';
 import { NativeFile } from '@/components/custom/native-file';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 /** Displays host-fetched PDF and media bytes with their native viewer layout. */
 export function FilePreview({
     body,
     title,
-    type,
     ...dialogProps
-}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { body: Blob; title: string; type: 'pdf' | 'media' }) {
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    body: Blob;
+    title: string;
+}) {
     return (
-        <FramedDialog
-            title={title}
-            variant="fullscreen"
-            paddingInline={type === 'pdf' ? 0 : undefined}
-            gap={type === 'pdf' ? 0 : undefined}
-            {...dialogProps}
-        >
-            {type === 'pdf' ? (
-                <div className="h-full min-h-0 w-full flex-1">
+        <Dialog fullscreen {...dialogProps}>
+            <DialogContent className="flex h-[95dvh] w-[95dvw] max-w-[95dvw] flex-col sm:max-w-[95dvw]">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                </DialogHeader>
+                <div className="min-h-0 flex-1 overflow-auto">
                     <NativeFile body={body} title={title} />
                 </div>
-            ) : (
-                <NativeFile body={body} title={title} />
-            )}
-        </FramedDialog>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -11,4 +11,4 @@ export {
     StepperContent
 } from '@/components/reui/stepper';
 
-export { ProgressStepper, Wizard, Step } from '@/components/custom/wizard';
+export { Wizard, Step } from '@/components/custom/wizard';

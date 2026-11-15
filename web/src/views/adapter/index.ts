@@ -76,7 +76,6 @@ export { Separator } from './display/separator';
 /** @category Layouts */
 export {
     Dialog,
-    FramedDialog,
     DialogTrigger,
     DialogPortal,
     DialogClose,
@@ -203,10 +202,7 @@ export {
     TableRow,
     TableHead,
     TableCell,
-    TableCaption,
-    DataTable,
-    proportional,
-    pixel
+    TableCaption
 } from './display/table';
 
 /** @category Action */
@@ -264,7 +260,6 @@ export {
     StepperDescription,
     StepperPanel,
     StepperContent,
-    ProgressStepper,
     Wizard,
     Step
 } from './layouts/stepper';
@@ -344,10 +339,16 @@ export {
     DataGridContainer,
     dataGridFeatures,
     DataGridTable,
+    DataGridTableRowSelect,
+    DataGridTableRowSelectAll,
     DataGridColumnHeader,
     DataGridPagination,
     DataGridScrollArea
 } from './display/data-grid';
+
+export type { DataGridFeatures, DataGridProps, DataGridColumnMeta, DataGridTableInstance } from './display/data-grid';
+
+export type { ColumnDef, CellContext, RowSelectionState, SortingState } from '../hooks/use-table';
 
 /** @category Form */
 export { Filters, createFilterQuery, flattenFilterConditions } from './form/filters';

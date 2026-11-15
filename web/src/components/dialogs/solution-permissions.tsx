@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import type { ComponentProps } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/custom/native-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
+import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function SolutionPermissionsDialog({
@@ -20,17 +20,29 @@ export function SolutionPermissionsDialog({
     organizationId,
     onOpenChange,
     ...dialogProps
-}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { solutionId: string; organizationId: string }) {
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    solutionId: string;
+    organizationId: string;
+}) {
     return (
-        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
-            <ApiBoundary key={solutionId}>
-                <SolutionPermissions
-                    solutionId={solutionId}
-                    organizationId={organizationId}
-                    onClose={() => onOpenChange(false)}
-                />
-            </ApiBoundary>
-        </FramedDialog>
+        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Solution permissions</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[80dvh] overflow-auto">
+                    <ApiBoundary key={solutionId}>
+                        <SolutionPermissions
+                            solutionId={solutionId}
+                            organizationId={organizationId}
+                            onClose={() => onOpenChange(false)}
+                        />
+                    </ApiBoundary>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -59,7 +71,6 @@ export default function SolutionPermissions({
 
     return (
         <Stack gap={4} padding={6}>
-            <h2 className="font-semibold tracking-tight text-3xl">Solution permissions</h2>
             {settings.roles.length === 0 ? (
                 <span>Rebuild and deploy the Solution to load its roles.</span>
             ) : (
@@ -126,67 +137,71 @@ function MemberPermissions({
 
     return (
         <Stack gap={4}>
-            <DataTable
-                data={rows}
-                idKey="id"
-                density="compact"
-                columns={[
-                    {
-                        key: 'member',
-                        header: 'Member',
-                        width: proportional(2),
-                        renderCell: (member) => (
-                            <Stack direction="horizontal" gap={3} align="center">
-                                <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
-                                <Stack gap={0}>
-                                    <span>{member.name}</span>
-                                    <span className="text-xs text-muted-foreground">{member.email}</span>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Member</TableHead>
+                        <TableHead>Role</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {rows.map((member) => (
+                        <TableRow key={member.id}>
+                            <TableCell>
+                                <Stack direction="horizontal" gap={3} align="center">
+                                    <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
+                                    <Stack gap={0}>
+                                        <span>{member.name}</span>
+                                        <span className="text-xs text-muted-foreground">{member.email}</span>
+                                    </Stack>
                                 </Stack>
-                            </Stack>
-                        )
-                    },
-                    {
-                        key: 'role',
-                        header: 'Role',
-                        width: proportional(1),
-                        renderCell: (member) => (
-                            <Select
-                                disabled={save.isPending}
-                                value={member.role}
-                                items={[
-                                    { value: '', label: 'No access' },
-                                    ...settings.roles.map((value) => ({ value, label: value }))
-                                ]}
-                                onValueChange={(role) =>
-                                    setRoles((current) => ({ ...current, [member.id]: role ?? '' }))
-                                }
-                            >
-                                <SelectTrigger aria-label={`Role for ${member.name}`} className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="">
-                                        <Ban aria-hidden="true" />
-                                        No access
-                                    </SelectItem>
-                                    {settings.roles.map((role) => (
-                                        <SelectItem key={role} value={role}>
-                                            {role === 'read' ? (
-                                                <Eye aria-hidden="true" />
-                                            ) : role === 'write' ? (
-                                                <Pencil aria-hidden="true" />
-                                            ) : (
-                                                <Shield aria-hidden="true" />
-                                            )}
-                                            {role}
+                            </TableCell>
+                            <TableCell>
+                                <Select
+                                    disabled={save.isPending}
+                                    value={member.role}
+                                    items={[
+                                        { value: '', label: 'No access' },
+                                        ...settings.roles.map((value) => ({ value, label: value }))
+                                    ]}
+                                    onValueChange={(role) =>
+                                        setRoles((current) => ({ ...current, [member.id]: role ?? '' }))
+                                    }
+                                >
+                                    <SelectTrigger aria-label={`Role for ${member.name}`} className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">
+                                            <Ban aria-hidden="true" />
+                                            No access
                                         </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )
-                    }
-                ]}
-            />
+                                        {settings.roles.map((role) => (
+                                            <SelectItem key={role} value={role}>
+                                                {role === 'read' ? (
+                                                    <Eye aria-hidden="true" />
+                                                ) : role === 'write' ? (
+                                                    <Pencil aria-hidden="true" />
+                                                ) : (
+                                                    <Shield aria-hidden="true" />
+                                                )}
+                                                {role}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                    {rows.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={2} className="text-center">
+                                <span role="status">No data</span>
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
             <Stack direction="horizontal" gap={2} justify="end">
                 <Button size="sm" variant="ghost" disabled={save.isPending} onClick={onClose}>
                     Cancel

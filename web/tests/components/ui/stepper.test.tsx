@@ -2,9 +2,6 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Button } from '@/components/shadcn/button';
-import userEvent from '@testing-library/user-event';
-import { ProgressStepper, Step } from '@/components/custom/wizard';
 import {
     Stepper,
     StepperContent,
@@ -84,117 +81,6 @@ it('supports compound controlled navigation and preserves force-mounted drafts a
             expect(draft.value).toBe('Retained');
             expect(output.textContent).not.toContain('Review your application');
             expect(submit).not.toHaveBeenCalled();
-        }
-    );
-});
-
-it('renders step actions inside their own step without nesting them in the step button', async () => {
-    // Act
-    await withMounted(
-        <ProgressStepper activeStep={1} orientation="vertical" onStepClick={() => {}}>
-            <Step step={0} label="contract-v1.pdf">
-                <Button variant="outline">Download</Button>
-            </Step>
-            <Step step={1} label="contract-v2.pdf">
-                <Button variant="outline">Approve</Button>
-            </Step>
-        </ProgressStepper>,
-        async (output) => {
-            // Assert
-            const steps = output.querySelectorAll('[data-slot="stepper-item"]');
-            expect(steps[0].textContent).toContain('Download');
-            expect(steps[0].textContent).not.toContain('Approve');
-            expect(steps[1].textContent).toContain('Approve');
-            expect(output.querySelector('button button')).toBeNull();
-        }
-    );
-});
-
-it('runs a step action without activating its step', async () => {
-    // Arrange
-    const onStepClick = vi.fn();
-    const onApprove = vi.fn();
-
-    // Act
-    await withMounted(
-        <ProgressStepper activeStep={0} orientation="vertical" onStepClick={onStepClick}>
-            <Step step={0} label="contract-v1.pdf" />
-            <Step step={1} label="contract-v2.pdf">
-                <Button variant="outline" onClick={onApprove}>
-                    Approve
-                </Button>
-            </Step>
-        </ProgressStepper>,
-        async (output) => {
-            const approve = Array.from(output.querySelectorAll('button')).find(
-                (button) => button.textContent === 'Approve'
-            );
-
-            await act(async () => approve?.click());
-
-            // Assert
-            expect(onApprove).toHaveBeenCalledOnce();
-            expect(onStepClick).not.toHaveBeenCalled();
-        }
-    );
-});
-
-it('keeps steps inert without onStepClick while their actions remain focusable', async () => {
-    // Act
-    await withMounted(
-        <ProgressStepper activeStep={0} orientation="vertical">
-            <Step step={0} label="contract-v1.pdf" description="Uploaded by Ana">
-                <Button variant="outline">Download</Button>
-            </Step>
-        </ProgressStepper>,
-        async (output) => {
-            const buttons = output.querySelectorAll('button');
-            buttons[0]?.focus();
-
-            // Assert
-            expect(Array.from(buttons, (button) => button.textContent)).toEqual(['Download']);
-            expect(document.activeElement).toBe(buttons[0]);
-        }
-    );
-});
-
-it('activates authored progress indices without submitting the owning form', async () => {
-    const onStepClick = vi.fn();
-    const onSubmit = vi.fn();
-    const user = userEvent.setup();
-
-    await withMounted(
-        <form onSubmit={onSubmit}>
-            <ProgressStepper activeStep={4} onStepClick={onStepClick}>
-                <Step step={3} label="Prepare" />
-                <Step step={4} label="Review" />
-                <Step label="Finish" />
-            </ProgressStepper>
-        </form>,
-        async (output) => {
-            const current = output.querySelector('[aria-current="step"]');
-
-            const prepare = Array.from(output.querySelectorAll('button')).find((button) =>
-                button.textContent?.includes('Prepare')
-            );
-
-            const finish = Array.from(output.querySelectorAll('button')).find((button) =>
-                button.textContent?.includes('Finish')
-            );
-
-            expect(current?.textContent).toContain('Review');
-            await act(async () => prepare?.click());
-            await act(async () => finish?.click());
-            expect(onStepClick.mock.calls).toEqual([[3], [2]]);
-
-            // Keyboard navigation keeps activation separate from focus and preserves public indices.
-            prepare?.focus();
-            await act(async () => user.keyboard('{ArrowRight}'));
-            expect(document.activeElement?.textContent).toContain('Review');
-            expect(onStepClick).toHaveBeenCalledTimes(2);
-            await act(async () => user.keyboard('{End}{Enter}'));
-            expect(onStepClick.mock.calls.at(-1)).toEqual([2]);
-            expect(onSubmit).not.toHaveBeenCalled();
         }
     );
 });

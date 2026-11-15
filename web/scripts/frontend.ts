@@ -45,7 +45,6 @@ export {
     CodeBlockTitle,
     CodeBlockWrapToggle
 } from '../src/views/adapter/display/code-block';
-export { DataTable } from '../src/views/adapter/display/table';
 export { Input } from '../src/views/adapter/form/input';
 export { Textarea } from '../src/views/adapter/form/textarea';
 export * from '../src/views/adapter/form/field';
@@ -57,7 +56,7 @@ export { useTimePicker } from '../src/views/hooks/use-time-picker';
 export { Switch } from '../src/views/adapter/form/switch';
 export { Checkbox } from '../src/views/adapter/form/checkbox';
 export { RadioGroup, RadioGroupItem } from '../src/views/adapter/form/radio-group';
-export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, StepperContent, ProgressStepper, Wizard, Step } from '../src/views/adapter/layouts/stepper';
+export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, StepperContent, Wizard, Step } from '../src/views/adapter/layouts/stepper';
 export { Button } from '../src/views/adapter/action/button';
 export { FileViewer } from '../src/views/adapter/display/file-viewer';
 export * from '../src/views/adapter/layouts/card';
@@ -75,8 +74,10 @@ export type { ChartConfig } from '../src/views/adapter/charts/chart';
 export { MetricCard, MetricGrid, ProviderChart, UsageChart } from '../src/views/adapter/charts/analytics';
 export { CountryChart } from '../src/views/adapter/charts/country-chart';
 export { RevenueFlow } from '../src/views/adapter/charts/revenue-flow';
-export { DataGrid, DataGridContainer, dataGridFeatures, DataGridTable, DataGridColumnHeader, DataGridPagination, DataGridScrollArea } from '../src/views/adapter/display/data-grid';
+export { DataGrid, DataGridContainer, dataGridFeatures, DataGridTable, DataGridTableRowSelect, DataGridTableRowSelectAll, DataGridColumnHeader, DataGridPagination, DataGridScrollArea } from '../src/views/adapter/display/data-grid';
+export type { DataGridFeatures, DataGridProps, DataGridColumnMeta, DataGridTableInstance } from '../src/views/adapter/display/data-grid';
 export { useTable } from '../src/views/hooks/use-table';
+export type { ColumnDef, CellContext, RowSelectionState, SortingState } from '../src/views/hooks/use-table';
 export { Filters, createFilterQuery, flattenFilterConditions } from '../src/views/adapter/form/filters';
 export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from '../src/views/adapter/layouts/frame';
 export { IconTile } from '../src/views/adapter/display/icon';

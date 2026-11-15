@@ -719,14 +719,17 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     }
 });
 
-it('controls the LongLink FramedDialog with public Buttons inside an authored View', async () => {
+it('controls a native compound Dialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <FramedDialog title="Order details" open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent>
+                    <DialogTitle>Order details</DialogTitle>
                 <p>Review the order</p>
-            </FramedDialog>
+                </DialogContent>
+            </Dialog>
         </>;
     }`);
 
@@ -744,7 +747,7 @@ it('controls the LongLink FramedDialog with public Buttons inside an authored Vi
         expect(document.getElementById(titleId ?? '')?.textContent).toBe('Order details');
         expect(dialog?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
 
-        const close = dialog?.querySelector<HTMLButtonElement>('[aria-label="Close dialog"]');
+        const close = dialog?.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
 
         if (!close) throw new Error('Expected dialog close button');
         await user.click(close);
@@ -753,6 +756,61 @@ it('controls the LongLink FramedDialog with public Buttons inside an authored Vi
     } finally {
         runtime.close();
     }
+});
+
+it('updates scrolled viewport geometry through the admitted port and releases nested fullscreen state', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <div style={{height: 6000}}>
+            <Dialog defaultOpen>
+                <DialogContent>
+                    <DialogTitle>Order details</DialogTitle>
+                    <Dialog fullscreen>
+                        <DialogTrigger>Preview</DialogTrigger>
+                        <DialogContent><DialogTitle>Attachment</DialogTitle></DialogContent>
+                    </Dialog>
+                </DialogContent>
+            </Dialog>
+        </div>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+
+        if (!dialog) throw new Error('Missing standard dialog');
+        const root = document.documentElement;
+        expect(root.hasAttribute('data-view-runtime')).toBe(true);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1200, bottom: 4200, height: 600 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1200px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('600px');
+
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+        const trigger = dialog.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
+
+        if (!trigger) throw new Error('Missing fullscreen trigger');
+        const user = userEvent.setup();
+        await user.click(trigger);
+        await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2));
+        expect(root.hasAttribute('data-view-fullscreen')).toBe(true);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 0, bottom: 0, height: 900 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('0px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('900px');
+        await user.keyboard('{Escape}');
+        await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1));
+        expect(root.hasAttribute('data-view-fullscreen')).toBe(false);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+        expect(document.activeElement).toBe(trigger);
+    } finally {
+        runtime.close();
+    }
+
+    expect(document.documentElement.hasAttribute('data-view-runtime')).toBe(false);
+    expect(document.documentElement.hasAttribute('data-view-fullscreen')).toBe(false);
+    expect(document.documentElement.style.getPropertyValue('--view-viewport-top')).toBe('');
 });
 
 it('keeps evaluation diagnostics bounded and inert in the same Solution View region', async () => {

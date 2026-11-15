@@ -11,10 +11,23 @@ const confirmation = useConfirm();
 confirmation.show({ title: 'Publish changes?', actionLabel: 'Publish', actionVariant: 'default', onAction: async () => {} });
 
 const records = [{ id: 'shipment', name: 'Shipment', price: 2 }];
+const [sorting, setSorting] = useState(/** @type {SortingState} */ ([]));
+const [rowSelection, setRowSelection] = useState(/** @type {RowSelectionState} */ ({}));
+/** @type {ColumnDef<DataGridFeatures, (typeof records)[number]>[]} */
+const columns = [
+    { id: 'selection', header: () => <DataGridTableRowSelectAll />, cell: ({ row }) => <DataGridTableRowSelect row={row} /> },
+    { accessorKey: 'name', header: ({ column }) => <DataGridColumnHeader column={column} title="Name" /> },
+    { accessorKey: 'price', header: ({ column }) => <DataGridColumnHeader column={column} title="Price" /> }
+];
 const table = useTable({
     features: dataGridFeatures,
+    manualPagination: true,
     data: records,
-    columns: [{ accessorKey: 'name', header: ({ column }) => <DataGridColumnHeader column={column} title="Name" /> }],
+    columns,
+    enableRowSelection: true,
+    state: { sorting, rowSelection },
+    onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getRowId: (row) => row.id
 });
 const query = createFilterQuery();
@@ -37,15 +50,15 @@ const nativeGrid = (
     </DataGrid>
 );
 const configuredTable = (
-    <DataTable
-        data={records}
-        columns={[{ key: 'price', sortable: true }]}
-        idKey="id"
-        enableRowSelection
-        onSortingChange={(sorting) => sorting[0]?.desc.valueOf()}
-        onRowSelectionChange={(selection) => selection.shipment?.valueOf()}
+    <DataGrid
+        table={table}
+        recordCount={records.length}
         emptyMessage={<Button onClick={async () => { await downloads.download('/api/export', 'shipments.csv'); }}>Export</Button>}
-    />
+    >
+        <DataGridContainer>
+            <DataGridScrollArea><DataGridTable /></DataGridScrollArea>
+        </DataGridContainer>
+    </DataGrid>
 );
 const filters = <Filters fields={[]} query={query} onQueryChange={(next) => flattenFilterConditions(next)} />;
 
@@ -249,7 +262,6 @@ const nativeComposition = (
                     </TableRow>
                 </TableBody>
             </Table>
-            <DataTable data={[{ reference: 'PO-871' }]} />
             <Empty aria-label="Search results">
                 <EmptyHeader>
                     <EmptyTitle>No matching orders</EmptyTitle>
@@ -421,9 +433,14 @@ const nativeForm = (
 const _adapters = (
     <InteractiveCard size="sm" className="w-full" style={{ minHeight: 100 }} isSelected onChange={() => {}}>
         <CardContent>
-            <FramedDialog open onOpenChange={() => {}} title="Title" variant="fullscreen" gap={4} paddingInline={4}>
-                {nativeComposition}
-            </FramedDialog>
+            <Dialog fullscreen open onOpenChange={() => {}}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Title</DialogTitle>
+                    </DialogHeader>
+                    {nativeComposition}
+                </DialogContent>
+            </Dialog>
         </CardContent>
     </InteractiveCard>
 );
@@ -436,9 +453,6 @@ const _legacyButton = <Button label="Save" />;
 const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error FramedDialog visibility changes require a controlled callback.
-const _uncontrolledFrame = <FramedDialog open title="Title" />;
-
 // @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
 const _legacyTable = <Table data={[{ name: 'Order' }]} />;
 // @ts-expect-error Native DropdownMenu does not accept data-driven action items.

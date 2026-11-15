@@ -11,10 +11,10 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -116,85 +116,87 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         </Stack>
                     </Stack>
                 ) : (
-                    <DataTable
-                        data={rows}
-                        idKey={(row) => (row.kind === 'invitation' ? row.id : row.organization.id)}
-                        hasHover
-                        density="compact"
-                        columns={[
-                            {
-                                key: 'organization',
-                                header: 'Name',
-                                width: proportional(1),
-                                renderCell: (row) => (
-                                    <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar kind="organization" name={row.organization.name} />
-                                        <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
-                                            {row.kind === 'invitation' ? (
-                                                <span>{row.organization.name}</span>
-                                            ) : presentation === 'settings' ? (
-                                                <Stack direction="horizontal" gap={1} align="center">
+                    <Table className="[&_td]:whitespace-normal">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                {invitations.length > 0 && <TableHead className="text-end"></TableHead>}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {rows.map((row) => (
+                                <TableRow key={row.kind === 'invitation' ? row.id : row.organization.id}>
+                                    <TableCell>
+                                        <Stack direction="horizontal" gap={3} align="center">
+                                            <GeneratedAvatar kind="organization" name={row.organization.name} />
+                                            <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
+                                                {row.kind === 'invitation' ? (
+                                                    <span>{row.organization.name}</span>
+                                                ) : presentation === 'settings' ? (
+                                                    <Stack direction="horizontal" gap={1} align="center">
+                                                        <Link href={`/orgs/${row.organization.id}`}>
+                                                            {row.organization.name}
+                                                        </Link>
+                                                        <Badge variant="secondary">{row.role}</Badge>
+                                                    </Stack>
+                                                ) : (
                                                     <Link href={`/orgs/${row.organization.id}`}>
                                                         {row.organization.name}
                                                     </Link>
-                                                    <Badge variant="secondary">{row.role}</Badge>
-                                                </Stack>
-                                            ) : (
-                                                <Link href={`/orgs/${row.organization.id}`}>
-                                                    {row.organization.name}
-                                                </Link>
-                                            )}
-                                            <span className="text-xs text-muted-foreground">
-                                                {row.kind === 'invitation'
-                                                    ? `Invitation · ${row.role}`
-                                                    : 'Organization'}
-                                            </span>
+                                                )}
+                                                <span className="text-xs text-muted-foreground">
+                                                    {row.kind === 'invitation'
+                                                        ? `Invitation · ${row.role}`
+                                                        : 'Organization'}
+                                                </span>
+                                            </Stack>
                                         </Stack>
-                                    </Stack>
-                                )
-                            },
-                            ...(invitations.length > 0
-                                ? [
-                                      {
-                                          key: 'actions',
-                                          header: '',
-                                          align: 'end' as const,
-                                          renderCell: (row: (typeof rows)[number]) =>
-                                              row.kind === 'invitation' ? (
-                                                  <Stack direction="horizontal" gap={2} justify="end">
-                                                      <Button
-                                                          size="sm"
-                                                          variant="outline"
-                                                          onClick={() =>
-                                                              setSelected({
-                                                                  type: 'decline',
-                                                                  id: row.id,
-                                                                  name: row.organization.name
-                                                              })
-                                                          }
-                                                      >
-                                                          Decline
-                                                      </Button>
-                                                      <Button
-                                                          size="sm"
-                                                          variant="default"
-                                                          onClick={() =>
-                                                              setSelected({
-                                                                  type: 'accept',
-                                                                  id: row.id,
-                                                                  name: row.organization.name
-                                                              })
-                                                          }
-                                                      >
-                                                          Accept
-                                                      </Button>
-                                                  </Stack>
-                                              ) : null
-                                      }
-                                  ]
-                                : [])
-                        ]}
-                    />
+                                    </TableCell>
+                                    {invitations.length > 0 && (
+                                        <TableCell className="text-end">
+                                            {row.kind === 'invitation' ? (
+                                                <Stack direction="horizontal" gap={2} justify="end">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                type: 'decline',
+                                                                id: row.id,
+                                                                name: row.organization.name
+                                                            })
+                                                        }
+                                                    >
+                                                        Decline
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                type: 'accept',
+                                                                id: row.id,
+                                                                name: row.organization.name
+                                                            })
+                                                        }
+                                                    >
+                                                        Accept
+                                                    </Button>
+                                                </Stack>
+                                            ) : null}
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                            {rows.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={invitations.length > 0 ? 2 : 1} className="text-center">
+                                        <span role="status">No data</span>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
             </Stack>
             {selected?.type === 'create' && (

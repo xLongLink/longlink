@@ -17,7 +17,7 @@ export default function List() {
     const [sorting, setSorting] = useState([{ id: 'filename', desc: false }]);
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const term = search.trim().toLowerCase();
-    const filtered = files.filter((file) => file.filename.includes(term));
+    const filtered = useMemo(() => files.filter((file) => file.filename.includes(term)), [term]);
 
     const columns = [
         {

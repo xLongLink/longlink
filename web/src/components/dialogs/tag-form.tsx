@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
-import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/custom/native-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import {
     Combobox,
@@ -30,7 +30,7 @@ export function TagForm({
     onSuccess,
     onOpenChange,
     ...dialogProps
-}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
@@ -55,86 +55,86 @@ export function TagForm({
     });
 
     return (
-        <FramedDialog {...dialogProps} onOpenChange={onOpenChange}>
-            <Stack padding={8} minHeight="100%" justify="center" className="shrink-0">
-                <Stack gap={6} width="100%" maxWidth={640} className="mx-auto">
-                    <h2 className="font-semibold tracking-tight text-3xl text-center">
-                        {tag ? 'Edit tab' : 'New tab'}
-                    </h2>
-                    <form
-                        onSubmit={(event) => {
-                            void form.handleSubmit(submit)(event);
-                        }}
-                        noValidate
-                        aria-busy={form.formState.isSubmitting}
-                    >
-                        <fieldset disabled={form.formState.isSubmitting} className="contents">
-                            <Stack gap={3}>
-                                <Controller
-                                    name="name"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field data-invalid={fieldState.invalid}>
-                                            <FieldLabel htmlFor="tag-name">Name</FieldLabel>
-                                            <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
-                                            <FieldError errors={[fieldState.error]} />
-                                        </Field>
-                                    )}
-                                />
-                                <Controller
-                                    name="icon"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field data-invalid={fieldState.invalid}>
-                                            <FieldLabel htmlFor="tag-icon">Icon</FieldLabel>
-                                            <Combobox
-                                                items={schemas.zTagIcon.options}
-                                                value={field.value}
-                                                onValueChange={(value) => field.onChange(value ?? 'tag')}
-                                                itemToStringLabel={(icon) => tabs.icons[icon].label}
-                                                disabled={form.formState.isSubmitting}
-                                            >
-                                                <ComboboxInput
-                                                    ref={field.ref}
-                                                    id="tag-icon"
-                                                    onBlur={field.onBlur}
-                                                    aria-invalid={fieldState.invalid}
+        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <Stack className="max-h-[80dvh] overflow-auto">
+                    <Stack gap={6} width="100%" maxWidth={640} className="mx-auto">
+                        <DialogTitle>{tag ? 'Edit tab' : 'New tab'}</DialogTitle>
+                        <form
+                            onSubmit={(event) => {
+                                void form.handleSubmit(submit)(event);
+                            }}
+                            noValidate
+                            aria-busy={form.formState.isSubmitting}
+                        >
+                            <fieldset disabled={form.formState.isSubmitting} className="contents">
+                                <Stack gap={3}>
+                                    <Controller
+                                        name="name"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field data-invalid={fieldState.invalid}>
+                                                <FieldLabel htmlFor="tag-name">Name</FieldLabel>
+                                                <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
+                                                <FieldError errors={[fieldState.error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                    <Controller
+                                        name="icon"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field data-invalid={fieldState.invalid}>
+                                                <FieldLabel htmlFor="tag-icon">Icon</FieldLabel>
+                                                <Combobox
+                                                    items={schemas.zTagIcon.options}
+                                                    value={field.value}
+                                                    onValueChange={(value) => field.onChange(value ?? 'tag')}
+                                                    itemToStringLabel={(icon) => tabs.icons[icon].label}
                                                     disabled={form.formState.isSubmitting}
-                                                    className="w-full"
-                                                />
-                                                <ComboboxContent>
-                                                    <ComboboxEmpty>No results found</ComboboxEmpty>
-                                                    <ComboboxList>
-                                                        {(icon: z.output<typeof schemas.zTagIcon>) => {
-                                                            const option = tabs.icons[icon];
-                                                            const Icon = option.component;
+                                                >
+                                                    <ComboboxInput
+                                                        ref={field.ref}
+                                                        id="tag-icon"
+                                                        onBlur={field.onBlur}
+                                                        aria-invalid={fieldState.invalid}
+                                                        disabled={form.formState.isSubmitting}
+                                                        className="w-full"
+                                                    />
+                                                    <ComboboxContent>
+                                                        <ComboboxEmpty>No results found</ComboboxEmpty>
+                                                        <ComboboxList>
+                                                            {(icon: z.output<typeof schemas.zTagIcon>) => {
+                                                                const option = tabs.icons[icon];
+                                                                const Icon = option.component;
 
-                                                            return (
-                                                                <ComboboxItem key={icon} value={icon}>
-                                                                    <Icon aria-hidden="true" />
-                                                                    {option.label}
-                                                                </ComboboxItem>
-                                                            );
-                                                        }}
-                                                    </ComboboxList>
-                                                </ComboboxContent>
-                                            </Combobox>
-                                            <FieldError errors={[fieldState.error]} />
-                                        </Field>
-                                    )}
-                                />
-                                <Stack direction="horizontal" gap={2}>
-                                    <Button type="submit">{tag ? 'Save' : 'Create tab'}</Button>
-                                    <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                                        Cancel
-                                    </Button>
+                                                                return (
+                                                                    <ComboboxItem key={icon} value={icon}>
+                                                                        <Icon aria-hidden="true" />
+                                                                        {option.label}
+                                                                    </ComboboxItem>
+                                                                );
+                                                            }}
+                                                        </ComboboxList>
+                                                    </ComboboxContent>
+                                                </Combobox>
+                                                <FieldError errors={[fieldState.error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                    <Stack direction="horizontal" gap={2}>
+                                        <Button type="submit">{tag ? 'Save' : 'Create tab'}</Button>
+                                        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                                            Cancel
+                                        </Button>
+                                    </Stack>
                                 </Stack>
-                            </Stack>
-                        </fieldset>
-                        <FieldError errors={[form.formState.errors.root]} />
-                    </form>
+                            </fieldset>
+                            <FieldError errors={[form.formState.errors.root]} />
+                        </form>
+                    </Stack>
                 </Stack>
-            </Stack>
-        </FramedDialog>
+            </DialogContent>
+        </Dialog>
     );
 }

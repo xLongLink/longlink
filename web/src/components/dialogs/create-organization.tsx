@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/custom/native-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -19,7 +19,11 @@ const organizationSchema = zOrganizationCreate.extend({
 export default function CreateOrganization({
     onSuccess,
     ...dialogProps
-}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & { onSuccess: () => Promise<void> }) {
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSuccess: () => Promise<void>;
+}) {
     const form = useForm({ resolver: zodResolver(organizationSchema), defaultValues: { name: '' } });
 
     /** Creates the organization before awaiting the parent's success workflow. */
@@ -35,80 +39,68 @@ export default function CreateOrganization({
 
     // Keep the split dialog compact and within the dynamic viewport.
     return (
-        <FramedDialog paddingInline={0} {...dialogProps}>
-            <div className="flex h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
-                <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
-                    <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
-                        <form
-                            onSubmit={(event) => {
-                                void form.handleSubmit(submit)(event);
-                            }}
-                            noValidate
-                            aria-busy={form.formState.isSubmitting}
-                        >
-                            <fieldset disabled={form.formState.isSubmitting} className="contents">
-                                <Stack gap={10}>
-                                    <Stack gap={2} align="center">
-                                        <img
-                                            src="/images/organization.png"
-                                            alt=""
-                                            className="size-20 object-contain invert dark:invert-0"
-                                            width={1254}
-                                            height={1254}
-                                            decoding="async"
-                                        />
-                                        <Stack gap={0}>
-                                            <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                                New organization
-                                            </h2>
-                                            <p className="text-muted-foreground text-center">
-                                                A place for your workflows and data
-                                            </p>
+        <Dialog {...dialogProps}>
+            <DialogContent>
+                <div className="flex max-h-[80dvh] min-h-0 min-w-0 overflow-auto">
+                    <div className="min-h-0 min-w-0 flex-1">
+                        <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
+                            <form
+                                onSubmit={(event) => {
+                                    void form.handleSubmit(submit)(event);
+                                }}
+                                noValidate
+                                aria-busy={form.formState.isSubmitting}
+                            >
+                                <fieldset disabled={form.formState.isSubmitting} className="contents">
+                                    <Stack gap={10}>
+                                        <Stack gap={2} align="center">
+                                            <img
+                                                src="/images/organization.png"
+                                                alt=""
+                                                className="size-20 object-contain invert dark:invert-0"
+                                                width={1254}
+                                                height={1254}
+                                                decoding="async"
+                                            />
+                                            <Stack gap={0}>
+                                                <DialogTitle>New organization</DialogTitle>
+                                                <p className="text-muted-foreground text-center">
+                                                    A place for your workflows and data
+                                                </p>
+                                            </Stack>
+                                        </Stack>
+                                        {/* Let the subtitle size the column, then stretch the controls to match. */}
+                                        <Stack gap={4} width={0} className="min-w-full">
+                                            <Controller
+                                                name="name"
+                                                control={form.control}
+                                                render={({ field, fieldState }) => (
+                                                    <Field data-invalid={fieldState.invalid}>
+                                                        <FieldLabel htmlFor="organization-name">Name</FieldLabel>
+                                                        <Input
+                                                            {...field}
+                                                            id="organization-name"
+                                                            placeholder="Example LongLink"
+                                                            required
+                                                            aria-required="true"
+                                                            aria-invalid={fieldState.invalid}
+                                                        />
+                                                        <FieldError errors={[fieldState.error]} />
+                                                    </Field>
+                                                )}
+                                            />
+                                            <Button type="submit" className="w-full">
+                                                Create organization
+                                            </Button>
                                         </Stack>
                                     </Stack>
-                                    {/* Let the subtitle size the column, then stretch the controls to match. */}
-                                    <Stack gap={4} width={0} className="min-w-full">
-                                        <Controller
-                                            name="name"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="organization-name">Name</FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        id="organization-name"
-                                                        placeholder="Example LongLink"
-                                                        required
-                                                        aria-required="true"
-                                                        aria-invalid={fieldState.invalid}
-                                                    />
-                                                    <FieldError errors={[fieldState.error]} />
-                                                </Field>
-                                            )}
-                                        />
-                                        <Button type="submit" className="w-full">
-                                            Create organization
-                                        </Button>
-                                    </Stack>
-                                </Stack>
-                            </fieldset>
-                            <FieldError errors={[form.formState.errors.root]} />
-                        </form>
-                    </Stack>
+                                </fieldset>
+                                <FieldError errors={[form.formState.errors.root]} />
+                            </form>
+                        </Stack>
+                    </div>
                 </div>
-                <div className="hidden min-w-0 flex-[0_0_50%] overflow-hidden bg-muted md:flex">
-                    <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                        <img
-                            src="/images/organization-city.png"
-                            alt="Hand-drawn city skyline reflected in water."
-                            className="h-full w-full object-contain invert dark:invert-0"
-                            width={941}
-                            height={1672}
-                            decoding="async"
-                        />
-                    </Stack>
-                </div>
-            </div>
-        </FramedDialog>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -450,9 +450,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
 
                 await vi.waitFor(() => expect(requests).toContain(`POST ${base}/invitations`));
 
-                const close = document.querySelector<HTMLButtonElement>(
-                    '[role="dialog"] button[aria-label="Close dialog"]'
-                );
+                const close = document.querySelector<HTMLButtonElement>('[role="dialog"] [data-slot="dialog-close"]');
 
                 if (!close) throw new Error('Expected the pending form to remain dismissible');
 

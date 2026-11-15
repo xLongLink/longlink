@@ -1,6 +1,7 @@
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
 import { CircleX, LoaderCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/reui/alert';
 import { ControlSizeContext, DialogActivityContext } from './contexts';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import {
@@ -126,15 +127,10 @@ function ConfirmationDialog({
                         <AlertDialogTitle>{options.title}</AlertDialogTitle>
                         {options.description && <AlertDialogDescription>{options.description}</AlertDialogDescription>}
                         {error && (
-                            <div
-                                role="alert"
-                                className="flex items-center gap-2 text-destructive forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
-                            >
-                                <CircleX aria-hidden="true" className="size-5 shrink-0" />
-                                <p className="m-0 min-w-0 flex-1 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
-                                    {error}
-                                </p>
-                            </div>
+                            <Alert variant="destructive">
+                                <CircleX aria-hidden="true" />
+                                <AlertDescription className="min-w-0 wrap-anywhere">{error}</AlertDescription>
+                            </Alert>
                         )}
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -82,6 +82,52 @@ export default function Tasks() {
     // Load persisted tasks and keep the dialog's open state local to this View.
     const [tasks] = useApi('/api/tasks');
     const [isOpen, setIsOpen] = useState(false);
+    const table = useTable({
+        features: dataGridFeatures,
+        manualPagination: true,
+        data: tasks,
+        getRowId: (task) => task.id,
+        columns: [
+            {
+                accessorKey: 'title',
+                header: 'Task',
+                size: 300,
+                enableSorting: false,
+                cell: ({ row: { original: task } }) => (
+                    <Stack gap={0}>
+                        <Text>{task.title}</Text>
+                        {task.attachment ? (
+                            <Link href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
+                                {task.attachment}
+                            </Link>
+                        ) : (
+                            <Text className="text-muted-foreground">No attachment</Text>
+                        )}
+                    </Stack>
+                )
+            },
+            {
+                accessorKey: 'created_by',
+                header: 'Created by',
+                size: 150,
+                enableSorting: false,
+                cell: ({ row: { original: task } }) => (
+                    <Stack direction="horizontal" align="center" gap={2}>
+                        <GeneratedAvatar
+                            name={task.created_by.name}
+                            seed={task.created_by.id}
+                            src={task.created_by.avatar}
+                            size="sm"
+                        />
+                        <Stack gap={0}>
+                            <Text>{task.created_by.name}</Text>
+                            <Text className="text-xs text-muted-foreground">{task.created_by.email}</Text>
+                        </Stack>
+                    </Stack>
+                )
+            }
+        ]
+    });
 
     return (
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
@@ -92,51 +138,21 @@ export default function Tasks() {
                     Add task
                 </Button>
             </Stack>
-            <DataTable
-                data={tasks}
-                hasHover
-                columns={[
-                    {
-                        key: 'title',
-                        header: 'Task',
-                        width: proportional(2),
-                        renderCell: (task) => (
-                            <Stack gap={0}>
-                                <Text>{task.title}</Text>
-                                {task.attachment ? (
-                                    <Link href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
-                                        {task.attachment}
-                                    </Link>
-                                ) : (
-                                    <Text className="text-muted-foreground">No attachment</Text>
-                                )}
-                            </Stack>
-                        )
-                    },
-                    {
-                        key: 'created_by',
-                        header: 'Created by',
-                        width: proportional(1),
-                        renderCell: (task) => (
-                            <Stack direction="horizontal" align="center" gap={2}>
-                                <GeneratedAvatar
-                                    name={task.created_by.name}
-                                    seed={task.created_by.id}
-                                    src={task.created_by.avatar}
-                                    size="sm"
-                                />
-                                <Stack gap={0}>
-                                    <Text>{task.created_by.name}</Text>
-                                    <Text className="text-xs text-muted-foreground">{task.created_by.email}</Text>
-                                </Stack>
-                            </Stack>
-                        )
-                    }
-                ]}
-            />
-            <FramedDialog title="Add task" open={isOpen} onOpenChange={setIsOpen}>
-                {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
-            </FramedDialog>
+            <DataGrid table={table} recordCount={tasks.length} tableLayout={{ rowBorder: true, headerBorder: true }}>
+                <DataGridContainer>
+                    <DataGridScrollArea orientation="horizontal">
+                        <DataGridTable />
+                    </DataGridScrollArea>
+                </DataGridContainer>
+            </DataGrid>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add task</DialogTitle>
+                    </DialogHeader>
+                    {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
+                </DialogContent>
+            </Dialog>
         </Stack>
     );
 }

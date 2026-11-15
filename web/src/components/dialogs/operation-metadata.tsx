@@ -1,44 +1,49 @@
 import type { z } from 'zod';
-import type { ComponentProps } from 'react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/custom/native-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 export function OperationMetadata({
     metadata,
     ...dialogProps
-}: Pick<ComponentProps<typeof FramedDialog>, 'open' | 'onOpenChange'> & {
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     metadata: z.output<typeof schemas.zOperationResponse>;
 }) {
     return (
-        <FramedDialog title="Operation metadata" {...dialogProps}>
-            <Stack gap={2} padding={8}>
-                <span>
-                    <b>Operation</b> {metadata.kind}
-                </span>
-                <span>
-                    <b>Status</b> {metadata.status}
-                </span>
-                <span>
-                    <b>ID</b> {metadata.id}
-                </span>
-                <span>
-                    <b>Target</b> {metadata.target_id}
-                </span>
-                <span>
-                    <b>Created</b> {metadata.created_at}
-                </span>
-                {metadata.finished_at && (
+        <Dialog {...dialogProps}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Operation metadata</DialogTitle>
+                </DialogHeader>
+                <Stack gap={2} className="max-h-[80dvh] overflow-auto">
                     <span>
-                        <b>Finished</b> {metadata.finished_at}
+                        <b>Operation</b> {metadata.kind}
                     </span>
-                )}
-                {metadata.failed && (
                     <span>
-                        <b>Reason</b> {metadata.failed}
+                        <b>Status</b> {metadata.status}
                     </span>
-                )}
-            </Stack>
-        </FramedDialog>
+                    <span>
+                        <b>ID</b> {metadata.id}
+                    </span>
+                    <span>
+                        <b>Target</b> {metadata.target_id}
+                    </span>
+                    <span>
+                        <b>Created</b> {metadata.created_at}
+                    </span>
+                    {metadata.finished_at && (
+                        <span>
+                            <b>Finished</b> {metadata.finished_at}
+                        </span>
+                    )}
+                    {metadata.failed && (
+                        <span>
+                            <b>Reason</b> {metadata.failed}
+                        </span>
+                    )}
+                </Stack>
+            </DialogContent>
+        </Dialog>
     );
 }

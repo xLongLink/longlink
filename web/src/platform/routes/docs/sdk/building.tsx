@@ -1,6 +1,7 @@
-import { DataTable } from '@/components/custom/data-table';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -61,30 +62,31 @@ environments = "src.envs:Env"
                             <CodeBlockCopyButton className="ml-auto" />
                         </CodeBlockHeader>
                     </CodeBlock>
-                    <DataTable
-                        density="compact"
-                        idKey="metadata"
-                        data={[
-                            { metadata: 'description', label: 'org.opencontainers.image.description' },
-                            { metadata: 'environments', label: 'dev.longlink.environments' }
-                        ]}
-                        columns={[
-                            {
-                                key: 'metadata',
-                                header: 'Metadata',
-                                renderCell: (row) => <InlineCode>{row.metadata}</InlineCode>
-                            },
-                            {
-                                key: 'label',
-                                header: 'Image label',
-                                renderCell: (row) => <InlineCode>{row.label}</InlineCode>
-                            }
-                        ]}
-                    />
+                    <Table className="[&_td]:whitespace-normal">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Metadata</TableHead>
+                                <TableHead>Image label</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[
+                                { metadata: 'description', label: 'org.opencontainers.image.description' },
+                                { metadata: 'environments', label: 'dev.longlink.environments' }
+                            ].map((row) => (
+                                <TableRow key={row.metadata}>
+                                    <TableCell>
+                                        <InlineCode>{row.metadata}</InlineCode>
+                                    </TableCell>
+                                    <TableCell>
+                                        <InlineCode>{row.label}</InlineCode>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>
     );
 }
-
-import { InlineCode } from '@/components/shadcn/inline-code';

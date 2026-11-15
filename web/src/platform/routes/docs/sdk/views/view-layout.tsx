@@ -4,11 +4,11 @@ import { Switch } from '@/components/shadcn/switch';
 import { Circle, ExternalLink } from 'lucide-react';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import { componentDocumentation } from '@/platform/component-documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -167,28 +167,27 @@ export default function ViewLayout({
                             className="flex flex-col gap-5 [&_td]:border-border/40 [&_td]:py-1 [&_th]:border-border/40"
                         >
                             {[...groups].map(([name, properties]) => (
-                                <DataTable
-                                    key={name}
-                                    data={properties}
-                                    density="compact"
-                                    hasHover={false}
-                                    isStriped={false}
-                                    columns={[
-                                        {
-                                            key: 'name',
-                                            header: `${name} - Properties`,
-                                            width: proportional(1),
-                                            renderCell: (property) => (
-                                                <Stack gap={0}>
-                                                    <span>{property.name}</span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {property.description}
-                                                    </span>
-                                                </Stack>
-                                            )
-                                        }
-                                    ]}
-                                />
+                                <Table key={name} className="[&_td]:whitespace-normal">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>{`${name} - Properties`}</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {properties.map((row) => (
+                                            <TableRow key={row.name}>
+                                                <TableCell>
+                                                    <Stack gap={0}>
+                                                        <span>{row.name}</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {row.description}
+                                                        </span>
+                                                    </Stack>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             ))}
                         </TabsContent>
                     </Tabs>

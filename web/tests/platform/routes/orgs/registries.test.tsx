@@ -119,7 +119,7 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     expect(document.querySelector('[role="dialog"] form')?.getAttribute('aria-busy')).toBe('true');
 
                     const close = document.querySelector<HTMLButtonElement>(
-                        '[role="dialog"] button[aria-label="Close dialog"]'
+                        '[role="dialog"] [data-slot="dialog-close"]'
                     );
 
                     if (!close) throw new Error('Expected the pending form to remain dismissible');

@@ -11,9 +11,9 @@ import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -68,55 +68,59 @@ export default function Organizations() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <DataTable
-                    data={organizations.items}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'name',
-                            header: 'Name',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack direction="horizontal" gap={3} align="center">
-                                    <GeneratedAvatar kind="organization" name={row.name} />
-                                    <Stack align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <Link href={`/orgs/${row.id}`}>{row.name}</Link>
-                                            {row.status !== 'running' && (
-                                                <Badge
-                                                    variant={
-                                                        row.status === 'creating' ? 'info-light' : 'destructive-light'
-                                                    }
-                                                >
-                                                    {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                </Badge>
-                                            )}
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead className="text-end">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {organizations.items.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>
+                                    <Stack direction="horizontal" gap={3} align="center">
+                                        <GeneratedAvatar kind="organization" name={row.name} />
+                                        <Stack align="start">
+                                            <Stack direction="horizontal" gap={1} align="center">
+                                                <Link href={`/orgs/${row.id}`}>{row.name}</Link>
+                                                {row.status !== 'running' && (
+                                                    <Badge
+                                                        variant={
+                                                            row.status === 'creating'
+                                                                ? 'info-light'
+                                                                : 'destructive-light'
+                                                        }
+                                                    >
+                                                        {row.status === 'creating' ? 'Creating' : 'Failed'}
+                                                    </Badge>
+                                                )}
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">Organization</span>
                                         </Stack>
-                                        <span className="text-xs text-muted-foreground">Organization</span>
                                     </Stack>
-                                </Stack>
-                            )
-                        },
-                        {
-                            key: 'id',
-                            header: 'Actions',
-                            align: 'end',
-                            width: proportional(0.5),
-                            renderCell: (row) => (
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                >
-                                    <Info aria-hidden="true" />
-                                    Metadata
-                                </Button>
-                            )
-                        }
-                    ]}
-                />
+                                </TableCell>
+                                <TableCell className="text-end">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setDialog({ kind: 'metadata', id: row.id })}
+                                    >
+                                        <Info aria-hidden="true" />
+                                        Metadata
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {organizations.items.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={2} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
                 <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={organizations.total} />
                 </footer>

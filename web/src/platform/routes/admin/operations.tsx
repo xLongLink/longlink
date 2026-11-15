@@ -6,9 +6,9 @@ import { Button } from '@/components/shadcn/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 const kinds = {
@@ -68,53 +68,51 @@ export default function Operations() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <DataTable
-                    data={operations.items}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'kind',
-                            header: 'Operation',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack align="start">
-                                    <span>{kinds[row.kind]}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {statuses[row.status]}
-                                        {row.finished_at && ` - ${row.finished_at}`}
-                                    </span>
-                                </Stack>
-                            )
-                        },
-                        {
-                            key: 'resource_name',
-                            header: 'Resource',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack align="start">
-                                    <span>{row.resource_name ?? 'Resource unavailable'}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
-                                    </span>
-                                </Stack>
-                            )
-                        },
-                        {
-                            key: 'id',
-                            header: 'Actions',
-                            align: 'end',
-                            width: proportional(0.5),
-                            renderCell: (row) => (
-                                <Button size="sm" variant="ghost" onClick={() => setMetadataId(row.id)}>
-                                    <Info aria-hidden="true" />
-                                    Metadata
-                                </Button>
-                            )
-                        }
-                    ]}
-                />
+                <Table className="[&_td]:whitespace-normal">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Operation</TableHead>
+                            <TableHead>Resource</TableHead>
+                            <TableHead className="text-end">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {operations.items.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>
+                                    <Stack align="start">
+                                        <span>{kinds[row.kind]}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {statuses[row.status]}
+                                            {row.finished_at && ` - ${row.finished_at}`}
+                                        </span>
+                                    </Stack>
+                                </TableCell>
+                                <TableCell>
+                                    <Stack align="start">
+                                        <span>{row.resource_name ?? 'Resource unavailable'}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
+                                        </span>
+                                    </Stack>
+                                </TableCell>
+                                <TableCell className="text-end">
+                                    <Button size="sm" variant="ghost" onClick={() => setMetadataId(row.id)}>
+                                        <Info aria-hidden="true" />
+                                        Metadata
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {operations.items.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center">
+                                    <span role="status">No data</span>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
                 <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={operations.total} />
                 </footer>

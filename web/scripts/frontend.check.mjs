@@ -30,7 +30,9 @@ test('published component provenance matches the implementation exposed to Views
         if (target.startsWith('./')) assert.ok(categories.has(target.split('/')[1]));
         if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
             for (const specifier of statement.exportClause.elements) {
-                assert.equal(target.startsWith('../hooks/'), /^use[A-Z]/.test(specifier.name.text));
+                if (!statement.isTypeOnly && !specifier.isTypeOnly) {
+                    assert.equal(target.startsWith('../hooks/'), /^use[A-Z]/.test(specifier.name.text));
+                }
             }
         }
     }

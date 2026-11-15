@@ -149,7 +149,7 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/data-grid",
             "introduction": "Native ReUI data grid with caller-owned TanStack state and columns.",
-            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface.",
+            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface. For row selection, provide stable domain IDs through getRowId and compose DataGridTableRowSelectAll and DataGridTableRowSelect in the selection column.",
             "properties": [
                 {
                     "name": "table",
@@ -977,7 +977,7 @@
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/dialog",
             "justification": "Tracks native dialog visibility for isolated View host coordination without adding frame styling.",
-            "guidance": "Compose the native DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose components. Use FramedDialog for the custom fixed or fullscreen frame.",
+            "guidance": "Compose the native DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose components.",
             "introduction": "Native Dialog root properties with isolated View host coordination.",
             "properties": [
                 { "name": "open / defaultOpen", "type": "boolean", "description": "Controlled or initial visibility." },
@@ -986,45 +986,13 @@
                     "type": "(open, eventDetails) => void",
                     "description": "Native visibility callback; eventDetails.cancel() cancels the change."
                 },
+                {
+                    "name": "fullscreen",
+                    "type": "boolean",
+                    "description": "Expands the isolated View host over Platform navigation without styling the dialog content."
+                },
                 { "name": "children", "type": "ReactNode", "description": "Native dialog composition." }
             ]
-        },
-        {
-            "name": "FramedDialog",
-            "category": "Layouts",
-            "guidance": "Use open with onOpenChange for the custom frame. Set variant to fullscreen for isolated-host fullscreen coordination. Use Dialog for native composition.",
-            "introduction": "Custom modal frame that closes with Escape or its close button, not backdrop clicks, and can fill about 95% of the screen while keeping Solution content sandboxed.",
-            "keywords": ["modal", "confirmation", "confirm"],
-            "properties": [
-                { "name": "children", "type": "ReactNode", "description": "Dialog content." },
-                { "name": "title", "type": "string", "description": "Shows a dialog header when a title is provided." },
-                {
-                    "name": "variant",
-                    "type": "\"standard\" | \"fullscreen\"",
-                    "description": "Standard uses the fixed frame. Fullscreen fills about 95% of the screen, including over Platform navigation.",
-                    "default": "standard"
-                },
-                { "name": "open", "type": "boolean", "description": "Whether the dialog is open." },
-                {
-                    "name": "onOpenChange",
-                    "type": "(open: boolean) => void",
-                    "description": "Callback when dialog visibility changes."
-                },
-                {
-                    "name": "gap",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Spacing between the title and content; defaults to 3.",
-                    "default": 3
-                },
-                {
-                    "name": "paddingInline",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Horizontal content padding using the theme spacing scale."
-                }
-            ],
-            "source": "custom",
-            "reference": "https://ui.shadcn.com/docs/components/base/dialog",
-            "justification": "Owns fixed or fullscreen viewport-aware frames, scrolling, focus recovery, and isolated View host coordination."
         },
         {
             "name": "Separator",
@@ -1839,19 +1807,6 @@
             "reference": "https://reui.io/docs/components/base/stepper"
         },
         {
-            "name": "ProgressStepper",
-            "category": "Layouts",
-            "introduction": "Custom zero-based progress adapter using the default ReUI stepper styling.",
-            "properties": [
-                { "name": "activeStep", "type": "number", "description": "Zero-based active index." },
-                { "name": "onStepClick", "type": "(index: number) => void", "description": "Enables step navigation." },
-                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "description": "Progress layout." },
-                { "name": "children", "type": "ReactNode", "description": "Custom Step definitions." }
-            ],
-            "source": "custom",
-            "justification": "Adapts existing zero-based process metadata to the native one-based ReUI Stepper without owning a panel workflow."
-        },
-        {
             "name": "Wizard",
             "category": "Layouts",
             "introduction": "Custom LongLink wizard with persistent Step panels, React Hook Form validation, and guarded asynchronous actions. Wrap the form in FormProvider and declare Step.fields. Next validates those field paths; a submit Button in the last Step invokes the form's handleSubmit. Set shouldFocusError: false so Wizard can reveal invalid hidden steps before focusing them.",
@@ -1895,11 +1850,6 @@
                     "type": "(index: number) => void",
                     "description": "Receives wizard selection changes."
                 },
-                {
-                    "name": "Step.step",
-                    "type": "number",
-                    "description": "Optional progress index; defaults to child order. Wizards always use child order."
-                },
                 { "name": "Step.label", "type": "string", "description": "Visible label identifying the step." },
                 {
                     "name": "Step.fields",
@@ -1914,7 +1864,7 @@
                 {
                     "name": "Step.children",
                     "type": "ReactNode",
-                    "description": "Persistent panel content in wizard mode; inline content in progress mode."
+                    "description": "Persistent Wizard panel content."
                 }
             ],
             "source": "custom",
@@ -1948,7 +1898,7 @@
             "name": "Table",
             "category": "Display",
             "introduction": "Native shadcn table composition with HTML table, row, and cell props.",
-            "guidance": "Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption. Use DataTable for the custom data-driven adapter.",
+            "guidance": "Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption. Use ReUI DataGrid for sorting, selection, and pagination.",
             "properties": [
                 {
                     "name": "children",
@@ -1958,55 +1908,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/table"
-        },
-        {
-            "name": "DataTable",
-            "category": "Display",
-            "introduction": "Custom data-driven row adapter over ReUI DataGrid with automatic safe value formatting.",
-            "keywords": ["records", "rows", "columns", "data table", "list", "queue", "sorting"],
-            "guidance": "Present dense records as rows. Keep selection and query state explicit; do not wrap each row in a Card.",
-            "properties": [
-                { "name": "data", "type": "T[]", "description": "Data objects displayed as rows." },
-                {
-                    "name": "hasHover",
-                    "type": "boolean",
-                    "description": "Applies a hover highlight background to rows on pointer devices.",
-                    "default": false
-                },
-                {
-                    "name": "isStriped",
-                    "type": "boolean",
-                    "description": "Applies a background wash to even-numbered rows.",
-                    "default": false
-                },
-                {
-                    "name": "columns",
-                    "type": "{ key: string; header?: ReactNode; width?: ColumnWidth; align?: \"start\" | \"center\" | \"end\"; sortable?: boolean; renderCell?: ((row: T) => ReactNode); }[]",
-                    "description": "Columns with opt-in native sorting, custom cells, and proportional() or pixel() widths."
-                },
-                {
-                    "name": "sorting / onSortingChange",
-                    "type": "SortingState / (sorting: SortingState) => void",
-                    "description": "Optional controlled sorting. Otherwise the component owns sort state."
-                },
-                {
-                    "name": "enableRowSelection / idKey",
-                    "type": "boolean / keyof T | ((row: T) => string | number)",
-                    "description": "Opt-in native selection controls. Selection requires a stable domain idKey."
-                },
-                {
-                    "name": "rowSelection / onRowSelectionChange",
-                    "type": "RowSelectionState / (selection: RowSelectionState) => void",
-                    "description": "Optional controlled selection keyed by domain IDs. Otherwise the component owns selection."
-                },
-                {
-                    "name": "emptyMessage",
-                    "type": "ReactNode",
-                    "description": "Caller-owned empty-state content, including recovery actions."
-                }
-            ],
-            "source": "custom",
-            "justification": "Adapts data-driven rows and safe value formatting to ReUI DataGrid without requiring each View to configure a table controller."
         },
         {
             "name": "Tabs",

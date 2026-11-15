@@ -8,7 +8,7 @@ import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
@@ -74,34 +74,34 @@ function RegisteredCards({ base }: { base: string }) {
     const [cards] = useApi(`${base}/cards`, schemas.zPaymentCard.array());
 
     return (
-        <DataTable
-            data={cards}
-            idKey="id"
-            density="compact"
-            columns={[
-                {
-                    key: 'brand',
-                    header: 'Card',
-                    width: proportional(2),
-                    renderCell: (card) => (
-                        <span className="capitalize">
-                            {card.brand.replaceAll('_', ' ')} •••• {card.last4}
-                        </span>
-                    )
-                },
-                {
-                    key: 'exp_month',
-                    header: 'Expires',
-                    width: proportional(1),
-                    renderCell: (card) => `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}`
-                },
-                {
-                    key: 'is_default',
-                    header: 'Status',
-                    width: proportional(1),
-                    renderCell: (card) => (card.is_default ? <Token label="Default" /> : null)
-                }
-            ]}
-        />
+        <Table className="[&_td]:whitespace-normal">
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Card</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {cards.map((row) => (
+                    <TableRow key={row.id}>
+                        <TableCell>
+                            <span className="capitalize">
+                                {row.brand.replaceAll('_', ' ')} •••• {row.last4}
+                            </span>
+                        </TableCell>
+                        <TableCell>{`${String(row.exp_month).padStart(2, '0')}/${row.exp_year}`}</TableCell>
+                        <TableCell>{row.is_default ? <Token label="Default" /> : null}</TableCell>
+                    </TableRow>
+                ))}
+                {cards.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={3} className="text-center">
+                            <span role="status">No data</span>
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
     );
 }

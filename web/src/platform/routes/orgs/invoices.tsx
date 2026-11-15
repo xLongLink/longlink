@@ -5,7 +5,7 @@ import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
@@ -33,65 +33,63 @@ function InvoiceTable({ base }: { base: string }) {
     const [invoices] = useApi(`${base}/invoices`, schemas.zPaymentInvoice.array());
 
     return (
-        <DataTable
-            data={invoices}
-            idKey="id"
-            density="compact"
-            columns={[
-                {
-                    key: 'number',
-                    header: 'Invoice',
-                    width: proportional(2),
-                    renderCell: (invoice) =>
-                        invoice.hosted_invoice_url ? (
-                            <Link href={invoice.hosted_invoice_url} className="underline" isExternalLink>
-                                {invoice.number ?? invoice.id}
-                            </Link>
-                        ) : (
-                            <span>{invoice.number ?? invoice.id}</span>
-                        )
-                },
-                {
-                    key: 'created_at',
-                    header: 'Date',
-                    width: proportional(1),
-                    renderCell: (invoice) =>
-                        new Date(invoice.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
-                },
-                {
-                    key: 'total',
-                    header: 'Amount',
-                    align: 'end',
-                    width: proportional(1),
-                    renderCell: (invoice) => {
-                        const currency = new Intl.NumberFormat(undefined, {
-                            style: 'currency',
-                            currency: invoice.currency.toUpperCase()
-                        });
+        <Table className="[&_td]:whitespace-normal">
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-end">Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Document</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {invoices.map((row) => {
+                    const currency = new Intl.NumberFormat(undefined, {
+                        style: 'currency',
+                        currency: row.currency.toUpperCase()
+                    });
 
-                        return currency.format(
-                            invoice.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
-                        );
-                    }
-                },
-                {
-                    key: 'status',
-                    header: 'Status',
-                    width: proportional(1),
-                    renderCell: (invoice) => <Token label={invoice.status?.replaceAll('_', ' ') ?? 'Unknown'} />
-                },
-                {
-                    key: 'has_pdf',
-                    header: 'Document',
-                    width: proportional(1),
-                    renderCell: (invoice) =>
-                        invoice.has_pdf ? (
-                            <Link href={`${base}/invoices/${invoice.id}/pdf`} className="underline" isExternalLink>
-                                PDF
-                            </Link>
-                        ) : null
-                }
-            ]}
-        />
+                    return (
+                        <TableRow key={row.id}>
+                            <TableCell>
+                                {row.hosted_invoice_url ? (
+                                    <Link href={row.hosted_invoice_url} className="underline" isExternalLink>
+                                        {row.number ?? row.id}
+                                    </Link>
+                                ) : (
+                                    <span>{row.number ?? row.id}</span>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {new Date(row.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            </TableCell>
+                            <TableCell className="text-end">
+                                {currency.format(
+                                    row.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                <Token label={row.status?.replaceAll('_', ' ') ?? 'Unknown'} />
+                            </TableCell>
+                            <TableCell>
+                                {row.has_pdf ? (
+                                    <Link href={`${base}/invoices/${row.id}/pdf`} className="underline" isExternalLink>
+                                        PDF
+                                    </Link>
+                                ) : null}
+                            </TableCell>
+                        </TableRow>
+                    );
+                })}
+                {invoices.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">
+                            <span role="status">No data</span>
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
     );
 }

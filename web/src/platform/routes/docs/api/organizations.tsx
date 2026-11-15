@@ -1,7 +1,7 @@
-import { DataTable } from '@/components/custom/data-table';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources', icon: EyeOff },
@@ -45,26 +45,28 @@ export default function Organizations() {
                 </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <span className="font-semibold">User permissions</span>
-                    <DataTable
-                        data={organizationRoles}
-                        idKey="name"
-                        density="compact"
-                        columns={[
-                            {
-                                key: 'name',
-                                header: 'Roles',
-                                renderCell: ({ access, icon: RoleIcon, name }) => (
-                                    <Stack gap={0}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                            <span className="font-semibold capitalize">{name}</span>
+                    <Table className="[&_td]:whitespace-normal">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Roles</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {organizationRoles.map(({ access, icon: RoleIcon, name }) => (
+                                <TableRow key={name}>
+                                    <TableCell>
+                                        <Stack gap={0}>
+                                            <Stack direction="horizontal" gap={2} align="center">
+                                                <RoleIcon aria-hidden="true" className="text-primary" size={16} />
+                                                <span className="font-semibold capitalize">{name}</span>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{access}</span>
                                         </Stack>
-                                        <span className="text-xs text-muted-foreground">{access}</span>
-                                    </Stack>
-                                )
-                            }
-                        ]}
-                    />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>

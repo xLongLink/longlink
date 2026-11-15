@@ -41,6 +41,7 @@ import {
     type ViewportMessage
 } from './protocol';
 import '../index.css';
+import './dialog.css';
 
 declare global {
     interface Window {
@@ -139,6 +140,7 @@ function initialize(event: MessageEvent<unknown>): void {
     // Scope requests and cache state to this admitted sandbox's lifetime.
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const lifetime = new AbortController();
+    document.documentElement.setAttribute('data-view-runtime', '');
 
     const pending = new Map<
         number,
@@ -315,6 +317,7 @@ function initialize(event: MessageEvent<unknown>): void {
         modalDepth += open ? 1 : -1;
 
         if (fullscreen) fullscreenDepth += open ? 1 : -1;
+        document.documentElement.toggleAttribute('data-view-fullscreen', fullscreenDepth > 0);
 
         const command = { type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) };
 
@@ -338,6 +341,12 @@ function initialize(event: MessageEvent<unknown>): void {
             port.postMessage({ type: 'modal', depth: 0 });
             lifetime.abort();
             observer.disconnect();
+            document.documentElement.removeAttribute('data-view-runtime');
+            document.documentElement.removeAttribute('data-view-fullscreen');
+
+            for (const property of ['--view-viewport-top', '--view-viewport-bottom', '--view-viewport-height']) {
+                document.documentElement.style.removeProperty(property);
+            }
 
             for (const waiter of pending.values()) {
                 clearTimeout(waiter.timer);

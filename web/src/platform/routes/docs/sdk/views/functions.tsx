@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [
@@ -24,24 +24,25 @@ export default function FunctionsPage() {
             <h2 className="font-semibold tracking-tight text-3xl" id="functions">
                 Functions
             </h2>
-            <DataTable
-                data={functions}
-                idKey="name"
-                density="compact"
-                columns={[
-                    {
-                        key: 'name',
-                        header: 'Function',
-                        width: proportional(1),
-                        renderCell: (functionEntry) => (
-                            <Stack gap={0}>
-                                <span>{functionEntry.name}</span>
-                                <span className="text-xs text-muted-foreground">{functionEntry.description}</span>
-                            </Stack>
-                        )
-                    }
-                ]}
-            />
+            <Table className="[&_td]:whitespace-normal">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Function</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {functions.map((row) => (
+                        <TableRow key={row.name}>
+                            <TableCell>
+                                <Stack gap={0}>
+                                    <span>{row.name}</span>
+                                    <span className="text-xs text-muted-foreground">{row.description}</span>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </ViewLayout>
     );
 }

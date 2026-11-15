@@ -1,6 +1,17 @@
 export { DataGrid, DataGridContainer, dataGridFeatures } from '@/components/reui/data-grid/data-grid';
 
-export { DataGridTable } from '@/components/reui/data-grid/data-grid-table';
+export type {
+    DataGridFeatures,
+    DataGridProps,
+    DataGridColumnMeta,
+    DataGridTableInstance
+} from '@/components/reui/data-grid/data-grid';
+
+export {
+    DataGridTable,
+    DataGridTableRowSelect,
+    DataGridTableRowSelectAll
+} from '@/components/reui/data-grid/data-grid-table';
 
 export { DataGridColumnHeader } from '@/components/reui/data-grid/data-grid-column-header';
 

@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/custom/native-dialog';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
@@ -16,7 +16,7 @@ export function InviteMember({
     canInviteAdmin,
     onSubmit,
     ...dialogProps
-}: Omit<ComponentProps<typeof FramedDialog>, 'children'> & {
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     canInviteAdmin: boolean;
     onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
@@ -42,113 +42,101 @@ export function InviteMember({
     });
 
     return (
-        <FramedDialog paddingInline={0} {...dialogProps}>
-            <div className="flex h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
-                <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
-                    <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
-                        <form
-                            onSubmit={(event) => {
-                                void form.handleSubmit(submit)(event);
-                            }}
-                            noValidate
-                            aria-busy={form.formState.isSubmitting}
-                        >
-                            <fieldset disabled={form.formState.isSubmitting} className="contents">
-                                <Stack gap={10}>
-                                    <Stack gap={2} align="center">
-                                        <img
-                                            src="/images/organization.png"
-                                            alt=""
-                                            className="size-20 object-contain invert dark:invert-0"
-                                            width={1254}
-                                            height={1254}
-                                            decoding="async"
-                                        />
-                                        <Stack gap={0}>
-                                            <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                                Invite user
-                                            </h2>
-                                            <p className="text-muted-foreground text-center">
-                                                Send an invitation to join this organization.
-                                            </p>
+        <Dialog {...dialogProps}>
+            <DialogContent>
+                <div className="flex max-h-[80dvh] min-h-0 min-w-0 overflow-auto">
+                    <div className="min-h-0 min-w-0 flex-1">
+                        <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
+                            <form
+                                onSubmit={(event) => {
+                                    void form.handleSubmit(submit)(event);
+                                }}
+                                noValidate
+                                aria-busy={form.formState.isSubmitting}
+                            >
+                                <fieldset disabled={form.formState.isSubmitting} className="contents">
+                                    <Stack gap={10}>
+                                        <Stack gap={2} align="center">
+                                            <img
+                                                src="/images/organization.png"
+                                                alt=""
+                                                className="size-20 object-contain invert dark:invert-0"
+                                                width={1254}
+                                                height={1254}
+                                                decoding="async"
+                                            />
+                                            <Stack gap={0}>
+                                                <DialogTitle>Invite user</DialogTitle>
+                                                <p className="text-muted-foreground text-center">
+                                                    Send an invitation to join this organization.
+                                                </p>
+                                            </Stack>
+                                        </Stack>
+                                        <Stack gap={4} width={0} className="min-w-full">
+                                            <Controller
+                                                name="email"
+                                                control={form.control}
+                                                render={({ field, fieldState }) => (
+                                                    <Field data-invalid={fieldState.invalid}>
+                                                        <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                                                        <Input
+                                                            {...field}
+                                                            id="invite-email"
+                                                            type="email"
+                                                            placeholder="user@example.com"
+                                                            aria-invalid={fieldState.invalid}
+                                                        />
+                                                        <FieldError errors={[fieldState.error]} />
+                                                    </Field>
+                                                )}
+                                            />
+                                            <Controller
+                                                name="role"
+                                                control={form.control}
+                                                render={({ field, fieldState }) => (
+                                                    <Field data-invalid={fieldState.invalid}>
+                                                        <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+                                                        <Select
+                                                            name={field.name}
+                                                            value={field.value}
+                                                            onValueChange={(value) => field.onChange(value ?? 'write')}
+                                                            disabled={form.formState.isSubmitting}
+                                                            items={roles.map(({ value }) => ({ value, label: value }))}
+                                                        >
+                                                            <SelectTrigger
+                                                                ref={field.ref}
+                                                                id="invite-role"
+                                                                onBlur={field.onBlur}
+                                                                aria-invalid={fieldState.invalid}
+                                                                className="w-full"
+                                                            >
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {roles.map(({ value, icon: Icon }) => (
+                                                                    <SelectItem key={value} value={value}>
+                                                                        <Icon aria-hidden="true" />
+                                                                        {value}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FieldError errors={[fieldState.error]} />
+                                                    </Field>
+                                                )}
+                                            />
+                                            <Button type="submit" className="w-full">
+                                                Invite
+                                            </Button>
                                         </Stack>
                                     </Stack>
-                                    <Stack gap={4} width={0} className="min-w-full">
-                                        <Controller
-                                            name="email"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="invite-email">Email</FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        id="invite-email"
-                                                        type="email"
-                                                        placeholder="user@example.com"
-                                                        aria-invalid={fieldState.invalid}
-                                                    />
-                                                    <FieldError errors={[fieldState.error]} />
-                                                </Field>
-                                            )}
-                                        />
-                                        <Controller
-                                            name="role"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="invite-role">Role</FieldLabel>
-                                                    <Select
-                                                        name={field.name}
-                                                        value={field.value}
-                                                        onValueChange={(value) => field.onChange(value ?? 'write')}
-                                                        disabled={form.formState.isSubmitting}
-                                                        items={roles.map(({ value }) => ({ value, label: value }))}
-                                                    >
-                                                        <SelectTrigger
-                                                            ref={field.ref}
-                                                            id="invite-role"
-                                                            onBlur={field.onBlur}
-                                                            aria-invalid={fieldState.invalid}
-                                                            className="w-full"
-                                                        >
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {roles.map(({ value, icon: Icon }) => (
-                                                                <SelectItem key={value} value={value}>
-                                                                    <Icon aria-hidden="true" />
-                                                                    {value}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FieldError errors={[fieldState.error]} />
-                                                </Field>
-                                            )}
-                                        />
-                                        <Button type="submit" className="w-full">
-                                            Invite
-                                        </Button>
-                                    </Stack>
-                                </Stack>
-                            </fieldset>
-                            <FieldError errors={[form.formState.errors.root]} />
-                        </form>
-                    </Stack>
+                                </fieldset>
+                                <FieldError errors={[form.formState.errors.root]} />
+                            </form>
+                        </Stack>
+                    </div>
                 </div>
-                <div className="hidden min-w-0 flex-[0_0_50%] overflow-hidden bg-muted md:flex">
-                    <Stack width="100%" height="100%" align="center" justify="center" padding={6}>
-                        <img
-                            src="/images/invitation.png"
-                            alt="Hand-drawn envelopes."
-                            className="h-full w-full object-contain invert dark:invert-0"
-                            width={1223}
-                            height={1286}
-                            decoding="async"
-                        />
-                    </Stack>
-                </div>
-            </div>
-        </FramedDialog>
+            </DialogContent>
+        </Dialog>
     );
 }
