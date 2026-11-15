@@ -15,6 +15,7 @@ export type ChartOptions = Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'c
 };
 
 export type CartesianChartProps<Row extends object> = ChartOptions & {
+    axes?: boolean;
     data: readonly Row[];
     xKey: ChartKey<Row>;
     series: readonly ChartSeries<Row>[];

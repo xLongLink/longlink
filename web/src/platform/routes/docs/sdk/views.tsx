@@ -305,7 +305,9 @@ export default function Item({ params }) {
                                                 className={`aspect-square w-full max-w-full ${component.name === 'Maps' ? 'py-0' : ''}`}
                                             >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                                <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden">
+                                                <div
+                                                    className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
+                                                >
                                                     <Stack
                                                         className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.name === 'Maps' ? '' : 'scale-90'}`}
                                                         width="100%"

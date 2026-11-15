@@ -410,6 +410,12 @@
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
+                    "name": "axes",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows category and value axes with grid lines."
+                },
+                {
                     "name": "series",
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels. Colors are assigned internally."
@@ -431,6 +437,12 @@
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
+                    "name": "axes",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows category and value axes with grid lines."
+                },
+                {
                     "name": "series",
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels. Colors are assigned internally."
@@ -451,6 +463,12 @@
             "properties": [
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
+                {
+                    "name": "axes",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows category and value axes with grid lines."
+                },
                 {
                     "name": "series",
                     "type": "readonly ChartSeries<Row>[]",

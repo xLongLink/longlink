@@ -88,6 +88,7 @@ export function ChartExample({
             <Chart
                 data={data}
                 xKey="month"
+                axes={!isCompact}
                 series={series}
                 legend={false}
                 tooltip={!isCompact}
@@ -97,7 +98,7 @@ export function ChartExample({
     }
 
     const chart = (
-        <Box width="100%" height={height}>
+        <Box width="100%" maxWidth="100%" height={height}>
             {plot}
         </Box>
     );

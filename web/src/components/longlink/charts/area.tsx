@@ -9,6 +9,7 @@ export function AreaChart<Row extends object>({
     data: rows,
     xKey,
     series,
+    axes = true,
     legend = true,
     tooltip = true,
     ...props
@@ -26,11 +27,11 @@ export function AreaChart<Row extends object>({
             <recharts.AreaChart
                 data={prepared.rows}
                 accessibilityLayer
-                margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+                margin={{ top: 12, right: 12, left: axes ? 0 : 12, bottom: axes ? 0 : 12 }}
             >
-                <recharts.CartesianGrid vertical={false} />
-                <recharts.XAxis dataKey="category" axisLine={false} tickLine={false} tickMargin={8} />
-                <recharts.YAxis axisLine={false} tickLine={false} width={48} />
+                {axes && <recharts.CartesianGrid vertical={false} />}
+                <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
+                <recharts.YAxis hide={!axes} axisLine={false} tickLine={false} width={48} />
                 {series.map((item, index) => (
                     <recharts.Area
                         key={item.key}

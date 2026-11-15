@@ -16016,6 +16016,7 @@ type ChartOptions = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "
     tooltip?: boolean;
 };
 type CartesianChartProps<Row extends object> = ChartOptions & {
+    axes?: boolean;
     data: readonly Row[];
     xKey: ChartKey<Row>;
     series: readonly ChartSeries<Row>[];
@@ -16033,9 +16034,9 @@ export type SankeyLink = {
     target: number;
     value: number;
 };
-export function AreaChart<Row extends object>({ data: rows, xKey, series, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
-export function BarChart<Row extends object>({ data: rows, xKey, series, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
-export function LineChart<Row extends object>({ data: rows, xKey, series, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
+export function AreaChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
+export function BarChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
+export function LineChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
 export function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, ...props }: ValueChartProps<Row>): React$1.JSX.Element;
 export function RadarChart<Row extends object>({ data: rows, categoryKey, series, legend, tooltip, ...props }: ChartOptions & {
     data: readonly Row[];
