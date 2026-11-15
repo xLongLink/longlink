@@ -1,93 +1,24 @@
-import ViewLayout from './view-layout';
-import FormPreview from './form-preview';
-import { Input } from '@/components/shadcn/input';
-import { Textarea } from '@/components/shadcn/textarea';
-import { Field, FieldDescription, FieldLabel } from '@/components/shadcn/field';
+import { Input } from '@/views/adapter/form/input';
+import FormDocumentation from './form-documentation';
 
-/** Documents native input and field composition. */
+/** Shows a native text input with control-owned labeling and feedback. */
+export function InputExample() {
+    return <Input name="name" label="Name" description="The order name." defaultValue="New order" required />;
+}
+
+/** Documents native input behavior and optional schema validation. */
 export default function InputPage() {
     return (
-        <ViewLayout
+        <FormDocumentation
             name="Input"
-            properties={[
-                { name: 'name', type: 'string', description: 'Native FormData field name.' },
-                { name: 'type', type: 'HTMLInputTypeAttribute', description: 'Native input type.' },
-                { name: 'defaultValue', type: 'string | number', description: 'Initial uncontrolled value.' },
-                { name: 'value', type: 'string | number', description: 'Controlled input value.' },
-                { name: 'onChange', type: 'ChangeEventHandler<HTMLInputElement>', description: 'Native change event.' },
-                {
-                    name: 'min / max / step',
-                    type: 'string | number',
-                    description: 'Native number, date, and time constraints. Use step="any" for decimals.'
-                },
-                {
-                    name: 'accept / multiple',
-                    type: 'string / boolean',
-                    description:
-                        'File picker hints and multiple selection for type="file". Validate files in your form schema and on the server.'
-                },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables interaction and excludes the input from submission.'
-                },
-                {
-                    name: 'maxLength',
-                    type: 'number',
-                    description: 'Native UTF-16 length limit, not Python code-point validation.'
-                },
-                {
-                    name: 'Field.orientation',
-                    type: '"vertical" | "horizontal" | "responsive"',
-                    description: 'Installed field layout.'
-                },
-                { name: 'FieldLabel.htmlFor', type: 'string', description: 'ID of the labeled control.' },
-                {
-                    name: 'FieldDescription / FieldError',
-                    type: 'components',
-                    description: 'Compose helper text and error feedback; connect with aria-describedby.'
-                },
-                {
-                    name: 'FieldSet / FieldLegend / FieldGroup / FieldContent / FieldTitle / FieldSeparator',
-                    type: 'components',
-                    description: 'Installed shadcn field composition with native element props.'
-                },
-                {
-                    name: 'InputGroup / InputGroupInput / InputGroupTextarea',
-                    type: 'components',
-                    description: 'Compose grouped controls without changing native input events.'
-                },
-                {
-                    name: 'InputGroupAddon.align',
-                    type: '"inline-start" | "inline-end" | "block-start" | "block-end"',
-                    description: 'Position an addon within the input group.'
-                },
-                {
-                    name: 'InputGroupButton / InputGroupText',
-                    type: 'components',
-                    description: 'Compose actions and text inside a group.'
-                },
-                {
-                    name: 'Textarea',
-                    type: 'component',
-                    description: 'Native textarea props, including rows, defaultValue, disabled, and DOM change events.'
-                }
-            ]}
-            example={{
-                title: 'Native name field',
-                preview: (
-                    <FormPreview>
-                        <InputExample />
-                    </FormPreview>
-                ),
-                code: `const schema = z.object({
-  name: z.string().trim().min(1, "Enter an order name.")
-});
-
-function OrderForm() {
-  const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "" } });
+            preview={<InputExample />}
+            code={`function Example() {
+  const form = useForm({
+    resolver: zodResolver(z.object({ name: z.string().trim().min(1, "Enter an order name.") })),
+    defaultValues: { name: "New order" },
+  });
   const submit = useSubmit("/api/orders", {
-    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+    onError: () => form.setError("root", { message: "Could not save. Please try again." }),
   });
 
   async function save(values) {
@@ -98,70 +29,20 @@ function OrderForm() {
 
   return (
     <form onSubmit={form.handleSubmit(save)} noValidate>
-      <FieldGroup>
-        <Controller name="name" control={form.control} render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="order-name">Name</FieldLabel>
-            <Input {...field} id="order-name" aria-invalid={fieldState.invalid} />
-            <FieldError errors={[fieldState.error]} />
-          </Field>
-        )} />
+      <Stack gap={4}>
+        <Input
+          {...form.register("name")}
+          label="Name"
+          description="The order name."
+          error={form.formState.errors.name?.message}
+          disabled={form.formState.isSubmitting}
+        />
         <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
-        <Button type="button" variant="outline" onClick={() => form.reset()}>Reset</Button>
-        <FieldError errors={[form.formState.errors.root]} />
-      </FieldGroup>
+        {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
+      </Stack>
     </form>
   );
-}`
-            }}
+}`}
         />
-    );
-}
-
-/** Shows a labeled native field without an adapter-owned value. */
-export function InputExample() {
-    return (
-        <div className="flex flex-col gap-4">
-            <Field>
-                <FieldLabel htmlFor="native-name">Name</FieldLabel>
-                <Input
-                    id="native-name"
-                    name="name"
-                    defaultValue="New order"
-                    required
-                    aria-describedby="native-name-description"
-                />
-                <FieldDescription id="native-name-description">Order name.</FieldDescription>
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="native-quantity">Quantity</FieldLabel>
-                <Input
-                    id="native-quantity"
-                    name="quantity"
-                    type="number"
-                    defaultValue={3}
-                    min={1}
-                    max={100}
-                    step={1}
-                    required
-                />
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="native-date">Due date</FieldLabel>
-                <Input id="native-date" name="due_date" type="date" defaultValue="2026-10-02" required />
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="native-time">Start time</FieldLabel>
-                <Input id="native-time" name="start_time" type="time" required />
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="native-file">Attachment</FieldLabel>
-                <Input id="native-file" name="attachment" type="file" />
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="native-notes">Notes</FieldLabel>
-                <Textarea id="native-notes" name="notes" defaultValue="Order notes" />
-            </Field>
-        </div>
     );
 }

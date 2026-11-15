@@ -108,73 +108,24 @@ export { Input } from './form/input';
 export { Textarea } from './form/textarea';
 
 /** @category Form */
-export {
-    Field,
-    FieldLabel,
-    FieldDescription,
-    FieldError,
-    FieldGroup,
-    FieldLegend,
-    FieldSeparator,
-    FieldSet,
-    FieldContent,
-    FieldTitle
-} from './form/field';
-
-/** @category Form */
-export {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
-    InputGroupInput,
-    InputGroupTextarea,
-    InputGroupText
-} from './form/input-group';
-
-/** @category Form */
 export { Checkbox } from './form/checkbox';
 
 /** @category Form */
 export { Switch } from './form/switch';
 
 /** @category Form */
-export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from './form/slider';
+export { Slider } from './form/slider';
 
 /** @category Form */
-export {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectScrollDownButton,
-    SelectScrollUpButton,
-    SelectSeparator,
-    SelectTrigger,
-    SelectValue
-} from './form/select';
+export { Select } from './form/select';
+
+export type { FormOption } from './form/select';
 
 /** @category Form */
-export {
-    Combobox,
-    ComboboxInput,
-    ComboboxContent,
-    ComboboxList,
-    ComboboxItem,
-    ComboboxGroup,
-    ComboboxLabel,
-    ComboboxCollection,
-    ComboboxEmpty,
-    ComboboxSeparator,
-    ComboboxChips,
-    ComboboxChip,
-    ComboboxChipsInput,
-    ComboboxTrigger,
-    ComboboxValue
-} from './form/combobox';
+export { Combobox } from './form/combobox';
 
 /** @category Form */
-export { RadioGroup, RadioGroupItem } from './form/radio-group';
+export { RadioGroup } from './form/radio-group';
 
 /** @category Display */
 export {
@@ -319,5 +270,3 @@ export { useFormContext } from '../hooks/use-form-context';
 export { useSubmit } from '../hooks/use-submit';
 
 export { useTable } from '../hooks/use-table';
-
-export { useComboboxAnchor } from '../hooks/use-combobox-anchor';

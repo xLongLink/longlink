@@ -2,9 +2,9 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
-import { Switch } from '@/components/shadcn/switch';
 import userEvent from '@testing-library/user-event';
-import { Checkbox } from '@/components/shadcn/checkbox';
+import { Switch } from '@/components/longlink/form/switch';
+import { Checkbox } from '@/components/longlink/form/checkbox';
 
 it.each([
     ['switch', Switch],
@@ -17,14 +17,7 @@ it.each([
 
         return (
             <form>
-                <Control
-                    aria-label="Enabled"
-                    name="enabled"
-                    checked={checked}
-                    onCheckedChange={setChecked}
-                    render={<button type="button" />}
-                    nativeButton
-                />
+                <Control aria-label="Enabled" name="enabled" checked={checked} onCheckedChange={setChecked} />
                 <Control aria-label="Locked" name="locked" defaultChecked disabled />
                 <button type="submit">Save</button>
             </form>
@@ -53,14 +46,7 @@ it('preserves native switch sizing and caller-controlled checked state', async (
     const changes: boolean[] = [];
 
     await withMounted(
-        <Switch
-            aria-label="Enabled"
-            size="sm"
-            checked
-            onCheckedChange={(checked) => changes.push(checked)}
-            render={<button type="button" />}
-            nativeButton
-        />,
+        <Switch aria-label="Enabled" size="sm" checked onCheckedChange={(checked) => changes.push(checked)} />,
         async (output) => {
             const control = output.querySelector('[role="switch"]');
 

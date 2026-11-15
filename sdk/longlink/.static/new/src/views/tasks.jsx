@@ -31,37 +31,29 @@ function TaskForm({ onSuccess, onCancel }) {
     return (
         <form onSubmit={form.handleSubmit(createTask)} noValidate aria-busy={form.formState.isSubmitting}>
             <fieldset disabled={form.formState.isSubmitting} className="contents">
-                <FieldGroup>
+                <Stack gap={4}>
                     <Controller
                         name="title"
                         control={form.control}
                         render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="task-title">Title</FieldLabel>
-                                <Input {...field} id="task-title" aria-invalid={fieldState.invalid} />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
+                            <Input {...field} id="task-title" label="Title" error={fieldState.error?.message} />
                         )}
                     />
                     <Controller
                         name="attachment"
                         control={form.control}
                         render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="task-attachment">Attachment</FieldLabel>
-                                <Input
-                                    id="task-attachment"
-                                    name={field.name}
-                                    type="file"
-                                    ref={field.ref}
-                                    onBlur={field.onBlur}
-                                    onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
-                                    aria-invalid={fieldState.invalid}
-                                    aria-describedby="task-attachment-error"
-                                    required
-                                />
-                                <FieldError id="task-attachment-error" errors={[fieldState.error]} />
-                            </Field>
+                            <Input
+                                id="task-attachment"
+                                label="Attachment"
+                                name={field.name}
+                                type="file"
+                                ref={field.ref}
+                                onBlur={field.onBlur}
+                                onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
+                                error={fieldState.error?.message}
+                                required
+                            />
                         )}
                     />
                     <Stack direction="horizontal" justify="end" gap={2}>
@@ -70,8 +62,8 @@ function TaskForm({ onSuccess, onCancel }) {
                         </Button>
                         <Button type="submit">Create task</Button>
                     </Stack>
-                    <FieldError errors={[form.formState.errors.root]} />
-                </FieldGroup>
+                    {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
+                </Stack>
             </fieldset>
         </form>
     );

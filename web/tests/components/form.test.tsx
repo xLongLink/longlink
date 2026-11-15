@@ -4,12 +4,11 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../render';
 import { ReportedError } from '@/lib/reported';
-import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import userEvent from '@testing-library/user-event';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { Input } from '@/components/longlink/form/input';
 
 it('rejects invalid values, guards duplicate writes, and preserves the draft after a reported failure for retry', async () => {
     // A pending or failed write must not duplicate a mutation or destroy an edited draft.
@@ -43,19 +42,23 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
                 data-success={form.formState.isSubmitSuccessful}
             >
                 <fieldset disabled={form.formState.isSubmitting}>
+                    <p id="policy">Only work accounts.</p>
                     <Controller
                         name="email"
                         control={form.control}
                         render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="email">Email</FieldLabel>
-                                <Input {...field} id="email" aria-invalid={fieldState.invalid} />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
+                            <Input
+                                {...field}
+                                id="email"
+                                label="Email"
+                                description="Your account email."
+                                aria-describedby="policy"
+                                error={fieldState.error?.message}
+                            />
                         )}
                     />
                     <button type="submit">Save</button>
-                    <FieldError errors={[form.formState.errors.root]} />
+                    {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
                 </fieldset>
             </form>
         );
@@ -72,6 +75,13 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
         });
         expect(submissions).toEqual([]);
         expect(output.querySelector('[role="alert"]')?.textContent).toBeTruthy();
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        expect(
+            input
+                .getAttribute('aria-describedby')
+                ?.split(' ')
+                .map((id) => document.getElementById(id)?.textContent)
+        ).toEqual(['Only work accounts.', 'Your account email.', expect.any(String)]);
         expect(document.activeElement).toBe(input);
 
         await act(async () => user.type(input, 'mara@example.com'));
@@ -80,6 +90,9 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
             form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
         });
         expect(submissions).toEqual([{ email: 'mara@example.com' }]);
+        expect(input.getAttribute('aria-invalid')).not.toBe('true');
+        expect(input.getAttribute('aria-describedby')).toBe('policy email-description');
+        expect(output.querySelector('#email-error')).toBeNull();
         expect(input.closest('fieldset')?.disabled).toBe(true);
 
         await act(async () => reject(new ReportedError('Unavailable')));

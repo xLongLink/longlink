@@ -1,113 +1,20 @@
-import ViewLayout from './view-layout';
-import FormPreview from './form-preview';
-import { FieldLabel } from '@/components/shadcn/field';
-import { Checkbox } from '@/components/shadcn/checkbox';
+import FormDocumentation from './form-documentation';
+import { Checkbox } from '@/views/adapter/form/checkbox';
 
-/** Documents Checkbox in LongLink Views. */
-export default function CheckboxPage() {
-    // Render this component's authored examples in the shared documentation layout.
-    return (
-        <ViewLayout
-            name="Checkbox"
-            properties={[
-                { name: 'id', type: 'string', description: 'ID of the input element.' },
-                { name: 'name', type: 'string', description: 'Identifies the field when a form is submitted.' },
-                { name: 'form', type: 'string', description: 'ID of the form that owns the hidden input.' },
-                {
-                    name: 'value',
-                    type: 'string',
-                    description: 'Value submitted when checked. Defaults to "on" for form submission.'
-                },
-                {
-                    name: 'uncheckedValue',
-                    type: 'string',
-                    description: 'Value submitted when unchecked. Omitted by default.'
-                },
-                {
-                    name: 'required',
-                    type: 'boolean',
-                    description: 'Requires the checkbox to be checked before submission.'
-                },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Prevents interaction and excludes the field from submission.'
-                },
-                { name: 'readOnly', type: 'boolean', description: 'Prevents changes to the checked state.' },
-                { name: 'defaultChecked', type: 'boolean', description: 'Initial checked state.' },
-                {
-                    name: 'checked',
-                    type: 'boolean',
-                    description: 'Controlled checked state. Use defaultChecked for an uncontrolled checkbox.'
-                },
-                {
-                    name: 'onCheckedChange',
-                    type: '(checked: boolean, eventDetails: Checkbox.Root.ChangeEventDetails) => void',
-                    description: 'Receives the next checked state and Base UI event details.'
-                },
-                {
-                    name: 'indeterminate',
-                    type: 'boolean',
-                    description: 'Displays a mixed state independently of the checked value.'
-                },
-                {
-                    name: 'inputRef',
-                    type: 'React.Ref<HTMLInputElement>',
-                    description: 'Ref to the hidden input element.'
-                },
-                {
-                    name: 'parent',
-                    type: 'boolean',
-                    description: 'Controls child checkboxes within a Base UI CheckboxGroup.'
-                }
-            ]}
-            example={{
-                title: 'Approval form',
-                preview: (
-                    <FormPreview>
-                        <div className="flex justify-center">
-                            <CheckboxExample />
-                        </div>
-                    </FormPreview>
-                ),
-                code: `/** Submits approval only when the checkbox is checked. */
-export default function ApprovalForm() {
-  const form = useForm({ defaultValues: { approved: true } });
-  const submit = useSubmit("/api/example", {
-    onError: () => form.setError("root", { message: "Could not save. Please try again." })
-  });
-
-  async function save(values) {
-    const data = new FormData();
-    if (values.approved) data.append("approved", "on");
-    await submit(data);
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(save)}>
-      <Controller name="approved" control={form.control} render={({ field }) => (
-      <FieldLabel>
-        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-        Approved
-      </FieldLabel>
-      )} />
-      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
-      <FieldError errors={[form.formState.errors.root]} />
-    </form>
-  );
-}`
-            }}
-        />
-    );
+/** Shows a checkbox whose visible label activates the control. */
+export function CheckboxExample() {
+    return <Checkbox name="approved" label="Approved" defaultChecked />;
 }
 
-/** Shows a named checkbox whose unchecked value is omitted from submissions. */
-export function CheckboxExample() {
-    // Restore the initial checked state with native form reset behavior.
+/** Documents checked state and native checkbox submission. */
+export default function CheckboxPage() {
     return (
-        <FieldLabel>
-            <Checkbox name="approved" defaultChecked />
-            Approved
-        </FieldLabel>
+        <FormDocumentation
+            name="Checkbox"
+            preview={<CheckboxExample />}
+            code={`function Example() {
+  return <Checkbox name="approved" label="Approved" defaultChecked />;
+}`}
+        />
     );
 }

@@ -1,5 +1,3 @@
-const anchor = useComboboxAnchor();
-
 const [selected, setSelected] = useState('one');
 const remembered = useRef(/** @type {HTMLButtonElement | null} */ (null));
 const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
@@ -98,7 +96,7 @@ const nativeComposition = (
             </Stack>
             </Box>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
-            <FieldSeparator><a href="/login">Sign in</a></FieldSeparator>
+            <a href="/login">Sign in</a>
             <Link
                 ref={linkRef}
                 href="/orders"
@@ -141,22 +139,17 @@ const nativeComposition = (
                 </PaginationContent>
             </Pagination>
             <DataPagination page={1} onPageChange={(page) => page.toFixed()} totalItems={50} pageSize={10} />
-            <Field>
-                <FieldLabel htmlFor="native-name">Name</FieldLabel>
                 <Input
                     id="native-name"
+                    label="Name"
+                    description="Company website."
+                    error="Enter a URL."
                     type="url"
                     name="website"
                     onChange={(event) => event.currentTarget.value.trim()}
                 />
                 <Textarea name="notes" onChange={(event) => event.currentTarget.value.trim()} />
-                <InputGroup>
-                    <InputGroupInput name="search" />
-                    <InputGroupAddon>
-                        <InputGroupText>Search</InputGroupText>
-                    </InputGroupAddon>
-                </InputGroup>
-            </Field>
+                <Input name="search" label="Search" />
             <Switch
                 checked
                 onCheckedChange={(checked, details) => {
@@ -165,12 +158,9 @@ const nativeComposition = (
                 }}
                 size="sm"
             />
-            <Field orientation="horizontal">
-                <Switch id="notifications" defaultChecked />
-                <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
-            </Field>
-            <Field>
-                <FieldLabel htmlFor="appointment-time">Appointment time</FieldLabel>
+                <Switch id="notifications" label="Notifications" defaultChecked />
+            <div>
+                <label htmlFor="appointment-time">Appointment time</label>
                 <TimePicker
                     id="appointment-time"
                     name="appointment"
@@ -192,20 +182,17 @@ const nativeComposition = (
                         </TimePickerFooter>
                     </TimePickerContent>
                 </TimePicker>
-            </Field>
+            </div>
             <RadioGroup
                 name="plan"
+                label="Plan"
+                options={[{ value: 'one', label: 'Solo' }]}
                 value={selected}
                 onValueChange={(value, details) => {
                     setSelected(value);
                     details.cancel();
                 }}
-            >
-                <Field orientation="horizontal">
-                    <RadioGroupItem id="native-plan" value="one" />
-                    <FieldLabel htmlFor="native-plan">Solo</FieldLabel>
-                </Field>
-            </RadioGroup>
+            />
             <Checkbox
                 indeterminate
                 onCheckedChange={(checked, details) => {
@@ -297,52 +284,23 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <Slider aria-label="Level" defaultValue={10} onValueChange={(value) => value.toFixed()}>
-                <SliderControl>
-                    <SliderTrack>
-                        <SliderRange />
-                    </SliderTrack>
-                    <SliderThumb index={0} />
-                </SliderControl>
-            </Slider>
+            <Slider label="Level" defaultValue={10} onValueChange={(value) => value.toFixed()} />
             <Progress value={50} label="Progress" showValue />
-            <Select items={[{ value: 'one', label: 'One' }]} defaultValue="one">
-                <SelectTrigger>
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="one">One</SelectItem>
-                </SelectContent>
-            </Select>
+            <Select options={[{ value: 'one', label: 'One' }]} defaultValue="one" onValueChange={(value) => value?.toUpperCase()} />
             <Select
                 multiple
                 name="teams"
+                label="Teams"
+                placeholder="Select teams"
+                options={[{ value: 'design', label: 'Design' }, { value: 'engineering', label: 'Engineering' }]}
                 defaultValue={['design']}
                 onValueChange={(values, details) => {
                     values.map((value) => value.toUpperCase());
                     details.cancel();
                 }}
-            >
-                <SelectTrigger aria-label="Teams">
-                    <SelectValue placeholder="Select teams" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="design">Design</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                </SelectContent>
-            </Select>
-            <Combobox items={['One', 'Two']}>
-                <ComboboxInput />
-                <ComboboxContent anchor={anchor}>
-                    <ComboboxList>
-                        {(item) => (
-                            <ComboboxItem key={item} value={item}>
-                                {item}
-                            </ComboboxItem>
-                        )}
-                    </ComboboxList>
-                </ComboboxContent>
-            </Combobox>
+            />
+            <Combobox label="Assignee" options={[{ value: 'one', label: 'One' }, { value: 'two', label: 'Two' }]} onValueChange={(value) => value?.toUpperCase()} />
+            <Combobox multiple label="Assignees" options={[{ value: 'one', label: 'One' }]} onValueChange={(values) => values.map((value) => value.toUpperCase())} />
     </Card>
 );
 
@@ -379,15 +337,9 @@ const nativeForm = (
         })}
         noValidate
     >
-        <FieldGroup>
             <Controller name="name" control={orderForm.control} render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="order-name">Name</FieldLabel>
-                <Input {...field} id="order-name" aria-invalid={fieldState.invalid} />
-                <FieldError errors={[fieldState.error]} />
-            </Field>
+                <Input {...field} label="Name" error={fieldState.error?.message} />
             )} />
-        </FieldGroup>
     </form>
     </FormProvider>
 );
@@ -437,6 +389,14 @@ const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10
 const _buttonClasses = <Button className="bg-red-500" />;
 // @ts-expect-error Authored inline styling is excluded from View components.
 const _inputStyle = <Input style={{ color: 'red' }} />;
+// @ts-expect-error Option values are strings, not arbitrary objects.
+const _selectObject = <Select options={[{ value: { id: 1 }, label: 'One' }]} />;
+// @ts-expect-error Multiple selection requires an array value.
+const _selectMultiple = <Select multiple options={[]} value="one" />;
+// @ts-expect-error Combobox composition is internal.
+const _comboboxChildren = <Combobox options={[]}><input /></Combobox>;
+// @ts-expect-error Checkbox rendering is internal.
+const _checkboxRender = <Checkbox render={<button />} />;
 // @ts-expect-error Calendar slots retain their installed styling.
 const _calendarClasses = <Calendar classNames={{ root: 'custom-calendar' }} />;
 // @ts-expect-error Calendar style maps are excluded too.

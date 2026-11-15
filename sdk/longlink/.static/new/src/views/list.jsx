@@ -67,11 +67,8 @@ export default function List() {
             >
                 <Frame variant="ghost" stacked dense spacing="sm" className="min-w-0">
                     <FrameHeader>
-                        <InputGroup className="w-full md:max-w-96">
-                            <InputGroupAddon>
-                                <Icon icon="search" size="sm" />
-                            </InputGroupAddon>
-                            <InputGroupInput
+                        <Box width={384} maxWidth="100%">
+                            <Input
                                 aria-label="Search files"
                                 placeholder="Search files"
                                 value={search}
@@ -80,7 +77,7 @@ export default function List() {
                                     setPagination((current) => ({ ...current, pageIndex: 0 }));
                                 }}
                             />
-                        </InputGroup>
+                        </Box>
                     </FrameHeader>
                     <FramePanel className="p-0">
                         <DataGridScrollArea orientation="horizontal">

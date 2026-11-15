@@ -1,87 +1,20 @@
-import { useId } from 'react';
-import ViewLayout from './view-layout';
-import FormPreview from './form-preview';
-import { Textarea } from '@/components/shadcn/textarea';
-import { Field, FieldLabel } from '@/components/shadcn/field';
+import FormDocumentation from './form-documentation';
+import { Textarea } from '@/views/adapter/form/textarea';
 
-/** Documents the shadcn textarea in LongLink Views. */
-export default function TextareaPage() {
-    // Show native textarea props and DOM events without a custom form adapter.
-    return (
-        <ViewLayout
-            name="Textarea"
-            properties={[
-                { name: 'name', type: 'string', description: 'Form submission name.' },
-                { name: 'value', type: 'string', description: 'Controlled value.' },
-                { name: 'defaultValue', type: 'string', description: 'Initial uncontrolled value.' },
-                {
-                    name: 'onChange',
-                    type: 'ChangeEventHandler<HTMLTextAreaElement>',
-                    description: 'DOM change event; read event.currentTarget.value.'
-                },
-                { name: 'placeholder', type: 'string', description: 'Hint shown while empty.' },
-                { name: 'rows', type: 'number', description: 'Number of visible text rows.' },
-                { name: 'required', type: 'boolean', description: 'Requires a value before native form submission.' },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables editing, keyboard focus, and form submission.'
-                },
-                {
-                    name: 'readOnly',
-                    type: 'boolean',
-                    description: 'Prevents edits while retaining focus and submission.'
-                },
-                { name: 'maxLength', type: 'number', description: 'Native maximum length in UTF-16 code units.' },
-                { name: 'autoComplete', type: 'string', description: 'Native autocomplete hint.' }
-            ]}
-            example={{
-                title: 'Notes form',
-                preview: (
-                    <FormPreview>
-                        <TextareaExample />
-                    </FormPreview>
-                ),
-                code: `/** Submits multi-line notes using shadcn's textarea. */
-export default function NotesForm() {
-  const form = useForm({ defaultValues: { notes: "" } });
-  const submit = useSubmit("/api/example", {
-    onError: () => form.setError("root", { message: "Could not save. Please try again." })
-  });
-
-  async function save(values) {
-    const data = new FormData();
-    data.append("notes", values.notes);
-    await submit(data);
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(save)}>
-      <Controller name="notes" control={form.control} render={({ field }) => (
-      <Field>
-        <FieldLabel htmlFor="notes">Notes</FieldLabel>
-        <Textarea {...field} id="notes" placeholder="Enter notes" />
-      </Field>
-      )} />
-      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
-      <FieldError errors={[form.formState.errors.root]} />
-    </form>
-  );
-}`
-            }}
-        />
-    );
+/** Shows an uncontrolled textarea with an associated label. */
+export function TextareaExample() {
+    return <Textarea name="notes" label="Notes" rows={4} placeholder="Add order notes" />;
 }
 
-/** Shows the default textarea with an associated label. */
-export function TextareaExample() {
-    const id = useId();
-
-    // Keep label associations unique across documentation and catalog previews.
+/** Documents the owned textarea without changing native DOM events. */
+export default function TextareaPage() {
     return (
-        <Field>
-            <FieldLabel htmlFor={id}>Notes</FieldLabel>
-            <Textarea id={id} name="notes" placeholder="Enter notes" />
-        </Field>
+        <FormDocumentation
+            name="Textarea"
+            preview={<TextareaExample />}
+            code={`function Example() {
+  return <Textarea name="notes" label="Notes" rows={4} placeholder="Add order notes" />;
+}`}
+        />
     );
 }

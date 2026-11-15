@@ -205,9 +205,24 @@
         {
             "name": "Input",
             "category": "Form",
-            "introduction": "Native shadcn Input with HTML input attributes and DOM change events.",
-            "guidance": "Compose with Field, FieldLabel, FieldDescription, and FieldError. Use type=\"date\", type=\"time\", or type=\"file\" for browser-native pickers. For files, read event.currentTarget.files and keep the input uncontrolled; React Hook Form and the form schema own selection and validation. Use InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupButton, and InputGroupText for addons.",
+            "introduction": "A props-based input with native DOM events and internally associated labels and validation feedback.",
+            "guidance": "Use label, description, and error instead of Field composition. Box owns width; Stack and Grid arrange controls. Validation and submission remain caller-owned; runtime failures belong to the error boundary. Use native date, time, and file input types. File inputs remain uncontrolled and files must be validated on the server.",
             "properties": [
+                {
+                    "name": "label",
+                    "type": "string",
+                    "description": "Optional visible label, automatically associated with the input."
+                },
+                {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Supporting text associated through aria-describedby."
+                },
+                {
+                    "name": "error",
+                    "type": "string",
+                    "description": "Caller-owned validation message; marks the input invalid."
+                },
                 {
                     "name": "name / type / required / disabled / readOnly / maxLength",
                     "type": "native input props",
@@ -232,26 +247,20 @@
                     "name": "accept / multiple",
                     "type": "string / boolean",
                     "description": "File picker hints and multiple selection. Validate file types, counts, and sizes in the form schema and on the server."
-                },
-                {
-                    "name": "Field / FieldLabel / FieldDescription / FieldError / FieldSet / FieldLegend / FieldGroup / FieldContent / FieldTitle / FieldSeparator",
-                    "type": "components",
-                    "description": "Installed shadcn field composition with native element props."
-                },
-                {
-                    "name": "InputGroup / InputGroupInput / InputGroupTextarea / InputGroupAddon / InputGroupButton / InputGroupText",
-                    "type": "components",
-                    "description": "Installed shadcn grouped input composition."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns field labeling, validation feedback, and fixed presentation while retaining the installed native input.",
             "reference": "https://ui.shadcn.com/docs/components/input"
         },
         {
             "name": "Textarea",
             "category": "Form",
-            "introduction": "Native shadcn Textarea with HTML textarea attributes and DOM change events.",
+            "introduction": "A props-based textarea with native DOM events and internally associated field feedback.",
             "properties": [
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string", "description": "Caller-owned validation message." },
                 {
                     "name": "name / rows / required / disabled / readOnly / maxLength",
                     "type": "native textarea props",
@@ -264,14 +273,18 @@
                 },
                 { "name": "value / defaultValue", "type": "string", "description": "Controlled or uncontrolled value." }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns field presentation while preserving native textarea values, events, refs, and constraints.",
             "reference": "https://ui.shadcn.com/docs/components/textarea"
         },
         {
             "name": "Checkbox",
             "category": "Form",
-            "introduction": "Native shadcn Checkbox with Base UI props and default styling. Compose Field and FieldLabel for labeled inputs.",
+            "introduction": "A checkbox with an optional adjacent label and associated validation feedback.",
             "properties": [
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string", "description": "Caller-owned validation message." },
                 {
                     "name": "checked / defaultChecked",
                     "type": "boolean",
@@ -289,7 +302,8 @@
                     "description": "Standard form control behavior."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns labeled checkbox presentation without replacing Base UI checked state or native form participation.",
             "reference": "https://ui.shadcn.com/docs/components/checkbox"
         },
         {
@@ -346,13 +360,13 @@
                 {
                     "name": "scale",
                     "type": "number",
-                    "description": "Projection scale in the 800 × 400 coordinate space.",
+                    "description": "Projection scale in the 800 \u00d7 400 coordinate space.",
                     "default": 140
                 },
                 {
                     "name": "zoom",
                     "type": "number",
-                    "description": "Optional viewport zoom (1–4). Enables dragging and smooth focus on center while preserving wheel scrolling and reduced motion."
+                    "description": "Optional viewport zoom (1\u20134). Enables dragging and smooth focus on center while preserving wheel scrolling and reduced motion."
                 },
                 {
                     "name": "height",
@@ -1032,7 +1046,7 @@
             "name": "Controller",
             "category": "Form",
             "introduction": "Connects a controlled input to React Hook Form without a LongLink field adapter.",
-            "guidance": "Render shadcn Field with data-invalid, associate FieldLabel and Input, pass field props to the input, and render FieldError with fieldState.error. Use field.value and field.onChange for Select and other controlled inputs. Connect field.ref to the focusable control. Use form.reset() to restore defaults.",
+            "guidance": "Pass field props to Input or Textarea, with label and error={fieldState.error?.message}. For selection controls, pass value={field.value}, onValueChange={field.onChange}, and ref={field.ref}; boolean controls use checked and onCheckedChange. Use form.reset() to restore defaults. Field layout and accessible feedback are internal to each control.",
             "properties": [
                 { "name": "name", "type": "FieldPath", "description": "Registered form value path." },
                 { "name": "control", "type": "Control", "description": "The control returned by useForm." },
@@ -1371,9 +1385,17 @@
         {
             "name": "RadioGroup",
             "category": "Form",
-            "introduction": "Selects one value using the native shadcn radio group composition.",
-            "guidance": "Compose RadioGroupItem with Field and FieldLabel. Use onValueChange for selection changes and disabled for native disabled behavior.",
+            "introduction": "Selects one string value from labeled options with internally owned radio composition.",
+            "guidance": "Supply options instead of RadioGroupItem children. Labels, feedback, and keyboard navigation are internal. Box owns width and callers own validation.",
             "properties": [
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string" },
+                {
+                    "name": "options",
+                    "type": "readonly FormOption[]",
+                    "description": "String value, label, and optional disabled state per option."
+                },
                 { "name": "name", "type": "string", "description": "Form submission name." },
                 {
                     "name": "required",
@@ -1391,29 +1413,31 @@
                     "name": "onValueChange",
                     "type": "(value: string, eventDetails) => void",
                     "description": "Called with the next selected value and Base UI event details."
-                },
-                { "name": "RadioGroupItem.value", "type": "string", "description": "Value submitted for this option." },
-                { "name": "RadioGroupItem.id", "type": "string", "description": "Connects the option to its label." },
-                {
-                    "name": "RadioGroupItem.disabled",
-                    "type": "boolean",
-                    "description": "Disables this option.",
-                    "default": false
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns option and field composition while Base UI retains keyboard navigation and form behavior.",
             "reference": "https://ui.shadcn.com/docs/components/base/radio-group"
         },
         {
             "name": "Select",
             "category": "Form",
-            "introduction": "Native select composition with single or multiple selection.",
-            "guidance": "Compose SelectTrigger, SelectValue, SelectContent, and SelectItem. Use multiple with array values for multiple selection and repeated named form entries. SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, and SelectScrollDownButton are also exported.",
+            "introduction": "An options-based select with single or multiple string values.",
+            "guidance": "Supply options and optional label, description, and error. Trigger, popup, and option composition are internal. Use multiple with array values and repeated named form entries. Box owns width.",
             "properties": [
-                { "name": "items", "type": "Native items", "description": "Supplies labels for selected values." },
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string" },
+                {
+                    "name": "options",
+                    "type": "readonly FormOption[]",
+                    "description": "String value, label, and optional disabled state per option."
+                },
+                { "name": "placeholder", "type": "string" },
+                { "name": "multiple", "type": "boolean", "default": false },
                 {
                     "name": "value / defaultValue",
-                    "type": "Value | Value[] | null",
+                    "type": "string | readonly string[] | null",
                     "description": "Controlled or initial selection; multiple controls array selection."
                 },
                 {
@@ -1426,30 +1450,37 @@
                     "type": "Native form props",
                     "description": "Native form participation and validation."
                 },
-                { "name": "SelectTrigger.size", "type": "\"default\" | \"sm\"", "default": "default" },
-                {
-                    "name": "render",
-                    "type": "Native part props",
-                    "description": "Native parts accept DOM attributes, events, and refs."
-                }
+                { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns select composition and field presentation while retaining Base UI selection and form semantics.",
             "reference": "https://ui.shadcn.com/docs/components/select"
         },
         {
             "name": "Combobox",
             "category": "Form",
-            "introduction": "Native searchable selection with single or multiple values.",
-            "guidance": "Compose ComboboxInput, ComboboxContent, ComboboxList, and ComboboxItem. Group, label, collection, empty, separator, trigger, value, chips, chip, and chips-input parts are exported with the Combobox prefix. useComboboxAnchor supplies a positioning ref.",
+            "introduction": "Searchable string options with internally owned input, popup, and multiple-selection chips.",
+            "guidance": "Supply options and optional label, description, and error. Search matches labels; submitted values remain option values. Use multiple for array values. Loading and data fetching remain caller-owned.",
             "properties": [
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string" },
                 {
-                    "name": "items / filteredItems",
-                    "type": "Native items",
-                    "description": "Items for native filtering or externally filtered results."
+                    "name": "options",
+                    "type": "readonly FormOption[]",
+                    "description": "String value, label, and optional disabled state per option."
+                },
+                { "name": "placeholder", "type": "string" },
+                { "name": "emptyText", "type": "string", "default": "No results" },
+                { "name": "multiple", "type": "boolean", "default": false },
+                {
+                    "name": "name / form / required / disabled / readOnly",
+                    "type": "Native form props",
+                    "description": "Native form participation and interaction constraints."
                 },
                 {
                     "name": "value / defaultValue",
-                    "type": "Value | Value[] | null",
+                    "type": "string | readonly string[] | null",
                     "description": "Controlled or initial selection; multiple controls array selection."
                 },
                 {
@@ -1461,31 +1492,20 @@
                     "name": "inputValue / onInputValueChange",
                     "type": "Native input props",
                     "description": "Controls search text independently from selection."
-                },
-                {
-                    "name": "ComboboxInput.showTrigger / showClear",
-                    "type": "boolean",
-                    "description": "Controls input trigger and clear buttons."
-                },
-                {
-                    "name": "render",
-                    "type": "Native part props",
-                    "description": "Native parts accept DOM attributes, events, and refs."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns searchable option composition, chips, and field feedback while Base UI manages interaction and native values.",
             "reference": "https://ui.shadcn.com/docs/components/combobox"
         },
         {
             "name": "Slider",
             "category": "Form",
-            "introduction": "Edits a number or array of values with native slider composition.",
+            "introduction": "Edits scalar or range values with internally composed, labeled thumbs.",
             "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Optional SliderControl, SliderTrack, SliderRange, and SliderThumb composition; default parts are supplied when omitted."
-                },
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string" },
                 { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "default": "horizontal" },
                 {
                     "name": "name",
@@ -1540,24 +1560,10 @@
                     "name": "format / locale",
                     "type": "Intl.NumberFormatOptions / Intl.LocalesArgument",
                     "description": "Native value formatting."
-                },
-                {
-                    "name": "SliderThumb.index",
-                    "type": "number",
-                    "description": "Associates the thumb with an array value; needed for multi-thumb server rendering."
-                },
-                {
-                    "name": "SliderThumb.getAriaLabel",
-                    "type": "(index: number) => string",
-                    "description": "Accessible name for each thumb."
-                },
-                {
-                    "name": "SliderThumb.getAriaValueText",
-                    "type": "(formattedValue: string, value: number, index: number) => string",
-                    "description": "Accessible text for each thumb value. All parts support native DOM attributes, refs, and render; component styling is fixed."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns thumb composition and accessible field feedback while Base UI manages values, keyboard editing, and form inputs.",
             "reference": "https://ui.shadcn.com/docs/components/slider"
         },
         {
@@ -1693,9 +1699,12 @@
         {
             "name": "Switch",
             "category": "Form",
-            "introduction": "Native shadcn Switch with Base UI props and default styling.",
-            "guidance": "Use checked, defaultChecked, onCheckedChange(checked, eventDetails), size, and disabled. Compose Field and FieldLabel for an accessible label.",
+            "introduction": "A boolean preference with an optional adjacent label and associated validation feedback.",
+            "guidance": "Use checked, defaultChecked, onCheckedChange(checked, eventDetails), size, and disabled. Label and feedback composition are internal.",
             "properties": [
+                { "name": "label", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "error", "type": "string" },
                 { "name": "checked", "type": "boolean", "description": "Controlled checked state." },
                 { "name": "defaultChecked", "type": "boolean", "description": "Initial uncontrolled checked state." },
                 {
@@ -1711,7 +1720,8 @@
                 },
                 { "name": "name", "type": "string", "description": "Native form field name." }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns labeled switch presentation while retaining native checked state and form participation.",
             "reference": "https://ui.shadcn.com/docs/components/switch"
         },
         {

@@ -578,24 +578,14 @@ it('uses composed menu actions to transition authored table results to empty and
     }
 });
 
-it('submits native Select and Combobox compositions exported to authored JSX as selected form values', async () => {
+it('submits options-based Select and Combobox controls exported to authored JSX as selected form values', async () => {
     // Missing public exports or accidental adapter semantics must not break authored native form controls.
     const runtime = await initializeRuntime(`export default function View() {
         return <form>
-            <Select name="status" defaultValue="open">
-                <SelectTrigger aria-label="Status"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-            </Select>
-            <Combobox name="assignee" items={['Ada', 'Grace']} defaultValue="Ada">
-                <ComboboxInput aria-label="Assignee" />
-                <ComboboxContent>
-                    <ComboboxEmpty>No people</ComboboxEmpty>
-                    <ComboboxList>{person => <ComboboxItem key={person} value={person}>{person}</ComboboxItem>}</ComboboxList>
-                </ComboboxContent>
-            </Combobox>
+            <Select name="status" aria-label="Status" defaultValue="open"
+                options={[{ value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' }]} />
+            <Combobox name="assignee" aria-label="Assignee" defaultValue="Ada"
+                options={[{ value: 'Ada', label: 'Ada' }, { value: 'Grace', label: 'Grace' }]} />
         </form>;
     }`);
 
@@ -641,20 +631,14 @@ it('submits native Select and Combobox compositions exported to authored JSX as 
     }
 });
 
-it('edits and resets composed native text fields through the authored View boundary', async () => {
+it('edits and resets labeled text fields through the authored View boundary', async () => {
     // Native exports must preserve DOM events rather than substituting adapter string callbacks.
     const runtime = await initializeRuntime(`export default function View() {
         const [draft, setDraft] = useState('Initial');
         return <Box width={draft === 'Initial' ? 320 : 480} background="outline" onResetCapture={() => setDraft('Initial')}>
         <form>
-            <Field>
-                <FieldLabel htmlFor="draft">Draft</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput id="draft" name="draft" value={draft}
-                        onChange={event => setDraft(event.currentTarget.value)} />
-                    <InputGroupAddon><InputGroupText>Text</InputGroupText></InputGroupAddon>
-                </InputGroup>
-            </Field>
+            <Input id="draft" name="draft" label="Draft" value={draft}
+                onChange={event => setDraft(event.currentTarget.value)} />
             <Textarea name="notes" aria-label="Notes" defaultValue="Original notes" />
             <Input name="excluded" defaultValue="Private" disabled />
             <output>{draft}</output>
@@ -692,13 +676,10 @@ it('edits and resets composed native text fields through the authored View bound
     }
 });
 
-it('toggles and resets checkbox form data through the FieldLabel exposed to authored Views', async () => {
+it('toggles and resets checkbox form data through its owned label in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <form>
-            <FieldLabel>
-                <Checkbox name="approved" defaultChecked />
-                Approved
-            </FieldLabel>
+            <Checkbox name="approved" label="Approved" defaultChecked />
             <button type="reset">Reset</button>
         </form>;
     }`);
@@ -726,7 +707,7 @@ it('toggles and resets checkbox form data through the FieldLabel exposed to auth
 it('edits and resets native ReUI time picker values through the authored View boundary', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <form>
-            <FieldLabel htmlFor="native-time">Appointment</FieldLabel>
+            <label htmlFor="native-time">Appointment</label>
             <TimePicker id="native-time" name="appointment" defaultValue="09:30" hourCycle={24}>
                 <TimePickerInput />
                 <TimePickerContent />
