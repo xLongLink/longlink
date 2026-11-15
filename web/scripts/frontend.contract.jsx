@@ -300,10 +300,7 @@ const nativeComposition = (
                     <SliderThumb index={0} />
                 </SliderControl>
             </Slider>
-            <Progress value={50}>
-                <ProgressLabel>Progress</ProgressLabel>
-                <ProgressValue />
-            </Progress>
+            <Progress value={50} label="Progress" showValue />
             <Select items={[{ value: 'one', label: 'One' }]} defaultValue="one">
                 <SelectTrigger>
                     <SelectValue />

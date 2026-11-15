@@ -1,13 +1,13 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { Progress } from '@/components/longlink/progress';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {
@@ -44,14 +44,20 @@ export default function Usage({ base }: { base: string }) {
                     </NativeNavigationLink>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
-                    <Progress value={usage.solutions} max={usage.max_solutions}>
-                        <ProgressLabel>Solutions</ProgressLabel>
-                        <ProgressValue>{() => `${usage.solutions} / ${usage.max_solutions}`}</ProgressValue>
-                    </Progress>
-                    <Progress value={usage.users} max={userScale}>
-                        <ProgressLabel>Users</ProgressLabel>
-                        <ProgressValue>{() => `${usage.users} / ${userScale}`}</ProgressValue>
-                    </Progress>
+                    <Progress
+                        value={usage.solutions}
+                        max={usage.max_solutions}
+                        label="Solutions"
+                        showValue
+                        valueText={`${usage.solutions} / ${usage.max_solutions}`}
+                    />
+                    <Progress
+                        value={usage.users}
+                        max={userScale}
+                        label="Users"
+                        showValue
+                        valueText={`${usage.users} / ${userScale}`}
+                    />
                     {(['storage', 'database'] as const).map((resource) => (
                         <ApiBoundary
                             key={resource}
@@ -98,10 +104,13 @@ function UsageMeter({
     const capacity = hasPaymentMethod ? usage.quota_bytes : included;
 
     return (
-        <Progress value={usage.space_used} max={capacity}>
-            <ProgressLabel>{resource === 'storage' ? 'File storage' : 'Database storage'}</ProgressLabel>
-            <ProgressValue>{() => `${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}</ProgressValue>
-        </Progress>
+        <Progress
+            value={usage.space_used}
+            max={capacity}
+            label={resource === 'storage' ? 'File storage' : 'Database storage'}
+            showValue
+            valueText={`${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}
+        />
     );
 }
 

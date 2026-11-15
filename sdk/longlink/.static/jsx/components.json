@@ -1343,12 +1343,23 @@
         {
             "name": "Progress",
             "category": "Display",
-            "introduction": "Displays native progress with a built-in track and indicator.",
+            "introduction": "Displays progress with a built-in track, indicator, and fixed styling.",
             "properties": [
                 {
-                    "name": "children",
+                    "name": "label",
                     "type": "ReactNode",
-                    "description": "Optional ProgressLabel and ProgressValue content."
+                    "description": "Custom text or JSX displayed on the left above the bar."
+                },
+                {
+                    "name": "showValue",
+                    "type": "boolean",
+                    "description": "Shows the formatted current value.",
+                    "default": false
+                },
+                {
+                    "name": "valueText",
+                    "type": "ReactNode",
+                    "description": "Custom text or JSX displayed on the right instead of the percentage."
                 },
                 {
                     "name": "value",
@@ -1357,30 +1368,15 @@
                 },
                 { "name": "max", "type": "number", "description": "Maximum value.", "default": 100 },
                 { "name": "min", "type": "number", "description": "Minimum value.", "default": 0 },
-                {
-                    "name": "format",
-                    "type": "Intl.NumberFormatOptions",
-                    "description": "Native number formatting options."
-                },
                 { "name": "locale", "type": "Intl.LocalesArgument", "description": "Locale for number formatting." },
                 {
                     "name": "getAriaValueText",
                     "type": "(formattedValue: string, value: number | null) => string",
                     "description": "Provides an accessible alternative to the numeric value."
-                },
-                { "name": "ProgressLabel.children", "type": "ReactNode", "description": "Accessible progress label." },
-                {
-                    "name": "ProgressValue.children",
-                    "type": "null | ((formattedValue: string | null, value: number | null) => ReactNode)",
-                    "description": "Optional custom value formatter."
-                },
-                {
-                    "name": "ProgressTrack / ProgressIndicator",
-                    "type": "Native component props",
-                    "description": "Exported native parts. All progress components support DOM attributes, refs, and render; component styling is fixed."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Provides a props-based progress API with fixed styling while preserving Base UI formatting and accessibility.",
             "reference": "https://ui.shadcn.com/docs/components/progress"
         },
         {

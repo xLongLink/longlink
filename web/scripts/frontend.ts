@@ -67,7 +67,7 @@ export * from '../src/views/adapter/form/combobox';
 export { useComboboxAnchor } from '../src/views/hooks/use-combobox-anchor';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from '../src/views/adapter/layouts/tabs';
 export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '../src/views/adapter/form/slider';
-export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '../src/views/adapter/display/progress';
+export { Progress } from '../src/views/adapter/display/progress';
 export type FrontendElement = JSX.Element;
 export type FrontendElementType = JSX.ElementType;
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/views/adapter/charts/chart';

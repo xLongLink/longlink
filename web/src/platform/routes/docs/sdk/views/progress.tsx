@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
+import { Progress } from '@/components/longlink/progress';
 
-/** Documents the native shadcn Progress composition. */
+/** Documents Progress in LongLink Views. */
 export default function ProgressPage() {
     return (
         <ViewLayout
@@ -9,18 +9,30 @@ export default function ProgressPage() {
             properties={[
                 { name: 'value', type: 'number | null', description: 'Current value; null means indeterminate.' },
                 { name: 'max', type: 'number', description: 'Maximum value; defaults to 100.' },
-                { name: 'children', type: 'ReactNode', description: 'Compose ProgressLabel and ProgressValue.' },
-                { name: 'format', type: 'Intl.NumberFormatOptions', description: 'Value formatting options.' }
+                {
+                    name: 'label',
+                    type: 'ReactNode',
+                    description: 'Custom text or JSX displayed on the left above the bar.'
+                },
+                { name: 'showValue', type: 'boolean', description: 'Shows the formatted value; defaults to false.' },
+                {
+                    name: 'valueText',
+                    type: 'ReactNode',
+                    description: 'Custom text or JSX displayed on the right instead of the percentage.'
+                }
             ]}
             example={{
                 title: 'Progress',
                 preview: <ProgressExample />,
                 code: `function Example() {
   return (
-    <Progress value={60} className="w-4/5">
-      <ProgressLabel>Progress</ProgressLabel>
-      <ProgressValue />
-    </Progress>
+    <div className="w-full max-w-sm">
+      <Progress
+        value={60}
+        label="Uploading files"
+        valueText={<span><strong>60</strong> / 100 files</span>}
+      />
+    </div>
   );
 }`
             }}
@@ -31,9 +43,16 @@ export default function ProgressPage() {
 /** Renders labeled progress for the documentation catalog. */
 export function ProgressExample() {
     return (
-        <Progress value={60} className="w-4/5">
-            <ProgressLabel>Progress</ProgressLabel>
-            <ProgressValue />
-        </Progress>
+        <div className="w-full max-w-sm">
+            <Progress
+                value={60}
+                label="Uploading files"
+                valueText={
+                    <span>
+                        <strong>60</strong> / 100 files
+                    </span>
+                }
+            />
+        </div>
     );
 }

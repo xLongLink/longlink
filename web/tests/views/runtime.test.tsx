@@ -496,14 +496,12 @@ it('returns native Calendar ranges to authored state without selecting disabled 
     }
 });
 
-it('exposes native Progress composition inside the isolated View runtime', async () => {
+it('updates labeled Progress values inside the isolated View runtime', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [value, setValue] = useState(25);
         return <>
-            <Progress value={value} max={50}>
-                <ProgressLabel>Storage</ProgressLabel>
-                <ProgressValue />
-            </Progress>
+            <Progress value={value} max={50} label="Storage" showValue />
+            <Progress value={value} max={50} label={<span>Usage</span>} valueText={<strong>{value + ' / 50'}</strong>} />
             <button type="button" onClick={() => setValue(40)}>Update</button>
         </>;
     }`);
@@ -512,6 +510,9 @@ it('exposes native Progress composition inside the isolated View runtime', async
         await vi.waitFor(() => expect(runtime.mount.querySelector('[role="progressbar"]')).not.toBeNull());
         const progress = runtime.mount.querySelector('[role="progressbar"]');
         expect(progress?.getAttribute('aria-valuenow')).toBe('25');
+        expect(runtime.mount.querySelector('#' + progress?.getAttribute('aria-labelledby'))?.textContent).toBe(
+            'Storage'
+        );
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('50%');
         const button = runtime.mount.querySelector('button');
 
@@ -519,6 +520,8 @@ it('exposes native Progress composition inside the isolated View runtime', async
         await userEvent.setup().click(button);
         await vi.waitFor(() => expect(progress?.getAttribute('aria-valuenow')).toBe('40'));
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('80%');
+        expect(runtime.mount.querySelectorAll('[data-slot="progress-value"]')[1]?.textContent).toBe('40 / 50');
+        expect(runtime.mount.querySelector('[data-slot="progress-value"] strong')?.textContent).toBe('40 / 50');
         runtime.send({ type: 'appearance', appearance: { theme: 'dark', accent: 'blue' } });
         expect(document.documentElement.dataset.theme).toBe('dark');
         expect(runtime.mount.querySelector('[role="progressbar"]')).toBe(progress);

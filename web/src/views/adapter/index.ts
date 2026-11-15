@@ -235,7 +235,7 @@ export type {
 } from './display/code-block';
 
 /** @category Display */
-export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from './display/progress';
+export { Progress } from './display/progress';
 
 /** @category Layouts */
 export { Wizard, Step } from './layouts/wizard';
