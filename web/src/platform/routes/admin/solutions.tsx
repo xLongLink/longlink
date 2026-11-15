@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
@@ -11,7 +12,6 @@ import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
@@ -136,12 +136,13 @@ export default function Solutions() {
                             width: proportional(0.5),
                             renderCell: (row) => (
                                 <Button
-                                    label="Metadata"
-                                    icon={<Info />}
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                />
+                                >
+                                    <Info aria-hidden="true" />
+                                    Metadata
+                                </Button>
                             )
                         }
                     ]}

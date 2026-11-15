@@ -3,9 +3,10 @@ import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/shadcn/button';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
@@ -33,15 +34,14 @@ export default function Usage({ base }: { base: string }) {
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
                         </span>
                     </Stack>
-                    <Button
-                        label="See prices"
-                        variant="outline"
-                        size="sm"
+                    <NativeNavigationLink
+                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
                         href="/pricing/"
                         target="_blank"
-                        rel="noopener noreferrer"
-                        endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                    />
+                    >
+                        See prices
+                        <ExternalLink className="size-4" aria-hidden="true" />
+                    </NativeNavigationLink>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                     <Progress value={usage.solutions} max={usage.max_solutions}>
@@ -62,7 +62,7 @@ export default function Usage({ base }: { base: string }) {
                                         {resource === 'storage' ? 'File storage' : 'Database storage'} usage
                                         unavailable.
                                     </span>
-                                    <Button label="Retry" onClick={resetErrorBoundary} />
+                                    <Button onClick={resetErrorBoundary}>Retry</Button>
                                 </Stack>
                             )}
                         >

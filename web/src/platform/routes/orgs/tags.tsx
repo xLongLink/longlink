@@ -3,14 +3,13 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
+import { Button } from '@/components/shadcn/button';
 import { TagForm } from '@/components/dialogs/tag-form';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { Button as MenuTriggerButton } from '@/components/shadcn/button';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
 import {
     DropdownMenu,
@@ -49,7 +48,11 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                         Tabs
                     </h4>
-                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
+                    {canMaintain && (
+                        <Button size="sm" onClick={() => setAction({ kind: 'create' })}>
+                            New tab
+                        </Button>
+                    )}
                 </Stack>
                 <DataTable
                     data={tags}
@@ -81,7 +84,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                           <DropdownMenu>
                                               <DropdownMenuTrigger
                                                   render={
-                                                      <MenuTriggerButton
+                                                      <Button
                                                           type="button"
                                                           variant="ghost"
                                                           size="icon-sm"
@@ -89,7 +92,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                                           disabled={move.isPending}
                                                       >
                                                           <Ellipsis aria-hidden="true" />
-                                                      </MenuTriggerButton>
+                                                      </Button>
                                                   }
                                               />
                                               <DropdownMenuContent align="end">

@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
+import { Button } from '@/components/shadcn/button';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -10,7 +11,6 @@ import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
@@ -183,15 +183,20 @@ function MemberPermissions({
                 ]}
             />
             <Stack direction="horizontal" gap={2} justify="end">
-                <Button label="Cancel" size="sm" variant="ghost" disabled={save.isPending} onClick={onClose} />
+                <Button size="sm" variant="ghost" disabled={save.isPending} onClick={onClose}>
+                    Cancel
+                </Button>
                 <Button
-                    label="Save"
                     size="sm"
-                    variant="default"
-                    isLoading={save.isPending}
+                    aria-busy={save.isPending || undefined}
                     disabled={save.isPending || Object.keys(roles).length === 0}
                     onClick={() => save.mutate()}
-                />
+                >
+                    Save
+                </Button>
+                <span role="status" className="sr-only">
+                    {save.isPending ? 'Loading' : ''}
+                </span>
             </Stack>
         </Stack>
     );

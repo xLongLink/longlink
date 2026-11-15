@@ -3,13 +3,13 @@ import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import {
     Combobox,
     ComboboxContent,
@@ -123,8 +123,10 @@ export function TagForm({
                                     )}
                                 />
                                 <Stack direction="horizontal" gap={2}>
-                                    <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
-                                    <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
+                                    <Button type="submit">{tag ? 'Save' : 'Create tab'}</Button>
+                                    <Button type="button" variant="ghost" onClick={onClose}>
+                                        Cancel
+                                    </Button>
                                 </Stack>
                             </Stack>
                         </fieldset>

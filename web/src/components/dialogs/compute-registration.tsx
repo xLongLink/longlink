@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
 import { Step, Wizard } from '@/components/custom/wizard';
@@ -10,7 +11,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
@@ -89,7 +89,11 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                     noValidate
                     aria-busy={form.formState.isSubmitting}
                 >
-                    <Wizard height="min(560px, calc(100dvh - var(--spacing) * 40))" backVariant="ghost">
+                    <Wizard
+                        showProgress={false}
+                        height="min(560px, calc(100dvh - var(--spacing) * 40))"
+                        backVariant="ghost"
+                    >
                         <Step label="Metadata" fields={['name', 'gateway_url', 'storage_endpoint']}>
                             <Stack gap={8}>
                                 <h2 className="font-semibold tracking-tight text-3xl text-center">Register Compute</h2>
@@ -188,12 +192,9 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                                     />
                                 </Stack>
                             </Stack>
-                            <Button
-                                type="submit"
-                                label="Register"
-                                variant="default"
-                                disabled={fileRead.kind === 'reading' || !kubeconfig.trim()}
-                            />
+                            <Button type="submit" disabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
+                                Register
+                            </Button>
                         </Step>
                     </Wizard>
                     <FieldError errors={[form.formState.errors.root]} />

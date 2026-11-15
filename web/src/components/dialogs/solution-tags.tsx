@@ -37,6 +37,7 @@ export function SolutionTags({
 }) {
     const anchor = useComboboxAnchor();
     const availableTags = tags.filter((tag) => tag.kind === 'tag');
+    const tagsById = new Map(availableTags.map((tag) => [tag.id, tag]));
 
     const form = useForm({
         resolver: zodResolver(schemas.zSolutionTagsWrite),
@@ -77,9 +78,7 @@ export function SolutionTags({
                                                 items={availableTags.map((tag) => tag.id)}
                                                 value={field.value}
                                                 onValueChange={field.onChange}
-                                                itemToStringLabel={(id) =>
-                                                    availableTags.find((tag) => tag.id === id)?.name ?? id
-                                                }
+                                                itemToStringLabel={(id) => tagsById.get(id)?.name ?? id}
                                                 disabled={form.formState.isSubmitting}
                                             >
                                                 <ComboboxChips ref={anchor}>
@@ -87,9 +86,7 @@ export function SolutionTags({
                                                         {(ids: string[]) => (
                                                             <>
                                                                 {ids.map((id) => {
-                                                                    const name =
-                                                                        availableTags.find((tag) => tag.id === id)
-                                                                            ?.name ?? id;
+                                                                    const name = tagsById.get(id)?.name ?? id;
 
                                                                     return (
                                                                         <ComboboxChip key={id} aria-label={name}>
@@ -117,7 +114,7 @@ export function SolutionTags({
                                                     </ComboboxEmpty>
                                                     <ComboboxList>
                                                         {(id: string) => {
-                                                            const tag = availableTags.find((tag) => tag.id === id);
+                                                            const tag = tagsById.get(id);
 
                                                             if (!tag) return null;
                                                             const Icon = tabs.icons[tag.icon].component;

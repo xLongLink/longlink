@@ -5,8 +5,11 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import { NativeLink } from '@/components/custom/native-link';
-import { NativeButton } from '@/components/custom/native-button';
+import { buttonVariants } from '@/components/shadcn/button';
+import { MemberAccess } from '@/components/dialogs/member-access';
+import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
+import { InvitationResponse } from '@/components/dialogs/invitation-response';
+import { NativeLink, NativeNavigationLink } from '@/components/custom/native-link';
 
 /** Exposes actual router state after clicks without replacing navigation. */
 function Location() {
@@ -20,146 +23,66 @@ function Location() {
     );
 }
 
-it('deduplicates pending actions, reports rejection, and allows a successful retry', async () => {
-    let reject: (cause: Error) => void = () => {};
+it.each(['member', 'invitation'] as const)(
+    'deduplicates %s confirmation, reports failure, and allows retry',
+    async (kind) => {
+        let reject: (cause: Error) => void = () => {};
 
-    const pending = new Promise<void>((_, fail) => {
-        reject = fail;
-    });
+        const pending = new Promise<void>((_, fail) => {
+            reject = fail;
+        });
 
-    const action = vi.fn<() => Promise<void>>().mockReturnValueOnce(pending).mockResolvedValue(undefined);
-    const parent = vi.fn();
+        const action = vi.fn<() => Promise<void>>().mockReturnValueOnce(pending).mockResolvedValue(undefined);
+        const notify = vi.fn();
+        const close = vi.fn();
 
-    await withMounted(
-        <section onClick={parent}>
-            <NativeButton label="Save" clickAction={action} />
-        </section>,
-        async (output) => {
-            const button = output.querySelector('button');
+        const confirm = async () => {
+            await action();
+            close();
+        };
 
-            if (!button) throw new Error('Expected Save');
+        await withMounted(
+            <ApiErrorContext value={createErrorReporter(notify)}>
+                {kind === 'member' ? (
+                    <MemberAccess open name="Reader" action={{ kind: 'remove' }} onClose={close} onConfirm={confirm} />
+                ) : (
+                    <InvitationResponse
+                        open
+                        invitation={{ type: 'accept', name: 'Team' }}
+                        onClose={close}
+                        onConfirm={confirm}
+                    />
+                )}
+            </ApiErrorContext>,
+            async () => {
+                const button = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
+                    (control) => control.textContent === (kind === 'member' ? 'Remove member' : 'Accept')
+                );
 
-            await act(async () => {
-                button.click();
-                button.click();
-            });
-            expect(action).toHaveBeenCalledTimes(1);
-            expect(parent).toHaveBeenCalledTimes(1);
-            expect(button.getAttribute('aria-busy')).toBe('true');
-            expect(output.querySelector('[role="status"]')?.textContent).toBe('Loading');
+                if (!button) throw new Error('Expected confirmation');
 
-            await act(async () => reject(new Error('Transport failure')));
-            expect(output.querySelector('[role="alert"]')?.textContent).toContain('Please try again.');
-            expect(button.disabled).toBe(false);
+                await act(async () => {
+                    button.click();
+                    button.click();
+                });
+                expect(action).toHaveBeenCalledTimes(1);
+                expect(close).not.toHaveBeenCalled();
+                expect(button.getAttribute('aria-busy')).toBe('true');
+                expect(button.disabled).toBe(true);
 
-            await act(async () => button.click());
-            expect(action).toHaveBeenCalledTimes(2);
-            expect(output.querySelector('[role="alert"]')).toBeNull();
-            expect(button.hasAttribute('aria-busy')).toBe(false);
-        }
-    );
-});
+                await act(async () => reject(new Error('Transport failure')));
+                expect(notify).toHaveBeenCalledWith(expect.stringContaining('Please try again.'));
+                expect(close).not.toHaveBeenCalled();
+                expect(button.disabled).toBe(false);
 
-it('runs synchronous click cancellation before an async action or router navigation', async () => {
-    const action = vi.fn();
-    const canceled = vi.fn((event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => event.preventDefault());
-
-    await withMounted(
-        <>
-            <NativeButton label="Cancel action" onClick={canceled} clickAction={action} />
-            <NativeButton label="Cancel navigation" href="/orders" onClick={canceled} clickAction={action} />
-            <Location />
-        </>,
-        async (output) => {
-            const button = output.querySelector('button');
-            const anchor = output.querySelector('a');
-
-            if (!button || !anchor) throw new Error('Expected action and navigation controls');
-
-            await act(async () => {
-                button.click();
-                anchor.click();
-            });
-            expect(canceled).toHaveBeenCalledTimes(2);
-            expect(action).not.toHaveBeenCalled();
-            expect(output.querySelector('output')?.textContent).toBe('/');
-            expect(output.querySelector('[aria-busy="true"]')).toBeNull();
-        }
-    );
-});
-
-it('keeps native submitter data and excludes disabled/loading controls from submission', async () => {
-    const submissions: Array<{ title: FormDataEntryValue | null; intent: FormDataEntryValue | null }> = [];
-    const action = vi.fn();
-    const events = userEvent.setup();
-
-    await withMounted(
-        <form
-            onSubmit={(event) => {
-                event.preventDefault();
-                const submitter = event.nativeEvent instanceof SubmitEvent ? event.nativeEvent.submitter : null;
-                const data = new FormData(event.currentTarget, submitter);
-                submissions.push({ title: data.get('title'), intent: data.get('intent') });
-            }}
-        >
-            <input name="title" defaultValue="Report" />
-            <NativeButton label="Preview" clickAction={action} />
-            <NativeButton label="Disabled" type="submit" disabled />
-            <NativeButton label="Loading" type="submit" isLoading />
-            <NativeButton label="Publish" type="submit" name="intent" value="publish" />
-        </form>,
-        async (output) => {
-            const buttons = output.querySelectorAll('button');
-            const publish = buttons[3];
-
-            if (!publish) throw new Error('Expected submit controls');
-
-            await act(async () => {
-                buttons[0]?.click();
-                buttons[1]?.click();
-                buttons[2]?.click();
-            });
-            expect(action).toHaveBeenCalledTimes(1);
-            expect(submissions).toEqual([]);
-            expect(buttons[1]?.disabled).toBe(true);
-            expect(buttons[2]?.getAttribute('aria-busy')).toBe('true');
-
-            await act(async () => {
-                publish.focus();
-                await events.keyboard('{Enter}');
-            });
-            expect(submissions).toEqual([{ title: 'Report', intent: 'publish' }]);
-        }
-    );
-});
-
-it.each(['disabled', 'isLoading'] as const)('blocks navigation and actions while %s', async (state) => {
-    const action = vi.fn();
-
-    await withMounted(
-        <>
-            <NativeButton
-                href="/orders"
-                label="Orders"
-                disabled={state === 'disabled'}
-                isLoading={state === 'isLoading'}
-                clickAction={action}
-            />
-            <Location />
-        </>,
-        async (output) => {
-            const button = output.querySelector('button');
-
-            if (!button) throw new Error('Expected a disabled navigation control');
-
-            await act(async () => button.click());
-            expect(button.disabled).toBe(true);
-            expect(output.querySelector('a')).toBeNull();
-            expect(output.querySelector('output')?.textContent).toBe('/');
-            expect(action).not.toHaveBeenCalled();
-        }
-    );
-});
+                await act(async () => button.click());
+                expect(action).toHaveBeenCalledTimes(2);
+                expect(close).toHaveBeenCalledTimes(1);
+                expect(button.hasAttribute('aria-busy')).toBe(false);
+            }
+        );
+    }
+);
 
 it.each(['link', 'button'] as const)('preserves router and native gestures for a trusted %s link', async (kind) => {
     await withMounted(
@@ -167,7 +90,9 @@ it.each(['link', 'button'] as const)('preserves router and native gestures for a
             {kind === 'link' ? (
                 <NativeLink href="/orders?filter=open">Orders</NativeLink>
             ) : (
-                <NativeButton href="/orders?filter=open" label="Orders" />
+                <NativeNavigationLink href="/orders?filter=open" className={buttonVariants()}>
+                    Orders
+                </NativeNavigationLink>
             )}
             <Location />
         </>,
@@ -226,12 +151,18 @@ it('leaves external, mailto, downloads and new-tab destinations to native naviga
             <NativeLink href="https://example.com/docs" isExternalLink rel="author">
                 Docs
             </NativeLink>
-            <NativeButton href="mailto:info@longlink.dev" label="Email" />
+            <NativeNavigationLink href="mailto:info@longlink.dev" className={buttonVariants()}>
+                Email
+            </NativeNavigationLink>
             <NativeLink href="/report.pdf" download="report.pdf">
                 Report
             </NativeLink>
-            <NativeButton href="/api/archive" download label="Archive" />
-            <NativeButton href="/pricing" target="_blank" label="Pricing" />
+            <NativeNavigationLink href="/api/archive" download className={buttonVariants()}>
+                Archive
+            </NativeNavigationLink>
+            <NativeNavigationLink href="/pricing" target="_blank" className={buttonVariants()}>
+                Pricing
+            </NativeNavigationLink>
             <Location />
         </>,
         async (output) => {

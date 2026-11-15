@@ -403,14 +403,11 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     }
 
     /** Sends the validated invitation and refreshes organization access. */
-    async function inviteMember(data: FormData) {
+    async function inviteMember(data: z.output<typeof schemas.zOrganizationInvitationCreate>) {
         // Keep the dialog open on failure, but refresh either way because a failed email still saves the invitation.
         try {
             await api.post(`${base}/invitations`, {
-                json: schemas.zOrganizationInvitationCreate.parse({
-                    role: data.get('role'),
-                    email: z.string().trim().parse(data.get('email'))
-                })
+                json: schemas.zOrganizationInvitationCreate.parse({ role: data.role, email: data.email.trim() })
             });
             closeInvitation();
         } catch (failure) {

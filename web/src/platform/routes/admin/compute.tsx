@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -10,7 +11,6 @@ import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
@@ -39,7 +39,7 @@ export default function Compute() {
             <title>Compute | LongLink</title>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
-                <Button label="Register Compute" onClick={() => setDialog({ kind: 'registration' })} />
+                <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
             <Field>
                 <FieldLabel htmlFor="search-compute">Search compute</FieldLabel>
@@ -96,12 +96,13 @@ export default function Compute() {
                             width: proportional(0.5),
                             renderCell: (row) => (
                                 <Button
-                                    label="Metadata"
-                                    icon={<Info />}
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                />
+                                >
+                                    <Info aria-hidden="true" />
+                                    Metadata
+                                </Button>
                             )
                         }
                     ]}

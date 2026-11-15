@@ -8,14 +8,14 @@ import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import DeploymentReview from '@/components/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { Button as MenuTriggerButton } from '@/components/shadcn/button';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
@@ -106,14 +106,18 @@ export default function SolutionManagement({
                             <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Solutions
                             </h2>
-                            {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
+                            {canMaintain && (
+                                <Button size="sm" onClick={openCreate}>
+                                    New Solution
+                                </Button>
+                            )}
                         </Stack>
                         <Separator />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
-                        {canMaintain && <Button label="New Solution" onClick={openCreate} />}
+                        {canMaintain && <Button onClick={openCreate}>New Solution</Button>}
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
@@ -135,21 +139,19 @@ export default function SolutionManagement({
                             <p className="text-muted-foreground text-center">Bring your business processes to life</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Button
-                                label="Read the docs"
-                                variant="outline"
+                            <NativeNavigationLink
+                                className={buttonVariants({ variant: 'outline' })}
                                 href="/docs/"
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                            />
+                            >
+                                Read the docs
+                                <ExternalLink className="size-4" aria-hidden="true" />
+                            </NativeNavigationLink>
                             {canMaintain && (
-                                <Button
-                                    label="Create solution"
-                                    variant="default"
-                                    icon={<Plus className="size-4" aria-hidden="true" />}
-                                    onClick={openCreate}
-                                />
+                                <Button onClick={openCreate}>
+                                    <Plus className="size-4" aria-hidden="true" />
+                                    Create solution
+                                </Button>
                             )}
                         </Stack>
                     </Stack>
@@ -218,14 +220,14 @@ export default function SolutionManagement({
                                               <DropdownMenu>
                                                   <DropdownMenuTrigger
                                                       render={
-                                                          <MenuTriggerButton
+                                                          <Button
                                                               type="button"
                                                               variant="ghost"
                                                               size="icon-sm"
                                                               aria-label={`Actions for ${row.name}`}
                                                           >
                                                               <Ellipsis aria-hidden="true" />
-                                                          </MenuTriggerButton>
+                                                          </Button>
                                                       }
                                                   />
                                                   <DropdownMenuContent align="end">

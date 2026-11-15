@@ -1,23 +1,38 @@
 import { api } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
+import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { Token } from '@/components/custom/token';
+import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage] = useApi(`${base}/usage`, schemas.zOrganizationUsage);
+    const reportError = useApiError();
+    const inFlight = useRef(false);
+    const [pending, startRegistration] = useTransition();
 
     /** Opens owner-authorized Stripe card registration without an immediate payment. */
     async function registerCard() {
-        const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
+        // Guard checkout creation before pending state renders.
+        if (inFlight.current) return;
+        inFlight.current = true;
 
-        // Redirect only after validating the API's hosted URL.
-        window.location.assign(response.url);
+        try {
+            const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
+
+            // Redirect only after validating the API's hosted URL.
+            window.location.assign(response.url);
+        } catch (cause) {
+            reportError(cause);
+        } finally {
+            inFlight.current = false;
+        }
     }
 
     return (
@@ -27,8 +42,18 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                     Payment Methods
                 </h2>
                 {usage.stripe_enabled && canManage && (
-                    <Button label="Add card" size="sm" variant="default" clickAction={registerCard} />
+                    <Button
+                        size="sm"
+                        disabled={pending}
+                        aria-busy={pending || undefined}
+                        onClick={() => startRegistration(registerCard)}
+                    >
+                        Add card
+                    </Button>
                 )}
+                <span role="status" className="sr-only">
+                    {pending ? 'Loading' : ''}
+                </span>
             </Stack>
             <Separator />
             {!usage.stripe_enabled ? (

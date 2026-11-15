@@ -7,6 +7,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
@@ -14,7 +15,10 @@ export function InviteMember({
     canInviteAdmin,
     onSubmit,
     ...dialogProps
-}: DialogProps & { canInviteAdmin: boolean; onSubmit: (data: FormData) => Promise<void> }) {
+}: DialogProps & {
+    canInviteAdmin: boolean;
+    onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
+}) {
     const roles = [
         { value: 'read', icon: EyeOff },
         { value: 'write', icon: ArrowUp },
@@ -32,16 +36,9 @@ export function InviteMember({
         defaultValues: { email: '', role: 'write' }
     });
 
-    const submit = useSubmit(
-        async (values: z.output<typeof schema>) => {
-            const data = new FormData();
-
-            data.append('email', values.email);
-            data.append('role', values.role);
-            await onSubmit(data);
-        },
-        { onError: () => form.setError('root', { message: 'Could not send the invitation. Please try again.' }) }
-    );
+    const submit = useSubmit(onSubmit, {
+        onError: () => form.setError('root', { message: 'Could not send the invitation. Please try again.' })
+    });
 
     return (
         <Dialog paddingInline={0} {...dialogProps}>

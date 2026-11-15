@@ -92,6 +92,7 @@ export default function CreateSolution({
                     aria-busy={form.formState.isSubmitting}
                 >
                     <Wizard
+                        showProgress={false}
                         height="min(560px, calc(100dvh - var(--spacing) * 40))"
                         onCancel={onClose}
                         next={(step) => (step === 0 ? { label: 'Inspect', action: inspectImage } : undefined)}

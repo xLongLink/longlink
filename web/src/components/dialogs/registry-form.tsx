@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 export function RegistryForm({
@@ -81,8 +81,10 @@ export function RegistryForm({
                                     />
                                 </Stack>
                                 <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                                    <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
-                                    <Button label="Save" variant="default" type="submit" />
+                                    <Button variant="ghost" type="button" onClick={onClose}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit">Save</Button>
                                 </Stack>
                             </Stack>
                         </fieldset>

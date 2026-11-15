@@ -13,10 +13,9 @@ import { ViewBackdrop } from '@/components/view-backdrop';
 import type { FileViewerCommand } from '@/views/protocol';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
-import { PdfPreview } from '@/components/dialogs/pdf-preview';
 import { PageError, PageLoading } from '@/components/ui/utils';
+import { FilePreview } from '@/components/dialogs/file-preview';
 import { TextPreview } from '@/components/dialogs/text-preview';
-import { MediaPreview } from '@/components/dialogs/media-preview';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
 
@@ -472,8 +471,9 @@ export function JsxView({
                         )
                 )}
             </div>
-            {filePreview?.type === 'pdf' && (
-                <PdfPreview
+            {(filePreview?.type === 'pdf' || filePreview?.type === 'media') && (
+                <FilePreview
+                    type={filePreview.type}
                     body={filePreview.body}
                     title={filePreview.title}
                     onClose={() => setFilePreview(undefined)}
@@ -482,13 +482,6 @@ export function JsxView({
             {filePreview?.type === 'text' && (
                 <TextPreview
                     text={filePreview.text}
-                    title={filePreview.title}
-                    onClose={() => setFilePreview(undefined)}
-                />
-            )}
-            {filePreview?.type === 'media' && (
-                <MediaPreview
-                    body={filePreview.body}
                     title={filePreview.title}
                     onClose={() => setFilePreview(undefined)}
                 />

@@ -10,9 +10,10 @@ import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
+import { buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -119,20 +120,20 @@ export default function Home() {
                                 <p className="text-muted-foreground text-balance">Using open-source technologies</p>
                             </Stack>
                             <Grid columns={2} gap={3}>
-                                <Button
-                                    className="w-full"
-                                    endContent={<Mail aria-hidden="true" size={16} />}
+                                <NativeNavigationLink
+                                    className={buttonVariants({ variant: 'outline', className: 'w-full' })}
                                     href="mailto:info@longlink.dev"
-                                    label="Contact Us"
-                                    variant="outline"
-                                />
-                                <Button
-                                    className="w-full"
-                                    endContent={<ArrowRight aria-hidden="true" size={16} />}
+                                >
+                                    Contact Us
+                                    <Mail aria-hidden="true" size={16} />
+                                </NativeNavigationLink>
+                                <NativeNavigationLink
+                                    className={buttonVariants({ className: 'w-full' })}
                                     href="/login/"
-                                    label="Get Started"
-                                    variant="default"
-                                />
+                                >
+                                    Get Started
+                                    <ArrowRight aria-hidden="true" size={16} />
+                                </NativeNavigationLink>
                             </Grid>
                         </Stack>
                     </div>

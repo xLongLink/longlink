@@ -8,8 +8,9 @@ import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { Button, buttonVariants } from '@/components/shadcn/button';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
@@ -76,7 +77,9 @@ export default function ResetPassword() {
             >
                 {pageMetadata}
                 <Separator />
-                <Button href="/auth/forgot-password" label="Request another reset link" variant="default" />
+                <NativeNavigationLink href="/auth/forgot-password" className={buttonVariants()}>
+                    Request another reset link
+                </NativeNavigationLink>
             </AuthLayout>
         );
     }
@@ -86,7 +89,9 @@ export default function ResetPassword() {
             {pageMetadata}
             <Separator />
             {verification?.status !== 'verified' ? (
-                <Button isLoading label="Reset password" variant="default" />
+                <Button disabled aria-busy="true">
+                    Reset password
+                </Button>
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <div
@@ -102,7 +107,9 @@ export default function ResetPassword() {
                             {confirmation}
                         </p>
                     </div>
-                    <Button href="/login" label="Back to sign in" variant="default" />
+                    <NativeNavigationLink href="/login" className={buttonVariants()}>
+                        Back to sign in
+                    </NativeNavigationLink>
                 </Stack>
             ) : (
                 <form
@@ -129,7 +136,7 @@ export default function ResetPassword() {
                             label="New password"
                             type="password"
                         />
-                        <Button label="Reset password" type="submit" variant="default" />
+                        <Button type="submit">Reset password</Button>
                     </Stack>
                 </form>
             )}

@@ -11,10 +11,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -110,7 +111,9 @@ export default function VerifyEmail() {
             <AuthLayout title="Verify your email" description="Request a new registration link to continue.">
                 {pageMetadata}
                 <Stack gap={3}>
-                    <Button href={recoveryRegisterHref} label="Request a new registration link" />
+                    <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                        Request a new registration link
+                    </NativeNavigationLink>
                 </Stack>
             </AuthLayout>
         );
@@ -121,7 +124,9 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Verify your email" description="Verifying your email...">
                 {pageMetadata}
-                <Button isLoading label="Verifying your email..." variant="default" />
+                <Button disabled aria-busy="true">
+                    Verifying your email...
+                </Button>
             </AuthLayout>
         );
     }
@@ -131,7 +136,9 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}
-                <Button href={recoveryRegisterHref} label="Request a new registration link" />
+                <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                    Request a new registration link
+                </NativeNavigationLink>
             </AuthLayout>
         );
     }
@@ -169,7 +176,9 @@ export default function VerifyEmail() {
                                 type="password"
                             />
                         </div>
-                        <Button className="w-full" label="Create account" type="submit" variant="default" />
+                        <Button className="w-full" type="submit">
+                            Create account
+                        </Button>
                     </div>
                 </form>
                 <Separator />

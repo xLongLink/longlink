@@ -1,14 +1,14 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
+import { act, type ComponentProps } from 'react';
 import userEvent from '@testing-library/user-event';
 import { TagForm } from '@/components/dialogs/tag-form';
 import { InviteMember } from '@/components/dialogs/invite-member';
 
 it.each([false, true])('submits the selected invitation role with admin access=%s', async (canInviteAdmin) => {
-    const submitted = vi.fn(async (_data: FormData) => {});
+    const submitted = vi.fn<ComponentProps<typeof InviteMember>['onSubmit']>(async () => {});
     const user = userEvent.setup();
 
     await withMounted(
@@ -33,10 +33,10 @@ it.each([false, true])('submits the selected invitation role with admin access=%
             await act(async () => user.click(selected));
             await act(async () => form.requestSubmit());
             await vi.waitFor(() => expect(submitted).toHaveBeenCalledOnce());
-            expect(Array.from(submitted.mock.calls[0][0])).toEqual([
-                ['email', 'member@example.com'],
-                ['role', canInviteAdmin ? 'admin' : 'maintain']
-            ]);
+            expect(submitted.mock.calls[0][0]).toEqual({
+                email: 'member@example.com',
+                role: canInviteAdmin ? 'admin' : 'maintain'
+            });
         }
     );
 });

@@ -84,9 +84,7 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Next').click());
-        await act(async () =>
-            vi.waitFor(() => expect(button('Update solution').getAttribute('aria-disabled')).toBeNull())
-        );
+        await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -110,16 +108,16 @@ describe('DeploymentReview', () => {
         // Act
         // The image already changed, so only the missing required value blocks submission.
         expect(input('REQUIRED_SECRET').value).toBe('');
-        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        expect(button('Update solution').disabled).toBe(true);
         await act(async () => button('Update solution').click());
         expect(submissions).toEqual([]);
         await act(async () => user.type(input('NEW_SECRET'), '   '));
-        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        expect(button('Update solution').disabled).toBe(true);
         await act(async () => button('Update solution').click());
         expect(submissions).toEqual([]);
         await act(async () => user.clear(input('NEW_SECRET')));
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
-        expect(button('Update solution').getAttribute('aria-disabled')).toBeNull();
+        expect(button('Update solution').disabled).toBe(false);
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => button('Update solution').click());

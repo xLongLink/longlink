@@ -2,13 +2,13 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
+import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -46,12 +46,13 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     </h2>
                     {canMaintain && (
                         <Button
-                            label="Add registry"
                             size="sm"
                             onClick={() =>
                                 setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
                             }
-                        />
+                        >
+                            Add registry
+                        </Button>
                     )}
                 </Stack>
                 <Separator />
@@ -72,11 +73,12 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                       width: proportional(1),
                                       renderCell: (row: Registry) => (
                                           <Button
-                                              label="Delete"
                                               size="sm"
                                               variant="destructive"
                                               onClick={() => setAction({ kind: 'delete', connection: row })}
-                                          />
+                                          >
+                                              Delete
+                                          </Button>
                                       )
                                   }
                               ]

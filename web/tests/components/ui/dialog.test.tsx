@@ -15,21 +15,6 @@ import {
     DropdownMenuTrigger
 } from '@/components/shadcn/dropdown-menu';
 
-it('dismisses the FramedDialog without submitting its form', async () => {
-    // Arrange
-    const close = vi.fn();
-
-    // Act
-    await withMounted(<FramedDialog open onOpenChange={close} />, async () => {
-        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
-        await act(async () => button?.click());
-
-        // Assert
-        expect(close).toHaveBeenCalledExactlyOnceWith(false);
-        expect(button?.getAttribute('type')).toBe('button');
-    });
-});
-
 it.each([undefined, 'fullscreen'] as const)(
     'dismisses a standard dialog in %s mode without submitting its form',
     async (variant) => {

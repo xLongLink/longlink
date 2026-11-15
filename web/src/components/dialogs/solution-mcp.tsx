@@ -1,12 +1,15 @@
 import { Plug } from 'lucide-react';
+import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
+import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/open-ai';
 import { useNotification } from '@/lib/notifications';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: DialogProps & { solutionId: string }) {
     return (
@@ -34,14 +37,14 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
                             <ApiBoundary key={solutionId}>
                                 <SolutionMcpUrl solutionId={solutionId} onClose={onClose} />
                             </ApiBoundary>
-                            <Button
+                            <NativeNavigationLink
+                                className={buttonVariants({ className: 'w-full' })}
                                 download
                                 href={`/api/v1/solutions/${solutionId}/plugin`}
-                                label="Download plugin ZIP"
-                                variant="default"
-                                style={{ width: '100%' }}
-                                icon={<OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />}
-                            />
+                            >
+                                <OpenAI className="size-5 scale-125" aria-hidden="true" focusable="false" />
+                                Download plugin ZIP
+                            </NativeNavigationLink>
                         </Stack>
                     </Stack>
                 </div>
@@ -64,6 +67,9 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
 
 function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     const showNotification = useNotification();
+    const reportError = useApiError();
+    const inFlight = useRef(false);
+    const [pending, startCopy] = useTransition();
 
     const [{ resource }] = useApi(
         `/.well-known/oauth-protected-resource/api/v1/solutions/${solutionId}/proxy/mcp`,
@@ -71,15 +77,34 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
     );
 
     return (
-        <Button
-            label="Copy MCP server URL"
-            variant="outline"
-            style={{ width: '100%' }}
-            clickAction={async () => {
-                await navigator.clipboard.writeText(resource);
-                showNotification('Copied');
-                onClose();
-            }}
-        />
+        <>
+            <Button
+                variant="outline"
+                className="w-full"
+                disabled={pending}
+                aria-busy={pending || undefined}
+                onClick={() => {
+                    // Start clipboard access within the user gesture and close only after success.
+                    if (inFlight.current) return;
+                    inFlight.current = true;
+                    startCopy(async () => {
+                        try {
+                            await navigator.clipboard.writeText(resource);
+                            showNotification('Copied');
+                            onClose();
+                        } catch (cause) {
+                            reportError(cause);
+                        } finally {
+                            inFlight.current = false;
+                        }
+                    });
+                }}
+            >
+                Copy MCP server URL
+            </Button>
+            <span role="status" className="sr-only">
+                {pending ? 'Loading' : ''}
+            </span>
+        </>
     );
 }

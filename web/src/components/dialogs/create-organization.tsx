@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const organizationSchema = zOrganizationCreate.extend({
@@ -85,12 +85,9 @@ export default function CreateOrganization({
                                                 </Field>
                                             )}
                                         />
-                                        <Button
-                                            label="Create organization"
-                                            variant="default"
-                                            type="submit"
-                                            style={{ width: '100%' }}
-                                        />
+                                        <Button type="submit" className="w-full">
+                                            Create organization
+                                        </Button>
                                     </Stack>
                                 </Stack>
                             </fieldset>

@@ -6,12 +6,13 @@ import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import CreateOrganization from '@/components/dialogs/create-organization';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
 
@@ -73,18 +74,16 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Organizations
                             </h2>
-                            <Button
-                                label="Create Organization"
-                                size="sm"
-                                onClick={() => setSelected({ type: 'create' })}
-                            />
+                            <Button size="sm" onClick={() => setSelected({ type: 'create' })}>
+                                Create Organization
+                            </Button>
                         </Stack>
                         <Separator />
                     </>
                 ) : !onboarding ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
                         <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
-                        <Button label="Create Organization" onClick={() => setSelected({ type: 'create' })} />
+                        <Button onClick={() => setSelected({ type: 'create' })}>Create Organization</Button>
                     </Stack>
                 ) : null}
                 {onboarding ? (
@@ -102,20 +101,18 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             <p className="text-muted-foreground text-center">A place for your workflows and data</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Button
-                                label="Read the docs"
-                                variant="outline"
+                            <NativeNavigationLink
+                                className={buttonVariants({ variant: 'outline' })}
                                 href="/docs/"
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                            />
-                            <Button
-                                label="Create organization"
-                                variant="default"
-                                icon={<Plus className="size-4" aria-hidden="true" />}
-                                onClick={() => setSelected({ type: 'create' })}
-                            />
+                            >
+                                Read the docs
+                                <ExternalLink className="size-4" aria-hidden="true" />
+                            </NativeNavigationLink>
+                            <Button onClick={() => setSelected({ type: 'create' })}>
+                                <Plus className="size-4" aria-hidden="true" />
+                                Create organization
+                            </Button>
                         </Stack>
                     </Stack>
                 ) : (
@@ -166,7 +163,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                               row.kind === 'invitation' ? (
                                                   <Stack direction="horizontal" gap={2} justify="end">
                                                       <Button
-                                                          label="Decline"
                                                           size="sm"
                                                           variant="outline"
                                                           onClick={() =>
@@ -176,9 +172,10 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                                   name: row.organization.name
                                                               })
                                                           }
-                                                      />
+                                                      >
+                                                          Decline
+                                                      </Button>
                                                       <Button
-                                                          label="Accept"
                                                           size="sm"
                                                           variant="default"
                                                           onClick={() =>
@@ -188,7 +185,9 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                                   name: row.organization.name
                                                               })
                                                           }
-                                                      />
+                                                      >
+                                                          Accept
+                                                      </Button>
                                                   </Stack>
                                               ) : null
                                       }

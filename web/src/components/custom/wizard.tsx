@@ -55,6 +55,7 @@ type WizardProps = Omit<ProgressStepperProps, 'onStepClick'> & {
     onStepClick?: (index: number) => void;
     /** Bounds a wizard, keeping progress above its independently scrollable panels. */
     height?: number | string;
+    showProgress?: boolean;
     /** Runs a step-specific action after validation; false prevents advancement. */
     next?: (step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined;
     onCancel?: () => void;
@@ -318,13 +319,15 @@ export function Wizard(props: WizardProps) {
         >
             {props.height === undefined ? (
                 <div className="flex min-w-0 flex-col gap-4">
-                    {progress}
+                    {props.showProgress !== false && progress}
                     {content}
                 </div>
             ) : (
                 <>
-                    <div className="shrink-0 px-8 py-4">{progress}</div>
-                    <div className="min-h-0 flex-1 overflow-auto px-8 pb-8">
+                    {props.showProgress !== false && <div className="shrink-0 px-8 py-4">{progress}</div>}
+                    <div
+                        className={`min-h-0 flex-1 overflow-auto px-8 pb-8${props.showProgress === false ? ' pt-8' : ''}`}
+                    >
                         <div className="mx-auto flex min-h-full w-full max-w-160 flex-col justify-center">
                             {content}
                         </div>

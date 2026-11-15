@@ -89,7 +89,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(
                     [...document.querySelectorAll('[role="status"]')].some((status) => status.textContent === 'Loading')
                 ).toBe(true);
-                expect(submit.getAttribute('aria-disabled')).toBe('true');
+                expect(submit.disabled).toBe(true);
                 await act(async () => user.type(textarea, 'must not race the file'));
                 expect(textarea.value).toBe('');
 
@@ -102,7 +102,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(
                     [...document.querySelectorAll('[role="status"]')].some((status) => status.textContent === 'Loading')
                 ).toBe(false);
-                expect(submit.getAttribute('aria-disabled')).not.toBe('true');
+                expect(submit.disabled).toBe(false);
 
                 // Rejected formats clear loaded YAML without ever reading the invalid file.
                 let invalidReads = 0;
@@ -118,7 +118,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 await act(async () => user.upload(upload, new InvalidFile([], 'config.txt')));
                 expect(invalidReads).toBe(0);
                 expect(textarea.value).toBe('');
-                expect(submit.getAttribute('aria-disabled')).toBe('true');
+                expect(submit.disabled).toBe(true);
                 expect(document.querySelector('#compute-file-error')?.textContent).toContain('config.txt');
 
                 // A failed read exposes only the safe error; a later selection can recover.
@@ -157,7 +157,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 await act(async () => finishObsolete('obsolete credentials'));
                 expect(textarea.value).toBe(yaml);
                 expect(textarea.disabled).toBe(false);
-                expect(submit.getAttribute('aria-disabled')).not.toBe('true');
+                expect(submit.disabled).toBe(false);
             },
             '/admin/compute'
         );

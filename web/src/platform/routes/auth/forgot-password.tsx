@@ -5,10 +5,11 @@ import { AuthLayout } from './auth-layout';
 import { Mail, CircleCheck } from 'lucide-react';
 import { Divider } from '@/components/custom/divider';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
@@ -44,7 +45,9 @@ export default function ForgotPassword() {
                             {confirmation}
                         </p>
                     </div>
-                    <Button href="/login" label="Back to sign in" variant="default" />
+                    <NativeNavigationLink href="/login" className={buttonVariants()}>
+                        Back to sign in
+                    </NativeNavigationLink>
                 </Stack>
             ) : (
                 <form
@@ -65,13 +68,10 @@ export default function ForgotPassword() {
                             label="Email"
                             type="email"
                         />
-                        <Button
-                            icon={<Mail aria-hidden="true" size={16} />}
-                            label="Send reset email"
-                            type="submit"
-                            variant="default"
-                            style={{ width: '100%' }}
-                        />
+                        <Button type="submit" variant="default" className="w-full">
+                            <Mail aria-hidden="true" size={16} />
+                            Send reset email
+                        </Button>
                     </Stack>
                 </form>
             )}

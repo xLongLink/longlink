@@ -2,11 +2,11 @@ import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
@@ -107,13 +107,10 @@ export default function Operations() {
                             align: 'end',
                             width: proportional(0.5),
                             renderCell: (row) => (
-                                <Button
-                                    label="Metadata"
-                                    icon={<Info />}
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setMetadataId(row.id)}
-                                />
+                                <Button size="sm" variant="ghost" onClick={() => setMetadataId(row.id)}>
+                                    <Info aria-hidden="true" />
+                                    Metadata
+                                </Button>
                             )
                         }
                     ]}

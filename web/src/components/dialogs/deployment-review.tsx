@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Step, Wizard } from '@/components/custom/wizard';
@@ -10,7 +11,6 @@ import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeTextInput } from '@/components/custom/native-text-input';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 type DeploymentReviewProps = DialogProps & {
@@ -98,8 +98,10 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                             <h2 className="font-semibold tracking-tight text-3xl">Update {item.name}</h2>
                             <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
                             <Stack direction="horizontal" gap={2}>
-                                <Button label="Cancel" variant="ghost" onClick={onClose} />
-                                {!isPending && <Button label="Retry" onClick={() => void refetch()} />}
+                                <Button variant="ghost" onClick={onClose}>
+                                    Cancel
+                                </Button>
+                                {!isPending && <Button onClick={() => void refetch()}>Retry</Button>}
                             </Stack>
                         </Stack>
                     </div>
@@ -114,15 +116,13 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                         aria-busy={form.formState.isSubmitting}
                     >
                         <Wizard
+                            showProgress={false}
                             height="min(560px, calc(100dvh - var(--spacing) * 40))"
                             backVariant="ghost"
                             finalAction={
-                                <Button
-                                    type="submit"
-                                    label="Update solution"
-                                    variant="default"
-                                    disabled={missingRequired || !hasChanges}
-                                />
+                                <Button type="submit" disabled={missingRequired || !hasChanges}>
+                                    Update solution
+                                </Button>
                             }
                         >
                             <Step label="Image">
