@@ -1,4 +1,7 @@
 /** @category Layouts */
+export { Box } from './layouts/box';
+
+/** @category Layouts */
 export { Stack, StackItem } from './layouts/stack';
 
 /** @category Layouts */

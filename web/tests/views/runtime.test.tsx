@@ -645,7 +645,8 @@ it('edits and resets composed native text fields through the authored View bound
     // Native exports must preserve DOM events rather than substituting adapter string callbacks.
     const runtime = await initializeRuntime(`export default function View() {
         const [draft, setDraft] = useState('Initial');
-        return <form onReset={() => setDraft('Initial')}>
+        return <Box width={draft === 'Initial' ? 320 : 480} background="outline" onResetCapture={() => setDraft('Initial')}>
+        <form>
             <Field>
                 <FieldLabel htmlFor="draft">Draft</FieldLabel>
                 <InputGroup>
@@ -658,7 +659,8 @@ it('edits and resets composed native text fields through the authored View bound
             <Input name="excluded" defaultValue="Private" disabled />
             <output>{draft}</output>
             <button type="reset">Reset</button>
-        </form>;
+        </form>
+        </Box>;
     }`);
 
     try {
@@ -675,6 +677,8 @@ it('edits and resets composed native text fields through the authored View bound
         await user.clear(notes);
         await user.type(notes, 'New notes');
         expect(runtime.mount.querySelector('output')?.textContent).toBe('Edited');
+        expect(runtime.mount.querySelector<HTMLElement>('[data-slot="box"]')?.style.width).toBe('480px');
+        expect(runtime.mount.querySelector('#draft')).toBe(input);
         expect(new FormData(form).get('draft')).toBe('Edited');
         expect(new FormData(form).get('notes')).toBe('New notes');
         expect(new FormData(form).has('excluded')).toBe(false);
@@ -682,6 +686,7 @@ it('edits and resets composed native text fields through the authored View bound
         await vi.waitFor(() => expect(input.value).toBe('Initial'));
         expect(notes.value).toBe('Original notes');
         expect(runtime.mount.querySelector('output')?.textContent).toBe('Initial');
+        expect(runtime.mount.querySelector<HTMLElement>('[data-slot="box"]')?.style.width).toBe('320px');
     } finally {
         runtime.close();
     }

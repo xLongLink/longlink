@@ -8,7 +8,7 @@ import { Separator } from '@/components/shadcn/separator';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
@@ -74,7 +74,7 @@ function RegisteredCards({ base }: { base: string }) {
     const [cards] = useApi(`${base}/cards`, schemas.zPaymentCard.array());
 
     return (
-        <Table className="[&_td]:whitespace-normal">
+        <Table wrap>
             <TableHeader>
                 <TableRow>
                     <TableHead>Card</TableHead>
@@ -96,7 +96,7 @@ function RegisteredCards({ base }: { base: string }) {
                 ))}
                 {cards.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={3} className="text-center">
+                        <TableCell colSpan={3} align="center">
                             <Empty role="status" title="No data" />
                         </TableCell>
                     </TableRow>

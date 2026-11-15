@@ -18,7 +18,7 @@ import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -158,13 +158,13 @@ export default function SolutionManagement({
                 ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
                     <p className="text-muted-foreground">No Solutions in this category.</p>
                 ) : (
-                    <Table className="[&_td]:whitespace-normal">
+                    <Table wrap>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Solution</TableHead>
-                                {presentation === 'settings' && <TableHead className="text-end">Version</TableHead>}
+                                {presentation === 'settings' && <TableHead align="end">Version</TableHead>}
                                 {presentation === 'settings' && canMaintain && (
-                                    <TableHead className="text-end">Actions</TableHead>
+                                    <TableHead align="end">Actions</TableHead>
                                 )}
                             </TableRow>
                         </TableHeader>
@@ -201,10 +201,10 @@ export default function SolutionManagement({
                                         </Stack>
                                     </TableCell>
                                     {presentation === 'settings' && (
-                                        <TableCell className="text-end">{row.deployed_version || '—'}</TableCell>
+                                        <TableCell align="end">{row.deployed_version || '—'}</TableCell>
                                     )}
                                     {presentation === 'settings' && canMaintain && (
-                                        <TableCell className="text-end">
+                                        <TableCell align="end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger
                                                     render={
@@ -292,7 +292,7 @@ export default function SolutionManagement({
                                             (presentation === 'settings' ? 1 : 0) +
                                             (presentation === 'settings' && canMaintain ? 1 : 0)
                                         }
-                                        className="text-center"
+                                        align="center"
                                     >
                                         <Empty role="status" title="No data" />
                                     </TableCell>

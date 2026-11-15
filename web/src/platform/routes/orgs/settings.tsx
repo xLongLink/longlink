@@ -25,7 +25,7 @@ import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -259,11 +259,11 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                     </h2>
                 </Stack>
                 <Separator />
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>User</TableHead>
-                            {canAdminister && <TableHead className="text-end">Actions</TableHead>}
+                            {canAdminister && <TableHead align="end">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -282,7 +282,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                     </Stack>
                                 </TableCell>
                                 {canAdminister && (
-                                    <TableCell className="text-end">
+                                    <TableCell align="end">
                                         {row.role === 'owner' && !canManageOwners ? null : (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger
@@ -329,7 +329,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                         ))}
                         {members.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={canAdminister ? 2 : 1} className="text-center">
+                                <TableCell colSpan={canAdminister ? 2 : 1} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>
@@ -439,12 +439,12 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     )}
                 </Stack>
                 <Separator />
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Email</TableHead>
                             <TableHead>Role</TableHead>
-                            {canMaintain && <TableHead className="text-end">Actions</TableHead>}
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -455,7 +455,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                     <span className="text-xs text-muted-foreground">{row.role}</span>
                                 </TableCell>
                                 {canMaintain && (
-                                    <TableCell className="text-end">
+                                    <TableCell align="end">
                                         <Button
                                             variant="destructive"
                                             disabled={revoking}
@@ -484,7 +484,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                         ))}
                         {invitations.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
+                                <TableCell colSpan={canMaintain ? 3 : 2} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

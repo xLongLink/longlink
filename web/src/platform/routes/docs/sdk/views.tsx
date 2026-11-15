@@ -33,7 +33,7 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import {
     CodeBlock,
@@ -87,6 +87,7 @@ const previews = new Map(
             </div>
         ),
         Button: <Button>Button</Button>,
+        Box: <BoxExample />,
         Card: (
             <Card>
                 <CardContent>Lorem ipsum dolor sit amet.</CardContent>
@@ -224,7 +225,7 @@ export default function Item({ params }) {
                         API reference
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                        <Table className="[&_td]:whitespace-normal">
+                        <Table wrap>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>API</TableHead>
@@ -319,3 +320,4 @@ export default function Item({ params }) {
         </DocumentationArticle>
     );
 }
+import { BoxExample } from './views/box';

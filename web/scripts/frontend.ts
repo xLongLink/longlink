@@ -30,6 +30,7 @@ export { Separator } from '../src/views/adapter/display/separator';
 export { Image } from '../src/views/adapter/display/image';
 export { Text } from '../src/views/adapter/display/text';
 export { Heading } from '../src/views/adapter/display/heading';
+export { Box } from '../src/views/adapter/layouts/box';
 export { Currency } from '../src/views/adapter/display/currency';
 export { Timestamp } from '../src/views/adapter/display/timestamp';
 export { Stack, StackItem } from '../src/views/adapter/layouts/stack';

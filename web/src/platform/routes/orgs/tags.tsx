@@ -10,7 +10,7 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -54,11 +54,11 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                         </Button>
                     )}
                 </Stack>
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Tab</TableHead>
-                            {canMaintain && <TableHead className="text-end">Actions</TableHead>}
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -74,7 +74,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                         </Stack>
                                     </TableCell>
                                     {canMaintain && (
-                                        <TableCell className="text-end">
+                                        <TableCell align="end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger
                                                     render={
@@ -126,7 +126,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                         })}
                         {tags.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={canMaintain ? 2 : 1} className="text-center">
+                                <TableCell colSpan={canMaintain ? 2 : 1} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

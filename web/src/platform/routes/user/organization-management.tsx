@@ -14,7 +14,7 @@ import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -116,11 +116,11 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         </Stack>
                     </Stack>
                 ) : (
-                    <Table className="[&_td]:whitespace-normal">
+                    <Table wrap>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
-                                {invitations.length > 0 && <TableHead className="text-end"></TableHead>}
+                                {invitations.length > 0 && <TableHead align="end"></TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -153,7 +153,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                         </Stack>
                                     </TableCell>
                                     {invitations.length > 0 && (
-                                        <TableCell className="text-end">
+                                        <TableCell align="end">
                                             {row.kind === 'invitation' ? (
                                                 <Stack direction="horizontal" gap={2} justify="end">
                                                     <Button
@@ -190,7 +190,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             ))}
                             {rows.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={invitations.length > 0 ? 2 : 1} className="text-center">
+                                    <TableCell colSpan={invitations.length > 0 ? 2 : 1} align="center">
                                         <Empty role="status" title="No data" />
                                     </TableCell>
                                 </TableRow>

@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
 import { viewHooks } from '@/lib/documentation';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {
@@ -11,7 +11,7 @@ export default function HooksPage() {
             <h2 className="font-semibold tracking-tight text-3xl" id="hooks">
                 Hooks
             </h2>
-            <Table className="[&_td]:whitespace-normal">
+            <Table wrap>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Hook</TableHead>

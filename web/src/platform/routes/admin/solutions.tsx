@@ -12,7 +12,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
@@ -66,13 +66,13 @@ export default function Solutions() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Solution</TableHead>
                             <TableHead>Organization</TableHead>
                             <TableHead>Image</TableHead>
-                            <TableHead className="text-end">Actions</TableHead>
+                            <TableHead align="end">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -123,7 +123,7 @@ export default function Solutions() {
                                         </span>
                                     </Stack>
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell align="end">
                                     <Button
                                         size="sm"
                                         variant="ghost"
@@ -137,7 +137,7 @@ export default function Solutions() {
                         ))}
                         {solutions.items.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center">
+                                <TableCell colSpan={4} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

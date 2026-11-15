@@ -3,7 +3,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',
@@ -46,7 +46,7 @@ export default function Platform() {
                         </Link>{' '}
                         for their settings.
                     </p>
-                    <Table className="[&_td]:whitespace-normal">
+                    <Table wrap>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Environment variables</TableHead>

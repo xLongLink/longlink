@@ -609,6 +609,28 @@
             "reference": "https://reui.io/components/file-type"
         },
         {
+            "name": "Box",
+            "category": "Layouts",
+            "introduction": "Controls container dimensions and semantic backgrounds without arranging its children.",
+            "guidance": "Use Box around Stack or Grid to control sizing. Numeric dimensions are pixels; strings are CSS sizes. Omitted backgrounds remain transparent. Native div attributes and events are supported without refs or styling overrides.",
+            "keywords": ["container", "width", "height", "background", "sizing"],
+            "properties": [
+                { "name": "children", "type": "ReactNode" },
+                { "name": "width", "type": "string | number", "description": "Container width." },
+                { "name": "height", "type": "string | number", "description": "Container height." },
+                { "name": "maxWidth", "type": "string | number", "description": "Maximum container width." },
+                { "name": "minHeight", "type": "string | number", "description": "Minimum container height." },
+                {
+                    "name": "background",
+                    "type": "\"none\" | \"primary\" | \"secondary\" | \"outline\"",
+                    "description": "Surface style with matching foreground text. None is transparent and inherits text color; outline adds a theme border.",
+                    "default": "none"
+                }
+            ],
+            "source": "custom",
+            "justification": "Owns container sizing and semantic backgrounds separately from Stack and Grid layout."
+        },
+        {
             "name": "Button",
             "category": "Action",
             "introduction": "Button with Base UI behavior and component-owned styling.",
@@ -1754,16 +1776,35 @@
         {
             "name": "Table",
             "category": "Display",
-            "introduction": "Native shadcn table composition with HTML table, row, and cell props.",
+            "introduction": "Displays semantic tables with fixed styling, optional text wrapping, and cell alignment.",
             "guidance": "Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption. Use ReUI DataGrid for sorting, selection, and pagination.",
             "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
-                    "description": "Native table parts with standard HTML attributes and events."
+                    "description": "Table parts with standard HTML attributes, events, and refs; styling overrides are excluded."
+                },
+                {
+                    "name": "wrap",
+                    "type": "boolean",
+                    "description": "Wraps cell text instead of keeping it on one line.",
+                    "default": false
+                },
+                {
+                    "name": "TableHead.align",
+                    "type": "\"start\" | \"center\" | \"end\"",
+                    "description": "Header text alignment.",
+                    "default": "start"
+                },
+                {
+                    "name": "TableCell.align",
+                    "type": "\"start\" | \"center\" | \"end\"",
+                    "description": "Cell text alignment.",
+                    "default": "start"
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Provides fixed table styling with explicit wrapping and logical alignment while preserving native table semantics.",
             "reference": "https://ui.shadcn.com/docs/components/table"
         },
         {

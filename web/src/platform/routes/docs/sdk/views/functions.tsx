@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [
@@ -24,7 +24,7 @@ export default function FunctionsPage() {
             <h2 className="font-semibold tracking-tight text-3xl" id="functions">
                 Functions
             </h2>
-            <Table className="[&_td]:whitespace-normal">
+            <Table wrap>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Function</TableHead>

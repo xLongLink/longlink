@@ -13,7 +13,7 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists organizations and confirms administrator deletion. */
@@ -68,11 +68,11 @@ export default function Organizations() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead className="text-end">Actions</TableHead>
+                            <TableHead align="end">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -98,7 +98,7 @@ export default function Organizations() {
                                         </Stack>
                                     </Stack>
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell align="end">
                                     <Button
                                         size="sm"
                                         variant="ghost"
@@ -112,7 +112,7 @@ export default function Organizations() {
                         ))}
                         {organizations.items.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={2} className="text-center">
+                                <TableCell colSpan={2} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

@@ -5,7 +5,7 @@ import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
@@ -33,12 +33,12 @@ function InvoiceTable({ base }: { base: string }) {
     const [invoices] = useApi(`${base}/invoices`, schemas.zPaymentInvoice.array());
 
     return (
-        <Table className="[&_td]:whitespace-normal">
+        <Table wrap>
             <TableHeader>
                 <TableRow>
                     <TableHead>Invoice</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead className="text-end">Amount</TableHead>
+                    <TableHead align="end">Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Document</TableHead>
                 </TableRow>
@@ -64,7 +64,7 @@ function InvoiceTable({ base }: { base: string }) {
                             <TableCell>
                                 {new Date(row.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </TableCell>
-                            <TableCell className="text-end">
+                            <TableCell align="end">
                                 {currency.format(
                                     row.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
                                 )}
@@ -84,7 +84,7 @@ function InvoiceTable({ base }: { base: string }) {
                 })}
                 {invoices.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">
+                        <TableCell colSpan={5} align="center">
                             <Empty role="status" title="No data" />
                         </TableCell>
                     </TableRow>

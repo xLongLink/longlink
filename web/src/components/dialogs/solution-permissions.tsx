@@ -12,8 +12,8 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 export function SolutionPermissionsDialog({
     solutionId,
@@ -195,7 +195,7 @@ function MemberPermissions({
                     ))}
                     {rows.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={2} className="text-center">
+                            <TableCell colSpan={2} align="center">
                                 <Empty role="status" title="No data" />
                             </TableCell>
                         </TableRow>

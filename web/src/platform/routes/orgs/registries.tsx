@@ -8,7 +8,7 @@ import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -56,12 +56,12 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     )}
                 </Stack>
                 <Separator />
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Registry</TableHead>
                             <TableHead>Username</TableHead>
-                            {canMaintain && <TableHead className="text-end">Actions</TableHead>}
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -70,7 +70,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                 <TableCell>{row.host}</TableCell>
                                 <TableCell>{row.username}</TableCell>
                                 {canMaintain && (
-                                    <TableCell className="text-end">
+                                    <TableCell align="end">
                                         <Button
                                             size="sm"
                                             variant="destructive"
@@ -84,7 +84,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                         ))}
                         {connections.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={canMaintain ? 3 : 2} className="text-center">
+                                <TableCell colSpan={canMaintain ? 3 : 2} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

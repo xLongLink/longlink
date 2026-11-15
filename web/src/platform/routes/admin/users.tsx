@@ -8,7 +8,7 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists Platform users with server-side pagination. */
@@ -53,7 +53,7 @@ export default function Users() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>User</TableHead>
@@ -89,7 +89,7 @@ export default function Users() {
                         ))}
                         {users.items.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={2} className="text-center">
+                                <TableCell colSpan={2} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

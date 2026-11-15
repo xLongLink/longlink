@@ -10,7 +10,7 @@ import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -156,7 +156,7 @@ export default function ViewLayout({
                             {[...groups].map(([group, properties]) => (
                                 <div key={group} className="flex flex-col gap-3">
                                     {groups.size > 1 && <h3 className="text-sm font-medium">{group}</h3>}
-                                    <Table aria-label={`${group} properties`} className="[&_td]:whitespace-normal">
+                                    <Table aria-label={`${group} properties`} wrap>
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead scope="col">Prop</TableHead>

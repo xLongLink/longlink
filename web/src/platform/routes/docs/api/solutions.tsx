@@ -1,7 +1,7 @@
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },
@@ -41,7 +41,7 @@ export default function Solutions() {
                 </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <span className="font-semibold">User permissions</span>
-                    <Table className="[&_td]:whitespace-normal">
+                    <Table wrap>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Roles</TableHead>

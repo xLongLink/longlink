@@ -1,7 +1,7 @@
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -62,7 +62,7 @@ environments = "src.envs:Env"
                             <CodeBlockCopyButton className="ml-auto" />
                         </CodeBlockHeader>
                     </CodeBlock>
-                    <Table className="[&_td]:whitespace-normal">
+                    <Table wrap>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Metadata</TableHead>

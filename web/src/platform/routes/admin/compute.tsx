@@ -11,7 +11,7 @@ import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
@@ -72,11 +72,11 @@ export default function Compute() {
                 </InputGroup>
             </Field>
             <Stack gap={1}>
-                <Table className="[&_td]:whitespace-normal">
+                <Table wrap>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Compute</TableHead>
-                            <TableHead className="text-end">Actions</TableHead>
+                            <TableHead align="end">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -88,7 +88,7 @@ export default function Compute() {
                                         <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
                                     </Stack>
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell align="end">
                                     <Button
                                         size="sm"
                                         variant="ghost"
@@ -102,7 +102,7 @@ export default function Compute() {
                         ))}
                         {computes.items.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={2} className="text-center">
+                                <TableCell colSpan={2} align="center">
                                     <Empty role="status" title="No data" />
                                 </TableCell>
                             </TableRow>

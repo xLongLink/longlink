@@ -85,6 +85,7 @@ const nativeComposition = (
                 <Avatar size="md" name="Account" src="/account.png" />
                 <Avatar shape="rounded" name="Acme" />
             </AvatarGroup>
+            <Box width={320} maxWidth="100%" minHeight={120} background="outline">
             <Stack
                 aria-label="Preview"
                 gap={4}
@@ -92,6 +93,7 @@ const nativeComposition = (
             >
                 <Grid id="preview" columns={1} />
             </Stack>
+            </Box>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <FieldSeparator><a href="/login">Sign in</a></FieldSeparator>
             <Link
@@ -231,16 +233,16 @@ const nativeComposition = (
             <Button nativeButton={false} render={<Link href="/orders" />}>
                 Open orders
             </Button>
-            <Table aria-label="Orders">
+            <Table aria-label="Orders" wrap>
                 <TableCaption>Open orders</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead scope="col">Reference</TableHead>
+                        <TableHead scope="col" align="end">Reference</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow onClick={(event) => event.currentTarget.focus()}>
-                        <TableCell colSpan={2}>PO-871</TableCell>
+                        <TableCell colSpan={2} align="end">PO-871</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
