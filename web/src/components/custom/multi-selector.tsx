@@ -1,11 +1,27 @@
-import { Picker } from './picker';
-import type { ReactNode } from 'react';
+import { Icon } from './icon';
+import { useId, type ReactNode } from 'react';
 import { useValue } from '@/components/custom/value';
 import { FormField } from '@/components/custom/form-field';
 import type { FieldProps } from '@/components/custom/types';
-import { selectorOptions, type SelectorOptionType } from '@/components/custom/options';
+import { FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
+import { selectorOptions, type SelectorOptionType, type SelectorOptionData } from './options';
+import {
+    Combobox,
+    ComboboxChip,
+    ComboboxChips,
+    ComboboxChipsInput,
+    ComboboxCollection,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxGroup,
+    ComboboxItem,
+    ComboboxLabel,
+    ComboboxList,
+    ComboboxValue,
+    useComboboxAnchor
+} from '@/components/shadcn/combobox';
 
-/** Selects multiple values while preserving repeated native form entries. */
+/** Connects the standard multi-value Combobox to repeated View form entries. */
 export function MultiSelector(
     props: FieldProps & {
         options: SelectorOptionType[];
@@ -14,14 +30,16 @@ export function MultiSelector(
         onChange?: (value: string[]) => void;
         placeholder?: string;
         emptyText?: ReactNode;
-        triggerDisplay?: 'count' | 'labels' | 'badges';
-        hasSelectAll?: boolean;
-        hasSearch?: boolean;
     }
 ) {
-    // The View wrapper owns reset and serialization; the primitive owns interaction.
+    const id = useId();
+    const anchor = useComboboxAnchor();
     const field = useValue(props.value, props.defaultValue ?? [], props.onChange);
+    const groups = selectorOptions(props.options).filter((group) => !group.divider);
+    const items = groups.flatMap((group) => group.items);
+    const selected = field.value.map((value) => items.find((item) => item.value === value) ?? { value });
 
+    // Keep reset and serialization at the View boundary; Combobox owns interaction.
     return (
         <FormField
             name={props.name}
@@ -30,27 +48,71 @@ export function MultiSelector(
             fieldRef={field.ref}
             values={field.value}
             serialize
-            className="view-picker"
-            data-multiple
-            data-disabled={props.disabled || undefined}
         >
-            <Picker
-                unwrapped
-                label={props.label}
-                description={props.description}
-                required={props.required}
-                disabled={props.disabled}
-                placeholder={props.placeholder}
-                emptyText={props.emptyText}
-                hasSearch={props.hasSearch}
-                hasSelectAll={props.hasSelectAll}
-                triggerDisplay={props.triggerDisplay}
+            <FieldContent>
+                <FieldLabel htmlFor={id}>
+                    {props.label}
+                    {props.required && <span className="text-muted-foreground">Required</span>}
+                </FieldLabel>
+                {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
+            </FieldContent>
+            <Combobox<SelectorOptionData, true>
                 multiple
-                options={selectorOptions(props.options)}
-                value={field.value}
-                onChange={field.onChange}
-                hasClear
-            />
+                items={groups}
+                value={selected}
+                onValueChange={(values) => field.onChange(values.map((item) => item.value))}
+                disabled={props.disabled}
+                isItemEqualToValue={(item, value) => item.value === value.value}
+                itemToStringLabel={(item) => item.label ?? item.value}
+            >
+                <ComboboxChips ref={anchor}>
+                    <ComboboxValue>
+                        {(values: SelectorOptionData[]) => (
+                            <>
+                                {values.map((item) => (
+                                    <ComboboxChip key={item.value} aria-label={item.label ?? item.value}>
+                                        {item.label ?? item.value}
+                                    </ComboboxChip>
+                                ))}
+                                <ComboboxChipsInput
+                                    id={id}
+                                    placeholder={values.length ? undefined : (props.placeholder ?? 'Select...')}
+                                    aria-describedby={props.description ? `${id}-description` : undefined}
+                                    aria-required={props.required || undefined}
+                                    disabled={props.disabled}
+                                />
+                            </>
+                        )}
+                    </ComboboxValue>
+                </ComboboxChips>
+                <ComboboxContent anchor={anchor}>
+                    <ComboboxEmpty>
+                        {items.length === 0 ? (props.emptyText ?? 'No options') : 'No results found'}
+                    </ComboboxEmpty>
+                    <ComboboxList>
+                        {(group: (typeof groups)[number]) => (
+                            <ComboboxGroup key={group.id} items={group.items}>
+                                {group.title && <ComboboxLabel>{group.title}</ComboboxLabel>}
+                                <ComboboxCollection>
+                                    {(item: SelectorOptionData) => (
+                                        <ComboboxItem key={item.value} value={item} disabled={item.disabled}>
+                                            {item.icon && <Icon icon={item.icon} size="sm" />}
+                                            <span className="flex min-w-0 flex-col">
+                                                <span>{item.label ?? item.value}</span>
+                                                {item.description && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {item.description}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </ComboboxItem>
+                                    )}
+                                </ComboboxCollection>
+                            </ComboboxGroup>
+                        )}
+                    </ComboboxList>
+                </ComboboxContent>
+            </Combobox>
         </FormField>
     );
 }

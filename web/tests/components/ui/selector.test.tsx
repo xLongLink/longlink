@@ -7,7 +7,6 @@ import { Selector } from '@/components/custom/selector';
 import { MultiSelector } from '@/components/custom/multi-selector';
 
 it.each([false, true])('keeps a rejected controlled single change out of submission, search=%s', async (hasSearch) => {
-    // A nullable controlled caller may decline both a selection and a clear request.
     const change = vi.fn();
     const user = userEvent.setup();
 
@@ -24,12 +23,12 @@ it.each([false, true])('keeps a rejected controlled single change out of submiss
             />
         </form>,
         async (output) => {
-            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
+            const control = output.querySelector<HTMLElement>('[role="combobox"]');
             const form = output.querySelector('form');
 
-            if (!trigger || !form) throw new Error('Expected owner control');
+            if (!control || !form) throw new Error('Expected owner control');
 
-            await act(async () => user.click(trigger));
+            await act(async () => user.click(control));
 
             const option = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
                 (item) => item.textContent === 'Bob'
@@ -40,9 +39,8 @@ it.each([false, true])('keeps a rejected controlled single change out of submiss
             await act(async () => user.click(option));
             expect(change).toHaveBeenCalledWith('Bob');
             expect(new FormData(form).getAll('owner')).toEqual(['']);
-            expect(trigger.textContent).toBe('Select...');
             expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
-            expect(document.activeElement).toBe(trigger);
+            expect(document.activeElement).toBe(control);
         }
     );
 });
@@ -101,7 +99,7 @@ it('recovers from a required denial, clears to null, and honors canceled and com
     );
 });
 
-it('selects only enabled filtered multi options, preserves other selections, and resets the search after dismissal', async () => {
+it('preserves other multi selections while filtering, removing chips, and resetting the form', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -110,9 +108,6 @@ it('selects only enabled filtered multi options, preserves other selections, and
                 label="Teams"
                 name="team"
                 defaultValue={['support', 'locked']}
-                hasSearch
-                hasSelectAll
-                triggerDisplay="labels"
                 options={[
                     {
                         type: 'section',
@@ -131,185 +126,132 @@ it('selects only enabled filtered multi options, preserves other selections, and
         </form>,
         async (output) => {
             const form = output.querySelector('form');
-            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
+            const search = output.querySelector<HTMLInputElement>('input[role="combobox"]');
 
-            if (!form || !trigger) throw new Error('Expected teams form');
-
-            await act(async () => user.click(trigger));
-            const search = document.querySelector<HTMLInputElement>('input[aria-label="Search Teams"]');
-
-            if (!search) throw new Error('Expected team search');
+            if (!form || !search) throw new Error('Expected teams form');
 
             await act(async () => user.type(search, 'unmatched'));
-            expect(document.querySelector('[role="status"]')?.textContent).toBe('No results found');
-            expect(document.querySelector('[role="listbox"] [role="group"]')).toBeNull();
-            const clearSearch = document.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]');
-
-            if (!clearSearch) throw new Error('Expected query recovery action');
-
-            await act(async () => user.click(clearSearch));
+            expect(document.querySelector('[data-slot="combobox-empty"]')?.textContent).toBe('No results found');
+            expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+            await act(async () => user.clear(search));
             await act(async () => user.type(search, 'de'));
 
-            const selectAll = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
-                (option) => option.textContent === 'Select all'
+            const design = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
+                (option) => option.textContent === 'DesignDesign team'
             );
 
-            if (!selectAll) throw new Error('Expected select all');
+            const disabled = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
+                (option) => option.textContent === 'Design locked'
+            );
 
-            await act(async () => user.click(selectAll));
-            expect(new FormData(form).getAll('team')).toEqual(['support', 'locked', 'design', 'development']);
-            expect(trigger.textContent).toBe('Support, Locked, Design, +1');
-            expect(search.value).toBe('de');
-            expect(document.querySelector('[role="listbox"]')).not.toBeNull();
-            await act(async () => user.click(selectAll));
+            if (!design || !disabled) throw new Error('Expected filtered team options');
+
+            await act(async () => user.click(disabled));
             expect(new FormData(form).getAll('team')).toEqual(['support', 'locked']);
-            await act(async () => user.keyboard('{Escape}'));
-            await act(async () => user.click(trigger));
-            expect(document.querySelector<HTMLInputElement>('input[aria-label="Search Teams"]')?.value).toBe('');
-            expect(document.querySelector('[role="listbox"]')?.textContent).toContain('Support');
-            await act(async () => user.keyboard('{Escape}'));
-            const clear = output.querySelector<HTMLButtonElement>('button[aria-label="Clear Teams"]');
+            await act(async () => user.click(design));
+            expect(new FormData(form).getAll('team')).toEqual(['support', 'locked', 'design']);
 
-            if (!clear) throw new Error('Expected multi clear');
+            const remove = output.querySelector<HTMLButtonElement>(
+                '[data-slot="combobox-chip"][aria-label="Support"] button'
+            );
 
-            await act(async () => user.click(clear));
-            expect(new FormData(form).getAll('team')).toEqual([]);
+            if (!remove) throw new Error('Expected support removal');
+
+            await act(async () => user.click(remove));
+            expect(new FormData(form).getAll('team')).toEqual(['locked', 'design']);
+            form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+            await act(async () => form.reset());
+            expect(new FormData(form).getAll('team')).toEqual(['locked', 'design']);
             await act(async () => form.reset());
             expect(new FormData(form).getAll('team')).toEqual(['support', 'locked']);
         }
     );
 });
 
-it.each([false, true])(
-    'omits disabled fields without losing focusability or accepting activation, search=%s',
-    async (hasSearch) => {
-        const change = vi.fn();
-        const user = userEvent.setup();
-
-        await withMounted(
-            <form>
-                <Selector
-                    label="Owner"
-                    name="owner"
-                    value="Alice"
-                    options={['Alice', 'Bob']}
-                    onChange={change}
-                    hasSearch={hasSearch}
-                    disabled
-                    required
-                />
-                <MultiSelector
-                    label="Teams"
-                    name="team"
-                    value={['design', 'support']}
-                    options={['design', 'support']}
-                    onChange={change}
-                    hasSearch={hasSearch}
-                    disabled
-                    required
-                />
-            </form>,
-            async (output) => {
-                const form = output.querySelector('form');
-                const triggers = output.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
-
-                if (!form || triggers.length !== 2) throw new Error('Expected disabled fields');
-
-                for (const trigger of triggers) {
-                    trigger.focus();
-                    expect(document.activeElement).toBe(trigger);
-                    expect(trigger.getAttribute('aria-disabled')).toBe('true');
-                    await act(async () => user.click(trigger));
-                    await act(async () => user.keyboard('{ArrowDown}{Enter}'));
-                }
-
-                expect([...triggers].every((trigger) => trigger.getAttribute('aria-expanded') !== 'true')).toBe(true);
-
-                for (const list of document.querySelectorAll('[role="listbox"]'))
-                    expect(list.closest('[hidden]')).not.toBeNull();
-                expect(change).not.toHaveBeenCalled();
-                expect([...new FormData(form)]).toEqual([]);
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
-            }
-        );
-    }
-);
-
-it('skips disabled options during keyboard selection and keeps search and select-all opt-in', async () => {
+it.each([false, true])('omits disabled fields and rejects activation, search=%s', async (hasSearch) => {
+    const change = vi.fn();
     const user = userEvent.setup();
 
     await withMounted(
         <form>
+            <Selector
+                label="Owner"
+                name="owner"
+                value="Alice"
+                options={['Alice', 'Bob']}
+                onChange={change}
+                hasSearch={hasSearch}
+                disabled
+                required
+            />
             <MultiSelector
                 label="Teams"
                 name="team"
-                options={[{ value: 'locked', label: 'Locked', disabled: true }, 'Design', 'Support']}
+                value={['design', 'support']}
+                options={['design', 'support']}
+                onChange={change}
+                disabled
+                required
             />
         </form>,
         async (output) => {
-            const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
             const form = output.querySelector('form');
+            const controls = output.querySelectorAll<HTMLInputElement | HTMLButtonElement>('[role="combobox"]');
 
-            if (!trigger || !form) throw new Error('Expected teams form');
+            if (!form || controls.length !== 2) throw new Error('Expected disabled fields');
 
-            trigger.focus();
-            await act(async () => user.keyboard('{ArrowDown}'));
-            expect(document.querySelector('input[placeholder="Search..."]')).toBeNull();
-            expect(document.querySelector('[role="listbox"]')?.textContent).not.toContain('Select all');
-            await act(async () => user.keyboard('{Enter}'));
-            expect(new FormData(form).getAll('team')).toEqual(['Design']);
-            expect(trigger.textContent).toContain('1 selected');
+            for (const control of controls) {
+                expect(control.disabled).toBe(true);
+                await act(async () => user.click(control));
+                await act(async () => user.keyboard('{ArrowDown}{Enter}'));
+            }
+
+            expect([...controls].every((control) => control.getAttribute('aria-expanded') !== 'true')).toBe(true);
+            expect(change).not.toHaveBeenCalled();
+            expect([...new FormData(form)]).toEqual([]);
+            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
         }
     );
 });
 
-it('keeps a rejected clear controlled and displays selected badges without losing overflow values', async () => {
+it('keeps rejected chip removal and searchable clear out of controlled submission', async () => {
     const user = userEvent.setup();
-    const change = vi.fn();
+    const ownerChange = vi.fn();
+    const teamsChange = vi.fn();
 
     await withMounted(
         <form>
-            <Selector label="Owner" name="owner" value="Alice" onChange={change} options={['Alice']} />
+            <Selector label="Owner" name="owner" value="Alice" onChange={ownerChange} options={['Alice']} hasSearch />
             <MultiSelector
                 label="Teams"
                 name="team"
-                options={['Alpha', 'Beta', 'Gamma', 'Delta']}
-                triggerDisplay="badges"
-                hasSelectAll
+                value={['Alpha', 'Beta']}
+                onChange={teamsChange}
+                options={['Alpha', 'Beta']}
             />
         </form>,
         async (output) => {
             const form = output.querySelector('form');
-            const clearOwner = output.querySelector<HTMLButtonElement>('button[aria-label="Clear Owner"]');
-            const trigger = output.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')[1];
+            const clear = output.querySelector<HTMLButtonElement>('[data-slot="combobox-clear"]');
 
-            if (!form || !clearOwner || !trigger) throw new Error('Expected owner and teams fields');
-
-            await act(async () => user.click(clearOwner));
-            expect(change).toHaveBeenCalledWith(null);
-            expect(new FormData(form).getAll('owner')).toEqual(['Alice']);
-            expect(output.querySelector('button[aria-expanded]')?.textContent).toBe('Alice');
-            await act(async () => user.click(trigger));
-
-            const selectAll = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
-                (option) => option.textContent === 'Select all'
+            const remove = output.querySelector<HTMLButtonElement>(
+                '[data-slot="combobox-chip"][aria-label="Alpha"] button'
             );
 
-            if (!selectAll) throw new Error('Expected select all');
+            if (!form || !clear || !remove) throw new Error('Expected controlled fields');
 
-            await act(async () => user.click(selectAll));
-            expect([...trigger.querySelectorAll('[data-slot="badge"]')].map((badge) => badge.textContent)).toEqual([
-                'Alpha',
-                'Beta',
-                'Gamma'
-            ]);
-            expect(trigger.textContent).toBe('AlphaBetaGamma+1');
-            expect(new FormData(form).getAll('team')).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta']);
+            await act(async () => user.click(clear));
+            expect(ownerChange).toHaveBeenCalledWith(null);
+            expect(new FormData(form).getAll('owner')).toEqual(['Alice']);
+            await act(async () => user.click(remove));
+            expect(teamsChange).toHaveBeenCalledWith(['Beta']);
+            expect(new FormData(form).getAll('team')).toEqual(['Alpha', 'Beta']);
+            expect(output.querySelector('[data-slot="combobox-chip"][aria-label="Alpha"]')).not.toBeNull();
         }
     );
 });
 
-it('closes a revoked picker without losing its value or reviving its old query when access returns', async () => {
+it('rejects selection after an open field is disabled without losing its submitted value when re-enabled', async () => {
     const user = userEvent.setup();
     const change = vi.fn();
     let setDisabled: (disabled: boolean) => void = () => {};
@@ -334,25 +276,27 @@ it('closes a revoked picker without losing its value or reviving its old query w
     }
 
     await withMounted(<Access />, async (output) => {
-        const trigger = output.querySelector<HTMLButtonElement>('button[aria-expanded]');
+        const search = output.querySelector<HTMLInputElement>('input[role="combobox"]');
         const form = output.querySelector('form');
 
-        if (!trigger || !form) throw new Error('Expected revocable owner field');
+        if (!search || !form) throw new Error('Expected revocable owner field');
 
-        await act(async () => user.click(trigger));
-        const search = document.querySelector<HTMLInputElement>('input[aria-label="Search Owner"]');
-
-        if (!search) throw new Error('Expected owner search');
-
+        await act(async () => user.click(search));
+        await act(async () => user.clear(search));
         await act(async () => user.type(search, 'Bob'));
+
+        const bob = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
+            (option) => option.textContent === 'Bob'
+        );
+
+        if (!bob) throw new Error('Expected Bob');
+
+        change.mockClear();
         await act(async () => setDisabled(true));
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
+        await act(async () => user.click(bob));
+        expect(change).not.toHaveBeenCalled();
         expect(new FormData(form).getAll('owner')).toEqual([]);
         await act(async () => setDisabled(false));
-        expect(trigger.getAttribute('aria-expanded')).toBe('false');
         expect(new FormData(form).getAll('owner')).toEqual(['Alice']);
-        await act(async () => user.click(trigger));
-        expect(document.querySelector<HTMLInputElement>('input[aria-label="Search Owner"]')?.value).toBe('');
-        expect(change).not.toHaveBeenCalled();
     });
 });

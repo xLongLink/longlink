@@ -40,9 +40,7 @@ export function SolutionTags({
                                 options={tags
                                     .filter((tag) => tag.kind === 'tag')
                                     .map((tag) => ({ value: tag.id, label: tag.name, icon: tag.icon }))}
-                                triggerDisplay="labels"
                                 placeholder="Select tags"
-                                hasSearch
                                 emptyText="Create tabs in organization settings under General first."
                             />
                             <Stack direction="horizontal" gap={2} justify="end">

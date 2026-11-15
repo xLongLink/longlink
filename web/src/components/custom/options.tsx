@@ -1,4 +1,3 @@
-import { Icon } from './icon';
 import { isString } from 'es-toolkit';
 import type { ReactNode } from 'react';
 import type { IconName } from 'lucide-react/dynamic';
@@ -17,31 +16,25 @@ export type SelectorOptionType =
     | { type: 'divider' }
     | { type: 'section'; title?: string; options: SelectorOptionData[] };
 
-export type PickerOption = Omit<SelectorOptionData, 'icon'> & { icon?: ReactNode };
+/** Normalizes View options into the grouped collection used by Select and Combobox. */
+export function selectorOptions(options: SelectorOptionType[]) {
+    const groups: { title?: string; divider?: boolean; items: SelectorOptionData[] }[] = [];
+    let items: SelectorOptionData[] = [];
 
-export type PickerOptionType =
-    | string
-    | PickerOption
-    | { type: 'divider' }
-    | { type: 'section'; title?: string; options: PickerOption[] };
+    // Preserve source order and explicit section boundaries.
+    for (const option of options) {
+        if (!isString(option) && 'type' in option) {
+            if (items.length) groups.push({ items });
+            items = [];
+            groups.push(
+                option.type === 'divider'
+                    ? { divider: true, items: [] }
+                    : { title: option.title, items: option.options }
+            );
+        } else items.push(isString(option) ? { value: option } : option);
+    }
 
-/** Adapts Lucide icon names for both single and multiple option pickers. */
-export function selectorOptions(options: SelectorOptionType[]): PickerOptionType[] {
-    return options.map((option) => {
-        // Preserve plain labels and dividers without adding a glyph.
-        if (isString(option) || ('type' in option && option.type === 'divider')) return option;
+    if (items.length) groups.push({ items });
 
-        // Load section glyphs through the shared icon renderer.
-        if ('type' in option)
-            return {
-                ...option,
-                options: option.options.map((entry) => ({
-                    ...entry,
-                    icon: entry.icon ? <Icon icon={entry.icon} size="sm" /> : undefined
-                }))
-            };
-
-        // Keep selected values and menu rows on the same icon-loading path.
-        return { ...option, icon: option.icon ? <Icon icon={option.icon} size="sm" /> : undefined };
-    });
+    return groups.map((group, id) => ({ ...group, id }));
 }

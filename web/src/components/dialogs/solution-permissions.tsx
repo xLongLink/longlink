@@ -3,7 +3,6 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
-import { Picker } from '@/components/custom/picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -13,6 +12,7 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function SolutionPermissionsDialog({
     solutionId,
@@ -145,21 +145,39 @@ function MemberPermissions({
                         header: 'Role',
                         width: proportional(1),
                         renderCell: (member) => (
-                            <Picker
-                                label={`Role for ${member.name}`}
-                                labelHidden
+                            <Select
                                 disabled={save.isPending}
                                 value={member.role}
-                                options={[
-                                    { value: '', label: 'No access', icon: <Ban /> },
-                                    ...settings.roles.map((value) => ({
-                                        value,
-                                        label: value,
-                                        icon: value === 'read' ? <Eye /> : value === 'write' ? <Pencil /> : <Shield />
-                                    }))
+                                items={[
+                                    { value: '', label: 'No access' },
+                                    ...settings.roles.map((value) => ({ value, label: value }))
                                 ]}
-                                onChange={(role) => setRoles((current) => ({ ...current, [member.id]: role ?? '' }))}
-                            />
+                                onValueChange={(role) =>
+                                    setRoles((current) => ({ ...current, [member.id]: role ?? '' }))
+                                }
+                            >
+                                <SelectTrigger aria-label={`Role for ${member.name}`} className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">
+                                        <Ban aria-hidden="true" />
+                                        No access
+                                    </SelectItem>
+                                    {settings.roles.map((role) => (
+                                        <SelectItem key={role} value={role}>
+                                            {role === 'read' ? (
+                                                <Eye aria-hidden="true" />
+                                            ) : role === 'write' ? (
+                                                <Pencil aria-hidden="true" />
+                                            ) : (
+                                                <Shield aria-hidden="true" />
+                                            )}
+                                            {role}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         )
                     }
                 ]}
