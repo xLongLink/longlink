@@ -32,7 +32,6 @@ export function createErrorReporter(notify: (message: string) => void): ErrorRep
         if (isCanceledRequest(cause)) return;
 
         // Object identity is useful even when a transport throws something other than an Error.
-        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- WeakSet eligibility is an identity check, not input validation.
         if (typeof cause === 'object' && cause !== null) {
             if (reported.has(cause)) return;
             reported.add(cause);

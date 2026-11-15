@@ -1,11 +1,9 @@
 import { cn } from 'cn';
 import * as dicebear from '@dicebear/core';
 import { useMemo, useState, type ComponentProps } from 'react';
+import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar';
 import waves from '@dicebear/styles/waves.json' with { type: 'json' };
 import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
-import { Avatar as AvatarRoot, AvatarImage } from '@/components/shadcn/avatar';
-
-export { AvatarGroup } from '@/components/shadcn/avatar';
 
 // Use a subdued palette for generated user avatars without altering their shapes.
 const glyphsStyle = new dicebear.Style({
@@ -21,8 +19,7 @@ const glyphsStyle = new dicebear.Style({
 
 const wavesStyle = new dicebear.Style(waves);
 
-/* oxlint-disable anti-slop/no-shape-in-symbol-names -- "shape" is the existing public avatar geometry prop. */
-interface AvatarProps extends Omit<ComponentProps<typeof AvatarRoot>, 'size'> {
+interface AvatarProps extends AvatarPrimitive.Root.Props {
     shape?: 'circle' | 'rounded' | 'square';
     name?: string;
     src?: string | null;
@@ -30,19 +27,9 @@ interface AvatarProps extends Omit<ComponentProps<typeof AvatarRoot>, 'size'> {
 }
 
 /** Uses local Waves fallbacks for rounded avatars and Glyphs for circles and squares. */
-export function Avatar({
-    className,
-    src,
-    name,
-    size = 'md',
-    children,
-    shape: geometry = 'circle',
-    ...props
-}: AvatarProps) {
-    /* oxlint-enable anti-slop/no-shape-in-symbol-names */
-
-    // Select fallback artwork from the effective geometry.
-    const style = geometry === 'rounded' ? wavesStyle : glyphsStyle;
+export function Avatar({ className, src, name, size = 'md', children, shape = 'circle', ...props }: AvatarProps) {
+    // Select fallback artwork from the shape.
+    const style = shape === 'rounded' ? wavesStyle : glyphsStyle;
 
     // Reuse fixed-seed artwork until its style changes.
     const fallbackSrc = useMemo(() => {
@@ -61,20 +48,23 @@ export function Avatar({
     const labelled = Boolean(accessibleName || props['aria-label'] || props['aria-labelledby']);
 
     return (
-        <AvatarRoot
+        <AvatarPrimitive.Root
+            data-slot="avatar"
+            data-size={size}
             role={labelled ? 'img' : 'presentation'}
             aria-label={accessibleName}
             aria-hidden={labelled ? undefined : true}
             {...props}
-            size={size === 'md' ? 'default' : size}
             className={cn(
-                'overflow-hidden [&>[data-slot=avatar-image]]:rounded-[inherit] after:rounded-[inherit]',
-                geometry === 'circle' ? 'rounded-full' : geometry === 'rounded' ? 'rounded-lg' : 'rounded-none',
+                'group/avatar relative flex size-8 shrink-0 overflow-hidden select-none after:absolute after:inset-0 after:rounded-[inherit] after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten',
+                shape === 'circle' ? 'rounded-full' : shape === 'rounded' ? 'rounded-lg' : 'rounded-none',
                 className
             )}
         >
-            <AvatarImage
+            <AvatarPrimitive.Image
                 key={imageSrc}
+                data-slot="avatar-image"
+                className="aspect-square size-full rounded-[inherit] object-cover"
                 src={imageSrc}
                 alt=""
                 keepMounted
@@ -83,6 +73,20 @@ export function Avatar({
                 }}
             />
             {children}
-        </AvatarRoot>
+        </AvatarPrimitive.Root>
+    );
+}
+
+/** Displays overlapping avatars with the shared group styling. */
+export function AvatarGroup({ className, ...props }: ComponentProps<'div'>) {
+    return (
+        <div
+            data-slot="avatar-group"
+            className={cn(
+                'group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background',
+                className
+            )}
+            {...props}
+        />
     );
 }

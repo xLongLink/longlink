@@ -1,5 +1,4 @@
 // @vitest-environment happy-dom
-/* oxlint-disable anti-slop/no-shape-in-symbol-names -- The existing public avatar prop is named shape. */
 import { it, expect } from 'vitest';
 import { act, useRef, useState } from 'react';
 import { Avatar } from '@/components/longlink/avatar';

@@ -31,7 +31,6 @@ export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>
 
             const submission = Promise.resolve().then(async () => {
                 try {
-                    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The submission boundary accepts a Platform callback or a scoped SDK path.
                     if (typeof action === 'function') {
                         await action(data);
                     } else {

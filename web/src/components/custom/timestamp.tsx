@@ -18,7 +18,6 @@ export function Timestamp({ value, format = 'date_time' }: { value: number | str
     // eslint-disable-next-line react/purity -- Seed the client clock once without changing the hydration markup.
     if (format === 'relative' && canReadClock && now === null) setNow(Date.now());
 
-    // eslint-disable-next-line anti-slop/no-runtime-typeof -- The public input boundary distinguishes Unix timestamps from date strings.
     const date = new Date(typeof value === 'number' && value < 1e12 ? value * 1000 : value);
 
     if (Number.isNaN(date.getTime())) return null;

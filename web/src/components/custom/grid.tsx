@@ -61,7 +61,6 @@ export function Grid({
     const columns = collapsed ? 1 : configuredColumns;
     let template: string | undefined;
 
-    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- The public columns contract is a number or responsive track configuration.
     if (typeof columns === 'object') {
         const repeat = columns.repeat === 'fit' ? 'auto-fit' : 'auto-fill';
 

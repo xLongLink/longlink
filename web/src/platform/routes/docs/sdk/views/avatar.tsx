@@ -23,19 +23,19 @@ export default function AvatarPage() {
     <Stack direction="horizontal" gap={6} align="center">
       <AvatarGroup>
         <Avatar name="Ada Lovelace" shape="circle" size="sm" />
-        <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
-        <Avatar name="Ada Lovelace" shape="square" size="sm" />
-      </AvatarGroup>
-
-      <AvatarGroup>
         <Avatar name="Ada Lovelace" shape="circle" size="md" />
-        <Avatar name="Ada Lovelace" shape="rounded" size="md" />
-        <Avatar name="Ada Lovelace" shape="square" size="md" />
+        <Avatar name="Ada Lovelace" shape="circle" size="lg" />
       </AvatarGroup>
 
       <AvatarGroup>
-        <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+        <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
+        <Avatar name="Ada Lovelace" shape="rounded" size="md" />
         <Avatar name="Ada Lovelace" shape="rounded" size="lg" />
+      </AvatarGroup>
+
+      <AvatarGroup>
+        <Avatar name="Ada Lovelace" shape="square" size="sm" />
+        <Avatar name="Ada Lovelace" shape="square" size="md" />
         <Avatar name="Ada Lovelace" shape="square" size="lg" />
       </AvatarGroup>
     </Stack>
@@ -52,19 +52,19 @@ export function AvatarExample() {
         <Stack direction="horizontal" gap={6} align="center">
             <AvatarGroup>
                 <Avatar name="Ada Lovelace" shape="circle" size="sm" />
-                <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
-                <Avatar name="Ada Lovelace" shape="square" size="sm" />
-            </AvatarGroup>
-
-            <AvatarGroup>
                 <Avatar name="Ada Lovelace" shape="circle" size="md" />
-                <Avatar name="Ada Lovelace" shape="rounded" size="md" />
-                <Avatar name="Ada Lovelace" shape="square" size="md" />
+                <Avatar name="Ada Lovelace" shape="circle" size="lg" />
             </AvatarGroup>
 
             <AvatarGroup>
-                <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+                <Avatar name="Ada Lovelace" shape="rounded" size="sm" />
+                <Avatar name="Ada Lovelace" shape="rounded" size="md" />
                 <Avatar name="Ada Lovelace" shape="rounded" size="lg" />
+            </AvatarGroup>
+
+            <AvatarGroup>
+                <Avatar name="Ada Lovelace" shape="square" size="sm" />
+                <Avatar name="Ada Lovelace" shape="square" size="md" />
                 <Avatar name="Ada Lovelace" shape="square" size="lg" />
             </AvatarGroup>
         </Stack>
