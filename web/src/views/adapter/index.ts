@@ -1,20 +1,20 @@
 /** @category Layouts */
-export { Stack, StackItem } from './adapter/layouts/stack';
+export { Stack, StackItem } from './layouts/stack';
 
 /** @category Layouts */
-export { Grid, GridSpan } from './adapter/layouts/grid';
+export { Grid, GridSpan } from './layouts/grid';
 
 /** @category Layouts */
-export { Disclosure } from './adapter/layouts/disclosure';
+export { Disclosure } from './layouts/disclosure';
 
 /** @category Layouts */
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './adapter/layouts/collapsible';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './layouts/collapsible';
 
 /** @category Display */
-export { Heading } from './adapter/display/heading';
+export { Heading } from './display/heading';
 
 /** @category Display */
-export { Text } from './adapter/display/text';
+export { Text } from './display/text';
 
 /** @category Display */
 export {
@@ -25,19 +25,19 @@ export {
     AvatarBadge,
     AvatarGroup,
     AvatarGroupCount
-} from './adapter/display/avatar';
+} from './display/avatar';
 
 /** @category Display */
-export { Image } from './adapter/display/image';
+export { Image } from './display/image';
 
 /** @category Display */
-export { Badge } from './adapter/display/badge';
+export { Badge } from './display/badge';
 
 /** @category Display */
-export { FileType } from './adapter/display/file-type';
+export { FileType } from './display/file-type';
 
 /** @category Display */
-export { Token } from './adapter/display/token';
+export { Token } from './display/token';
 
 /** @category Layouts */
 export {
@@ -49,10 +49,10 @@ export {
     CardContent,
     CardFooter,
     InteractiveCard
-} from './adapter/layouts/card';
+} from './layouts/card';
 
 /** @category Action */
-export { Button, ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from './adapter/action/button';
+export { Button, ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from './action/button';
 
 /** @category Action */
 export {
@@ -71,10 +71,10 @@ export {
     DropdownMenuSub,
     DropdownMenuSubTrigger,
     DropdownMenuSubContent
-} from './adapter/action/dropdown-menu';
+} from './action/dropdown-menu';
 
 /** @category Display */
-export { Separator, Divider } from './adapter/display/separator';
+export { Separator, Divider } from './display/separator';
 
 /** @category Layouts */
 export {
@@ -89,15 +89,15 @@ export {
     DialogFooter,
     DialogTitle,
     DialogDescription
-} from './adapter/layouts/dialog';
+} from './layouts/dialog';
 
 /** @category Form */
-export { Controller, FormProvider } from './adapter/form/form';
+export { Controller, FormProvider } from './form/form';
 
-export { z, zodResolver } from './adapter/form/validation';
+export { z, zodResolver } from './form/validation';
 
 /** @category Form */
-export { Calendar } from './adapter/form/calendar';
+export { Calendar } from './form/calendar';
 
 /** @category Form */
 export {
@@ -118,15 +118,15 @@ export {
     parseTimeValue,
     formatTimeValue,
     parseTimeInput
-} from './adapter/form/time-picker';
+} from './form/time-picker';
 
-export type * from './adapter/form/time-picker';
-
-/** @category Form */
-export { Input } from './adapter/form/input';
+export type * from './form/time-picker';
 
 /** @category Form */
-export { Textarea } from './adapter/form/textarea';
+export { Input } from './form/input';
+
+/** @category Form */
+export { Textarea } from './form/textarea';
 
 /** @category Form */
 export {
@@ -140,7 +140,7 @@ export {
     FieldSet,
     FieldContent,
     FieldTitle
-} from './adapter/form/field';
+} from './form/field';
 
 /** @category Form */
 export {
@@ -150,16 +150,16 @@ export {
     InputGroupInput,
     InputGroupTextarea,
     InputGroupText
-} from './adapter/form/input-group';
+} from './form/input-group';
 
 /** @category Form */
-export { Checkbox } from './adapter/form/checkbox';
+export { Checkbox } from './form/checkbox';
 
 /** @category Form */
-export { Switch } from './adapter/form/switch';
+export { Switch } from './form/switch';
 
 /** @category Form */
-export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from './adapter/form/slider';
+export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from './form/slider';
 
 /** @category Form */
 export {
@@ -173,7 +173,7 @@ export {
     SelectSeparator,
     SelectTrigger,
     SelectValue
-} from './adapter/form/select';
+} from './form/select';
 
 /** @category Form */
 export {
@@ -192,10 +192,10 @@ export {
     ComboboxChipsInput,
     ComboboxTrigger,
     ComboboxValue
-} from './adapter/form/combobox';
+} from './form/combobox';
 
 /** @category Form */
-export { RadioGroup, RadioGroupItem } from './adapter/form/radio-group';
+export { RadioGroup, RadioGroupItem } from './form/radio-group';
 
 /** @category Display */
 export {
@@ -210,7 +210,7 @@ export {
     DataTable,
     proportional,
     pixel
-} from './adapter/display/table';
+} from './display/table';
 
 /** @category Action */
 export {
@@ -222,10 +222,10 @@ export {
     PaginationNext,
     PaginationEllipsis,
     DataPagination
-} from './adapter/action/pagination';
+} from './action/pagination';
 
 /** @category Display */
-export { Timestamp } from './adapter/display/timestamp';
+export { Timestamp } from './display/timestamp';
 
 /** @category Display */
 export {
@@ -239,7 +239,7 @@ export {
     CodeBlockLineActions,
     CodeBlockTitle,
     CodeBlockWrapToggle
-} from './adapter/display/code-block';
+} from './display/code-block';
 
 export type {
     CodeBlockProps,
@@ -250,10 +250,10 @@ export type {
     CodeBlockLine,
     CodeBlockLineSpec,
     CodeBlockThemes
-} from './adapter/display/code-block';
+} from './display/code-block';
 
 /** @category Display */
-export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from './adapter/display/progress';
+export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from './display/progress';
 
 /** @category Layouts */
 export {
@@ -270,28 +270,28 @@ export {
     ProgressStepper,
     Wizard,
     Step
-} from './adapter/layouts/stepper';
+} from './layouts/stepper';
 
 /** @category Layouts */
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './adapter/layouts/tabs';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './layouts/tabs';
 
 /** @category Display */
-export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from './adapter/display/empty';
+export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia } from './display/empty';
 
 /** @category Layouts */
-export { Menu, MenuSection, MenuItem, MenuSubSection } from './adapter/layouts/menu';
+export { Menu, MenuSection, MenuItem, MenuSubSection } from './layouts/menu';
 
 /** @category Display */
-export { Icon, IconTile } from './adapter/display/icon';
+export { Icon, IconTile } from './display/icon';
 
 /** @category Action */
-export { Link } from './adapter/action/link';
+export { Link } from './action/link';
 
 /** @category Display */
-export { Currency } from './adapter/display/currency';
+export { Currency } from './display/currency';
 
 /** @category Display */
-export { FileViewer } from './adapter/display/file-viewer';
+export { FileViewer } from './display/file-viewer';
 
 /** @category Charts */
 export {
@@ -325,21 +325,21 @@ export {
     ChartTooltipContent,
     ChartLegend,
     ChartLegendContent
-} from './adapter/charts/chart';
+} from './charts/chart';
 
-export type { ChartConfig } from './adapter/charts/chart';
+export type { ChartConfig } from './charts/chart';
 
 /** @category Others */
-export { Maps } from './adapter/others/maps';
+export { Maps } from './others/maps';
 
 /** @category Charts */
-export { MetricCard, MetricGrid, ProviderChart, UsageChart } from './adapter/charts/analytics';
+export { MetricCard, MetricGrid, ProviderChart, UsageChart } from './charts/analytics';
 
 /** @category Charts */
-export { CountryChart } from './adapter/charts/country-chart';
+export { CountryChart } from './charts/country-chart';
 
 /** @category Charts */
-export { RevenueFlow } from './adapter/charts/revenue-flow';
+export { RevenueFlow } from './charts/revenue-flow';
 
 /** @category Display */
 export {
@@ -350,44 +350,44 @@ export {
     DataGridColumnHeader,
     DataGridPagination,
     DataGridScrollArea
-} from './adapter/display/data-grid';
+} from './display/data-grid';
 
 /** @category Form */
-export { Filters, createFilterQuery, flattenFilterConditions } from './adapter/form/filters';
+export { Filters, createFilterQuery, flattenFilterConditions } from './form/filters';
 
 /** @category Layouts */
-export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from './adapter/layouts/frame';
+export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from './layouts/frame';
 
-export { Fragment } from './adapter/runtime/fragment';
+export { Fragment } from './runtime/fragment';
 
-export { useState } from './hooks/use-state';
+export { useState } from '../hooks/use-state';
 
-export { useEffect } from './hooks/use-effect';
+export { useEffect } from '../hooks/use-effect';
 
-export { useMemo } from './hooks/use-memo';
+export { useMemo } from '../hooks/use-memo';
 
-export { useRef } from './hooks/use-ref';
+export { useRef } from '../hooks/use-ref';
 
-export { useApi } from './hooks/use-api';
+export { useApi } from '../hooks/use-api';
 
-export { useConfirm } from './hooks/use-confirm';
+export { useConfirm } from '../hooks/use-confirm';
 
-export { useForm } from './hooks/use-form';
+export { useForm } from '../hooks/use-form';
 
-export { useFormContext } from './hooks/use-form-context';
+export { useFormContext } from '../hooks/use-form-context';
 
-export { useSubmit } from './hooks/use-submit';
+export { useSubmit } from '../hooks/use-submit';
 
-export { useDownload } from './hooks/use-download';
+export { useDownload } from '../hooks/use-download';
 
-export { useTable } from './hooks/use-table';
+export { useTable } from '../hooks/use-table';
 
-export { useComboboxAnchor } from './hooks/use-combobox-anchor';
+export { useComboboxAnchor } from '../hooks/use-combobox-anchor';
 
-export { useTimePicker } from './hooks/use-time-picker';
+export { useTimePicker } from '../hooks/use-time-picker';
 
-export { useCodeBlockConfig } from './hooks/use-code-block-config';
+export { useCodeBlockConfig } from '../hooks/use-code-block-config';
 
-export { useCodeBlockFolding } from './hooks/use-code-block-folding';
+export { useCodeBlockFolding } from '../hooks/use-code-block-folding';
 
-export { useCodeBlockSelection } from './hooks/use-code-block-selection';
+export { useCodeBlockSelection } from '../hooks/use-code-block-selection';

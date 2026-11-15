@@ -2,7 +2,7 @@ import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
 import { CircleX } from 'lucide-react';
-import * as components from './components';
+import * as components from './adapter';
 import { createRoot } from 'react-dom/client';
 import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { transform } from 'sucrase';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import * as components from '@/views/components';
+import * as components from '@/views/adapter';
 import userEvent from '@testing-library/user-event';
 import { traceFlow } from '@/components/custom/flow';
 import { UsageChart } from '@/components/custom/analytics';

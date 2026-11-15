@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 test('published component provenance matches the implementation exposed to Views', async () => {
     const root = fileURLToPath(new URL('../', import.meta.url));
-    const entry = path.join(root, 'src/views/components.ts');
+    const entry = path.join(root, 'src/views/adapter/index.ts');
     const config = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
     const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
     const program = ts.createProgram([entry], parsed.options);
@@ -26,11 +26,11 @@ test('published component provenance matches the implementation exposed to Views
     for (const statement of source.statements) {
         assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
         const target = statement.moduleSpecifier.text;
-        assert.match(target, /^\.\/(?:adapter\/[^/]+|hooks)\/[^/]+$/);
-        if (target.startsWith('./adapter/')) assert.ok(categories.has(target.split('/')[2]));
+        assert.match(target, /^(?:\.\/[^/]+|\.\.\/hooks)\/[^/]+$/);
+        if (target.startsWith('./')) assert.ok(categories.has(target.split('/')[1]));
         if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
             for (const specifier of statement.exportClause.elements) {
-                assert.equal(target.startsWith('./hooks/'), /^use[A-Z]/.test(specifier.name.text));
+                assert.equal(target.startsWith('../hooks/'), /^use[A-Z]/.test(specifier.name.text));
             }
         }
     }
@@ -54,7 +54,7 @@ test('published component provenance matches the implementation exposed to Views
         assert.ok(declaration, `${component.name} must have an explicit public entry point.`);
         const target = declaration.parent.parent.moduleSpecifier.text;
         assert.equal(
-            target.startsWith('./hooks/') ? 'hooks' : target.split('/')[2],
+            target.startsWith('../hooks/') ? 'hooks' : target.split('/')[1],
             /^use[A-Z]/.test(component.name) ? 'hooks' : component.category.toLowerCase(),
             `${component.name} must follow its documentation category.`
         );

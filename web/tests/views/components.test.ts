@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import * as recharts from 'recharts';
+import * as components from '@/views/adapter';
 import * as card from '@/components/shadcn/card';
-import * as components from '@/views/components';
 import * as chart from '@/components/shadcn/chart';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 

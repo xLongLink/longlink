@@ -3,7 +3,7 @@ import * as React from 'react';
 import { transform } from 'sucrase';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
-import * as components from '@/views/components';
+import * as components from '@/views/adapter';
 import userEvent from '@testing-library/user-event';
 import { MenuNavigationContext } from '@/components/custom/contexts';
 import source from '../../../../sdk/longlink/.static/new/src/views/settings.jsx?raw';
