@@ -56,7 +56,7 @@ it('preserves a labelled live status and its ref while updating truncation detai
             });
             await act(async () => await user.hover(paragraph));
             await vi.waitFor(() =>
-                expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Updated long detail')
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe('Updated long detail')
             );
 
             expect(output.querySelector('p')).toBe(paragraph);
@@ -69,8 +69,7 @@ it('preserves a labelled live status and its ref while updating truncation detai
             expect(paragraph.classList.contains('publication-status')).toBe(true);
             expect(paragraph.style.maxWidth).toBe('80px');
             expect(paragraph.hasAttribute('tabindex')).toBe(false);
-            expect(paragraph.getAttribute('aria-describedby')).toBe(document.querySelector('[role="tooltip"]')?.id);
-            expect(document.querySelector('[role="tooltip"]')?.getAttribute('data-side')).toBe('bottom');
+            expect(document.querySelector('[data-slot="tooltip-content"]')?.getAttribute('data-side')).toBe('bottom');
 
             await act(async () => await user.unhover(paragraph));
             Object.defineProperty(paragraph, 'scrollWidth', { configurable: true, value: 40 });
@@ -78,7 +77,7 @@ it('preserves a labelled live status and its ref while updating truncation detai
                 paragraph.textContent = 'Short';
             });
             await act(async () => await user.hover(paragraph));
-            await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+            await vi.waitFor(() => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull());
             expect(textRef.current).toBe(paragraph);
             expect(paragraph.getAttribute('aria-labelledby')).toBe('status-label');
         }
@@ -143,13 +142,13 @@ it('clips text without exposing a tooltip when truncation details are disabled',
             Object.defineProperty(text, 'scrollWidth', { value: 200 });
             await act(async () => await user.hover(text));
 
-            expect(document.querySelector('[role="tooltip"]')).toBeNull();
+            expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
             expect(text.hasAttribute('aria-describedby')).toBe(false);
         }
     );
 });
 
-it('does not add a text tab stop or open truncation details for a nested link’s keyboard focus', async () => {
+it('keeps nested links keyboard accessible without adding a text tab stop', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -170,7 +169,14 @@ it('does not add a text tab stop or open truncation details for a nested link’
 
             expect(document.activeElement).toBe(text.querySelector('a'));
             expect(text.hasAttribute('tabindex')).toBe(false);
-            expect(document.querySelector('[role="tooltip"]')).toBeNull();
+            await vi.waitFor(() =>
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe(
+                    'Details additional truncated detail'
+                )
+            );
+            await act(async () => user.keyboard('{Escape}'));
+            await vi.waitFor(() => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull());
+            expect(document.activeElement).toBe(text.querySelector('a'));
         }
     );
 });
@@ -210,7 +216,7 @@ it('uses vertical content geometry for multiline overflow and removes details wh
                     await new Promise((resolve) => setTimeout(resolve, 250));
                 });
 
-                expect(document.querySelector('[role="tooltip"]')?.textContent).toBe(
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe(
                     'Full detail extending beyond two lines'
                 );
 
@@ -218,7 +224,7 @@ it('uses vertical content geometry for multiline overflow and removes details wh
                 await act(async () => {
                     paragraph.textContent = 'Two lines that fit';
                 });
-                await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+                await vi.waitFor(() => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull());
                 expect(output.querySelector('p')).toBe(paragraph);
                 expect(paragraph.hasAttribute('aria-describedby')).toBe(false);
             }

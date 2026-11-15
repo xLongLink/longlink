@@ -1,7 +1,7 @@
 import { cn } from 'cn';
-import { TypographyTooltip } from './typography-tooltip';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useEffect, useRef, useState, type HTMLAttributes, type Ref } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
 
 export type TextProps = Omit<HTMLAttributes<HTMLElement>, 'color'> & {
     as?: 'span' | 'p' | 'div' | 'label' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -81,12 +81,23 @@ export function Text({
     );
 
     return (
-        <TypographyTooltip
-            enabled={maxLines > 0 && hasTruncateTooltip !== false && overflow.truncated}
-            content={overflow.text}
-            placement={hasTruncateTooltip === true || hasTruncateTooltip === false ? 'above' : hasTruncateTooltip}
-        >
-            {content}
-        </TypographyTooltip>
+        <TooltipProvider>
+            <Tooltip disabled={maxLines <= 0 || hasTruncateTooltip === false || !overflow.truncated}>
+                <TooltipTrigger render={content} tabIndex={props.tabIndex} />
+                <TooltipContent
+                    side={
+                        hasTruncateTooltip === 'below'
+                            ? 'bottom'
+                            : hasTruncateTooltip === 'start'
+                              ? 'inline-start'
+                              : hasTruncateTooltip === 'end'
+                                ? 'inline-end'
+                                : 'top'
+                    }
+                >
+                    {overflow.text}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }

@@ -7,8 +7,8 @@ import { Separator } from '@/components/shadcn/separator';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
-import { TypographyTooltip } from '@/components/custom/typography-tooltip';
 import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
 
 /** Finds the longest platform tab path that matches a pathname. */
 function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {
@@ -97,51 +97,53 @@ export default function Platform({
                         </section>
                         <Separator />
                     </header>
-                    <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-1 group-data-collapsed/platform:py-2">
-                        {tabs.map((tab) => (
-                            <TypographyTooltip
-                                key={tab.href}
-                                content={tab.label}
-                                enabled={isCollapsed && !!tab.icon}
-                                placement="end"
-                            >
-                                <RouterLink
-                                    aria-current={selectedTab === tab.href ? 'page' : undefined}
-                                    aria-label={tab.label}
-                                    className="box-border flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-sm leading-(--text-sm--line-height) text-muted-foreground no-underline [&[aria-current]]:bg-secondary [&[aria-current]]:font-medium [&[aria-current]]:text-foreground [&[hidden]]:hidden group-data-collapsed/platform:size-8 group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not([aria-current]):hover]:[@media(hover:hover)]:bg-muted [&:not([aria-current]):active]:bg-accent forced-colors:[&[aria-current]]:bg-[Highlight] forced-colors:[&[aria-current]]:text-[HighlightText]"
-                                    hidden={isCollapsed && !tab.icon}
-                                    tabIndex={isCollapsed && !tab.icon ? -1 : undefined}
-                                    to={tab.href}
-                                    onClick={(event) => {
-                                        // Native and cancelled gestures must not change the current sidebar.
-                                        if (
-                                            event.defaultPrevented ||
-                                            event.button !== 0 ||
-                                            event.metaKey ||
-                                            event.ctrlKey ||
-                                            event.shiftKey ||
-                                            event.altKey
-                                        )
-                                            return;
+                    <TooltipProvider>
+                        <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-1 group-data-collapsed/platform:py-2">
+                            {tabs.map((tab) => (
+                                <Tooltip key={tab.href} disabled={!isCollapsed || !tab.icon}>
+                                    <TooltipTrigger
+                                        render={
+                                            <RouterLink
+                                                aria-current={selectedTab === tab.href ? 'page' : undefined}
+                                                aria-label={tab.label}
+                                                className="box-border flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-sm leading-(--text-sm--line-height) text-muted-foreground no-underline [&[aria-current]]:bg-secondary [&[aria-current]]:font-medium [&[aria-current]]:text-foreground [&[hidden]]:hidden group-data-collapsed/platform:size-8 group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not([aria-current]):hover]:[@media(hover:hover)]:bg-muted [&:not([aria-current]):active]:bg-accent forced-colors:[&[aria-current]]:bg-[Highlight] forced-colors:[&[aria-current]]:text-[HighlightText]"
+                                                hidden={isCollapsed && !tab.icon}
+                                                tabIndex={isCollapsed && !tab.icon ? -1 : undefined}
+                                                to={tab.href}
+                                                onClick={(event) => {
+                                                    // Native and cancelled gestures must not change the current sidebar.
+                                                    if (
+                                                        event.defaultPrevented ||
+                                                        event.button !== 0 ||
+                                                        event.metaKey ||
+                                                        event.ctrlKey ||
+                                                        event.shiftKey ||
+                                                        event.altKey
+                                                    )
+                                                        return;
 
-                                        setIsMobileCollapsed(true);
-                                    }}
-                                >
-                                    {tab.icon && (
-                                        <span
-                                            aria-hidden="true"
-                                            className="flex size-4 flex-none items-center justify-center [&_svg]:size-full"
-                                        >
-                                            {tab.icon}
-                                        </span>
-                                    )}
-                                    <span className="min-w-0 truncate group-data-collapsed/platform:hidden">
-                                        {tab.label}
-                                    </span>
-                                </RouterLink>
-                            </TypographyTooltip>
-                        ))}
-                    </section>
+                                                    setIsMobileCollapsed(true);
+                                                }}
+                                            >
+                                                {tab.icon && (
+                                                    <span
+                                                        aria-hidden="true"
+                                                        className="flex size-4 flex-none items-center justify-center [&_svg]:size-full"
+                                                    >
+                                                        {tab.icon}
+                                                    </span>
+                                                )}
+                                                <span className="min-w-0 truncate group-data-collapsed/platform:hidden">
+                                                    {tab.label}
+                                                </span>
+                                            </RouterLink>
+                                        }
+                                    />
+                                    <TooltipContent side="inline-end">{tab.label}</TooltipContent>
+                                </Tooltip>
+                            ))}
+                        </section>
+                    </TooltipProvider>
                     <footer className="flex-none px-2 pt-1 pb-2 group-data-collapsed/platform:flex group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-1 group-data-collapsed/platform:pt-0">
                         <section className="flex flex-col gap-3 group-data-collapsed/platform:flex-none group-data-collapsed/platform:gap-2">
                             <Separator />

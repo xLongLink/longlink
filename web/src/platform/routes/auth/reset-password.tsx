@@ -8,7 +8,6 @@ import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { useAnnouncement } from '@/components/custom/announcement';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
@@ -34,11 +33,6 @@ export default function ResetPassword() {
     });
 
     const confirmation = 'Your password has been reset. You can now sign in.';
-
-    const { root, channel } = useAnnouncement(
-        form.formState.isSubmitSuccessful && !form.formState.errors.root?.credential ? confirmation : '',
-        'event'
-    );
 
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
@@ -96,15 +90,17 @@ export default function ResetPassword() {
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <div
-                        ref={root}
                         className="native-auth-banner flex max-w-full items-start gap-2 rounded-xl bg-success/10 px-4 py-3 font-[inherit] text-success-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
                         data-status="success"
                     >
                         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
-                        <p className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
+                        <p
+                            role="status"
+                            aria-atomic="true"
+                            className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere"
+                        >
                             {confirmation}
                         </p>
-                        <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
                     </div>
                     <Button href="/login" label="Back to sign in" variant="default" />
                 </Stack>

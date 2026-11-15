@@ -370,8 +370,9 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
                 await user.tab();
             });
             expect(document.activeElement).toBe(users);
-            await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Users'));
-            expect(document.querySelector('[role="tooltip"]')?.id).toBe(users.getAttribute('aria-describedby'));
+            await vi.waitFor(() =>
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe('Users')
+            );
             expect(users.getAttribute('aria-label')).toBe('Users');
 
             await act(async () => {
@@ -386,7 +387,7 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('291');
             await act(async () => user.tab({ shift: true }));
             expect(document.activeElement).toBe(users);
-            expect(document.querySelector('[role="tooltip"]')).toBeNull();
+            expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
             expect(users.hasAttribute('aria-describedby')).toBe(false);
         }
     );
@@ -406,14 +407,16 @@ it('shows labels on hover only for collapsed iconful navigation', async () => {
             if (!users) throw new Error('Missing Users link');
 
             await act(async () => user.hover(users));
-            expect(document.querySelector('[role="tooltip"]')).toBeNull();
+            expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
             await act(async () => user.unhover(users));
             await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
             expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
             await act(async () => user.hover(users));
-            await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Users'));
+            await vi.waitFor(() =>
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe('Users')
+            );
             await act(async () => user.unhover(users));
-            await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+            await vi.waitFor(() => expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull());
             expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
         }
     );

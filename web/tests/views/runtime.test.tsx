@@ -319,7 +319,7 @@ it('bounds request failures and retries the failed query instead of leaving its 
 
         if (!labelId) throw new Error('Expected visible loading label association');
         expect(document.getElementById(labelId)?.textContent).toBe('Loading View');
-        expect(progress.closest('[role="status"]')).toBeNull();
+        expect(progress.closest('[role="status"]')?.textContent).toBe('Loading View');
         runtime.send({ id: requests[0], ok: false, error: failure });
         await vi.waitFor(() => expect(runtime.mount.querySelector('h2')?.textContent).toBe('View could not be loaded'));
         expect(runtime.mount.querySelector('[role="progressbar"]')).toBeNull();

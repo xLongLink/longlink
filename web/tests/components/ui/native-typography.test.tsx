@@ -65,7 +65,9 @@ it('keeps native refs, focus and caller handlers working with truncation details
             });
             await act(async () => await user.tab());
             await vi.waitFor(() =>
-                expect(document.querySelector('[role="tooltip"]')?.textContent).toBe('Updated account details')
+                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe(
+                    'Updated account details'
+                )
             );
 
             expect(document.activeElement).toBe(paragraph);
