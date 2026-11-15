@@ -5084,6 +5084,729 @@ interface BadgeProps extends useRender.ComponentProps<"span"> {
     radius?: VariantProps<typeof badgeVariants>["radius"];
 }
 export function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+const FILE_TYPE_EXTENSIONS: {
+    pdf: {
+        category: "document";
+        color: string;
+    };
+    doc: {
+        category: "document";
+        color: string;
+    };
+    docx: {
+        category: "document";
+        color: string;
+    };
+    odt: {
+        category: "document";
+        color: string;
+    };
+    rtf: {
+        category: "document";
+        color: string;
+    };
+    pages: {
+        category: "document";
+        color: string;
+    };
+    txt: {
+        category: "document";
+        color: string;
+    };
+    md: {
+        category: "document";
+        color: string;
+    };
+    log: {
+        category: "document";
+        color: string;
+    };
+    mdx: {
+        category: "document";
+        color: string;
+    };
+    mdc: {
+        category: "document";
+        color: string;
+    };
+    eml: {
+        category: "document";
+        color: string;
+    };
+    srt: {
+        category: "document";
+        color: string;
+    };
+    vtt: {
+        category: "document";
+        color: string;
+    };
+    xls: {
+        category: "spreadsheet";
+        color: string;
+    };
+    xlsx: {
+        category: "spreadsheet";
+        color: string;
+    };
+    xlsm: {
+        category: "spreadsheet";
+        color: string;
+    };
+    ods: {
+        category: "spreadsheet";
+        color: string;
+    };
+    csv: {
+        category: "spreadsheet";
+        color: string;
+    };
+    tsv: {
+        category: "spreadsheet";
+        color: string;
+    };
+    numbers: {
+        category: "spreadsheet";
+        color: string;
+        label: string;
+    };
+    parquet: {
+        category: "spreadsheet";
+        color: string;
+        label: string;
+    };
+    sqlite: {
+        category: "spreadsheet";
+        color: string;
+    };
+    db: {
+        category: "spreadsheet";
+        color: string;
+    };
+    ppt: {
+        category: "presentation";
+        color: string;
+    };
+    pptx: {
+        category: "presentation";
+        color: string;
+    };
+    odp: {
+        category: "presentation";
+        color: string;
+    };
+    key: {
+        category: "presentation";
+        color: string;
+    };
+    png: {
+        category: "image";
+        color: string;
+    };
+    jpg: {
+        category: "image";
+        color: string;
+    };
+    jpeg: {
+        category: "image";
+        color: string;
+    };
+    gif: {
+        category: "image";
+        color: string;
+    };
+    webp: {
+        category: "image";
+        color: string;
+    };
+    avif: {
+        category: "image";
+        color: string;
+    };
+    heic: {
+        category: "image";
+        color: string;
+    };
+    bmp: {
+        category: "image";
+        color: string;
+    };
+    tif: {
+        category: "image";
+        color: string;
+    };
+    tiff: {
+        category: "image";
+        color: string;
+    };
+    ico: {
+        category: "image";
+        color: string;
+    };
+    raw: {
+        category: "image";
+        color: string;
+    };
+    svg: {
+        category: "image";
+        color: string;
+    };
+    jxl: {
+        category: "image";
+        color: string;
+    };
+    mp4: {
+        category: "video";
+        color: string;
+    };
+    mov: {
+        category: "video";
+        color: string;
+    };
+    avi: {
+        category: "video";
+        color: string;
+    };
+    mkv: {
+        category: "video";
+        color: string;
+    };
+    webm: {
+        category: "video";
+        color: string;
+    };
+    mpeg: {
+        category: "video";
+        color: string;
+    };
+    mpg: {
+        category: "video";
+        color: string;
+    };
+    wmv: {
+        category: "video";
+        color: string;
+    };
+    m3u8: {
+        category: "video";
+        color: string;
+    };
+    mp3: {
+        category: "audio";
+        color: string;
+    };
+    wav: {
+        category: "audio";
+        color: string;
+    };
+    aac: {
+        category: "audio";
+        color: string;
+    };
+    flac: {
+        category: "audio";
+        color: string;
+    };
+    ogg: {
+        category: "audio";
+        color: string;
+    };
+    m4a: {
+        category: "audio";
+        color: string;
+    };
+    aiff: {
+        category: "audio";
+        color: string;
+    };
+    opus: {
+        category: "audio";
+        color: string;
+    };
+    js: {
+        category: "code";
+        color: string;
+    };
+    jsx: {
+        category: "code";
+        color: string;
+    };
+    mjs: {
+        category: "code";
+        color: string;
+    };
+    ts: {
+        category: "code";
+        color: string;
+    };
+    tsx: {
+        category: "code";
+        color: string;
+    };
+    html: {
+        category: "code";
+        color: string;
+    };
+    htm: {
+        category: "code";
+        color: string;
+    };
+    css: {
+        category: "code";
+        color: string;
+    };
+    scss: {
+        category: "code";
+        color: string;
+    };
+    json: {
+        category: "code";
+        color: string;
+    };
+    xml: {
+        category: "code";
+        color: string;
+    };
+    yaml: {
+        category: "code";
+        color: string;
+    };
+    yml: {
+        category: "code";
+        color: string;
+    };
+    sql: {
+        category: "code";
+        color: string;
+    };
+    py: {
+        category: "code";
+        color: string;
+    };
+    java: {
+        category: "code";
+        color: string;
+    };
+    php: {
+        category: "code";
+        color: string;
+    };
+    rb: {
+        category: "code";
+        color: string;
+    };
+    go: {
+        category: "code";
+        color: string;
+    };
+    rs: {
+        category: "code";
+        color: string;
+    };
+    c: {
+        category: "code";
+        color: string;
+    };
+    cpp: {
+        category: "code";
+        color: string;
+    };
+    h: {
+        category: "code";
+        color: string;
+    };
+    cs: {
+        category: "code";
+        color: string;
+    };
+    sh: {
+        category: "code";
+        color: string;
+    };
+    rss: {
+        category: "code";
+        color: string;
+    };
+    cjs: {
+        category: "code";
+        color: string;
+    };
+    mts: {
+        category: "code";
+        color: string;
+    };
+    vue: {
+        category: "code";
+        color: string;
+    };
+    svelte: {
+        category: "code";
+        color: string;
+    };
+    astro: {
+        category: "code";
+        color: string;
+    };
+    graphql: {
+        category: "code";
+        color: string;
+        label: string;
+    };
+    gql: {
+        category: "code";
+        color: string;
+    };
+    prisma: {
+        category: "code";
+        color: string;
+    };
+    wasm: {
+        category: "code";
+        color: string;
+    };
+    map: {
+        category: "code";
+        color: string;
+    };
+    kt: {
+        category: "code";
+        color: string;
+    };
+    kts: {
+        category: "code";
+        color: string;
+    };
+    swift: {
+        category: "code";
+        color: string;
+    };
+    dart: {
+        category: "code";
+        color: string;
+    };
+    lua: {
+        category: "code";
+        color: string;
+    };
+    r: {
+        category: "code";
+        color: string;
+    };
+    scala: {
+        category: "code";
+        color: string;
+    };
+    ex: {
+        category: "code";
+        color: string;
+    };
+    exs: {
+        category: "code";
+        color: string;
+    };
+    hpp: {
+        category: "code";
+        color: string;
+    };
+    cc: {
+        category: "code";
+        color: string;
+    };
+    cu: {
+        category: "code";
+        color: string;
+    };
+    ps1: {
+        category: "code";
+        color: string;
+    };
+    bat: {
+        category: "code";
+        color: string;
+    };
+    bash: {
+        category: "code";
+        color: string;
+    };
+    zsh: {
+        category: "code";
+        color: string;
+    };
+    gradle: {
+        category: "code";
+        color: string;
+    };
+    ipynb: {
+        category: "code";
+        color: string;
+    };
+    env: {
+        category: "code";
+        color: string;
+    };
+    toml: {
+        category: "code";
+        color: string;
+    };
+    ini: {
+        category: "code";
+        color: string;
+    };
+    conf: {
+        category: "code";
+        color: string;
+    };
+    jsonc: {
+        category: "code";
+        color: string;
+    };
+    lock: {
+        category: "code";
+        color: string;
+    };
+    git: {
+        category: "code";
+        color: string;
+    };
+    ignore: {
+        category: "code";
+        color: string;
+    };
+    dockerfile: {
+        category: "code";
+        color: string;
+        label: string;
+    };
+    makefile: {
+        category: "code";
+        color: string;
+        label: string;
+    };
+    tf: {
+        category: "code";
+        color: string;
+    };
+    tfvars: {
+        category: "code";
+        color: string;
+    };
+    hcl: {
+        category: "code";
+        color: string;
+    };
+    proto: {
+        category: "code";
+        color: string;
+    };
+    jsonl: {
+        category: "code";
+        color: string;
+    };
+    ndjson: {
+        category: "code";
+        color: string;
+    };
+    diff: {
+        category: "code";
+        color: string;
+    };
+    patch: {
+        category: "code";
+        color: string;
+    };
+    pem: {
+        category: "code";
+        color: string;
+    };
+    crt: {
+        category: "code";
+        color: string;
+    };
+    zip: {
+        category: "archive";
+        color: string;
+    };
+    rar: {
+        category: "archive";
+        color: string;
+    };
+    "7z": {
+        category: "archive";
+        color: string;
+    };
+    tar: {
+        category: "archive";
+        color: string;
+    };
+    gz: {
+        category: "archive";
+        color: string;
+    };
+    tgz: {
+        category: "archive";
+        color: string;
+    };
+    bz2: {
+        category: "archive";
+        color: string;
+    };
+    xz: {
+        category: "archive";
+        color: string;
+    };
+    zst: {
+        category: "archive";
+        color: string;
+    };
+    jar: {
+        category: "archive";
+        color: string;
+    };
+    whl: {
+        category: "archive";
+        color: string;
+    };
+    safetensors: {
+        category: "archive";
+        color: string;
+        label: string;
+    };
+    gguf: {
+        category: "archive";
+        color: string;
+    };
+    onnx: {
+        category: "archive";
+        color: string;
+    };
+    pt: {
+        category: "archive";
+        color: string;
+    };
+    fig: {
+        category: "design";
+        color: string;
+    };
+    sketch: {
+        category: "design";
+        color: string;
+    };
+    psd: {
+        category: "design";
+        color: string;
+    };
+    ai: {
+        category: "design";
+        color: string;
+    };
+    eps: {
+        category: "design";
+        color: string;
+    };
+    indd: {
+        category: "design";
+        color: string;
+    };
+    aep: {
+        category: "design";
+        color: string;
+    };
+    xd: {
+        category: "design";
+        color: string;
+    };
+    exe: {
+        category: "executable";
+        color: string;
+    };
+    msi: {
+        category: "executable";
+        color: string;
+    };
+    dmg: {
+        category: "executable";
+        color: string;
+    };
+    apk: {
+        category: "executable";
+        color: string;
+    };
+    deb: {
+        category: "executable";
+        color: string;
+    };
+    iso: {
+        category: "executable";
+        color: string;
+    };
+    app: {
+        category: "executable";
+        color: string;
+    };
+    pkg: {
+        category: "executable";
+        color: string;
+    };
+    ipa: {
+        category: "executable";
+        color: string;
+    };
+    aab: {
+        category: "executable";
+        color: string;
+    };
+    rpm: {
+        category: "executable";
+        color: string;
+    };
+    ttf: {
+        category: "font";
+        color: string;
+    };
+    otf: {
+        category: "font";
+        color: string;
+    };
+    woff: {
+        category: "font";
+        color: string;
+    };
+    woff2: {
+        category: "font";
+        color: string;
+    };
+};
+const FILE_TYPE_CATEGORIES: readonly [
+    "archive",
+    "audio",
+    "code",
+    "design",
+    "document",
+    "empty",
+    "executable",
+    "folder",
+    "font",
+    "image",
+    "presentation",
+    "spreadsheet",
+    "video"
+];
+type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
+type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
+const fileTypeVariants: (props?: ({
+    size?: "default" | "xs" | "sm" | "lg" | "xl" | "mini" | null | undefined;
+} & ClassProp) | undefined) => string;
+type FileTypeVariant = "outline" | "solid" | "light" | "mono";
+type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children"> & {
+    type?: FileTypeName | (string & {});
+    variant?: FileTypeVariant;
+    size?: VariantProps<typeof fileTypeVariants>["size"];
+    label?: React$1.ReactNode;
+    glyph?: boolean;
+    icon?: React$1.ReactNode;
+    labelClassName?: string;
+};
+export function FileType({ type, variant, size, label, glyph, icon, labelClassName, className, ...props }: FileTypeProps): React$1.JSX.Element;
 const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
     orientation?: Orientation | undefined;
@@ -15252,7 +15975,7 @@ export function FrameHeader({ className, ...props }: React$1.ComponentProps<"hea
 export function FrameTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 export function FrameFooter({ className, ...props }: React$1.ComponentProps<"footer">): React$1.JSX.Element;
 const iconTileVariants: (props?: ({
-    variant?: "outline" | "frame" | "solid" | "elevated" | "soft" | null | undefined;
+    variant?: "outline" | "solid" | "frame" | "elevated" | "soft" | null | undefined;
     size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
@@ -15415,6 +16138,7 @@ declare const FieldLegend: typeof NativeFrontend.FieldLegend;
 declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
 declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
+declare const FileType: typeof NativeFrontend.FileType;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
 declare const Filters: typeof NativeFrontend.Filters;
 declare const Frame: typeof NativeFrontend.Frame;

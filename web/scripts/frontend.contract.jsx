@@ -21,6 +21,7 @@ const query = createFilterQuery();
 const downloads = useDownload();
 const icon = <Icon icon="triangle-exclamation-point" size="sm" />;
 const token = <Token icon="user-round" label="Owner" />;
+const fileType = <FileType type="pdf" variant="solid" size="sm" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;
 // @ts-expect-error LongLink aliases are not Lucide names.
 const legacyIcon = <Icon icon="close" size="sm" />;

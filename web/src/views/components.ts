@@ -41,6 +41,9 @@ export { Image } from '@/components/custom/image';
 export { Badge } from '@/components/reui/badge';
 
 /** @category Display */
+export { FileType } from '@/components/reui/file-type';
+
+/** @category Display */
 export { Token } from '@/components/custom/token';
 
 /** @category Layouts */

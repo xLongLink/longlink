@@ -620,6 +620,49 @@
             "reference": "https://reui.io/docs/components/base/badge"
         },
         {
+            "name": "FileType",
+            "category": "Display",
+            "introduction": "Displays a file extension or family using the native ReUI file type icon.",
+            "keywords": ["file", "extension", "document", "folder"],
+            "properties": [
+                {
+                    "name": "type",
+                    "type": "string",
+                    "description": "Extension such as pdf or .docx, family such as image or folder, or empty. Unknown extensions render as neutral files."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"outline\" | \"solid\" | \"light\" | \"mono\"",
+                    "description": "Icon appearance.",
+                    "default": "outline"
+                },
+                {
+                    "name": "size",
+                    "type": "\"mini\" | \"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
+                    "description": "Icon size.",
+                    "default": "default"
+                },
+                {
+                    "name": "label",
+                    "type": "ReactNode",
+                    "description": "Replaces the extension label. Use null or an empty string to hide it."
+                },
+                { "name": "glyph", "type": "boolean", "description": "Shows the family glyph instead of the label." },
+                {
+                    "name": "icon",
+                    "type": "ReactNode",
+                    "description": "Custom icon replacing the label and family glyph."
+                },
+                {
+                    "name": "labelClassName",
+                    "type": "string",
+                    "description": "Classes applied to the label badge. Native span attributes, className, style, events, and refs are supported on the root."
+                }
+            ],
+            "source": "reui",
+            "reference": "https://reui.io/components/file-type"
+        },
+        {
             "name": "Button",
             "category": "Action",
             "introduction": "Native shadcn Button with Base UI props and default styling.",
@@ -1546,11 +1589,7 @@
             "category": "Display",
             "introduction": "Loads and caches Lucide icons by kebab-case name without blocking the View or changing icon dimensions.",
             "properties": [
-                {
-                    "name": "icon",
-                    "type": "IconName",
-                    "description": "Lucide kebab-case icon name."
-                },
+                { "name": "icon", "type": "IconName", "description": "Lucide kebab-case icon name." },
                 {
                     "name": "size",
                     "type": "\"sm\" | \"lg\" | \"md\"",

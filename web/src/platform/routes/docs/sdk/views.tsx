@@ -17,6 +17,7 @@ import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
+import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
@@ -78,6 +79,7 @@ const previews = new Map(
         ),
         Avatar: <AvatarExample />,
         GeneratedAvatar: <GeneratedAvatarExample />,
+        FileType: <FileTypeExample />,
         Badge: (
             <div className="flex flex-wrap items-center justify-center gap-2">
                 <Badge variant="secondary">Draft</Badge>

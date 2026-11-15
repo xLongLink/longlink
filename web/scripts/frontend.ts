@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 
 export { Badge } from '../src/components/reui/badge';
+export { FileType } from '../src/components/reui/file-type';
 export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '../src/components/shadcn/button-group';
 export * from '../src/components/shadcn/dialog';
 export * from '../src/components/shadcn/pagination';

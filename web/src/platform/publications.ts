@@ -105,6 +105,7 @@ export const componentDocumentation = [
     { name: 'DropdownMenu', category: 'Action', icon: ListCollapse },
     { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileInput', category: 'Form', icon: FileCode2 },
+    { name: 'FileType', category: 'Display', icon: FileText },
     { name: 'FileViewer', category: 'Display', icon: FileText },
     { name: 'Functions', category: 'Runtime' },
     { name: 'Grid', category: 'Layouts', icon: Grip },
