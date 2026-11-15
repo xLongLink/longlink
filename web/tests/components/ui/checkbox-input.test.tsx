@@ -3,20 +3,16 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { SwitchField } from '@/components/custom/switch-field';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
 
-it.each([
-    ['checkbox', CheckboxInput],
-    ['switch', SwitchField]
-] as const)('%s serializes only checked answers and restores uncanceled local defaults', async (_, Control) => {
+it('serializes only checked answers and restores uncanceled local defaults', async () => {
     // Real form reset must update both the accessible state and the successful native control.
     const user = userEvent.setup();
     const changes: boolean[] = [];
 
     await withMounted(
         <form>
-            <Control label="Enabled" name="enabled" defaultChecked onChange={(value) => changes.push(value)} />
+            <CheckboxInput label="Enabled" name="enabled" defaultChecked onChange={(value) => changes.push(value)} />
         </form>,
         async (output) => {
             const form = output.querySelector('form');
@@ -38,17 +34,14 @@ it.each([
     );
 });
 
-it.each([
-    ['checkbox', CheckboxInput],
-    ['switch', SwitchField]
-] as const)('%s keeps controlled answers through rejected changes and reset', async (_, Control) => {
+it('keeps controlled answers through rejected changes and reset', async () => {
     // A caller can reject a user change without losing its saved value during native reset.
     const user = userEvent.setup();
     const changes: boolean[] = [];
 
     await withMounted(
         <form>
-            <Control label="Enabled" name="enabled" value onChange={(value) => changes.push(value)} />
+            <CheckboxInput label="Enabled" name="enabled" value onChange={(value) => changes.push(value)} />
         </form>,
         async (output) => {
             const form = output.querySelector('form');
@@ -66,16 +59,13 @@ it.each([
     );
 });
 
-it.each([
-    ['checkbox', CheckboxInput],
-    ['switch', SwitchField]
-] as const)('%s activates from its label and keyboard and enforces a required answer', async (_, Control) => {
+it('activates from its label and keyboard and enforces a required answer', async () => {
     // Native validation must recover when the accessible control changes the actual submitted input.
     const user = userEvent.setup();
 
     await withMounted(
         <form>
-            <Control label="Accept" description="Required agreement" name="accepted" required />
+            <CheckboxInput label="Accept" description="Required agreement" name="accepted" required />
         </form>,
         async (output) => {
             const form = output.querySelector('form');
@@ -109,17 +99,14 @@ it.each([
     );
 });
 
-it.each([
-    ['checkbox', CheckboxInput],
-    ['switch', SwitchField]
-] as const)('%s keeps disabled answers focusable but immutable and omitted', async (_, Control) => {
+it('keeps disabled answers focusable but immutable and omitted', async () => {
     // Disabled settings remain discoverable without blocking submission or leaking saved values.
     const user = userEvent.setup();
     const changes: boolean[] = [];
 
     await withMounted(
         <form>
-            <Control
+            <CheckboxInput
                 label="Locked"
                 name="locked"
                 disabled
@@ -127,7 +114,7 @@ it.each([
                 defaultChecked
                 onChange={(value) => changes.push(value)}
             />
-            <Control label="Locked off" name="locked-off" disabled required />
+            <CheckboxInput label="Locked off" name="locked-off" disabled required />
         </form>,
         async (output) => {
             const form = output.querySelector('form');
@@ -148,10 +135,7 @@ it.each([
     );
 });
 
-it.each([
-    ['checkbox', CheckboxInput],
-    ['switch', SwitchField]
-] as const)('%s inherits native disabled fieldsets for focus and mutation', async (_, Control) => {
+it('inherits native disabled fieldsets for focus and mutation', async () => {
     // Fieldset disabling must cover the visible control as well as its hidden native input.
     const user = userEvent.setup();
     const changes: boolean[] = [];
@@ -159,7 +143,7 @@ it.each([
     await withMounted(
         <form>
             <fieldset disabled>
-                <Control
+                <CheckboxInput
                     label="Inherited"
                     name="inherited"
                     required

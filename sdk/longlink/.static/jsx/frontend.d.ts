@@ -17409,11 +17409,6 @@ export function TimePickerConfirm({ variant, size, onClick, children, ...props }
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
-export function SwitchField(props: FieldProps & {
-    value?: boolean;
-    defaultChecked?: boolean;
-    onChange?: (value: boolean) => void;
-}): React$1.JSX.Element;
 function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
 function RadioGroup$1({ className, ...props }: RadioGroup.Props): React$1.JSX.Element;
 export function RadioGroupItem({ className, ...props }: Radio.Root.Props): React$1.JSX.Element;
@@ -17561,7 +17556,6 @@ function SliderControl$1({ className, ...props }: Slider.Control.Props): React$1
 function SliderTrack$1({ className, ...props }: Slider.Track.Props): React$1.JSX.Element;
 export function SliderRange({ className, ...props }: Slider.Indicator.Props): React$1.JSX.Element;
 function SliderThumb$1({ className, ...props }: Slider.Thumb.Props): React$1.JSX.Element;
-export function SliderField<Value extends number | readonly number[]>({ label, description, required, children, defaultValue, value, min, ...props }: FieldProps & Slider.Root.Props<Value>): React$1.JSX.Element;
 function Progress$1({ className, children, value, ...props }: Progress.Root.Props): React$1.JSX.Element;
 function ProgressTrack$1({ className, ...props }: Progress.Track.Props): React$1.JSX.Element;
 function ProgressIndicator$1({ className, ...props }: Progress.Indicator.Props): React$1.JSX.Element;
@@ -20619,7 +20613,6 @@ declare const SelectValue: typeof NativeFrontend.SelectValue;
 declare const Separator: typeof NativeFrontend.Separator;
 declare const Slider: typeof NativeFrontend.Slider;
 declare const SliderControl: typeof NativeFrontend.SliderControl;
-declare const SliderField: typeof NativeFrontend.SliderField;
 declare const SliderRange: typeof NativeFrontend.SliderRange;
 declare const SliderThumb: typeof NativeFrontend.SliderThumb;
 declare const SliderTrack: typeof NativeFrontend.SliderTrack;
@@ -20637,7 +20630,6 @@ declare const StepperSeparator: typeof NativeFrontend.StepperSeparator;
 declare const StepperTitle: typeof NativeFrontend.StepperTitle;
 declare const StepperTrigger: typeof NativeFrontend.StepperTrigger;
 declare const Switch: typeof NativeFrontend.Switch;
-declare const SwitchField: typeof NativeFrontend.SwitchField;
 declare const Table: typeof NativeFrontend.Table;
 declare const TableBody: typeof NativeFrontend.TableBody;
 declare const TableCaption: typeof NativeFrontend.TableCaption;

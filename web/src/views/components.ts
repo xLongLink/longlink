@@ -162,10 +162,10 @@ export {
 export { Checkbox, CheckboxInput } from './adapter/checkbox';
 
 /** @category Form */
-export { Switch, SwitchField } from './adapter/switch';
+export { Switch } from './adapter/switch';
 
 /** @category Form */
-export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb, SliderField } from './adapter/slider';
+export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from './adapter/slider';
 
 /** @category Form */
 export { FileInput } from './adapter/file-input';

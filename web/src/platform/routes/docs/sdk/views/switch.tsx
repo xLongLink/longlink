@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
 import FormPreview from './form-preview';
 import { Switch } from '@/components/shadcn/switch';
-import { SwitchField } from '@/components/custom/switch-field';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 
 /** Documents Switch in LongLink Views. */
 export default function SwitchPage() {
@@ -23,46 +23,17 @@ export default function SwitchPage() {
                     description: 'Disables the native control, including keyboard focus and form submission.'
                 },
                 { name: 'name', type: 'string', description: 'Form submission name.' },
-                { name: 'defaultChecked', type: 'boolean', description: 'Initial uncontrolled checked state.' },
-                {
-                    name: 'SwitchField.label',
-                    type: 'string',
-                    description: 'Label text for the switch (always rendered for accessibility).'
-                },
-                {
-                    name: 'SwitchField.description',
-                    type: 'string',
-                    description: 'Description text displayed below the label.'
-                },
-                {
-                    name: 'SwitchField.name',
-                    type: 'string',
-                    description: "Includes the themed control's value under this form submission name."
-                },
-                {
-                    name: 'SwitchField.required',
-                    type: 'boolean',
-                    description: 'Requires a value before native form submission.'
-                },
-                {
-                    name: 'SwitchField.disabled',
-                    type: 'boolean',
-                    description: 'Prevents edits and submission while keeping the control keyboard-focusable.'
-                },
-                { name: 'SwitchField.value', type: 'boolean', description: 'Whether the switch is on or off.' },
-                { name: 'SwitchField.defaultChecked', type: 'boolean', description: 'Initial checked state.' },
-                {
-                    name: 'SwitchField.onChange',
-                    type: '(value: boolean) => void',
-                    description: 'Callback fired when the switch state changes.'
-                }
+                { name: 'defaultChecked', type: 'boolean', description: 'Initial uncontrolled checked state.' }
             ]}
             example={{
                 title: 'Preference form',
                 preview: (
                     <FormPreview>
                         <div className="mx-auto w-fit">
-                            <SwitchField name="notifications" label="Notifications" defaultChecked />
+                            <Field orientation="horizontal">
+                                <Switch id="notifications" name="notifications" defaultChecked />
+                                <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+                            </Field>
                         </div>
                     </FormPreview>
                 ),
@@ -83,7 +54,17 @@ export default function PreferenceForm() {
     <form onSubmit={form.handleSubmit(save)}>
       <div className="mx-auto w-fit">
         <Controller name="notifications" control={form.control} render={({ field }) => (
-          <SwitchField label="Notifications" value={field.value} onChange={field.onChange} />
+          <Field orientation="horizontal">
+            <Switch
+              id="notifications"
+              ref={field.ref}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+              onBlur={field.onBlur}
+              disabled={form.formState.isSubmitting}
+            />
+            <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+          </Field>
         )} />
       </div>
       <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>

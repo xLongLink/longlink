@@ -159,7 +159,10 @@ const nativeComposition = (
                 }}
                 size="sm"
             />
-            <SwitchField label="Notifications" defaultChecked />
+            <Field orientation="horizontal">
+                <Switch id="notifications" defaultChecked />
+                <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+            </Field>
             <Field>
                 <FieldLabel htmlFor="appointment-time">Appointment time</FieldLabel>
                 <TimePicker
@@ -310,7 +313,14 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <SliderField label="Level" defaultValue={10} onValueChange={(value) => value.toFixed()} />
+            <Slider aria-label="Level" defaultValue={10} onValueChange={(value) => value.toFixed()}>
+                <SliderControl>
+                    <SliderTrack>
+                        <SliderRange />
+                    </SliderTrack>
+                    <SliderThumb index={0} />
+                </SliderControl>
+            </Slider>
             <Progress value={50}>
                 <ProgressLabel>Progress</ProgressLabel>
                 <ProgressValue />

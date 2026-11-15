@@ -1941,23 +1941,6 @@
             "reference": "https://ui.shadcn.com/docs/components/slider"
         },
         {
-            "name": "SliderField",
-            "category": "Form",
-            "introduction": "Adds field labeling and description to the native Slider.",
-            "properties": [
-                { "name": "label", "type": "string", "description": "Visible field label and accessible slider name." },
-                { "name": "description", "type": "string", "description": "Supporting field description." },
-                { "name": "required", "type": "boolean", "description": "Displays the field requirement." },
-                {
-                    "name": "Slider props",
-                    "type": "Native Slider props",
-                    "description": "Accepts the same generic values, callbacks, composition, form ownership, and native props as Slider."
-                }
-            ],
-            "source": "custom",
-            "justification": "Connects native Slider composition to the LongLink labeled field contract."
-        },
-        {
             "name": "Stack",
             "category": "Layouts",
             "introduction": "Arranges View content using Tailwind spacing steps.",
@@ -2176,7 +2159,7 @@
             "name": "Switch",
             "category": "Form",
             "introduction": "Native shadcn Switch with Base UI props and default styling.",
-            "guidance": "Use checked, defaultChecked, onCheckedChange(checked, eventDetails), size, and disabled. Compose an accessible label. SwitchField is the custom labeled form adapter.",
+            "guidance": "Use checked, defaultChecked, onCheckedChange(checked, eventDetails), size, and disabled. Compose Field and FieldLabel for an accessible label.",
             "properties": [
                 { "name": "checked", "type": "boolean", "description": "Controlled checked state." },
                 { "name": "defaultChecked", "type": "boolean", "description": "Initial uncontrolled checked state." },
@@ -2195,47 +2178,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/switch"
-        },
-        {
-            "name": "SwitchField",
-            "category": "Form",
-            "introduction": "Custom labeled LongLink switch adapter with boolean value/onChange, form reset, and focusable disabled controls. Use Switch for native shadcn props.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the switch (always rendered for accessibility)."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed below the label."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                { "name": "value", "type": "boolean", "description": "Whether the switch is on or off." },
-                { "name": "defaultChecked", "type": "boolean", "description": "Initial checked state." },
-                {
-                    "name": "onChange",
-                    "type": "(value: boolean) => void",
-                    "description": "Callback fired when the switch state changes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Composes a labeled Switch with boolean callbacks, native naming, and reset support."
         },
         {
             "name": "Table",

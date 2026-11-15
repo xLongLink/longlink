@@ -1,6 +1,8 @@
+import { useId } from 'react';
 import ViewLayout from './view-layout';
 import FormPreview from './form-preview';
-import { SliderField } from '@/components/custom/slider-field';
+import { Field, FieldContent, FieldDescription, FieldTitle } from '@/components/shadcn/field';
+import { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '@/components/shadcn/slider';
 
 /** Documents Slider in LongLink Views. */
 export default function SliderPage() {
@@ -9,21 +11,20 @@ export default function SliderPage() {
         <ViewLayout
             name="Slider"
             properties={[
-                { name: 'SliderField.label', type: 'string', description: 'SliderField label text.' },
                 {
-                    name: 'SliderField.description',
+                    name: 'aria-labelledby',
                     type: 'string',
-                    description: 'SliderField description rendered below the label.'
+                    description: 'ID of the FieldTitle that labels the slider.'
+                },
+                {
+                    name: 'aria-describedby',
+                    type: 'string',
+                    description: 'ID of the FieldDescription that describes the slider.'
                 },
                 {
                     name: 'name',
                     type: 'string',
                     description: "Includes the themed control's value under this form submission name."
-                },
-                {
-                    name: 'SliderField.required',
-                    type: 'boolean',
-                    description: 'Marks the SliderField label as required; sliders always have a value.'
                 },
                 {
                     name: 'disabled',
@@ -39,6 +40,11 @@ export default function SliderPage() {
                     description: 'Current value: a number for one thumb or a readonly number array for multiple thumbs.'
                 },
                 { name: 'defaultValue', type: 'number | readonly number[]', description: 'Initial value.' },
+                {
+                    name: 'children',
+                    type: 'ReactNode',
+                    description: 'Compose SliderControl, SliderTrack, SliderRange, and one SliderThumb per value.'
+                },
                 {
                     name: 'onValueChange',
                     type: '(value, eventDetails) => void',
@@ -65,6 +71,7 @@ export default function SliderPage() {
                 ),
                 code: `/** Submits progress managed by React Hook Form. */
 export default function ProgressForm() {
+  const id = useId();
   const form = useForm({ defaultValues: { progress: 60 } });
   const submit = useSubmit("/api/example", {
     onError: () => form.setError("root", { message: "Could not save. Please try again." })
@@ -79,7 +86,21 @@ export default function ProgressForm() {
   return (
     <form onSubmit={form.handleSubmit(save)}>
       <Controller name="progress" control={form.control} render={({ field }) => (
-        <SliderField label="Progress" value={field.value} onChange={field.onChange} min={0} max={100} step={1} />
+        <Field>
+          <FieldContent>
+            <FieldTitle id={id + "-label"}>Progress</FieldTitle>
+            <FieldDescription id={id + "-description"}>Percentage complete.</FieldDescription>
+          </FieldContent>
+          <Slider name={field.name} value={field.value} onValueChange={field.onChange}
+            aria-labelledby={id + "-label"} aria-describedby={id + "-description"}
+            min={0} max={100} step={1}>
+            <SliderControl>
+              <SliderTrack><SliderRange /></SliderTrack>
+              <SliderThumb index={0} ref={field.ref} onBlur={field.onBlur}
+                aria-describedby={id + "-description"} />
+            </SliderControl>
+          </Slider>
+        </Field>
       )} />
       <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
       <FieldError errors={[form.formState.errors.root]} />
@@ -93,6 +114,31 @@ export default function ProgressForm() {
 
 /** Shows a named slider whose value is included in native form data. */
 export function SliderExample() {
-    // Delegate editing and named form inputs to the native slider.
-    return <SliderField name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />;
+    // Associate this scalar slider's label and description without adding form inputs.
+    const id = useId();
+
+    return (
+        <Field>
+            <FieldContent>
+                <FieldTitle id={`${id}-label`}>Progress</FieldTitle>
+                <FieldDescription id={`${id}-description`}>Percentage complete.</FieldDescription>
+            </FieldContent>
+            <Slider
+                name="progress"
+                aria-labelledby={`${id}-label`}
+                aria-describedby={`${id}-description`}
+                defaultValue={60}
+                min={0}
+                max={100}
+                step={1}
+            >
+                <SliderControl>
+                    <SliderTrack>
+                        <SliderRange />
+                    </SliderTrack>
+                    <SliderThumb index={0} aria-describedby={`${id}-description`} />
+                </SliderControl>
+            </Slider>
+        </Field>
+    );
 }
