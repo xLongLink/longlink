@@ -9,7 +9,7 @@ import { Avatar } from '@/components/longlink/avatar';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
-import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
 import {
     DropdownMenu,

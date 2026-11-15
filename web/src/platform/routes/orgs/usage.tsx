@@ -7,7 +7,7 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
-import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {

@@ -3,7 +3,7 @@ import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent, ReactNode, Re
 import { cn } from 'cn';
 import { flushSync } from 'react-dom';
 
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { ClockIcon } from 'lucide-react';

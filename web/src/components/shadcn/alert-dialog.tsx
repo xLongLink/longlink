@@ -2,7 +2,7 @@
 
 import { cn } from 'cn';
 import * as React from 'react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { AlertDialog as AlertDialogPrimitive } from '@base-ui/react/alert-dialog';
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {

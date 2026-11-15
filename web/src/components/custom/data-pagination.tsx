@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@/components/shadcn/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/longlink/action/button';
 import {
     Pagination as Navigation,
     PaginationContent,

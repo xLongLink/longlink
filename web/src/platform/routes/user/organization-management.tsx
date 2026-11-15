@@ -7,12 +7,12 @@ import { apiQueryOptions } from '@/lib/react-query';
 import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
 

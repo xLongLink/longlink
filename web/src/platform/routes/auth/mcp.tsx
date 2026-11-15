@@ -3,10 +3,10 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { Button } from '@/components/shadcn/button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
+import { Button } from '@/components/longlink/action/button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 

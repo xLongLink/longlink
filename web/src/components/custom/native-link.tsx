@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import { ArrowUpRight } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
-import { buttonVariants } from '@/components/shadcn/button';
+import { buttonVariants } from '@/components/longlink/action/button';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 
 type NativeAnchorProps = Omit<ComponentPropsWithRef<'a'>, 'download'> & { download?: string | boolean };

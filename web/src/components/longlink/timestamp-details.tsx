@@ -1,6 +1,6 @@
 import { Check, Copy } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
 import { useEffect, useId, useRef, useState } from 'react';
+import { Button } from '@/components/longlink/action/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 
 /** Shows the relative timestamp's keyboard-accessible, copyable absolute instant. */

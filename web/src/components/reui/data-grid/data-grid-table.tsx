@@ -27,7 +27,7 @@ import { flexRender, Subscribe } from '@tanstack/react-table';
 import type { Cell, Column, Header, Row } from '@tanstack/react-table';
 import { cn } from 'cn';
 
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Empty } from '@/components/longlink/empty';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Spinner } from '@/components/shadcn/spinner';

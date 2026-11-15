@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Dialog } from '@/components/custom/native-dialog';
+import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';

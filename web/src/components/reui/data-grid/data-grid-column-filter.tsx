@@ -7,7 +7,7 @@ import type { DataGridFeatures } from '@/components/reui/data-grid/data-grid';
 import type { Column } from '@tanstack/react-table';
 
 import { cn } from 'cn';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Input } from '@/components/shadcn/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { Separator } from '@/components/shadcn/separator';

@@ -50,7 +50,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { flexRender } from '@tanstack/react-table';
 import type { Cell, Header, Row } from '@tanstack/react-table';
 
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { GripVerticalIcon } from 'lucide-react';
 
 function DataGridTableDndHeader<TData extends object>({

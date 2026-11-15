@@ -10,8 +10,8 @@ import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
-import { buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
+import { buttonVariants } from '@/components/longlink/action/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 

@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@/components/longlink/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
-import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
     DropdownMenu,

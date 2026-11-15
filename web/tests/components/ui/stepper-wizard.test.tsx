@@ -2,10 +2,10 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Step, Wizard } from '@/components/custom/wizard';
+import { Button } from '@/components/longlink/action/button';
 
 /** Lets the owner accept navigation independently of the wizard's request. */
 function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {

@@ -5,7 +5,7 @@ import { resolveNavigationUrl } from '@/lib/url';
 import { LinkNavigationContext } from './contexts';
 import { Spinner } from '@/components/shadcn/spinner';
 import { FileRequestContext, useDownload } from './preview';
-import { buttonVariants } from '@/components/shadcn/button';
+import { buttonVariants } from '@/components/longlink/action/button';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
 
 type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type'> &

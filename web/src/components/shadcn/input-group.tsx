@@ -1,8 +1,8 @@
 import { cn } from 'cn';
 import * as React from 'react';
 import { Input } from '@/components/shadcn/input';
-import { Button } from '@/components/shadcn/button';
 import { Textarea } from '@/components/shadcn/textarea';
+import { Button } from '@/components/longlink/action/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {

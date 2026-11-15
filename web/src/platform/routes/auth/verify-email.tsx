@@ -11,11 +11,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Button } from '@/components/shadcn/button';
 import { Dialog } from '@/components/custom/native-dialog';
+import { Button } from '@/components/longlink/action/button';
 import {
     DialogTrigger,
     DialogContent,

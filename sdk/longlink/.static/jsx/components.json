@@ -663,7 +663,8 @@
                     "description": "Native button event handler."
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns the shared Button implementation in LongLink while preserving the shadcn API and Base UI behavior.",
             "reference": "https://ui.shadcn.com/docs/components/button"
         },
         {

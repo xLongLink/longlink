@@ -38,7 +38,7 @@ import type {
 } from '@/components/reui/filters/filters-types';
 
 import { cn } from 'cn';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { ButtonGroup } from '@/components/shadcn/button-group';
 import { Input } from '@/components/shadcn/input';
 import { CheckIcon, XIcon } from 'lucide-react';

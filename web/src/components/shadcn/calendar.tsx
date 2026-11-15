@@ -2,7 +2,7 @@
 
 import { cn } from 'cn';
 import * as React from 'react';
-import { Button, buttonVariants } from '@/components/shadcn/button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from 'lucide-react';
 import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from 'react-day-picker';
 

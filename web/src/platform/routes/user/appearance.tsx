@@ -1,8 +1,8 @@
 import { Circle, Check } from 'lucide-react';
 import { accentColors } from '@/lib/appearance';
-import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
+import { Button } from '@/components/longlink/action/button';
 import { Card, CardContent } from '@/components/shadcn/card';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 

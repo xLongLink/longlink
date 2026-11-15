@@ -2,7 +2,7 @@
 
 import { cn } from 'cn';
 import * as React from 'react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
 import { ChevronDownIcon, XIcon, CheckIcon } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';

@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import type { ComponentProps, CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import {
     highlightCode,

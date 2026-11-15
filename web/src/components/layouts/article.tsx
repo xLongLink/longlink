@@ -1,6 +1,6 @@
 import { Page } from '@/components/ui/page';
-import { Button } from '@/components/shadcn/button';
 import { Separator } from '@/components/shadcn/separator';
+import { Button } from '@/components/longlink/action/button';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';

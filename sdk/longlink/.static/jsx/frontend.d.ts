@@ -10090,22 +10090,6 @@ type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "classNam
 };
 function FileType({ type, variant, size, label, glyph, icon, ...props }: FileTypeProps): React$1.JSX.Element;
 const FileType$1: ViewComponent<typeof FileType>;
-const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface ButtonState {
-    disabled: boolean;
-}
-interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
-    focusableWhenDisabled?: boolean | undefined;
-}
-namespace Button {
-    type State = ButtonState;
-    type Props = ButtonProps;
-}
-const buttonVariants: (props?: ({
-    variant?: "default" | "link" | "outline" | "secondary" | "destructive" | "ghost" | null | undefined;
-    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
-} & ClassProp) | undefined) => string;
-function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
     orientation?: Orientation | undefined;
@@ -10124,6 +10108,22 @@ const buttonGroupVariants: (props?: ({
 function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
 function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
+const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface ButtonState {
+    disabled: boolean;
+}
+interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
+    focusableWhenDisabled?: boolean | undefined;
+}
+namespace Button {
+    type State = ButtonState;
+    type Props = ButtonProps;
+}
+const buttonVariants: (props?: ({
+    variant?: "default" | "link" | "outline" | "secondary" | "destructive" | "ghost" | null | undefined;
+    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+} & ClassProp) | undefined) => string;
+function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 const Button$2: ViewComponent<typeof Button$1>;
 const ButtonGroup$1: ViewComponent<typeof ButtonGroup>;
 const ButtonGroupText$1: ViewComponent<typeof ButtonGroupText>;

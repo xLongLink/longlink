@@ -1,9 +1,9 @@
 import { Maps } from './maps';
 import type { MapData } from './map-data';
 import { useState, type ReactNode } from 'react';
-import { Button } from '@/components/shadcn/button';
 import { IconTile } from '@/components/reui/icon-tile';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/longlink/action/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shadcn/card';
 
 export type CountryUsage = {

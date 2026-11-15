@@ -56,7 +56,7 @@ import type { Cell, Header, Row } from '@tanstack/react-table';
 import { cn } from 'cn';
 import { createPortal } from 'react-dom';
 
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { GripHorizontalIcon } from 'lucide-react';
 
 // Context to share sortable listeners from row to handle

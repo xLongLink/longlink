@@ -8,9 +8,9 @@ import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';

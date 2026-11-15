@@ -4,15 +4,14 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { Dialog } from '@/components/custom/native-dialog';
-import { buttonVariants } from '@/components/shadcn/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */

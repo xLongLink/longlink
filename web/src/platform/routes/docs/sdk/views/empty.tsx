@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import { Empty } from '@/components/longlink/empty';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 
 /** Documents Empty in LongLink Views. */
 export default function EmptyPage() {

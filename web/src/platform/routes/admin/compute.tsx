@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';

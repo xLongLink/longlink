@@ -2,9 +2,9 @@ import { SidebarContext } from '@/lib/sidebar';
 import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
 import { useContext, useLayoutEffect, useState } from 'react';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
 

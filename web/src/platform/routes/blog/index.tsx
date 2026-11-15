@@ -2,7 +2,7 @@ import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/ui/page';
 import { Grid } from '@/components/custom/grid';
 import { Separator } from '@/components/shadcn/separator';
-import { buttonVariants } from '@/components/shadcn/button';
+import { buttonVariants } from '@/components/longlink/action/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 

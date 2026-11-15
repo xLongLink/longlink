@@ -1,10 +1,10 @@
 import { CircleX } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { Button } from '@/components/shadcn/button';
 import { PageLoading } from '@/components/ui/utils';
 import { Toaster } from '@/components/shadcn/sonner';
 import { createQueryRuntime } from '@/lib/react-query';
 import { ApiErrorContext, useApiError } from '@/lib/errors';
+import { Button } from '@/components/longlink/action/button';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { Suspense, useEffect, useId, useState, type ReactNode } from 'react';
 import { createNotifications, NotificationContext } from '@/lib/notifications';

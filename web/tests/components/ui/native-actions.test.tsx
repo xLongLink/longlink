@@ -5,9 +5,9 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import { buttonVariants } from '@/components/shadcn/button';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
+import { buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
 import { NativeLink, NativeNavigationLink } from '@/components/custom/native-link';
 

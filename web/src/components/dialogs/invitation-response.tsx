@@ -1,7 +1,7 @@
 import { useApiError } from '@/lib/errors';
 import { useRef, useTransition } from 'react';
-import { Button } from '@/components/shadcn/button';
 import { Dialog } from '@/components/custom/native-dialog';
+import { Button } from '@/components/longlink/action/button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 

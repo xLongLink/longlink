@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import ViewLayout from './view-layout';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/shadcn/card';
 
 /** Documents native card composition and the custom interactive wrapper. */

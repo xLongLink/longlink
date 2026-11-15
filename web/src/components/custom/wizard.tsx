@@ -1,7 +1,7 @@
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { useFormContext } from 'react-hook-form';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
 import {
     Children,

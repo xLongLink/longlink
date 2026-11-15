@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import * as React from 'react';
 import { XIcon } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/longlink/action/button';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {

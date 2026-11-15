@@ -1,6 +1,6 @@
 import { viewComponent } from '../props';
-import * as button from '@/components/shadcn/button';
 import * as group from '@/components/shadcn/button-group';
+import * as button from '@/components/longlink/action/button';
 
 export const Button = viewComponent(button.Button);
 

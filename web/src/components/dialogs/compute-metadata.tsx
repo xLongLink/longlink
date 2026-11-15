@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import { Button } from '@/components/shadcn/button';
 import { Dialog } from '@/components/custom/native-dialog';
+import { Button } from '@/components/longlink/action/button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
