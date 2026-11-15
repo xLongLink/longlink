@@ -17475,13 +17475,6 @@ function ActionControl({ children, variant, size: requestedSize, type, disabled,
 }): React$1.JSX.Element;
 type ButtonProps$1 = React$1.ComponentProps<typeof ActionControl>;
 export function ActionButton({ onClick, ...props }: ButtonProps$1): React$1.JSX.Element;
-export function ActionButtonGroup({ children, label, orientation, size: requestedSize, isDisabled }: {
-    children?: React$1.ReactNode;
-    label: string;
-    orientation?: "horizontal" | "vertical";
-    size?: "sm" | "default" | "lg";
-    isDisabled?: boolean;
-}): React$1.JSX.Element;
 export function FileViewer({ src, title }: {
     src: string;
     title: string;
@@ -20444,7 +20437,6 @@ export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Butto
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
-declare const ActionButtonGroup: typeof NativeFrontend.ActionButtonGroup;
 declare const Area: typeof NativeFrontend.Area;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
 declare const AttachmentLink: typeof NativeFrontend.AttachmentLink;

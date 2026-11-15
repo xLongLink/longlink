@@ -6,11 +6,11 @@ import { ErrorBoundary } from 'react-error-boundary';
 // @vitest-environment happy-dom
 import { act, createRef, type MouseEvent } from 'react';
 import { renderStatic, withMounted } from '../../render';
+import { ButtonGroup } from '@/components/shadcn/button-group';
 import { ActionButton } from '@/components/custom/action-button';
 import { Dialog, DialogTrigger } from '@/components/shadcn/dialog';
 import { LinkNavigationContext } from '@/components/custom/contexts';
 import { Button as StandardButton } from '@/components/shadcn/button';
-import { ActionButtonGroup } from '@/components/custom/action-button-group';
 
 it('composes a dialog trigger with native props, merged click handlers, and both refs', async () => {
     const buttonRef = createRef<HTMLButtonElement>();
@@ -67,11 +67,11 @@ it('preserves native link keyboard semantics inside a group', async () => {
     const user = userEvent.setup();
 
     await withMounted(
-        <ActionButtonGroup label="Navigation">
+        <ButtonGroup aria-label="Navigation">
             <ActionButton href="https://example.com/docs" onClick={action}>
                 Docs
             </ActionButton>
-        </ActionButtonGroup>,
+        </ButtonGroup>,
         async (output) => {
             const anchor = output.querySelector('a');
 
@@ -192,8 +192,7 @@ it('retains submitter data and reset behavior through the real form', async () =
     );
 });
 
-it('keeps grouped actions sized and disabled, excluding disabled submitter data', async () => {
-    // Group state must retain authority over its action descendants.
+it('blocks disabled actions and excludes disabled submitter data', async () => {
     const action = vi.fn();
     const submitted = vi.fn();
     const ancestor = vi.fn();
@@ -205,14 +204,14 @@ it('keeps grouped actions sized and disabled, excluding disabled submitter data'
                     submitted();
                 }}
             >
-                <ActionButtonGroup label="Actions" size="lg" isDisabled>
-                    <ActionButton type="submit" name="intent" value="publish" onClick={action}>
+                <ButtonGroup aria-label="Actions">
+                    <ActionButton type="submit" name="intent" value="publish" size="lg" disabled onClick={action}>
                         Publish
                     </ActionButton>
-                    <ActionButton size="icon-lg" aria-label="Delete" onClick={action}>
+                    <ActionButton size="icon-lg" aria-label="Delete" disabled onClick={action}>
                         <Icon icon="trash" size="lg" />
                     </ActionButton>
-                </ActionButtonGroup>
+                </ButtonGroup>
             </form>
         </section>,
         async (output) => {

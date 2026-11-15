@@ -4,10 +4,6 @@ import type { LucideIconData } from 'lucide-react';
 
 export const ControlSizeContext = createContext<'sm' | 'md' | 'lg' | null>(null);
 
-export const ButtonGroupContext = createContext<{ orientation: 'horizontal' | 'vertical'; isDisabled: boolean } | null>(
-    null
-);
-
 export const FormRequestContext = createContext<
     | ((
           path: string,

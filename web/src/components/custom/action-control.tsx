@@ -1,8 +1,7 @@
 import { cn } from 'cn';
 import { LoaderCircle } from 'lucide-react';
-import { Toolbar } from '@base-ui/react/toolbar';
+import { ControlSizeContext } from './contexts';
 import { Button as Control } from '@/components/shadcn/button';
-import { ButtonGroupContext, ControlSizeContext } from './contexts';
 import { useContext, useRef, useState, useTransition, useSyncExternalStore, type ComponentProps } from 'react';
 
 type ActionClickEvent = Parameters<NonNullable<ComponentProps<typeof Control>['onClick']>>[0];
@@ -32,12 +31,10 @@ export function ActionControl({
 }) {
     const inheritedSize = useContext(ControlSizeContext);
     const size = requestedSize ?? (inheritedSize === 'md' ? 'default' : inheritedSize) ?? 'default';
-    const group = useContext(ButtonGroupContext);
-    const blocked = disabled || (group?.isDisabled ?? false);
     const inFlight = useRef(false);
     const [loadingLabel, setLoadingLabel] = useState('');
     const [pending, startTransition] = useTransition();
-    const isLink = href !== undefined && !blocked;
+    const isLink = href !== undefined && !disabled;
 
     const client = useSyncExternalStore(
         () => () => {},
@@ -45,11 +42,11 @@ export function ActionControl({
         () => false
     );
 
-    const renderedType = blocked && !client && type !== 'button' ? 'button' : type;
+    const renderedType = disabled && !client && type !== 'button' ? 'button' : type;
 
     // The synchronous guard covers repeated events before React commits the pending state.
     function activate(event: ActionClickEvent) {
-        if (blocked || pending || inFlight.current) {
+        if (disabled || pending || inFlight.current) {
             event.preventDefault();
             event.stopPropagation();
 
@@ -68,7 +65,7 @@ export function ActionControl({
         });
     }
 
-    const control = (
+    return (
         <Control
             {...props}
             variant={variant}
@@ -76,21 +73,20 @@ export function ActionControl({
             className={cn('relative min-w-0', className)}
             data-variant={variant}
             data-size={size}
-            data-group-action={group ? '' : undefined}
             nativeButton={isLink ? false : props.nativeButton}
             render={isLink ? <a href={href} /> : props.render}
             role={isLink ? 'link' : props.role}
             type={isLink ? undefined : renderedType}
-            name={blocked || isLink ? undefined : name}
+            name={disabled || isLink ? undefined : name}
             value={value}
             form={isLink ? undefined : form}
-            disabled={blocked}
+            disabled={disabled}
             focusableWhenDisabled={props.focusableWhenDisabled ?? true}
             aria-label={props['aria-label'] ?? (pending ? loadingLabel : undefined)}
             aria-busy={pending || props['aria-busy']}
-            aria-disabled={blocked || pending || props['aria-disabled']}
+            aria-disabled={disabled || pending || props['aria-disabled']}
             onClickCapture={(event) => {
-                if (blocked) {
+                if (disabled) {
                     event.preventDefault();
                     event.stopPropagation();
 
@@ -103,7 +99,7 @@ export function ActionControl({
             onKeyDown={(event) => {
                 onKeyDown?.(event);
 
-                if ((blocked || pending || inFlight.current) && (event.key === 'Enter' || event.key === ' ')) {
+                if ((disabled || pending || inFlight.current) && (event.key === 'Enter' || event.key === ' ')) {
                     event.preventDefault();
                 }
 
@@ -126,18 +122,5 @@ export function ActionControl({
                 {pending ? 'Loading' : ''}
             </span>
         </Control>
-    );
-
-    if (!group) return control;
-
-    return isLink ? (
-        <Toolbar.Link render={control} />
-    ) : (
-        <Toolbar.Button
-            render={control}
-            disabled={blocked}
-            focusableWhenDisabled={group.isDisabled}
-            nativeButton={!isLink}
-        />
     );
 }

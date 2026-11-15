@@ -5,8 +5,8 @@ import type { ReactNode } from 'react';
 import { use, useEffect, useRef } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
+import { ControlSizeContext, DialogActivityContext } from './contexts';
 import { DialogContent, DialogTitle } from '@/components/shadcn/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from './contexts';
 
 type FramedDialogProps = {
     children?: ReactNode;
@@ -60,37 +60,35 @@ export function FramedDialog(props: FramedDialogProps) {
                     popup.current?.querySelector<HTMLElement>('[data-autofocus]') ?? title.current ?? true
                 }
             >
-                <ButtonGroupContext value={null}>
-                    <ControlSizeContext value={null}>
-                        <div className="absolute end-3 top-3 z-1">
-                            <BaseDialog.Close
-                                aria-label="Close dialog"
-                                render={<Button variant="ghost" size="icon" type="button" />}
-                            >
-                                <Icon icon="x" size="md" />
-                            </BaseDialog.Close>
-                        </div>
-                        {props.title && (
-                            <DialogTitle
-                                ref={title}
-                                render={<div />}
-                                tabIndex={-1}
-                                className="shrink-0 p-4 pe-12 outline-none"
-                            >
-                                <Heading level={2}>{props.title}</Heading>
-                            </DialogTitle>
-                        )}
-                        <div
-                            className="min-h-0 flex-1 overflow-auto"
-                            style={{
-                                paddingInline: `calc(var(--spacing) * ${props.paddingInline ?? 4})`,
-                                paddingBlockStart: props.title ? `calc(var(--spacing) * ${props.gap ?? 3})` : 0
-                            }}
+                <ControlSizeContext value={null}>
+                    <div className="absolute end-3 top-3 z-1">
+                        <BaseDialog.Close
+                            aria-label="Close dialog"
+                            render={<Button variant="ghost" size="icon" type="button" />}
                         >
-                            {props.children}
-                        </div>
-                    </ControlSizeContext>
-                </ButtonGroupContext>
+                            <Icon icon="x" size="md" />
+                        </BaseDialog.Close>
+                    </div>
+                    {props.title && (
+                        <DialogTitle
+                            ref={title}
+                            render={<div />}
+                            tabIndex={-1}
+                            className="shrink-0 p-4 pe-12 outline-none"
+                        >
+                            <Heading level={2}>{props.title}</Heading>
+                        </DialogTitle>
+                    )}
+                    <div
+                        className="min-h-0 flex-1 overflow-auto"
+                        style={{
+                            paddingInline: `calc(var(--spacing) * ${props.paddingInline ?? 4})`,
+                            paddingBlockStart: props.title ? `calc(var(--spacing) * ${props.gap ?? 3})` : 0
+                        }}
+                    >
+                        {props.children}
+                    </div>
+                </ControlSizeContext>
             </DialogContent>
         </BaseDialog.Root>
     );

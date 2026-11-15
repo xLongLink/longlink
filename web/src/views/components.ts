@@ -65,7 +65,6 @@ export { ActionButton } from '@/components/custom/action-button';
 export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/shadcn/button-group';
 
 /** Custom grouped actions with roving focus and inherited disabled state. @category Action */
-export { ActionButtonGroup } from '@/components/custom/action-button-group';
 
 /** @category Action */
 export {

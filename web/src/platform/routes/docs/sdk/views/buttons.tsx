@@ -4,7 +4,6 @@ import { Button } from '@/components/shadcn/button';
 import { ButtonGroup } from '@/components/shadcn/button-group';
 import { ActionButton } from '@/components/custom/action-button';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { ActionButtonGroup } from '@/components/custom/action-button-group';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -65,31 +64,6 @@ export default function ButtonsPage() {
                     name: 'ButtonGroup.children',
                     type: 'ReactNode',
                     description: 'Native Button or composed control children.'
-                },
-                {
-                    type: 'ReactNode',
-                    description: 'ActionButton children for coordinated keyboard navigation.',
-                    name: 'ActionButtonGroup.children'
-                },
-                {
-                    type: 'string',
-                    description: 'Accessible label for the group (aria-label).',
-                    name: 'ActionButtonGroup.label'
-                },
-                {
-                    type: '"horizontal" | "vertical"',
-                    description: 'Layout direction of the button group.',
-                    name: 'ActionButtonGroup.orientation'
-                },
-                {
-                    type: '"sm" | "lg" | "default"',
-                    description: 'Default size for buttons in the group. Individual buttons can override.',
-                    name: 'ActionButtonGroup.size'
-                },
-                {
-                    type: 'boolean',
-                    description: 'Whether all buttons in the group are disabled.',
-                    name: 'ActionButtonGroup.isDisabled'
                 }
             ]}
             example={{
@@ -129,19 +103,15 @@ export default function ButtonsPage() {
         <ActionButton size="icon-lg" aria-label="Add (large)"><Icon icon="plus" size="lg" /></ActionButton>
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
-        <ButtonGroup aria-label="Native actions">
+        <ButtonGroup aria-label="Actions">
           <Button variant="outline">Save</Button>
           <Button variant="outline">Cancel</Button>
+          <Button size="icon" aria-label="Add" variant="outline"><Icon icon="plus" size="md" /></Button>
         </ButtonGroup>
-        <ActionButtonGroup label="Actions">
-          <ActionButton variant="outline">Save</ActionButton>
-          <ActionButton variant="outline">Cancel</ActionButton>
-          <ActionButton size="icon" aria-label="Add" variant="outline"><Icon icon="plus" size="md" /></ActionButton>
-        </ActionButtonGroup>
-        <ActionButtonGroup label="Vertical actions" orientation="vertical">
-          <ActionButton variant="outline">Edit</ActionButton>
-          <ActionButton variant="outline">Duplicate</ActionButton>
-        </ActionButtonGroup>
+        <ButtonGroup aria-label="Vertical actions" orientation="vertical">
+          <Button variant="outline">Edit</Button>
+          <Button variant="outline">Duplicate</Button>
+        </ButtonGroup>
       </Stack>
     </Stack>
   );
@@ -209,21 +179,17 @@ export function ButtonExample() {
                 </ActionButton>
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
-                <ButtonGroup aria-label="Native actions">
+                <ButtonGroup aria-label="Actions">
                     <Button variant="outline">Save</Button>
                     <Button variant="outline">Cancel</Button>
-                </ButtonGroup>
-                <ActionButtonGroup label="Actions">
-                    <ActionButton variant="outline">Save</ActionButton>
-                    <ActionButton variant="outline">Cancel</ActionButton>
-                    <ActionButton size="icon" aria-label="Add" variant="outline">
+                    <Button size="icon" aria-label="Add" variant="outline">
                         <Icon icon="plus" size="md" />
-                    </ActionButton>
-                </ActionButtonGroup>
-                <ActionButtonGroup label="Vertical actions" orientation="vertical">
-                    <ActionButton variant="outline">Edit</ActionButton>
-                    <ActionButton variant="outline">Duplicate</ActionButton>
-                </ActionButtonGroup>
+                    </Button>
+                </ButtonGroup>
+                <ButtonGroup aria-label="Vertical actions" orientation="vertical">
+                    <Button variant="outline">Edit</Button>
+                    <Button variant="outline">Duplicate</Button>
+                </ButtonGroup>
             </Stack>
         </Stack>
     );

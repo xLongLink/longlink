@@ -737,40 +737,6 @@
             "justification": "Awaits Solution actions, blocks duplicate activation, and coordinates scoped navigation and reported-error recovery."
         },
         {
-            "name": "ActionButtonGroup",
-            "category": "Action",
-            "guidance": "Renamed from ButtonGroup. Existing Views that use label, size, or isDisabled must use ActionButtonGroup; ButtonGroup now exposes native shadcn composition.",
-            "introduction": "Groups related actions with connected styling and a single keyboard tab stop.",
-            "properties": [
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "ActionButton children for coordinated keyboard navigation."
-                },
-                { "name": "label", "type": "string", "description": "Accessible label for the group (aria-label)." },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Layout direction of the button group.",
-                    "default": "horizontal"
-                },
-                {
-                    "name": "size",
-                    "type": "\"sm\" | \"default\" | \"lg\"",
-                    "description": "Default size for buttons in the group. Individual buttons can override.",
-                    "default": "default"
-                },
-                {
-                    "name": "isDisabled",
-                    "type": "boolean",
-                    "description": "Whether all buttons in the group are disabled.",
-                    "default": false
-                }
-            ],
-            "source": "custom",
-            "justification": "Coordinates roving keyboard focus, inherited action sizes, and disabled state; native ButtonGroup only groups visual controls."
-        },
-        {
             "name": "Card",
             "category": "Layouts",
             "introduction": "Native shadcn card composition.",
@@ -2653,7 +2619,7 @@
             "name": "ButtonGroup",
             "category": "Action",
             "introduction": "Native shadcn ButtonGroup composition with HTML div attributes.",
-            "guidance": "Use ActionButtonGroup for coordinated keyboard focus and inherited action sizes and disabled state.",
+            "guidance": "Compose Button children with explicit size and disabled props. Use aria-label to name the group.",
             "properties": [
                 {
                     "name": "orientation",

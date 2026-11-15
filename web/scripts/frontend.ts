@@ -68,7 +68,6 @@ export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, Ste
 export { ProgressStepper, Wizard, Step } from '../src/components/custom/wizard';
 export { Button } from '../src/components/shadcn/button';
 export { ActionButton } from '../src/components/custom/action-button';
-export { ActionButtonGroup } from '../src/components/custom/action-button-group';
 export { FileViewer } from '../src/components/custom/file-viewer';
 export * from '../src/components/shadcn/card';
 export * from '../src/components/custom/interactive-card';

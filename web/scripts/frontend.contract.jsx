@@ -284,7 +284,7 @@ const nativeComposition = (
             >
                 Save
             </Button>
-            <ActionButtonGroup label="Actions" size="default">
+            <ButtonGroup aria-label="Actions">
                 <ActionButton
                     aria-label="Approve"
                     size="icon-xs"
@@ -295,7 +295,7 @@ const nativeComposition = (
                 >
                     <Icon icon="check" size="sm" />
                 </ActionButton>
-            </ActionButtonGroup>
+            </ButtonGroup>
             <FileViewer src="/attachment" title="Attachment" />
             <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
                 <TabsList variant="line">
@@ -425,9 +425,6 @@ const _legacySeparator = <Separator isFullBleed />;
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
 // @ts-expect-error FramedDialog visibility changes require a controlled callback.
 const _uncontrolledFrame = <FramedDialog open title="Title" />;
-
-// @ts-expect-error ActionButtonGroup no longer accepts the legacy medium size.
-const _legacyGroupSize = <ActionButtonGroup label="Actions" size="md" />;
 
 // @ts-expect-error ActionButton uses native Button variants.
 const _legacyIconVariant = <ActionButton aria-label="Approve" variant="primary"><Icon icon="check" size="sm" /></ActionButton>;

@@ -6,8 +6,8 @@ import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import { Dialog as NativeDialog } from '@/components/custom/native-dialog';
+import { ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
     DropdownMenu,
     DropdownMenuItem,
@@ -102,7 +102,7 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
     });
 });
 
-it('traps keyboard focus, ignores backdrop presses, and restores focus after Escape from a disabled group', async () => {
+it('traps keyboard focus, ignores backdrop presses, and restores focus after Escape', async () => {
     const activity = vi.fn();
 
     /** Opens a controlled modal from an independently operable trigger. */
@@ -114,13 +114,11 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
                 <button type="button" onClick={() => setOpen(true)}>
                     Edit
                 </button>
-                <ButtonGroupContext value={{ orientation: 'vertical', isDisabled: true }}>
-                    <ControlSizeContext value="lg">
-                        <FramedDialog title="Edit order" open={open} onOpenChange={setOpen}>
-                            <input aria-label="Order name" />
-                        </FramedDialog>
-                    </ControlSizeContext>
-                </ButtonGroupContext>
+                <ControlSizeContext value="lg">
+                    <FramedDialog title="Edit order" open={open} onOpenChange={setOpen}>
+                        <input aria-label="Order name" />
+                    </FramedDialog>
+                </ControlSizeContext>
             </DialogActivityContext>
         );
     }
