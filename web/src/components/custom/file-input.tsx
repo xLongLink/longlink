@@ -225,11 +225,6 @@ export function NativeFileInput({
                     aria-invalid={invalid || undefined}
                     aria-describedby={describedBy}
                     onClick={open}
-                    onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        open();
-                    }}
                 >
                     {(mode === 'input' || !files.length) && <Upload aria-hidden="true" />}
                     <span

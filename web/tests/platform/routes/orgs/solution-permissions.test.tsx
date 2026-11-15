@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import SolutionPermissions from '@/components/dialogs/solution-permissions';
 
 it('retains an explicit no-access draft after save failure and retries against the deployed revision', async () => {
-    // Only transport is replaced: queries, picker selection, disabled save state, and retry stay real.
+    // Only transport is replaced: queries, selection, disabled save state, and retry stay real.
     const revision = '00000000-0000-4000-8000-000000000001';
     const member = '00000000-0000-4000-8000-000000000002';
     const writes: unknown[] = [];
@@ -72,13 +72,7 @@ it('retains an explicit no-access draft after save failure and retries against t
 
                 if (!trigger || !save) throw new Error('Expected permissions controls');
 
-                expect(
-                    trigger
-                        .getAttribute('aria-labelledby')
-                        ?.split(' ')
-                        .map((id) => document.getElementById(id)?.textContent)
-                        .join(' ')
-                ).toContain('Role for Alex');
+                expect(trigger.getAttribute('aria-label')).toBe('Role for Alex');
                 expect(output.querySelector('[aria-label^="Clear"]')).toBeNull();
                 expect(save.disabled || save.getAttribute('aria-disabled') === 'true').toBe(true);
                 await act(async () => user.click(trigger));
@@ -94,14 +88,14 @@ it('retains an explicit no-access draft after save failure and retries against t
                 expect(writes).toEqual([]);
                 await act(async () => user.click(save));
                 await vi.waitFor(() => expect(writes).toEqual([{ role: null, revision_id: revision }]));
-                expect(trigger.getAttribute('aria-disabled')).toBe('true');
+                expect(trigger.disabled).toBe(true);
                 await act(async () => user.click(trigger));
                 expect(trigger.getAttribute('aria-expanded')).toBe('false');
                 expect(close).not.toHaveBeenCalled();
                 await act(async () => finishFirstWrite(Response.json({ detail: 'Try again' }, { status: 409 })));
                 await vi.waitFor(() => expect(reportError).toHaveBeenCalledOnce());
                 expect(trigger.textContent).toBe('No access');
-                await vi.waitFor(() => expect(trigger.getAttribute('aria-disabled')).not.toBe('true'));
+                await vi.waitFor(() => expect(trigger.disabled).toBe(false));
                 expect(close).not.toHaveBeenCalled();
                 await act(async () => user.click(save));
                 await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());

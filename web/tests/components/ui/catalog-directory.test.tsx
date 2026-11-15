@@ -2,7 +2,6 @@ import { act } from 'react';
 // @vitest-environment happy-dom
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as icons from '@/lib/icons';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import * as components from '@/views/components';
@@ -12,51 +11,7 @@ import { UsageChart } from '@/components/custom/analytics';
 import type { RevenueQuarter } from '@/components/custom/flow';
 import { RevenueFlow } from '@/components/custom/revenue-flow';
 import { FileRequestContext } from '@/components/custom/preview';
-import { IconRequestContext } from '@/components/custom/contexts';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
-
-const models = [
-    {
-        id: 'aster',
-        name: 'Aster Vision',
-        provider: 'Northstar',
-        description: 'Visual analysis.',
-        rating: 4.8,
-        reviews: 13,
-        context: 128000,
-        input: 10,
-        output: 20,
-        modalities: ['text', 'image'],
-        tags: ['Vision']
-    },
-    {
-        id: 'cedar',
-        name: 'Cedar Vision',
-        provider: 'Solis',
-        description: 'Visual extraction.',
-        rating: 4.5,
-        reviews: 17,
-        context: 64000,
-        input: 0.2,
-        output: 0.5,
-        modalities: ['text', 'image'],
-        tags: ['Vision']
-    },
-    ...Array.from({ length: 10 }, (_, index) => ({
-        id: `model-${index}`,
-        name: `Model ${index}`,
-        provider: 'Solis',
-        description: 'Text analysis.',
-        rating: 4,
-        reviews: 7,
-        context: 32000,
-        input: 1,
-        output: 2,
-        modalities: ['text'],
-        tags: ['Chat']
-    }))
-];
 
 // Exercise the shipped View against the real shared components and scoped download boundary.
 const code = transform(source, {
@@ -72,8 +27,7 @@ const bindings = {
     useEffect: React.useEffect,
     useMemo: React.useMemo,
     useRef: React.useRef,
-    ...components,
-    useApi: () => [models]
+    ...components
 };
 
 const module = { exports: {} };
@@ -84,144 +38,113 @@ const evaluate = new Function('module', 'exports', ...Object.keys(bindings), `${
 // SAFETY: The source is the repository-owned starter View, not an external module.
 const List = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
 
-/** Supplies the real icon loader while the fixture owns its model response. */
-function CatalogDirectory() {
-    const [client] = React.useState(() => new QueryClient());
-
-    return (
-        <QueryClientProvider client={client}>
-            <IconRequestContext value={icons.load}>
-                <List />
-            </IconRequestContext>
-        </QueryClientProvider>
-    );
-}
-
-it('recovers filtering from a later page and exports every matching row in numeric price order', async () => {
+it('normalizes file searches and restores results after an empty search', async () => {
     const user = userEvent.setup();
+
+    await withMounted(<List />, async (output) => {
+        const search = output.querySelector<HTMLInputElement>('input[aria-label="Search files"]');
+
+        if (!search) throw new Error('Expected file search');
+
+        await act(async () => user.type(search, '  PNG  '));
+        expect(output.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(output.querySelector('tbody a')?.textContent).toContain('example.png');
+        expect(output.querySelector('tbody')?.textContent).not.toContain('garden.jpg');
+
+        await act(async () => user.clear(search));
+        await act(async () => user.type(search, 'missing-file'));
+        expect(output.querySelector('tbody')?.textContent).toContain('No files found');
+        expect(output.querySelector('tbody a')).toBeNull();
+
+        const clear = [...output.querySelectorAll('button')].find((button) => button.textContent === 'Clear search');
+
+        if (!clear) throw new Error('Expected empty-state recovery');
+
+        await act(async () => user.click(clear));
+        expect(search.value).toBe('');
+        expect(output.querySelector('tbody')?.textContent).toContain('example.png');
+        expect(output.querySelector('tbody')?.textContent).toContain('garden.jpg');
+        expect(output.querySelector('tbody')?.textContent).not.toContain('No files found');
+    });
+});
+
+it('returns to the first page when a search narrows results from a later file page', async () => {
+    const user = userEvent.setup();
+
+    await withMounted(<List />, async (output) => {
+        const size = output.querySelector<HTMLButtonElement>('[aria-label="Rows per page"]');
+
+        if (!size) throw new Error('Expected page size control');
+
+        await act(async () => user.click(size));
+
+        const five = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+            (option) => option.textContent === '5'
+        );
+
+        if (!five) throw new Error('Expected five-row page option');
+
+        await act(async () => user.click(five));
+        const secondPage = output.querySelector<HTMLButtonElement>('button[aria-label="Go to page 2"]');
+
+        if (!secondPage) throw new Error('Expected second file page');
+
+        await act(async () => user.click(secondPage));
+        expect(
+            output.querySelector('[aria-label="Go to page 2"]')?.getAttribute('aria-current'),
+            output.querySelector('[data-slot="data-grid-pagination"]')?.textContent
+        ).toBe('page');
+        expect(output.querySelector('tbody')?.textContent).not.toContain('example.gif');
+
+        const search = output.querySelector<HTMLInputElement>('input[aria-label="Search files"]');
+
+        if (!search) throw new Error('Expected file search');
+
+        await act(async () => user.type(search, '.gif'));
+        expect(output.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(output.querySelector('tbody a')?.textContent).toContain('example.gif');
+        expect(output.querySelector('[data-slot="data-grid-pagination"]')?.textContent).toContain('1 - 1 of 1');
+
+        await act(async () => user.clear(search));
+        expect(output.querySelector('[aria-label="Go to page 1"]')?.getAttribute('aria-current')).toBe('page');
+        expect(output.querySelector('tbody')?.textContent).toContain('example.gif');
+        expect(output.querySelectorAll('tbody tr')).toHaveLength(5);
+    });
+});
+
+it('wires filtered file rows to scoped previews with their own asset path and title without eager loading', async () => {
+    const user = userEvent.setup();
+    const preview = vi.fn(async (_path: string, _title?: string) => null);
     const download = vi.fn(async (_path: string, _filename: string) => {});
 
     await withMounted(
-        <FileRequestContext value={{ download, preview: async () => null }}>
-            <CatalogDirectory />
+        <FileRequestContext value={{ preview, download }}>
+            <List />
         </FileRequestContext>,
         async (output) => {
-            const secondPage = output.querySelector<HTMLButtonElement>('button[aria-label="Go to page 2"]');
-            const search = output.querySelector<HTMLInputElement>('input[aria-label="Search models"]');
+            expect(preview).not.toHaveBeenCalled();
+            const search = output.querySelector<HTMLInputElement>('input[aria-label="Search files"]');
 
-            if (!secondPage || !search) throw new Error('Expected directory controls');
+            if (!search) throw new Error('Expected file search');
 
-            await act(async () => user.click(secondPage));
-            expect(output.querySelector('tbody')?.textContent).not.toContain('Aster Vision');
-            await act(async () => user.type(search, 'vision'));
-            expect(output.querySelectorAll('tbody tr')).toHaveLength(2);
-            expect(output.querySelector('tbody')?.textContent).toContain('Aster Vision');
-            expect(output.querySelector('tbody')?.textContent).toContain('Cedar Vision');
+            for (const filename of ['garden.jpg', 'example.pdf', 'example.tsx']) {
+                await act(async () => user.clear(search));
+                await act(async () => user.type(search, filename));
+                const attachment = output.querySelector<HTMLAnchorElement>('tbody a');
 
-            const sort = output.querySelector<HTMLButtonElement>('[aria-label="Sort models"]');
+                if (!attachment) throw new Error(`Expected attachment for ${filename}`);
 
-            if (!sort) throw new Error('Expected sort control');
+                expect(attachment.textContent).toContain(filename);
+                expect(attachment.getAttribute('aria-haspopup')).toBe('dialog');
+                const calls = preview.mock.calls.length;
+                await act(async () => user.click(attachment));
+                expect(preview).toHaveBeenCalledTimes(calls + 1);
+                expect(preview).toHaveBeenLastCalledWith(`/assets/${filename}`, filename);
+            }
 
-            await act(async () => user.click(sort));
-
-            const priceOption = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
-                (option) => option.textContent === 'Lowest input price'
-            );
-
-            if (!priceOption) throw new Error('Expected price sort option');
-
-            await act(async () => user.click(priceOption));
-            expect(output.querySelector('tbody tr')?.textContent).toContain('Cedar Vision');
-
-            const exportButton = [...output.querySelectorAll('button')].find(
-                (button) => button.textContent === 'Export'
-            );
-
-            if (!exportButton) throw new Error('Expected export control');
-
-            await act(async () => user.click(exportButton));
-            expect(download).toHaveBeenCalledExactlyOnceWith('/api/models/export?ids=cedar%2Caster', 'models.csv');
-            await act(async () => user.clear(search));
-            await act(async () => user.click(exportButton));
-            const exported = new URL(download.mock.calls[1][0], 'https://example.test');
-            expect(exported.searchParams.get('ids')?.split(',')).toHaveLength(12);
-            await act(async () => user.type(search, 'no matching model'));
-            expect(output.querySelector('tbody')?.textContent).toContain('No models found');
-
-            const clear = [...output.querySelectorAll('button')].find(
-                (button) => button.textContent === 'Clear filters'
-            );
-
-            if (!clear) throw new Error('Expected empty-state recovery');
-
-            await act(async () => user.click(clear));
-            expect(search.value).toBe('');
-            expect(output.querySelectorAll('tbody tr')).toHaveLength(10);
-            expect(output.querySelector('tbody tr')?.textContent).toContain('Cedar Vision');
+            expect(download).not.toHaveBeenCalled();
         }
     );
-});
-
-it('retains a bookmark across detail navigation without treating Save as navigation', async () => {
-    const user = userEvent.setup();
-
-    await withMounted(<CatalogDirectory />, async (output) => {
-        const save = output.querySelector<HTMLButtonElement>('button[aria-label="Save Aster Vision"]');
-
-        if (!save) throw new Error('Expected bookmark control');
-
-        await act(async () => user.click(save));
-        expect(output.querySelector('h1')).toBeNull();
-        expect(output.querySelector('button[aria-label="Unsave Aster Vision"]')?.getAttribute('aria-pressed')).toBe(
-            'true'
-        );
-        const model = [...output.querySelectorAll('a')].find((link) => link.textContent === 'Aster Vision');
-
-        if (!model) throw new Error('Expected model link');
-
-        await act(async () => user.click(model));
-        expect(output.querySelector('h1')?.textContent).toBe('Aster Vision');
-        expect(output.querySelector('button[aria-label="Unsave Aster Vision"]')).not.toBeNull();
-        const back = [...output.querySelectorAll('button')].find((button) => button.textContent === 'Back');
-
-        if (!back) throw new Error('Expected Back control');
-
-        await act(async () => user.click(back));
-        expect(output.querySelector('tbody')).not.toBeNull();
-        expect(output.querySelector('button[aria-label="Unsave Aster Vision"]')?.getAttribute('aria-pressed')).toBe(
-            'true'
-        );
-    });
-});
-
-it('applies the provider is-not operator rather than treating every provider rule as inclusion', async () => {
-    const user = userEvent.setup();
-
-    async function pickOption(label: string) {
-        const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
-            (item) => item.textContent?.trim() === label
-        );
-
-        if (!option) throw new Error(`Expected filter option: ${label}`);
-
-        await act(async () => user.click(option));
-    }
-
-    await withMounted(<CatalogDirectory />, async (output) => {
-        const add = [...output.querySelectorAll('button')].find(
-            (button) => button.textContent?.trim() === 'Add filter'
-        );
-
-        if (!add) throw new Error('Expected Add filter');
-
-        await act(async () => user.click(add));
-        await pickOption('Provider');
-        await pickOption('is not');
-        await pickOption('Solis');
-        expect(output.querySelectorAll('tbody tr')).toHaveLength(1);
-        expect(output.querySelector('tbody')?.textContent).toContain('Aster Vision');
-        expect(output.querySelector('tbody')?.textContent).not.toContain('Cedar Vision');
-    });
 });
 
 it('traces directed ancestors and descendants without including a sibling branch', () => {

@@ -170,7 +170,11 @@ it('opens the native picker once per keyboard activation and preserves the selec
             let opens = 0;
             input.addEventListener('click', () => opens++);
             await act(async () => user.tab());
-            await act(async () => user.keyboard('{Enter} '));
+            await act(async () => user.keyboard('{Enter}'));
+            expect(opens).toBe(1);
+            await act(async () => user.keyboard('[Space>]'));
+            expect(opens).toBe(1);
+            await act(async () => user.keyboard('[/Space]'));
             expect(opens).toBe(2);
             await act(async () => input.dispatchEvent(new Event('cancel', { bubbles: true })));
             expect(collect(control(output, 'form'))).toEqual([saved]);
