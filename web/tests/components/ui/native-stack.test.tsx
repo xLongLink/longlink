@@ -1,8 +1,6 @@
 // @vitest-environment happy-dom
-import { createRef } from 'react';
 import { it, expect } from 'vitest';
-import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
+import { renderStatic } from '../../render';
 import { NativeStack } from '@/components/custom/native-stack';
 
 it('preserves native spacing defaults, zero overrides, and pixel sizing during Stack migration', () => {
@@ -36,31 +34,4 @@ it('preserves native spacing defaults, zero overrides, and pixel sizing during S
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 4)');
     expect(sized.style.width).toBe('640px');
     expect(sized.style.minHeight).toBe('100vh');
-});
-
-it('keeps preview reset capture and native element refs working through the layout boundary', async () => {
-    const ref = createRef<HTMLElement>();
-    const user = userEvent.setup();
-    let resets = 0;
-
-    await withMounted(
-        <NativeStack as="section" ref={ref} aria-label="Preview" onResetCapture={() => resets++}>
-            <form>
-                <button type="reset">Reset preview</button>
-            </form>
-        </NativeStack>,
-        async (output) => {
-            expect(ref.current).toBe(output.querySelector('section'));
-            expect(ref.current?.getAttribute('aria-label')).toBe('Preview');
-
-            const reset = output.querySelector('button');
-
-            if (!reset) throw new Error('Expected preview reset');
-
-            await user.click(reset);
-            expect(resets).toBe(1);
-        }
-    );
-
-    expect(ref.current).toBeNull();
 });

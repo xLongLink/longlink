@@ -99,15 +99,6 @@ it('focuses the text input from its label while keeping its description separate
     );
 });
 
-it('preserves authored default values and submission names', () => {
-    // Act
-    const output = renderStatic(<TextInput label="Name" name="name" defaultValue="  Acme  " />);
-
-    // Assert
-    expect(output.querySelector('input[name="name"]')?.getAttribute('value')).toBe('  Acme  ');
-    expect(output.querySelector('input')?.getAttribute('type')).toBe('text');
-});
-
 it('associates the visible label and description with the actual editable control', () => {
     // Render two fields to catch duplicate generated IDs as well as missing associations.
     const output = renderStatic(

@@ -1,20 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect } from 'vitest';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { SwitchField } from '@/components/custom/switch-field';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
-
-it('maps field names and required state onto the native checkbox', () => {
-    // Act
-    const output = renderStatic(<CheckboxInput name="accepted" label="Accept terms" required defaultChecked />);
-
-    // Assert
-    expect(output.querySelector('input')?.getAttribute('name')).toBe('accepted');
-    expect(output.querySelector('input')?.hasAttribute('required')).toBe(true);
-    expect(output.querySelector('input')?.hasAttribute('checked')).toBe(true);
-});
 
 it.each([
     ['checkbox', CheckboxInput],

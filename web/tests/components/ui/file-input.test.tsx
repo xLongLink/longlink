@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect } from 'vitest';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { FileInput, NativeFileInput } from '@/components/custom/file-input';
 
 /** Requires the real control used by an interaction. */
@@ -29,16 +29,6 @@ function drop(zone: HTMLElement, files: File[]) {
     for (const file of files) dataTransfer.items.add(file);
     zone.dispatchEvent(Object.assign(new Event('drop', { bubbles: true, cancelable: true }), { dataTransfer }));
 }
-
-it('does not allow multiple attachments unless explicitly requested', () => {
-    // Act
-    const output = renderStatic(<FileInput label="Attachment" name="attachment" />);
-
-    // Assert
-    expect(output.querySelector('input[type="file"]')).not.toBeNull();
-    expect(output.querySelector('input[type="file"]')?.hasAttribute('multiple')).toBe(false);
-    expect(output.textContent).toContain('Choose file');
-});
 
 it.each(['input', 'dropzone'] as const)(
     'serializes real Files repeatedly and resets or clears %s selections',

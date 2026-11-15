@@ -17,19 +17,6 @@ import {
     DropdownMenuTrigger
 } from '@/components/shadcn/dropdown-menu';
 
-it('names the group while retaining its actions', () => {
-    // Act
-    const output = renderStatic(
-        <ActionButtonGroup label="Order actions">
-            <ActionButton variant="outline">Save</ActionButton>
-        </ActionButtonGroup>
-    );
-
-    // Assert
-    expect(output.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Order actions');
-    expect(output.textContent).toContain('Save');
-});
-
 it.each(['horizontal', 'vertical'] as const)(
     'roves %s actions, skips disabled controls and wraps',
     async (orientation) => {

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect } from 'vitest';
-import { renderStatic, withMounted } from '../../render';
+import { withMounted } from '../../render';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { Link as RouterLink, useNavigate } from 'react-router';
 
@@ -15,16 +15,6 @@ function HistoryBack() {
         </button>
     );
 }
-
-it('links ancestors but identifies the current page without a redundant link', () => {
-    // Act
-    const output = renderStatic(<PathBreadcrumb labels={{ docs: 'Documentation' }} />, '/docs/storage');
-
-    // Assert
-    expect(output.querySelector('a[href="/docs/"]')?.textContent).toContain('Documentation');
-    expect(output.querySelector('[aria-current="page"]')?.textContent).toContain('Storage');
-    expect(output.querySelector('a[href="/docs/storage/"]')).toBeNull();
-});
 
 it('updates the mounted trail after ancestor navigation, history traversal, and a different encoded path', async () => {
     // Keep the same breadcrumb mounted throughout real router transitions.

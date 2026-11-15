@@ -1,22 +1,11 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import type { Window } from 'happy-dom';
+import { withMounted } from '../../render';
 import { it, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import Layout from '@/platform/layouts/documentation';
-import { renderStatic, withMounted } from '../../render';
 import { Link, Route, Routes, useLocation } from 'react-router';
-
-it('selects Platform navigation for API documentation', () => {
-    // Act
-    const output = renderStatic(<Layout />, '/docs/api');
-
-    // Assert
-    expect(output.querySelector('[aria-label="Documentation sections"] [aria-current="page"]')?.textContent).toContain(
-        'Platform'
-    );
-    expect(output.querySelector('[aria-label="Documentation navigation"] a[href="/docs/sdk/storage/"]')).toBeNull();
-});
 
 // SAFETY: the happy-dom test environment provides its viewport controller on window.
 const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;

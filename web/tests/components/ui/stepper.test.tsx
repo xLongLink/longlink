@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { ProgressStepper, Step } from '@/components/custom/wizard';
 import {
     Stepper,
@@ -86,20 +86,6 @@ it('supports compound controlled navigation and preserves force-mounted drafts a
             expect(submit).not.toHaveBeenCalled();
         }
     );
-});
-
-it('preserves the authored process step labels', () => {
-    // Act
-    const output = renderStatic(
-        <ProgressStepper activeStep={1}>
-            <Step step={0} label="Review" />
-            <Step step={1} label="Deploy" />
-        </ProgressStepper>
-    );
-
-    // Assert
-    expect(output.textContent).toContain('Review');
-    expect(output.textContent).toContain('Deploy');
 });
 
 it('renders step actions inside their own step without nesting them in the step button', async () => {

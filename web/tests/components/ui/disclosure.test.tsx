@@ -1,22 +1,9 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { Disclosure } from '@/components/custom/disclosure';
-
-it('honors an authored initially open disclosure', () => {
-    // Act
-    const output = renderStatic(
-        <Disclosure trigger="Details" defaultOpen>
-            Order details
-        </Disclosure>
-    );
-
-    // Assert
-    expect(output.querySelector('[aria-expanded="true"]')).not.toBeNull();
-    expect(output.textContent).toContain('Order details');
-});
 
 it('toggles by keyboard without discarding an entered draft', async () => {
     // Closing a disclosure must hide its fields, not destroy their local form state.

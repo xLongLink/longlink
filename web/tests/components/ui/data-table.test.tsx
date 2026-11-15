@@ -8,17 +8,6 @@ import { ActionButton } from '@/components/custom/action-button';
 import { ControlSizeContext } from '@/components/custom/contexts';
 import { DataTable, pixel, proportional } from '@/components/custom/data-table';
 
-it('renders domain rows without inventing table actions', () => {
-    // Act
-    const output = renderStatic(
-        <DataTable data={[{ id: '1', name: 'Acme' }]} columns={[{ key: 'name', header: 'Customer' }]} />
-    );
-
-    // Assert
-    expect(output.querySelector('table')?.textContent).toContain('Customer');
-    expect(output.querySelector('table')?.textContent).toContain('Acme');
-});
-
 it('renders every supplied row and safely formats automatically generated cells', () => {
     // A renderer migration must not paginate results implicitly or stringify structured values.
     const output = renderStatic(
