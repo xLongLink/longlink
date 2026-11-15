@@ -1,8 +1,8 @@
 import type { z } from 'zod';
+import { Button } from '@/components/shadcn/button';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 export function SolutionMetadata({
     metadata,
@@ -39,7 +39,9 @@ export function SolutionMetadata({
                     <b>Created</b> {metadata.created_at}
                 </span>
                 <Stack direction="horizontal" justify="end">
-                    <Button label="Delete" variant="destructive" onClick={onDelete} />
+                    <Button variant="destructive" onClick={onDelete}>
+                        Delete
+                    </Button>
                 </Stack>
             </Stack>
         </Dialog>

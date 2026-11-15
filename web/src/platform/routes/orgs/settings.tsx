@@ -2,27 +2,26 @@ import { z } from 'zod';
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
-import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Button as ShadcnButton } from '@/components/shadcn/button';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
@@ -87,7 +86,7 @@ export default function OrganizationSettings() {
                     ].map((group) => (
                         <Collapsible key={group.label} defaultOpen>
                             <CollapsibleTrigger
-                                render={<ShadcnButton variant="ghost" size="sm" className="w-full justify-start" />}
+                                render={<Button variant="ghost" size="sm" className="w-full justify-start" />}
                             >
                                 <group.icon aria-hidden="true" />
                                 {group.label}
@@ -96,7 +95,7 @@ export default function OrganizationSettings() {
                             <CollapsibleContent>
                                 <div className="flex flex-col gap-0.5 ps-6">
                                     {group.sections.map((item) => (
-                                        <ShadcnButton
+                                        <Button
                                             nativeButton={false}
                                             render={<Link to={`${location.pathname}${location.search}#${item.id}`} />}
                                             variant={section === item.id ? 'secondary' : 'ghost'}
@@ -106,13 +105,13 @@ export default function OrganizationSettings() {
                                             key={item.id}
                                         >
                                             {item.label}
-                                        </ShadcnButton>
+                                        </Button>
                                     ))}
                                 </div>
                             </CollapsibleContent>
                         </Collapsible>
                     ))}
-                    <ShadcnButton
+                    <Button
                         nativeButton={false}
                         render={<Link to={`${location.pathname}${location.search}#solutions`} />}
                         variant={section === 'solutions' ? 'secondary' : 'ghost'}
@@ -122,7 +121,7 @@ export default function OrganizationSettings() {
                     >
                         <Boxes className="size-4" aria-hidden="true" />
                         Solutions
-                    </ShadcnButton>
+                    </Button>
                 </nav>
                 <Stack gap={3} className="min-w-0">
                     <ApiBoundary key={section}>
@@ -203,7 +202,9 @@ function GeneralSection({
                                 Once deleted, it will be gone forever. Please be certain.
                             </span>
                         </Stack>
-                        <Button label="Delete" variant="destructive" onClick={() => setIsConfirming(true)} />
+                        <Button variant="destructive" onClick={() => setIsConfirming(true)}>
+                            Delete
+                        </Button>
                     </Stack>
                 </Stack>
             )}
@@ -293,14 +294,14 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                               <DropdownMenu>
                                                   <DropdownMenuTrigger
                                                       render={
-                                                          <ShadcnButton
+                                                          <Button
                                                               type="button"
                                                               variant="ghost"
                                                               size="icon"
                                                               aria-label={`Actions for ${row.user.name}`}
                                                           >
                                                               <Ellipsis aria-hidden="true" />
-                                                          </ShadcnButton>
+                                                          </Button>
                                                       }
                                                   />
                                                   <DropdownMenuContent align="end">
@@ -385,6 +386,8 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
     const reportError = useApiError();
+    const revocationInFlight = useRef(false);
+    const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
 
@@ -430,7 +433,11 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
                     </h2>
-                    {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
+                    {canMaintain && (
+                        <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
+                            Invite
+                        </Button>
+                    )}
                 </Stack>
                 <Separator />
                 <DataTable
@@ -455,14 +462,27 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                       width: proportional(0.5),
                                       renderCell: (row: z.output<typeof schemas.zOrganizationInvitationResponse>) => (
                                           <Button
-                                              label="Revoke"
                                               variant="destructive"
-                                              clickAction={async () => {
-                                                  // Refresh organization access only after revocation succeeds.
-                                                  await api.delete(`${base}/invitations/${row.id}`);
-                                                  await invalidateInvitations();
+                                              disabled={revoking}
+                                              aria-busy={revoking || undefined}
+                                              onClick={() => {
+                                                  // Serialize revocation until the refreshed list is available.
+                                                  if (revocationInFlight.current) return;
+                                                  revocationInFlight.current = true;
+                                                  startRevocation(async () => {
+                                                      try {
+                                                          await api.delete(`${base}/invitations/${row.id}`);
+                                                          await invalidateInvitations();
+                                                      } catch (cause) {
+                                                          reportError(cause);
+                                                      } finally {
+                                                          revocationInFlight.current = false;
+                                                      }
+                                                  });
                                               }}
-                                          />
+                                          >
+                                              Revoke
+                                          </Button>
                                       )
                                   }
                               ]
@@ -470,6 +490,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     ]}
                 />
             </Stack>
+            <span role="status" className="sr-only">
+                {revoking ? 'Loading' : ''}
+            </span>
             <InviteMember
                 open={invitationAttempt !== null}
                 canInviteAdmin={canInviteAdmin}

@@ -2,13 +2,13 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import {
     Combobox,
     ComboboxChip,
@@ -137,8 +137,10 @@ export function SolutionTags({
                                     )}
                                 />
                                 <Stack direction="horizontal" gap={2} justify="end">
-                                    <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
-                                    <Button label="Save" type="submit" variant="default" />
+                                    <Button type="button" variant="ghost" onClick={onClose}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit">Save</Button>
                                 </Stack>
                             </Stack>
                         </fieldset>

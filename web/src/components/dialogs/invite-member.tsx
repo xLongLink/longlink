@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function InviteMember({
@@ -128,12 +128,9 @@ export function InviteMember({
                                                 </Field>
                                             )}
                                         />
-                                        <Button
-                                            label="Invite"
-                                            variant="default"
-                                            type="submit"
-                                            style={{ width: '100%' }}
-                                        />
+                                        <Button type="submit" className="w-full">
+                                            Invite
+                                        </Button>
                                     </Stack>
                                 </Stack>
                             </fieldset>
