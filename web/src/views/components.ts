@@ -294,7 +294,7 @@ export { Menu, MenuSection, MenuItem, MenuSubSection } from './adapter/layouts/m
 export { Icon, IconTile } from './adapter/display/icon';
 
 /** @category Action */
-export { Link, AttachmentLink } from './adapter/action/link';
+export { Link } from './adapter/action/link';
 
 /** @category Display */
 export { Currency } from './adapter/display/currency';

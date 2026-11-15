@@ -1563,34 +1563,25 @@
             "name": "Link",
             "category": "Action",
             "source": "custom",
-            "justification": "Validates destinations and coordinates Solution-relative navigation with the isolated host while forwarding native anchor properties.",
-            "introduction": "Native-shaped anchor for scoped Solution navigation and safe external HTTP(S) destinations.",
-            "guidance": "Use href and caller-owned content and classes. Use AttachmentLink for scoped preview/download capabilities and Button variant=\"link\" for actions.",
+            "justification": "Coordinates scoped navigation, file capabilities, and async actions while preserving native anchor or button semantics.",
+            "introduction": "Link for navigation, scoped file preview or download, and callback actions.",
+            "guidance": "Use href for navigation, add preview or download for scoped files, or omit href for an onClick action. Actions render as buttons with async loading and duplicate-click protection.",
             "properties": [
                 {
                     "name": "href",
                     "type": "string",
-                    "description": "Solution-relative or safe external HTTP(S) destination."
+                    "description": "Solution-relative or safe external HTTP(S) navigation destination, or scoped file path. Omit for callback-only actions."
                 },
                 {
-                    "name": "target / rel / className / ref / aria-*",
-                    "type": "native anchor props",
-                    "description": "Native anchor composition subject to runtime URL and navigation policy."
+                    "name": "...props",
+                    "type": "native anchor or button props",
+                    "description": "Navigation forwards anchor props and ref; file and callback actions forward button props and ref."
                 },
                 {
                     "name": "onClick",
-                    "type": "native anchor click handler",
-                    "description": "Receives the DOM-shaped React event; preventDefault cancels managed navigation."
+                    "type": "(event: MouseEvent) => void | Promise<void>",
+                    "description": "Runs a callback; actions track async loading. preventDefault cancels navigation or file handling."
                 },
-                { "name": "children", "type": "ReactNode", "description": "Caller-owned anchor content." }
-            ]
-        },
-        {
-            "name": "AttachmentLink",
-            "category": "Action",
-            "introduction": "Previews or downloads an attachment through scoped Solution file capabilities without navigating.",
-            "properties": [
-                { "name": "href", "type": "string", "description": "Scoped Solution attachment destination." },
                 {
                     "name": "preview",
                     "type": "string",
@@ -1601,16 +1592,9 @@
                     "type": "string",
                     "description": "Downloads a scoped Solution attachment with this filename instead of navigating. An empty string uses attachment."
                 },
-                { "name": "disabled", "type": "boolean", "description": "Disables attachment actions." },
-                {
-                    "name": "onClick",
-                    "type": "(event: ViewMouseEvent) => void | Promise<void>",
-                    "description": "Runs an action with automatic async loading and duplicate-click prevention."
-                },
+                { "name": "disabled", "type": "boolean", "description": "Disables navigation or the action." },
                 { "name": "children", "type": "ReactNode", "description": "Link content" }
-            ],
-            "source": "custom",
-            "justification": "Uses scoped preview and download capabilities with pending feedback, duplicate-action protection, and reported-error recovery."
+            ]
         },
         {
             "name": "Menu",

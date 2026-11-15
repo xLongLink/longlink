@@ -385,7 +385,7 @@ it('preserves native Collapsible composition and cancellable authored visibility
 });
 
 it('returns native Calendar ranges to authored state without selecting disabled dates', async () => {
-    // DateInput's string adapter cannot replace range selection and native Date callbacks.
+    // Preserve range selection and native Date callbacks.
     const runtime = await initializeRuntime(`export default function View() {
         const [range, setRange] = useState(undefined);
         return <>
@@ -681,7 +681,7 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     const runtime = await initializeRuntime(`export default function View() {
         return <>
             <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
-            <AttachmentLink href="/api/report" download="report.pdf">Download report</AttachmentLink>
+            <Link href="/api/report" download="report.pdf">Download report</Link>
         </>;
     }`);
 
@@ -700,10 +700,10 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     };
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('a')).toHaveLength(2));
+        await vi.waitFor(() => expect(runtime.mount.querySelector('button')?.textContent).toBe('Download report'));
         const orders = runtime.mount.querySelector<HTMLAnchorElement>('a[aria-label="Orders"]');
 
-        const report = Array.from(runtime.mount.querySelectorAll('a')).find(
+        const report = Array.from(runtime.mount.querySelectorAll('button')).find(
             (anchor) => anchor.textContent === 'Download report'
         );
 

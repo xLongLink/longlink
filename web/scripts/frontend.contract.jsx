@@ -105,9 +105,11 @@ const nativeComposition = (
             >
                 <span>Orders</span>
             </Link>
-            <AttachmentLink href="/api/report" download="report.pdf">
+            <Link href="/api/report" download="report.pdf">
                 Download report
-            </AttachmentLink>
+            </Link>
+            <Link onClick={async (event) => { event.currentTarget.focus(); }}>Run action</Link>
+            <Link href="/api/report" preview="report.pdf">Preview</Link>
             <ButtonGroup aria-label="Actions" orientation="vertical">
                 <Button>Save</Button>
                 <Button>Cancel</Button>
@@ -447,8 +449,12 @@ const _customGroupProps = <ButtonGroup isDisabled />;
 const _customDialogProps = <Dialog isOpen open onOpenChange={() => {}} />;
 // @ts-expect-error Ordinary links use the native href property.
 const _legacyLink = <Link to="/orders">Orders</Link>;
-// @ts-expect-error Scoped previews belong to AttachmentLink.
-const _customLinkProps = <Link href="/api/report" preview="report.pdf">Preview</Link>;
+// @ts-expect-error A file action cannot preview and download simultaneously.
+const _conflictingLinkActions = <Link href="/api/report" preview="report.pdf" download="report.pdf">Report</Link>;
+// @ts-expect-error Scoped file actions require a path.
+const _missingFilePath = <Link preview="report.pdf">Preview</Link>;
+// @ts-expect-error A link requires a destination or an action.
+const _missingLinkAction = <Link>Report</Link>;
 // @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
 const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
 

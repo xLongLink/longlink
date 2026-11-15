@@ -68,7 +68,7 @@ export { Stepper, StepperNav, StepperItem, StepperTrigger, StepperIndicator, Ste
 export { Button } from '../src/views/adapter/action/button';
 export { FileViewer } from '../src/views/adapter/display/file-viewer';
 export * from '../src/views/adapter/layouts/card';
-export { Link, AttachmentLink } from '../src/views/adapter/action/link';
+export { Link } from '../src/views/adapter/action/link';
 export * from '../src/views/adapter/form/select';
 export * from '../src/views/adapter/form/combobox';
 export { useComboboxAnchor } from '../src/views/hooks/use-combobox-anchor';

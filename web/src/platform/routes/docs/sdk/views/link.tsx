@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
-import { Button } from '@/components/shadcn/button';
 import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
@@ -15,31 +14,31 @@ export default function LinkPage() {
                 {
                     name: 'href',
                     type: 'string',
-                    description: 'Navigation destination. Solution-relative paths stay within the Solution.'
+                    description: 'Navigation or file destination. Omit for an onClick-only action.'
                 },
                 {
-                    name: 'AttachmentLink.preview',
+                    name: 'preview',
                     type: 'string',
                     description: 'Open a scoped Solution file in a preview dialog using this filename as its title.'
                 },
                 {
-                    name: 'AttachmentLink.download',
+                    name: 'download',
                     type: 'string',
                     description: 'Download filename for a scoped Solution attachment instead of navigation.'
                 },
-                { name: 'AttachmentLink.href', type: 'string', description: 'Scoped Solution file path.' },
-                { name: 'AttachmentLink.disabled', type: 'boolean', description: 'Disables the attachment action.' },
+                { name: 'disabled', type: 'boolean', description: 'Disables navigation or the action.' },
                 {
                     name: 'onClick',
-                    type: 'MouseEventHandler<HTMLAnchorElement>',
-                    description: 'Native click handler. Call preventDefault() to cancel navigation.'
+                    type: '(event: MouseEvent) => void | Promise<void>',
+                    description:
+                        'Runs a callback. Actions track async loading; preventDefault cancels navigation or file handling.'
                 },
                 { name: 'children', type: 'ReactNode', description: 'Caller-owned link content.' },
                 {
                     name: '...props',
-                    type: 'ComponentPropsWithRef<"a">',
+                    type: 'Native anchor or button props',
                     description:
-                        'Native anchor props and ref, except download. Use AttachmentLink for scoped files and Button variant="link" for actions.'
+                        'Navigation forwards anchor props and ref. File and callback actions forward button props and ref.'
                 }
             ]}
             example={{
@@ -51,13 +50,13 @@ export default function LinkPage() {
   return (
     <Stack>
       <Link href="/orders">Orders</Link>
-      <AttachmentLink href="/api/documents/sample" preview="sample-document.txt">
+      <Link href="/api/documents/sample" preview="sample-document.txt">
         sample-document.txt
-      </AttachmentLink>
-      <AttachmentLink href="/api/documents/sample" download="sample-document.txt">
+      </Link>
+      <Link href="/api/documents/sample" download="sample-document.txt">
         sample-document.txt
-      </AttachmentLink>
-      <Button variant="link" onClick={() => setIsOpen(true)}>Document details</Button>
+      </Link>
+      <Link onClick={() => setIsOpen(true)}>Document details</Link>
       <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
         <Stack padding={4}>
           <Text>Document details opened without navigation.</Text>
@@ -79,9 +78,7 @@ export function LinkExample() {
     return (
         <Stack>
             <Link href="/docs/sdk/views">Docs</Link>
-            <Button variant="link" onClick={() => setIsOpen(true)}>
-                Document details
-            </Button>
+            <Link onClick={() => setIsOpen(true)}>Document details</Link>
             <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
                     <span>Document details opened without navigation.</span>

@@ -24,12 +24,12 @@ export default function List() {
             accessorKey: 'filename',
             header: ({ column }) => <DataGridColumnHeader column={column} title="File" />,
             cell: ({ row }) => (
-                <AttachmentLink href={`/assets/${row.original.filename}`} preview={row.original.filename}>
+                <Link href={`/assets/${row.original.filename}`} preview={row.original.filename}>
                     <span className="inline-flex items-center gap-2">
                         <FileType type={row.original.type} size="xs" aria-hidden="true" />
                         {row.original.filename}
                     </span>
-                </AttachmentLink>
+                </Link>
             )
         },
         {

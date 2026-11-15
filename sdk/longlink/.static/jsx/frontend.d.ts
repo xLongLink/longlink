@@ -17497,20 +17497,29 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     onChange?: (isSelected: boolean) => void;
 };
 export function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
-export function Link({ className, ...props }: Omit<React$1.ComponentPropsWithRef<"a">, "download">): React$1.JSX.Element;
-type AttachmentLinkProps = {
+type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type"> & ({
     href: string;
-    disabled?: boolean;
-    onClick?: (event: React$1.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void | Promise<void>;
-    children?: React$1.ReactNode;
-} & ({
     preview: string;
     download?: never;
+    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 } | {
+    href: string;
     download: string;
     preview?: never;
+    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+} | {
+    href?: never;
+    preview?: never;
+    download?: never;
+    onClick: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 });
-export function AttachmentLink({ href, download, preview, disabled, onClick, children }: AttachmentLinkProps): React$1.JSX.Element;
+type LinkProps = (Omit<React$1.ComponentPropsWithRef<"a">, "download"> & {
+    href: string;
+    preview?: never;
+    download?: never;
+    disabled?: boolean;
+}) | ActionLinkProps;
+export function Link(props: LinkProps): React$1.JSX.Element;
 const Select$1: typeof SelectRoot;
 function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
 function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
@@ -19629,7 +19638,7 @@ interface NodeProps extends Omit<React$1.SVGProps<SVGRectElement>, "height" | "w
     x: number;
     y: number;
 }
-interface LinkProps extends React$1.SVGProps<SVGPathElement> {
+interface LinkProps$1 extends React$1.SVGProps<SVGPathElement> {
     sourceX: number;
     targetX: number;
     sourceY: number;
@@ -19650,7 +19659,7 @@ interface SankeyData {
     links: LinkDataItem[];
 }
 type SankeyNodeOptions = React$1.ReactElement<React$1.SVGProps<SVGRectElement>> | ((props: NodeProps) => React$1.ReactNode) | Props$9;
-type SankeyLinkOptions = React$1.ReactElement<React$1.SVGProps<SVGPathElement>> | ((props: LinkProps) => React$1.ReactElement<React$1.SVGProps<SVGPathElement>>) | React$1.SVGProps<SVGPathElement>;
+type SankeyLinkOptions = React$1.ReactElement<React$1.SVGProps<SVGPathElement>> | ((props: LinkProps$1) => React$1.ReactElement<React$1.SVGProps<SVGPathElement>>) | React$1.SVGProps<SVGPathElement>;
 interface SankeyProps extends EventThrottlingProps {
     nameKey?: DataKey<any>;
     dataKey?: DataKey<any>;
@@ -19670,9 +19679,9 @@ interface SankeyProps extends EventThrottlingProps {
     title?: string;
     desc?: string;
     margin?: Partial<Margin>;
-    onClick?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
-    onMouseEnter?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
-    onMouseLeave?: (item: NodeProps | LinkProps, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onClick?: (item: NodeProps | LinkProps$1, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseEnter?: (item: NodeProps | LinkProps$1, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
+    onMouseLeave?: (item: NodeProps | LinkProps$1, type: SankeyElementType, e: React$1.MouseEvent<SVGGraphicsElement>) => void;
     sort?: boolean;
     verticalAlign?: SankeyVerticalAlign;
     align?: "left" | "justify";
@@ -20425,7 +20434,6 @@ export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Butto
 
 declare const Area: typeof NativeFrontend.Area;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
-declare const AttachmentLink: typeof NativeFrontend.AttachmentLink;
 declare const Avatar: typeof NativeFrontend.Avatar;
 declare const AvatarBadge: typeof NativeFrontend.AvatarBadge;
 declare const AvatarFallback: typeof NativeFrontend.AvatarFallback;

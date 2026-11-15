@@ -103,9 +103,9 @@ export default function Tasks() {
                             <Stack gap={0}>
                                 <Text>{task.title}</Text>
                                 {task.attachment ? (
-                                    <AttachmentLink href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
+                                    <Link href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
                                         {task.attachment}
-                                    </AttachmentLink>
+                                    </Link>
                                 ) : (
                                     <Text className="text-muted-foreground">No attachment</Text>
                                 )}
