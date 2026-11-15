@@ -43,6 +43,7 @@
         "class-variance-authority": "^0.7.1",
         "cn": "^0.5.2",
         "date-fns": "4.4.0",
+        "es-module-shims": "^2.8.4",
         "es-toolkit": "^1.53.2",
         "isbot": "^5",
         "ky": "^2.2.0",

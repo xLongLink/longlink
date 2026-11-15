@@ -14,7 +14,7 @@ export const FormRequestContext = createContext<
 
 export const DialogActivityContext = createContext<((open: boolean, fullscreen: boolean) => void) | null>(null);
 
-// Native pages and isolated Views supply separate loaders for the same public icon contract.
+// Each runtime supplies the icon loader from its own packaged component library.
 export const IconRequestContext = createContext<((name: string) => Promise<LucideIconData>) | null>(null);
 
 // The sandbox supplies a host navigation capability; native previews use ordinary links.

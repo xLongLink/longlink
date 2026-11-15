@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import * as icons from '@/lib/icons';
 import { CircleX } from 'lucide-react';
 import * as components from './adapter';
 import { createRoot } from 'react-dom/client';
@@ -29,13 +30,10 @@ import {
     type RequestCommand,
     type DownloadCommand,
     type PreviewCommand,
-    type IconCommand,
     downloadSchema,
     previewSchema,
     type ViewReply,
     type ViewData,
-    iconSchema,
-    iconDataSchema,
     appearanceMessageSchema,
     type AppearanceMessage,
     viewportMessageSchema,
@@ -179,7 +177,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     /** Owns the deadline and channel transfer for each scoped operation. */
-    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand | IconCommand): Promise<ViewData> {
+    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand): Promise<ViewData> {
         const { id } = command;
 
         return new Promise<ViewData>((resolve, reject) => {
@@ -201,15 +199,6 @@ function initialize(event: MessageEvent<unknown>): void {
                 reject(error);
             }
         });
-    }
-
-    /** Requests validated icon geometry from the host. */
-    async function loadIcon(name: string) {
-        const command = iconSchema.parse({ type: 'icon', id: sequence++, name });
-        const data = await exchange(command);
-
-        // Validate icon geometry at the receiving boundary before giving it to Lucide's renderer.
-        return iconDataSchema.parse(data);
     }
 
     /** Loads inert file bytes inside the sandbox. */
@@ -427,7 +416,7 @@ function initialize(event: MessageEvent<unknown>): void {
                                     </div>
                                 }
                             >
-                                <IconRequestContext value={loadIcon}>
+                                <IconRequestContext value={icons.load}>
                                     <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
                                         <MenuNavigationProvider>
                                             <FileRequestContext value={fileRequests}>

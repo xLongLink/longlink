@@ -57,19 +57,21 @@ it('ignores a mismatched session and releases an admitted port when its mount is
     }
 }, 30_000);
 
-it('loads gallery images concurrently without a request cap', async () => {
+it('loads gallery images concurrently with Solution-owned icons', async () => {
     // Arrange
     const runtime = await initializeRuntime(
-        "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }"
+        'export default function View() { return <><Icon icon="search" size="sm" />{Array.from({ length: 12 }, (_, index) => <Image key={index} src={\'/api/photos/\' + index} alt={\'Photo \' + index} />)}</>; }'
     );
 
     const requests: { id: number; path: string }[] = [];
+    const hostIcons: unknown[] = [];
 
     // Hold image responses until every request is in flight.
     runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
         if (command.type === 'icon') {
+            hostIcons.push(command);
             runtime.send({ id: command.id, ok: false, error: 'No icons in this test' });
 
             return;
@@ -91,6 +93,8 @@ it('loads gallery images concurrently without a request cap', async () => {
 
         // Assert
         await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
+        await vi.waitFor(() => expect(runtime.mount.querySelector('svg.lucide-search circle')).not.toBeNull());
+        expect(hostIcons).toEqual([]);
         expect(runtime.mount.textContent).not.toContain('Photo unavailable');
     } finally {
         runtime.close();

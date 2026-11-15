@@ -25,6 +25,10 @@ export const MAX_MODAL_DEPTH = 8;
 
 export const parametersSchema = z.record(z.string(), z.string());
 
+export const moduleRequestSchema = z
+    .object({ id: z.number().int().nonnegative(), path: z.string().min(1).max(256) })
+    .strict();
+
 export const requestSchema = z
     .object({
         type: z.literal('request'),

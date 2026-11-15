@@ -17,7 +17,7 @@ import { PageError, PageLoading } from '@/components/ui/utils';
 import { FilePreview } from '@/components/dialogs/file-preview';
 import { TextPreview } from '@/components/dialogs/text-preview';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
+import { commandSchema, parametersSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
 
@@ -140,7 +140,8 @@ export function JsxView({
             );
 
             // Reject stale or mixed runtime assets instead of silently rendering with the wrong components.
-            const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${script}\n${styles}`));
+            const content = `${script}\n${styles}${runtime.modules ? `\n${JSON.stringify(runtime.modules)}` : ''}`;
+            const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
 
             const version = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
@@ -160,8 +161,10 @@ export function JsxView({
         const { script, styles } = kernel;
         const controller = new AbortController();
         const channel = new MessageChannel();
+        const assets = new MessageChannel();
         const session = crypto.randomUUID();
         const pending = new Set<number>();
+        const modules = new Map<string, Promise<string>>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 
         /** Sends host-measured visible bounds without giving the sandbox control of page geometry. */
@@ -215,6 +218,8 @@ export function JsxView({
             if (appearancePort.current === channel.port1) appearancePort.current = null;
             channel.port1.close();
             channel.port2.close();
+            assets.port1.close();
+            assets.port2.close();
         }
 
         /** Reports startup failure only while this attempt still owns the mounted frame. */
@@ -247,7 +252,7 @@ export function JsxView({
                         appearance: currentAppearance.current
                     },
                     '*',
-                    [channel.port2]
+                    runtime.modules ? [channel.port2, assets.port2] : [channel.port2]
                 );
                 appearancePort.current = channel.port1;
 
@@ -262,6 +267,54 @@ export function JsxView({
 
         // Authenticate the bootstrap by its WindowProxy and fresh session before transferring a private port.
         window.addEventListener('message', ready);
+
+        // Serve only manifest-listed JavaScript from this Solution, never host imports or caller-selected URLs.
+        assets.port1.onmessage = async (event: MessageEvent<unknown>) => {
+            if (controller.signal.aborted) return;
+            const parsed = moduleRequestSchema.safeParse(event.data);
+
+            if (!parsed.success) {
+                fail('assets');
+
+                return;
+            }
+
+            const { id, path } = parsed.data;
+
+            try {
+                if (!runtime.modules || !Object.hasOwn(runtime.modules, path)) {
+                    throw new Error('Module is not part of the Solution runtime');
+                }
+
+                const expectedVersion = runtime.modules[path];
+                let source = modules.get(path);
+
+                if (!source) {
+                    source = (async () => {
+                        const url = new URL(host.requestUrl(requestBaseUrl, `views/${path}`), window.location.origin);
+                        url.searchParams.set('v', runtime.version);
+                        const body = await host.load(url.href, { signal: controller.signal });
+                        const bytes = await body.arrayBuffer();
+                        const digest = await crypto.subtle.digest('SHA-256', bytes);
+                        const version = Array.from(new Uint8Array(digest), (byte) =>
+                            byte.toString(16).padStart(2, '0')
+                        ).join('');
+
+                        if (version !== expectedVersion) throw new Error('Solution module integrity mismatch');
+
+                        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                    })();
+                    modules.set(path, source);
+                }
+
+                const text = await source;
+
+                if (!controller.signal.aborted) assets.port1.postMessage({ id, source: text });
+            } catch {
+                if (!controller.signal.aborted) assets.port1.postMessage({ id, error: 'Solution module unavailable' });
+            }
+        };
+
         channel.port1.onmessage = async (event: MessageEvent<unknown>) => {
             const parsed = commandSchema.safeParse(event.data);
 
@@ -350,7 +403,8 @@ export function JsxView({
                 let data: ViewData;
 
                 if (command.type === 'icon') {
-                    // Import only host-owned Lucide modules and transfer validated geometry, not code.
+                    // Older SDKs use this bridge; chunked runtimes must use their own packaged icons.
+                    if (runtime.modules) throw new Error('Icons must belong to the Solution runtime');
                     const icon = await icons.load(command.name);
                     data = iconDataSchema.parse(icon);
                 } else if (command.type === 'download') {
@@ -399,7 +453,7 @@ export function JsxView({
 
             const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
             const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
-            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
+            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'${runtime.modules ? ' blob:' : ''}; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
 
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
@@ -420,7 +474,7 @@ export function JsxView({
 
         // Replacing or unmounting a View revokes its channel and cancels every outstanding operation.
         return dispose;
-    }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel]);
+    }, [source, parameters, requestBaseUrl, navigationBaseUrl, navigate, reportError, kernel, runtime]);
 
     if (runtimeError) return <PageError title="Unable to load this View" description={STARTUP_FAILURES.assets} />;
 
