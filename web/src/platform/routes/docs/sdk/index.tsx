@@ -2,7 +2,6 @@ import { MoveRight } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -22,9 +21,9 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="solution-sdk" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="solution-sdk">
                     Business processes, defined as code
-                </Heading>
+                </h1>
                 <p>
                     Business processes evolve over time. Requirements change, exceptions happen, and the people involved
                     may change. As information becomes fragmented, more time is spent finding data, reconstructing
@@ -41,23 +40,23 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <p>
                     Build dedicated tools with established Python libraries: use{' '}
-                    <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink>
+                    <Link href="https://github.com/fastapi/fastapi" className="underline" isExternalLink>
                         FastAPI
                     </Link>{' '}
                     for routes,{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink>
+                    <Link href="https://sqlmodel.tiangolo.com/" className="underline" isExternalLink>
                         SQLModel
                     </Link>{' '}
                     for data, and{' '}
-                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink>
+                    <Link href="https://docs.pydantic.dev/latest/" className="underline" isExternalLink>
                         Pydantic
                     </Link>{' '}
                     for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
                     LongLink handles the infrastructure.
                 </p>
-                <Heading id="create-a-solution" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="create-a-solution">
                     Create a Solution
-                </Heading>
+                </h2>
                 <Tabs defaultValue="github">
                     <TabsList variant="line">
                         <TabsTrigger value="github">GitHub</TabsTrigger>
@@ -74,15 +73,15 @@ export default function DocsArticleRoute() {
                         </CodeBlock>
                     </TabsContent>
                 </Tabs>
-                <Heading id="local-development" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="local-development">
                     Local Development
-                </Heading>
+                </h2>
                 <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <p>
                     Open{' '}
-                    <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink>
+                    <Link href="http://127.0.0.1:1707" className="underline" isExternalLink>
                         http://127.0.0.1:1707
                     </Link>{' '}
                     to preview your Solution.

@@ -1,7 +1,6 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -27,12 +26,12 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="routes" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="routes">
                     Routes
-                </Heading>
+                </h1>
                 <p>
                     Implement your application logic using standard{' '}
-                    <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink>
+                    <Link href="https://fastapi.tiangolo.com/tutorial/" className="underline" isExternalLink>
                         FastAPI routes
                     </Link>
                     . LongLink provides the current user and common services such as the database and storage through{' '}
@@ -47,9 +46,9 @@ export default function DocsArticleRoute() {
                         agents.
                     </p>
                 </Stack>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from longlink import Context, LongLink
 
@@ -70,9 +69,9 @@ async def current_user_name(ctx: Context) -> str:
                         <CodeBlockCopyButton className="ml-auto" />
                     </CodeBlockHeader>
                 </CodeBlock>
-                <Heading id="permissions" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="permissions">
                     Permissions
-                </Heading>
+                </h2>
                 <p>
                     LongLink discovers permissions from registered HTTP methods and path templates at build time and
                     stores the catalog in the container image alongside environment requirements. No operation ID or
@@ -125,9 +124,9 @@ async def approve_invoice(id: int) -> dict[str, int]:
                     endpoint when access depends on an invoice's owner or state. Local development keeps the seeded
                     development identity and does not require Platform assignments.
                 </p>
-                <Heading id="exceptions" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="exceptions">
                     Exceptions
-                </Heading>
+                </h2>
                 <p>
                     Invalid input returns <InlineCode>422</InlineCode>. Unhandled exceptions return a generic{' '}
                     <InlineCode>500</InlineCode> response without exposing the original message. Raise{' '}

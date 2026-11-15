@@ -67,7 +67,10 @@ export default function VerifyEmail() {
         // Validate the email claim only while verification is still active.
         if (signal.aborted) return;
 
-        return { status: 'verified', data: zEmailPayload.parse(value) };
+        const data = zEmailPayload.parse(value);
+        sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
+
+        return { status: 'verified', data };
     }
 
     const { verification, startVerification } = useVerification(token, verify);
@@ -92,7 +95,6 @@ export default function VerifyEmail() {
         // Refresh the persistent identity observer after replacing the previous session.
         await clearSessionQueries(queryClient);
         await refetch();
-        sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
         void navigate('/user/organizations', { replace: true });
     }
 
@@ -173,11 +175,11 @@ export default function VerifyEmail() {
                 <Separator />
                 <p className="text-xs text-center text-muted-foreground">
                     By continuing, you agree to our <br />
-                    <Link href="/terms/" hasUnderline>
+                    <Link href="/terms/" className="underline">
                         Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy/" hasUnderline>
+                    <Link href="/privacy/" className="underline">
                         Privacy Policy
                     </Link>
                     .

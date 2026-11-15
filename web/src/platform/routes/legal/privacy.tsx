@@ -2,7 +2,6 @@ import { legalPaths } from '@/platform/publications';
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description: 'Read the LongLink privacy policy.',
@@ -32,14 +31,14 @@ export default function Privacy() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
-                <Heading id="privacy-policy" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="privacy-policy">
                     Privacy Policy
-                </Heading>
+                </h1>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="scope-and-controller" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="scope-and-controller">
                         1. Scope and controller
-                    </Heading>
+                    </h2>
                     <p>
                         This Policy explains how LongLink handles personal data when you visit our website, use our
                         hosted platform, connect infrastructure, or contact us. The hosted platform is for users aged 18
@@ -49,7 +48,7 @@ export default function Privacy() {
                     <p>
                         The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent
                         to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .
@@ -62,9 +61,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="our-roles" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="our-roles">
                         2. Our roles
-                    </Heading>
+                    </h2>
                     <p>
                         We are the controller for account, organization, authentication, support, security, and other
                         operational data needed to run our Service. This Policy primarily describes those activities.
@@ -82,9 +81,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="personal-data-we-process" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="personal-data-we-process">
                         3. Personal data we process
-                    </Heading>
+                    </h2>
                     <p>
                         Depending on how you use the Service, we may process the following categories of personal data:
                     </p>
@@ -157,9 +156,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="why-we-process-personal-data" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="why-we-process-personal-data">
                         4. Why we process personal data
-                    </Heading>
+                    </h2>
                     <p>
                         We process data to create accounts, manage organizations and access, operate Solutions and
                         connected infrastructure, deliver account and service messages, protect the Service, diagnose
@@ -181,9 +180,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="service-providers-and-other-recipients" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="service-providers-and-other-recipients">
                         5. Service providers and other recipients
-                    </Heading>
+                    </h2>
                     <p>We disclose only the data reasonably needed for the recipient's role:</p>
                     <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
                         <li>
@@ -230,9 +229,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="international-transfers" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="international-transfers">
                         6. International transfers
-                    </Heading>
+                    </h2>
                     <p>
                         Personal data may be processed where we, our providers, or your connected infrastructure
                         operate, including Switzerland, the European Economic Area, the United States, and other
@@ -246,9 +245,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="cookies-and-similar-storage" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="cookies-and-similar-storage">
                         7. Cookies and similar storage
-                    </Heading>
+                    </h2>
                     <p>
                         We use HTTP-only cookies for signed sign-in sessions, email registration, password resets, and
                         OAuth sign-in. These are necessary for account access and security. A separate payment provider
@@ -266,9 +265,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="retention" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="retention">
                         8. Retention
-                    </Heading>
+                    </h2>
                     <p>
                         We keep data for as long as needed to provide the Service or meet legal and security
                         obligations:
@@ -325,9 +324,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="security-and-data-incidents" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="security-and-data-incidents">
                         9. Security and data incidents
-                    </Heading>
+                    </h2>
                     <p>
                         We use safeguards appropriate to the risk, including access controls, password hashing, signed
                         session cookies, transport encryption, resource isolation, secret management, and logging. No
@@ -343,9 +342,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="your-rights" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="your-rights">
                         10. Your rights
-                    </Heading>
+                    </h2>
                     <p>
                         Depending on applicable law, you may request access, correction, deletion, restriction,
                         objection, or transfer of your personal data. You may request account closure and withdraw
@@ -353,7 +352,7 @@ export default function Privacy() {
                     </p>
                     <p>
                         Send requests to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         . We may verify your identity before responding. We generally respond within 30 days. Access is
@@ -366,9 +365,9 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="changes-to-this-policy" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="changes-to-this-policy">
                         11. Changes to this Policy
-                    </Heading>
+                    </h2>
                     <p>
                         We may update this Policy as the Service, providers, deployment model, or legal requirements
                         change. We will post the revised Policy with a new update date. If a change materially affects
@@ -378,17 +377,17 @@ export default function Privacy() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="contact" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="contact">
                         12. Contact
-                    </Heading>
+                    </h2>
                     <p>LongLink SAGL, UID CHE-150.642.313.</p>
                     <p>
                         Privacy enquiries and data-rights requests:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         . Security, technical, and account support:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .

@@ -11,7 +11,6 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
@@ -37,7 +36,7 @@ export default function Compute() {
         <Stack gap={2}>
             <title>Compute | LongLink</title>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                <Heading level={1}>Compute</Heading>
+                <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
                 <Button label="Register Compute" onClick={() => setDialog({ kind: 'registration' })} />
             </Stack>
             <TextInput

@@ -2,7 +2,6 @@ import { DataTable } from '@/components/custom/data-table';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },
@@ -31,9 +30,9 @@ export default function Solutions() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="solutions" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="solutions">
                     Solutions
-                </Heading>
+                </h1>
                 <p>
                     Solutions belong to an organization and run as separate services. The Platform manages their
                     deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL

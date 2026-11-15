@@ -9694,13 +9694,13 @@ type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     dangerouslySetInnerHTML?: never;
 };
 function Image$1(props: ImageProps): React$1.JSX.Element;
-type NativeTextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
+type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
     as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
     maxLines?: number;
     hasTruncateTooltip?: boolean | "above" | "below" | "start" | "end";
     ref?: React$1.Ref<HTMLElement>;
 };
-function NativeText({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: NativeTextProps): React$1.JSX.Element;
+function Text$1({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: TextProps): React$1.JSX.Element;
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 function NativeHeading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
     level?: HeadingLevel;
@@ -10443,14 +10443,14 @@ type ElementContent = ElementContentMap[keyof ElementContentMap];
 interface ElementContentMap {
     comment: Comment$1;
     element: Element$1;
-    text: Text$1;
+    text: Text$2;
 }
 type RootContent = RootContentMap[keyof RootContentMap];
 interface RootContentMap {
     comment: Comment$1;
     doctype: Doctype;
     element: Element$1;
-    text: Text$1;
+    text: Text$2;
 }
 interface Node$2 extends Node$1 {
     data?: Data$1 | undefined;
@@ -10490,7 +10490,7 @@ interface Root extends Parent {
 }
 interface RootData extends Data$1 {
 }
-interface Text$1 extends Literal {
+interface Text$2 extends Literal {
     type: "text";
     data?: TextData | undefined;
 }
@@ -13208,7 +13208,7 @@ type Props = PresentationAttributesWithProps<DotProps, SVGCircleElement> & DotPr
 type TextAnchor = "start" | "middle" | "end" | "inherit";
 type TextVerticalAnchor = "start" | "middle" | "end";
 type RenderableText = string | number | boolean | null | undefined;
-interface TextProps {
+interface TextProps$1 {
     scaleToFit?: boolean;
     angle?: number;
     textAnchor?: TextAnchor;
@@ -13220,7 +13220,7 @@ interface TextProps {
     maxLines?: number;
     width?: number | string;
 }
-type Props$1 = Omit<React$1.SVGProps<SVGTextElement>, "textAnchor" | "verticalAnchor"> & TextProps;
+type Props$1 = Omit<React$1.SVGProps<SVGTextElement>, "textAnchor" | "verticalAnchor"> & TextProps$1;
 interface ZIndexable {
     zIndex?: number;
 }
@@ -16019,7 +16019,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeHeading as Heading, NativeText as Text, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, };
+export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, NativeHeading as Heading, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;

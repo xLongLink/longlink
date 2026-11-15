@@ -9,7 +9,6 @@ import NotFoundLayout from '@/components/layouts/not-found';
 import { SolutionPage } from '@/components/ui/solution-page';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -113,7 +112,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
 
     return (
         <Stack gap={2}>
-            <Heading level={1}>Solution deployment has failed</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Solution deployment has failed</h1>
             {logs.length ? (
                 <CodeBlock code={logs.join('\n')} showLineNumbers>
                     <CodeBlockCopyButton />

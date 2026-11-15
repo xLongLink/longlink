@@ -1,7 +1,6 @@
 import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
-import { Heading } from '@/components/custom/heading';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -85,7 +84,7 @@ export function DeletionDialog({
                         className="my-[calc(var(--spacing)*2-var(--text-3xl)*var(--text-3xl--line-height)/2)] min-w-0 flex-1"
                         render={<div />}
                     >
-                        <Heading level={2}>{confirmation.title}</Heading>
+                        <h2 className="font-semibold tracking-tight text-3xl">{confirmation.title}</h2>
                     </AlertDialogTitle>
                     <Button
                         className="-my-2 -me-2"

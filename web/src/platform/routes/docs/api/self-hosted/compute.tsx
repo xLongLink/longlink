@@ -1,7 +1,6 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -26,9 +25,9 @@ export default function Compute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="compute" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="compute">
                     Compute
-                </Heading>
+                </h1>
                 <p>
                     Compute runs your Solutions on Kubernetes and is installed using the{' '}
                     <Link href="https://github.com/xLongLink/longlink/tree/main/k8s/chart" isExternalLink>
@@ -47,9 +46,9 @@ export default function Compute() {
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack as="section" gap={3}>
-                    <Heading id="configuration" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="configuration">
                         Configuration
-                    </Heading>
+                    </h2>
                     <CodeBlock
                         language="yaml"
                         code={`gateway:
@@ -70,9 +69,9 @@ rustfs:
                     </CodeBlock>
                 </Stack>
                 <Stack as="section" gap={3}>
-                    <Heading id="connect" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="connect">
                         Connect to the Platform
-                    </Heading>
+                    </h2>
                     <p>
                         Sign in as the Platform administrator, open Compute, and select Register Compute. Enter a name,
                         the gateway and storage HTTPS endpoints, and a kubeconfig with cluster access. The kubeconfig

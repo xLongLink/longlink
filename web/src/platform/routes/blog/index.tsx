@@ -4,7 +4,6 @@ import { Grid } from '@/components/custom/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Lists articles about LongLink and building process-specific applications. */
 export default function Blog() {
@@ -15,12 +14,7 @@ export default function Blog() {
                 <section className="p-6">
                     <Stack className="mx-auto" maxWidth={1000} width="100%" gap={10} align="center">
                         <Stack className="text-center" gap={3} align="center" width="100%">
-                            <Heading
-                                level={1}
-                                className="text-5xl font-semibold text-balance text-center tracking-wide"
-                            >
-                                Blog
-                            </Heading>
+                            <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Blog</h1>
                             <p className="text-muted-foreground text-pretty text-lg sm:text-xl">
                                 Ideas, stories, and updates from LongLink
                             </p>
@@ -30,9 +24,9 @@ export default function Blog() {
                                 <Stack className="min-h-80" gap={0} paddingBlock={8} align="center">
                                     <Stack gap={2} align="center">
                                         <BookOpen aria-hidden="true" className="text-primary" size={20} />
-                                        <Heading level={2} className="text-center">
+                                        <h2 className="font-semibold tracking-tight text-3xl text-center">
                                             Why LongLink
-                                        </Heading>
+                                        </h2>
                                     </Stack>
                                     <Separator className="my-10 data-[orientation=horizontal]:w-1/3 self-center" />
                                     <p className="text-muted-foreground text-pretty text-center">

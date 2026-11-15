@@ -7,7 +7,6 @@ import { DataPagination } from '@/components/custom/data-pagination';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Platform users with server-side pagination. */
@@ -19,7 +18,7 @@ export default function Users() {
     return (
         <Stack gap={2}>
             <title>Users | LongLink</title>
-            <Heading level={1}>Users</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Users</h1>
             <TextInput label="Search users" placeholder="Search by name or email" {...search} startIcon={<Search />} />
             <Stack gap={1}>
                 <DataTable

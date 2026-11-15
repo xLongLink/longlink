@@ -6,7 +6,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function SolutionTags({
     base,
@@ -31,9 +30,7 @@ export function SolutionTags({
         <Dialog {...dialogProps} onClose={onClose}>
             <Stack padding={8} minHeight="100%" justify="center" className="shrink-0">
                 <Stack gap={6} width="100%" maxWidth={640} className="mx-auto">
-                    <Heading level={2} className="text-center">
-                        Tags for {solution.name}
-                    </Heading>
+                    <h2 className="font-semibold tracking-tight text-3xl text-center">Tags for {solution.name}</h2>
                     <Form action={save}>
                         <Stack gap={4}>
                             <MultiSelector

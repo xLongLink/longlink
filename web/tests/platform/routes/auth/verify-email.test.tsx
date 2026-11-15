@@ -71,6 +71,7 @@ it('allows account credential entry only after the email proof exchange succeeds
 
                 // Assert
                 await vi.waitFor(() => expect(output.querySelector('input[name="name"]')).not.toBeNull());
+                expect(sessionStorage.getItem(storageKey)).toBeNull();
                 expect(output.querySelector('input[name="password"]')).not.toBeNull();
                 expect(output.querySelector('button[type="submit"]')?.textContent).toBe('Create account');
                 expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
@@ -84,6 +85,126 @@ it('allows account credential entry only after the email proof exchange succeeds
         resolveVerification(Response.json({ email: 'new@example.com' }));
         transport.mockRestore();
         window.history.replaceState(originalState, '', originalUrl);
+        sessionStorage.removeItem(storageKey);
+    }
+});
+
+it('retains pending proof when verification is canceled by unmounting', async () => {
+    // Arrange a delayed exchange with proof recovered from storage.
+    const storageKey = 'longlink.registration.token';
+    sessionStorage.setItem(storageKey, 'pending-proof');
+    let resolveVerification: (response: Response) => void = () => undefined;
+    let verificationRequest: Request | undefined;
+
+    const verificationResponse = new Promise<Response>((resolve) => {
+        resolveVerification = resolve;
+    });
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+
+        if (new URL(request.url).pathname === '/api/v1/me') {
+            return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+        }
+
+        verificationRequest = request;
+
+        return verificationResponse;
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={() => undefined}>
+                <AccountAppearanceProvider>
+                    <ApiBoundary>
+                        <Page />
+                    </ApiBoundary>
+                </AccountAppearanceProvider>
+            </ApiErrorContext>,
+            async (output) => {
+                await vi.waitFor(() => expect(verificationRequest).toBeDefined());
+                expect(sessionStorage.getItem(storageKey)).toBe('pending-proof');
+                expect(output.querySelector('input[name="password"]')).toBeNull();
+            },
+            '/auth/verify-email'
+        );
+
+        // A late success cannot discard the canceled attempt's retry credential.
+        expect(verificationRequest?.signal.aborted).toBe(true);
+        await act(async () => resolveVerification(Response.json({ email: 'new@example.com' })));
+        expect(sessionStorage.getItem(storageKey)).toBe('pending-proof');
+    } finally {
+        resolveVerification(Response.json({ email: 'new@example.com' }));
+        transport.mockRestore();
+        sessionStorage.removeItem(storageKey);
+    }
+});
+
+it.each(['transport failure', 'invalid response'])('retains email proof for retry after %s', async (failure) => {
+    // Arrange a recoverable failed exchange with no remaining URL credential.
+    const storageKey = 'longlink.registration.token';
+    const proofs: unknown[] = [];
+    const errors: unknown[] = [];
+    sessionStorage.setItem(storageKey, 'retry-proof');
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (path === '/api/v1/me') return Response.json({ detail: 'Not authenticated' }, { status: 401 });
+
+        if (path === '/api/v1/auth/register/setup' && proofs.length === 2) {
+            return Response.json({ email: 'new@example.com' });
+        }
+
+        if (path === '/api/v1/auth/verify' && request.method === 'POST') {
+            proofs.push(await request.json());
+
+            if (proofs.length === 1) {
+                return failure === 'transport failure'
+                    ? Response.json({ detail: 'Unavailable' }, { status: 503 })
+                    : Response.json({ email: 'not-an-email' });
+            }
+
+            return Response.json({ email: 'new@example.com' });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={(error) => errors.push(error)}>
+                <AccountAppearanceProvider>
+                    <ApiBoundary>
+                        <Page />
+                    </ApiBoundary>
+                </AccountAppearanceProvider>
+            </ApiErrorContext>,
+            async (output) => {
+                // A failed exchange must retain proof without admitting credential entry.
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page.'));
+                });
+                expect(sessionStorage.getItem(storageKey)).toBe('retry-proof');
+                expect(output.querySelector('input[name="password"]')).toBeNull();
+                const retry = output.querySelector('button');
+
+                if (!retry) throw new Error('Expected verification retry');
+
+                // Retry remounts verification with the retained bearer.
+                await act(async () => userEvent.setup().click(retry));
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.querySelector('input[name="name"]')).not.toBeNull());
+                });
+                expect(proofs).toEqual([{ token: 'retry-proof' }, { token: 'retry-proof' }]);
+                expect(sessionStorage.getItem(storageKey)).toBeNull();
+                expect(errors).toHaveLength(1);
+            },
+            '/auth/verify-email'
+        );
+    } finally {
+        transport.mockRestore();
         sessionStorage.removeItem(storageKey);
     }
 });
@@ -235,9 +356,14 @@ it('withholds account credentials and offers a new link when email proof is reje
     }
 });
 
-it('refreshes the persistent identity after registration before entering a protected route', async () => {
-    // Arrange verified setup for an anonymous session.
+it('discards exchanged proof and recovers setup on remount before completing registration', async () => {
+    // Arrange an exchange that establishes server-owned setup for an anonymous session.
+    const storageKey = 'longlink.registration.token';
+    const originalUrl = window.location.href;
+    const originalState: unknown = window.history.state;
+    let verified = false;
     let registered = false;
+    const admissionRequests: string[] = [];
     const credentials: unknown[] = [];
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
@@ -248,7 +374,21 @@ it('refreshes the persistent identity after registration before entering a prote
             return registered ? Response.json(user) : Response.json({ detail: 'Not authenticated' }, { status: 401 });
         }
 
-        if (path === '/api/v1/auth/register/setup') return Response.json({ email: user.email });
+        if (path === '/api/v1/auth/verify' && request.method === 'POST') {
+            admissionRequests.push(path);
+            expect(await request.json()).toEqual({ token: 'registration-proof' });
+            verified = true;
+
+            return Response.json({ email: user.email });
+        }
+
+        if (path === '/api/v1/auth/register/setup') {
+            admissionRequests.push(path);
+
+            return verified
+                ? Response.json({ email: user.email })
+                : Response.json({ detail: 'Missing setup cookie' }, { status: 400 });
+        }
 
         if (path === '/api/v1/auth/register/complete' && request.method === 'POST') {
             credentials.push(await request.json());
@@ -261,6 +401,25 @@ it('refreshes the persistent identity after registration before entering a prote
     });
 
     try {
+        // Exchange once, then leave before submitting any account credentials.
+        await withMounted(
+            <Routes>
+                <Route element={<PlatformRoot />}>
+                    <Route path="/auth/verify-email" element={<Page />} />
+                </Route>
+            </Routes>,
+            async (output) => {
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.querySelector('input[name="name"]')).not.toBeNull());
+                });
+                expect(sessionStorage.getItem(storageKey)).toBeNull();
+                expect(credentials).toEqual([]);
+                expect(admissionRequests).toEqual(['/api/v1/auth/verify']);
+            },
+            '/auth/verify-email#token=registration-proof'
+        );
+
+        // Recover without the fragment or a stored bearer, using only server-owned setup.
         await withMounted(
             <Routes>
                 <Route element={<PlatformRoot />}>
@@ -295,11 +454,14 @@ it('refreshes the persistent identity after registration before entering a prote
                 expect(output.textContent).not.toContain('Unexpected sign-in prompt');
                 expect(credentials).toEqual([{ name: 'New Owner', password: 'Strong-password-123' }]);
                 expect(output.textContent).not.toContain('Unable to load');
+                expect(admissionRequests).toEqual(['/api/v1/auth/verify', '/api/v1/auth/register/setup']);
             },
             '/auth/verify-email'
         );
     } finally {
         transport.mockRestore();
+        window.history.replaceState(originalState, '', originalUrl);
+        sessionStorage.removeItem(storageKey);
         localStorage.removeItem('longlink:appearance');
     }
 });

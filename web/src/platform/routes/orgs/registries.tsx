@@ -9,7 +9,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -42,9 +41,9 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     wrap="wrap"
                     minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Private registries
-                    </Heading>
+                    </h2>
                     {canMaintain && (
                         <Button
                             label="Add registry"

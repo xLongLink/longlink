@@ -29,11 +29,10 @@ export function NativeLink({
     rel,
     download,
     children,
-    hasUnderline = false,
     isExternalLink = false,
     className,
     ...props
-}: Omit<NativeAnchorProps, 'type' | 'color'> & { hasUnderline?: boolean; isExternalLink?: boolean }) {
+}: Omit<NativeAnchorProps, 'type' | 'color'> & { isExternalLink?: boolean }) {
     const linkTarget = isExternalLink ? '_blank' : target;
 
     const attributes = {
@@ -44,7 +43,6 @@ export function NativeLink({
         className: cn(
             buttonVariants({ variant: 'link', size: null }),
             'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
-            hasUnderline && 'underline',
             className
         )
     };

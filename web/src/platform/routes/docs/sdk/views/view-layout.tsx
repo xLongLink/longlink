@@ -7,7 +7,6 @@ import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -123,9 +122,9 @@ export default function ViewLayout({
         <DocumentationArticle article={article}>
             <Stack gap={5}>
                 <Stack gap={0}>
-                    <Heading id="introduction" level={1}>
+                    <h1 className="font-semibold tracking-tight text-4xl" id="introduction">
                         {component.label}
-                    </Heading>
+                    </h1>
                     {!runtime && (
                         <p className="text-xs text-muted-foreground">
                             {component.reference ? (

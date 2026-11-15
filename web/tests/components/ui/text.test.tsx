@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
-import { act, createRef } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Text } from '@/components/custom/text';
+import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 
@@ -85,6 +85,47 @@ it('preserves a labelled live status and its ref while updating truncation detai
     );
 
     expect(textRef.current).toBeNull();
+});
+
+it('cleans up callback refs on replacement and unmount without detaching them twice', async () => {
+    const user = userEvent.setup();
+    const firstCleanup = vi.fn();
+    const secondCleanup = vi.fn();
+    const firstRef = vi.fn((_element: HTMLElement | null) => firstCleanup);
+    const secondRef = vi.fn((_element: HTMLElement | null) => secondCleanup);
+
+    function Status() {
+        const [replaced, setReplaced] = useState(false);
+
+        return (
+            <>
+                <Text ref={replaced ? secondRef : firstRef}>Publication status</Text>
+                <button onClick={() => setReplaced(true)}>Replace ref</button>
+            </>
+        );
+    }
+
+    await withMounted(<Status />, async (output) => {
+        const text = output.querySelector('span');
+        const button = output.querySelector('button');
+
+        if (!text || !button) throw new Error('Missing status controls');
+
+        expect(firstRef).toHaveBeenCalledExactlyOnceWith(text);
+        expect(firstCleanup).not.toHaveBeenCalled();
+
+        await act(async () => await user.click(button));
+
+        expect(output.querySelector('span')).toBe(text);
+        expect(firstCleanup).toHaveBeenCalledOnce();
+        expect(firstRef).toHaveBeenCalledExactlyOnceWith(text);
+        expect(secondRef).toHaveBeenCalledExactlyOnceWith(text);
+        expect(secondCleanup).not.toHaveBeenCalled();
+    });
+
+    expect(firstCleanup).toHaveBeenCalledOnce();
+    expect(secondCleanup).toHaveBeenCalledOnce();
+    expect(secondRef).toHaveBeenCalledOnce();
 });
 
 it('clips text without exposing a tooltip when truncation details are disabled', async () => {

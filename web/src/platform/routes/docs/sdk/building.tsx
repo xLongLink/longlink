@@ -1,7 +1,6 @@
 import { DataTable } from '@/components/custom/data-table';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -24,9 +23,9 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="building" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="building">
                     Building
-                </Heading>
+                </h1>
                 <p>
                     Package your solution into a standard container image. LongLink builds the solution together with
                     its locked dependencies, configuration requirements, and metadata.
@@ -43,9 +42,9 @@ export default function DocsArticleRoute() {
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack gap={2}>
-                    <Heading id="metadata" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="metadata">
                         Metadata
-                    </Heading>
+                    </h2>
                     <CodeBlock
                         code={`[project]
 name = "orders"

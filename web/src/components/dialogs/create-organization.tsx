@@ -6,7 +6,6 @@ import { Illustration } from '@/components/ui/illustration';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Notifies the parent after a successful organization creation request. */
@@ -42,9 +41,9 @@ export default function CreateOrganization({
                                         decoding="async"
                                     />
                                     <Stack gap={0}>
-                                        <Heading level={2} className="text-center">
+                                        <h2 className="font-semibold tracking-tight text-3xl text-center">
                                             New organization
-                                        </Heading>
+                                        </h2>
                                         <p className="text-muted-foreground text-center">
                                             A place for your workflows and data
                                         </p>

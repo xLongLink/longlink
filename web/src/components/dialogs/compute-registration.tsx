@@ -10,7 +10,6 @@ import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeTextArea } from '@/components/custom/native-text-area';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
@@ -75,9 +74,7 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                 <Wizard height="min(560px, calc(100dvh - var(--spacing) * 40))" backVariant="ghost">
                     <Step label="Metadata">
                         <Stack gap={8}>
-                            <Heading level={2} className="text-center">
-                                Register Compute
-                            </Heading>
+                            <h2 className="font-semibold tracking-tight text-3xl text-center">Register Compute</h2>
                             <Stack gap={3}>
                                 <TextInput label="Name" name="name" required />
                                 <TextInput
@@ -97,9 +94,7 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                     </Step>
                     <Step label="Kubeconfig">
                         <Stack gap={8}>
-                            <Heading level={2} className="text-center">
-                                Connect your cluster
-                            </Heading>
+                            <h2 className="font-semibold tracking-tight text-3xl text-center">Connect your cluster</h2>
                             <Stack gap={3}>
                                 <NativeFileInput
                                     label="Kubeconfig file"

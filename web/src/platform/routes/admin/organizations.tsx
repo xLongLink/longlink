@@ -12,7 +12,6 @@ import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -35,7 +34,7 @@ export default function Organizations() {
     return (
         <Stack gap={2}>
             <title>Organizations | LongLink</title>
-            <Heading level={1}>Organizations</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
             <TextInput label="Search organizations" placeholder="Search by name" {...search} startIcon={<Search />} />
             <Stack gap={1}>
                 <DataTable

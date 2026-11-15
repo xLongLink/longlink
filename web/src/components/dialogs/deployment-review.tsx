@@ -10,7 +10,6 @@ import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeTextInput } from '@/components/custom/native-text-input';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 type DeploymentReviewProps = DialogProps & {
     item: { id: string; name: string };
@@ -84,7 +83,7 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                 <div className="h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                     <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                         <Stack gap={4} align="center" justify="center" minHeight="100%">
-                            <Heading level={2}>Update {item.name}</Heading>
+                            <h2 className="font-semibold tracking-tight text-3xl">Update {item.name}</h2>
                             <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
                             <Stack direction="horizontal" gap={2}>
                                 <Button label="Cancel" variant="ghost" onClick={onClose} />
@@ -111,9 +110,9 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
                                     <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
-                                    <Heading level={2} className="text-center">
+                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
                                         Update {item.name}
-                                    </Heading>
+                                    </h2>
                                 </Stack>
                                 <Stack direction="horizontal" gap={4} align="center">
                                     <div className="min-h-0 min-w-0 grow">
@@ -138,9 +137,9 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                             <Stack gap={4}>
                                 <Stack gap={3} align="center">
                                     <RefreshCw className="size-20 text-muted-foreground" aria-hidden="true" />
-                                    <Heading level={2} className="text-center">
+                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
                                         Configure your environment
-                                    </Heading>
+                                    </h2>
                                 </Stack>
                                 {!candidate.metadata.environments?.length && (
                                     <span className="text-muted-foreground">

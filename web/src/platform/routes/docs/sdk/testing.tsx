@@ -1,7 +1,6 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -19,12 +18,12 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="testing" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="testing">
                     Testing
-                </Heading>
+                </h1>
                 <p>
                     Test your application with standard{' '}
-                    <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink>
+                    <Link href="https://docs.pytest.org/en/stable/" className="underline" isExternalLink>
                         pytest
                     </Link>{' '}
                     workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
@@ -41,9 +40,9 @@ export default function DocsArticleRoute() {
                 <CodeBlock code="uv run pytest <filename>" language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from main import app
 from longlink.testclient import TestClient

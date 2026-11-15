@@ -3,7 +3,6 @@ import { Grid } from '@/components/custom/grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const cardClassName =
     'flex min-h-60 flex-col -me-px -mb-px rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*6)-1px)] text-inherit no-underline hover:border-ring hover:bg-muted active:bg-accent focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2';
@@ -25,17 +24,17 @@ export default function DocsIndex() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={6}>
-                <Heading id="documentation" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="documentation">
                     Documentation
-                </Heading>
+                </h1>
                 <p>
                     Learn how to build, run, and manage solutions with LongLink. Start with the basics, create your
                     first Solution, or explore the platform in more detail.
                 </p>
                 <Stack as="section" gap={3}>
-                    <Heading id="start-here" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="start-here">
                         Start here
-                    </Heading>
+                    </h2>
                     <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
                         <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
                             <Stack className="flex-1" gap={6} justify="between">

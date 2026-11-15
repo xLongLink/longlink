@@ -12,7 +12,6 @@ import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 
 export function SolutionPermissionsDialog({
@@ -55,7 +54,7 @@ export default function SolutionPermissions({
 
     return (
         <Stack gap={4} padding={6}>
-            <Heading level={2}>Solution permissions</Heading>
+            <h2 className="font-semibold tracking-tight text-3xl">Solution permissions</h2>
             {settings.roles.length === 0 ? (
                 <span>Rebuild and deploy the Solution to load its roles.</span>
             ) : (

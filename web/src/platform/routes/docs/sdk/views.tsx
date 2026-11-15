@@ -38,7 +38,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import {
@@ -211,9 +210,9 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="views" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="views">
                     Views
-                </Heading>
+                </h1>
                 <p>
                     Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
                     components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
@@ -270,9 +269,12 @@ export default function Item({ params }) {
                     .filter((category) => category !== 'Runtime')
                     .map((category) => (
                         <Stack key={category} gap={3}>
-                            <Heading id={category.toLowerCase().replace(/\W+/g, '-')} level={2}>
+                            <h2
+                                className="font-semibold tracking-tight text-3xl"
+                                id={category.toLowerCase().replace(/\W+/g, '-')}
+                            >
                                 {category}
-                            </Heading>
+                            </h2>
                             <Grid columns={{ minWidth: 190, max: 3, repeat: 'fill' }} gap={4}>
                                 {componentDocumentation
                                     .filter((component) => component.category === category)

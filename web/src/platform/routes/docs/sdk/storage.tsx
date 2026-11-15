@@ -1,7 +1,6 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -20,16 +19,16 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="storage" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="storage">
                     Storage
-                </Heading>
+                </h1>
                 <p>
                     Use <InlineCode>ctx.storage</InlineCode> to read and write files asynchronously through a normalized{' '}
-                    <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink>
+                    <Link href="https://github.com/fsspec/filesystem_spec" className="underline" isExternalLink>
                         fsspec
                     </Link>{' '}
                     filesystem. Production uses{' '}
-                    <Link href="https://github.com/fsspec/s3fs" hasUnderline isExternalLink>
+                    <Link href="https://github.com/fsspec/s3fs" className="underline" isExternalLink>
                         s3fs
                     </Link>{' '}
                     with native async S3 I/O through aiobotocore. Synchronous local and memory filesystems are adapted
@@ -43,9 +42,9 @@ export default function DocsArticleRoute() {
                         LongLink platform.
                     </p>
                 </Stack>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from longlink import Context
 
@@ -61,9 +60,9 @@ async def write_report(ctx: Context) -> None:
                     <InlineCode>await ctx.storage.remove(path)</InlineCode> to delete it. Removing a missing file is
                     safe. <InlineCode>open(path)</InlineCode> returns a read-only binary file context.
                 </p>
-                <Heading id="file-responses" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="file-responses">
                     Previews and downloads
-                </Heading>
+                </h2>
                 <p>
                     Yield file chunks from a route with <InlineCode>response_class=StreamingResponse</InlineCode>. Set
                     the content type for previews; the frontend decides whether to preview or download the same URL. A

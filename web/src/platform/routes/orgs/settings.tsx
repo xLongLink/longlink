@@ -24,7 +24,6 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
@@ -73,9 +72,9 @@ export default function OrganizationSettings() {
             <Stack direction="horizontal" gap={3} align="center">
                 <GeneratedAvatar kind="organization" name={membership.organization.name} />
                 <Stack gap={0}>
-                    <Heading level={4} accessibilityLevel={1}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {membership.organization.name}
-                    </Heading>
+                    </h4>
                     <span className="text-xs text-muted-foreground">Organization</span>
                 </Stack>
             </Stack>
@@ -176,18 +175,18 @@ function GeneralSection({
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     General
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
                     <Stack className="text-red-600 dark:text-red-400">
-                        <Heading level={4} accessibilityLevel={3} className="text-inherit">
+                        <h4 aria-level={3} className="font-semibold tracking-tight text-xl text-inherit">
                             Danger zone
-                        </Heading>
+                        </h4>
                     </Stack>
                     <Stack
                         direction="horizontal"
@@ -254,9 +253,9 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
         <>
             <Stack gap={4}>
                 <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Members
-                    </Heading>
+                    </h2>
                 </Stack>
                 <Separator />
                 <DataTable
@@ -428,9 +427,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     wrap="wrap"
                     minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
-                    </Heading>
+                    </h2>
                     {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
                 </Stack>
                 <Separator />

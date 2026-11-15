@@ -1,6 +1,5 @@
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description:
@@ -16,9 +15,9 @@ export default function WhyLongLink() {
     return (
         <PublicArticle article={article}>
             <Stack className="text-lg leading-relaxed" gap={5}>
-                <Heading id="why-longlink" level={1} className="text-balance">
+                <h1 id="why-longlink" className="font-semibold tracking-tight text-4xl text-balance">
                     Why LongLink
-                </Heading>
+                </h1>
 
                 <Stack className="[&_p]:opacity-90" gap={10}>
                     <Stack as="section" gap={4}>

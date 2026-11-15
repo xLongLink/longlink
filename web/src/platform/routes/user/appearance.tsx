@@ -5,7 +5,6 @@ import { useUpdateUser } from '@/lib/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { Card, CardContent } from '@/components/shadcn/card';
 import { InteractiveCard } from '@/components/custom/interactive-card';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
@@ -15,9 +14,9 @@ export default function AppearanceSettings() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3" role="group" aria-label="Theme">
-                <Heading level={4} accessibilityLevel={3}>
+                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                     Theme
-                </Heading>
+                </h4>
                 <div className="flex flex-wrap gap-3">
                     {(
                         [
@@ -52,9 +51,9 @@ export default function AppearanceSettings() {
                 </div>
             </div>
             <div className="flex flex-col gap-3">
-                <Heading level={4} accessibilityLevel={3}>
+                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                     Appearance
-                </Heading>
+                </h4>
                 <Card size="sm">
                     <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
                         <span>Accent color</span>

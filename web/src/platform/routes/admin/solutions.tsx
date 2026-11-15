@@ -12,7 +12,6 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
@@ -33,7 +32,7 @@ export default function Solutions() {
     return (
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
-            <Heading level={1}>Solutions</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Solutions</h1>
             <TextInput
                 label="Search solutions"
                 placeholder="Search by name, description, or organization"

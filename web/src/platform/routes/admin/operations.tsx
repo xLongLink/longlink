@@ -8,7 +8,6 @@ import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const kinds = {
@@ -35,7 +34,7 @@ export default function Operations() {
     return (
         <Stack gap={2}>
             <title>Operations | LongLink</title>
-            <Heading level={1}>Operations</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Operations</h1>
             <TextInput
                 label="Search operations"
                 placeholder="Search by operation kind or resource name"

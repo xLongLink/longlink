@@ -6,7 +6,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
@@ -19,17 +18,17 @@ export default function Usage({ base }: { base: string }) {
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Usage
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             <Card>
                 <CardHeader className="flex items-center justify-between border-b">
                     <Stack gap={0}>
-                        <Heading level={4} accessibilityLevel={3}>
+                        <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                             Monthly usage
-                        </Heading>
+                        </h4>
                         <span className="text-muted-foreground">
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
                         </span>

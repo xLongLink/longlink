@@ -12,7 +12,6 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -47,9 +46,9 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         <>
             <Stack gap={3}>
                 <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Heading level={4} accessibilityLevel={3}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                         Tabs
-                    </Heading>
+                    </h4>
                     {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
                 </Stack>
                 <DataTable

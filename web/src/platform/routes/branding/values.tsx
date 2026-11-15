@@ -1,7 +1,6 @@
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description: 'The values behind the LongLink brand.',
@@ -17,13 +16,13 @@ export default function Values() {
     return (
         <PublicArticle article={article}>
             <Stack gap={4}>
-                <Heading id="values" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="values">
                     Values
-                </Heading>
+                </h1>
                 <blockquote className="m-0 border-s-2 border-orange-600 ps-4 wrap-break-word text-orange-600 dark:border-orange-400 dark:text-orange-400">
                     <Stack gap={0}>
                         <span>Beta notice: This page is being built.</span>
-                        <Link href={article.editUrl} hasUnderline isExternalLink className="text-inherit">
+                        <Link href={article.editUrl} isExternalLink className="underline text-inherit">
                             Edit on GitHub
                         </Link>
                     </Stack>

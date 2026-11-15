@@ -5,7 +5,6 @@ import { Illustration } from '@/components/ui/illustration';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function InviteMember({
     canInviteAdmin,
@@ -29,9 +28,9 @@ export function InviteMember({
                                         decoding="async"
                                     />
                                     <Stack gap={0}>
-                                        <Heading level={2} className="text-center">
+                                        <h2 className="font-semibold tracking-tight text-3xl text-center">
                                             Invite user
-                                        </Heading>
+                                        </h2>
                                         <p className="text-muted-foreground text-center">
                                             Send an invitation to join this organization.
                                         </p>

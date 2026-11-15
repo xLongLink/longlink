@@ -11,7 +11,6 @@ import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Owns one creation attempt, shared by the organization list and settings pages. */
 export default function CreateSolution({
@@ -83,9 +82,9 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
+                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
                                         Choose a Solution image
-                                    </Heading>
+                                    </h2>
                                     <p className="text-muted-foreground text-center">
                                         Start with a container image or try the sample Solution
                                     </p>
@@ -124,9 +123,7 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Make it yours
-                                    </Heading>
+                                    <h2 className="font-semibold tracking-tight text-3xl text-center">Make it yours</h2>
                                     <p className="text-muted-foreground text-center">
                                         Give your Solution a name and description
                                     </p>
@@ -156,9 +153,9 @@ export default function CreateSolution({
                                     decoding="async"
                                 />
                                 <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
+                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
                                         Configure your environment
-                                    </Heading>
+                                    </h2>
                                     <p className="text-muted-foreground text-center">
                                         Set the values your Solution needs to run
                                     </p>

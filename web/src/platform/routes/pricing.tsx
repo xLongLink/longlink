@@ -5,7 +5,6 @@ import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 // Schema defaults come from the same constants used to calculate monthly invoices.
 const rates = schemas.zOrganizationUsage
@@ -44,12 +43,7 @@ export default function Pricing() {
                 <section className="p-6">
                     <Stack className="mx-auto" width="100%" maxWidth={1000} gap={10} align="center">
                         <Stack gap={3} align="center">
-                            <Heading
-                                level={1}
-                                className="text-5xl font-semibold text-balance text-center tracking-wide"
-                            >
-                                Pricing
-                            </Heading>
+                            <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Pricing</h1>
                             <p className="text-muted-foreground">Billed per Organization</p>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
@@ -69,9 +63,9 @@ export default function Pricing() {
                                         <Stack gap={6} paddingBlock={10} align="center">
                                             <Stack gap={3} align="center">
                                                 <ResourceIcon aria-hidden className="text-primary" size={20} />
-                                                <Heading level={2} className="text-center">
+                                                <h2 className="font-semibold tracking-tight text-3xl text-center">
                                                     {resource.resource}
-                                                </Heading>
+                                                </h2>
                                             </Stack>
                                             <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">

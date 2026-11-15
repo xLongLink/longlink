@@ -12,7 +12,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeTextInput } from '@/components/custom/native-text-input';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -54,9 +53,9 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
             <div className="flex items-center gap-3">
                 <GeneratedAvatar name={name} src={user.avatar} seed={user.id} />
                 <div className="flex flex-col gap-0">
-                    <Heading level={4} accessibilityLevel={1}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {name}
-                    </Heading>
+                    </h4>
                     <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
             </div>
@@ -94,12 +93,9 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                         <div className="flex flex-col gap-8">
                             <div className="flex flex-col gap-4">
                                 <div className="flex min-h-8 flex-col justify-end">
-                                    <Heading
-                                        level={2}
-                                        className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                                    >
+                                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                         Account
-                                    </Heading>
+                                    </h2>
                                 </div>
                                 <Separator />
                                 <NativeTextInput

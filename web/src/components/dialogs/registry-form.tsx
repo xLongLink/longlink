@@ -6,7 +6,6 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 export function RegistryForm({
     base,
@@ -32,9 +31,7 @@ export function RegistryForm({
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={2} className="text-center">
-                                Connect a registry
-                            </Heading>
+                            <h2 className="font-semibold tracking-tight text-3xl text-center">Connect a registry</h2>
                             <p className="text-muted-foreground text-center">
                                 Allow LongLink to pull your private container images
                             </p>

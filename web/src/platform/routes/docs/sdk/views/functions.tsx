@@ -1,7 +1,6 @@
 import ViewLayout from './view-layout';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [
@@ -22,9 +21,9 @@ export default function FunctionsPage() {
     // Render the runtime-specific functions table.
     return (
         <ViewLayout name="Functions" toc={[{ id: 'functions', label: 'Functions', level: 2 }]}>
-            <Heading id="functions" level={2}>
+            <h2 className="font-semibold tracking-tight text-3xl" id="functions">
                 Functions
-            </Heading>
+            </h2>
             <DataTable
                 data={functions}
                 idKey="name"

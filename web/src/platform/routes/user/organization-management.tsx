@@ -14,7 +14,6 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
@@ -72,12 +71,9 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             wrap="wrap"
                             minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading
-                                level={2}
-                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Organizations
-                            </Heading>
+                            </h2>
                             <Button
                                 label="Create Organization"
                                 size="sm"
@@ -88,7 +84,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     </>
                 ) : !onboarding ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
-                        <Heading level={1}>Organizations</Heading>
+                        <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
                         <Button label="Create Organization" onClick={() => setSelected({ type: 'create' })} />
                     </Stack>
                 ) : null}
@@ -103,9 +99,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} className="text-center">
-                                Your Organizations
-                            </Heading>
+                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Organizations</h1>
                             <p className="text-muted-foreground text-center">A place for your workflows and data</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">

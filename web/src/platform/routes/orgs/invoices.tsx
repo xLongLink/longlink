@@ -6,16 +6,15 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Invoices
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             {canManage ? (
@@ -45,7 +44,7 @@ function InvoiceTable({ base }: { base: string }) {
                     width: proportional(2),
                     renderCell: (invoice) =>
                         invoice.hosted_invoice_url ? (
-                            <Link href={invoice.hosted_invoice_url} hasUnderline isExternalLink>
+                            <Link href={invoice.hosted_invoice_url} className="underline" isExternalLink>
                                 {invoice.number ?? invoice.id}
                             </Link>
                         ) : (
@@ -87,7 +86,7 @@ function InvoiceTable({ base }: { base: string }) {
                     width: proportional(1),
                     renderCell: (invoice) =>
                         invoice.has_pdf ? (
-                            <Link href={`${base}/invoices/${invoice.id}/pdf`} hasUnderline isExternalLink>
+                            <Link href={`${base}/invoices/${invoice.id}/pdf`} className="underline" isExternalLink>
                                 PDF
                             </Link>
                         ) : null

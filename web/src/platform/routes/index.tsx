@@ -13,7 +13,6 @@ import { Tailwindcss } from '@/components/svg/tailwindcss';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -50,14 +49,11 @@ export default function Home() {
                         minHeight="100svh"
                     >
                         <Stack className="max-w-xl text-left" gap={6} align="start">
-                            <Heading
-                                level={1}
-                                className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl"
-                            >
+                            <h1 className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl">
                                 Your business.
                                 <br />
                                 Defined as code.
-                            </Heading>
+                            </h1>
                             <p className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
                                 Design, build, operate, and improve.
                                 <br />
@@ -67,9 +63,8 @@ export default function Home() {
                                 Currently in testing Beta.{' '}
                                 <Link
                                     href="https://github.com/xLongLink/longlink"
-                                    hasUnderline
                                     isExternalLink
-                                    className="text-inherit"
+                                    className="underline text-inherit"
                                 >
                                     Star LongLink on GitHub.
                                 </Link>
@@ -118,9 +113,9 @@ export default function Home() {
                                 🇨🇭
                             </span>
                             <Stack gap={0} align="center">
-                                <Heading level={2} className="text-balance text-center tracking-wide">
+                                <h2 className="font-semibold text-3xl text-balance text-center tracking-wide">
                                     Made in Switzerland
-                                </Heading>
+                                </h2>
                                 <p className="text-muted-foreground text-balance">Using open-source technologies</p>
                             </Stack>
                             <Grid columns={2} gap={3}>

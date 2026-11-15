@@ -2,7 +2,6 @@ import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -21,9 +20,9 @@ export default function Platform() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="platform" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="platform">
                     Platform
-                </Heading>
+                </h1>
                 <p>
                     The Platform API and web interface are released as a{' '}
                     <Link href="https://ghcr.io/xlonglink/longlink" isExternalLink>
@@ -36,9 +35,9 @@ export default function Platform() {
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack as="section" gap={3}>
-                    <Heading id="environment" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="environment">
                         Environment variables
-                    </Heading>
+                    </h2>
                     <p>
                         See the{' '}
                         <Link href="https://github.com/xLongLink/longlink/blob/main/api/.env.sample" isExternalLink>

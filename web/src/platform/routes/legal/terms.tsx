@@ -2,7 +2,6 @@ import { legalPaths } from '@/platform/publications';
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description: 'Read the LongLink terms of service.',
@@ -36,18 +35,18 @@ export default function Terms() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
-                <Heading id="terms-of-service" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="terms-of-service">
                     Terms of Service
-                </Heading>
+                </h1>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="provider-acceptance-and-eligibility" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="provider-acceptance-and-eligibility">
                         1. Provider, acceptance and eligibility
-                    </Heading>
+                    </h2>
                     <p>
                         LongLink is operated by LongLink SAGL ("LongLink", "we", "us" or "our"), UID CHE-150.642.313.
                         Contact:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .
@@ -68,9 +67,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="definitions-and-contract-documents" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="definitions-and-contract-documents">
                         2. Definitions and contract documents
-                    </Heading>
+                    </h2>
                     <p>
                         "Service" means the LongLink hosted platform, its APIs, deployment tooling, and related support,
                         including the SDK and runtime when connected to our platform. "Solution" means a workload
@@ -93,9 +92,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="service-and-beta-status" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="service-and-beta-status">
                         3. Service and beta status
-                    </Heading>
+                    </h2>
                     <p>
                         The Service is in beta. Features and APIs may change, and defects, interruptions, or data loss
                         may occur. No uptime or service-level commitment applies unless agreed in writing.
@@ -117,9 +116,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="accounts-organizations-and-security" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="accounts-organizations-and-security">
                         4. Accounts, organizations and security
-                    </Heading>
+                    </h2>
                     <p>
                         Keep account and organization information accurate. You are responsible for activity by users
                         you authorize and for securing your accounts, Solutions, credentials, and connected
@@ -127,7 +126,7 @@ export default function Terms() {
                     </p>
                     <p>
                         Use reasonable access controls and notify{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>{' '}
                         promptly if you suspect unauthorized access or a credential compromise.
@@ -140,9 +139,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="acceptable-use" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="acceptable-use">
                         5. Acceptable use
-                    </Heading>
+                    </h2>
                     <p>Use the Service lawfully and within your configured resource limits. You must not:</p>
                     <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
                         <li>
@@ -187,7 +186,7 @@ export default function Terms() {
                         We do not routinely monitor Customer Content. We may investigate and restrict or remove content,
                         access, or resources where reasonably necessary to address suspected abuse, security risks, or
                         legal violations. We handle personal data as described in our{' '}
-                        <Link href="/privacy/" hasUnderline>
+                        <Link href="/privacy/" className="underline">
                             Privacy Policy
                         </Link>
                         .
@@ -195,9 +194,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="usage-and-payments" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="usage-and-payments">
                         6. Usage and payments
-                    </Heading>
+                    </h2>
                     <p>
                         Usage within the published free allowances has no fee. Usage above those allowances is measured
                         at month-end and charged monthly to your saved payment method at the published rates, without
@@ -217,9 +216,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="content-privacy-and-data-processing" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="content-privacy-and-data-processing">
                         7. Content and privacy
-                    </Heading>
+                    </h2>
                     <p>
                         You retain your rights in Customer Content. You grant us a non-exclusive, worldwide,
                         royalty-free license to host, copy, transmit, and otherwise process it only as needed to
@@ -256,7 +255,7 @@ export default function Terms() {
                     <p>
                         We act as controller for account, organization, billing, support, security, and operational
                         data, as explained in our{' '}
-                        <Link href="/privacy/" hasUnderline>
+                        <Link href="/privacy/" className="underline">
                             Privacy Policy
                         </Link>
                         .
@@ -264,9 +263,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="our-technology-and-feedback" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="our-technology-and-feedback">
                         8. Our technology and feedback
-                    </Heading>
+                    </h2>
                     <p>
                         We and our licensors retain rights in the Service and our branding, subject to applicable
                         open-source licenses. You may use the hosted Service while these Terms apply. Open-source
@@ -280,9 +279,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="warranties" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="warranties">
                         9. Warranties
-                    </Heading>
+                    </h2>
                     <p>
                         To the fullest extent permitted by law, the Service is provided "as is" and "as available". We
                         do not guarantee uninterrupted operation, a particular result, or preservation of Customer
@@ -295,9 +294,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="limitation-of-liability" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="limitation-of-liability">
                         10. Limitation of liability
-                    </Heading>
+                    </h2>
                     <p>
                         Nothing in these Terms excludes or limits liability for wilful misconduct or gross negligence
                         under Article 100(1) of the Swiss Code of Obligations, fraud, or any liability that cannot
@@ -317,9 +316,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="indemnity-for-business-users" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="indemnity-for-business-users">
                         11. Indemnity for business users
-                    </Heading>
+                    </h2>
                     <p>
                         If you are a business user, you will defend and indemnify LongLink SAGL against third-party
                         claims and reasonable costs arising from your Customer Content, your breach of these Terms, or
@@ -334,9 +333,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="suspension-deletion-and-termination" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="suspension-deletion-and-termination">
                         12. Suspension and termination
-                    </Heading>
+                    </h2>
                     <p>
                         You may stop using the Service or request account closure at any time. Export your Customer
                         Content first; deletion may be irreversible. You remain responsible for charges incurred before
@@ -356,9 +355,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="changes-to-these-terms" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="changes-to-these-terms">
                         13. Changes to these Terms
-                    </Heading>
+                    </h2>
                     <p>
                         We may update these Terms as the Service or law changes. We will give at least 30 days' notice
                         of material adverse changes by email or through the Service, except where an urgent legal or
@@ -373,9 +372,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="force-majeure" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="force-majeure">
                         14. Force majeure
-                    </Heading>
+                    </h2>
                     <p>
                         Neither party is liable for delays caused by events beyond its reasonable control, including
                         supplier outages, natural disasters, and government action. This does not excuse payment for
@@ -384,9 +383,9 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="general-and-governing-law" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="general-and-governing-law">
                         15. General and governing law
-                    </Heading>
+                    </h2>
                     <p>
                         These Terms and any applicable signed agreement are the entire agreement about the Service. If a
                         provision is unenforceable, the rest remains effective. A failure to enforce a right is not a
@@ -401,16 +400,16 @@ export default function Terms() {
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="contact" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="contact">
                         16. Contact
-                    </Heading>
+                    </h2>
                     <p>
                         Legal enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         . General, technical, account, and billing enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .

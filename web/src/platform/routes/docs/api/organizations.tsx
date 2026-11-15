@@ -1,7 +1,6 @@
 import { DataTable } from '@/components/custom/data-table';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
 
 const organizationRoles = [
@@ -36,9 +35,9 @@ export default function Organizations() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="organizations" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="organizations">
                     Organizations
-                </Heading>
+                </h1>
                 <p>
                     The organization defines the boundary for work. It manages the members and Solutions that belong to
                     it, keeping access and responsibilities clearly separated. Each organization gets its own dedicated

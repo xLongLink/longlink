@@ -18,7 +18,6 @@ import { DataTable, proportional } from '@/components/custom/data-table';
 import { Button as MenuTriggerButton } from '@/components/shadcn/button';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 import {
@@ -105,19 +104,16 @@ export default function SolutionManagement({
                             wrap="wrap"
                             minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading
-                                level={2}
-                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Solutions
-                            </Heading>
+                            </h2>
                             {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
                         </Stack>
                         <Separator />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
-                        <Heading level={1}>{categoryName}</Heading>
+                        <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
                         {canMaintain && <Button label="New Solution" onClick={openCreate} />}
                     </Stack>
                 ) : null}
@@ -136,9 +132,7 @@ export default function SolutionManagement({
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} className="text-center">
-                                Your Solutions
-                            </Heading>
+                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Solutions</h1>
                             <p className="text-muted-foreground text-center">Bring your business processes to life</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
