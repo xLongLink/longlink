@@ -10,6 +10,7 @@ import { useConfirm } from '@/components/custom/confirmation';
 import { FileRequestContext } from '@/components/custom/preview';
 import { NativeLoading } from '@/components/custom/native-loading';
 import { FileViewerContext } from '@/components/custom/file-context';
+import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import {
@@ -37,9 +38,7 @@ import {
     appearanceMessageSchema,
     type AppearanceMessage,
     viewportMessageSchema,
-    type ViewportMessage,
-    viewAppearanceSchema,
-    type ViewAppearance
+    type ViewportMessage
 } from './protocol';
 import '../index.css';
 
@@ -113,7 +112,7 @@ const initialization = z
         session: z.string(),
         source: z.string(),
         params: parametersSchema,
-        appearance: viewAppearanceSchema,
+        appearance: appearanceSchema,
         navigationBaseUrl: z.url({ protocol: /^https?$/ })
     })
     .strict();
@@ -208,19 +207,19 @@ function initialize(event: MessageEvent<unknown>): void {
         return iconDataSchema.parse(data);
     }
 
-    /** Keeps images in the sandbox and delegates document previews to the host. */
-    async function requestPreview(path: string, title?: string): Promise<Blob | null> {
-        if (title !== undefined) {
-            const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
-            const data = await exchange(command);
-
-            return z.instanceof(Blob).nullable().parse(data);
-        }
-
+    /** Loads inert file bytes inside the sandbox. */
+    async function loadFile(path: string): Promise<Blob> {
         // Binary previews must remain inert file data rather than arbitrary response objects.
         const data = await request(path, { binary: true });
 
         return z.instanceof(Blob).parse(data);
+    }
+
+    /** Opens a document preview owned by the host. */
+    async function requestPreview(path: string, title: string): Promise<void> {
+        const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
+        const data = await exchange(command);
+        z.null().parse(data);
     }
 
     /** Asks the host to save an attachment without opening a document inside the sandbox. */
@@ -230,7 +229,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     // Supply file previews and downloads without exposing the general request API to file components.
-    const fileRequests = { preview: requestPreview, download };
+    const fileRequests = { load: loadFile, preview: requestPreview, download };
 
     /** Tracks an inline slot while native document rendering remains host-owned. */
     function mountFileViewer(element: HTMLElement, path: string, title: string): () => void {
@@ -356,6 +355,8 @@ function initialize(event: MessageEvent<unknown>): void {
             }
 
             pending.clear();
+            root.unmount();
+            client.clear();
             port.close();
         },
         { once: true }
@@ -413,48 +414,44 @@ function initialize(event: MessageEvent<unknown>): void {
             <QueryClientProvider client={client}>
                 <QueryErrorResetBoundary>
                     {({ reset }) => (
-                        <ViewLayout>
-                            <ErrorBoundary
-                                onReset={reset}
-                                fallbackRender={({ error, resetErrorBoundary }) => (
-                                    <ViewFailure
-                                        title="View could not be loaded"
-                                        message={
-                                            error instanceof Error
-                                                ? error.message.slice(0, 1024)
-                                                : 'An unexpected View error occurred.'
-                                        }
-                                        retry={resetErrorBoundary}
-                                    />
-                                )}
-                            >
-                                <React.Suspense
-                                    fallback={
-                                        <div className="view-runtime-loading">
-                                            <NativeLoading label="Loading View" />
-                                        </div>
+                        <ErrorBoundary
+                            onReset={reset}
+                            fallbackRender={({ error, resetErrorBoundary }) => (
+                                <ViewFailure
+                                    title="View could not be loaded"
+                                    message={
+                                        error instanceof Error
+                                            ? error.message.slice(0, 1024)
+                                            : 'An unexpected View error occurred.'
                                     }
-                                >
-                                    <IconRequestContext value={loadIcon}>
-                                        <LinkNavigationContext
-                                            value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}
-                                        >
-                                            <MenuNavigationProvider>
-                                                <FileRequestContext value={fileRequests}>
-                                                    <FileViewerContext value={mountFileViewer}>
-                                                        <DialogActivityContext value={modalActivity}>
-                                                            <FormRequestContext value={request}>
-                                                                <View params={params} />
-                                                            </FormRequestContext>
-                                                        </DialogActivityContext>
-                                                    </FileViewerContext>
-                                                </FileRequestContext>
-                                            </MenuNavigationProvider>
-                                        </LinkNavigationContext>
-                                    </IconRequestContext>
-                                </React.Suspense>
-                            </ErrorBoundary>
-                        </ViewLayout>
+                                    retry={resetErrorBoundary}
+                                />
+                            )}
+                        >
+                            <React.Suspense
+                                fallback={
+                                    <div className="view-runtime-loading">
+                                        <NativeLoading label="Loading View" />
+                                    </div>
+                                }
+                            >
+                                <IconRequestContext value={loadIcon}>
+                                    <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
+                                        <MenuNavigationProvider>
+                                            <FileRequestContext value={fileRequests}>
+                                                <FileViewerContext value={mountFileViewer}>
+                                                    <DialogActivityContext value={modalActivity}>
+                                                        <FormRequestContext value={request}>
+                                                            <View params={params} />
+                                                        </FormRequestContext>
+                                                    </DialogActivityContext>
+                                                </FileViewerContext>
+                                            </FileRequestContext>
+                                        </MenuNavigationProvider>
+                                    </LinkNavigationContext>
+                                </IconRequestContext>
+                            </React.Suspense>
+                        </ErrorBoundary>
                     )}
                 </QueryErrorResetBoundary>
             </QueryClientProvider>
@@ -462,21 +459,19 @@ function initialize(event: MessageEvent<unknown>): void {
     } catch (error) {
         // Compilation diagnostics belong to the authored source, not privileged host state.
         content = (
-            <ViewLayout>
-                <ViewFailure
-                    title="View compilation failed"
-                    message={
-                        error instanceof Error
-                            ? error.message.slice(0, 1024)
-                            : 'Export a default JSX component without package imports.'
-                    }
-                />
-            </ViewLayout>
+            <ViewFailure
+                title="View compilation failed"
+                message={
+                    error instanceof Error
+                        ? error.message.slice(0, 1024)
+                        : 'Export a default JSX component without package imports.'
+                }
+            />
         );
     }
 
     /** Updates document appearance without reconciling or remounting the authored View. */
-    function renderAppearance(appearance: ViewAppearance) {
+    function renderAppearance(appearance: Appearance) {
         document.documentElement.dataset.themeScope = 'stone';
         document.documentElement.dataset.accent = appearance.accent;
 
@@ -487,7 +482,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
     // Start from the handshake, then receive live preferences over the private port.
     renderAppearance(parsed.data.appearance);
-    root.render(content);
+    root.render(<ViewLayout>{content}</ViewLayout>);
 }
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.

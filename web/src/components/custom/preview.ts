@@ -1,9 +1,10 @@
 import { ReportedError } from '@/lib/reported';
-import { createContext, useContext, useEffect, useEffectEvent, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-// Only the isolated runtime supplies scoped preview and download capabilities.
+// Only the isolated runtime supplies scoped file capabilities.
 export const FileRequestContext = createContext<{
-    preview: (path: string, title?: string) => Promise<Blob | null>;
+    load: (path: string) => Promise<Blob>;
+    preview: (path: string, title: string) => Promise<void>;
     download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
 
@@ -37,10 +38,9 @@ type PreviewState =
     | { status: 'error'; cause: unknown }
     | { status: 'ready'; url: string };
 
-/** Owns a mounted preview; inline images remain caller-owned and documents open in the host. */
-export function usePreview(src: string, inline = false, title?: string, onOpened?: () => void): PreviewState {
-    const request = useContext(FileRequestContext)?.preview;
-    const notifyOpened = useEffectEvent(() => onOpened?.());
+/** Owns a mounted image preview; inline images remain caller-owned. */
+export function usePreview(src: string, inline = false): PreviewState {
+    const request = useContext(FileRequestContext)?.load;
 
     // Store only scoped previews that wait for their host response.
     const [preview, setPreview] = useState<PreviewState>({ status: 'loading' });
@@ -52,18 +52,12 @@ export function usePreview(src: string, inline = false, title?: string, onOpened
         let active = true;
         let objectUrl: string | undefined;
 
-        /** Accepts image bytes or a completed host preview and ignores responses after closing. */
+        /** Accepts image bytes and ignores responses after closing. */
         async function load() {
             try {
-                const value = await request?.(src, title);
+                const value = await request?.(src);
 
                 if (!active) return;
-
-                if (value === null && title !== undefined) {
-                    notifyOpened();
-
-                    return;
-                }
 
                 // Reject non-image responses without exposing their contents in the View.
                 if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
@@ -88,7 +82,7 @@ export function usePreview(src: string, inline = false, title?: string, onOpened
 
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-    }, [inline, request, src, title]);
+    }, [inline, request, src]);
 
     // Inline images are immediately ready without duplicating their source in state.
     return inline ? { status: 'ready', url: src } : preview;

@@ -44,13 +44,28 @@ export default function TextareaPage() {
                 ),
                 code: `/** Submits multi-line notes using shadcn's textarea. */
 export default function NotesForm() {
+  const form = useForm({ defaultValues: { notes: "" } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("notes", values.notes);
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="notes" control={form.control} render={({ field }) => (
       <Field>
         <FieldLabel htmlFor="notes">Notes</FieldLabel>
-        <Textarea id="notes" name="notes" placeholder="Enter notes" />
+        <Textarea {...field} id="notes" placeholder="Enter notes" />
       </Field>
-    </Form>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

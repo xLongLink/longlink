@@ -1,10 +1,9 @@
 import { Icon } from './icon';
 import { useId, type ReactNode } from 'react';
 import { useValue } from '@/components/custom/value';
-import { FormField } from '@/components/custom/form-field';
 import type { FieldProps } from '@/components/custom/types';
-import { FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { selectorOptions, type SelectorOptionType, type SelectorOptionData } from './options';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import {
     Combobox,
     ComboboxChip,
@@ -34,21 +33,14 @@ export function MultiSelector(
 ) {
     const id = useId();
     const anchor = useComboboxAnchor();
-    const field = useValue(props.value, props.defaultValue ?? [], props.onChange);
+    const { ref, ...field } = useValue(props.value, props.defaultValue ?? [], props.onChange);
     const groups = selectorOptions(props.options).filter((group) => !group.divider);
     const items = groups.flatMap((group) => group.items);
     const selected = field.value.map((value) => items.find((item) => item.value === value) ?? { value });
 
-    // Keep reset and serialization at the View boundary; Combobox owns interaction.
+    // Base UI owns multi-value interaction and repeated form entries.
     return (
-        <FormField
-            name={props.name}
-            required={props.required}
-            disabled={props.disabled}
-            fieldRef={field.ref}
-            values={field.value}
-            serialize
-        >
+        <Field ref={ref}>
             <FieldContent>
                 <FieldLabel htmlFor={id}>
                     {props.label}
@@ -57,6 +49,9 @@ export function MultiSelector(
                 {props.description && <FieldDescription id={`${id}-description`}>{props.description}</FieldDescription>}
             </FieldContent>
             <Combobox<SelectorOptionData, true>
+                name={props.name}
+                required={props.required}
+                itemToStringValue={(item) => item.value}
                 multiple
                 items={groups}
                 value={selected}
@@ -113,6 +108,6 @@ export function MultiSelector(
                     </ComboboxList>
                 </ComboboxContent>
             </Combobox>
-        </FormField>
+        </Field>
     );
 }

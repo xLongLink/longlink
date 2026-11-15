@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/custom/form';
 import userEvent from '@testing-library/user-event';
 import { act, useState, type FormEvent } from 'react';
 import { DateInput } from '@/components/custom/date-input';
@@ -105,8 +104,12 @@ it('rejects nonexistent and forbidden dates without submitting a stale saved dat
     const changes: (ISODateString | undefined)[] = [];
     const user = userEvent.setup();
     await withMounted(
-        <Form
-            action={(data) => {
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+
+                if (!event.currentTarget.reportValidity()) return;
+                const data = new FormData(event.currentTarget);
                 submissions.push(data);
             }}
         >
@@ -120,7 +123,7 @@ it('rejects nonexistent and forbidden dates without submitting a stale saved dat
                 onChange={(value) => changes.push(value)}
                 required
             />
-        </Form>,
+        </form>,
         async (output) => {
             const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
             const form = find<HTMLFormElement>(output, 'form');
@@ -160,13 +163,17 @@ it('canonicalizes typed AM/PM and compact time, validates seconds inclusively, a
     const submissions: FormData[] = [];
     const user = userEvent.setup();
     await withMounted(
-        <Form
-            action={(data) => {
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+
+                if (!event.currentTarget.reportValidity()) return;
+                const data = new FormData(event.currentTarget);
                 submissions.push(data);
             }}
         >
             <TimeInput label="Start" name="start" hasSeconds min={time('09:30')} max={time('14:30:15')} required />
-        </Form>,
+        </form>,
         async (output) => {
             const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
             const form = find<HTMLFormElement>(output, 'form');
@@ -194,7 +201,7 @@ it('canonicalizes typed AM/PM and compact time, validates seconds inclusively, a
             await act(async () => user.clear(input));
             await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
             expect(submissions).toHaveLength(2);
-            expect(output.querySelector('[role=alert]')?.textContent).toBe('Please complete this field.');
+            expect(input.checkValidity()).toBe(false);
         }
     );
 });
@@ -555,8 +562,12 @@ it.each(['25:00', '09:60', '08:30'])(
             const [value, setValue] = useState<ISOTimeString | undefined>(invalid as ISOTimeString);
 
             return (
-                <Form
-                    action={(data) => {
+                <form
+                    onSubmit={(event) => {
+                        event.preventDefault();
+
+                        if (!event.currentTarget.reportValidity()) return;
+                        const data = new FormData(event.currentTarget);
                         submissions.push(data);
                     }}
                 >
@@ -569,7 +580,7 @@ it.each(['25:00', '09:60', '08:30'])(
                         max={time('10:00')}
                         hourFormat="24h"
                     />
-                </Form>
+                </form>
             );
         }
 
@@ -592,13 +603,17 @@ it('submits ASCII ISO times after typing Unicode digits, RTL marks, and spaced s
     const user = userEvent.setup();
     const submissions: FormData[] = [];
     await withMounted(
-        <Form
-            action={(data) => {
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+
+                if (!event.currentTarget.reportValidity()) return;
+                const data = new FormData(event.currentTarget);
                 submissions.push(data);
             }}
         >
             <TimeInput label="Start" name="start" required />
-        </Form>,
+        </form>,
         async (output) => {
             const input = find<HTMLInputElement>(output, 'input:not([type=hidden])');
             const form = find<HTMLFormElement>(output, 'form');

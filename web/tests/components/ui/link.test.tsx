@@ -149,7 +149,17 @@ it('guards repeated downloads until the callback and scoped host download finish
 
     try {
         await withMounted(
-            <FileRequestContext value={{ preview: async () => null, download }}>
+            <FileRequestContext
+                value={{
+                    load: async () => {
+                        throw new Error('Downloads must not load file bytes in the View');
+                    },
+                    preview: async () => {
+                        throw new Error('Downloads must not open a preview');
+                    },
+                    download
+                }}
+            >
                 <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
                     <AttachmentLink href="/invoice.pdf" download="invoice.pdf" onClick={action}>
                         Download
@@ -214,7 +224,15 @@ it('commits callback state updates before the returned promise settles', async (
 
     try {
         await withMounted(
-            <FileRequestContext value={{ preview: async () => null, download: async () => {} }}>
+            <FileRequestContext
+                value={{
+                    load: async () => {
+                        throw new Error('Attachment links must not load file bytes');
+                    },
+                    preview: async () => {},
+                    download: async () => {}
+                }}
+            >
                 <Action />
             </FileRequestContext>,
             async (output) => {
@@ -279,11 +297,16 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
 });
 
 it('allows canceling an attachment preview without navigating or requesting file bytes', async () => {
-    const preview = vi.fn(async () => null);
+    const preview = vi.fn(async () => {});
+
+    const load = vi.fn(async () => {
+        throw new Error('Attachment links must not load file bytes');
+    });
+
     const navigate = vi.fn();
 
     await withMounted(
-        <FileRequestContext value={{ preview, download: async () => {} }}>
+        <FileRequestContext value={{ load, preview, download: async () => {} }}>
             <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
                 <AttachmentLink href="/invoice.pdf" preview="Invoice" onClick={(event) => event.preventDefault()}>
                     Preview
@@ -295,6 +318,7 @@ it('allows canceling an attachment preview without navigating or requesting file
             await act(async () => output.querySelector('a')?.dispatchEvent(event));
             expect(event.defaultPrevented).toBe(true);
             expect(preview).not.toHaveBeenCalled();
+            expect(load).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
             expect(output.querySelector('a')?.hasAttribute('aria-busy')).toBe(false);
         }
@@ -302,11 +326,17 @@ it('allows canceling an attachment preview without navigating or requesting file
 });
 
 it('opens previews through the scoped capability without a native download', async () => {
-    const preview = vi.fn(async () => null);
+    const preview = vi.fn(async () => {});
+
+    const load = vi.fn(async () => {
+        throw new Error('Attachment links must not load file bytes');
+    });
+
+    const download = vi.fn(async () => {});
     const navigate = vi.fn();
 
     await withMounted(
-        <FileRequestContext value={{ preview, download: async () => {} }}>
+        <FileRequestContext value={{ load, preview, download }}>
             <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
                 <AttachmentLink href="/invoice.pdf" preview="Invoice">
                     Preview
@@ -322,6 +352,8 @@ it('opens previews through the scoped capability without a native download', asy
             await act(async () => anchor.dispatchEvent(event));
             expect(event.defaultPrevented).toBe(true);
             expect(preview).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'Invoice');
+            expect(load).not.toHaveBeenCalled();
+            expect(download).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
         }
     );
@@ -329,12 +361,20 @@ it('opens previews through the scoped capability without a native download', asy
 
 it('recovers after a scoped preview failure has already been reported', async () => {
     const preview = vi
-        .fn<() => Promise<null>>()
+        .fn<() => Promise<void>>()
         .mockRejectedValueOnce(new ReportedError('Request already reported'))
-        .mockResolvedValue(null);
+        .mockResolvedValue(undefined);
 
     await withMounted(
-        <FileRequestContext value={{ preview, download: async () => {} }}>
+        <FileRequestContext
+            value={{
+                load: async () => {
+                    throw new Error('Attachment links must not load file bytes');
+                },
+                preview,
+                download: async () => {}
+            }}
+        >
             <AttachmentLink href="/invoice.pdf" preview="Invoice">
                 Preview
             </AttachmentLink>

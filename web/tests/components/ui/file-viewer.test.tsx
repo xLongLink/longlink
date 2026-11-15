@@ -13,7 +13,10 @@ it('displays an image immediately without custom preview or download actions', a
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async () => new Blob(['image'], { type: 'image/png' }),
+                    load: async () => new Blob(['image'], { type: 'image/png' }),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => {
                         throw new Error('Viewing must not download');
                     }
@@ -61,7 +64,10 @@ it('ignores a pending response after replacing the file and releases the display
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' })),
+                    load: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' })),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => undefined
                 }}
             >
@@ -94,7 +100,15 @@ it('displays PDFs natively and retypes active text documents before embedding', 
         for (const type of ['application/pdf', 'text/html']) {
             const body = new Blob(['<script>active()</script>'], { type });
             await withMounted(
-                <FileRequestContext value={{ preview: async () => body, download: async () => undefined }}>
+                <FileRequestContext
+                    value={{
+                        load: async () => body,
+                        preview: async () => {
+                            throw new Error('Native viewers must not open a host preview');
+                        },
+                        download: async () => undefined
+                    }}
+                >
                     <FileViewer src="/api/report" title="Report" />
                 </FileRequestContext>,
                 async (output) => {
@@ -127,7 +141,10 @@ it('does not embed unknown binary files or interpret their content', async () =>
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async () => new Blob(['<script>active()</script>'], { type: 'application/octet-stream' }),
+                    load: async () => new Blob(['<script>active()</script>'], { type: 'application/octet-stream' }),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => undefined
                 }}
             >

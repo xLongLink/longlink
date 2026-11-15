@@ -44,7 +44,10 @@ export function FileViewerExample() {
     return (
         <FileRequestContext
             value={{
-                preview: requestPreviewFile,
+                load: requestPreviewFile,
+                preview: async () => {
+                    throw new Error('Host previews are unavailable in this documentation example');
+                },
                 download: async (_path, filename) => {
                     // The native example can only download this fixed public documentation asset.
                     await host.download(

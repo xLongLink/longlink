@@ -1,11 +1,15 @@
 import type { FieldProps } from './types';
+import type { ComponentProps } from 'react';
 import { TemporalField } from './temporal-field';
 import { TimePicker, TimePickerColumns, TimePickerPanel } from '@/components/reui/time-picker';
 import { displayTime, readTime, timeSeconds, timeFromSeconds, type ISOTimeString } from './temporal';
 
 /** Edits canonical times with inclusive second-aware bounds and minute arrow-key increments. */
-export function TimeInput(
-    props: FieldProps & {
+export function TimeInput({
+    ref,
+    ...props
+}: FieldProps &
+    Pick<ComponentProps<'input'>, 'ref' | 'onBlur' | 'aria-invalid' | 'aria-describedby'> & {
         value?: ISOTimeString;
         defaultValue?: ISOTimeString;
         onChange?: (value: ISOTimeString | undefined) => void;
@@ -15,8 +19,7 @@ export function TimeInput(
         hourFormat?: '12h' | '24h';
         increment?: number;
         placeholder?: string;
-    }
-) {
+    }) {
     const seconds = props.hasSeconds ?? false;
     const hourFormat = props.hourFormat ?? '12h';
     const min = props.min ? timeSeconds(props.min) : 0;
@@ -30,6 +33,10 @@ export function TimeInput(
 
     return (
         <TemporalField
+            ref={ref}
+            onBlur={props.onBlur}
+            aria-invalid={props['aria-invalid']}
+            aria-describedby={props['aria-describedby']}
             label={props.label}
             description={props.description}
             name={props.name}

@@ -22,7 +22,7 @@ export function FileViewer({
 function FileContent({ src, title }: { src: string; title: string }) {
     const element = useRef<HTMLDivElement>(null);
     const mount = useContext(FileViewerContext);
-    const request = useContext(FileRequestContext)?.preview;
+    const request = useContext(FileRequestContext)?.load;
     const [preview, setPreview] = useState<Blob | Error>();
 
     // The host renders native plugins without weakening the Solution sandbox.

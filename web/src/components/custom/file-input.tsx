@@ -1,27 +1,32 @@
 import { useValue } from './value';
-import { FormField } from './form-field';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
-import { useEffect, useId, useRef, useState, type DragEvent } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { InputGroup, InputGroupButton } from '@/components/shadcn/input-group';
 import { CircleAlert, CircleCheck, TriangleAlert, Upload, X } from 'lucide-react';
-import { FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { useEffect, useEffectEvent, useId, useRef, useState, type ComponentProps, type DragEvent } from 'react';
 
-type FileInputProps = FieldProps & {
-    value?: File | File[] | null;
-    onChange?: (value: File | File[] | null) => void;
-    accept?: string;
-    multiple?: boolean;
-    maxSize?: number;
-    maxFiles?: number;
-    placeholder?: string;
-    mode?: 'input' | 'dropzone';
-};
+type FileInputProps = FieldProps &
+    Pick<ComponentProps<'button'>, 'ref' | 'onBlur' | 'aria-invalid' | 'aria-describedby'> & {
+        value?: File | File[] | null;
+        onChange?: (value: File | File[] | null) => void;
+        accept?: string;
+        multiple?: boolean;
+        maxSize?: number;
+        maxFiles?: number;
+        placeholder?: string;
+        mode?: 'input' | 'dropzone';
+    };
 
 /** Selects files with explicit upload constraints; uploading remains a Solution operation. */
-export function FileInput(props: FileInputProps) {
+export function FileInput({ ref, ...props }: FileInputProps) {
     return (
         <NativeFileInput
+            ref={ref}
+            onBlur={props.onBlur}
+            aria-invalid={props['aria-invalid']}
+            aria-describedby={props['aria-describedby']}
             label={props.label}
             description={props.description}
             name={props.name}
@@ -54,12 +59,17 @@ export function NativeFileInput({
     maxFiles,
     placeholder = multiple ? 'Choose files' : 'Choose file',
     mode = 'input',
-    status
+    status,
+    ref,
+    onBlur,
+    'aria-invalid': ariaInvalid,
+    'aria-describedby': ariaDescribedBy
 }: FileInputProps & { status?: { type: 'error' | 'warning' | 'success'; message?: string } }) {
     // Keep the browser's transient FileList separate from the caller-owned selection.
-    const field = useValue(value, null, onChange);
+    const { ref: rootRef, ...field } = useValue(value, null, onChange);
     const input = useRef<HTMLInputElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
+    const triggerRef = useMergedRefs(trigger, ref);
     const id = useId();
     const [error, setError] = useState<string>();
     const [dragging, setDragging] = useState(false);
@@ -70,14 +80,27 @@ export function NativeFileInput({
     const statusType = status?.type ?? (error ? 'error' : undefined);
     const StatusIcon = statusType === 'success' ? CircleCheck : statusType === 'warning' ? TriangleAlert : CircleAlert;
 
+    // The picker is transient; only the accepted selection participates in native FormData.
+    const collect = useEffectEvent((event: FormDataEvent) => {
+        if (!name || disabled || input.current?.matches(':disabled')) return;
+
+        for (const file of files) event.formData.append(name, file);
+    });
+
+    useEffect(() => {
+        input.current?.setCustomValidity(
+            invalid ? (message ?? 'Choose a valid file.') : required && !files.length ? 'Choose a file.' : ''
+        );
+    }, [invalid, message, required, files.length]);
+
     const describedBy =
-        [description && `${id}-description`, message && `${id}-status`, required && `${id}-required`]
+        [ariaDescribedBy, description && `${id}-description`, message && `${id}-status`, required && `${id}-required`]
             .filter(Boolean)
             .join(' ') || undefined;
 
     // Canceled resets preserve both the selection and its validation feedback.
     useEffect(() => {
-        const form = field.ref.current?.closest('form');
+        const form = rootRef.current?.closest('form');
 
         if (!form) return;
 
@@ -90,9 +113,13 @@ export function NativeFileInput({
         };
 
         form.addEventListener('reset', reset);
+        form.addEventListener('formdata', collect);
 
-        return () => form.removeEventListener('reset', reset);
-    }, [field.ref]);
+        return () => {
+            form.removeEventListener('reset', reset);
+            form.removeEventListener('formdata', collect);
+        };
+    }, [rootRef]);
 
     // Filter before publishing, matching the released partial-selection and count-limit behavior.
     const select = (selected: File[]) => {
@@ -161,13 +188,8 @@ export function NativeFileInput({
     };
 
     return (
-        <FormField
-            name={name}
-            required={required}
-            disabled={disabled}
-            fieldRef={field.ref}
-            values={files}
-            serialize
+        <Field
+            ref={rootRef}
             className="view-text-field view-file-field group/file"
             data-disabled={disabled || undefined}
             data-mode={mode}
@@ -215,15 +237,16 @@ export function NativeFileInput({
                 }
             >
                 <Button
-                    ref={trigger}
+                    ref={triggerRef}
                     id={id}
                     className="view-file-trigger min-w-0 flex-1 justify-start aria-disabled:cursor-default"
                     variant="ghost"
                     type="button"
                     aria-label={fileNames ? `${label}, ${fileNames}` : label}
                     aria-disabled={disabled || undefined}
-                    aria-invalid={invalid || undefined}
+                    aria-invalid={ariaInvalid || invalid || undefined}
                     aria-describedby={describedBy}
+                    onBlur={onBlur}
                     onClick={open}
                 >
                     {(mode === 'input' || !files.length) && <Upload aria-hidden="true" />}
@@ -246,6 +269,10 @@ export function NativeFileInput({
                     disabled={disabled}
                     aria-hidden="true"
                     tabIndex={-1}
+                    onInvalid={(event) => {
+                        event.preventDefault();
+                        trigger.current?.focus();
+                    }}
                     onChange={(event) => {
                         select(Array.from(event.currentTarget.files ?? []));
                         event.currentTarget.value = '';
@@ -284,6 +311,6 @@ export function NativeFileInput({
             <span className="sr-only [clip-path:inset(50%)]" role="status">
                 {!message && fileNames ? `Selected: ${fileNames}` : ''}
             </span>
-        </FormField>
+        </Field>
     );
 }

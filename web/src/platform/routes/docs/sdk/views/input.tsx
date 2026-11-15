@@ -74,19 +74,39 @@ export default function InputPage() {
                         <InputExample />
                     </FormPreview>
                 ),
-                code: `<Field>
-  <FieldLabel htmlFor="name">Name</FieldLabel>
-  <Input id="name" name="name" defaultValue="New order" required aria-describedby="name-description" />
-  <FieldDescription id="name-description">Order name.</FieldDescription>
-</Field>
-<Field>
-  <FieldLabel htmlFor="quantity">Quantity</FieldLabel>
-  <Input id="quantity" name="quantity" type="number" defaultValue={3} min={1} max={100} step={1} required />
-</Field>
-<Field>
-  <FieldLabel htmlFor="notes">Notes</FieldLabel>
-  <Textarea id="notes" name="notes" defaultValue="Order notes" />
-</Field>`
+                code: `const schema = z.object({
+  name: z.string().trim().min(1, "Enter an order name.")
+});
+
+function OrderForm() {
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "" } });
+  const submit = useSubmit("/api/orders", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("name", values.name);
+    await submit(data);
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(save)} noValidate>
+      <FieldGroup>
+        <Controller name="name" control={form.control} render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="order-name">Name</FieldLabel>
+            <Input {...field} id="order-name" aria-invalid={fieldState.invalid} />
+            <FieldError errors={[fieldState.error]} />
+          </Field>
+        )} />
+        <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+        <Button type="button" variant="outline" onClick={() => form.reset()}>Reset</Button>
+        <FieldError errors={[form.formState.errors.root]} />
+      </FieldGroup>
+    </form>
+  );
+}`
             }}
         />
     );

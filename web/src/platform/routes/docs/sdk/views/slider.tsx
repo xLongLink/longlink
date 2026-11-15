@@ -63,12 +63,27 @@ export default function SliderPage() {
                         <SliderExample />
                     </FormPreview>
                 ),
-                code: `/** Submits progress without keeping a separate draft value. */
+                code: `/** Submits progress managed by React Hook Form. */
 export default function ProgressForm() {
+  const form = useForm({ defaultValues: { progress: 60 } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("progress", String(values.progress));
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
-      <SliderField name="progress" label="Progress" defaultValue={60} min={0} max={100} step={1} />
-    </Form>
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="progress" control={form.control} render={({ field }) => (
+        <SliderField label="Progress" value={field.value} onChange={field.onChange} min={0} max={100} step={1} />
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

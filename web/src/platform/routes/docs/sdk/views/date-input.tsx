@@ -63,10 +63,28 @@ export default function DateInputPage() {
                 ),
                 code: `/** Submits an ISO date using the themed calendar picker. */
 export default function DueDateForm() {
+  const form = useForm({ defaultValues: { due_date: "2026-10-02" } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("due_date", values.due_date);
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
-      <DateInput name="due_date" label="Due date" defaultValue="2026-10-02" required />
-    </Form>
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="due_date" control={form.control} rules={{ required: "Choose a date." }} render={({ field, fieldState }) => (
+        <div className="flex flex-col gap-2">
+          <DateInput ref={field.ref} onBlur={field.onBlur} label="Due date" value={field.value} onChange={field.onChange} aria-invalid={fieldState.invalid} aria-describedby="due-date-error" required />
+          <FieldError id="due-date-error" errors={[fieldState.error]} />
+        </div>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

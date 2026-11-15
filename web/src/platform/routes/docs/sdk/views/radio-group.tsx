@@ -38,9 +38,25 @@ export default function RadioGroupPage() {
                 ),
                 code: `/** Submits one plan using shadcn radio controls. */
 export default function PlanForm() {
+  const form = useForm({
+    resolver: zodResolver(z.object({ plan: z.enum(["solo", "team"]) })),
+    defaultValues: { plan: "team" }
+  });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("plan", values.plan);
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
-      <RadioGroup className="mx-auto w-fit" name="plan" defaultValue="team" aria-label="Plan" required>
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="plan" control={form.control} render={({ field, fieldState }) => (
+      <Field data-invalid={fieldState.invalid}>
+      <RadioGroup className="mx-auto w-fit" value={field.value} onValueChange={field.onChange} aria-label="Plan" aria-invalid={fieldState.invalid}>
         <Field orientation="horizontal">
           <RadioGroupItem id="plan-solo" value="solo" />
           <FieldLabel htmlFor="plan-solo">Solo</FieldLabel>
@@ -50,7 +66,12 @@ export default function PlanForm() {
           <FieldLabel htmlFor="plan-team">Team</FieldLabel>
         </Field>
       </RadioGroup>
-    </Form>
+      <FieldError errors={[fieldState.error]} />
+      </Field>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

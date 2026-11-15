@@ -128,16 +128,7 @@ type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
 
 /** @category Form @group DateInput */
-type DateInputProps = FieldProps & {
-    value?: ISODateString;
-    defaultValue?: ISODateString;
-    onChange?: (value: ISODateString | undefined) => void;
-    min?: ISODateString;
-    max?: ISODateString;
-    /** Additional constraints applied to the themed calendar picker. */
-    dateConstraints?: readonly ((date: Date) => boolean)[];
-    placeholder?: string;
-};
+type DateInputProps = Parameters<typeof NativeFrontend.DateInput>[0];
 
 /** Shared props for form controls. */
 type FieldProps = {
@@ -172,56 +163,12 @@ declare function Token(props: {
     onRemove?: () => void;
 }): React.JSX.Element;
 
-/** Custom scoped submission and Wizard validation with native form properties and caller-owned layout. @category Form */
-declare function Form(props: Omit<NativeFrontend.FrontendFormProps, 'action' | 'method'> & {
-    /** Solution-relative API path or a callback receiving the complete form data. */
-    action: string | ((data: FormData) => void | Promise<void>);
-    /** Write method used to submit the form; defaults to post. */
-    method?: 'post' | 'put' | 'patch' | 'delete';
-    /** Prevents submission when workflow requirements are not satisfied. */
-    submitDisabled?: boolean;
-    /** Runs after a successful write and automatic cached-data refresh. */
-    onSuccess?: (data: ViewData) => void | Promise<void>;
-}): React.JSX.Element;
-
-/** @category Form */
-declare function DateInput(props: DateInputProps): React.JSX.Element;
-
-/** @category Form */
-declare function TimeInput(
-    props: FieldProps & {
-        value?: ISOTimeString;
-        defaultValue?: ISOTimeString;
-        onChange?: (value: ISOTimeString | undefined) => void;
-        min?: ISOTimeString;
-        max?: ISOTimeString;
-        hasSeconds?: boolean;
-        hourFormat?: '12h' | '24h';
-        increment?: number;
-        placeholder?: string;
-    }
-): React.JSX.Element;
-
 /** @category Form */
 declare function CheckboxInput(
     props: FieldProps & {
         value?: boolean | 'indeterminate';
         defaultChecked?: boolean;
         onChange?: (value: boolean) => void;
-    }
-): React.JSX.Element;
-
-/** @category Form */
-declare function FileInput(
-    props: FieldProps & {
-        value?: File | File[] | null;
-        onChange?: (value: File | File[] | null) => void;
-        accept?: string;
-        multiple?: boolean;
-        maxSize?: number;
-        maxFiles?: number;
-        placeholder?: string;
-        mode?: 'input' | 'dropzone';
     }
 ): React.JSX.Element;
 
@@ -4911,6 +4858,4407 @@ type Defaultize<P, D> = P extends any ? string extends keyof P ? P : Pick<P, Exc
 type ReactManagedAttributes<C, P> = C extends {
     defaultProps: infer D;
 } ? Defaultize<P, D> : P;
+type Schema = ObjectSchema | ArraySchema | StringSchema | NumberSchema | IntegerSchema | BooleanSchema | NullSchema;
+type _JSONSchema = boolean | JSONSchema;
+type SchemaType = "object" | "array" | "string" | "number" | "boolean" | "null" | "integer";
+type JSONSchema = {
+    [k: string]: unknown;
+    $schema?: "https://json-schema.org/draft/2020-12/schema" | "http://json-schema.org/draft-07/schema#" | "http://json-schema.org/draft-04/schema#";
+    $id?: string;
+    $anchor?: string;
+    $ref?: string;
+    $dynamicRef?: string;
+    $dynamicAnchor?: string;
+    $vocabulary?: Record<string, boolean>;
+    $comment?: string;
+    $defs?: Record<string, JSONSchema>;
+    type?: SchemaType | SchemaType[];
+    additionalItems?: _JSONSchema;
+    unevaluatedItems?: _JSONSchema;
+    prefixItems?: _JSONSchema[];
+    items?: _JSONSchema | _JSONSchema[];
+    contains?: _JSONSchema;
+    additionalProperties?: _JSONSchema;
+    unevaluatedProperties?: _JSONSchema;
+    properties?: Record<string, _JSONSchema>;
+    patternProperties?: Record<string, _JSONSchema>;
+    dependentSchemas?: Record<string, _JSONSchema>;
+    propertyNames?: _JSONSchema;
+    if?: _JSONSchema;
+    then?: _JSONSchema;
+    else?: _JSONSchema;
+    allOf?: JSONSchema[];
+    anyOf?: JSONSchema[];
+    oneOf?: JSONSchema[];
+    not?: _JSONSchema;
+    multipleOf?: number;
+    maximum?: number;
+    exclusiveMaximum?: number | boolean;
+    minimum?: number;
+    exclusiveMinimum?: number | boolean;
+    maxLength?: number;
+    minLength?: number;
+    pattern?: string;
+    maxItems?: number;
+    minItems?: number;
+    uniqueItems?: boolean;
+    maxContains?: number;
+    minContains?: number;
+    maxProperties?: number;
+    minProperties?: number;
+    required?: string[];
+    dependentRequired?: Record<string, string[]>;
+    enum?: Array<string | number | boolean | null>;
+    const?: string | number | boolean | null;
+    id?: string;
+    title?: string;
+    description?: string;
+    default?: unknown;
+    deprecated?: boolean;
+    readOnly?: boolean;
+    writeOnly?: boolean;
+    nullable?: boolean;
+    examples?: unknown[];
+    format?: string;
+    contentMediaType?: string;
+    contentEncoding?: string;
+    contentSchema?: JSONSchema;
+    _prefault?: unknown;
+};
+type BaseSchema = JSONSchema;
+interface ObjectSchema extends JSONSchema {
+    type: "object";
+}
+interface ArraySchema extends JSONSchema {
+    type: "array";
+}
+interface StringSchema extends JSONSchema {
+    type: "string";
+}
+interface NumberSchema extends JSONSchema {
+    type: "number";
+}
+interface IntegerSchema extends JSONSchema {
+    type: "integer";
+}
+interface BooleanSchema extends JSONSchema {
+    type: "boolean";
+}
+interface NullSchema extends JSONSchema {
+    type: "null";
+}
+interface StandardTypedV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardTypedV1.Props<Input, Output>;
+}
+namespace StandardTypedV1 {
+    interface Props<Input = unknown, Output = Input> {
+        readonly version: 1;
+        readonly vendor: string;
+        readonly types?: Types<Input, Output> | undefined;
+    }
+    interface Types<Input = unknown, Output = Input> {
+        readonly input: Input;
+        readonly output: Output;
+    }
+    type InferInput<Schema extends StandardTypedV1> = NonNullable<Schema["~standard"]["types"]>["input"];
+    type InferOutput<Schema extends StandardTypedV1> = NonNullable<Schema["~standard"]["types"]>["output"];
+}
+interface StandardSchemaV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardSchemaV1.Props<Input, Output>;
+}
+namespace StandardSchemaV1 {
+    interface Props<Input = unknown, Output = Input> extends StandardTypedV1.Props<Input, Output> {
+        readonly validate: (value: unknown, options?: StandardSchemaV1.Options | undefined) => Result<Output> | Promise<Result<Output>>;
+    }
+    type Result<Output> = SuccessResult<Output> | FailureResult;
+    interface SuccessResult<Output> {
+        readonly value: Output;
+        readonly issues?: undefined;
+    }
+    interface Options {
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
+    interface FailureResult {
+        readonly issues: ReadonlyArray<Issue>;
+    }
+    interface Issue {
+        readonly message: string;
+        readonly path?: ReadonlyArray<PropertyKey | PathSegment> | undefined;
+    }
+    interface PathSegment {
+        readonly key: PropertyKey;
+    }
+    interface Types<Input = unknown, Output = Input> extends StandardTypedV1.Types<Input, Output> {
+    }
+    type InferInput<Schema extends StandardTypedV1> = StandardTypedV1.InferInput<Schema>;
+    type InferOutput<Schema extends StandardTypedV1> = StandardTypedV1.InferOutput<Schema>;
+}
+interface StandardJSONSchemaV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardJSONSchemaV1.Props<Input, Output>;
+}
+namespace StandardJSONSchemaV1 {
+    interface Props<Input = unknown, Output = Input> extends StandardTypedV1.Props<Input, Output> {
+        readonly jsonSchema: Converter;
+    }
+    interface Converter {
+        readonly input: (options: StandardJSONSchemaV1.Options) => Record<string, unknown>;
+        readonly output: (options: StandardJSONSchemaV1.Options) => Record<string, unknown>;
+    }
+    type Target = "draft-2020-12" | "draft-07" | "openapi-3.0" | ({} & string);
+    interface Options {
+        readonly target: Target;
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
+    interface Types<Input = unknown, Output = Input> extends StandardTypedV1.Types<Input, Output> {
+    }
+    type InferInput<Schema extends StandardTypedV1> = StandardTypedV1.InferInput<Schema>;
+    type InferOutput<Schema extends StandardTypedV1> = StandardTypedV1.InferOutput<Schema>;
+}
+interface StandardSchemaWithJSONProps<Input = unknown, Output = Input> extends StandardSchemaV1.Props<Input, Output>, StandardJSONSchemaV1.Props<Input, Output> {
+}
+const $output: unique symbol;
+type $output = typeof $output;
+const $input: unique symbol;
+type $input = typeof $input;
+type $replace<Meta, S extends $ZodType> = Meta extends $output ? output<S> : Meta extends $input ? input<S> : Meta extends (infer M)[] ? $replace<M, S>[] : Meta extends (...args: infer P) => infer R ? (...args: {
+    [K in keyof P]: $replace<P[K], S>;
+}) => $replace<R, S> : Meta extends object ? {
+    [K in keyof Meta]: $replace<Meta[K], S>;
+} : Meta;
+type MetadataType = object | undefined;
+class $ZodRegistry<Meta extends MetadataType = MetadataType, Schema extends $ZodType = $ZodType> {
+    _meta: Meta;
+    _schema: Schema;
+    _map: WeakMap<Schema, $replace<Meta, Schema>>;
+    _idmap: Map<string, Schema>;
+    add<S extends Schema>(schema: S, ..._meta: undefined extends Meta ? [
+        $replace<Meta, S>?
+    ] : [
+        $replace<Meta, S>
+    ]): this;
+    clear(): this;
+    remove(schema: Schema): this;
+    get<S extends Schema>(schema: S): $replace<Meta, S> | undefined;
+    has(schema: Schema): boolean;
+}
+interface JSONSchemaMeta {
+    id?: string | undefined;
+    title?: string | undefined;
+    description?: string | undefined;
+    deprecated?: boolean | undefined;
+    [k: string]: unknown;
+}
+interface GlobalMeta extends JSONSchemaMeta {
+}
+function registry<T extends MetadataType = MetadataType, S extends $ZodType = $ZodType>(): $ZodRegistry<T, S>;
+const globalRegistry: $ZodRegistry<GlobalMeta>;
+type Processor<T extends schemas.$ZodType = schemas.$ZodType> = (schema: T, ctx: ToJSONSchemaContext, json: JSONSchema$1.BaseSchema, params: ProcessParams) => void;
+type UnrepresentableHandler<T extends schemas.$ZodType = schemas.$ZodType> = (ctx: {
+    zodSchema: T;
+    path: (string | number)[];
+    message: string;
+}) => JSONSchema$1.BaseSchema | "throw" | "any" | undefined;
+interface JSONSchemaGeneratorParams {
+    processors: Record<string, Processor>;
+    metadata?: $ZodRegistry<Record<string, any>>;
+    target?: "draft-04" | "draft-07" | "draft-2020-12" | "openapi-3.0" | ({} & string) | undefined;
+    unrepresentable?: "throw" | "any" | UnrepresentableHandler<schemas.$ZodTypes>;
+    override?: (ctx: {
+        zodSchema: schemas.$ZodTypes;
+        jsonSchema: JSONSchema$1.BaseSchema;
+        path: (string | number)[];
+    }) => void;
+    io?: "input" | "output";
+    cycles?: "ref" | "throw";
+    reused?: "ref" | "inline";
+    external?: {
+        registry: $ZodRegistry<{
+            id?: string | undefined;
+        }>;
+        uri?: ((id: string) => string) | undefined;
+        defs: Record<string, JSONSchema$1.BaseSchema>;
+    } | undefined;
+}
+type ToJSONSchemaParams = Omit<JSONSchemaGeneratorParams, "processors" | "external">;
+interface RegistryToJSONSchemaParams extends ToJSONSchemaParams {
+    uri?: (id: string) => string;
+}
+interface ProcessParams {
+    schemaPath: schemas.$ZodType[];
+    path: (string | number)[];
+}
+interface Seen {
+    schema: JSONSchema$1.BaseSchema;
+    def?: JSONSchema$1.BaseSchema;
+    defId?: string | undefined;
+    count: number;
+    cycle?: (string | number)[] | undefined;
+    isParent?: boolean | undefined;
+    ref?: schemas.$ZodType | null;
+    path?: (string | number)[] | undefined;
+}
+interface ToJSONSchemaContext {
+    processors: Record<string, Processor>;
+    metadataRegistry: $ZodRegistry<Record<string, any>>;
+    target: "draft-04" | "draft-07" | "draft-2020-12" | "openapi-3.0" | ({} & string);
+    unrepresentable: "throw" | "any" | UnrepresentableHandler;
+    override: (ctx: {
+        zodSchema: schemas.$ZodType;
+        jsonSchema: JSONSchema$1.BaseSchema;
+        path: (string | number)[];
+    }) => void;
+    io: "input" | "output";
+    counter: number;
+    seen: Map<schemas.$ZodType, Seen>;
+    sharedDefsExtractedFor?: ToJSONSchemaContext["external"];
+    sharedEmitDoneFor?: ToJSONSchemaContext["external"];
+    cycles: "ref" | "throw";
+    reused: "ref" | "inline";
+    intersections: JSONSchema$1.BaseSchema[][];
+    deferred: (() => void)[];
+    external?: {
+        registry: $ZodRegistry<{
+            id?: string | undefined;
+        }>;
+        uri?: ((id: string) => string) | undefined;
+        defs: Record<string, JSONSchema$1.BaseSchema>;
+    } | undefined;
+}
+function initializeContext(params: JSONSchemaGeneratorParams): ToJSONSchemaContext;
+function handleUnrepresentable(schema: schemas.$ZodType, ctx: ToJSONSchemaContext, json: JSONSchema$1.BaseSchema, params: ProcessParams, message: string): boolean;
+function processSchema<T extends schemas.$ZodType>(schema: T, ctx: ToJSONSchemaContext, _params?: ProcessParams): JSONSchema$1.BaseSchema;
+function extractDefs<T extends schemas.$ZodType>(ctx: ToJSONSchemaContext, schema: T): void;
+function finalize<T extends schemas.$ZodType>(ctx: ToJSONSchemaContext, schema: T): ZodStandardJSONSchemaPayload<T>;
+type ZodStandardSchemaWithJSON<T> = StandardSchemaWithJSONProps<core.input<T>, core.output<T>>;
+interface ZodStandardJSONSchemaPayload<T> extends JSONSchema$1.BaseSchema {
+    "~standard": ZodStandardSchemaWithJSON<T>;
+}
+const createToJSONSchemaMethod: <T extends schemas.$ZodType>(schema: T, processors?: Record<string, Processor>) => (params?: ToJSONSchemaParams) => ZodStandardJSONSchemaPayload<T>;
+type StandardJSONSchemaMethodParams = Parameters<StandardJSONSchemaV1["~standard"]["jsonSchema"]["input"]>[0];
+const createStandardJSONSchemaMethod: <T extends schemas.$ZodType>(schema: T, io: "input" | "output", processors?: Record<string, Processor>) => (params?: StandardJSONSchemaMethodParams) => JSONSchema$1.BaseSchema;
+type JSONType = string | number | boolean | null | JSONType[] | {
+    [key: string]: JSONType;
+};
+type JWTAlgorithm = "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512" | "ES256" | "ES384" | "ES512" | "PS256" | "PS384" | "PS512" | "EdDSA" | (string & {});
+type HashAlgorithm = "md5" | "sha1" | "sha256" | "sha384" | "sha512";
+type HashEncoding = "hex" | "base64" | "base64url";
+type HashFormat = `${HashAlgorithm}_${HashEncoding}`;
+type IPVersion = "v4" | "v6";
+type MimeTypes = "application/json" | "application/xml" | "application/x-www-form-urlencoded" | "application/javascript" | "application/pdf" | "application/zip" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/octet-stream" | "application/graphql" | "text/html" | "text/plain" | "text/css" | "text/javascript" | "text/csv" | "image/png" | "image/jpeg" | "image/gif" | "image/svg+xml" | "image/webp" | "audio/mpeg" | "audio/ogg" | "audio/wav" | "audio/webm" | "video/mp4" | "video/webm" | "video/ogg" | "font/woff" | "font/woff2" | "font/ttf" | "font/otf" | "multipart/form-data" | (string & {});
+type ParsedTypes = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function" | "file" | "date" | "array" | "map" | "set" | "nan" | "null" | "promise";
+type AssertEqual<T, U> = (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2 ? true : false;
+type AssertNotEqual<T, U> = (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2 ? false : true;
+type AssertExtends<T, U> = T extends U ? T : never;
+type ToZodMismatch<T, S extends schemas.$ZodType> = {
+    "types do not match": {
+        expected: T;
+        received: S["_zod"]["output"];
+    };
+};
+type ToZodKeyMismatch<Expected, Received> = schemas.$ZodType & {
+    "types do not match": {
+        expected: Expected;
+        received: Received;
+    };
+};
+const toZodDummy: unique symbol;
+type ToZodNormalize<T> = [
+    T
+] extends [
+    (...args: any[]) => any
+] ? T : [
+    T
+] extends [
+    object
+] ? {
+    [K in keyof T]: ToZodNormalize<T[K]>;
+} : T | typeof toZodDummy;
+type ToZodEqual<Output, T> = AssertEqual<Output, T> extends true ? true : IsAny<Output> extends true ? false : IsAny<T> extends true ? false : AssertEqual<ToZodNormalize<Output>, ToZodNormalize<T>>;
+type ToZodShape<Shape, T> = {
+    [K in keyof Shape]: Shape[K] extends schemas.$ZodType ? K extends keyof T ? ToZodEqual<Shape[K]["_zod"]["output"], T[K]> extends true ? Shape[K] : ToZodKeyMismatch<T[K], Shape[K]["_zod"]["output"]> : ToZodKeyMismatch<never, Shape[K]["_zod"]["output"]> : Shape[K];
+} & {
+    [K in Exclude<keyof T, keyof Shape>]: ToZodKeyMismatch<T[K], never>;
+};
+type ToZodExpand<X> = {
+    [K in keyof X]: X[K];
+} & {};
+type ToZodTarget<S extends schemas.$ZodType, T> = S extends schemas.$ZodObject<infer Shape, infer Config> ? T extends object ? AssertEqual<ToZodExpand<ToZodShape<Shape, T>>, ToZodExpand<Shape>> extends true ? S & ToZodMismatch<T, S> : schemas.$ZodObject<ToZodExpand<ToZodShape<Shape, T>>, Config> : S & ToZodMismatch<T, S> : S & ToZodMismatch<T, S>;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type Omit$1<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+type OmitKeys<T, K extends string> = Pick<T, Exclude<keyof T, K>>;
+type MakePartial<T, K extends keyof T> = Omit$1<T, K> & InexactPartial$1<Pick<T, K>>;
+type MakeRequired<T, K extends keyof T> = Omit$1<T, K> & Required<Pick<T, K>>;
+type Exactly<T, X> = T & Record<Exclude<keyof X, keyof T>, never>;
+type NoUndefined<T> = T extends undefined ? never : T;
+type Whatever = {} | undefined | null;
+type Widen<T> = T extends string ? string : T extends number ? number : T extends boolean ? boolean : T extends bigint ? bigint : T;
+type LoosePartial<T extends object> = InexactPartial$1<T> & {
+    [k: string]: unknown;
+};
+type Mask<Keys extends PropertyKey> = {
+    [K in Keys]?: true;
+};
+type Writeable<T> = {
+    -readonly [P in keyof T]: T[P];
+} & {};
+type InexactPartial$1<T> = {
+    [P in keyof T]?: T[P] | undefined;
+};
+type EmptyObject = Record<string, never>;
+type BuiltIn = (((...args: any[]) => any) | (new (...args: any[]) => any)) | {
+    readonly [Symbol.toStringTag]: string;
+} | Date | Error | Generator | Promise<unknown> | RegExp;
+type MakeReadonly<T> = T extends Map<infer K, infer V> ? ReadonlyMap<K, V> : T extends Set<infer V> ? ReadonlySet<V> : T extends [
+    infer Head,
+    ...infer Tail
+] ? readonly [
+    Head,
+    ...Tail
+] : T extends Array<infer V> ? ReadonlyArray<V> : T extends BuiltIn ? T : Readonly<T>;
+type SomeObject = Record<PropertyKey, any>;
+type Identity<T> = T;
+type Flatten<T> = Identity<{
+    [k in keyof T]: T[k];
+}>;
+type Mapped<T> = {
+    [k in keyof T]: T[k];
+};
+type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+type NoNeverKeys<T> = {
+    [k in keyof T]: [
+        T[k]
+    ] extends [
+        never
+    ] ? never : k;
+}[keyof T];
+type NoNever<T> = Identity<{
+    [k in NoNeverKeys<T>]: k extends keyof T ? T[k] : never;
+}>;
+type Extend<A extends SomeObject, B extends SomeObject> = Flatten<keyof A & keyof B extends never ? A & B : {
+    [K in keyof A as K extends keyof B ? never : K]: A[K];
+} & {
+    [K in keyof B]: B[K];
+}>;
+type TupleItems = ReadonlyArray<schemas.SomeType>;
+type AnyFunc = (...args: any[]) => any;
+type IsProp<T, K extends keyof T> = T[K] extends AnyFunc ? never : K;
+type MaybeAsync<T> = T | Promise<T>;
+type KeyOf<T> = keyof OmitIndexSignature<T>;
+type OmitIndexSignature<T> = {
+    [K in keyof T as string extends K ? never : K extends string ? K : never]: T[K];
+};
+type ExtractIndexSignature<T> = {
+    [K in keyof T as string extends K ? K : K extends string ? never : K]: T[K];
+};
+type Keys<T extends object> = keyof OmitIndexSignature<T>;
+type SchemaClass<T extends schemas.SomeType> = {
+    new (def: T["_zod"]["def"]): T;
+};
+type EnumValue = string | number;
+type EnumLike = Readonly<Record<string, EnumValue>>;
+type ToEnum<T extends EnumValue> = Flatten<{
+    [k in T]: k;
+}>;
+type KeysEnum<T extends object> = ToEnum<Exclude<keyof T, symbol>>;
+type KeysArray<T extends object> = Flatten<(keyof T & string)[]>;
+type Literal = string | number | bigint | boolean | null | undefined;
+type LiteralArray = Array<Literal>;
+type Primitive = string | number | symbol | bigint | boolean | null | undefined;
+type PrimitiveArray = Array<Primitive>;
+type HasSize = {
+    size: number;
+};
+type HasLength = {
+    length: number;
+};
+type Numeric = number | bigint | Date;
+type SafeParseResult<T> = SafeParseSuccess<T> | SafeParseError<T>;
+type SafeParseSuccess<T> = {
+    success: true;
+    data: T;
+    error?: never;
+};
+type SafeParseError<T> = {
+    success: false;
+    data?: never;
+    error: $ZodError<T>;
+};
+type PropValues = Record<string, Set<Primitive>>;
+type PrimitiveSet = Set<Primitive>;
+function assertEqual<A, B>(val: AssertEqual<A, B>): AssertEqual<A, B>;
+function assertNotEqual<A, B>(val: AssertNotEqual<A, B>): AssertNotEqual<A, B>;
+function toZod<T>(): <S extends schemas.$ZodType>(schema: ToZodEqual<S["_zod"]["output"], T> extends true ? S : ToZodTarget<S, T>) => S;
+function assertIs<T>(_arg: T): void;
+function assertNever(_x: never): never;
+function assert<T>(_: any): asserts _ is T;
+function getEnumValues(entries: EnumLike): EnumValue[];
+function joinValues<T extends Primitive[]>(array: T, separator?: string): string;
+function jsonStringifyReplacer(_: string, value: any): any;
+function cached<T>(getter: () => T): {
+    value: T;
+};
+function nullish(input: any): boolean;
+function cleanRegex(source: string): string;
+function floatSafeRemainder(val: number, step: number): number;
+function defineLazy<T, K extends keyof T>(object: T, key: K, getter: () => T[K]): void;
+function objectClone(obj: object): any;
+function assignProp<T extends object, K extends PropertyKey>(target: T, prop: K, value: K extends keyof T ? T[K] : any): void;
+interface ShapeGetter {
+    (): Record<PropertyKey, any>;
+    raw: Record<PropertyKey, any>;
+}
+function rawShape(def: any): Record<PropertyKey, any> | undefined;
+function mergeDefs(...defs: Record<string, any>[]): any;
+function cloneDef(schema: schemas.$ZodType): any;
+function getElementAtPath(obj: any, path: (string | number)[] | null | undefined): any;
+function promiseAllObject<T extends object>(promisesObj: T): Promise<{
+    [k in keyof T]: Awaited<T[k]>;
+}>;
+function randomString(length?: number): string;
+function esc(str: string): string;
+function slugify(input: string): string;
+const captureStackTrace: (targetObject: object, constructorOpt?: Function) => void;
+function isObject(data: any): data is Record<PropertyKey, unknown>;
+const allowsEval: {
+    value: boolean;
+};
+function isPlainObject(o: any): o is Record<PropertyKey, unknown>;
+function shallowClone(o: any): any;
+function numKeys(data: any): number;
+const getParsedType: (data: any) => ParsedTypes;
+const propertyKeyTypes: Set<string>;
+const primitiveTypes: Set<string>;
+function escapeRegex(str: string): string;
+function clone<T extends schemas.$ZodType>(inst: T, def?: T["_zod"]["def"], params?: {
+    parent: boolean;
+}): T;
+type EmptyToNever<T> = keyof T extends never ? never : T;
+type Normalize<T> = T extends undefined ? never : T extends Record<any, any> ? Flatten<{
+    [k in keyof Omit$1<T, "error" | "message">]: T[k];
+} & ("error" extends keyof T ? {
+    error?: Exclude<T["error"], string>;
+} : unknown)> : never;
+function normalizeParams<T>(_params: T): Normalize<T>;
+function createTransparentProxy<T extends object>(getter: () => T): T;
+function stringifyPrimitive(value: any): string;
+function optionalKeys(shape: schemas.$ZodShape): string[];
+type CleanKey<T extends PropertyKey> = T extends `?${infer K}` ? K : T extends `${infer K}?` ? K : T;
+type ToCleanMap<T extends schemas.$ZodLooseShape> = {
+    [k in keyof T]: k extends `?${infer K}` ? K : k extends `${infer K}?` ? K : k;
+};
+type FromCleanMap<T extends schemas.$ZodLooseShape> = {
+    [k in keyof T as k extends `?${infer K}` ? K : k extends `${infer K}?` ? K : k]: k;
+};
+const NUMBER_FORMAT_RANGES: Record<$ZodNumberFormats, [
+    number,
+    number
+]>;
+const BIGINT_FORMAT_RANGES: Record<$ZodBigIntFormats, [
+    bigint,
+    bigint
+]>;
+function pick(schema: schemas.$ZodObject, mask: Record<string, unknown>): any;
+function omit(schema: schemas.$ZodObject, mask: object): any;
+function extend(schema: schemas.$ZodObject, shape: schemas.$ZodShape): any;
+function safeExtend(schema: schemas.$ZodObject, shape: schemas.$ZodShape): any;
+function merge(a: schemas.$ZodObject, b: schemas.$ZodObject): any;
+function partial(Class: SchemaClass<schemas.$ZodOptional> | null, schema: schemas.$ZodObject, mask: object | undefined, name?: string): any;
+function required(Class: SchemaClass<schemas.$ZodNonOptional>, schema: schemas.$ZodObject, mask: object | undefined): any;
+type Constructor<T, Def extends any[] = any[]> = new (...args: Def) => T;
+function aborted(x: schemas.ParsePayload, startIndex?: number): boolean;
+function explicitlyAborted(x: schemas.ParsePayload, startIndex?: number): boolean;
+function prefixIssues(path: PropertyKey, issues: $ZodRawIssue[]): $ZodRawIssue[];
+function unwrapMessage(message: string | {
+    message: string;
+} | undefined | null): string | undefined;
+function sizeCaps(defChecks: $ZodCheck<never>[] | undefined): [
+    number,
+    $ZodCheck<never>
+][];
+function attachSchema(issues: $ZodRawIssue[], start: number, inst: schemas.$ZodType): void;
+function finalizeIssue(iss: $ZodRawIssue, ctx: schemas.ParseContextInternal | undefined, config: $ZodConfig): $ZodIssue;
+function getSizableOrigin(input: any): "set" | "map" | "file" | "unknown";
+function codePointLength(str: string): number;
+function getLengthableOrigin(input: any): "array" | "string" | "unknown";
+function parsedType(data: unknown): $ZodInvalidTypeExpected;
+function issue(_iss: string, input: any, inst: any): $ZodRawIssue;
+function issue(_iss: $ZodRawIssue): $ZodRawIssue;
+function cleanEnum(obj: Record<string, EnumValue>): EnumValue[];
+function base64ToUint8Array(base64: string): InstanceType<typeof Uint8Array>;
+function uint8ArrayToBase64(bytes: Uint8Array): string;
+function base64urlToUint8Array(base64url: string): InstanceType<typeof Uint8Array>;
+function uint8ArrayToBase64url(bytes: Uint8Array): string;
+function hexToUint8Array(hex: string): InstanceType<typeof Uint8Array>;
+function uint8ArrayToHex(bytes: Uint8Array): string;
+abstract class Class {
+    constructor(..._args: any[]);
+}
+function members(proto: object, table: object): void;
+function own<T>(inst: object, key: PropertyKey, value: T, enumerable?: boolean): T;
+function hide<T>(inst: object, key: PropertyKey, value: T): T;
+function derived<T>(computes: {
+    [K in keyof T]?: (inst: T) => T[K];
+}, table: ProtoOf<T>): ProtoOf<T>;
+type ProtoOf<T> = {
+    [K in keyof T]?: (T[K] extends (...args: infer A) => infer R ? (...args: A) => R : T[K]) | undefined;
+} & ThisType<T>;
+function defineLazyInternal<T extends {
+    _zod: any;
+}>(inst: T, key: string, compute: (zod: T["_zod"]) => unknown): void;
+function installLazyProp(inst: object, key: string, make: (self: any) => unknown, enumerable: boolean): void;
+const CONSTANT_CATCH = "~constantCatch";
+function constantCatch<T>(value: T): () => T;
+const version: {
+    readonly major: 4;
+    readonly minor: 6;
+    readonly patch: number;
+};
+interface ParseContext<T extends $ZodIssueBase = never> {
+    readonly error?: $ZodErrorMap<T>;
+    readonly reportInput?: boolean;
+    readonly jitless?: boolean;
+}
+interface ParseContextInternal<T extends $ZodIssueBase = never> extends ParseContext<T> {
+    readonly async?: boolean | undefined;
+    readonly direction?: "forward" | "backward";
+    readonly skipChecks?: boolean;
+    readonly abortEarly?: boolean;
+}
+interface $ZodMemoizer {
+    attach(inst: $ZodType): void;
+    guard(inst: $ZodType): void;
+    alloc<T extends object>(inst: $ZodType, payload: ParsePayload, empty: T, ctx: ParseContextInternal): T;
+}
+interface ParsePayload<T = unknown> {
+    value: T;
+    issues: $ZodRawIssue[];
+    aborted?: boolean;
+    memo?: boolean | undefined;
+}
+type CheckFn<T> = (input: ParsePayload<T>) => util.MaybeAsync<void>;
+interface $ZodTypeDef {
+    type: "string" | "number" | "int" | "boolean" | "bigint" | "symbol" | "null" | "undefined" | "void" | "never" | "any" | "unknown" | "date" | "object" | "record" | "file" | "array" | "tuple" | "union" | "intersection" | "map" | "set" | "enum" | "literal" | "nullable" | "optional" | "nonoptional" | "success" | "transform" | "default" | "prefault" | "catch" | "nan" | "pipe" | "readonly" | "template_literal" | "promise" | "lazy" | "function" | "custom";
+    error?: $ZodErrorMap<never> | undefined;
+    checks?: $ZodCheck<never>[];
+}
+interface _$ZodTypeInternals {
+    version: typeof version;
+    def: $ZodTypeDef;
+    deferred: util.AnyFunc[] | undefined;
+    run(payload: ParsePayload<any>, ctx: ParseContextInternal): util.MaybeAsync<ParsePayload>;
+    parse(payload: ParsePayload<any>, ctx: ParseContextInternal): util.MaybeAsync<ParsePayload>;
+    traits: Set<string>;
+    optin?: "optional" | "defaulted" | undefined;
+    optout?: "optional" | undefined;
+    values?: util.PrimitiveSet | undefined;
+    propValues?: util.PropValues | undefined;
+    pattern: RegExp | undefined;
+    constr: new (def: any) => $ZodType;
+    bag: Record<string, unknown>;
+    isst: $ZodIssueBase;
+    processJSONSchema?: ((ctx: ToJSONSchemaContext, json: JSONSchema$1.BaseSchema, params: ProcessParams) => void) | undefined;
+    toJSONSchema?: () => unknown;
+    parent?: $ZodType | undefined;
+}
+interface $ZodTypeInternals<O = unknown, I = unknown> extends _$ZodTypeInternals {
+    output: O;
+    input: I;
+}
+type $ZodStandardSchema<T> = StandardSchemaV1.Props<input<T>, output<T>>;
+type SomeType = {
+    _zod: _$ZodTypeInternals;
+};
+interface $ZodType<O = unknown, I = unknown, Internals extends $ZodTypeInternals<O, I> = $ZodTypeInternals<O, I>> {
+    _zod: Internals;
+    "~standard": $ZodStandardSchema<this>;
+}
+interface _$ZodType<T extends $ZodTypeInternals = $ZodTypeInternals> extends $ZodType<T["output"], T["input"], T> {
+}
+const $ZodType: $constructor<$ZodType>;
+function standardProps(inst: $ZodType): StandardSchemaV1.Props<any, any>;
+interface $ZodStringDef extends $ZodTypeDef {
+    type: "string";
+    coerce?: boolean;
+    checks?: $ZodCheck<string>[];
+}
+interface $ZodStringInternals<Input> extends $ZodTypeInternals<string, Input> {
+    def: $ZodStringDef;
+    pattern: RegExp;
+    isst: $ZodIssueInvalidType;
+    bag: util.LoosePartial<{
+        minimum: number;
+        maximum: number;
+        patterns: Set<RegExp>;
+        format: string;
+        contentEncoding: string;
+        laxFormat: boolean;
+    }>;
+}
+interface $ZodString<Input = unknown> extends _$ZodType<$ZodStringInternals<Input>> {
+}
+const $ZodString: $constructor<$ZodString>;
+interface $ZodStringFormatDef<Format extends string = string> extends $ZodStringDef, $ZodCheckStringFormatDef<Format> {
+}
+interface $ZodStringFormatInternals<Format extends string = string> extends $ZodStringInternals<string>, $ZodCheckStringFormatInternals {
+    def: $ZodStringFormatDef<Format>;
+}
+interface $ZodStringFormat<Format extends string = string> extends $ZodType {
+    _zod: $ZodStringFormatInternals<Format>;
+}
+const $ZodStringFormat: $constructor<$ZodStringFormat>;
+interface $ZodGUIDDef extends $ZodStringFormatDef<"guid"> {
+}
+interface $ZodGUIDInternals extends $ZodStringFormatInternals<"guid"> {
+}
+interface $ZodGUID extends $ZodType {
+    _zod: $ZodGUIDInternals;
+}
+const $ZodGUID: $constructor<$ZodGUID>;
+interface $ZodUUIDDef extends $ZodStringFormatDef<"uuid"> {
+    version?: "v1" | "v2" | "v3" | "v4" | "v5" | "v6" | "v7" | "v8";
+}
+interface $ZodUUIDInternals extends $ZodStringFormatInternals<"uuid"> {
+    def: $ZodUUIDDef;
+}
+interface $ZodUUID extends $ZodType {
+    _zod: $ZodUUIDInternals;
+}
+const $ZodUUID: $constructor<$ZodUUID>;
+interface $ZodEmailDef extends $ZodStringFormatDef<"email"> {
+}
+interface $ZodEmailInternals extends $ZodStringFormatInternals<"email"> {
+}
+interface $ZodEmail extends $ZodType {
+    _zod: $ZodEmailInternals;
+}
+const $ZodEmail: $constructor<$ZodEmail>;
+interface $ZodURLDef extends $ZodStringFormatDef<"url"> {
+    hostname?: RegExp | undefined;
+    protocol?: RegExp | undefined;
+    normalize?: boolean | undefined;
+}
+interface $ZodURLInternals extends $ZodStringFormatInternals<"url"> {
+    def: $ZodURLDef;
+}
+interface $ZodURL extends $ZodType {
+    _zod: $ZodURLInternals;
+}
+const URL_BAD_FORMAT = 1;
+const URL_UNPARSEABLE = 2;
+function canParseURL(input: string): boolean;
+function validateURL(trimmed: string, def: Pick<$ZodURLDef, "protocol" | "hostname" | "normalize">): URL | true | typeof URL_BAD_FORMAT | typeof URL_UNPARSEABLE;
+function parseURLObject(trimmed: string, def: Pick<$ZodURLDef, "protocol" | "normalize">): URL | typeof URL_BAD_FORMAT | typeof URL_UNPARSEABLE;
+function stripTabAndNewline(value: string): string;
+function urlHostnameOk(url: URL, hostname: RegExp): boolean;
+function urlProtocolOk(url: URL, protocol: RegExp): boolean;
+const $ZodURL: $constructor<$ZodURL>;
+interface $ZodEmojiDef extends $ZodStringFormatDef<"emoji"> {
+}
+interface $ZodEmojiInternals extends $ZodStringFormatInternals<"emoji"> {
+}
+interface $ZodEmoji extends $ZodType {
+    _zod: $ZodEmojiInternals;
+}
+const $ZodEmoji: $constructor<$ZodEmoji>;
+interface $ZodNanoIDDef extends $ZodStringFormatDef<"nanoid"> {
+    length?: number | undefined;
+}
+interface $ZodNanoIDInternals extends $ZodStringFormatInternals<"nanoid"> {
+    def: $ZodNanoIDDef;
+}
+interface $ZodNanoID extends $ZodType {
+    _zod: $ZodNanoIDInternals;
+}
+const $ZodNanoID: $constructor<$ZodNanoID>;
+interface $ZodCUIDDef extends $ZodStringFormatDef<"cuid"> {
+}
+interface $ZodCUIDInternals extends $ZodStringFormatInternals<"cuid"> {
+}
+interface $ZodCUID extends $ZodType {
+    _zod: $ZodCUIDInternals;
+}
+const $ZodCUID: $constructor<$ZodCUID>;
+interface $ZodCUID2Def extends $ZodStringFormatDef<"cuid2"> {
+}
+interface $ZodCUID2Internals extends $ZodStringFormatInternals<"cuid2"> {
+}
+interface $ZodCUID2 extends $ZodType {
+    _zod: $ZodCUID2Internals;
+}
+const $ZodCUID2: $constructor<$ZodCUID2>;
+interface $ZodULIDDef extends $ZodStringFormatDef<"ulid"> {
+}
+interface $ZodULIDInternals extends $ZodStringFormatInternals<"ulid"> {
+}
+interface $ZodULID extends $ZodType {
+    _zod: $ZodULIDInternals;
+}
+const $ZodULID: $constructor<$ZodULID>;
+interface $ZodXIDDef extends $ZodStringFormatDef<"xid"> {
+}
+interface $ZodXIDInternals extends $ZodStringFormatInternals<"xid"> {
+}
+interface $ZodXID extends $ZodType {
+    _zod: $ZodXIDInternals;
+}
+const $ZodXID: $constructor<$ZodXID>;
+interface $ZodKSUIDDef extends $ZodStringFormatDef<"ksuid"> {
+}
+interface $ZodKSUIDInternals extends $ZodStringFormatInternals<"ksuid"> {
+}
+interface $ZodKSUID extends $ZodType {
+    _zod: $ZodKSUIDInternals;
+}
+const $ZodKSUID: $constructor<$ZodKSUID>;
+interface $ZodISODateTimeDef extends $ZodStringFormatDef<"datetime"> {
+    precision: number | null;
+    offset: boolean;
+    local: boolean;
+}
+interface $ZodISODateTimeInternals extends $ZodStringFormatInternals {
+    def: $ZodISODateTimeDef;
+}
+interface $ZodISODateTime extends $ZodType {
+    _zod: $ZodISODateTimeInternals;
+}
+const $ZodISODateTime: $constructor<$ZodISODateTime>;
+interface $ZodISODateDef extends $ZodStringFormatDef<"date"> {
+}
+interface $ZodISODateInternals extends $ZodStringFormatInternals<"date"> {
+}
+interface $ZodISODate extends $ZodType {
+    _zod: $ZodISODateInternals;
+}
+const $ZodISODate: $constructor<$ZodISODate>;
+interface $ZodISOTimeDef extends $ZodStringFormatDef<"time"> {
+    precision?: number | null;
+}
+interface $ZodISOTimeInternals extends $ZodStringFormatInternals<"time"> {
+    def: $ZodISOTimeDef;
+}
+interface $ZodISOTime extends $ZodType {
+    _zod: $ZodISOTimeInternals;
+}
+const $ZodISOTime: $constructor<$ZodISOTime>;
+interface $ZodISODurationDef extends $ZodStringFormatDef<"duration"> {
+}
+interface $ZodISODurationInternals extends $ZodStringFormatInternals<"duration"> {
+}
+interface $ZodISODuration extends $ZodType {
+    _zod: $ZodISODurationInternals;
+}
+const $ZodISODuration: $constructor<$ZodISODuration>;
+interface $ZodIPv4Def extends $ZodStringFormatDef<"ipv4"> {
+    version?: "v4";
+}
+interface $ZodIPv4Internals extends $ZodStringFormatInternals<"ipv4"> {
+    def: $ZodIPv4Def;
+}
+interface $ZodIPv4 extends $ZodType {
+    _zod: $ZodIPv4Internals;
+}
+const $ZodIPv4: $constructor<$ZodIPv4>;
+interface $ZodIPv6Def extends $ZodStringFormatDef<"ipv6"> {
+    version?: "v6";
+}
+interface $ZodIPv6Internals extends $ZodStringFormatInternals<"ipv6"> {
+    def: $ZodIPv6Def;
+}
+interface $ZodIPv6 extends $ZodType {
+    _zod: $ZodIPv6Internals;
+}
+function isValidIPv6(value: string): boolean;
+const $ZodIPv6: $constructor<$ZodIPv6>;
+interface $ZodMACDef extends $ZodStringFormatDef<"mac"> {
+    delimiter?: string;
+}
+interface $ZodMACInternals extends $ZodStringFormatInternals<"mac"> {
+    def: $ZodMACDef;
+}
+interface $ZodMAC extends $ZodType {
+    _zod: $ZodMACInternals;
+}
+const $ZodMAC: $constructor<$ZodMAC>;
+interface $ZodCIDRv4Def extends $ZodStringFormatDef<"cidrv4"> {
+    version?: "v4";
+}
+interface $ZodCIDRv4Internals extends $ZodStringFormatInternals<"cidrv4"> {
+    def: $ZodCIDRv4Def;
+}
+interface $ZodCIDRv4 extends $ZodType {
+    _zod: $ZodCIDRv4Internals;
+}
+const $ZodCIDRv4: $constructor<$ZodCIDRv4>;
+interface $ZodCIDRv6Def extends $ZodStringFormatDef<"cidrv6"> {
+    version?: "v6";
+}
+interface $ZodCIDRv6Internals extends $ZodStringFormatInternals<"cidrv6"> {
+    def: $ZodCIDRv6Def;
+}
+interface $ZodCIDRv6 extends $ZodType {
+    _zod: $ZodCIDRv6Internals;
+}
+function isValidCIDRv6(value: string): boolean;
+const $ZodCIDRv6: $constructor<$ZodCIDRv6>;
+function isValidBase64(data: string): boolean;
+interface $ZodBase64Def extends $ZodStringFormatDef<"base64"> {
+}
+interface $ZodBase64Internals extends $ZodStringFormatInternals<"base64"> {
+}
+interface $ZodBase64 extends $ZodType {
+    _zod: $ZodBase64Internals;
+}
+const base64Charset: RegExp;
+const $ZodBase64: $constructor<$ZodBase64>;
+const base64urlCharset: RegExp;
+function isValidBase64URL(data: string): boolean;
+interface $ZodBase64URLDef extends $ZodStringFormatDef<"base64url"> {
+}
+interface $ZodBase64URLInternals extends $ZodStringFormatInternals<"base64url"> {
+}
+interface $ZodBase64URL extends $ZodType {
+    _zod: $ZodBase64URLInternals;
+}
+const $ZodBase64URL: $constructor<$ZodBase64URL>;
+interface $ZodE164Def extends $ZodStringFormatDef<"e164"> {
+}
+interface $ZodE164Internals extends $ZodStringFormatInternals<"e164"> {
+}
+interface $ZodE164 extends $ZodType {
+    _zod: $ZodE164Internals;
+}
+const $ZodE164: $constructor<$ZodE164>;
+function isValidCreditCard(input: string): boolean;
+interface $ZodCreditCardDef extends $ZodStringFormatDef<"credit_card"> {
+}
+interface $ZodCreditCardInternals extends $ZodStringFormatInternals<"credit_card"> {
+    def: $ZodCreditCardDef;
+}
+interface $ZodCreditCard extends $ZodType {
+    _zod: $ZodCreditCardInternals;
+}
+const $ZodCreditCard: $constructor<$ZodCreditCard>;
+function isValidIBAN(input: string): boolean;
+interface $ZodIBANDef extends $ZodStringFormatDef<"iban"> {
+}
+interface $ZodIBANInternals extends $ZodStringFormatInternals<"iban"> {
+    def: $ZodIBANDef;
+}
+interface $ZodIBAN extends $ZodType {
+    _zod: $ZodIBANInternals;
+}
+const $ZodIBAN: $constructor<$ZodIBAN>;
+function isValidJWT(token: string, algorithm?: util.JWTAlgorithm | null): boolean;
+interface $ZodJWTDef extends $ZodStringFormatDef<"jwt"> {
+    alg?: util.JWTAlgorithm | undefined;
+}
+interface $ZodJWTInternals extends $ZodStringFormatInternals<"jwt"> {
+    def: $ZodJWTDef;
+}
+interface $ZodJWT extends $ZodType {
+    _zod: $ZodJWTInternals;
+}
+const $ZodJWT: $constructor<$ZodJWT>;
+interface $ZodCustomStringFormatDef<Format extends string = string> extends $ZodStringFormatDef<Format> {
+    fn: (val: string) => unknown;
+}
+interface $ZodCustomStringFormatInternals<Format extends string = string> extends $ZodStringFormatInternals<Format> {
+    def: $ZodCustomStringFormatDef<Format>;
+}
+interface $ZodCustomStringFormat<Format extends string = string> extends $ZodStringFormat<Format> {
+    _zod: $ZodCustomStringFormatInternals<Format>;
+}
+const $ZodCustomStringFormat: $constructor<$ZodCustomStringFormat>;
+interface $ZodNumberDef extends $ZodTypeDef {
+    type: "number";
+    coerce?: boolean;
+}
+interface $ZodNumberInternals<Input = unknown> extends $ZodTypeInternals<number, Input> {
+    def: $ZodNumberDef;
+    pattern: RegExp;
+    isst: $ZodIssueInvalidType;
+    bag: util.LoosePartial<{
+        minimum: number;
+        maximum: number;
+        exclusiveMinimum: number;
+        exclusiveMaximum: number;
+        format: string;
+        pattern: RegExp;
+    }>;
+}
+interface $ZodNumber<Input = unknown> extends $ZodType {
+    _zod: $ZodNumberInternals<Input>;
+}
+const $ZodNumber: $constructor<$ZodNumber>;
+interface $ZodNumberFormatDef<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodNumberDef, $ZodCheckNumberFormatDef<Format> {
+}
+interface $ZodNumberFormatInternals<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodNumberInternals<number>, $ZodCheckNumberFormatInternals<Format> {
+    def: $ZodNumberFormatDef<Format>;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodNumberFormat<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodType {
+    _zod: $ZodNumberFormatInternals<Format>;
+}
+const $ZodNumberFormat: $constructor<$ZodNumberFormat>;
+interface $ZodBooleanDef extends $ZodTypeDef {
+    type: "boolean";
+    coerce?: boolean;
+    checks?: $ZodCheck<boolean>[];
+}
+interface $ZodBooleanInternals<T = unknown> extends $ZodTypeInternals<boolean, T> {
+    pattern: RegExp;
+    def: $ZodBooleanDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodBoolean<T = unknown> extends $ZodType {
+    _zod: $ZodBooleanInternals<T>;
+}
+const $ZodBoolean: $constructor<$ZodBoolean>;
+interface $ZodBigIntDef extends $ZodTypeDef {
+    type: "bigint";
+    coerce?: boolean;
+}
+interface $ZodBigIntInternals<T = unknown> extends $ZodTypeInternals<bigint, T> {
+    pattern: RegExp;
+    def: $ZodBigIntDef;
+    isst: $ZodIssueInvalidType;
+    bag: util.LoosePartial<{
+        minimum: bigint;
+        maximum: bigint;
+        format: string;
+    }>;
+}
+interface $ZodBigInt<T = unknown> extends $ZodType {
+    _zod: $ZodBigIntInternals<T>;
+}
+const $ZodBigInt: $constructor<$ZodBigInt>;
+interface $ZodBigIntFormatDef<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodBigIntDef, $ZodCheckBigIntFormatDef<Format> {
+    check: "bigint_format";
+}
+interface $ZodBigIntFormatInternals<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodBigIntInternals<bigint>, $ZodCheckBigIntFormatInternals<Format> {
+    def: $ZodBigIntFormatDef<Format>;
+}
+interface $ZodBigIntFormat<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodType {
+    _zod: $ZodBigIntFormatInternals<Format>;
+}
+const $ZodBigIntFormat: $constructor<$ZodBigIntFormat>;
+interface $ZodSymbolDef extends $ZodTypeDef {
+    type: "symbol";
+}
+interface $ZodSymbolInternals extends $ZodTypeInternals<symbol, symbol> {
+    def: $ZodSymbolDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodSymbol extends $ZodType {
+    _zod: $ZodSymbolInternals;
+}
+const $ZodSymbol: $constructor<$ZodSymbol>;
+interface $ZodUndefinedDef extends $ZodTypeDef {
+    type: "undefined";
+}
+interface $ZodUndefinedInternals extends $ZodTypeInternals<undefined, undefined> {
+    pattern: RegExp;
+    def: $ZodUndefinedDef;
+    values: util.PrimitiveSet;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodUndefined extends $ZodType {
+    _zod: $ZodUndefinedInternals;
+}
+const $ZodUndefined: $constructor<$ZodUndefined>;
+interface $ZodNullDef extends $ZodTypeDef {
+    type: "null";
+}
+interface $ZodNullInternals extends $ZodTypeInternals<null, null> {
+    pattern: RegExp;
+    def: $ZodNullDef;
+    values: util.PrimitiveSet;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodNull extends $ZodType {
+    _zod: $ZodNullInternals;
+}
+const $ZodNull: $constructor<$ZodNull>;
+interface $ZodAnyDef extends $ZodTypeDef {
+    type: "any";
+}
+interface $ZodAnyInternals extends $ZodTypeInternals<any, any> {
+    def: $ZodAnyDef;
+    isst: never;
+}
+interface $ZodAny extends $ZodType {
+    _zod: $ZodAnyInternals;
+}
+const $ZodAny: $constructor<$ZodAny>;
+interface $ZodUnknownDef extends $ZodTypeDef {
+    type: "unknown";
+}
+interface $ZodUnknownInternals extends $ZodTypeInternals<unknown, unknown> {
+    def: $ZodUnknownDef;
+    isst: never;
+}
+interface $ZodUnknown extends $ZodType {
+    _zod: $ZodUnknownInternals;
+}
+const $ZodUnknown: $constructor<$ZodUnknown>;
+interface $ZodNeverDef extends $ZodTypeDef {
+    type: "never";
+}
+interface $ZodNeverInternals extends $ZodTypeInternals<never, never> {
+    def: $ZodNeverDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodNever extends $ZodType {
+    _zod: $ZodNeverInternals;
+}
+const $ZodNever: $constructor<$ZodNever>;
+interface $ZodVoidDef extends $ZodTypeDef {
+    type: "void";
+}
+interface $ZodVoidInternals extends $ZodTypeInternals<void, void> {
+    def: $ZodVoidDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodVoid extends $ZodType {
+    _zod: $ZodVoidInternals;
+}
+const $ZodVoid: $constructor<$ZodVoid>;
+interface $ZodDateDef extends $ZodTypeDef {
+    type: "date";
+    coerce?: boolean;
+}
+interface $ZodDateInternals<T = unknown> extends $ZodTypeInternals<Date, T> {
+    def: $ZodDateDef;
+    isst: $ZodIssueInvalidType;
+    bag: util.LoosePartial<{
+        minimum: Date;
+        maximum: Date;
+        format: string;
+    }>;
+}
+interface $ZodDate<T = unknown> extends $ZodType {
+    _zod: $ZodDateInternals<T>;
+}
+const $ZodDate: $constructor<$ZodDate>;
+interface $ZodArrayDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "array";
+    element: T;
+}
+interface $ZodArrayInternals<T extends SomeType = $ZodType> extends _$ZodTypeInternals {
+    def: $ZodArrayDef<T>;
+    isst: $ZodIssueInvalidType;
+    output: output<T>[];
+    input: input<T>[];
+}
+interface $ZodArray<T extends SomeType = $ZodType> extends $ZodType<any, any, $ZodArrayInternals<T>> {
+}
+const $ZodArray: $constructor<$ZodArray>;
+type OptionalOutSchema = {
+    _zod: {
+        optout: "optional";
+    };
+};
+type OptionalInSchema = {
+    _zod: {
+        optin: "optional" | "defaulted";
+    };
+};
+type $InferObjectOutput<T extends $ZodLooseShape, Extra extends Record<string, unknown>> = string extends keyof T ? util.IsAny<T[keyof T]> extends true ? Record<string, unknown> : {
+    [k in string]: output<T[keyof T]>;
+} : keyof (T & Extra) extends never ? Record<string, never> : util.Prettify<{
+    -readonly [k in keyof T as T[k] extends OptionalOutSchema ? never : k]: T[k]["_zod"]["output"];
+} & {
+    -readonly [k in keyof T as T[k] extends OptionalOutSchema ? k : never]?: T[k]["_zod"]["output"];
+} & Extra>;
+type $InferObjectInput<T extends $ZodLooseShape, Extra extends Record<string, unknown>> = string extends keyof T ? util.IsAny<T[keyof T]> extends true ? Record<string, unknown> : {
+    [k in string]: input<T[keyof T]>;
+} : keyof (T & Extra) extends never ? Record<string, never> : util.Prettify<{
+    -readonly [k in keyof T as T[k] extends OptionalInSchema ? never : k]: T[k]["_zod"]["input"];
+} & {
+    -readonly [k in keyof T as T[k] extends OptionalInSchema ? k : never]?: T[k]["_zod"]["input"];
+} & Extra>;
+type $ZodObjectConfig = {
+    out: Record<string, unknown>;
+    in: Record<string, unknown>;
+};
+type $loose = {
+    out: Record<string, unknown>;
+    in: Record<string, unknown>;
+};
+type $strict = {
+    out: {};
+    in: {};
+};
+type $strip = {
+    out: {};
+    in: {};
+};
+type $catchall<T extends SomeType> = {
+    out: {
+        [k: string]: output<T>;
+    };
+    in: {
+        [k: string]: input<T>;
+    };
+};
+type $ZodShape = Readonly<{
+    [k: string]: $ZodType;
+}>;
+interface $ZodObjectDef<Shape extends $ZodShape = $ZodShape> extends $ZodTypeDef {
+    type: "object";
+    shape: Shape;
+    catchall?: $ZodType | undefined;
+}
+interface $ZodObjectInternals<Shape extends $ZodShape = $ZodShape, Config extends $ZodObjectConfig = $ZodObjectConfig> extends _$ZodTypeInternals {
+    def: $ZodObjectDef<Shape>;
+    config: Config;
+    isst: $ZodIssueInvalidType | $ZodIssueUnrecognizedKeys;
+    propValues: util.PropValues;
+    output: $InferObjectOutput<Shape, Config["out"]>;
+    input: $InferObjectInput<Shape, Config["in"]>;
+    optin?: "optional" | undefined;
+    optout?: "optional" | undefined;
+}
+type $ZodLooseShape = Record<string, any>;
+interface $ZodObject<Shape extends Readonly<$ZodShape> = Readonly<$ZodShape>, Params extends $ZodObjectConfig = $ZodObjectConfig> extends $ZodType<any, any, $ZodObjectInternals<Shape, Params>> {
+}
+const $ZodObject: $constructor<$ZodObject>;
+const $ZodObjectJIT: $constructor<$ZodObject>;
+type $InferUnionOutput<T extends SomeType> = T extends any ? output<T> : never;
+type $InferUnionInput<T extends SomeType> = T extends any ? input<T> : never;
+interface $ZodUnionDef<Options extends readonly SomeType[] = readonly $ZodType[]> extends $ZodTypeDef {
+    type: "union";
+    options: Options;
+    inclusive?: boolean;
+}
+type IsOptionalIn<T extends SomeType> = T extends OptionalInSchema ? true : false;
+type IsOptionalOut<T extends SomeType> = T extends OptionalOutSchema ? true : false;
+interface $ZodUnionInternals<T extends readonly SomeType[] = readonly $ZodType[]> extends _$ZodTypeInternals {
+    def: $ZodUnionDef<T>;
+    isst: $ZodIssueInvalidUnion;
+    pattern: T[number]["_zod"]["pattern"];
+    values: T[number]["_zod"]["values"];
+    output: $InferUnionOutput<T[number]>;
+    input: $InferUnionInput<T[number]>;
+    optin: IsOptionalIn<T[number]> extends false ? "optional" | "defaulted" | undefined : "optional" | "defaulted";
+    optout: IsOptionalOut<T[number]> extends false ? "optional" | undefined : "optional";
+}
+interface $ZodUnion<T extends readonly SomeType[] = readonly $ZodType[]> extends $ZodType<any, any, $ZodUnionInternals<T>> {
+    _zod: $ZodUnionInternals<T>;
+}
+const $ZodUnion: $constructor<$ZodUnion>;
+interface $ZodXorInternals<T extends readonly SomeType[] = readonly $ZodType[]> extends $ZodUnionInternals<T> {
+}
+interface $ZodXor<T extends readonly SomeType[] = readonly $ZodType[]> extends $ZodType<any, any, $ZodXorInternals<T>> {
+    _zod: $ZodXorInternals<T>;
+}
+const $ZodXor: $constructor<$ZodXor>;
+interface $ZodDiscriminatedUnionDef<Options extends readonly SomeType[] = readonly $ZodType[], Disc extends string = string> extends $ZodUnionDef<Options> {
+    discriminator: Disc;
+    unionFallback?: boolean;
+}
+interface $ZodDiscriminatedUnionInternals<Options extends readonly SomeType[] = readonly $ZodType[], Disc extends string = string> extends $ZodUnionInternals<Options> {
+    def: $ZodDiscriminatedUnionDef<Options, Disc>;
+    propValues: util.PropValues;
+    bag: util.LoosePartial<{
+        optionsMap: Map<util.Primitive, $ZodType | null>;
+    }>;
+}
+type $DiscriminatorValue<Options extends readonly SomeType[], Disc extends string> = {
+    [I in keyof Options]: Options[I] extends {
+        _zod: {
+            output: infer Out;
+        };
+    } ? Disc extends keyof Out ? Out[Disc] : never : never;
+}[number];
+type $DiscriminatedOption<Options extends readonly SomeType[], Disc extends string, V> = {
+    [I in keyof Options]: Options[I] extends {
+        _zod: {
+            output: infer Out;
+        };
+    } ? Disc extends keyof Out ? V extends Out[Disc] ? Options[I] : never : never : never;
+}[number];
+function getDiscriminatedOption<Options extends readonly SomeType[], Disc extends string, const V extends $DiscriminatorValue<Options, Disc>>(union: $ZodDiscriminatedUnion<Options, Disc>, value: V): $DiscriminatedOption<Options, Disc, V>;
+interface $ZodDiscriminatedUnion<Options extends readonly SomeType[] = readonly $ZodType[], Disc extends string = string> extends $ZodType {
+    _zod: $ZodDiscriminatedUnionInternals<Options, Disc>;
+}
+const $ZodDiscriminatedUnion: $constructor<$ZodDiscriminatedUnion>;
+interface $ZodIntersectionDef<Left extends SomeType = $ZodType, Right extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "intersection";
+    left: Left;
+    right: Right;
+}
+interface $ZodIntersectionInternals<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends _$ZodTypeInternals {
+    def: $ZodIntersectionDef<A, B>;
+    isst: never;
+    optin: A["_zod"]["optin"] | B["_zod"]["optin"];
+    optout: A["_zod"]["optout"] | B["_zod"]["optout"];
+    output: output<A> & output<B>;
+    input: input<A> & input<B>;
+}
+interface $ZodIntersection<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodIntersectionInternals<A, B>;
+}
+const $ZodIntersection: $constructor<$ZodIntersection>;
+function mergeValues(a: any, b: any): {
+    valid: true;
+    data: any;
+} | {
+    valid: false;
+    mergeErrorPath: (string | number)[];
+};
+interface $ZodTupleDef<T extends util.TupleItems = readonly $ZodType[], Rest extends SomeType | null = $ZodType | null> extends $ZodTypeDef {
+    type: "tuple";
+    items: T;
+    rest: Rest;
+}
+type $InferTupleInputType<T extends util.TupleItems, Rest extends SomeType | null> = [
+    ...TupleInputTypeWithOptionals<T>,
+    ...(Rest extends SomeType ? input<Rest>[] : [
+    ])
+];
+type TupleInputTypeNoOptionals<T extends util.TupleItems> = {
+    [k in keyof T]: input<T[k]>;
+};
+type TupleInputTypeWithOptionals<T extends util.TupleItems> = T extends readonly [
+    ...infer Prefix extends SomeType[],
+    infer Tail extends SomeType
+] ? Tail["_zod"]["optin"] extends "optional" | "defaulted" ? [
+    ...TupleInputTypeWithOptionals<Prefix>,
+    input<Tail>?
+] : TupleInputTypeNoOptionals<T> : [
+];
+type $InferTupleOutputType<T extends util.TupleItems, Rest extends SomeType | null> = [
+    ...TupleOutputTypeWithOptionals<T>,
+    ...(Rest extends SomeType ? output<Rest>[] : [
+    ])
+];
+type TupleOutputTypeNoOptionals<T extends util.TupleItems> = {
+    [k in keyof T]: output<T[k]>;
+};
+type TupleOutputTypeWithOptionals<T extends util.TupleItems> = T extends readonly [
+    ...infer Prefix extends SomeType[],
+    infer Tail extends SomeType
+] ? Tail["_zod"]["optout"] extends "optional" ? [
+    ...TupleOutputTypeWithOptionals<Prefix>,
+    output<Tail>?
+] : TupleOutputTypeNoOptionals<T> : [
+];
+interface $ZodTupleInternals<T extends util.TupleItems = readonly $ZodType[], Rest extends SomeType | null = $ZodType | null> extends _$ZodTypeInternals {
+    def: $ZodTupleDef<T, Rest>;
+    isst: $ZodIssueInvalidType | $ZodIssueTooBig<unknown[]> | $ZodIssueTooSmall<unknown[]>;
+    output: $InferTupleOutputType<T, Rest>;
+    input: $InferTupleInputType<T, Rest>;
+}
+interface $ZodTuple<T extends util.TupleItems = readonly $ZodType[], Rest extends SomeType | null = $ZodType | null> extends $ZodType {
+    _zod: $ZodTupleInternals<T, Rest>;
+}
+const $ZodTuple: $constructor<$ZodTuple>;
+type $ZodRecordKey = $ZodType<string | number | symbol, unknown>;
+interface $ZodRecordDef<Key extends $ZodRecordKey = $ZodRecordKey, Value extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "record";
+    keyType: Key;
+    valueType: Value;
+    mode?: "strict" | "loose";
+    partial?: boolean;
+}
+type $InferZodRecordOutput<Key extends $ZodRecordKey = $ZodRecordKey, Value extends SomeType = $ZodType> = Key extends $partial ? Partial<Record<output<Key>, output<Value>>> : Record<output<Key>, output<Value>>;
+type $InferZodRecordInput<Key extends $ZodRecordKey = $ZodRecordKey, Value extends SomeType = $ZodType> = Key extends $partial ? Partial<Record<input<Key> & PropertyKey, input<Value>>> : [
+    Value
+] extends [
+    OptionalInSchema
+] ? Partial<Record<input<Key> & PropertyKey, input<Value>>> : Record<input<Key> & PropertyKey, input<Value>>;
+interface $ZodRecordInternals<Key extends $ZodRecordKey = $ZodRecordKey, Value extends SomeType = $ZodType> extends $ZodTypeInternals {
+    def: $ZodRecordDef<Key, Value>;
+    output: $InferZodRecordOutput<Key, Value>;
+    input: $InferZodRecordInput<Key, Value>;
+    isst: $ZodIssueInvalidType | $ZodIssueInvalidKey<Record<PropertyKey, unknown>>;
+    optin?: "optional" | undefined;
+    optout?: "optional" | undefined;
+}
+type $partial = {
+    "~~partial": true;
+};
+interface $ZodRecord<Key extends $ZodRecordKey = $ZodRecordKey, Value extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodRecordInternals<Key, Value>;
+}
+const $ZodRecord: $constructor<$ZodRecord>;
+interface $ZodMapDef<Key extends SomeType = $ZodType, Value extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "map";
+    keyType: Key;
+    valueType: Value;
+}
+interface $ZodMapInternals<Key extends SomeType = $ZodType, Value extends SomeType = $ZodType> extends $ZodTypeInternals<Map<output<Key>, output<Value>>, Map<input<Key>, input<Value>>> {
+    def: $ZodMapDef<Key, Value>;
+    isst: $ZodIssueInvalidType | $ZodIssueInvalidKey | $ZodIssueInvalidElement<unknown>;
+    optin?: "optional" | undefined;
+    optout?: "optional" | undefined;
+}
+interface $ZodMap<Key extends SomeType = $ZodType, Value extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodMapInternals<Key, Value>;
+}
+const $ZodMap: $constructor<$ZodMap>;
+interface $ZodSetDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "set";
+    valueType: T;
+}
+interface $ZodSetInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<Set<output<T>>, Set<input<T>>> {
+    def: $ZodSetDef<T>;
+    isst: $ZodIssueInvalidType;
+    optin?: "optional" | undefined;
+    optout?: "optional" | undefined;
+}
+interface $ZodSet<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodSetInternals<T>;
+}
+const $ZodSet: $constructor<$ZodSet>;
+type $InferEnumOutput<T extends util.EnumLike> = T[keyof T] & {};
+type $InferEnumInput<T extends util.EnumLike> = T[keyof T] & {};
+interface $ZodEnumDef<T extends util.EnumLike = util.EnumLike> extends $ZodTypeDef {
+    type: "enum";
+    entries: T;
+}
+interface $ZodEnumInternals<T extends util.EnumLike = util.EnumLike> extends $ZodTypeInternals<$InferEnumOutput<T>, $InferEnumInput<T>> {
+    def: $ZodEnumDef<T>;
+    values: util.PrimitiveSet;
+    pattern: RegExp;
+    isst: $ZodIssueInvalidValue;
+}
+interface $ZodEnum<T extends util.EnumLike = util.EnumLike> extends $ZodType {
+    _zod: $ZodEnumInternals<T>;
+}
+const $ZodEnum: $constructor<$ZodEnum>;
+interface $ZodLiteralDef<T extends util.Literal> extends $ZodTypeDef {
+    type: "literal";
+    values: T[];
+}
+interface $ZodLiteralInternals<T extends util.Literal = util.Literal> extends $ZodTypeInternals<T, T> {
+    def: $ZodLiteralDef<T>;
+    values: Set<T>;
+    pattern: RegExp;
+    isst: $ZodIssueInvalidValue;
+}
+interface $ZodLiteral<T extends util.Literal = util.Literal> extends $ZodType {
+    _zod: $ZodLiteralInternals<T>;
+}
+const $ZodLiteral: $constructor<$ZodLiteral>;
+type _File = typeof globalThis extends {
+    File: infer F extends new (...args: any[]) => any;
+} ? InstanceType<F> : {};
+interface File$1 extends _File {
+    readonly type: string;
+    readonly size: number;
+}
+interface $ZodFileDef extends $ZodTypeDef {
+    type: "file";
+}
+interface $ZodFileInternals extends $ZodTypeInternals<File$1, File$1> {
+    def: $ZodFileDef;
+    isst: $ZodIssueInvalidType;
+    bag: util.LoosePartial<{
+        minimum: number;
+        maximum: number;
+        mime: util.MimeTypes[];
+    }>;
+}
+interface $ZodFile extends $ZodType {
+    _zod: $ZodFileInternals;
+}
+const $ZodFile: $constructor<$ZodFile>;
+interface $ZodTransformDef extends $ZodTypeDef {
+    type: "transform";
+    transform: (input: unknown, payload: ParsePayload<unknown>) => util.MaybeAsync<unknown>;
+}
+interface $ZodTransformInternals<O = unknown, I = unknown> extends $ZodTypeInternals<O, I> {
+    def: $ZodTransformDef;
+    isst: never;
+}
+interface $ZodTransform<O = unknown, I = unknown> extends $ZodType {
+    _zod: $ZodTransformInternals<O, I>;
+}
+const $ZodTransform: $constructor<$ZodTransform>;
+interface $ZodOptionalDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "optional";
+    innerType: T;
+}
+interface $ZodOptionalInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<output<T> | undefined, input<T> | undefined> {
+    def: $ZodOptionalDef<T>;
+    optin: "optional" | "defaulted";
+    optout: "optional";
+    isst: never;
+    values: T["_zod"]["values"];
+    pattern: T["_zod"]["pattern"];
+}
+interface $ZodOptional<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodOptionalInternals<T>;
+}
+const $ZodOptional: $constructor<$ZodOptional>;
+interface $ZodExactOptionalDef<T extends SomeType = $ZodType> extends $ZodOptionalDef<T> {
+}
+interface $ZodExactOptionalInternals<T extends SomeType = $ZodType> extends $ZodOptionalInternals<T> {
+    def: $ZodExactOptionalDef<T>;
+    output: output<T>;
+    input: input<T>;
+}
+interface $ZodExactOptional<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodExactOptionalInternals<T>;
+}
+const $ZodExactOptional: $constructor<$ZodExactOptional>;
+interface $ZodNullableDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "nullable";
+    innerType: T;
+}
+interface $ZodNullableInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<output<T> | null, input<T> | null> {
+    def: $ZodNullableDef<T>;
+    optin: T["_zod"]["optin"];
+    optout: T["_zod"]["optout"];
+    isst: never;
+    values: T["_zod"]["values"];
+    pattern: T["_zod"]["pattern"];
+}
+interface $ZodNullable<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodNullableInternals<T>;
+}
+const $ZodNullable: $constructor<$ZodNullable>;
+interface $ZodDefaultDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "default";
+    innerType: T;
+    defaultValue: util.NoUndefined<output<T>>;
+}
+interface $ZodDefaultInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<util.NoUndefined<output<T>>, input<T> | undefined> {
+    def: $ZodDefaultDef<T>;
+    optin: "defaulted";
+    optout?: "optional" | undefined;
+    isst: never;
+    values: T["_zod"]["values"];
+}
+interface $ZodDefault<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodDefaultInternals<T>;
+}
+const $ZodDefault: $constructor<$ZodDefault>;
+interface $ZodPrefaultDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "prefault";
+    innerType: T;
+    defaultValue: input<T>;
+}
+interface $ZodPrefaultInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<output<T>, input<T> | undefined> {
+    def: $ZodPrefaultDef<T>;
+    optin: "defaulted";
+    optout?: "optional" | undefined;
+    isst: never;
+    values: T["_zod"]["values"];
+}
+interface $ZodPrefault<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodPrefaultInternals<T>;
+}
+const $ZodPrefault: $constructor<$ZodPrefault>;
+interface $ZodNonOptionalDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "nonoptional";
+    innerType: T;
+}
+interface $ZodNonOptionalInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<util.NoUndefined<output<T>>, util.NoUndefined<input<T>>> {
+    def: $ZodNonOptionalDef<T>;
+    isst: $ZodIssueInvalidType;
+    values: T["_zod"]["values"];
+    optin: "optional" | undefined;
+    optout: "optional" | undefined;
+}
+interface $ZodNonOptional<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodNonOptionalInternals<T>;
+}
+const $ZodNonOptional: $constructor<$ZodNonOptional>;
+interface $ZodSuccessDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "success";
+    innerType: T;
+}
+interface $ZodSuccessInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<boolean, input<T>> {
+    def: $ZodSuccessDef<T>;
+    isst: never;
+    optin: T["_zod"]["optin"];
+    optout: "optional" | undefined;
+}
+interface $ZodSuccess<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodSuccessInternals<T>;
+}
+const $ZodSuccess: $constructor<$ZodSuccess>;
+interface $ZodCatchCtx extends ParsePayload {
+    error: {
+        issues: $ZodIssue[];
+    };
+    input: unknown;
+}
+interface $ZodCatchDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "catch";
+    innerType: T;
+    catchValue: (ctx: $ZodCatchCtx) => unknown;
+}
+interface $ZodCatchInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<output<T>, input<T>> {
+    def: $ZodCatchDef<T>;
+    optin: T["_zod"]["optin"];
+    optout: T["_zod"]["optout"];
+    isst: never;
+    values: T["_zod"]["values"];
+}
+interface $ZodCatch<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodCatchInternals<T>;
+}
+const $ZodCatch: $constructor<$ZodCatch>;
+interface $ZodNaNDef extends $ZodTypeDef {
+    type: "nan";
+}
+interface $ZodNaNInternals extends $ZodTypeInternals<number, number> {
+    def: $ZodNaNDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodNaN extends $ZodType {
+    _zod: $ZodNaNInternals;
+}
+const $ZodNaN: $constructor<$ZodNaN>;
+interface $ZodPipeDef<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "pipe";
+    in: A;
+    out: B;
+    transform?: (value: output<A>, payload: ParsePayload<output<A>>) => util.MaybeAsync<input<B>>;
+    reverseTransform?: (value: input<B>, payload: ParsePayload<input<B>>) => util.MaybeAsync<output<A>>;
+}
+interface $ZodPipeInternals<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodTypeInternals<output<B>, input<A>> {
+    def: $ZodPipeDef<A, B>;
+    isst: never;
+    values: A["_zod"]["values"];
+    optin: A["_zod"]["optin"];
+    optout: B["_zod"]["optout"];
+    propValues: A["_zod"]["propValues"];
+}
+interface $ZodPipe<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodPipeInternals<A, B>;
+}
+const $ZodPipe: $constructor<$ZodPipe>;
+interface $ZodCodecDef<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodPipeDef<A, B> {
+    transform: (value: output<A>, payload: ParsePayload<output<A>>) => util.MaybeAsync<input<B>>;
+    reverseTransform: (value: input<B>, payload: ParsePayload<input<B>>) => util.MaybeAsync<output<A>>;
+}
+interface $ZodCodecInternals<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodTypeInternals<output<B>, input<A>> {
+    def: $ZodCodecDef<A, B>;
+    isst: never;
+    values: A["_zod"]["values"];
+    optin: A["_zod"]["optin"];
+    optout: B["_zod"]["optout"];
+    propValues: A["_zod"]["propValues"];
+}
+interface $ZodCodec<A extends SomeType = $ZodType, B extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodCodecInternals<A, B>;
+}
+const $ZodCodec: $constructor<$ZodCodec>;
+interface $ZodPreprocessDef<B extends SomeType = $ZodType, I = unknown> extends $ZodPipeDef<$ZodTransform<unknown, I>, B> {
+    in: $ZodTransform<unknown, I>;
+    out: B;
+}
+interface $ZodPreprocessInternals<B extends SomeType = $ZodType, I = unknown> extends $ZodPipeInternals<$ZodTransform<unknown, I>, B> {
+    def: $ZodPreprocessDef<B, I>;
+    optin: B["_zod"]["optin"];
+    optout: B["_zod"]["optout"];
+}
+interface $ZodPreprocess<B extends SomeType = $ZodType, I = unknown> extends $ZodPipe<$ZodTransform<unknown, I>, B> {
+    _zod: $ZodPreprocessInternals<B, I>;
+}
+const $ZodPreprocess: $constructor<$ZodPreprocess>;
+interface $ZodReadonlyDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "readonly";
+    innerType: T;
+}
+interface $ZodReadonlyInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<util.MakeReadonly<output<T>>, util.MakeReadonly<input<T>>> {
+    def: $ZodReadonlyDef<T>;
+    optin: T["_zod"]["optin"];
+    optout: T["_zod"]["optout"];
+    isst: never;
+    propValues: T["_zod"]["propValues"];
+    values: T["_zod"]["values"];
+}
+interface $ZodReadonly<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodReadonlyInternals<T>;
+}
+const $ZodReadonly: $constructor<$ZodReadonly>;
+interface $ZodTemplateLiteralDef extends $ZodTypeDef {
+    type: "template_literal";
+    parts: $ZodTemplateLiteralPart[];
+    format?: string | undefined;
+}
+interface $ZodTemplateLiteralInternals<Template extends string = string> extends $ZodTypeInternals<Template, Template> {
+    pattern: RegExp;
+    def: $ZodTemplateLiteralDef;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodTemplateLiteral<Template extends string = string> extends $ZodType {
+    _zod: $ZodTemplateLiteralInternals<Template>;
+}
+type LiteralPart = Exclude<util.Literal, symbol>;
+interface SchemaPartInternals extends $ZodTypeInternals<LiteralPart, LiteralPart> {
+    pattern: RegExp;
+}
+interface SchemaPart extends $ZodType {
+    _zod: SchemaPartInternals;
+}
+type $ZodTemplateLiteralPart = LiteralPart | SchemaPart;
+type UndefinedToEmptyString<T> = T extends undefined ? "" : T;
+type AppendToTemplateLiteral<Template extends string, Suffix extends LiteralPart | $ZodType> = Suffix extends LiteralPart ? `${Template}${UndefinedToEmptyString<Suffix>}` : Suffix extends $ZodType ? `${Template}${output<Suffix> extends infer T extends LiteralPart ? UndefinedToEmptyString<T> : never}` : never;
+type ConcatenateTupleOfStrings<T extends string[]> = T extends [
+    infer First extends string,
+    ...infer Rest extends string[]
+] ? Rest extends string[] ? First extends "" ? ConcatenateTupleOfStrings<Rest> : `${First}${ConcatenateTupleOfStrings<Rest>}` : never : "";
+type ConvertPartsToStringTuple<Parts extends $ZodTemplateLiteralPart[]> = {
+    [K in keyof Parts]: Parts[K] extends LiteralPart ? `${UndefinedToEmptyString<Parts[K]>}` : Parts[K] extends $ZodType ? `${output<Parts[K]> extends infer T extends LiteralPart ? UndefinedToEmptyString<T> : never}` : never;
+};
+type ToTemplateLiteral<Parts extends $ZodTemplateLiteralPart[]> = ConcatenateTupleOfStrings<ConvertPartsToStringTuple<Parts>>;
+type $PartsToTemplateLiteral<Parts extends $ZodTemplateLiteralPart[]> = [
+] extends Parts ? `` : Parts extends [
+    ...infer Rest,
+    infer Last extends $ZodTemplateLiteralPart
+] ? Rest extends $ZodTemplateLiteralPart[] ? AppendToTemplateLiteral<$PartsToTemplateLiteral<Rest>, Last> : never : never;
+const $ZodTemplateLiteral: $constructor<$ZodTemplateLiteral>;
+type $ZodFunctionArgs = $ZodType<unknown[], unknown[]>;
+type $ZodFunctionIn = $ZodFunctionArgs;
+type $ZodFunctionOut = $ZodType;
+type $InferInnerFunctionType<Args extends $ZodFunctionIn, Returns extends $ZodFunctionOut> = (...args: $ZodFunctionIn extends Args ? never[] : output<Args>) => input<Returns>;
+type $InferInnerFunctionTypeAsync<Args extends $ZodFunctionIn, Returns extends $ZodFunctionOut> = (...args: $ZodFunctionIn extends Args ? never[] : output<Args>) => util.MaybeAsync<input<Returns>>;
+type $InferOuterFunctionType<Args extends $ZodFunctionIn, Returns extends $ZodFunctionOut> = (...args: $ZodFunctionIn extends Args ? never[] : input<Args>) => output<Returns>;
+type $InferOuterFunctionTypeAsync<Args extends $ZodFunctionIn, Returns extends $ZodFunctionOut> = (...args: $ZodFunctionIn extends Args ? never[] : input<Args>) => Promise<output<Returns>>;
+interface $ZodFunctionDef<In extends $ZodFunctionIn = $ZodFunctionIn, Out extends $ZodFunctionOut = $ZodFunctionOut> extends $ZodTypeDef {
+    type: "function";
+    input: In;
+    output: Out;
+}
+interface $ZodFunctionInternals<Args extends $ZodFunctionIn, Returns extends $ZodFunctionOut> extends $ZodTypeInternals<$InferOuterFunctionType<Args, Returns>, $InferInnerFunctionType<Args, Returns>> {
+    def: $ZodFunctionDef<Args, Returns>;
+    isst: $ZodIssueInvalidType;
+}
+interface $ZodFunction<Args extends $ZodFunctionIn = $ZodFunctionIn, Returns extends $ZodFunctionOut = $ZodFunctionOut> extends $ZodType<any, any, $ZodFunctionInternals<Args, Returns>> {
+    _def: $ZodFunctionDef<Args, Returns>;
+    _input: $InferInnerFunctionType<Args, Returns>;
+    _output: $InferOuterFunctionType<Args, Returns>;
+    implement<F extends $InferInnerFunctionType<Args, Returns>>(func: F): (...args: Parameters<this["_output"]>) => ReturnType<F> extends ReturnType<this["_output"]> ? ReturnType<F> : ReturnType<this["_output"]>;
+    implementAsync<F extends $InferInnerFunctionTypeAsync<Args, Returns>>(func: F): F extends $InferOuterFunctionTypeAsync<Args, Returns> ? F : $InferOuterFunctionTypeAsync<Args, Returns>;
+    input<const Items extends util.TupleItems, const Rest extends $ZodFunctionOut = $ZodFunctionOut>(args: Items, rest?: Rest): $ZodFunction<$ZodTuple<Items, Rest>, Returns>;
+    input<NewArgs extends $ZodFunctionIn>(args: NewArgs): $ZodFunction<NewArgs, Returns>;
+    input(...args: any[]): $ZodFunction<any, Returns>;
+    output<NewReturns extends $ZodType>(output: NewReturns): $ZodFunction<Args, NewReturns>;
+}
+interface $ZodFunctionParams<I extends $ZodFunctionIn, O extends $ZodType> {
+    input?: I;
+    output?: O;
+}
+const $ZodFunction: $constructor<$ZodFunction>;
+interface $ZodPromiseDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "promise";
+    innerType: T;
+}
+interface $ZodPromiseInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<Promise<output<T>>, util.MaybeAsync<input<T>>> {
+    def: $ZodPromiseDef<T>;
+    isst: never;
+}
+interface $ZodPromise<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodPromiseInternals<T>;
+}
+const $ZodPromise: $constructor<$ZodPromise>;
+interface $ZodLazyDef<T extends SomeType = $ZodType> extends $ZodTypeDef {
+    type: "lazy";
+    getter: () => T;
+}
+interface $ZodLazyInternals<T extends SomeType = $ZodType> extends $ZodTypeInternals<output<T>, input<T>> {
+    def: $ZodLazyDef<T>;
+    isst: never;
+    innerType: T;
+    pattern: T["_zod"]["pattern"];
+    propValues: T["_zod"]["propValues"];
+    optin: T["_zod"]["optin"];
+    optout: T["_zod"]["optout"];
+}
+interface $ZodLazy<T extends SomeType = $ZodType> extends $ZodType {
+    _zod: $ZodLazyInternals<T>;
+}
+const $ZodLazy: $constructor<$ZodLazy>;
+interface $ZodCustomDef<O = unknown> extends $ZodTypeDef, $ZodCheckDef {
+    type: "custom";
+    check: "custom";
+    path?: PropertyKey[] | undefined;
+    error?: $ZodErrorMap | undefined;
+    params?: Record<string, any> | undefined;
+    fn: (arg: O) => unknown;
+}
+interface $ZodCustomInternals<O = unknown, I = unknown> extends $ZodTypeInternals<O, I>, $ZodCheckInternals<O> {
+    def: $ZodCustomDef;
+    issc: $ZodIssue;
+    isst: never;
+    bag: util.LoosePartial<{
+        Class: typeof util.Class;
+    }>;
+}
+interface $ZodCustom<O = unknown, I = unknown> extends $ZodType {
+    _zod: $ZodCustomInternals<O, I>;
+}
+const $ZodCustom: $constructor<$ZodCustom>;
+type $ZodTypes = $ZodString | $ZodNumber | $ZodBigInt | $ZodBoolean | $ZodDate | $ZodSymbol | $ZodUndefined | $ZodNullable | $ZodNull | $ZodAny | $ZodUnknown | $ZodNever | $ZodVoid | $ZodArray | $ZodObject | $ZodUnion | $ZodIntersection | $ZodTuple | $ZodRecord | $ZodMap | $ZodSet | $ZodLiteral | $ZodEnum | $ZodFunction | $ZodPromise | $ZodLazy | $ZodOptional | $ZodDefault | $ZodPrefault | $ZodTemplateLiteral | $ZodCustom | $ZodTransform | $ZodNonOptional | $ZodReadonly | $ZodNaN | $ZodPipe | $ZodSuccess | $ZodCatch | $ZodFile;
+type $ZodStringFormatTypes = $ZodGUID | $ZodUUID | $ZodEmail | $ZodURL | $ZodEmoji | $ZodNanoID | $ZodCUID | $ZodCUID2 | $ZodULID | $ZodXID | $ZodKSUID | $ZodISODateTime | $ZodISODate | $ZodISOTime | $ZodISODuration | $ZodIPv4 | $ZodIPv6 | $ZodMAC | $ZodCIDRv4 | $ZodCIDRv6 | $ZodBase64 | $ZodBase64URL | $ZodE164 | $ZodCreditCard | $ZodIBAN | $ZodJWT | $ZodCustomStringFormat<"hex"> | $ZodCustomStringFormat<util.HashFormat> | $ZodCustomStringFormat<"hostname"> | $ZodCustomStringFormat<"currency_code">;
+interface $ZodCheckDef {
+    check: string;
+    error?: $ZodErrorMap<never> | undefined;
+    abort?: boolean | undefined;
+    when?: ((payload: schemas.ParsePayload) => boolean) | undefined;
+}
+interface $ZodCheckInternals<T> {
+    def: $ZodCheckDef;
+    issc?: $ZodIssueBase;
+    check(payload: schemas.ParsePayload<T>): util.MaybeAsync<void>;
+    onattach: ((schema: schemas.$ZodType) => void)[];
+}
+interface $ZodCheck<T = never> {
+    _zod: $ZodCheckInternals<T>;
+}
+const $ZodCheck: $constructor<$ZodCheck<any>>;
+interface $ZodCheckLessThanDef extends $ZodCheckDef {
+    check: "less_than";
+    value: util.Numeric;
+    inclusive: boolean;
+}
+interface $ZodCheckLessThanInternals<T extends util.Numeric = util.Numeric> extends $ZodCheckInternals<T> {
+    def: $ZodCheckLessThanDef;
+    issc: $ZodIssueTooBig<T>;
+}
+interface $ZodCheckLessThan<T extends util.Numeric = util.Numeric> extends $ZodCheck<T> {
+    _zod: $ZodCheckLessThanInternals<T>;
+}
+const $ZodCheckLessThan: $constructor<$ZodCheckLessThan>;
+interface $ZodCheckGreaterThanDef extends $ZodCheckDef {
+    check: "greater_than";
+    value: util.Numeric;
+    inclusive: boolean;
+}
+interface $ZodCheckGreaterThanInternals<T extends util.Numeric = util.Numeric> extends $ZodCheckInternals<T> {
+    def: $ZodCheckGreaterThanDef;
+    issc: $ZodIssueTooSmall<T>;
+}
+interface $ZodCheckGreaterThan<T extends util.Numeric = util.Numeric> extends $ZodCheck<T> {
+    _zod: $ZodCheckGreaterThanInternals<T>;
+}
+const $ZodCheckGreaterThan: $constructor<$ZodCheckGreaterThan>;
+interface $ZodCheckMultipleOfDef<T extends number | bigint = number | bigint> extends $ZodCheckDef {
+    check: "multiple_of";
+    value: T;
+}
+interface $ZodCheckMultipleOfInternals<T extends number | bigint = number | bigint> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMultipleOfDef<T>;
+    issc: $ZodIssueNotMultipleOf;
+}
+interface $ZodCheckMultipleOf<T extends number | bigint = number | bigint> extends $ZodCheck<T> {
+    _zod: $ZodCheckMultipleOfInternals<T>;
+}
+const $ZodCheckMultipleOf: $constructor<$ZodCheckMultipleOf<number | bigint>>;
+type $ZodNumberFormats = "int32" | "uint32" | "float32" | "float64" | "safeint";
+interface $ZodCheckNumberFormatDef<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodCheckDef {
+    check: "number_format";
+    format: Format;
+}
+interface $ZodCheckNumberFormatInternals<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodCheckInternals<number> {
+    def: $ZodCheckNumberFormatDef<Format>;
+    issc: $ZodIssueInvalidType | $ZodIssueTooBig<"number"> | $ZodIssueTooSmall<"number">;
+}
+interface $ZodCheckNumberFormat<Format extends $ZodNumberFormats = $ZodNumberFormats> extends $ZodCheck<number> {
+    _zod: $ZodCheckNumberFormatInternals<Format>;
+}
+const $ZodCheckNumberFormat: $constructor<$ZodCheckNumberFormat>;
+type $ZodBigIntFormats = "int64" | "uint64";
+interface $ZodCheckBigIntFormatDef<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodCheckDef {
+    check: "bigint_format";
+    format: Format;
+}
+interface $ZodCheckBigIntFormatInternals<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodCheckInternals<bigint> {
+    def: $ZodCheckBigIntFormatDef<Format>;
+    issc: $ZodIssueTooBig<"bigint"> | $ZodIssueTooSmall<"bigint">;
+}
+interface $ZodCheckBigIntFormat<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends $ZodCheck<bigint> {
+    _zod: $ZodCheckBigIntFormatInternals<Format>;
+}
+const $ZodCheckBigIntFormat: $constructor<$ZodCheckBigIntFormat>;
+interface $ZodCheckMaxSizeDef extends $ZodCheckDef {
+    check: "max_size";
+    maximum: number;
+}
+interface $ZodCheckMaxSizeInternals<T extends util.HasSize = util.HasSize> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMaxSizeDef;
+    issc: $ZodIssueTooBig<T>;
+}
+interface $ZodCheckMaxSize<T extends util.HasSize = util.HasSize> extends $ZodCheck<T> {
+    _zod: $ZodCheckMaxSizeInternals<T>;
+}
+const $ZodCheckMaxSize: $constructor<$ZodCheckMaxSize>;
+interface $ZodCheckMinSizeDef extends $ZodCheckDef {
+    check: "min_size";
+    minimum: number;
+}
+interface $ZodCheckMinSizeInternals<T extends util.HasSize = util.HasSize> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMinSizeDef;
+    issc: $ZodIssueTooSmall<T>;
+}
+interface $ZodCheckMinSize<T extends util.HasSize = util.HasSize> extends $ZodCheck<T> {
+    _zod: $ZodCheckMinSizeInternals<T>;
+}
+const $ZodCheckMinSize: $constructor<$ZodCheckMinSize>;
+interface $ZodCheckSizeEqualsDef extends $ZodCheckDef {
+    check: "size_equals";
+    size: number;
+}
+interface $ZodCheckSizeEqualsInternals<T extends util.HasSize = util.HasSize> extends $ZodCheckInternals<T> {
+    def: $ZodCheckSizeEqualsDef;
+    issc: $ZodIssueTooBig<T> | $ZodIssueTooSmall<T>;
+}
+interface $ZodCheckSizeEquals<T extends util.HasSize = util.HasSize> extends $ZodCheck<T> {
+    _zod: $ZodCheckSizeEqualsInternals<T>;
+}
+const $ZodCheckSizeEquals: $constructor<$ZodCheckSizeEquals>;
+interface $ZodCheckMaxLengthDef extends $ZodCheckDef {
+    check: "max_length";
+    maximum: number;
+}
+interface $ZodCheckMaxLengthInternals<T extends util.HasLength = util.HasLength> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMaxLengthDef;
+    issc: $ZodIssueTooBig<T>;
+}
+interface $ZodCheckMaxLength<T extends util.HasLength = util.HasLength> extends $ZodCheck<T> {
+    _zod: $ZodCheckMaxLengthInternals<T>;
+}
+const $ZodCheckMaxLength: $constructor<$ZodCheckMaxLength>;
+interface $ZodCheckMinLengthDef extends $ZodCheckDef {
+    check: "min_length";
+    minimum: number;
+}
+interface $ZodCheckMinLengthInternals<T extends util.HasLength = util.HasLength> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMinLengthDef;
+    issc: $ZodIssueTooSmall<T>;
+}
+interface $ZodCheckMinLength<T extends util.HasLength = util.HasLength> extends $ZodCheck<T> {
+    _zod: $ZodCheckMinLengthInternals<T>;
+}
+const $ZodCheckMinLength: $constructor<$ZodCheckMinLength>;
+interface $ZodCheckLengthEqualsDef extends $ZodCheckDef {
+    check: "length_equals";
+    length: number;
+}
+interface $ZodCheckLengthEqualsInternals<T extends util.HasLength = util.HasLength> extends $ZodCheckInternals<T> {
+    def: $ZodCheckLengthEqualsDef;
+    issc: $ZodIssueTooBig<T> | $ZodIssueTooSmall<T>;
+}
+interface $ZodCheckLengthEquals<T extends util.HasLength = util.HasLength> extends $ZodCheck<T> {
+    _zod: $ZodCheckLengthEqualsInternals<T>;
+}
+const $ZodCheckLengthEquals: $constructor<$ZodCheckLengthEquals>;
+type $ZodStringFormats = "email" | "url" | "emoji" | "uuid" | "guid" | "nanoid" | "cuid" | "cuid2" | "ulid" | "xid" | "ksuid" | "datetime" | "date" | "time" | "duration" | "ipv4" | "ipv6" | "cidrv4" | "cidrv6" | "base64" | "base64url" | "json_string" | "e164" | "credit_card" | "iban" | "lowercase" | "uppercase" | "regex" | "jwt" | "starts_with" | "ends_with" | "includes";
+interface $ZodCheckStringFormatDef<Format extends string = string> extends $ZodCheckDef {
+    check: "string_format";
+    format: Format;
+    pattern?: RegExp | undefined;
+}
+interface $ZodCheckStringFormatInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckStringFormatDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckStringFormat extends $ZodCheck<string> {
+    _zod: $ZodCheckStringFormatInternals;
+}
+const $ZodCheckStringFormat: $constructor<$ZodCheckStringFormat>;
+interface $ZodCheckRegexDef extends $ZodCheckStringFormatDef {
+    format: "regex";
+    pattern: RegExp;
+}
+interface $ZodCheckRegexInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckRegexDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckRegex extends $ZodCheck<string> {
+    _zod: $ZodCheckRegexInternals;
+}
+const $ZodCheckRegex: $constructor<$ZodCheckRegex>;
+interface $ZodCheckLowerCaseDef extends $ZodCheckStringFormatDef<"lowercase"> {
+}
+interface $ZodCheckLowerCaseInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckLowerCaseDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckLowerCase extends $ZodCheck<string> {
+    _zod: $ZodCheckLowerCaseInternals;
+}
+const $ZodCheckLowerCase: $constructor<$ZodCheckLowerCase>;
+interface $ZodCheckUpperCaseDef extends $ZodCheckStringFormatDef<"uppercase"> {
+}
+interface $ZodCheckUpperCaseInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckUpperCaseDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckUpperCase extends $ZodCheck<string> {
+    _zod: $ZodCheckUpperCaseInternals;
+}
+const $ZodCheckUpperCase: $constructor<$ZodCheckUpperCase>;
+interface $ZodCheckIncludesDef extends $ZodCheckStringFormatDef<"includes"> {
+    includes: string;
+    position?: number | undefined;
+}
+interface $ZodCheckIncludesInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckIncludesDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckIncludes extends $ZodCheck<string> {
+    _zod: $ZodCheckIncludesInternals;
+}
+const $ZodCheckIncludes: $constructor<$ZodCheckIncludes>;
+interface $ZodCheckStartsWithDef extends $ZodCheckStringFormatDef<"starts_with"> {
+    prefix: string;
+}
+interface $ZodCheckStartsWithInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckStartsWithDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckStartsWith extends $ZodCheck<string> {
+    _zod: $ZodCheckStartsWithInternals;
+}
+const $ZodCheckStartsWith: $constructor<$ZodCheckStartsWith>;
+interface $ZodCheckEndsWithDef extends $ZodCheckStringFormatDef<"ends_with"> {
+    suffix: string;
+}
+interface $ZodCheckEndsWithInternals extends $ZodCheckInternals<string> {
+    def: $ZodCheckEndsWithDef;
+    issc: $ZodIssueInvalidStringFormat;
+}
+interface $ZodCheckEndsWith extends $ZodCheckInternals<string> {
+    _zod: $ZodCheckEndsWithInternals;
+}
+const $ZodCheckEndsWith: $constructor<$ZodCheckEndsWith>;
+interface $ZodCheckPropertyDef extends $ZodCheckDef {
+    check: "property";
+    property: string;
+    schema: schemas.$ZodType;
+}
+interface $ZodCheckPropertyInternals<T extends object = object> extends $ZodCheckInternals<T> {
+    def: $ZodCheckPropertyDef;
+    issc: $ZodIssue;
+}
+interface $ZodCheckProperty<T extends object = object> extends $ZodCheck<T> {
+    _zod: $ZodCheckPropertyInternals<T>;
+}
+const $ZodCheckProperty: $constructor<$ZodCheckProperty>;
+interface $ZodCheckPropertiesDef<Shape extends schemas.$ZodShape = schemas.$ZodShape> extends $ZodCheckDef {
+    check: "properties";
+    shape: Shape;
+}
+type $ZodCheckPropertiesInput<Shape extends schemas.$ZodShape = schemas.$ZodShape> = {
+    -readonly [k in keyof Shape]: util.Widen<input<Shape[k]>>;
+};
+interface $ZodCheckPropertiesInternals<Shape extends schemas.$ZodShape = schemas.$ZodShape> extends $ZodCheckInternals<$ZodCheckPropertiesInput<Shape>> {
+    def: $ZodCheckPropertiesDef<Shape>;
+    issc: $ZodIssue;
+}
+interface $ZodCheckProperties<Shape extends schemas.$ZodShape = schemas.$ZodShape> extends $ZodCheck<$ZodCheckPropertiesInput<Shape>> {
+    _zod: $ZodCheckPropertiesInternals<Shape>;
+    [Symbol.iterator](): Iterator<this>;
+}
+const $ZodCheckProperties: $constructor<$ZodCheckProperties>;
+interface $ZodCheckMimeTypeDef extends $ZodCheckDef {
+    check: "mime_type";
+    mime: util.MimeTypes[];
+}
+interface $ZodCheckMimeTypeInternals<T extends schemas.File = schemas.File> extends $ZodCheckInternals<T> {
+    def: $ZodCheckMimeTypeDef;
+    issc: $ZodIssueInvalidValue;
+}
+interface $ZodCheckMimeType<T extends schemas.File = schemas.File> extends $ZodCheck<T> {
+    _zod: $ZodCheckMimeTypeInternals<T>;
+}
+const $ZodCheckMimeType: $constructor<$ZodCheckMimeType>;
+interface $ZodCheckOverwriteDef<T = unknown> extends $ZodCheckDef {
+    check: "overwrite";
+    tx(value: T): T;
+}
+interface $ZodCheckOverwriteInternals<T = unknown> extends $ZodCheckInternals<T> {
+    def: $ZodCheckOverwriteDef<T>;
+    issc: never;
+}
+interface $ZodCheckOverwrite<T = unknown> extends $ZodCheck<T> {
+    _zod: $ZodCheckOverwriteInternals<T>;
+}
+const $ZodCheckOverwrite: $constructor<$ZodCheckOverwrite>;
+type $ZodChecks = $ZodCheckLessThan | $ZodCheckGreaterThan | $ZodCheckMultipleOf | $ZodCheckNumberFormat | $ZodCheckBigIntFormat | $ZodCheckMaxSize | $ZodCheckMinSize | $ZodCheckSizeEquals | $ZodCheckMaxLength | $ZodCheckMinLength | $ZodCheckLengthEquals | $ZodCheckStringFormat | $ZodCheckProperty | $ZodCheckMimeType | $ZodCheckOverwrite;
+type $ZodStringFormatChecks = $ZodCheckRegex | $ZodCheckLowerCase | $ZodCheckUpperCase | $ZodCheckIncludes | $ZodCheckStartsWith | $ZodCheckEndsWith | schemas.$ZodStringFormatTypes;
+interface $ZodIssueBase {
+    readonly code?: string;
+    readonly input?: unknown;
+    readonly path: PropertyKey[];
+    readonly message: string;
+}
+type $ZodInvalidTypeExpected = "string" | "number" | "int" | "boolean" | "bigint" | "symbol" | "undefined" | "null" | "never" | "void" | "date" | "array" | "object" | "tuple" | "record" | "map" | "set" | "file" | "nonoptional" | "nan" | "function" | (string & {});
+interface $ZodIssueInvalidType<Input = unknown> extends $ZodIssueBase {
+    readonly code: "invalid_type";
+    readonly expected: $ZodInvalidTypeExpected;
+    readonly input?: Input;
+}
+interface $ZodIssueTooBig<Input = unknown> extends $ZodIssueBase {
+    readonly code: "too_big";
+    readonly origin: "number" | "int" | "bigint" | "date" | "string" | "array" | "set" | "file" | (string & {});
+    readonly maximum: number | bigint;
+    readonly inclusive?: boolean;
+    readonly exact?: boolean;
+    readonly input?: Input;
+}
+interface $ZodIssueTooSmall<Input = unknown> extends $ZodIssueBase {
+    readonly code: "too_small";
+    readonly origin: "number" | "int" | "bigint" | "date" | "string" | "array" | "set" | "file" | (string & {});
+    readonly minimum: number | bigint;
+    readonly inclusive?: boolean;
+    readonly exact?: boolean;
+    readonly input?: Input;
+}
+interface $ZodIssueInvalidStringFormat extends $ZodIssueBase {
+    readonly code: "invalid_format";
+    readonly format: $ZodStringFormats | (string & {});
+    readonly pattern?: string;
+    readonly input?: string;
+}
+interface $ZodIssueNotMultipleOf<Input extends number | bigint = number | bigint> extends $ZodIssueBase {
+    readonly code: "not_multiple_of";
+    readonly divisor: number;
+    readonly input?: Input;
+}
+interface $ZodIssueUnrecognizedKeys extends $ZodIssueBase {
+    readonly code: "unrecognized_keys";
+    readonly keys: string[];
+    readonly input?: Record<string, unknown>;
+}
+interface $ZodIssueInvalidUnionNoMatch extends $ZodIssueBase {
+    readonly code: "invalid_union";
+    readonly errors: $ZodIssue[][];
+    readonly input?: unknown;
+    readonly discriminator?: string | undefined;
+    readonly options?: util.Primitive[];
+    readonly inclusive?: true;
+}
+interface $ZodIssueInvalidUnionMultipleMatch extends $ZodIssueBase {
+    readonly code: "invalid_union";
+    readonly errors: [
+    ];
+    readonly input?: unknown;
+    readonly discriminator?: string | undefined;
+    readonly inclusive: false;
+    readonly matches: number[];
+}
+type $ZodIssueInvalidUnion = $ZodIssueInvalidUnionNoMatch | $ZodIssueInvalidUnionMultipleMatch;
+interface $ZodIssueInvalidKey<Input = unknown> extends $ZodIssueBase {
+    readonly code: "invalid_key";
+    readonly origin: "map" | "record";
+    readonly issues: $ZodIssue[];
+    readonly input?: Input;
+}
+interface $ZodIssueInvalidElement<Input = unknown> extends $ZodIssueBase {
+    readonly code: "invalid_element";
+    readonly origin: "map" | "set";
+    readonly key: unknown;
+    readonly issues: $ZodIssue[];
+    readonly input?: Input;
+}
+interface $ZodIssueInvalidValue<Input = unknown> extends $ZodIssueBase {
+    readonly code: "invalid_value";
+    readonly values: util.Primitive[];
+    readonly input?: Input;
+}
+interface $ZodIssueCustom extends $ZodIssueBase {
+    readonly code: "custom";
+    readonly params?: Record<string, any> | undefined;
+    readonly input?: unknown;
+}
+interface $ZodIssueStringCommonFormats extends $ZodIssueInvalidStringFormat {
+    format: Exclude<$ZodStringFormats, "regex" | "jwt" | "starts_with" | "ends_with" | "includes">;
+}
+interface $ZodIssueStringInvalidRegex extends $ZodIssueInvalidStringFormat {
+    format: "regex";
+    pattern: string;
+}
+interface $ZodIssueStringInvalidJWT extends $ZodIssueInvalidStringFormat {
+    format: "jwt";
+    algorithm?: string;
+}
+interface $ZodIssueStringStartsWith extends $ZodIssueInvalidStringFormat {
+    format: "starts_with";
+    prefix: string;
+}
+interface $ZodIssueStringEndsWith extends $ZodIssueInvalidStringFormat {
+    format: "ends_with";
+    suffix: string;
+}
+interface $ZodIssueStringIncludes extends $ZodIssueInvalidStringFormat {
+    format: "includes";
+    includes: string;
+}
+type $ZodStringFormatIssues = $ZodIssueStringCommonFormats | $ZodIssueStringInvalidRegex | $ZodIssueStringInvalidJWT | $ZodIssueStringStartsWith | $ZodIssueStringEndsWith | $ZodIssueStringIncludes;
+type $ZodIssue = $ZodIssueInvalidType | $ZodIssueTooBig | $ZodIssueTooSmall | $ZodIssueInvalidStringFormat | $ZodIssueNotMultipleOf | $ZodIssueUnrecognizedKeys | $ZodIssueInvalidUnion | $ZodIssueInvalidKey | $ZodIssueInvalidElement | $ZodIssueInvalidValue | $ZodIssueCustom;
+type $ZodIssueCode = $ZodIssue["code"];
+type $ZodInternalIssue<T extends $ZodIssueBase = $ZodIssue> = T extends any ? RawIssue<T> : never;
+type RawIssue<T extends $ZodIssueBase> = T extends any ? util.Flatten<util.MakePartial<T, "message" | "path"> & {
+    readonly input: unknown;
+    readonly inst?: $ZodType | $ZodCheck;
+    readonly schema?: $ZodType | undefined;
+    readonly continue?: boolean | undefined;
+} & Record<string, unknown>> : never;
+type $ZodRawIssue<T extends $ZodIssueBase = $ZodIssue> = $ZodInternalIssue<T>;
+interface $ZodErrorMap<T extends $ZodIssueBase = $ZodIssue> {
+    (issue: $ZodRawIssue<T>): {
+        message: string;
+    } | string | undefined | null;
+}
+interface $ZodError<T = unknown> extends Error {
+    type: T;
+    issues: $ZodIssue[];
+    _zod: {
+        output: T;
+        def: $ZodIssue[];
+    };
+    stack?: string;
+    name: string;
+}
+const $ZodError: $constructor<$ZodError>;
+interface $ZodRealError<T = any> extends $ZodError<T> {
+}
+const $ZodRealError$1: $constructor<$ZodRealError>;
+type $ZodFlattenedError<T, U = string> = _FlattenedError<T, U>;
+type _FlattenedError<T, U = string> = {
+    formErrors: U[];
+    fieldErrors: {
+        [P in keyof T]?: U[];
+    };
+};
+function flattenError<T>(error: $ZodError<T>): _FlattenedError<T>;
+function flattenError<T, U>(error: $ZodError<T>, mapper?: (issue: $ZodIssue) => U): _FlattenedError<T, U>;
+type _ZodFormattedError<T, U = string> = T extends [
+    any,
+    ...any[]
+] ? {
+    [K in keyof T]?: $ZodFormattedError<T[K], U>;
+} : T extends any[] ? {
+    [k: number]: $ZodFormattedError<T[number], U>;
+} : T extends object ? util.Flatten<{
+    [K in keyof T]?: $ZodFormattedError<T[K], U>;
+}> : any;
+type $ZodFormattedError<T, U = string> = {
+    _errors: U[];
+} & util.Flatten<_ZodFormattedError<T, U>>;
+function formatError<T>(error: $ZodError<T>): $ZodFormattedError<T>;
+function formatError<T, U>(error: $ZodError<T>, mapper?: (issue: $ZodIssue) => U): $ZodFormattedError<T, U>;
+type $ZodErrorTree<T, U = string> = T extends util.Primitive ? {
+    errors: U[];
+} : T extends [
+    any,
+    ...any[]
+] ? {
+    errors: U[];
+    items?: {
+        [K in keyof T]?: $ZodErrorTree<T[K], U>;
+    };
+} : T extends any[] ? {
+    errors: U[];
+    items?: Array<$ZodErrorTree<T[number], U>>;
+} : T extends object ? {
+    errors: U[];
+    properties?: {
+        [K in keyof T]?: $ZodErrorTree<T[K], U>;
+    };
+} : {
+    errors: U[];
+};
+function treeifyError<T>(error: $ZodError<T>): $ZodErrorTree<T>;
+function treeifyError<T, U>(error: $ZodError<T>, mapper?: (issue: $ZodIssue) => U): $ZodErrorTree<T, U>;
+function toDotPath(_path: readonly (string | number | symbol | StandardSchemaV1.PathSegment)[]): string;
+function prettifyError(error: StandardSchemaV1.FailureResult): string;
+type ZodTrait = {
+    _zod: {
+        def: any;
+        [k: string]: any;
+    };
+};
+interface $constructor<T extends ZodTrait, D = T["_zod"]["def"]> {
+    new (def: D): T;
+    init(inst: T, def: D): asserts inst is T;
+}
+interface $constructorParams {
+    Parent?: typeof Class;
+}
+const NEVER: never;
+function $constructor<T extends ZodTrait, D = T["_zod"]["def"]>(name: string, initializer: (inst: T, def: D) => void, proto?: ProtoOf<T>, params?: $constructorParams): $constructor<T, D>;
+const $brand: unique symbol;
+type $brand<T extends string | number | symbol = string | number | symbol> = {
+    [$brand]: {
+        [k in T]: true;
+    };
+};
+type $ZodBranded<T extends schemas.SomeType, Brand extends string | number | symbol, Dir extends "in" | "out" | "inout" = "out"> = T & (Dir extends "inout" ? {
+    _zod: {
+        input: input<T> & $brand<Brand>;
+        output: output<T> & $brand<Brand>;
+    };
+} : Dir extends "in" ? {
+    _zod: {
+        input: input<T> & $brand<Brand>;
+    };
+} : {
+    _zod: {
+        output: output<T> & $brand<Brand>;
+    };
+});
+type $ZodNarrow<T extends schemas.SomeType, Out> = T & {
+    _zod: {
+        output: Out;
+    };
+};
+class $ZodAsyncError extends Error {
+    constructor();
+}
+class $ZodEncodeError extends Error {
+    constructor(name: string);
+}
+type input<T> = T extends {
+    _zod: {
+        input: any;
+    };
+} ? T["_zod"]["input"] : unknown;
+type output<T> = T extends {
+    _zod: {
+        output: any;
+    };
+} ? T["_zod"]["output"] : unknown;
+interface $ZodConfig {
+    customError?: $ZodErrorMap | undefined;
+    localeError?: $ZodErrorMap | undefined;
+    jitless?: boolean | undefined;
+    memoizer?: schemas.$ZodMemoizer | undefined;
+    postProcessor?: ((inst: any) => void) | undefined;
+}
+const globalConfig: $ZodConfig;
+function config(newConfig?: Partial<$ZodConfig>): $ZodConfig;
+type $ZodErrorClass = {
+    new (issues: $ZodIssue[]): $ZodError;
+};
+type $ParseParams = {
+    callee?: util.AnyFunc;
+    Err?: $ZodErrorClass | undefined;
+};
+type $Parse = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => output<T>;
+const _parse: (_Err: $ZodErrorClass) => $Parse;
+const parse: $Parse;
+type $ParseAsync = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => Promise<output<T>>;
+const _parseAsync: (_Err: $ZodErrorClass) => $ParseAsync;
+const parseAsync: $ParseAsync;
+type $SafeParse = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => util.SafeParseResult<output<T>>;
+const _safeParse: (_Err: $ZodErrorClass) => $SafeParse;
+const safeParse: $SafeParse;
+type $SafeParseAsync = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => Promise<util.SafeParseResult<output<T>>>;
+const _safeParseAsync: (_Err: $ZodErrorClass) => $SafeParseAsync;
+const safeParseAsync: $SafeParseAsync;
+type $Validate = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => value is input<T>;
+const validate: $Validate;
+type $ValidateAsync = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => Promise<boolean>;
+const validateAsync: $ValidateAsync;
+type $Encode = <T extends schemas.$ZodType>(schema: T, value: output<T>, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => input<T>;
+const _encode: (_Err: $ZodErrorClass) => $Encode;
+const encode: $Encode;
+type $Decode = <T extends schemas.$ZodType>(schema: T, value: input<T>, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => output<T>;
+const _decode: (_Err: $ZodErrorClass) => $Decode;
+const decode: $Decode;
+type $EncodeAsync = <T extends schemas.$ZodType>(schema: T, value: output<T>, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => Promise<input<T>>;
+const _encodeAsync: (_Err: $ZodErrorClass) => $EncodeAsync;
+const encodeAsync: $EncodeAsync;
+type $DecodeAsync = <T extends schemas.$ZodType>(schema: T, value: input<T>, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => Promise<output<T>>;
+const _decodeAsync: (_Err: $ZodErrorClass) => $DecodeAsync;
+const decodeAsync: $DecodeAsync;
+type $SafeEncode = <T extends schemas.$ZodType>(schema: T, value: output<T>, _ctx?: schemas.ParseContext<$ZodIssue>) => util.SafeParseResult<input<T>>;
+const _safeEncode: (_Err: $ZodErrorClass) => $SafeEncode;
+const safeEncode: $SafeEncode;
+type $SafeDecode = <T extends schemas.$ZodType>(schema: T, value: input<T>, _ctx?: schemas.ParseContext<$ZodIssue>) => util.SafeParseResult<output<T>>;
+const _safeDecode: (_Err: $ZodErrorClass) => $SafeDecode;
+const safeDecode: $SafeDecode;
+type $SafeEncodeAsync = <T extends schemas.$ZodType>(schema: T, value: output<T>, _ctx?: schemas.ParseContext<$ZodIssue>) => Promise<util.SafeParseResult<input<T>>>;
+const _safeEncodeAsync: (_Err: $ZodErrorClass) => $SafeEncodeAsync;
+const safeEncodeAsync: $SafeEncodeAsync;
+type $SafeDecodeAsync = <T extends schemas.$ZodType>(schema: T, value: input<T>, _ctx?: schemas.ParseContext<$ZodIssue>) => Promise<util.SafeParseResult<output<T>>>;
+const _safeDecodeAsync: (_Err: $ZodErrorClass) => $SafeDecodeAsync;
+const safeDecodeAsync: $SafeDecodeAsync;
+class $ZodCyclicError extends Error {
+    constructor();
+}
+function isRecursiveSchema(inst: $ZodType): boolean;
+function memoizer(): $ZodMemoizer;
+function isBackEdge(ctx: object, value: unknown): boolean;
+const cuid: RegExp;
+const cuid2: RegExp;
+const ulid: RegExp;
+const xid: RegExp;
+const ksuid: RegExp;
+const nanoid: RegExp;
+function nanoidOfLength(length: number): RegExp;
+const duration: RegExp;
+const extendedDuration: RegExp;
+const guid: RegExp;
+const uuid: (version?: number | undefined) => RegExp;
+const uuid4: RegExp;
+const uuid6: RegExp;
+const uuid7: RegExp;
+const email: RegExp;
+const html5Email: RegExp;
+const rfc5322Email: RegExp;
+const unicodeEmail: RegExp;
+const idnEmail: RegExp;
+const browserEmail: RegExp;
+function emoji(): RegExp;
+const ipv4: RegExp;
+const ipv6: RegExp;
+const mac: (delimiter?: string) => RegExp;
+const cidrv4: RegExp;
+const cidrv6: RegExp;
+const base64: RegExp;
+const base64url: RegExp;
+const hostname: RegExp;
+const domain: RegExp;
+const httpProtocol: RegExp;
+const e164: RegExp;
+const creditCard: RegExp;
+const currencyCode: RegExp;
+const iban: RegExp;
+const date: RegExp;
+function time(args: {
+    precision?: number | null;
+}): RegExp;
+function datetime(args: {
+    precision?: number | null;
+    offset?: boolean;
+    local?: boolean;
+}): RegExp;
+const anyString: RegExp;
+const string: (params?: {
+    minimum?: number | undefined;
+    maximum?: number | undefined;
+}) => RegExp;
+const bigint: RegExp;
+const integer: RegExp;
+const number: RegExp;
+const boolean: RegExp;
+const _null: RegExp;
+const _undefined: RegExp;
+const lowercase: RegExp;
+const uppercase: RegExp;
+const hex: RegExp;
+const md5_hex: RegExp;
+const md5_base64: RegExp;
+const md5_base64url: RegExp;
+const sha1_hex: RegExp;
+const sha1_base64: RegExp;
+const sha1_base64url: RegExp;
+const sha256_hex: RegExp;
+const sha256_base64: RegExp;
+const sha256_base64url: RegExp;
+const sha384_hex: RegExp;
+const sha384_base64: RegExp;
+const sha384_base64url: RegExp;
+const sha512_hex: RegExp;
+const sha512_base64: RegExp;
+const sha512_base64url: RegExp;
+function _default(): {
+    localeError: $ZodErrorMap;
+};
+function _default$1(): {
+    localeError: $ZodErrorMap;
+};
+function _default$2(): {
+    localeError: $ZodErrorMap;
+};
+function _default$3(): {
+    localeError: $ZodErrorMap;
+};
+function _default$4(): {
+    localeError: $ZodErrorMap;
+};
+function _default$5(): {
+    localeError: $ZodErrorMap;
+};
+function _default$6(): {
+    localeError: $ZodErrorMap;
+};
+function _default$7(): {
+    localeError: $ZodErrorMap;
+};
+function _default$8(): {
+    localeError: $ZodErrorMap;
+};
+function _default$9(): {
+    localeError: $ZodErrorMap;
+};
+function _default$10(): {
+    localeError: $ZodErrorMap;
+};
+function _default$11(): {
+    localeError: $ZodErrorMap;
+};
+function _default$12(): {
+    localeError: $ZodErrorMap;
+};
+function _default$13(): {
+    localeError: $ZodErrorMap;
+};
+function _default$14(): {
+    localeError: $ZodErrorMap;
+};
+function _default$15(): {
+    localeError: $ZodErrorMap;
+};
+function _default$16(): {
+    localeError: $ZodErrorMap;
+};
+function _default$17(): {
+    localeError: $ZodErrorMap;
+};
+function _default$18(): {
+    localeError: $ZodErrorMap;
+};
+function _default$19(): {
+    localeError: $ZodErrorMap;
+};
+function _default$20(): {
+    localeError: $ZodErrorMap;
+};
+function _default$21(): {
+    localeError: $ZodErrorMap;
+};
+function _default$22(): {
+    localeError: $ZodErrorMap;
+};
+function _default$23(): {
+    localeError: $ZodErrorMap;
+};
+function _default$24(): {
+    localeError: $ZodErrorMap;
+};
+function _default$25(): {
+    localeError: $ZodErrorMap;
+};
+function _default$26(): {
+    localeError: $ZodErrorMap;
+};
+function _default$27(): {
+    localeError: $ZodErrorMap;
+};
+function _default$28(): {
+    localeError: $ZodErrorMap;
+};
+function _default$29(): {
+    localeError: $ZodErrorMap;
+};
+function _default$30(): {
+    localeError: $ZodErrorMap;
+};
+function _default$31(): {
+    localeError: $ZodErrorMap;
+};
+function _default$32(): {
+    localeError: $ZodErrorMap;
+};
+function _default$33(): {
+    localeError: $ZodErrorMap;
+};
+function _default$34(): {
+    localeError: $ZodErrorMap;
+};
+function _default$35(): {
+    localeError: $ZodErrorMap;
+};
+function _default$36(): {
+    localeError: $ZodErrorMap;
+};
+function _default$37(): {
+    localeError: $ZodErrorMap;
+};
+function _default$38(): {
+    localeError: $ZodErrorMap;
+};
+function _default$39(): {
+    localeError: $ZodErrorMap;
+};
+function _default$40(): {
+    localeError: $ZodErrorMap;
+};
+function _default$41(): {
+    localeError: $ZodErrorMap;
+};
+function _default$42(): {
+    localeError: $ZodErrorMap;
+};
+function _default$43(): {
+    localeError: $ZodErrorMap;
+};
+function _default$44(): {
+    localeError: $ZodErrorMap;
+};
+function _default$45(): {
+    localeError: $ZodErrorMap;
+};
+function _default$46(): {
+    localeError: $ZodErrorMap;
+};
+function _default$47(): {
+    localeError: $ZodErrorMap;
+};
+function _default$48(): {
+    localeError: $ZodErrorMap;
+};
+function _default$49(): {
+    localeError: $ZodErrorMap;
+};
+function _default$50(): {
+    localeError: $ZodErrorMap;
+};
+function _default$51(): {
+    localeError: $ZodErrorMap;
+};
+function _default$52(): {
+    localeError: $ZodErrorMap;
+};
+function _default$53(): {
+    localeError: $ZodErrorMap;
+};
+function _default$54(): {
+    localeError: $ZodErrorMap;
+};
+function _default$55(): {
+    localeError: $ZodErrorMap;
+};
+function _default$56(): {
+    localeError: $ZodErrorMap;
+};
+function _default$57(): {
+    localeError: $ZodErrorMap;
+};
+function _default$58(): {
+    localeError: $ZodErrorMap;
+};
+function _default$59(): {
+    localeError: $ZodErrorMap;
+};
+function _default$60(): {
+    localeError: $ZodErrorMap;
+};
+function _default$61(): {
+    localeError: $ZodErrorMap;
+};
+function _default$62(): {
+    localeError: $ZodErrorMap;
+};
+type ModeWriter = (doc: Doc, modes: {
+    execution: "sync" | "async";
+}) => void;
+class Doc {
+    args: string[];
+    closed: Record<string, unknown>;
+    content: string[];
+    indent: number;
+    constructor(args?: string[], closed?: Record<string, unknown>);
+    indented(fn: (doc: Doc) => void): void;
+    write(fn: ModeWriter): void;
+    write(line: string): void;
+    compile(): any;
+}
+const INVALID: unique symbol;
+type INVALID = typeof INVALID;
+interface CompileFnOptions {
+    debug?: boolean | undefined;
+    assertOnly?: boolean | undefined;
+}
+type CompiledFn<T> = ((input: unknown) => T | INVALID) & {
+    code?: string | undefined;
+    definite?: boolean | undefined;
+};
+class ZodCompileAsyncError extends Error {
+    constructor(message?: string);
+}
+class ZodCompileUnsupportedError extends Error {
+    readonly islandable: boolean;
+    constructor(feature: string, islandable?: boolean);
+}
+interface CompileOptions {
+    strict?: boolean | undefined;
+}
+function compile<T extends SomeType>(schema: T, options?: CompileOptions): T;
+function withParser<T extends SomeType>(schema: T, parser: (input: unknown) => output<T> | INVALID): T;
+function compileFn<T extends SomeType>(schema: T, options?: CompileFnOptions): CompiledFn<output<T>>;
+type Params<T extends schemas.$ZodType | $ZodCheck, IssueTypes extends $ZodIssueBase, OmitKeys extends keyof T["_zod"]["def"] = never> = util.Flatten<Partial<util.EmptyToNever<Omit<T["_zod"]["def"], OmitKeys> & ([
+    IssueTypes
+] extends [
+    never
+] ? {} : {
+    error?: string | $ZodErrorMap<IssueTypes> | undefined;
+    message?: string | undefined;
+})>>>;
+type TypeParams<T extends schemas.$ZodType = schemas.$ZodType & {
+    _isst: never;
+}, AlsoOmit extends Exclude<keyof T["_zod"]["def"], "type" | "checks" | "error"> = never> = Params<T, NonNullable<T["_zod"]["isst"]>, "type" | "checks" | "error" | AlsoOmit>;
+type CheckParams<T extends $ZodCheck = $ZodCheck, AlsoOmit extends Exclude<keyof T["_zod"]["def"], "check" | "error"> = never> = Params<T, NonNullable<T["_zod"]["issc"]>, "check" | "error" | AlsoOmit>;
+type StringFormatParams<T extends schemas.$ZodStringFormat = schemas.$ZodStringFormat, AlsoOmit extends Exclude<keyof T["_zod"]["def"], "type" | "coerce" | "checks" | "error" | "check" | "format"> = never> = Params<T, NonNullable<T["_zod"]["isst"] | T["_zod"]["issc"]>, "type" | "coerce" | "checks" | "error" | "check" | "format" | AlsoOmit>;
+type CheckStringFormatParams<T extends schemas.$ZodStringFormat = schemas.$ZodStringFormat, AlsoOmit extends Exclude<keyof T["_zod"]["def"], "type" | "coerce" | "checks" | "error" | "check" | "format"> = never> = Params<T, NonNullable<T["_zod"]["issc"]>, "type" | "coerce" | "checks" | "error" | "check" | "format" | AlsoOmit>;
+type CheckTypeParams<T extends schemas.$ZodType & $ZodCheck = schemas.$ZodType & $ZodCheck, AlsoOmit extends Exclude<keyof T["_zod"]["def"], "type" | "checks" | "error" | "check"> = never> = Params<T, NonNullable<T["_zod"]["isst"] | T["_zod"]["issc"]>, "type" | "checks" | "error" | "check" | AlsoOmit>;
+type $ZodStringParams = TypeParams<schemas.$ZodString<string>, "coerce"> & {
+    checks?: readonly $ZodCheck<string>[];
+};
+function _string<T extends schemas.$ZodString>(Class: util.SchemaClass<T>, params?: string | $ZodStringParams): T;
+function _coercedString<T extends schemas.$ZodString>(Class: util.SchemaClass<T>, params?: string | $ZodStringParams): T;
+type $ZodStringFormatParams = CheckTypeParams<schemas.$ZodStringFormat, "format" | "coerce" | "when" | "pattern">;
+type $ZodCheckStringFormatParams = CheckParams<$ZodCheckStringFormat, "format">;
+type $ZodEmailParams = StringFormatParams<schemas.$ZodEmail, "when">;
+type $ZodCheckEmailParams = CheckStringFormatParams<schemas.$ZodEmail, "when">;
+function _email<T extends schemas.$ZodEmail>(Class: util.SchemaClass<T>, params?: string | $ZodEmailParams | $ZodCheckEmailParams): T;
+type $ZodGUIDParams = StringFormatParams<schemas.$ZodGUID, "pattern" | "when">;
+type $ZodCheckGUIDParams = CheckStringFormatParams<schemas.$ZodGUID, "pattern" | "when">;
+function _guid<T extends schemas.$ZodGUID>(Class: util.SchemaClass<T>, params?: string | $ZodGUIDParams | $ZodCheckGUIDParams): T;
+type $ZodUUIDParams = StringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+type $ZodCheckUUIDParams = CheckStringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+function _uuid<T extends schemas.$ZodUUID>(Class: util.SchemaClass<T>, params?: string | $ZodUUIDParams | $ZodCheckUUIDParams): T;
+type $ZodUUIDv4Params = StringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+type $ZodCheckUUIDv4Params = CheckStringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+function _uuidv4<T extends schemas.$ZodUUID>(Class: util.SchemaClass<T>, params?: string | $ZodUUIDv4Params | $ZodCheckUUIDv4Params): T;
+type $ZodUUIDv6Params = StringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+type $ZodCheckUUIDv6Params = CheckStringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+function _uuidv6<T extends schemas.$ZodUUID>(Class: util.SchemaClass<T>, params?: string | $ZodUUIDv6Params | $ZodCheckUUIDv6Params): T;
+type $ZodUUIDv7Params = StringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+type $ZodCheckUUIDv7Params = CheckStringFormatParams<schemas.$ZodUUID, "pattern" | "when">;
+function _uuidv7<T extends schemas.$ZodUUID>(Class: util.SchemaClass<T>, params?: string | $ZodUUIDv7Params | $ZodCheckUUIDv7Params): T;
+type $ZodURLParams = StringFormatParams<schemas.$ZodURL, "when">;
+type $ZodCheckURLParams = CheckStringFormatParams<schemas.$ZodURL, "when">;
+function _url<T extends schemas.$ZodURL>(Class: util.SchemaClass<T>, params?: string | $ZodURLParams | $ZodCheckURLParams): T;
+type $ZodEmojiParams = StringFormatParams<schemas.$ZodEmoji, "when">;
+type $ZodCheckEmojiParams = CheckStringFormatParams<schemas.$ZodEmoji, "when">;
+function _emoji<T extends schemas.$ZodEmoji>(Class: util.SchemaClass<T>, params?: string | $ZodEmojiParams | $ZodCheckEmojiParams): T;
+type $ZodNanoIDParams = StringFormatParams<schemas.$ZodNanoID, "when" | "pattern">;
+type $ZodCheckNanoIDParams = CheckStringFormatParams<schemas.$ZodNanoID, "when" | "pattern">;
+function _nanoid<T extends schemas.$ZodNanoID>(Class: util.SchemaClass<T>, params?: string | $ZodNanoIDParams | $ZodCheckNanoIDParams): T;
+type $ZodCUIDParams = StringFormatParams<schemas.$ZodCUID, "when">;
+type $ZodCheckCUIDParams = CheckStringFormatParams<schemas.$ZodCUID, "when">;
+function _cuid<T extends schemas.$ZodCUID>(Class: util.SchemaClass<T>, params?: string | $ZodCUIDParams | $ZodCheckCUIDParams): T;
+type $ZodCUID2Params = StringFormatParams<schemas.$ZodCUID2, "when">;
+type $ZodCheckCUID2Params = CheckStringFormatParams<schemas.$ZodCUID2, "when">;
+function _cuid2<T extends schemas.$ZodCUID2>(Class: util.SchemaClass<T>, params?: string | $ZodCUID2Params | $ZodCheckCUID2Params): T;
+type $ZodULIDParams = StringFormatParams<schemas.$ZodULID, "when">;
+type $ZodCheckULIDParams = CheckStringFormatParams<schemas.$ZodULID, "when">;
+function _ulid<T extends schemas.$ZodULID>(Class: util.SchemaClass<T>, params?: string | $ZodULIDParams | $ZodCheckULIDParams): T;
+type $ZodXIDParams = StringFormatParams<schemas.$ZodXID, "when">;
+type $ZodCheckXIDParams = CheckStringFormatParams<schemas.$ZodXID, "when">;
+function _xid<T extends schemas.$ZodXID>(Class: util.SchemaClass<T>, params?: string | $ZodXIDParams | $ZodCheckXIDParams): T;
+type $ZodKSUIDParams = StringFormatParams<schemas.$ZodKSUID, "when">;
+type $ZodCheckKSUIDParams = CheckStringFormatParams<schemas.$ZodKSUID, "when">;
+function _ksuid<T extends schemas.$ZodKSUID>(Class: util.SchemaClass<T>, params?: string | $ZodKSUIDParams | $ZodCheckKSUIDParams): T;
+type $ZodIPv4Params = StringFormatParams<schemas.$ZodIPv4, "pattern" | "when" | "version">;
+type $ZodCheckIPv4Params = CheckStringFormatParams<schemas.$ZodIPv4, "pattern" | "when" | "version">;
+function _ipv4<T extends schemas.$ZodIPv4>(Class: util.SchemaClass<T>, params?: string | $ZodIPv4Params | $ZodCheckIPv4Params): T;
+type $ZodIPv6Params = StringFormatParams<schemas.$ZodIPv6, "pattern" | "when" | "version">;
+type $ZodCheckIPv6Params = CheckStringFormatParams<schemas.$ZodIPv6, "pattern" | "when" | "version">;
+function _ipv6<T extends schemas.$ZodIPv6>(Class: util.SchemaClass<T>, params?: string | $ZodIPv6Params | $ZodCheckIPv6Params): T;
+type $ZodMACParams = StringFormatParams<schemas.$ZodMAC, "pattern" | "when">;
+type $ZodCheckMACParams = CheckStringFormatParams<schemas.$ZodMAC, "pattern" | "when">;
+function _mac<T extends schemas.$ZodMAC>(Class: util.SchemaClass<T>, params?: string | $ZodMACParams | $ZodCheckMACParams): T;
+type $ZodCIDRv4Params = StringFormatParams<schemas.$ZodCIDRv4, "pattern" | "when">;
+type $ZodCheckCIDRv4Params = CheckStringFormatParams<schemas.$ZodCIDRv4, "pattern" | "when">;
+function _cidrv4<T extends schemas.$ZodCIDRv4>(Class: util.SchemaClass<T>, params?: string | $ZodCIDRv4Params | $ZodCheckCIDRv4Params): T;
+type $ZodCIDRv6Params = StringFormatParams<schemas.$ZodCIDRv6, "pattern" | "when">;
+type $ZodCheckCIDRv6Params = CheckStringFormatParams<schemas.$ZodCIDRv6, "pattern" | "when">;
+function _cidrv6<T extends schemas.$ZodCIDRv6>(Class: util.SchemaClass<T>, params?: string | $ZodCIDRv6Params | $ZodCheckCIDRv6Params): T;
+type $ZodBase64Params = StringFormatParams<schemas.$ZodBase64, "pattern" | "when">;
+type $ZodCheckBase64Params = CheckStringFormatParams<schemas.$ZodBase64, "pattern" | "when">;
+function _base64<T extends schemas.$ZodBase64>(Class: util.SchemaClass<T>, params?: string | $ZodBase64Params | $ZodCheckBase64Params): T;
+type $ZodBase64URLParams = StringFormatParams<schemas.$ZodBase64URL, "pattern" | "when">;
+type $ZodCheckBase64URLParams = CheckStringFormatParams<schemas.$ZodBase64URL, "pattern" | "when">;
+function _base64url<T extends schemas.$ZodBase64URL>(Class: util.SchemaClass<T>, params?: string | $ZodBase64URLParams | $ZodCheckBase64URLParams): T;
+type $ZodE164Params = StringFormatParams<schemas.$ZodE164, "when">;
+type $ZodCheckE164Params = CheckStringFormatParams<schemas.$ZodE164, "when">;
+function _e164<T extends schemas.$ZodE164>(Class: util.SchemaClass<T>, params?: string | $ZodE164Params | $ZodCheckE164Params): T;
+type $ZodCreditCardParams = StringFormatParams<schemas.$ZodCreditCard, "pattern" | "when">;
+type $ZodCheckCreditCardParams = CheckStringFormatParams<schemas.$ZodCreditCard, "pattern" | "when">;
+function _creditCard<T extends schemas.$ZodCreditCard>(Class: util.SchemaClass<T>, params?: string | $ZodCreditCardParams | $ZodCheckCreditCardParams): T;
+type $ZodIBANParams = StringFormatParams<schemas.$ZodIBAN, "pattern" | "when">;
+type $ZodCheckIBANParams = CheckStringFormatParams<schemas.$ZodIBAN, "pattern" | "when">;
+function _iban<T extends schemas.$ZodIBAN>(Class: util.SchemaClass<T>, params?: string | $ZodIBANParams | $ZodCheckIBANParams): T;
+type $ZodJWTParams = StringFormatParams<schemas.$ZodJWT, "pattern" | "when">;
+type $ZodCheckJWTParams = CheckStringFormatParams<schemas.$ZodJWT, "pattern" | "when">;
+function _jwt<T extends schemas.$ZodJWT>(Class: util.SchemaClass<T>, params?: string | $ZodJWTParams | $ZodCheckJWTParams): T;
+const TimePrecision: {
+    readonly Any: null;
+    readonly Minute: -1;
+    readonly Second: 0;
+    readonly Millisecond: 3;
+    readonly Microsecond: 6;
+};
+type $ZodISODateTimeParams = StringFormatParams<schemas.$ZodISODateTime, "pattern" | "when">;
+type $ZodCheckISODateTimeParams = CheckStringFormatParams<schemas.$ZodISODateTime, "pattern" | "when">;
+function _isoDateTime<T extends schemas.$ZodISODateTime>(Class: util.SchemaClass<T>, params?: string | $ZodISODateTimeParams | $ZodCheckISODateTimeParams): T;
+type $ZodISODateParams = StringFormatParams<schemas.$ZodISODate, "pattern" | "when">;
+type $ZodCheckISODateParams = CheckStringFormatParams<schemas.$ZodISODate, "pattern" | "when">;
+function _isoDate<T extends schemas.$ZodISODate>(Class: util.SchemaClass<T>, params?: string | $ZodISODateParams | $ZodCheckISODateParams): T;
+type $ZodISOTimeParams = StringFormatParams<schemas.$ZodISOTime, "pattern" | "when">;
+type $ZodCheckISOTimeParams = CheckStringFormatParams<schemas.$ZodISOTime, "pattern" | "when">;
+function _isoTime<T extends schemas.$ZodISOTime>(Class: util.SchemaClass<T>, params?: string | $ZodISOTimeParams | $ZodCheckISOTimeParams): T;
+type $ZodISODurationParams = StringFormatParams<schemas.$ZodISODuration, "when">;
+type $ZodCheckISODurationParams = CheckStringFormatParams<schemas.$ZodISODuration, "when">;
+function _isoDuration<T extends schemas.$ZodISODuration>(Class: util.SchemaClass<T>, params?: string | $ZodISODurationParams | $ZodCheckISODurationParams): T;
+type $ZodNumberParams = TypeParams<schemas.$ZodNumber<number>, "coerce"> & {
+    checks?: readonly $ZodCheck<number>[];
+};
+type $ZodNumberFormatParams = CheckTypeParams<schemas.$ZodNumberFormat, "format" | "coerce">;
+type $ZodCheckNumberFormatParams = CheckParams<$ZodCheckNumberFormat, "format" | "when">;
+function _number<T extends schemas.$ZodNumber>(Class: util.SchemaClass<T>, params?: string | $ZodNumberParams): T;
+function _coercedNumber<T extends schemas.$ZodNumber>(Class: util.SchemaClass<T>, params?: string | $ZodNumberParams): T;
+function _int<T extends schemas.$ZodNumberFormat>(Class: util.SchemaClass<T>, params?: string | $ZodCheckNumberFormatParams): T;
+function _float32<T extends schemas.$ZodNumberFormat>(Class: util.SchemaClass<T>, params?: string | $ZodCheckNumberFormatParams): T;
+function _float64<T extends schemas.$ZodNumberFormat>(Class: util.SchemaClass<T>, params?: string | $ZodCheckNumberFormatParams): T;
+function _int32<T extends schemas.$ZodNumberFormat>(Class: util.SchemaClass<T>, params?: string | $ZodCheckNumberFormatParams): T;
+function _uint32<T extends schemas.$ZodNumberFormat>(Class: util.SchemaClass<T>, params?: string | $ZodCheckNumberFormatParams): T;
+type $ZodBooleanParams = TypeParams<schemas.$ZodBoolean<boolean>, "coerce">;
+function _boolean<T extends schemas.$ZodBoolean>(Class: util.SchemaClass<T>, params?: string | $ZodBooleanParams): T;
+function _coercedBoolean<T extends schemas.$ZodBoolean>(Class: util.SchemaClass<T>, params?: string | $ZodBooleanParams): T;
+type $ZodBigIntParams = TypeParams<schemas.$ZodBigInt<bigint>>;
+type $ZodBigIntFormatParams = CheckTypeParams<schemas.$ZodBigIntFormat, "format" | "coerce">;
+type $ZodCheckBigIntFormatParams = CheckParams<$ZodCheckBigIntFormat, "format" | "when">;
+function _bigint<T extends schemas.$ZodBigInt>(Class: util.SchemaClass<T>, params?: string | $ZodBigIntParams): T;
+function _coercedBigint<T extends schemas.$ZodBigInt>(Class: util.SchemaClass<T>, params?: string | $ZodBigIntParams): T;
+function _int64<T extends schemas.$ZodBigIntFormat>(Class: util.SchemaClass<T>, params?: string | $ZodBigIntFormatParams): T;
+function _uint64<T extends schemas.$ZodBigIntFormat>(Class: util.SchemaClass<T>, params?: string | $ZodBigIntFormatParams): T;
+type $ZodSymbolParams = TypeParams<schemas.$ZodSymbol>;
+function _symbol<T extends schemas.$ZodSymbol>(Class: util.SchemaClass<T>, params?: string | $ZodSymbolParams): T;
+type $ZodUndefinedParams = TypeParams<schemas.$ZodUndefined>;
+function _undefined$1<T extends schemas.$ZodUndefined>(Class: util.SchemaClass<T>, params?: string | $ZodUndefinedParams): T;
+type $ZodNullParams = TypeParams<schemas.$ZodNull>;
+function _null$1<T extends schemas.$ZodNull>(Class: util.SchemaClass<T>, params?: string | $ZodNullParams): T;
+type $ZodAnyParams = TypeParams<schemas.$ZodAny>;
+function _any<T extends schemas.$ZodAny>(Class: util.SchemaClass<T>): T;
+type $ZodUnknownParams = TypeParams<schemas.$ZodUnknown>;
+function _unknown<T extends schemas.$ZodUnknown>(Class: util.SchemaClass<T>): T;
+type $ZodNeverParams = TypeParams<schemas.$ZodNever>;
+function _never<T extends schemas.$ZodNever>(Class: util.SchemaClass<T>, params?: string | $ZodNeverParams): T;
+type $ZodVoidParams = TypeParams<schemas.$ZodVoid>;
+function _void<T extends schemas.$ZodVoid>(Class: util.SchemaClass<T>, params?: string | $ZodVoidParams): T;
+type $ZodDateParams = TypeParams<schemas.$ZodDate, "coerce">;
+function _date<T extends schemas.$ZodDate>(Class: util.SchemaClass<T>, params?: string | $ZodDateParams): T;
+function _coercedDate<T extends schemas.$ZodDate>(Class: util.SchemaClass<T>, params?: string | $ZodDateParams): T;
+type $ZodNaNParams = TypeParams<schemas.$ZodNaN>;
+function _nan<T extends schemas.$ZodNaN>(Class: util.SchemaClass<T>, params?: string | $ZodNaNParams): T;
+type $ZodCheckLessThanParams = CheckParams<$ZodCheckLessThan, "inclusive" | "value" | "when">;
+function _lt(value: util.Numeric, params?: string | $ZodCheckLessThanParams): $ZodCheckLessThan<util.Numeric>;
+function _lte(value: util.Numeric, params?: string | $ZodCheckLessThanParams): $ZodCheckLessThan<util.Numeric>;
+type $ZodCheckGreaterThanParams = CheckParams<$ZodCheckGreaterThan, "inclusive" | "value" | "when">;
+function _gt(value: util.Numeric, params?: string | $ZodCheckGreaterThanParams): $ZodCheckGreaterThan;
+function _gte(value: util.Numeric, params?: string | $ZodCheckGreaterThanParams): $ZodCheckGreaterThan;
+function _positive(params?: string | $ZodCheckGreaterThanParams): $ZodCheckGreaterThan;
+function _negative(params?: string | $ZodCheckLessThanParams): $ZodCheckLessThan;
+function _nonpositive(params?: string | $ZodCheckLessThanParams): $ZodCheckLessThan;
+function _nonnegative(params?: string | $ZodCheckGreaterThanParams): $ZodCheckGreaterThan;
+type $ZodCheckMultipleOfParams = CheckParams<$ZodCheckMultipleOf, "value" | "when">;
+function _multipleOf(value: number | bigint, params?: string | $ZodCheckMultipleOfParams): $ZodCheckMultipleOf;
+type $ZodCheckMaxSizeParams = CheckParams<$ZodCheckMaxSize, "maximum" | "when">;
+function _maxSize(maximum: number, params?: string | $ZodCheckMaxSizeParams): $ZodCheckMaxSize<util.HasSize>;
+type $ZodCheckMinSizeParams = CheckParams<$ZodCheckMinSize, "minimum" | "when">;
+function _minSize(minimum: number, params?: string | $ZodCheckMinSizeParams): $ZodCheckMinSize<util.HasSize>;
+type $ZodCheckSizeEqualsParams = CheckParams<$ZodCheckSizeEquals, "size" | "when">;
+function _size(size: number, params?: string | $ZodCheckSizeEqualsParams): $ZodCheckSizeEquals<util.HasSize>;
+type $ZodCheckMaxLengthParams = CheckParams<$ZodCheckMaxLength, "maximum" | "when">;
+function _maxLength(maximum: number, params?: string | $ZodCheckMaxLengthParams): $ZodCheckMaxLength<util.HasLength>;
+type $ZodCheckMinLengthParams = CheckParams<$ZodCheckMinLength, "minimum" | "when">;
+function _minLength(minimum: number, params?: string | $ZodCheckMinLengthParams): $ZodCheckMinLength<util.HasLength>;
+type $ZodCheckLengthEqualsParams = CheckParams<$ZodCheckLengthEquals, "length" | "when">;
+function _length(length: number, params?: string | $ZodCheckLengthEqualsParams): $ZodCheckLengthEquals<util.HasLength>;
+type $ZodCheckRegexParams = CheckParams<$ZodCheckRegex, "format" | "pattern" | "when">;
+function _regex(pattern: RegExp, params?: string | $ZodCheckRegexParams): $ZodCheckRegex;
+type $ZodCheckLowerCaseParams = CheckParams<$ZodCheckLowerCase, "format" | "when">;
+function _lowercase(params?: string | $ZodCheckLowerCaseParams): $ZodCheckLowerCase;
+type $ZodCheckUpperCaseParams = CheckParams<$ZodCheckUpperCase, "format" | "when">;
+function _uppercase(params?: string | $ZodCheckUpperCaseParams): $ZodCheckUpperCase;
+type $ZodCheckIncludesParams = CheckParams<$ZodCheckIncludes, "includes" | "format" | "when" | "pattern">;
+function _includes(includes: string, params?: string | $ZodCheckIncludesParams): $ZodCheckIncludes;
+type $ZodCheckStartsWithParams = CheckParams<$ZodCheckStartsWith, "prefix" | "format" | "when" | "pattern">;
+function _startsWith(prefix: string, params?: string | $ZodCheckStartsWithParams): $ZodCheckStartsWith;
+type $ZodCheckEndsWithParams = CheckParams<$ZodCheckEndsWith, "suffix" | "format" | "pattern" | "when">;
+function _endsWith(suffix: string, params?: string | $ZodCheckEndsWithParams): $ZodCheckEndsWith;
+type $ZodCheckPropertyParams = CheckParams<$ZodCheckProperty, "property" | "schema" | "when">;
+function _property<K extends string, T extends schemas.$ZodType>(property: K, schema: T, params?: string | $ZodCheckPropertyParams): $ZodCheckProperty<{
+    [k in K]: util.Widen<input<T>>;
+}>;
+type $ZodCheckPropertiesParams = CheckParams<$ZodCheckProperties, "shape" | "when">;
+function _properties<Shape extends schemas.$ZodShape>(shape: Shape, params?: string | $ZodCheckPropertiesParams): $ZodCheckProperties<Shape>;
+type $ZodCheckMimeTypeParams = CheckParams<$ZodCheckMimeType, "mime" | "when">;
+function _mime(types: util.MimeTypes[], params?: string | $ZodCheckMimeTypeParams): $ZodCheckMimeType;
+function _overwrite<T>(tx: (input: T) => T): $ZodCheckOverwrite<T>;
+function _normalize(form?: "NFC" | "NFD" | "NFKC" | "NFKD" | (string & {})): $ZodCheckOverwrite<string>;
+function _trim(): $ZodCheckOverwrite<string>;
+function _toLowerCase(): $ZodCheckOverwrite<string>;
+function _toUpperCase(): $ZodCheckOverwrite<string>;
+function _slugify(): $ZodCheckOverwrite<string>;
+type $ZodArrayParams = TypeParams<schemas.$ZodArray, "element">;
+function _array<T extends schemas.$ZodType>(Class: util.SchemaClass<schemas.$ZodArray>, element: T, params?: string | $ZodArrayParams): schemas.$ZodArray<T>;
+type $ZodObjectParams = TypeParams<schemas.$ZodObject, "shape" | "catchall">;
+type $ZodUnionParams = TypeParams<schemas.$ZodUnion, "options">;
+function _union<const T extends readonly schemas.$ZodObject[]>(Class: util.SchemaClass<schemas.$ZodUnion>, options: T, params?: string | $ZodUnionParams): schemas.$ZodUnion<T>;
+type $ZodXorParams = TypeParams<schemas.$ZodXor, "options">;
+function _xor<const T extends readonly schemas.$ZodObject[]>(Class: util.SchemaClass<schemas.$ZodXor>, options: T, params?: string | $ZodXorParams): schemas.$ZodXor<T>;
+interface $ZodTypeDiscriminableInternals<_Disc extends string = string> extends schemas._$ZodTypeInternals {
+    propValues: util.PropValues;
+}
+interface $ZodTypeDiscriminable<_Disc extends string = string> extends schemas.SomeType {
+    _zod: $ZodTypeDiscriminableInternals;
+}
+type $ZodDiscriminatedUnionParams = TypeParams<schemas.$ZodDiscriminatedUnion, "options" | "discriminator">;
+function _discriminatedUnion<Types extends [
+    $ZodTypeDiscriminable,
+    ...$ZodTypeDiscriminable[]
+], Disc extends string>(Class: util.SchemaClass<schemas.$ZodDiscriminatedUnion>, discriminator: Disc, options: Types, params?: string | $ZodDiscriminatedUnionParams): schemas.$ZodDiscriminatedUnion<Types, Disc>;
+type $ZodIntersectionParams = TypeParams<schemas.$ZodIntersection, "left" | "right">;
+function _intersection<T extends schemas.$ZodObject, U extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodIntersection>, left: T, right: U): schemas.$ZodIntersection<T, U>;
+type $ZodTupleParams = TypeParams<schemas.$ZodTuple, "items" | "rest">;
+function _tuple<T extends readonly [
+    schemas.$ZodType,
+    ...schemas.$ZodType[]
+]>(Class: util.SchemaClass<schemas.$ZodTuple>, items: T, params?: string | $ZodTupleParams): schemas.$ZodTuple<T, null>;
+function _tuple<T extends readonly [
+    schemas.$ZodType,
+    ...schemas.$ZodType[]
+], Rest extends schemas.$ZodType>(Class: util.SchemaClass<schemas.$ZodTuple>, items: T, rest: Rest, params?: string | $ZodTupleParams): schemas.$ZodTuple<T, Rest>;
+type $ZodRecordParams = TypeParams<schemas.$ZodRecord, "keyType" | "valueType" | "partial">;
+function _record<Key extends schemas.$ZodRecordKey, Value extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodRecord>, keyType: Key, valueType: Value, params?: string | $ZodRecordParams): schemas.$ZodRecord<Key, Value>;
+type $ZodMapParams = TypeParams<schemas.$ZodMap, "keyType" | "valueType">;
+function _map<Key extends schemas.$ZodObject, Value extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodMap>, keyType: Key, valueType: Value, params?: string | $ZodMapParams): schemas.$ZodMap<Key, Value>;
+type $ZodSetParams = TypeParams<schemas.$ZodSet, "valueType">;
+function _set<Value extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodSet>, valueType: Value, params?: string | $ZodSetParams): schemas.$ZodSet<Value>;
+type $ZodEnumParams = TypeParams<schemas.$ZodEnum, "entries">;
+function _enum<const T extends string[]>(Class: util.SchemaClass<schemas.$ZodEnum>, values: T, params?: string | $ZodEnumParams): schemas.$ZodEnum<util.ToEnum<T[number]>>;
+function _enum<T extends util.EnumLike>(Class: util.SchemaClass<schemas.$ZodEnum>, entries: T, params?: string | $ZodEnumParams): schemas.$ZodEnum<T>;
+function _nativeEnum<T extends util.EnumLike>(Class: util.SchemaClass<schemas.$ZodEnum>, entries: T, params?: string | $ZodEnumParams): schemas.$ZodEnum<T>;
+type $ZodLiteralParams = TypeParams<schemas.$ZodLiteral, "values">;
+function _literal<const T extends Array<util.Literal>>(Class: util.SchemaClass<schemas.$ZodLiteral>, value: T, params?: string | $ZodLiteralParams): schemas.$ZodLiteral<T[number]>;
+function _literal<const T extends util.Literal>(Class: util.SchemaClass<schemas.$ZodLiteral>, value: T, params?: string | $ZodLiteralParams): schemas.$ZodLiteral<T>;
+type $ZodFileParams = TypeParams<schemas.$ZodFile>;
+function _file(Class: util.SchemaClass<schemas.$ZodFile>, params?: string | $ZodFileParams): schemas.$ZodFile;
+type $ZodTransformParams = TypeParams<schemas.$ZodTransform, "transform">;
+function _transform<I = unknown, O = I>(Class: util.SchemaClass<schemas.$ZodTransform>, fn: (input: I, ctx?: schemas.ParsePayload) => O): schemas.$ZodTransform<Awaited<O>, I>;
+type $ZodOptionalParams = TypeParams<schemas.$ZodOptional, "innerType">;
+function _optional<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodOptional>, innerType: T): schemas.$ZodOptional<T>;
+type $ZodNullableParams = TypeParams<schemas.$ZodNullable, "innerType">;
+function _nullable<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodNullable>, innerType: T): schemas.$ZodNullable<T>;
+type $ZodDefaultParams = TypeParams<schemas.$ZodDefault, "innerType" | "defaultValue">;
+function _default$63<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodDefault>, innerType: T, defaultValue: util.NoUndefined<output<T>> | (() => util.NoUndefined<output<T>>)): schemas.$ZodDefault<T>;
+type $ZodNonOptionalParams = TypeParams<schemas.$ZodNonOptional, "innerType">;
+function _nonoptional<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodNonOptional>, innerType: T, params?: string | $ZodNonOptionalParams): schemas.$ZodNonOptional<T>;
+type $ZodSuccessParams = TypeParams<schemas.$ZodSuccess, "innerType">;
+function _success<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodSuccess>, innerType: T): schemas.$ZodSuccess<T>;
+type $ZodCatchParams = TypeParams<schemas.$ZodCatch, "innerType" | "catchValue">;
+function _catch<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodCatch>, innerType: T, catchValue: output<T> | ((ctx: schemas.$ZodCatchCtx) => output<T>)): schemas.$ZodCatch<T>;
+type $ZodPipeParams = TypeParams<schemas.$ZodPipe, "in" | "out">;
+function _pipe<const A extends schemas.$ZodType, B extends schemas.$ZodType<unknown, output<A>> = schemas.$ZodType<unknown, output<A>>>(Class: util.SchemaClass<schemas.$ZodPipe>, in_: A, out: B | schemas.$ZodType<unknown, output<A>>): schemas.$ZodPipe<A, B>;
+type $ZodReadonlyParams = TypeParams<schemas.$ZodReadonly, "innerType">;
+function _readonly<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodReadonly>, innerType: T): schemas.$ZodReadonly<T>;
+type $ZodTemplateLiteralParams = TypeParams<schemas.$ZodTemplateLiteral, "parts">;
+function _templateLiteral<const Parts extends schemas.$ZodTemplateLiteralPart[]>(Class: util.SchemaClass<schemas.$ZodTemplateLiteral>, parts: Parts, params?: string | $ZodTemplateLiteralParams): schemas.$ZodTemplateLiteral<schemas.$PartsToTemplateLiteral<Parts>>;
+type $ZodLazyParams = TypeParams<schemas.$ZodLazy, "getter">;
+function _lazy<T extends schemas.$ZodType>(Class: util.SchemaClass<schemas.$ZodLazy>, getter: () => T): schemas.$ZodLazy<T>;
+type $ZodPromiseParams = TypeParams<schemas.$ZodPromise, "innerType">;
+function _promise<T extends schemas.$ZodObject>(Class: util.SchemaClass<schemas.$ZodPromise>, innerType: T): schemas.$ZodPromise<T>;
+type $ZodCustomParams = CheckTypeParams<schemas.$ZodCustom, "fn">;
+function _custom<O = unknown, I = O>(Class: util.SchemaClass<schemas.$ZodCustom>, fn: (data: O) => unknown, _params: string | $ZodCustomParams | undefined): schemas.$ZodCustom<O, I>;
+function _refine<O = unknown, I = O>(Class: util.SchemaClass<schemas.$ZodCustom>, fn: (data: O) => unknown, _params: string | $ZodCustomParams | undefined): schemas.$ZodCustom<O, I>;
+type $ZodSuperRefineIssue<T extends $ZodIssueBase = $ZodIssue> = T extends any ? RawIssue$1<T> : never;
+type RawIssue$1<T extends $ZodIssueBase> = T extends any ? util.Flatten<util.MakePartial<T, "message" | "path"> & {
+    readonly inst?: schemas.$ZodType | $ZodCheck;
+    readonly continue?: boolean | undefined;
+} & Record<string, unknown>> : never;
+interface $RefinementCtx<T = unknown> extends schemas.ParsePayload<T> {
+    addIssue(arg: string | $ZodSuperRefineIssue): void;
+}
+interface $ZodSuperRefineParams {
+    when?: ((payload: schemas.ParsePayload) => boolean) | undefined;
+}
+function _superRefine<T>(fn: (arg: T, payload: $RefinementCtx<T>) => void | Promise<void>, params?: $ZodSuperRefineParams): $ZodCheck<T>;
+function _check<O = unknown>(fn: schemas.CheckFn<O>, params?: string | $ZodCustomParams): $ZodCheck<O>;
+function describe<T>(description: string): $ZodCheck<T>;
+function meta<T>(metadata: GlobalMeta): $ZodCheck<T>;
+interface $ZodStringBoolParams extends TypeParams {
+    truthy?: string[];
+    falsy?: string[];
+    case?: "sensitive" | "insensitive" | undefined;
+}
+function _stringbool(Classes: {
+    Codec?: typeof schemas.$ZodCodec;
+    Boolean?: typeof schemas.$ZodBoolean;
+    String?: typeof schemas.$ZodString;
+}, _params?: string | $ZodStringBoolParams): schemas.$ZodCodec<schemas.$ZodString, schemas.$ZodBoolean>;
+function _stringFormat<Format extends string>(Class: typeof schemas.$ZodCustomStringFormat, format: Format, fnOrRegex: ((arg: string) => util.MaybeAsync<unknown>) | RegExp, _params?: string | $ZodStringFormatParams): schemas.$ZodCustomStringFormat<Format>;
+function toJSONSchema<T extends schemas.$ZodType>(schema: T, params?: ToJSONSchemaParams): ZodStandardJSONSchemaPayload<T>;
+function toJSONSchema(registry: $ZodRegistry<{
+    id?: string | undefined;
+}>, params?: RegistryToJSONSchemaParams): {
+    schemas: Record<string, ZodStandardJSONSchemaPayload<schemas.$ZodType>>;
+};
+type EmitParams = Pick<JSONSchemaGeneratorParams, "cycles" | "reused" | "external">;
+type JSONSchemaGeneratorConstructorParams = Pick<JSONSchemaGeneratorParams, "metadata" | "target" | "unrepresentable" | "override" | "io">;
+class JSONSchemaGenerator {
+    private ctx;
+    get metadataRegistry(): $ZodRegistry<Record<string, any>>;
+    get target(): ({} & string) | "draft-2020-12" | "draft-07" | "openapi-3.0" | "draft-04";
+    get unrepresentable(): ToJSONSchemaContext["unrepresentable"];
+    get override(): (ctx: {
+        zodSchema: schemas.$ZodType;
+        jsonSchema: JSONSchema$1.BaseSchema;
+        path: (string | number)[];
+    }) => void;
+    get io(): "input" | "output";
+    get counter(): number;
+    set counter(value: number);
+    get seen(): Map<schemas.$ZodType, Seen>;
+    constructor(params?: JSONSchemaGeneratorConstructorParams);
+    process(schema: schemas.$ZodType, _params?: ProcessParams): JSONSchema$1.BaseSchema;
+    emit(schema: schemas.$ZodType, _params?: EmitParams): JSONSchema$1.BaseSchema;
+}
+type ZodIssue = core.$ZodIssue;
+interface ZodError<T = unknown> extends $ZodError<T> {
+    format(): core.$ZodFormattedError<T>;
+    format<U>(mapper: (issue: core.$ZodIssue) => U): core.$ZodFormattedError<T, U>;
+    flatten(): core.$ZodFlattenedError<T>;
+    flatten<U>(mapper: (issue: core.$ZodIssue) => U): core.$ZodFlattenedError<T, U>;
+    addIssue(issue: core.$ZodIssue): void;
+    addIssues(issues: core.$ZodIssue[]): void;
+    isEmpty: boolean;
+}
+const ZodError: core.$constructor<ZodError>;
+const ZodRealError: core.$constructor<ZodError>;
+type ZodFlattenedError<T, U = string> = core.$ZodFlattenedError<T, U>;
+type ZodFormattedError<T, U = string> = core.$ZodFormattedError<T, U>;
+type ZodErrorMap<T extends core.$ZodIssueBase = core.$ZodIssue> = core.$ZodErrorMap<T>;
+type IssueData = core.$ZodRawIssue;
+type ZodSafeParseResult<T> = ZodSafeParseSuccess<T> | ZodSafeParseError<T>;
+type ZodSafeParseSuccess<T> = {
+    success: true;
+    data: T;
+    error?: never;
+};
+type ZodSafeParseError<T> = {
+    success: false;
+    data?: never;
+    error: ZodError<T>;
+};
+const parse$1: <T extends core.$ZodType>(schema: T, value: unknown, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => core.output<T>;
+const parseAsync$1: <T extends core.$ZodType>(schema: T, value: unknown, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => Promise<core.output<T>>;
+const safeParse$1: <T extends core.$ZodType>(schema: T, value: unknown, _ctx?: core.ParseContext<core.$ZodIssue>) => ZodSafeParseResult<core.output<T>>;
+const safeParseAsync$1: <T extends core.$ZodType>(schema: T, value: unknown, _ctx?: core.ParseContext<core.$ZodIssue>) => Promise<ZodSafeParseResult<core.output<T>>>;
+const encode$1: <T extends core.$ZodType>(schema: T, value: core.output<T>, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => core.input<T>;
+const decode$1: <T extends core.$ZodType>(schema: T, value: core.input<T>, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => core.output<T>;
+const encodeAsync$1: <T extends core.$ZodType>(schema: T, value: core.output<T>, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => Promise<core.input<T>>;
+const decodeAsync$1: <T extends core.$ZodType>(schema: T, value: core.input<T>, _ctx?: core.ParseContext<core.$ZodIssue>, _params?: {
+    callee?: core.util.AnyFunc;
+    Err?: core.$ZodErrorClass;
+}) => Promise<core.output<T>>;
+const safeEncode$1: <T extends core.$ZodType>(schema: T, value: core.output<T>, _ctx?: core.ParseContext<core.$ZodIssue>) => ZodSafeParseResult<core.input<T>>;
+const safeDecode$1: <T extends core.$ZodType>(schema: T, value: core.input<T>, _ctx?: core.ParseContext<core.$ZodIssue>) => ZodSafeParseResult<core.output<T>>;
+const safeEncodeAsync$1: <T extends core.$ZodType>(schema: T, value: core.output<T>, _ctx?: core.ParseContext<core.$ZodIssue>) => Promise<ZodSafeParseResult<core.input<T>>>;
+const safeDecodeAsync$1: <T extends core.$ZodType>(schema: T, value: core.input<T>, _ctx?: core.ParseContext<core.$ZodIssue>) => Promise<ZodSafeParseResult<core.output<T>>>;
+type ZodStandardSchemaWithJSON$1<T> = StandardSchemaWithJSONProps<core.input<T>, core.output<T>>;
+interface ZodType<Output = unknown, Input = unknown, Internals extends core.$ZodTypeInternals<Output, Input> = core.$ZodTypeInternals<Output, Input>> extends core.$ZodType<Output, Input, Internals> {
+    def: Internals["def"];
+    type: Internals["def"]["type"];
+    _def: Internals["def"];
+    _output: Internals["output"];
+    _input: Internals["input"];
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    toJSONSchema(params?: core.ToJSONSchemaParams): core.ZodStandardJSONSchemaPayload<this>;
+    check(...checks: (core.CheckFn<core.output<this>> | core.$ZodCheck<core.output<this>>)[]): this;
+    with(...checks: (core.CheckFn<core.output<this>> | core.$ZodCheck<core.output<this>>)[]): this;
+    clone(def?: Internals["def"], params?: {
+        parent: boolean;
+    }): this;
+    register<R extends core.$ZodRegistry>(registry: R, ...meta: this extends R["_schema"] ? undefined extends R["_meta"] ? [
+        core.$replace<R["_meta"], this>?
+    ] : [
+        core.$replace<R["_meta"], this>
+    ] : [
+        "Incompatible schema"
+    ]): this;
+    brand<T extends PropertyKey = PropertyKey, Dir extends "in" | "out" | "inout" = "out">(value?: T): PropertyKey extends T ? this : core.$ZodBranded<this, T, Dir>;
+    parse(data: unknown, params?: core.ParseContext<core.$ZodIssue>): core.output<this>;
+    safeParse(data: unknown, params?: core.ParseContext<core.$ZodIssue>): ZodSafeParseResult<core.output<this>>;
+    parseAsync(data: unknown, params?: core.ParseContext<core.$ZodIssue>): Promise<core.output<this>>;
+    safeParseAsync(data: unknown, params?: core.ParseContext<core.$ZodIssue>): Promise<ZodSafeParseResult<core.output<this>>>;
+    spa: (data: unknown, params?: core.ParseContext<core.$ZodIssue>) => Promise<ZodSafeParseResult<core.output<this>>>;
+    validate(data: unknown, params?: core.ParseContext<core.$ZodIssue>): data is core.input<this>;
+    validateAsync(data: unknown, params?: core.ParseContext<core.$ZodIssue>): Promise<boolean>;
+    encode(data: core.output<this>, params?: core.ParseContext<core.$ZodIssue>): core.input<this>;
+    decode(data: core.input<this>, params?: core.ParseContext<core.$ZodIssue>): core.output<this>;
+    encodeAsync(data: core.output<this>, params?: core.ParseContext<core.$ZodIssue>): Promise<core.input<this>>;
+    decodeAsync(data: core.input<this>, params?: core.ParseContext<core.$ZodIssue>): Promise<core.output<this>>;
+    safeEncode(data: core.output<this>, params?: core.ParseContext<core.$ZodIssue>): ZodSafeParseResult<core.input<this>>;
+    safeDecode(data: core.input<this>, params?: core.ParseContext<core.$ZodIssue>): ZodSafeParseResult<core.output<this>>;
+    safeEncodeAsync(data: core.output<this>, params?: core.ParseContext<core.$ZodIssue>): Promise<ZodSafeParseResult<core.input<this>>>;
+    safeDecodeAsync(data: core.input<this>, params?: core.ParseContext<core.$ZodIssue>): Promise<ZodSafeParseResult<core.output<this>>>;
+    refine<Ch extends (arg: core.output<this>) => unknown | Promise<unknown>>(check: Ch, params?: string | core.$ZodCustomParams): Ch extends (arg: any) => arg is infer R ? this & ZodType<R, core.input<this>> : this;
+    superRefine(refinement: (arg: core.output<this>, ctx: core.$RefinementCtx<core.output<this>>) => void | Promise<void>, params?: core.$ZodSuperRefineParams): this;
+    overwrite(fn: (x: core.output<this>) => core.output<this>): this;
+    optional(): ZodOptional<this>;
+    exactOptional(): ZodExactOptional<this>;
+    nonoptional(params?: string | core.$ZodNonOptionalParams): ZodNonOptional<this>;
+    nullable(): ZodNullable<this>;
+    nullish(): ZodOptional<ZodNullable<this>>;
+    default(def: util.NoUndefined<core.output<this>>): ZodDefault<this>;
+    default(def: () => util.NoUndefined<core.output<this>>): ZodDefault<this>;
+    prefault(def: () => core.input<this>): ZodPrefault<this>;
+    prefault(def: core.input<this>): ZodPrefault<this>;
+    array(): ZodArray<this>;
+    or<T extends core.SomeType>(option: T): ZodUnion<[
+        this,
+        T
+    ]>;
+    and<T extends core.SomeType>(incoming: T): ZodIntersection<this, T>;
+    transform<NewOut>(transform: (arg: core.output<this>, ctx: core.$RefinementCtx<core.output<this>>) => NewOut | Promise<NewOut>): ZodPipe<this, ZodTransform<Awaited<NewOut>, core.output<this>>>;
+    catch(def: core.output<this>): ZodCatch<this>;
+    catch(def: (ctx: core.$ZodCatchCtx) => core.output<this>): ZodCatch<this>;
+    pipe<T extends core.$ZodType<any, core.output<this>>>(target: T | core.$ZodType<any, core.output<this>>): ZodPipe<this, T>;
+    readonly(): ZodReadonly<this>;
+    describe(description: string): this;
+    description?: string;
+    meta(): core.$replace<core.GlobalMeta, this> | undefined;
+    meta(data: core.$replace<core.GlobalMeta, this>): this;
+    isOptional(): boolean;
+    isNullable(): boolean;
+    apply<T, TArgs extends unknown[] = [
+    ]>(fn: (schema: this, ...args: TArgs) => T, ...args: TArgs): T;
+}
+interface _ZodType<Internals extends core.$ZodTypeInternals = core.$ZodTypeInternals> extends ZodType<any, any, Internals> {
+}
+const ZodType: core.$constructor<ZodType>;
+interface _ZodString<T extends core.$ZodStringInternals<unknown> = core.$ZodStringInternals<unknown>> extends _ZodType<T> {
+    format: string | null;
+    minLength: number | null;
+    maxLength: number | null;
+    regex(regex: RegExp, params?: string | core.$ZodCheckRegexParams): this;
+    includes(value: string, params?: string | core.$ZodCheckIncludesParams): this;
+    startsWith(value: string, params?: string | core.$ZodCheckStartsWithParams): this;
+    endsWith(value: string, params?: string | core.$ZodCheckEndsWithParams): this;
+    min(minLength: number, params?: string | core.$ZodCheckMinLengthParams): this;
+    max(maxLength: number, params?: string | core.$ZodCheckMaxLengthParams): this;
+    length(len: number, params?: string | core.$ZodCheckLengthEqualsParams): this;
+    nonempty(params?: string | core.$ZodCheckMinLengthParams): this;
+    lowercase(params?: string | core.$ZodCheckLowerCaseParams): this;
+    uppercase(params?: string | core.$ZodCheckUpperCaseParams): this;
+    trim(): this;
+    normalize(form?: "NFC" | "NFD" | "NFKC" | "NFKD" | (string & {})): this;
+    toLowerCase(): this;
+    toUpperCase(): this;
+    slugify(): this;
+}
+const _ZodString: core.$constructor<_ZodString>;
+interface ZodString extends _ZodString<core.$ZodStringInternals<string>> {
+    email(params?: string | core.$ZodCheckEmailParams): this;
+    url(params?: string | core.$ZodCheckURLParams): this;
+    jwt(params?: string | core.$ZodCheckJWTParams): this;
+    emoji(params?: string | core.$ZodCheckEmojiParams): this;
+    guid(params?: string | core.$ZodCheckGUIDParams): this;
+    uuid(params?: string | core.$ZodCheckUUIDParams): this;
+    uuidv4(params?: string | core.$ZodCheckUUIDParams): this;
+    uuidv6(params?: string | core.$ZodCheckUUIDParams): this;
+    uuidv7(params?: string | core.$ZodCheckUUIDParams): this;
+    nanoid(params?: string | core.$ZodCheckNanoIDParams): this;
+    guid(params?: string | core.$ZodCheckGUIDParams): this;
+    cuid(params?: string | core.$ZodCheckCUIDParams): this;
+    cuid2(params?: string | core.$ZodCheckCUID2Params): this;
+    ulid(params?: string | core.$ZodCheckULIDParams): this;
+    base64(params?: string | core.$ZodCheckBase64Params): this;
+    base64url(params?: string | core.$ZodCheckBase64URLParams): this;
+    xid(params?: string | core.$ZodCheckXIDParams): this;
+    ksuid(params?: string | core.$ZodCheckKSUIDParams): this;
+    ipv4(params?: string | core.$ZodCheckIPv4Params): this;
+    ipv6(params?: string | core.$ZodCheckIPv6Params): this;
+    cidrv4(params?: string | core.$ZodCheckCIDRv4Params): this;
+    cidrv6(params?: string | core.$ZodCheckCIDRv6Params): this;
+    e164(params?: string | core.$ZodCheckE164Params): this;
+    datetime(params?: string | core.$ZodCheckISODateTimeParams): this;
+    date(params?: string | core.$ZodCheckISODateParams): this;
+    time(params?: string | core.$ZodCheckISOTimeParams): this;
+    duration(params?: string | core.$ZodCheckISODurationParams): this;
+}
+const ZodString: core.$constructor<ZodString>;
+function string$1(params?: string | core.$ZodStringParams): ZodString;
+function string$1<T extends string>(params?: string | core.$ZodStringParams): core.$ZodType<T, T>;
+interface ZodStringFormat<Format extends string = string> extends _ZodString<core.$ZodStringFormatInternals<Format>> {
+}
+const ZodStringFormat: core.$constructor<ZodStringFormat>;
+interface ZodISODateTime extends ZodStringFormat {
+    _zod: core.$ZodISODateTimeInternals;
+}
+const ZodISODateTime: core.$constructor<ZodISODateTime>;
+interface ZodISODate extends ZodStringFormat {
+    _zod: core.$ZodISODateInternals;
+}
+const ZodISODate: core.$constructor<ZodISODate>;
+interface ZodISOTime extends ZodStringFormat {
+    _zod: core.$ZodISOTimeInternals;
+}
+const ZodISOTime: core.$constructor<ZodISOTime>;
+interface ZodISODuration extends ZodStringFormat {
+    _zod: core.$ZodISODurationInternals;
+}
+const ZodISODuration: core.$constructor<ZodISODuration>;
+interface ZodEmail extends ZodStringFormat<"email"> {
+    _zod: core.$ZodEmailInternals;
+}
+const ZodEmail: core.$constructor<ZodEmail>;
+function email$1(params?: string | core.$ZodEmailParams): ZodEmail;
+interface ZodGUID extends ZodStringFormat<"guid"> {
+    _zod: core.$ZodGUIDInternals;
+}
+const ZodGUID: core.$constructor<ZodGUID>;
+function guid$1(params?: string | core.$ZodGUIDParams): ZodGUID;
+interface ZodUUID extends ZodStringFormat<"uuid"> {
+    _zod: core.$ZodUUIDInternals;
+}
+const ZodUUID: core.$constructor<ZodUUID>;
+function uuid$1(params?: string | core.$ZodUUIDParams): ZodUUID;
+function uuidv4(params?: string | core.$ZodUUIDv4Params): ZodUUID;
+function uuidv6(params?: string | core.$ZodUUIDv6Params): ZodUUID;
+function uuidv7(params?: string | core.$ZodUUIDv7Params): ZodUUID;
+interface ZodURL extends ZodStringFormat<"url"> {
+    _zod: core.$ZodURLInternals;
+}
+const ZodURL: core.$constructor<ZodURL>;
+function url(params?: string | core.$ZodURLParams): ZodURL;
+function httpUrl(params?: string | Omit<core.$ZodURLParams, "protocol" | "hostname">): ZodURL;
+interface ZodEmoji extends ZodStringFormat<"emoji"> {
+    _zod: core.$ZodEmojiInternals;
+}
+const ZodEmoji: core.$constructor<ZodEmoji>;
+function emoji$1(params?: string | core.$ZodEmojiParams): ZodEmoji;
+interface ZodNanoID extends ZodStringFormat<"nanoid"> {
+    _zod: core.$ZodNanoIDInternals;
+}
+const ZodNanoID: core.$constructor<ZodNanoID>;
+function nanoid$1(params?: string | core.$ZodNanoIDParams): ZodNanoID;
+interface ZodCUID extends ZodStringFormat<"cuid"> {
+    _zod: core.$ZodCUIDInternals;
+}
+const ZodCUID: core.$constructor<ZodCUID>;
+function cuid$1(params?: string | core.$ZodCUIDParams): ZodCUID;
+interface ZodCUID2 extends ZodStringFormat<"cuid2"> {
+    _zod: core.$ZodCUID2Internals;
+}
+const ZodCUID2: core.$constructor<ZodCUID2>;
+function cuid2$1(params?: string | core.$ZodCUID2Params): ZodCUID2;
+interface ZodULID extends ZodStringFormat<"ulid"> {
+    _zod: core.$ZodULIDInternals;
+}
+const ZodULID: core.$constructor<ZodULID>;
+function ulid$1(params?: string | core.$ZodULIDParams): ZodULID;
+interface ZodXID extends ZodStringFormat<"xid"> {
+    _zod: core.$ZodXIDInternals;
+}
+const ZodXID: core.$constructor<ZodXID>;
+function xid$1(params?: string | core.$ZodXIDParams): ZodXID;
+interface ZodKSUID extends ZodStringFormat<"ksuid"> {
+    _zod: core.$ZodKSUIDInternals;
+}
+const ZodKSUID: core.$constructor<ZodKSUID>;
+function ksuid$1(params?: string | core.$ZodKSUIDParams): ZodKSUID;
+interface ZodIPv4 extends ZodStringFormat<"ipv4"> {
+    _zod: core.$ZodIPv4Internals;
+}
+const ZodIPv4: core.$constructor<ZodIPv4>;
+function ipv4$1(params?: string | core.$ZodIPv4Params): ZodIPv4;
+interface ZodMAC extends ZodStringFormat<"mac"> {
+    _zod: core.$ZodMACInternals;
+}
+const ZodMAC: core.$constructor<ZodMAC>;
+function mac$1(params?: string | core.$ZodMACParams): ZodMAC;
+interface ZodIPv6 extends ZodStringFormat<"ipv6"> {
+    _zod: core.$ZodIPv6Internals;
+}
+const ZodIPv6: core.$constructor<ZodIPv6>;
+function ipv6$1(params?: string | core.$ZodIPv6Params): ZodIPv6;
+interface ZodCIDRv4 extends ZodStringFormat<"cidrv4"> {
+    _zod: core.$ZodCIDRv4Internals;
+}
+const ZodCIDRv4: core.$constructor<ZodCIDRv4>;
+function cidrv4$1(params?: string | core.$ZodCIDRv4Params): ZodCIDRv4;
+interface ZodCIDRv6 extends ZodStringFormat<"cidrv6"> {
+    _zod: core.$ZodCIDRv6Internals;
+}
+const ZodCIDRv6: core.$constructor<ZodCIDRv6>;
+function cidrv6$1(params?: string | core.$ZodCIDRv6Params): ZodCIDRv6;
+interface ZodBase64 extends ZodStringFormat<"base64"> {
+    _zod: core.$ZodBase64Internals;
+}
+const ZodBase64: core.$constructor<ZodBase64>;
+function base64$1(params?: string | core.$ZodBase64Params): ZodBase64;
+interface ZodBase64URL extends ZodStringFormat<"base64url"> {
+    _zod: core.$ZodBase64URLInternals;
+}
+const ZodBase64URL: core.$constructor<ZodBase64URL>;
+function base64url$1(params?: string | core.$ZodBase64URLParams): ZodBase64URL;
+interface ZodE164 extends ZodStringFormat<"e164"> {
+    _zod: core.$ZodE164Internals;
+}
+const ZodE164: core.$constructor<ZodE164>;
+function e164$1(params?: string | core.$ZodE164Params): ZodE164;
+interface ZodCreditCard extends ZodStringFormat<"credit_card"> {
+    _zod: core.$ZodCreditCardInternals;
+}
+const ZodCreditCard: core.$constructor<ZodCreditCard>;
+function creditCard$1(params?: string | core.$ZodCreditCardParams): ZodCreditCard;
+interface ZodIBAN extends ZodStringFormat<"iban"> {
+    _zod: core.$ZodIBANInternals;
+}
+const ZodIBAN: core.$constructor<ZodIBAN>;
+function iban$1(params?: string | core.$ZodIBANParams): ZodIBAN;
+interface ZodJWT extends ZodStringFormat<"jwt"> {
+    _zod: core.$ZodJWTInternals;
+}
+const ZodJWT: core.$constructor<ZodJWT>;
+function jwt(params?: string | core.$ZodJWTParams): ZodJWT;
+interface ZodCustomStringFormat<Format extends string = string> extends ZodStringFormat<Format>, core.$ZodCustomStringFormat<Format> {
+    _zod: core.$ZodCustomStringFormatInternals<Format>;
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodCustomStringFormat: core.$constructor<ZodCustomStringFormat>;
+function stringFormat<Format extends string>(format: Format, fnOrRegex: ((arg: string) => util.MaybeAsync<unknown>) | RegExp, _params?: string | core.$ZodStringFormatParams): ZodCustomStringFormat<Format>;
+function hostname$1(_params?: string | core.$ZodStringFormatParams): ZodCustomStringFormat<"hostname">;
+function hex$1(_params?: string | core.$ZodStringFormatParams): ZodCustomStringFormat<"hex">;
+function currencyCode$1(_params?: string | core.$ZodStringFormatParams): ZodCustomStringFormat<"currency_code">;
+function hash<Alg extends util.HashAlgorithm, Enc extends util.HashEncoding = "hex">(alg: Alg, params?: {
+    enc?: Enc;
+} & core.$ZodStringFormatParams): ZodCustomStringFormat<`${Alg}_${Enc}`>;
+interface _ZodNumber<Internals extends core.$ZodNumberInternals = core.$ZodNumberInternals> extends _ZodType<Internals> {
+    gt(value: number, params?: string | core.$ZodCheckGreaterThanParams): this;
+    gte(value: number, params?: string | core.$ZodCheckGreaterThanParams): this;
+    min(value: number, params?: string | core.$ZodCheckGreaterThanParams): this;
+    lt(value: number, params?: string | core.$ZodCheckLessThanParams): this;
+    lte(value: number, params?: string | core.$ZodCheckLessThanParams): this;
+    max(value: number, params?: string | core.$ZodCheckLessThanParams): this;
+    int(params?: string | core.$ZodCheckNumberFormatParams): this;
+    safe(params?: string | core.$ZodCheckNumberFormatParams): this;
+    positive(params?: string | core.$ZodCheckGreaterThanParams): this;
+    nonnegative(params?: string | core.$ZodCheckGreaterThanParams): this;
+    negative(params?: string | core.$ZodCheckLessThanParams): this;
+    nonpositive(params?: string | core.$ZodCheckLessThanParams): this;
+    multipleOf(value: number, params?: string | core.$ZodCheckMultipleOfParams): this;
+    step(value: number, params?: string | core.$ZodCheckMultipleOfParams): this;
+    finite(params?: unknown): this;
+    minValue: number | null;
+    maxValue: number | null;
+    isInt: boolean;
+    isFinite: boolean;
+    format: string | null;
+}
+interface ZodNumber extends _ZodNumber<core.$ZodNumberInternals<number>> {
+}
+const ZodNumber: core.$constructor<ZodNumber>;
+function number$1(params?: string | core.$ZodNumberParams): ZodNumber;
+interface ZodNumberFormat<Format extends $ZodNumberFormats = $ZodNumberFormats> extends ZodNumber {
+    _zod: core.$ZodNumberFormatInternals<Format>;
+}
+const ZodNumberFormat: core.$constructor<ZodNumberFormat>;
+interface ZodInt extends ZodNumberFormat<"safeint"> {
+}
+function int(params?: string | core.$ZodCheckNumberFormatParams): ZodInt;
+interface ZodFloat32 extends ZodNumberFormat<"float32"> {
+}
+function float32(params?: string | core.$ZodCheckNumberFormatParams): ZodFloat32;
+interface ZodFloat64 extends ZodNumberFormat<"float64"> {
+}
+function float64(params?: string | core.$ZodCheckNumberFormatParams): ZodFloat64;
+interface ZodInt32 extends ZodNumberFormat<"int32"> {
+}
+function int32(params?: string | core.$ZodCheckNumberFormatParams): ZodInt32;
+interface ZodUInt32 extends ZodNumberFormat<"uint32"> {
+}
+function uint32(params?: string | core.$ZodCheckNumberFormatParams): ZodUInt32;
+interface _ZodBoolean<T extends core.$ZodBooleanInternals = core.$ZodBooleanInternals> extends _ZodType<T> {
+}
+interface ZodBoolean extends _ZodBoolean<core.$ZodBooleanInternals<boolean>> {
+}
+const ZodBoolean: core.$constructor<ZodBoolean>;
+function boolean$1(params?: string | core.$ZodBooleanParams): ZodBoolean;
+interface _ZodBigInt<T extends core.$ZodBigIntInternals = core.$ZodBigIntInternals> extends _ZodType<T> {
+    gte(value: bigint, params?: string | core.$ZodCheckGreaterThanParams): this;
+    min(value: bigint, params?: string | core.$ZodCheckGreaterThanParams): this;
+    gt(value: bigint, params?: string | core.$ZodCheckGreaterThanParams): this;
+    lte(value: bigint, params?: string | core.$ZodCheckLessThanParams): this;
+    max(value: bigint, params?: string | core.$ZodCheckLessThanParams): this;
+    lt(value: bigint, params?: string | core.$ZodCheckLessThanParams): this;
+    positive(params?: string | core.$ZodCheckGreaterThanParams): this;
+    negative(params?: string | core.$ZodCheckLessThanParams): this;
+    nonpositive(params?: string | core.$ZodCheckLessThanParams): this;
+    nonnegative(params?: string | core.$ZodCheckGreaterThanParams): this;
+    multipleOf(value: bigint, params?: string | core.$ZodCheckMultipleOfParams): this;
+    minValue: bigint | null;
+    maxValue: bigint | null;
+    format: string | null;
+}
+interface ZodBigInt extends _ZodBigInt<core.$ZodBigIntInternals<bigint>> {
+}
+const ZodBigInt: core.$constructor<ZodBigInt>;
+function bigint$1(params?: string | core.$ZodBigIntParams): ZodBigInt;
+interface ZodBigIntFormat<Format extends $ZodBigIntFormats = $ZodBigIntFormats> extends ZodBigInt {
+    _zod: core.$ZodBigIntFormatInternals<Format>;
+}
+const ZodBigIntFormat: core.$constructor<ZodBigIntFormat>;
+interface ZodInt64 extends ZodBigIntFormat<"int64"> {
+}
+function int64(params?: string | core.$ZodBigIntFormatParams): ZodInt64;
+interface ZodUInt64 extends ZodBigIntFormat<"uint64"> {
+}
+function uint64(params?: string | core.$ZodBigIntFormatParams): ZodUInt64;
+interface ZodSymbol extends _ZodType<core.$ZodSymbolInternals> {
+}
+const ZodSymbol: core.$constructor<ZodSymbol>;
+function symbol(params?: string | core.$ZodSymbolParams): ZodSymbol;
+interface ZodUndefined extends _ZodType<core.$ZodUndefinedInternals> {
+}
+const ZodUndefined: core.$constructor<ZodUndefined>;
+function _undefined$2(params?: string | core.$ZodUndefinedParams): ZodUndefined;
+interface ZodNull extends _ZodType<core.$ZodNullInternals> {
+}
+const ZodNull: core.$constructor<ZodNull>;
+function _null$2(params?: string | core.$ZodNullParams): ZodNull;
+interface ZodAny extends _ZodType<core.$ZodAnyInternals> {
+}
+const ZodAny: core.$constructor<ZodAny>;
+function any(): ZodAny;
+interface ZodUnknown extends _ZodType<core.$ZodUnknownInternals> {
+}
+const ZodUnknown: core.$constructor<ZodUnknown>;
+function unknown(): ZodUnknown;
+interface ZodNever extends _ZodType<core.$ZodNeverInternals> {
+}
+const ZodNever: core.$constructor<ZodNever>;
+function never(params?: string | core.$ZodNeverParams): ZodNever;
+interface ZodVoid extends _ZodType<core.$ZodVoidInternals> {
+}
+const ZodVoid: core.$constructor<ZodVoid>;
+function _void$1(params?: string | core.$ZodVoidParams): ZodVoid;
+interface _ZodDate<T extends core.$ZodDateInternals = core.$ZodDateInternals> extends _ZodType<T> {
+    min(value: number | Date, params?: string | core.$ZodCheckGreaterThanParams): this;
+    max(value: number | Date, params?: string | core.$ZodCheckLessThanParams): this;
+    minDate: Date | null;
+    maxDate: Date | null;
+}
+interface ZodDate extends _ZodDate<core.$ZodDateInternals<Date>> {
+}
+const ZodDate: core.$constructor<ZodDate>;
+function date$1(params?: string | core.$ZodDateParams): ZodDate;
+interface ZodArray<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodArrayInternals<T>>, core.$ZodArray<T> {
+    element: T;
+    min(minLength: number, params?: string | core.$ZodCheckMinLengthParams): this;
+    nonempty(params?: string | core.$ZodCheckMinLengthParams): this;
+    max(maxLength: number, params?: string | core.$ZodCheckMaxLengthParams): this;
+    length(len: number, params?: string | core.$ZodCheckLengthEqualsParams): this;
+    unwrap(): T;
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodArray: core.$constructor<ZodArray>;
+function array<T extends core.SomeType>(element: T, params?: string | core.$ZodArrayParams): ZodArray<T>;
+function keyof<T extends ZodObject>(schema: T): ZodEnum<util.KeysEnum<T["_zod"]["output"]>>;
+type SafeExtendShape<Base extends core.$ZodShape, Ext extends core.$ZodLooseShape> = {
+    [K in keyof Ext]: K extends keyof Base ? core.output<Ext[K]> extends core.output<Base[K]> ? core.input<Ext[K]> extends core.input<Base[K]> ? Ext[K] : never : never : Ext[K];
+};
+interface ZodObject<Shape extends core.$ZodShape = core.$ZodLooseShape, Config extends core.$ZodObjectConfig = core.$strip> extends _ZodType<core.$ZodObjectInternals<Shape, Config>>, core.$ZodObject<Shape, Config> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    shape: Shape;
+    keyof(): ZodEnum<util.ToEnum<keyof Shape & string>>;
+    catchall<T extends core.SomeType>(schema: T): ZodObject<Shape, core.$catchall<T>>;
+    passthrough(): ZodObject<Shape, core.$loose>;
+    loose(): ZodObject<Shape, core.$loose>;
+    strict(): ZodObject<Shape, core.$strict>;
+    strip(): ZodObject<Shape, core.$strip>;
+    extend<U extends core.$ZodLooseShape>(shape: U): ZodObject<util.Extend<Shape, util.Writeable<U>>, Config>;
+    safeExtend<U extends core.$ZodLooseShape>(shape: SafeExtendShape<Shape, U> & Partial<Record<keyof Shape, core.SomeType>>): ZodObject<util.Extend<Shape, util.Writeable<U>>, Config>;
+    merge<U extends ZodObject>(other: U): ZodObject<util.Extend<Shape, U["shape"]>, U["_zod"]["config"]>;
+    pick<M extends util.Mask<keyof Shape>>(mask: M & Record<Exclude<keyof M, keyof Shape>, never>): ZodObject<util.Flatten<Pick<Shape, Extract<keyof Shape, keyof M>>>, Config>;
+    omit<M extends util.Mask<keyof Shape>>(mask: M & Record<Exclude<keyof M, keyof Shape>, never>): ZodObject<util.Flatten<Omit<Shape, Extract<keyof Shape, keyof M>>>, Config>;
+    partial(): ZodObject<{
+        -readonly [k in keyof Shape]: ZodOptional<Shape[k]>;
+    }, Config>;
+    partial<M extends util.Mask<keyof Shape>>(mask: M & Record<Exclude<keyof M, keyof Shape>, never>): ZodObject<{
+        -readonly [k in keyof Shape]: k extends keyof M ? ZodOptional<Shape[k]> : Shape[k];
+    }, Config>;
+    exactPartial(): ZodObject<{
+        -readonly [k in keyof Shape]: ZodExactOptional<Shape[k]>;
+    }, Config>;
+    exactPartial<M extends util.Mask<keyof Shape>>(mask: M & Record<Exclude<keyof M, keyof Shape>, never>): ZodObject<{
+        -readonly [k in keyof Shape]: k extends keyof M ? ZodExactOptional<Shape[k]> : Shape[k];
+    }, Config>;
+    required(): ZodObject<{
+        -readonly [k in keyof Shape]: ZodNonOptional<Shape[k]>;
+    }, Config>;
+    required<M extends util.Mask<keyof Shape>>(mask: M & Record<Exclude<keyof M, keyof Shape>, never>): ZodObject<{
+        -readonly [k in keyof Shape]: k extends keyof M ? ZodNonOptional<Shape[k]> : Shape[k];
+    }, Config>;
+}
+const ZodObject: core.$constructor<ZodObject>;
+function object<T extends core.$ZodLooseShape = Partial<Record<never, core.SomeType>>>(shape?: T, params?: string | core.$ZodObjectParams): ZodObject<util.Writeable<T>, core.$strip>;
+function strictObject<T extends core.$ZodLooseShape>(shape: T, params?: string | core.$ZodObjectParams): ZodObject<util.Writeable<T>, core.$strict>;
+function looseObject<T extends core.$ZodLooseShape>(shape: T, params?: string | core.$ZodObjectParams): ZodObject<util.Writeable<T>, core.$loose>;
+interface ZodUnion<T extends readonly core.SomeType[] = readonly core.$ZodType[]> extends _ZodType<core.$ZodUnionInternals<T>>, core.$ZodUnion<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    options: T;
+}
+const ZodUnion: core.$constructor<ZodUnion>;
+function union<const T extends readonly core.SomeType[]>(options: T, params?: string | core.$ZodUnionParams): ZodUnion<T>;
+interface ZodXor<T extends readonly core.SomeType[] = readonly core.$ZodType[]> extends _ZodType<core.$ZodXorInternals<T>>, core.$ZodXor<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    options: T;
+}
+const ZodXor: core.$constructor<ZodXor>;
+function xor<const T extends readonly core.SomeType[]>(options: T, params?: string | core.$ZodXorParams): ZodXor<T>;
+interface ZodDiscriminatedUnion<Options extends readonly core.SomeType[] = readonly core.$ZodType[], Disc extends string = string> extends ZodUnion<Options>, core.$ZodDiscriminatedUnion<Options, Disc> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    _zod: core.$ZodDiscriminatedUnionInternals<Options, Disc>;
+    def: core.$ZodDiscriminatedUnionDef<Options, Disc>;
+}
+const ZodDiscriminatedUnion: core.$constructor<ZodDiscriminatedUnion>;
+function discriminatedUnion<Types extends readonly [
+    core.$ZodTypeDiscriminable,
+    ...core.$ZodTypeDiscriminable[]
+], Disc extends string>(discriminator: Disc, options: Types, params?: string | core.$ZodDiscriminatedUnionParams): ZodDiscriminatedUnion<Types, Disc>;
+interface ZodIntersection<A extends core.SomeType = core.$ZodType, B extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodIntersectionInternals<A, B>>, core.$ZodIntersection<A, B> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodIntersection: core.$constructor<ZodIntersection>;
+function intersection<T extends core.SomeType, U extends core.SomeType>(left: T, right: U): ZodIntersection<T, U>;
+interface ZodTuple<T extends util.TupleItems = readonly core.$ZodType[], Rest extends core.SomeType | null = core.$ZodType | null> extends _ZodType<core.$ZodTupleInternals<T, Rest>>, core.$ZodTuple<T, Rest> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    rest<Rest extends core.SomeType = core.$ZodType>(rest: Rest): ZodTuple<T, Rest>;
+    partial(): ZodTuple<{
+        -readonly [k in keyof T]: ZodOptional<T[k]>;
+    }, Rest>;
+}
+const ZodTuple: core.$constructor<ZodTuple>;
+function tuple<T extends readonly [
+    core.SomeType,
+    ...core.SomeType[]
+]>(items: T, params?: string | core.$ZodTupleParams): ZodTuple<T, null>;
+function tuple<T extends readonly [
+    core.SomeType,
+    ...core.SomeType[]
+], Rest extends core.SomeType>(items: T, rest: Rest, params?: string | core.$ZodTupleParams): ZodTuple<T, Rest>;
+function tuple(items: [
+], params?: string | core.$ZodTupleParams): ZodTuple<[
+], null>;
+interface ZodRecord<Key extends core.$ZodRecordKey = core.$ZodRecordKey, Value extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodRecordInternals<Key, Value>>, core.$ZodRecord<Key, Value> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    keyType: Key;
+    valueType: Value;
+}
+const ZodRecord: core.$constructor<ZodRecord>;
+function record<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+function partialRecord<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key & core.$partial, Value>;
+function looseRecord<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+interface ZodMap<Key extends core.SomeType = core.$ZodType, Value extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodMapInternals<Key, Value>>, core.$ZodMap<Key, Value> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    keyType: Key;
+    valueType: Value;
+    min(minSize: number, params?: string | core.$ZodCheckMinSizeParams): this;
+    nonempty(params?: string | core.$ZodCheckMinSizeParams): this;
+    max(maxSize: number, params?: string | core.$ZodCheckMaxSizeParams): this;
+    size(size: number, params?: string | core.$ZodCheckSizeEqualsParams): this;
+}
+const ZodMap: core.$constructor<ZodMap>;
+function map<Key extends core.SomeType, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodMapParams): ZodMap<Key, Value>;
+interface ZodSet<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodSetInternals<T>>, core.$ZodSet<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    min(minSize: number, params?: string | core.$ZodCheckMinSizeParams): this;
+    nonempty(params?: string | core.$ZodCheckMinSizeParams): this;
+    max(maxSize: number, params?: string | core.$ZodCheckMaxSizeParams): this;
+    size(size: number, params?: string | core.$ZodCheckSizeEqualsParams): this;
+}
+const ZodSet: core.$constructor<ZodSet>;
+function set<Value extends core.SomeType>(valueType: Value, params?: string | core.$ZodSetParams): ZodSet<Value>;
+interface ZodEnum<T extends util.EnumLike = util.EnumLike> extends _ZodType<core.$ZodEnumInternals<T>>, core.$ZodEnum<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    enum: T;
+    options: Array<T[keyof T]>;
+    extract<const U extends readonly (keyof T)[]>(values: U, params?: string | core.$ZodEnumParams): ZodEnum<util.Flatten<Pick<T, U[number]>>>;
+    exclude<const U extends readonly (keyof T)[]>(values: U, params?: string | core.$ZodEnumParams): ZodEnum<util.Flatten<Omit<T, U[number]>>>;
+}
+const ZodEnum: core.$constructor<ZodEnum>;
+function _enum$1<const T extends readonly string[]>(values: T, params?: string | core.$ZodEnumParams): ZodEnum<util.ToEnum<T[number]>>;
+function _enum$1<const T extends util.EnumLike>(entries: T, params?: string | core.$ZodEnumParams): ZodEnum<T>;
+function nativeEnum<T extends util.EnumLike>(entries: T, params?: string | core.$ZodEnumParams): ZodEnum<T>;
+interface ZodLiteral<T extends util.Literal = util.Literal> extends _ZodType<core.$ZodLiteralInternals<T>>, core.$ZodLiteral<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    values: Set<T>;
+    value: T;
+}
+const ZodLiteral: core.$constructor<ZodLiteral>;
+function literal<const T extends ReadonlyArray<util.Literal>>(value: T, params?: string | core.$ZodLiteralParams): ZodLiteral<T[number]>;
+function literal<const T extends util.Literal>(value: T, params?: string | core.$ZodLiteralParams): ZodLiteral<T>;
+interface ZodFile extends _ZodType<core.$ZodFileInternals>, core.$ZodFile {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    min(size: number, params?: string | core.$ZodCheckMinSizeParams): this;
+    max(size: number, params?: string | core.$ZodCheckMaxSizeParams): this;
+    mime(types: util.MimeTypes | Array<util.MimeTypes>, params?: string | core.$ZodCheckMimeTypeParams): this;
+}
+const ZodFile: core.$constructor<ZodFile>;
+function file(params?: string | core.$ZodFileParams): ZodFile;
+interface ZodTransform<O = unknown, I = unknown> extends _ZodType<core.$ZodTransformInternals<O, I>>, core.$ZodTransform<O, I> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodTransform: core.$constructor<ZodTransform>;
+function transform<I = unknown, O = I>(fn: (input: I, ctx: core.$RefinementCtx) => O): ZodTransform<Awaited<O>, I>;
+interface ZodOptional<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodOptionalInternals<T>>, core.$ZodOptional<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodOptional: core.$constructor<ZodOptional>;
+function optional<T extends core.SomeType>(innerType: T): ZodOptional<T>;
+interface ZodExactOptional<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodExactOptionalInternals<T>>, core.$ZodExactOptional<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodExactOptional: core.$constructor<ZodExactOptional>;
+function exactOptional<T extends core.SomeType>(innerType: T): ZodExactOptional<T>;
+interface ZodNullable<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodNullableInternals<T>>, core.$ZodNullable<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodNullable: core.$constructor<ZodNullable>;
+function nullable<T extends core.SomeType>(innerType: T): ZodNullable<T>;
+function nullish$1<T extends core.SomeType>(innerType: T): ZodOptional<ZodNullable<T>>;
+interface ZodDefault<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodDefaultInternals<T>>, core.$ZodDefault<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+    removeDefault(): T;
+}
+const ZodDefault: core.$constructor<ZodDefault>;
+function _default$64<T extends core.SomeType>(innerType: T, defaultValue: util.NoUndefined<core.output<T>> | (() => util.NoUndefined<core.output<T>>)): ZodDefault<T>;
+interface ZodPrefault<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodPrefaultInternals<T>>, core.$ZodPrefault<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodPrefault: core.$constructor<ZodPrefault>;
+function prefault<T extends core.SomeType>(innerType: T, defaultValue: core.input<T> | (() => core.input<T>)): ZodPrefault<T>;
+interface ZodNonOptional<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodNonOptionalInternals<T>>, core.$ZodNonOptional<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodNonOptional: core.$constructor<ZodNonOptional>;
+function nonoptional<T extends core.SomeType>(innerType: T, params?: string | core.$ZodNonOptionalParams): ZodNonOptional<T>;
+interface ZodSuccess<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodSuccessInternals<T>>, core.$ZodSuccess<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodSuccess: core.$constructor<ZodSuccess>;
+function success<T extends core.SomeType>(innerType: T): ZodSuccess<T>;
+interface ZodCatch<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodCatchInternals<T>>, core.$ZodCatch<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+    removeCatch(): T;
+}
+const ZodCatch: core.$constructor<ZodCatch>;
+function _catch$1<T extends core.SomeType>(innerType: T, catchValue: core.output<T> | ((ctx: core.$ZodCatchCtx) => core.output<T>)): ZodCatch<T>;
+interface ZodNaN extends _ZodType<core.$ZodNaNInternals>, core.$ZodNaN {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodNaN: core.$constructor<ZodNaN>;
+function nan(params?: string | core.$ZodNaNParams): ZodNaN;
+interface ZodPipe<A extends core.SomeType = core.$ZodType, B extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodPipeInternals<A, B>>, core.$ZodPipe<A, B> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    in: A;
+    out: B;
+}
+const ZodPipe: core.$constructor<ZodPipe>;
+function pipe<const A extends core.SomeType, B extends core.$ZodType<unknown, core.output<A>> = core.$ZodType<unknown, core.output<A>>>(in_: A, out: B | core.$ZodType<unknown, core.output<A>>): ZodPipe<A, B>;
+interface ZodCodec<A extends core.SomeType = core.$ZodType, B extends core.SomeType = core.$ZodType> extends ZodPipe<A, B>, core.$ZodCodec<A, B> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    _zod: core.$ZodCodecInternals<A, B>;
+    def: core.$ZodCodecDef<A, B>;
+}
+const ZodCodec: core.$constructor<ZodCodec>;
+function codec<const A extends core.SomeType, B extends core.SomeType = core.$ZodType>(in_: A, out: B, params: {
+    decode: (value: core.output<A>, payload: core.ParsePayload<core.output<A>>) => core.util.MaybeAsync<core.input<B>>;
+    encode: (value: core.input<B>, payload: core.ParsePayload<core.input<B>>) => core.util.MaybeAsync<core.output<A>>;
+}): ZodCodec<A, B>;
+function invertCodec<A extends core.SomeType, B extends core.SomeType>(codec: ZodCodec<A, B>): ZodCodec<B, A>;
+interface ZodPreprocess<B extends core.SomeType = core.$ZodType, I = unknown> extends ZodPipe<core.$ZodTransform<unknown, I>, B>, core.$ZodPreprocess<B, I> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    _zod: core.$ZodPreprocessInternals<B, I>;
+    def: core.$ZodPreprocessDef<B, I>;
+}
+const ZodPreprocess: core.$constructor<ZodPreprocess>;
+interface ZodReadonly<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodReadonlyInternals<T>>, core.$ZodReadonly<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodReadonly: core.$constructor<ZodReadonly>;
+function readonly<T extends core.SomeType>(innerType: T): ZodReadonly<T>;
+interface ZodTemplateLiteral<Template extends string = string> extends _ZodType<core.$ZodTemplateLiteralInternals<Template>>, core.$ZodTemplateLiteral<Template> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodTemplateLiteral: core.$constructor<ZodTemplateLiteral>;
+function templateLiteral<const Parts extends core.$ZodTemplateLiteralPart[]>(parts: Parts, params?: string | core.$ZodTemplateLiteralParams): ZodTemplateLiteral<core.$PartsToTemplateLiteral<Parts>>;
+interface ZodLazy<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodLazyInternals<T>>, core.$ZodLazy<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodLazy: core.$constructor<ZodLazy>;
+function lazy<T extends core.SomeType>(getter: () => T): ZodLazy<T>;
+interface ZodPromise<T extends core.SomeType = core.$ZodType> extends _ZodType<core.$ZodPromiseInternals<T>>, core.$ZodPromise<T> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    unwrap(): T;
+}
+const ZodPromise: core.$constructor<ZodPromise>;
+function promise<T extends core.SomeType>(innerType: T): ZodPromise<T>;
+interface ZodFunction<Args extends core.$ZodFunctionIn = core.$ZodFunctionIn, Returns extends core.$ZodFunctionOut = core.$ZodFunctionOut> extends _ZodType<core.$ZodFunctionInternals<Args, Returns>>, core.$ZodFunction<Args, Returns> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+    _def: core.$ZodFunctionDef<Args, Returns>;
+    _input: core.$InferInnerFunctionType<Args, Returns>;
+    _output: core.$InferOuterFunctionType<Args, Returns>;
+    input<const Items extends util.TupleItems, const Rest extends core.$ZodFunctionOut = core.$ZodFunctionOut>(args: Items, rest?: Rest): ZodFunction<core.$ZodTuple<Items, Rest>, Returns>;
+    input<NewArgs extends core.$ZodFunctionIn>(args: NewArgs): ZodFunction<NewArgs, Returns>;
+    input(...args: any[]): ZodFunction<any, Returns>;
+    output<NewReturns extends core.$ZodType>(output: NewReturns): ZodFunction<Args, NewReturns>;
+}
+const ZodFunction: core.$constructor<ZodFunction>;
+function _function(): ZodFunction;
+function _function<const In extends ReadonlyArray<core.$ZodType>>(params: {
+    input: In;
+}): ZodFunction<ZodTuple<In, null>, core.$ZodFunctionOut>;
+function _function<const In extends ReadonlyArray<core.$ZodType>, const Out extends core.$ZodFunctionOut = core.$ZodFunctionOut>(params: {
+    input: In;
+    output: Out;
+}): ZodFunction<ZodTuple<In, null>, Out>;
+function _function<const In extends core.$ZodFunctionIn = core.$ZodFunctionIn>(params: {
+    input: In;
+}): ZodFunction<In, core.$ZodFunctionOut>;
+function _function<const Out extends core.$ZodFunctionOut = core.$ZodFunctionOut>(params: {
+    output: Out;
+}): ZodFunction<core.$ZodFunctionIn, Out>;
+function _function<In extends core.$ZodFunctionIn = core.$ZodFunctionIn, Out extends core.$ZodType = core.$ZodType>(params?: {
+    input: In;
+    output: Out;
+}): ZodFunction<In, Out>;
+interface ZodCustom<O = unknown, I = unknown> extends _ZodType<core.$ZodCustomInternals<O, I>>, core.$ZodCustom<O, I> {
+    "~standard": ZodStandardSchemaWithJSON$1<this>;
+}
+const ZodCustom: core.$constructor<ZodCustom>;
+function check<O = unknown>(fn: core.CheckFn<O>): core.$ZodCheck<O>;
+function custom<O>(fn?: (data: unknown) => unknown, _params?: string | core.$ZodCustomParams | undefined): ZodCustom<O, O>;
+function refine<T>(fn: (arg: NoInfer<T>) => util.MaybeAsync<unknown>, _params?: string | core.$ZodCustomParams): core.$ZodCheck<T>;
+function superRefine<T>(fn: (arg: T, payload: core.$RefinementCtx<T>) => void | Promise<void>, params?: core.$ZodSuperRefineParams): core.$ZodCheck<T>;
+const describe$1: typeof core.describe;
+const meta$1: typeof core.meta;
+type ZodInstanceOfParams = core.Params<ZodCustom, core.$ZodIssueCustom, "type" | "check" | "checks" | "fn" | "abort" | "error" | "params" | "path">;
+interface ZodInstanceOf<T = unknown> extends ZodCustom<T, T> {
+    properties<Shape extends {
+        [k in keyof T as T[k] extends Function ? never : k]?: core.$ZodType<unknown, T[k]>;
+    }>(shape: Shape, params?: string | core.$ZodCheckPropertiesParams): ZodInstanceOf<T & core.$InferObjectInput<Shape, {}>>;
+}
+const ZodInstanceOf: core.$constructor<ZodInstanceOf>;
+function _instanceof<T extends typeof util.Class>(cls: T, params?: ZodInstanceOfParams): ZodInstanceOf<InstanceType<T>>;
+const stringbool: (_params?: string | core.$ZodStringBoolParams) => ZodCodec<ZodString, ZodBoolean>;
+type _ZodJSONSchema = ZodUnion<[
+    ZodString,
+    ZodNumber,
+    ZodBoolean,
+    ZodNull,
+    ZodArray<ZodJSONSchema>,
+    ZodRecord<ZodString, ZodJSONSchema>
+]>;
+type _ZodJSONSchemaInternals = _ZodJSONSchema["_zod"];
+interface ZodJSONSchemaInternals extends _ZodJSONSchemaInternals {
+    output: util.JSONType;
+    input: util.JSONType;
+}
+interface ZodJSONSchema extends _ZodJSONSchema {
+    _zod: ZodJSONSchemaInternals;
+}
+function json(params?: string | core.$ZodCustomParams): ZodJSONSchema;
+function preprocess<A, U extends core.SomeType, B = unknown>(fn: (arg: B, ctx: core.$RefinementCtx) => A, schema: U): ZodPreprocess<U, B>;
+type TypeOf<T> = core.output<T>;
+type Infer<T> = core.output<T>;
+type ZodFirstPartySchemaTypes = core.$ZodTypes;
+const ZodIssueCode: {
+    readonly invalid_type: "invalid_type";
+    readonly too_big: "too_big";
+    readonly too_small: "too_small";
+    readonly invalid_format: "invalid_format";
+    readonly not_multiple_of: "not_multiple_of";
+    readonly unrecognized_keys: "unrecognized_keys";
+    readonly invalid_union: "invalid_union";
+    readonly invalid_key: "invalid_key";
+    readonly invalid_element: "invalid_element";
+    readonly invalid_value: "invalid_value";
+    readonly custom: "custom";
+};
+type inferFlattenedErrors<T extends core.$ZodType, U = string> = core.$ZodFlattenedError<core.output<T>, U>;
+type inferFormattedError<T extends core.$ZodType<any, any>, U = string> = core.$ZodFormattedError<core.output<T>, U>;
+type BRAND<T extends string | number | symbol = string | number | symbol> = {
+    [core.$brand]: {
+        [k in T]: true;
+    };
+};
+function setErrorMap(map: core.$ZodErrorMap): void;
+function getErrorMap(): core.$ZodErrorMap<core.$ZodIssue> | undefined;
+type ZodTypeAny<Output = unknown, Input = unknown, Internals extends core.$ZodTypeInternals<Output, Input> = core.$ZodTypeInternals<Output, Input>> = ZodType<Output, Input, Internals>;
+type ZodSchema<Output = unknown, Input = unknown, Internals extends core.$ZodTypeInternals<Output, Input> = core.$ZodTypeInternals<Output, Input>> = ZodType<Output, Input, Internals>;
+type Schema$1<Output = unknown, Input = unknown, Internals extends core.$ZodTypeInternals<Output, Input> = core.$ZodTypeInternals<Output, Input>> = ZodType<Output, Input, Internals>;
+type ZodRawShape = core.$ZodShape;
+enum ZodFirstPartyTypeKind {
+}
+type JSONSchemaVersion = "draft-2020-12" | "draft-7" | "draft-4" | "openapi-3.0";
+interface FromJSONSchemaParams {
+    defaultTarget?: JSONSchemaVersion;
+    registry?: $ZodRegistry<any>;
+}
+function fromJSONSchema(schema: JSONSchema$1.JSONSchema | boolean, params?: FromJSONSchemaParams): ZodType;
+type DeepPartial<T extends core.SomeType> = T extends schemas$1.ZodObject<infer Shape, infer Config> ? schemas$1.ZodObject<{
+    -readonly [K in keyof Shape]: schemas$1.ZodOptional<DeepPartial<Shape[K]>>;
+}, Config> : T extends schemas$1.ZodDiscriminatedUnion<infer Options, any> ? schemas$1.ZodUnion<{
+    -readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial<Options[I]> : Options[I];
+}> : T extends schemas$1.ZodUnion<infer Options> ? schemas$1.ZodUnion<{
+    -readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial<Options[I]> : Options[I];
+}> : T extends schemas$1.ZodArray<infer El> ? schemas$1.ZodArray<DeepPartial<El>> : T extends schemas$1.ZodTuple<infer Items, infer Rest> ? schemas$1.ZodTuple<{
+    -readonly [K in keyof Items]: Items[K] extends core.SomeType ? DeepPartial<Items[K]> : Items[K];
+}, Rest extends core.SomeType ? DeepPartial<Rest> : Rest> : T extends schemas$1.ZodIntersection<infer A, infer B> ? schemas$1.ZodIntersection<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodRecord<infer K, infer V> ? schemas$1.ZodRecord<K, DeepPartial<V>> : T extends schemas$1.ZodMap<infer K, infer V> ? schemas$1.ZodMap<K, DeepPartial<V>> : T extends schemas$1.ZodSet<infer El> ? schemas$1.ZodSet<DeepPartial<El>> : T extends schemas$1.ZodOptional<infer Inner> ? schemas$1.ZodOptional<DeepPartial<Inner>> : T extends schemas$1.ZodNullable<infer Inner> ? schemas$1.ZodNullable<DeepPartial<Inner>> : T extends schemas$1.ZodDefault<infer Inner> ? schemas$1.ZodDefault<DeepPartial<Inner>> : T extends schemas$1.ZodPrefault<infer Inner> ? schemas$1.ZodPrefault<DeepPartial<Inner>> : T extends schemas$1.ZodNonOptional<infer Inner> ? schemas$1.ZodNonOptional<DeepPartial<Inner>> : T extends schemas$1.ZodCatch<infer Inner> ? schemas$1.ZodCatch<DeepPartial<Inner>> : T extends schemas$1.ZodReadonly<infer Inner> ? schemas$1.ZodReadonly<DeepPartial<Inner>> : T extends schemas$1.ZodSuccess<infer Inner> ? schemas$1.ZodSuccess<DeepPartial<Inner>> : T extends schemas$1.ZodPromise<infer Inner> ? schemas$1.ZodPromise<DeepPartial<Inner>> : T extends schemas$1.ZodCodec<infer A, infer B> ? schemas$1.ZodCodec<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodPreprocess<infer B> ? schemas$1.ZodPreprocess<DeepPartial<B>> : T extends schemas$1.ZodPipe<infer A, infer B> ? schemas$1.ZodPipe<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodLazy<infer Inner> ? schemas$1.ZodLazy<DeepPartial<Inner>> : T;
+function deepPartial<T extends core.SomeType>(schema: T): DeepPartial<T>;
+type input$1<T> = core.input<T>;
+type output$1<T> = core.output<T>;
+function input$1<T extends core.$ZodType>(schema: T): schemas$1.ZodType<core.input<T>, core.input<T>>;
+function output$1<T extends core.$ZodType>(schema: T): schemas$1.ZodType<core.output<T>, core.output<T>>;
+function datetime$1(params?: string | core.$ZodISODateTimeParams): ZodISODateTime;
+function date$2(params?: string | core.$ZodISODateParams): ZodISODate;
+function time$1(params?: string | core.$ZodISOTimeParams): ZodISOTime;
+function duration$1(params?: string | core.$ZodISODurationParams): ZodISODuration;
+interface ZodCoercedString<T = unknown> extends schemas$1._ZodString<core.$ZodStringInternals<T>> {
+}
+function string$2<T = unknown>(params?: string | core.$ZodStringParams): ZodCoercedString<T>;
+interface ZodCoercedNumber<T = unknown> extends schemas$1._ZodNumber<core.$ZodNumberInternals<T>> {
+}
+function number$2<T = unknown>(params?: string | core.$ZodNumberParams): ZodCoercedNumber<T>;
+interface ZodCoercedBoolean<T = unknown> extends schemas$1._ZodBoolean<core.$ZodBooleanInternals<T>> {
+}
+function boolean$2<T = unknown>(params?: string | core.$ZodBooleanParams): ZodCoercedBoolean<T>;
+interface ZodCoercedBigInt<T = unknown> extends schemas$1._ZodBigInt<core.$ZodBigIntInternals<T>> {
+}
+function bigint$2<T = unknown>(params?: string | core.$ZodBigIntParams): ZodCoercedBigInt<T>;
+interface ZodCoercedDate<T = unknown> extends schemas$1._ZodDate<core.$ZodDateInternals<T>> {
+}
+function date$3<T = unknown>(params?: string | core.$ZodDateParams): ZodCoercedDate<T>;
+const EVENTS: {
+    readonly BLUR: "blur";
+    readonly FOCUS_OUT: "focusout";
+    readonly CHANGE: "change";
+    readonly SUBMIT: "submit";
+    readonly TRIGGER: "trigger";
+    readonly VALID: "valid";
+};
+const VALIDATION_MODE: {
+    readonly onBlur: "onBlur";
+    readonly onChange: "onChange";
+    readonly onSubmit: "onSubmit";
+    readonly onTouched: "onTouched";
+    readonly all: "all";
+};
+type Observer<T> = {
+    next: (value: T) => void;
+};
+type Subscription = {
+    unsubscribe: Noop;
+};
+type Subject<T> = {
+    readonly observers: Observer<T>[];
+    subscribe: (value: Observer<T>) => Subscription;
+    unsubscribe: Noop;
+} & Observer<T>;
+type EventType = "focus" | "blur" | "change" | "changeText" | "valueChange" | "contentSizeChange" | "endEditing" | "keyPress" | "submitEditing" | "layout" | "selectionChange" | "longPress" | "press" | "pressIn" | "pressOut" | "momentumScrollBegin" | "momentumScrollEnd" | "scroll" | "scrollBeginDrag" | "scrollEndDrag" | "load" | "error" | "progress" | "custom";
+type Prev = [
+    never,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    ...0[]
+];
+type IsTuple<T extends ReadonlyArray<unknown>> = number extends T["length"] ? false : true;
+type ArrayKey = number;
+type TupleKeys<T extends ReadonlyArray<unknown>> = Exclude<keyof T, keyof unknown[]>;
+type AnyIsEqual<T1, T2> = T1 extends T2 ? IsEqual<T1, T2> extends true ? true : never : never;
+type PathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive$1 | BrowserNativeObject | OpaqueType ? `${K}` : true extends AnyIsEqual<TraversedTypes, V> ? `${K}` : `${K}` | `${K}.${PathInternal<V, TraversedTypes | V, Prev[D]>}`;
+type PathInternal<T, TraversedTypes = T, D extends number = 9> = [
+    D
+] extends [
+    never
+] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
+    [K in TupleKeys<T>]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
+}[TupleKeys<T>] : PathImpl<ArrayKey, V, TraversedTypes, D> : {
+    [K in keyof T]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
+}[keyof T];
+type Path<T> = T extends unknown ? PathInternal<T> : never;
+type FieldPath<TFieldValues extends FieldValues> = Path<TFieldValues>;
+type ArrayPathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive$1 | BrowserNativeObject | OpaqueType ? IsAny$1<V> extends true ? string : never : V extends ReadonlyArray<infer U> ? U extends Primitive$1 | BrowserNativeObject | OpaqueType ? IsAny$1<V> extends true ? string : never : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}` | `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}` : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}`;
+type ArrayPathInternal<T, TraversedTypes = T, D extends number = 9> = [
+    D
+] extends [
+    never
+] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
+    [K in TupleKeys<T>]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
+}[TupleKeys<T>] : ArrayPathImpl<ArrayKey, V, TraversedTypes, D> : {
+    [K in keyof T]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
+}[keyof T];
+type ArrayPath<T> = T extends unknown ? ArrayPathInternal<T> : never;
+type FieldArrayPath<TFieldValues extends FieldValues> = ArrayPath<TFieldValues>;
+type PathValue<T, P extends Path<T> | ArrayPath<T>> = PathValueImpl<T, P>;
+type PathValueImpl<T, P extends string> = T extends unknown ? P extends `${infer K}.${infer R}` ? K extends keyof T ? undefined extends T[K] ? PathValueImpl<T[K], R> | undefined : PathValueImpl<T[K], R> : K extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? PathValueImpl<V, R> : never : never : P extends keyof T ? T[P] : P extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? V : T extends undefined ? undefined : never : never : never;
+type FieldPathValue<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = PathValue<TFieldValues, TFieldPath>;
+type FieldArrayPathValue<TFieldValues extends FieldValues, TFieldArrayPath extends FieldArrayPath<TFieldValues>> = PathValue<TFieldValues, TFieldArrayPath>;
+type FieldPathValues<TFieldValues extends FieldValues, TPath extends FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[]> = {} & {
+    [K in keyof TPath]: FieldPathValue<TFieldValues, TPath[K] & FieldPath<TFieldValues>>;
+};
+type FieldArray<TFieldValues extends FieldValues = FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>> = FieldArrayPathValue<TFieldValues, TFieldArrayName> extends ReadonlyArray<infer U> | null | undefined ? U : never;
+type ResolverSuccess<TTransformedValues> = {
+    values: TTransformedValues;
+    errors: Record<string, never>;
+};
+type ResolverError<TFieldValues extends FieldValues = FieldValues> = {
+    values: Record<string, never>;
+    errors: FieldErrors<TFieldValues>;
+};
+type ResolverResult<TFieldValues extends FieldValues = FieldValues, TTransformedValues = TFieldValues> = ResolverSuccess<TTransformedValues> | ResolverError<TFieldValues>;
+interface ResolverOptions<TFieldValues extends FieldValues> {
+    criteriaMode?: CriteriaMode;
+    fields: Record<InternalFieldName, Field["_f"]>;
+    names?: FieldName<TFieldValues>[];
+    shouldUseNativeValidation: boolean | undefined;
+}
+type Resolver<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = (values: TFieldValues, context: TContext | undefined, options: ResolverOptions<TFieldValues>) => Promise<ResolverResult<TFieldValues, TTransformedValues>> | ResolverResult<TFieldValues, TTransformedValues>;
+const $NestedValue: unique symbol;
+type NestedValue<TValue extends object = object> = {
+    [$NestedValue]: never;
+} & TValue;
+type DefaultValues<TFieldValues> = TFieldValues extends AsyncDefaultValues<TFieldValues> ? DeepPartial$1<Awaited<TFieldValues>> : DeepPartial$1<TFieldValues>;
+type InternalNameSet = Set<InternalFieldName>;
+type ValidationMode = typeof VALIDATION_MODE;
+type Mode = keyof ValidationMode;
+type CriteriaMode = "firstError" | "all";
+type SubmitHandler<T, TResult = unknown> = (data: T, event?: React$1.BaseSyntheticEvent) => TResult;
+type SubmitErrorHandler<TFieldValues extends FieldValues> = (errors: FieldErrors<TFieldValues>, event?: React$1.BaseSyntheticEvent) => unknown | Promise<unknown>;
+type SetValueConfig = Partial<{
+    shouldValidate: boolean;
+    shouldDirty: boolean;
+    shouldTouch: boolean;
+    delayError: boolean;
+}>;
+type TriggerConfig = Partial<{
+    shouldFocus: boolean;
+    shouldTouch: boolean;
+}>;
+type ResetFieldConfig<TFieldValues extends FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
+    keepDirty: boolean;
+    keepTouched: boolean;
+    keepError: boolean;
+    defaultValue: FieldPathValue<TFieldValues, TFieldName>;
+}>;
+type ChangeHandler = (event: {
+    target: any;
+    type?: any;
+}) => Promise<void | boolean>;
+type AsyncDefaultValues<TFieldValues> = (payload?: unknown) => Promise<TFieldValues>;
+type UseFormProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = Partial<{
+    mode: Mode;
+    disabled: boolean;
+    reValidateMode: Exclude<Mode, "onTouched" | "all">;
+    defaultValues: DefaultValues<TFieldValues> | AsyncDefaultValues<TFieldValues>;
+    values: TFieldValues;
+    errors: FieldErrors<TFieldValues>;
+    resetOptions: Parameters<UseFormReset<TFieldValues>>[1];
+    resolver: Resolver<TFieldValues, TContext, TTransformedValues>;
+    context: TContext;
+    shouldFocusError: boolean;
+    shouldUnregister: boolean;
+    shouldUseNativeValidation: boolean;
+    progressive: boolean;
+    criteriaMode: CriteriaMode;
+    delayError: number;
+    formControl?: Omit<UseFormReturn<TFieldValues, TContext, TTransformedValues>, "formState">;
+    validate: ValidateForm<TFieldValues>;
+}>;
+type FieldNamesMarkedBoolean<TFieldValues extends FieldValues> = DeepMap<DeepPartial$1<TFieldValues>, boolean>;
+type FormStateProxy<TFieldValues extends FieldValues = FieldValues> = {
+    isDirty: boolean;
+    isValidating: boolean;
+    dirtyFields: FieldNamesMarkedBoolean<TFieldValues>;
+    touchedFields: FieldNamesMarkedBoolean<TFieldValues>;
+    validatingFields: FieldNamesMarkedBoolean<TFieldValues>;
+    errors: boolean;
+    isValid: boolean;
+};
+type ReadFormState = {
+    [K in keyof FormStateProxy]: boolean | "all";
+} & {
+    values?: boolean;
+    defaultValues?: boolean | "all";
+    isSubmitted?: boolean | "all";
+    submitCount?: boolean | "all";
+};
+type FormState<TFieldValues extends FieldValues> = {
+    isDirty: boolean;
+    isLoading: boolean;
+    isSubmitted: boolean;
+    isSubmitSuccessful: boolean;
+    isSubmitting: boolean;
+    isValidating: boolean;
+    isValid: boolean;
+    disabled: boolean;
+    submitCount: number;
+    defaultValues?: undefined | Readonly<DeepPartial$1<TFieldValues>>;
+    dirtyFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+    touchedFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+    validatingFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+    errors: FieldErrors<TFieldValues>;
+    isReady: boolean;
+};
+type KeepStateOptions = Partial<{
+    keepDirtyValues: boolean;
+    keepErrors: boolean;
+    keepDirty: boolean;
+    keepValues: boolean;
+    keepDefaultValues: boolean;
+    keepIsSubmitted: boolean;
+    keepIsSubmitSuccessful: boolean;
+    keepTouched: boolean;
+    keepIsValidating: boolean;
+    keepIsValid: boolean;
+    keepSubmitCount: boolean;
+    keepFieldsRef: boolean;
+}>;
+type RefCallBack = (instance: any) => void;
+type UseFormRegisterReturn<TFieldName extends InternalFieldName = InternalFieldName> = {
+    onChange: ChangeHandler;
+    onBlur: ChangeHandler;
+    ref: RefCallBack;
+    name: TFieldName;
+    min?: string | number;
+    max?: string | number;
+    maxLength?: number;
+    minLength?: number;
+    pattern?: string;
+    required?: boolean;
+    disabled?: boolean;
+};
+type UseFormRegister<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: RegisterOptions<TFieldValues, TFieldName>) => UseFormRegisterReturn<TFieldName>;
+type SetFocusOptions = Partial<{
+    shouldSelect: boolean;
+}>;
+type UseFormSetFocus<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: SetFocusOptions) => void;
+type EitherOption<T> = {
+    [K in keyof T]: {
+        [P in K]: T[P];
+    } & Partial<Record<Exclude<keyof T, K>, never>>;
+}[keyof T];
+type GetValuesConfig = EitherOption<{
+    dirtyFields: boolean;
+    touchedFields: boolean;
+}>;
+type UseFormGetValues<TFieldValues extends FieldValues> = {
+    (name?: undefined, config?: GetValuesConfig): TFieldValues;
+    <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, config?: GetValuesConfig): FieldPathValue<TFieldValues, TFieldName>;
+    <TFieldNames extends FieldPath<TFieldValues>[]>(names: readonly [
+        ...TFieldNames
+    ], config?: GetValuesConfig): [
+        ...FieldPathValues<TFieldValues, TFieldNames>
+    ];
+};
+type ErrorNamespacePath = "root" | `root.${string}` | "form" | `form.${string}`;
+type GetErrorsResult<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues> | ErrorNamespacePath> = TName extends "root" ? (Record<string, GlobalError> & GlobalError) | undefined : TName extends ErrorNamespacePath ? GlobalError | undefined : TName extends FieldPath<TFieldValues> ? FieldPathError<TFieldValues, TName> | undefined : never;
+type UseFormGetErrors<TFieldValues extends FieldValues> = {
+    (name?: undefined): FieldErrors<TFieldValues>;
+    <TName extends FieldPath<TFieldValues> | ErrorNamespacePath>(name: TName): GetErrorsResult<TFieldValues, TName>;
+    <TNames extends (FieldPath<TFieldValues> | ErrorNamespacePath)[]>(names: readonly [
+        ...TNames
+    ]): {
+        [K in keyof TNames]: GetErrorsResult<TFieldValues, TNames[K]>;
+    };
+};
+type UseFormGetFieldState<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, formState?: FormState<TFieldValues>) => {
+    invalid: boolean;
+    isDirty: boolean;
+    isTouched: boolean;
+    isValidating: boolean;
+    error?: FieldPathError<TFieldValues, TFieldName>;
+};
+type UseFormSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
+    name?: readonly [
+        ...TFieldNames
+    ] | TFieldNames[number];
+    formState?: Partial<ReadFormState>;
+    callback: (data: Partial<FormState<TFieldValues>> & {
+        values: TFieldValues;
+        name?: InternalFieldName;
+        type?: EventType;
+    }) => void;
+    exact?: boolean;
+}) => () => void;
+type UseFormWatch<TFieldValues extends FieldValues> = {
+    (): TFieldValues;
+    <TFieldNames extends readonly FieldPath<TFieldValues>[]>(names: readonly [
+        ...TFieldNames
+    ], defaultValue?: DeepPartial$1<TFieldValues>): FieldPathValues<TFieldValues, TFieldNames>;
+    <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, defaultValue?: FieldPathValue<TFieldValues, TFieldName>): FieldPathValue<TFieldValues, TFieldName>;
+    (callback: WatchObserver<TFieldValues>, defaultValues?: DeepPartial$1<TFieldValues>): Subscription;
+};
+type UseFormTrigger<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: TriggerConfig) => Promise<boolean>;
+type UseFormClearErrors<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[] | ErrorNamespacePath) => void;
+type UseFormSetValue<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, value: FieldPathValue<TFieldValues, TFieldName>, options?: SetValueConfig) => void;
+type UseFormSetValues<TFieldValues extends FieldValues> = (value: Partial<TFieldValues> | ResetAction<TFieldValues>, options?: SetValueConfig) => void;
+type UseFormSetError<TFieldValues extends FieldValues> = (name: FieldPath<TFieldValues> | ErrorNamespacePath, error: ErrorOption, options?: {
+    shouldFocus: boolean;
+}) => void;
+type UseFormUnregister<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: Omit<KeepStateOptions, "keepIsSubmitted" | "keepSubmitCount" | "keepValues" | "keepDefaultValues" | "keepErrors"> & {
+    keepValue?: boolean;
+    keepDefaultValue?: boolean;
+    keepError?: boolean;
+}) => void;
+type UseFormHandleSubmit<TFieldValues extends FieldValues, TTransformedValues = TFieldValues> = <TResult>(onValid: SubmitHandler<TTransformedValues, TResult>, onInvalid?: SubmitErrorHandler<TFieldValues>) => (e?: React$1.BaseSyntheticEvent) => Promise<Awaited<TResult> | undefined>;
+type UseFormResetField<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: ResetFieldConfig<TFieldValues, TFieldName>) => void;
+type ResetAction<TFieldValues> = (formValues: TFieldValues) => TFieldValues;
+type UseFormReset<TFieldValues extends FieldValues> = (values?: DefaultValues<TFieldValues> | TFieldValues | ResetAction<TFieldValues>, keepStateOptions?: KeepStateOptions) => void;
+type UseFormResetDefaultValues<TFieldValues extends FieldValues> = (values: DefaultValues<TFieldValues> | TFieldValues, options?: Partial<Pick<KeepStateOptions, "keepDirty" | "keepIsValid">>) => void;
+type WatchInternal<TFieldValues> = (fieldNames?: InternalFieldName | InternalFieldName[], defaultValue?: DeepPartial$1<TFieldValues>, isMounted?: boolean, isGlobal?: boolean) => FieldPathValue<FieldValues, InternalFieldName> | FieldPathValues<FieldValues, InternalFieldName[]>;
+type GetIsDirty = <TName extends InternalFieldName, TData>(name?: TName, data?: TData) => boolean;
+type FormStateSubjectRef<TFieldValues extends FieldValues> = Subject<Partial<FormState<TFieldValues>> & {
+    name?: InternalFieldName;
+    values?: TFieldValues;
+    type?: EventType;
+}>;
+type Subjects<TFieldValues extends FieldValues = FieldValues> = {
+    array: Subject<{
+        name?: InternalFieldName;
+        values?: FieldValues;
+    }>;
+    state: FormStateSubjectRef<TFieldValues>;
+};
+type Names = {
+    mount: InternalNameSet;
+    unMount: InternalNameSet;
+    disabled: InternalNameSet;
+    array: InternalNameSet;
+    watch: InternalNameSet;
+    registerName: InternalNameSet;
+    focus?: InternalFieldName;
+    watchAll?: boolean;
+};
+type BatchFieldArrayUpdate = <T extends Function, TFieldValues extends FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>>(name: InternalFieldName, updatedFieldArrayValues?: Partial<FieldArray<TFieldValues, TFieldArrayName>>[], method?: T, args?: Partial<{
+    argA: unknown;
+    argB: unknown;
+}>, shouldSetValue?: boolean, shouldUpdateFieldsAndErrors?: boolean) => void;
+type FromSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
+    name?: readonly [
+        ...TFieldNames
+    ] | TFieldNames[number];
+    formState?: Partial<ReadFormState>;
+    callback: (data: Partial<FormState<TFieldValues>> & {
+        values: TFieldValues;
+        name?: InternalFieldName;
+    }) => void;
+    exact?: boolean;
+    reRenderRoot?: boolean;
+}) => () => void;
+type Control<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
+    _subjects: Subjects<TFieldValues>;
+    _removeUnmounted: Noop;
+    _names: Names;
+    _state: {
+        mount: boolean;
+        action: boolean;
+        actionArrayLengths: Map<InternalFieldName, number>;
+        watch: boolean;
+    };
+    _reset: UseFormReset<TFieldValues>;
+    _options: UseFormProps<TFieldValues, TContext, TTransformedValues>;
+    _getDirty: GetIsDirty;
+    _resetDefaultValues: Noop;
+    _formState: FormState<TFieldValues>;
+    _setValid: (shouldUpdateValid?: boolean) => void;
+    _fields: FieldRefs;
+    _formValues: FieldValues;
+    _proxyFormState: ReadFormState;
+    _defaultValues: Partial<DefaultValues<TFieldValues>>;
+    _getWatch: WatchInternal<TFieldValues>;
+    _setFieldArray: BatchFieldArrayUpdate;
+    _getFieldArray: <TFieldArrayValues>(name: InternalFieldName) => Partial<TFieldArrayValues>[];
+    _setErrors: (errors: FieldErrors<TFieldValues>) => void;
+    _setDisabledField: (props: {
+        disabled?: boolean;
+        name: InternalFieldName;
+    }) => void;
+    _runSchema: (names: InternalFieldName[]) => Promise<{
+        errors: FieldErrors;
+    }>;
+    _updateIsValidating: (names?: InternalFieldName[], isValidating?: boolean) => void;
+    _focusError: () => boolean | undefined;
+    _disableForm: (disabled?: boolean) => void;
+    _subscribe: FromSubscribe<TFieldValues>;
+    register: UseFormRegister<TFieldValues>;
+    handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
+    unregister: UseFormUnregister<TFieldValues>;
+    getFieldState: UseFormGetFieldState<TFieldValues>;
+    setError: UseFormSetError<TFieldValues>;
+};
+type WatchObserver<TFieldValues extends FieldValues> = (value: DeepPartialSkipArrayKey<TFieldValues>, info: {
+    name?: FieldPath<TFieldValues>;
+    type?: EventType;
+    values?: unknown;
+}) => void;
+type UseFormReturn<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
+    watch: UseFormWatch<TFieldValues>;
+    getValues: UseFormGetValues<TFieldValues>;
+    getErrors: UseFormGetErrors<TFieldValues>;
+    getFieldState: UseFormGetFieldState<TFieldValues>;
+    setError: UseFormSetError<TFieldValues>;
+    clearErrors: UseFormClearErrors<TFieldValues>;
+    setValue: UseFormSetValue<TFieldValues>;
+    setValues: UseFormSetValues<TFieldValues>;
+    trigger: UseFormTrigger<TFieldValues>;
+    formState: FormState<TFieldValues>;
+    resetField: UseFormResetField<TFieldValues>;
+    reset: UseFormReset<TFieldValues>;
+    resetDefaultValues: UseFormResetDefaultValues<TFieldValues>;
+    handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
+    unregister: UseFormUnregister<TFieldValues>;
+    control: Control<TFieldValues, TContext, TTransformedValues>;
+    register: UseFormRegister<TFieldValues>;
+    setFocus: UseFormSetFocus<TFieldValues>;
+    subscribe: UseFormSubscribe<TFieldValues>;
+};
+type UseFormStateReturn<TFieldValues extends FieldValues> = FormState<TFieldValues>;
+type FormProviderProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
+    children: React$1.ReactNode | React$1.ReactNode[];
+} & UseFormReturn<TFieldValues, TContext, TTransformedValues>;
+type Noop = () => void;
+interface File$2 extends Blob {
+    readonly lastModified: number;
+    readonly name: string;
+}
+interface FileList$1 {
+    readonly length: number;
+    item(index: number): File$2 | null;
+    [index: number]: File$2;
+}
+type Primitive$1 = null | undefined | string | number | boolean | symbol | bigint;
+type BrowserNativeObject = Date | FileList$1 | File$2;
+interface OpaqueTypes {
+}
+type OpaqueType = OpaqueTypes[keyof OpaqueTypes];
+type NonUndefined<T> = T extends undefined ? never : T;
+type LiteralUnion<T extends U, U extends Primitive$1> = T | (U & {
+    _?: never;
+});
+type ExtractObjects<T> = T extends infer U ? U extends object ? U : never : never;
+type IsPrimitiveLike<T> = T extends Primitive$1 ? true : false;
+type DeepPartial$1<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : {
+    [K in keyof T]?: ExtractObjects<T[K]> extends never ? T[K] : DeepPartial$1<T[K]>;
+};
+type DeepPartialSkipArrayKey<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : T extends ReadonlyArray<unknown> ? {
+    [K in keyof T]: DeepPartialSkipArrayKey<T[K]>;
+} : {
+    [K in keyof T]?: DeepPartialSkipArrayKey<T[K]>;
+};
+type IsAny$1<T> = 0 extends 1 & T ? true : false;
+type IsEqual<T1, T2> = T1 extends T2 ? (<G>() => G extends T1 ? 1 : 2) extends <G>() => G extends T2 ? 1 : 2 ? true : false : false;
+type DeepMap<T, TValue> = IsAny$1<T> extends true ? any : T extends BrowserNativeObject | NestedValue | OpaqueType ? TValue : T extends ReadonlyArray<infer U> ? Array<DeepMap<NonUndefined<U>, TValue> | undefined> : T extends object ? {
+    [K in keyof T]: DeepMap<NonUndefined<T[K]>, TValue>;
+} : TValue;
+type IsFlatObject<T extends object> = Extract<Exclude<T[keyof T], NestedValue | Date | FileList$1 | OpaqueType>, unknown[] | object> extends never ? true : false;
+type Merge<A, B> = {
+    [K in keyof A | keyof B]?: K extends keyof A & keyof B ? [
+        A[K],
+        B[K]
+    ] extends [
+        object,
+        object
+    ] ? Merge<A[K], B[K]> : B[K] : K extends keyof A ? A[K] : K extends keyof B ? B[K] : never;
+};
+type InternalFieldName = string;
+type FieldName<TFieldValues extends FieldValues> = IsFlatObject<TFieldValues> extends true ? Extract<keyof TFieldValues, string> : string;
+type CustomElement<TFieldValues extends FieldValues> = Partial<HTMLElement> & {
+    name: FieldName<TFieldValues>;
+    type?: string;
+    value?: any;
+    disabled?: boolean;
+    checked?: boolean;
+    options?: HTMLOptionsCollection;
+    files?: FileList | null;
+    focus?: Noop;
+};
+type FieldValues = Record<string, any>;
+type FieldElement<TFieldValues extends FieldValues = FieldValues> = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | CustomElement<TFieldValues>;
+type Ref = FieldElement;
+type Field = {
+    _f: {
+        ref: Ref;
+        name: InternalFieldName;
+        refs?: HTMLInputElement[];
+        mount?: boolean;
+        _c?: boolean;
+    } & RegisterOptions;
+};
+type FieldRefs = Partial<{
+    [key: InternalFieldName]: Field | FieldRefs;
+}>;
+type Message = string;
+type MultipleFieldErrors = {
+    [K in keyof RegisterOptions]?: ValidateResult;
+} & {
+    [key: string]: ValidateResult;
+};
+type FieldError = {
+    type: LiteralUnion<keyof RegisterOptions, string>;
+    root?: FieldError;
+    ref?: Ref;
+    types?: MultipleFieldErrors;
+    message?: Message;
+};
+type ErrorOption = {
+    message?: Message;
+    type?: LiteralUnion<keyof RegisterOptions, string>;
+    types?: MultipleFieldErrors;
+};
+type DeepRequired<T> = T extends BrowserNativeObject | Blob | OpaqueType ? T : {
+    [K in keyof T]-?: NonNullable<DeepRequired<T[K]>>;
+};
+type FieldErrorsImpl<T extends FieldValues = FieldValues> = {
+    [K in keyof T]?: T[K] extends BrowserNativeObject | Blob | OpaqueType ? FieldError : K extends "root" | `root.${string}` ? GlobalError : T[K] extends object ? Merge<FieldError, FieldErrorsImpl<T[K]>> : FieldError;
+};
+type GlobalError = Partial<{
+    type: string | number;
+    message: Message;
+}>;
+type FieldErrors<T extends FieldValues = FieldValues> = Partial<FieldErrorsImpl<DeepRequired<T>>> & {
+    root?: Record<string, GlobalError> & GlobalError;
+    form?: Record<string, GlobalError> & GlobalError;
+};
+type FieldPathError<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = TFieldPath extends FieldPath<TFieldValues> ? TFieldPath extends `${string}.root` ? GlobalError : DeepRequired<NonNullable<FieldPathValue<TFieldValues, TFieldPath>>> extends infer TFieldValue ? IsAny$1<TFieldValue> extends true ? FieldError : NonNullable<FieldErrorsImpl<{
+    value: TFieldValue;
+}>["value"]> : never : never;
+type ValidationValue = boolean | number | string | RegExp;
+type ValidationRule<TValidationValue extends ValidationValue = ValidationValue> = TValidationValue | ValidationValueMessage<TValidationValue>;
+type ValidationValueMessage<TValidationValue extends ValidationValue = ValidationValue> = {
+    value: TValidationValue | undefined;
+    message: Message;
+};
+type ValidateResult = Message | Message[] | boolean | undefined;
+type FormValidateResult<T> = Partial<Record<keyof T, {
+    message: Message | Message[] | boolean | undefined;
+    type?: string;
+}>> | string | boolean;
+type Validate<TFieldValue, TFormValues> = (value: TFieldValue, formValues: TFormValues) => ValidateResult | Promise<ValidateResult>;
+type ValidateFormEventType = (typeof EVENTS)[keyof typeof EVENTS];
+type ValidateForm<TFormValues extends FieldValues, TFieldName extends FieldPath<TFormValues> = FieldPath<TFormValues>> = (props: {
+    formValues: TFormValues;
+    formState: FormState<TFormValues>;
+    eventType?: ValidateFormEventType;
+    name?: TFieldName | TFieldName[];
+}) => FormValidateResult<TFormValues> | Promise<FormValidateResult<TFormValues>>;
+type RegisterOptions<TFieldValues extends FieldValues = FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
+    required: Message | ValidationRule<boolean>;
+    min: ValidationRule<number | string>;
+    max: ValidationRule<number | string>;
+    maxLength: ValidationRule<number>;
+    minLength: ValidationRule<number>;
+    validate: Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues> | Record<string, Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues>>;
+    value: FieldPathValue<TFieldValues, TFieldName>;
+    setValueAs: (value: any) => any;
+    shouldUnregister?: boolean;
+    onChange?: (event: any) => void;
+    onBlur?: (event: any) => void;
+    disabled: boolean;
+    deps: FieldPath<TFieldValues> | FieldPath<TFieldValues>[];
+}> & ({
+    pattern?: ValidationRule<RegExp>;
+    valueAsNumber?: false;
+    valueAsDate?: false;
+} | {
+    pattern?: undefined;
+    valueAsNumber?: false;
+    valueAsDate?: true;
+} | {
+    pattern?: undefined;
+    valueAsNumber?: true;
+    valueAsDate?: false;
+});
+type ControllerFieldState = {
+    invalid: boolean;
+    isTouched: boolean;
+    isDirty: boolean;
+    isValidating: boolean;
+    error?: FieldError;
+};
+type ControllerRenderProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = {
+    onChange: (...event: any[]) => void;
+    onBlur: Noop;
+    value: FieldPathValue<TFieldValues, TName>;
+    disabled?: boolean;
+    name: TName;
+    ref: RefCallBack;
+};
+type UseControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
+    name: TName;
+    rules?: Omit<RegisterOptions<TFieldValues, TName>, "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled">;
+    shouldUnregister?: boolean;
+    defaultValue?: FieldPathValue<TFieldValues, TName>;
+    control?: Control<TFieldValues, any, TTransformedValues>;
+    disabled?: boolean;
+    exact?: boolean;
+};
+type ControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
+    render: ({ field, fieldState, formState, }: {
+        field: ControllerRenderProps<TFieldValues, TName>;
+        fieldState: ControllerFieldState;
+        formState: UseFormStateReturn<TFieldValues>;
+    }) => React$1.ReactElement;
+} & UseControllerProps<TFieldValues, TName, TTransformedValues>;
+export const Controller: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues>(props: ControllerProps<TFieldValues, TName, TTransformedValues>) => React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+export function useForm<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues>(props?: UseFormProps<TFieldValues, TContext, TTransformedValues>): UseFormReturn<TFieldValues, TContext, TTransformedValues>;
+export const useFormContext: <TFieldValues extends FieldValues, TContext = any, TTransformedValues = TFieldValues>() => UseFormReturn<TFieldValues, TContext, TTransformedValues>;
+export const FormProvider: <TFieldValues extends FieldValues, TContext = any, TTransformedValues = TFieldValues>({ children, watch, getValues, getErrors, getFieldState, setError, clearErrors, setValue, setValues, trigger, formState, resetField, reset, resetDefaultValues, handleSubmit, unregister, control, register, setFocus, subscribe, }: FormProviderProps<TFieldValues, TContext, TTransformedValues>) => React$1.JSX.Element;
+const responseSchema: z.ZodUnion<readonly [
+    z.ZodJSONSchema,
+    z.ZodInstanceOf<Blob>
+]>;
+type ViewData = z.output<typeof responseSchema>;
+type SubmitOptions = {
+    method?: "POST" | "PUT" | "PATCH" | "DELETE";
+    onSuccess?: (data: ViewData) => void | Promise<void>;
+    onError?: (error: Error) => void | Promise<void>;
+};
+export function useSubmit(path: string, options?: SubmitOptions): (data: FormData) => Promise<void>;
+export function useSubmit<T>(action: (data: T) => void | Promise<void>, options?: Pick<SubmitOptions, "onError">): (data: T) => Promise<void>;
 const none: "none";
 const triggerPress: "trigger-press";
 const triggerHover: "trigger-hover";
@@ -5074,8 +9422,8 @@ type ClassProp = {
 type OmitUndefined<T> = T extends undefined ? never : T;
 type VariantProps<Component extends (...args: any) => any> = Omit<OmitUndefined<Parameters<Component>[0]>, "class" | "className">;
 const badgeVariants: (props?: ({
-    variant?: "default" | "outline" | "secondary" | "info" | "success" | "warning" | "destructive" | "focus" | "invert" | "primary-light" | "warning-light" | "success-light" | "info-light" | "destructive-light" | "invert-light" | "focus-light" | "primary-outline" | "warning-outline" | "success-outline" | "info-outline" | "destructive-outline" | "invert-outline" | "focus-outline" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
+    variant?: "success" | "default" | "outline" | "secondary" | "info" | "warning" | "destructive" | "focus" | "invert" | "primary-light" | "warning-light" | "success-light" | "info-light" | "destructive-light" | "invert-light" | "focus-light" | "primary-outline" | "warning-outline" | "success-outline" | "info-outline" | "destructive-outline" | "invert-outline" | "focus-outline" | null | undefined;
+    size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface BadgeProps extends useRender.ComponentProps<"span"> {
@@ -5794,7 +10142,7 @@ const FILE_TYPE_CATEGORIES: readonly [
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 const fileTypeVariants: (props?: ({
-    size?: "default" | "xs" | "sm" | "lg" | "xl" | "mini" | null | undefined;
+    size?: "default" | "sm" | "lg" | "xs" | "xl" | "mini" | null | undefined;
 } & ClassProp) | undefined) => string;
 type FileTypeVariant = "outline" | "solid" | "light" | "mono";
 type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children"> & {
@@ -5939,7 +10287,7 @@ type SelectorArgs$1<Selector> = Selector extends ((...params: infer Params) => a
 type AlignedPlacement = `${Side}-${Alignment}`;
 type Alignment = "start" | "end";
 type Axis = "x" | "y";
-type ClientRectObject = Prettify<Rect & SideObject>;
+type ClientRectObject = Prettify$1<Rect & SideObject>;
 type Coords = {
     [key in Axis]: number;
 };
@@ -5947,14 +10295,14 @@ type Dimensions = {
     [key in Length]: number;
 };
 type Length = "width" | "height";
-type Padding = number | Prettify<{
+type Padding = number | Prettify$1<{
     [K in Side]?: number | undefined;
 }>;
-type Placement = Prettify<Side | AlignedPlacement>;
-type Prettify<T> = {
+type Placement = Prettify$1<Side | AlignedPlacement>;
+type Prettify$1<T> = {
     [K in keyof T]: T[K];
 } & {};
-type Rect = Prettify<Coords & Dimensions>;
+type Rect = Prettify$1<Coords & Dimensions>;
 type Side = "top" | "right" | "bottom" | "left";
 type SideObject = {
     [key in Side]: number;
@@ -6005,14 +10353,14 @@ interface VirtualElement {
     getClientRects?: (() => Array<ClientRectObject> | DOMRectList) | undefined;
     contextElement?: Element | undefined;
 }
-type Prettify$1<T> = {
+type Prettify$2<T> = {
     [K in keyof T]: T[K];
 } & {};
 type ReferenceType = Element | VirtualElement;
-type UseFloatingData = Prettify$1<ComputePositionReturn & {
+type UseFloatingData = Prettify$2<ComputePositionReturn & {
     isPositioned: boolean;
 }>;
-type UseFloatingReturn<RT extends ReferenceType = ReferenceType> = Prettify$1<UseFloatingData & {
+type UseFloatingReturn<RT extends ReferenceType = ReferenceType> = Prettify$2<UseFloatingData & {
     update: () => void;
     floatingStyles: React$1.CSSProperties;
     refs: {
@@ -6279,7 +10627,7 @@ interface Group<Item = any> {
     [key: string]: unknown;
     items: ReadonlyArray<Item>;
 }
-class ComboboxItemCollection<in out Item, Value = Item> {
+class ComboboxItemCollection<Item, Value = Item> {
     private constructor();
     private readonly __itemCollectionBrand;
 }
@@ -6387,9 +10735,9 @@ type FormValidationMode = "onSubmit" | "onBlur" | "onChange";
 interface FormActions {
     validate: (fieldName?: string | undefined) => void;
 }
-interface FormState {
+interface FormState$1 {
 }
-interface FormProps<FormValues extends Record<string, any> = Record<string, any>> extends BaseUIComponentProps<"form", FormState, React$1.ComponentPropsWithRef<"form">> {
+interface FormProps<FormValues extends Record<string, any> = Record<string, any>> extends BaseUIComponentProps<"form", FormState$1, React$1.ComponentPropsWithRef<"form">> {
     validationMode?: FormValidationMode | undefined;
     errors?: FormContext["errors"] | undefined;
     onFormSubmit?: ((formValues: FormValues, eventDetails: Form.SubmitEventDetails) => void) | undefined;
@@ -6397,7 +10745,7 @@ interface FormProps<FormValues extends Record<string, any> = Record<string, any>
 }
 namespace Form {
     type Props<FormValues extends Record<string, any> = Record<string, any>> = FormProps<FormValues>;
-    type State = FormState;
+    type State = FormState$1;
     type Actions = FormActions;
     type ValidationMode = FormValidationMode;
     type SubmitEventReason = FormSubmitEventReason;
@@ -6953,9 +11301,9 @@ type HasGroupShape<Item> = Item extends object ? "items" extends keyof RemoveInd
 ] extends [
     never
 ] ? never[] extends NonNullable<Item["items"]> ? true : never : true : never : never;
-type IsAny<T> = 0 extends 1 & T ? true : false;
+type IsAny$2<T> = 0 extends 1 & T ? true : false;
 type GroupShapedItemsError = "Base UI: items passed to createItems() cannot have an `items` array property because it marks a group. Rename the field or cast the data.";
-type RejectGroupShapedItems<Item> = IsAny<Item> extends true ? unknown : true extends HasGroupShape<Item> ? GroupShapedItemsError : unknown;
+type RejectGroupShapedItems<Item> = IsAny$2<Item> extends true ? unknown : true extends HasGroupShape<Item> ? GroupShapedItemsError : unknown;
 type ComboboxItemsData<Item> = (Extract<Item, {
     items: ReadonlyArray<unknown>;
 }> extends never ? readonly Item[] : never) | readonly {
@@ -9620,7 +13968,7 @@ function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.
 function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
 const buttonVariants: (props?: ({
     variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 export function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
@@ -10455,13 +14803,13 @@ interface RootContentMap {
 interface Node$2 extends Node$1 {
     data?: Data$1 | undefined;
 }
-interface Literal extends Node$2 {
+interface Literal$1 extends Node$2 {
     value: string;
 }
 interface Parent extends Node$2 {
     children: RootContent[];
 }
-interface Comment$1 extends Literal {
+interface Comment$1 extends Literal$1 {
     type: "comment";
     data?: CommentData | undefined;
 }
@@ -10490,7 +14838,7 @@ interface Root extends Parent {
 }
 interface RootData extends Data$1 {
 }
-interface Text$2 extends Literal {
+interface Text$2 extends Literal$1 {
     type: "text";
     data?: TextData | undefined;
 }
@@ -10863,18 +15211,18 @@ const coreRowModelsFeature: TableFeature;
 const coreRowsFeature: TableFeature;
 const coreTablesFeature: TableFeature;
 interface InteropSubscribable<T> {
-    subscribe: (observer: Observer<T>) => Subscription;
+    subscribe: (observer: Observer$1<T>) => Subscription$1;
 }
-type Observer<T> = {
+type Observer$1<T> = {
     next?: (value: T) => void;
     error?: (err: unknown) => void;
     complete?: () => void;
 };
-interface Subscription {
+interface Subscription$1 {
     unsubscribe: () => void;
 }
 interface Subscribable<T> extends InteropSubscribable<T> {
-    subscribe: ((observer: Observer<T>) => Subscription) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription);
+    subscribe: ((observer: Observer$1<T>) => Subscription$1) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$1);
 }
 interface Readable<T> extends Subscribable<T> {
     get: () => T;
@@ -10905,7 +15253,7 @@ class Store$1<T, TActions extends StoreActionMap = never> {
     setState(updater: (prev: T) => T): void;
     get state(): T;
     get(): T;
-    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription;
+    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
 }
 class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
     private atom;
@@ -10913,7 +15261,7 @@ class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
     constructor(initialValue: T);
     get state(): T;
     get(): T;
-    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription;
+    subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$1;
 }
 interface TableAtomOptions<T> extends AtomOptions<T> {
     debugName: string;
@@ -10922,7 +15270,7 @@ interface TableReactivityBindings {
     createOptionsStore: boolean;
     wrapExternalAtoms: boolean;
     commit?: () => void;
-    addSubscription: (subscription: Subscription) => void;
+    addSubscription: (subscription: Subscription$1) => void;
     createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
     createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
     untrack: <T>(fn: () => T) => T;
@@ -11025,7 +15373,7 @@ interface Column_ColumnResizing {
 interface Header_ColumnResizing {
     getResizeHandler: (context?: Document) => (event: unknown) => void;
 }
-interface Header_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
+interface Header_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
 }
 interface Header_FeatureMap {
     columnSizingFeature: Header_ColumnSizing;
@@ -11043,7 +15391,7 @@ interface Row_RowExpanding {
     getToggleExpandedHandler: () => () => void;
     toggleExpanded: (expanded?: boolean) => void;
 }
-interface TableOptions_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
     autoResetExpanded?: boolean;
     enableExpanding?: boolean;
     getIsRowExpanded?: (row: Row<TFeatures, TData>) => boolean;
@@ -11052,7 +15400,7 @@ interface TableOptions_RowExpanding<in out TFeatures extends TableFeatures, in o
     onExpandedChange?: OnChangeFn<ExpandedState>;
     paginateExpandedRows?: boolean;
 }
-interface Table_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowExpanding<TFeatures extends TableFeatures, TData extends RowData> {
     _expandRows: (rowModel: RowModel<TFeatures, TData>) => RowModel<TFeatures, TData>;
     autoResetExpanded: () => void;
     getCanSomeRowsExpand: () => boolean;
@@ -11064,11 +15412,11 @@ interface Table_RowExpanding<in out TFeatures extends TableFeatures, in out TDat
     setExpanded: (updater: Updater<ExpandedState>) => void;
     toggleAllRowsExpanded: (expanded?: boolean) => void;
 }
-interface Table_RowModels_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
     getExpandedRowModel: () => RowModel<TFeatures, TData>;
     getPreExpandedRowModel: () => RowModel<TFeatures, TData>;
 }
-interface CachedRowModel_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Expanded<TFeatures extends TableFeatures, TData extends RowData> {
     expandedRowModel: () => RowModel<TFeatures, TData>;
 }
 const filterFns: {
@@ -11094,7 +15442,7 @@ const filterFns: {
 type BuiltInFilterFn = keyof typeof filterFns;
 interface FilterMeta {
 }
-type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$1<TFeatures> extends true ? FilterMeta : TFeatures extends {
+type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? FilterMeta : TFeatures extends {
     filterMeta: infer TFilterMeta extends object;
 } ? TFilterMeta : FilterMeta;
 interface FilterFns {
@@ -11107,35 +15455,35 @@ interface ColumnFilter {
     id: string;
     value: unknown;
 }
-interface RowModelFns_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface RowModelFns_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
     filterFns: Record<string, FilterFn<TFeatures, TData>>;
 }
-interface FilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface FilterFn<TFeatures extends TableFeatures, TData extends RowData> {
     (row: Row<TFeatures, TData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void): boolean;
     autoRemove?: ColumnFilterAutoRemoveTestFn<TFeatures, TData>;
     resolveFilterValue?: TransformFilterValueFn<TFeatures, TData>;
     resolveDataValue?: TransformDataValueFn;
 }
-interface FilterFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface FilterFnDef<TFeatures extends TableFeatures, TData extends RowData> {
     filter: (dataValue: any, filterValue: any, row: Row<TFeatures, TData>, columnId: string, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void) => boolean;
     autoRemove?: (filterValue: any) => boolean;
     resolveFilterValue?: (filterValue: any) => any;
     resolveDataValue?: TransformDataValueFn;
 }
-interface CreatedFilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends FilterFnDef<TFeatures, TData> {
+interface CreatedFilterFn<TFeatures extends TableFeatures, TData extends RowData> extends FilterFnDef<TFeatures, TData> {
     <TRowFeatures extends TableFeatures, TRowData extends RowData>(row: Row<TRowFeatures, TRowData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TRowFeatures>) => void): boolean;
 }
 type TransformFilterValueFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => TValue;
 type ColumnFilterAutoRemoveTestFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => boolean;
-type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$1<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
+type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
     filterFns: infer TFilterFns extends object;
 } ? Extract<keyof TFilterFns, string> : keyof FilterFns;
 type FilterFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractFilterFnKeys<TFeatures> | FilterFn<TFeatures, TData>;
-interface ColumnDef_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface ColumnDef_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
     enableColumnFilter?: boolean;
     filterFn?: FilterFnOption<TFeatures, TData>;
 }
-interface Column_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Column_ColumnFiltering<TFeatures extends TableFeatures, TData extends RowData> {
     getAutoFilterFn: () => FilterFn<TFeatures, TData>;
     getCanFilter: () => boolean;
     getFilterFn: () => FilterFn<TFeatures, TData>;
@@ -11144,11 +15492,11 @@ interface Column_ColumnFiltering<in out TFeatures extends TableFeatures, in out 
     getIsFiltered: () => boolean;
     setFilterValue: (updater: Updater<any>) => void;
 }
-interface Row_ColumnFiltering<in out TFeatures extends TableFeatures, in out _TData extends RowData> {
+interface Row_ColumnFiltering<TFeatures extends TableFeatures, _TData extends RowData> {
     columnFilters: Record<string, boolean>;
     columnFiltersMeta: Record<string, ExtractFilterMeta<TFeatures>>;
 }
-interface TableOptions_ColumnFiltering<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+interface TableOptions_ColumnFiltering<_TFeatures extends TableFeatures, _TData extends RowData> {
     enableColumnFilters?: boolean;
     enableFilters?: boolean;
     filterFromLeafRows?: boolean;
@@ -11160,11 +15508,11 @@ interface Table_ColumnFiltering {
     resetColumnFilters: (defaultState?: boolean) => void;
     setColumnFilters: (updater: Updater<ColumnFiltersState>) => void;
 }
-interface Table_RowModels_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
     getFilteredRowModel: () => RowModel<TFeatures, TData>;
     getPreFilteredRowModel: () => RowModel<TFeatures, TData>;
 }
-interface CachedRowModel_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Filtered<TFeatures extends TableFeatures, TData extends RowData> {
     filteredRowModel: () => RowModel<TFeatures, TData>;
 }
 interface PaginationState {
@@ -11181,7 +15529,7 @@ interface TableOptions_RowPagination {
     pageCount?: number;
     rowCount?: number;
 }
-interface Table_RowPagination<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+interface Table_RowPagination<_TFeatures extends TableFeatures, _TData extends RowData> {
     autoResetPageIndex: () => void;
     getCanNextPage: () => boolean;
     getCanLastPage: () => boolean;
@@ -11200,14 +15548,14 @@ interface Table_RowPagination<in out _TFeatures extends TableFeatures, in out _T
     setPageSize: (updater: Updater<number>) => void;
     setPagination: (updater: Updater<PaginationState>) => void;
 }
-interface Table_RowModels_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
     getPaginatedRowModel: () => RowModel<TFeatures, TData>;
     getPrePaginatedRowModel: () => RowModel<TFeatures, TData>;
 }
-interface CachedRowModel_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Paginated<TFeatures extends TableFeatures, TData extends RowData> {
     paginatedRowModel: () => RowModel<TFeatures, TData>;
 }
-interface Column_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Column_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
     getFacetedMinMaxValues: () => undefined | [
         number,
         number
@@ -11215,7 +15563,7 @@ interface Column_ColumnFaceting<in out TFeatures extends TableFeatures, in out T
     getFacetedRowModel: () => RowModel<TFeatures, TData>;
     getFacetedUniqueValues: () => Map<any, number>;
 }
-interface Table_RowModels_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
     getFacetedMinMaxValues: () => undefined | [
         number,
         number
@@ -11223,7 +15571,7 @@ interface Table_RowModels_Faceted<in out TFeatures extends TableFeatures, in out
     getFacetedRowModel: () => RowModel<TFeatures, TData>;
     getFacetedUniqueValues: () => Map<any, number>;
 }
-interface CachedRowModel_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Faceted<TFeatures extends TableFeatures, TData extends RowData> {
     facetedRowModels?: Record<string, () => RowModel<TFeatures, TData>>;
     facetedMinMaxValues?: Record<string, () => undefined | [
         number,
@@ -11237,7 +15585,7 @@ interface CachedRowModel_Faceted<in out TFeatures extends TableFeatures, in out 
     ];
     globalFacetedUniqueValues?: () => Map<any, number>;
 }
-interface Table_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_ColumnFaceting<TFeatures extends TableFeatures, TData extends RowData> {
     getGlobalFacetedMinMaxValues: () => undefined | [
         number,
         number
@@ -11245,15 +15593,15 @@ interface Table_ColumnFaceting<in out TFeatures extends TableFeatures, in out TD
     getGlobalFacetedRowModel: () => RowModel<TFeatures, TData>;
     getGlobalFacetedUniqueValues: () => Map<any, number>;
 }
-interface RowModel<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface RowModel<TFeatures extends TableFeatures, TData extends RowData> {
     rows: Array<Row<TFeatures, TData>>;
     flatRows: Array<Row<TFeatures, TData>>;
     rowsById: Record<string, Row<TFeatures, TData>>;
 }
-interface CachedRowModel_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Core<TFeatures extends TableFeatures, TData extends RowData> {
     coreRowModel: () => RowModel<TFeatures, TData>;
 }
-interface Table_RowModels_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Core<TFeatures extends TableFeatures, TData extends RowData> {
     getCoreRowModel: () => RowModel<TFeatures, TData>;
     getRowModel: () => RowModel<TFeatures, TData>;
 }
@@ -11262,7 +15610,7 @@ type GroupingState = Array<string>;
 interface TableState_ColumnGrouping {
     grouping: GroupingState;
 }
-interface ColumnDef_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface ColumnDef_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
     enableGrouping?: boolean;
     getGroupingValue?: (originalRow: TData, index: number, row: Row<TFeatures, TData>) => any;
 }
@@ -11290,16 +15638,16 @@ interface TableOptions_ColumnGrouping {
     manualGrouping?: boolean;
     onGroupingChange?: OnChangeFn<GroupingState>;
 }
-interface Table_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_ColumnGrouping<TFeatures extends TableFeatures, TData extends RowData> {
     _orderGroupedColumns: (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
     resetGrouping: (defaultState?: boolean) => void;
     setGrouping: (updater: Updater<GroupingState>) => void;
 }
-interface Table_RowModels_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
     getGroupedRowModel: () => RowModel<TFeatures, TData>;
     getPreGroupedRowModel: () => RowModel<TFeatures, TData>;
 }
-interface CachedRowModel_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Grouped<TFeatures extends TableFeatures, TData extends RowData> {
     groupedRowModel: () => RowModel<TFeatures, TData>;
 }
 interface TableState_GlobalFiltering {
@@ -11311,13 +15659,13 @@ interface ColumnDef_GlobalFiltering {
 interface Column_GlobalFiltering {
     getCanGlobalFilter: () => boolean;
 }
-interface TableOptions_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
     enableGlobalFilter?: boolean;
     getColumnCanGlobalFilter?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => boolean;
     globalFilterFn?: FilterFnOption<TFeatures, TData>;
     onGlobalFilterChange?: OnChangeFn<any>;
 }
-interface Table_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_GlobalFiltering<TFeatures extends TableFeatures, TData extends RowData> {
     getGlobalAutoFilterFn: () => FilterFn<TFeatures, TData> | undefined;
     getGlobalFilterFn: () => FilterFn<TFeatures, TData> | undefined;
     resetGlobalFilter: (defaultState?: boolean) => void;
@@ -11369,10 +15717,10 @@ interface AggregationFnDef<TFeatures extends TableFeatures = any, TData extends 
     aggregate: (context: AggregationContext<TFeatures, TData, TValue>) => TResult;
     merge?: (context: AggregationMergeContext<TFeatures, TData, TValue, TResult>) => TResult;
 }
-interface RowModelFns_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface RowModelFns_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
     aggregationFns: Record<string, AggregationFnDef<TFeatures, TData, any, any>>;
 }
-type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$1<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
+type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
     aggregationFns: infer TAggregationFns extends object;
 } ? Extract<keyof TAggregationFns, string> : keyof AggregationFns;
 type AggregationFnRef<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDef<TFeatures, TData, TValue, TResult>;
@@ -11391,18 +15739,18 @@ interface ResolvedAggregationFn<TFeatures extends TableFeatures, TData extends R
     aggregationFn: AggregationFnDef<TFeatures, TData, any, any> | undefined;
     id: string | undefined;
 }
-interface ColumnDef_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface ColumnDef_RowAggregation<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     aggregatedCell?: ColumnDefTemplate<ReturnType<Cell<TFeatures, TData, TValue>["getContext"]>>;
     aggregationFn?: AggregationFnOption<TFeatures, TData, TValue>;
     maxAggregationDepth?: number;
     getAggregationValue?: (context: AggregationValueContext<TFeatures, TData, TValue>) => AggregationValueResult | undefined;
 }
-interface Column_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Column_RowAggregation<TFeatures extends TableFeatures, TData extends RowData> {
     getAggregationFns: () => ReadonlyArray<ResolvedAggregationFn<TFeatures, TData>>;
     getAggregationValue: <TResult = ColumnAggregationValue<TFeatures>>(options?: AggregationValueOptions<TFeatures, TData>) => TResult;
     getAutoAggregationFn: () => AggregationFnDef<TFeatures, TData, any, any> | undefined;
 }
-interface AggregationValueOptions<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface AggregationValueOptions<TFeatures extends TableFeatures, TData extends RowData> {
     maxDepth?: number;
     rows?: ReadonlyArray<Row<TFeatures, TData>>;
 }
@@ -11445,13 +15793,13 @@ interface Column_ColumnOrdering {
     getIsFirstColumn: (position?: ColumnPinningPosition | "center") => boolean;
     getIsLastColumn: (position?: ColumnPinningPosition | "center") => boolean;
 }
-interface Table_ColumnOrdering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_ColumnOrdering<TFeatures extends TableFeatures, TData extends RowData> {
     getColumnIndexes: () => ColumnIndexes;
     getOrderColumnsFn: () => (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
     resetColumnOrder: (defaultState?: boolean) => void;
     setColumnOrder: (updater: Updater<ColumnOrderState>) => void;
 }
-interface Column_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface Column_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     accessorFn?: AccessorFn<TData, TValue>;
     columnDef: ColumnDef<TFeatures, TData, TValue>;
     columns: Array<Column<TFeatures, TData, TValue>>;
@@ -11460,15 +15808,15 @@ interface Column_CoreProperties<in out TFeatures extends TableFeatures, in out T
     parent?: Column<TFeatures, TData, TValue>;
     table: Table$1<TFeatures, TData>;
 }
-interface Column_Column<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
+interface Column_Column<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
     getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
     getLeafColumns: () => Array<Column<TFeatures, TData, TValue>>;
 }
-interface TableOptions_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface TableOptions_Columns<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     columns: ReadonlyArray<ColumnDef<TFeatures, TData, TValue>>;
     defaultColumn?: Partial<ColumnDef<TFeatures, TData, TValue>>;
 }
-interface Table_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_Columns<TFeatures extends TableFeatures, TData extends RowData> {
     getAllFlatColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
     getDefaultColumnDef: () => Partial<ColumnDef<TFeatures, TData, unknown>>;
     getAllColumns: () => Array<Column<TFeatures, TData, unknown>>;
@@ -11485,7 +15833,7 @@ interface TableOptions_ColumnVisibility {
     enableHiding?: boolean;
     onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
 }
-interface Table_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
     getIsAllColumnsVisible: () => boolean;
     getIsSomeColumnsVisible: () => boolean;
     getToggleAllColumnsVisibilityHandler: () => (event: unknown) => void;
@@ -11498,7 +15846,7 @@ interface Table_ColumnVisibility<in out TFeatures extends TableFeatures, in out 
 interface ColumnDef_ColumnVisibility {
     enableHiding?: boolean;
 }
-interface Row_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Row_ColumnVisibility<TFeatures extends TableFeatures, TData extends RowData> {
     getVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
     getVisibleCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
 }
@@ -11516,7 +15864,7 @@ interface RowPinningState {
 interface TableState_RowPinning {
     rowPinning: RowPinningState;
 }
-interface TableOptions_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
     enableRowPinning?: boolean | ((row: Row<TFeatures, TData>) => boolean);
     keepPinnedRows?: boolean;
     onRowPinningChange?: OnChangeFn<RowPinningState>;
@@ -11527,7 +15875,7 @@ interface Row_RowPinning {
     getPinnedIndex: () => number;
     pin: (position: RowPinningPosition, includeLeafRows?: boolean, includeParentRows?: boolean) => void;
 }
-interface Table_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowPinning<TFeatures extends TableFeatures, TData extends RowData> {
     getBottomRows: () => Array<Row<TFeatures, TData>>;
     getCenterRows: () => Array<Row<TFeatures, TData>>;
     getIsSomeRowsPinned: (position?: RowPinningPosition) => boolean;
@@ -11543,7 +15891,7 @@ interface ToggleSelectedOptions {
 interface TableState_RowSelection {
     rowSelection: RowSelectionState;
 }
-interface TableOptions_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
     enableRowRangeSelection?: boolean;
     enableMultiRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
     enableRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
@@ -11561,7 +15909,7 @@ interface Row_RowSelection {
     getToggleSelectedHandler: (opts?: ToggleSelectedOptions) => (event: unknown) => void;
     toggleSelected: (value?: boolean, opts?: ToggleSelectedOptions) => void;
 }
-interface Table_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowSelection<TFeatures extends TableFeatures, TData extends RowData> {
     _lastSelectedRowId: string | null;
     getFilteredSelectedRowModel: () => RowModel<TFeatures, TData>;
     getGroupedSelectedRowModel: () => RowModel<TFeatures, TData>;
@@ -11583,7 +15931,7 @@ interface Table_RowSelection<in out TFeatures extends TableFeatures, in out TDat
         deselectAll?: boolean;
     }) => void;
 }
-interface Row_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Row_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
     _cellsCache?: WeakMap<Column<TFeatures, TData, unknown>, Cell<TFeatures, TData, unknown>>;
     _displayIndexCache: number;
     _uniqueValuesCache: Record<string, unknown>;
@@ -11597,7 +15945,7 @@ interface Row_CoreProperties<in out TFeatures extends TableFeatures, in out TDat
     subRows: Array<Row<TFeatures, TData>>;
     table: Table$1<TFeatures, TData>;
 }
-interface Row_Row<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
+interface Row_Row<TFeatures extends TableFeatures, TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
     getDisplayIndex: () => number;
     getAllCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
     getAllCells: () => Array<Cell<TFeatures, TData, unknown>>;
@@ -11608,17 +15956,17 @@ interface Row_Row<in out TFeatures extends TableFeatures, in out TData extends R
     getValue: <TValue>(columnId: string) => TValue;
     renderValue: <TValue>(columnId: string) => TValue;
 }
-interface TableOptions_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_Rows<TFeatures extends TableFeatures, TData extends RowData> {
     getRowId?: (originalRow: TData, index: number, parent?: Row<TFeatures, TData>) => string;
     getSubRows?: (originalRow: TData, index: number) => undefined | ReadonlyArray<TData>;
 }
-interface Table_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_Rows<TFeatures extends TableFeatures, TData extends RowData> {
     getMaxSubRowDepth: () => number;
     getRowsInDisplayOrder: () => Array<Row<TFeatures, TData>>;
     getRowId: (_: TData, index: number, parent?: Row<TFeatures, TData>) => string;
     getRow: (id: string, searchAll?: boolean) => Row<TFeatures, TData>;
 }
-interface CachedRowModels_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModels_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     columnFacetingFeature: CachedRowModel_Faceted<TFeatures, TData>;
     columnFilteringFeature: CachedRowModel_Filtered<TFeatures, TData>;
     rowExpandingFeature: CachedRowModel_Expanded<TFeatures, TData>;
@@ -11627,7 +15975,7 @@ interface CachedRowModels_FeatureMap<in out TFeatures extends TableFeatures, in 
     rowSortingFeature: CachedRowModel_Sorted<TFeatures, TData>;
 }
 type CachedRowModels<TFeatures extends TableFeatures, TData extends RowData> = Partial<CachedRowModel_Core<TFeatures, TData>> & ExtractFeatureMapTypes<TFeatures, CachedRowModels_FeatureMap<TFeatures, TData>>;
-interface RowModelFns_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface RowModelFns_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     rowAggregationFeature: RowModelFns_RowAggregation<TFeatures, TData>;
     columnFilteringFeature: RowModelFns_ColumnFiltering<TFeatures, TData>;
     rowSortingFeature: RowModelFns_RowSorting<TFeatures, TData>;
@@ -11652,9 +16000,9 @@ interface TableState_FeatureMap {
 type TableState<TFeatures extends TableFeatures> = ExtractFeatureMapTypes<TFeatures, TableState_FeatureMap>;
 interface TableState_All extends Partial<TableState_CellSelection & TableState_ColumnFiltering & TableState_ColumnGrouping & TableState_ColumnOrdering & TableState_ColumnPinning & TableState_ColumnResizing & TableState_ColumnSizing & TableState_ColumnVisibility & TableState_GlobalFiltering & TableState_RowExpanding & TableState_RowPagination & TableState_RowPinning & TableState_RowSelection & TableState_RowSorting> {
 }
-interface TableMeta<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableMeta<TFeatures extends TableFeatures, TData extends RowData> {
 }
-type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$1<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
+type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$3<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
     tableMeta: infer TMeta extends object;
 } ? TMeta : TableMeta<TFeatures, TData>;
 type BaseAtoms<TFeatures extends TableFeatures> = {
@@ -11666,7 +16014,7 @@ type Atoms<TFeatures extends TableFeatures> = {
 type ExternalAtoms<TFeatures extends TableFeatures> = Partial<{
     [K in keyof TableState<TFeatures>]: Atom<TableState<TFeatures>[K]>;
 }>;
-interface TableOptions_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_Table<TFeatures extends TableFeatures, TData extends RowData> {
     readonly features: TFeatures & ValidateFeatureSlots<TFeatures>;
     readonly atoms?: ExternalAtoms<TFeatures>;
     readonly autoResetAll?: boolean;
@@ -11677,7 +16025,7 @@ interface TableOptions_Table<in out TFeatures extends TableFeatures, in out TDat
     readonly meta?: ExtractTableMeta<TFeatures, TData>;
     readonly state?: Partial<TableState<TFeatures>>;
 }
-interface Table_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_CoreProperties<TFeatures extends TableFeatures, TData extends RowData> {
     readonly _reactivity: TableReactivityBindings;
     _cellInstanceInitFns: Array<NonNullable<TableFeature["initCellInstanceData"]>>;
     _cellPrototype?: object;
@@ -11698,17 +16046,17 @@ interface Table_CoreProperties<in out TFeatures extends TableFeatures, in out TD
     readonly optionsStore?: Atom<TableOptions<TFeatures, TData>> | undefined;
     readonly store: ReadonlyStore<TableState<TFeatures>>;
 }
-interface Table_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
+interface Table_Table<TFeatures extends TableFeatures, TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
     reset: () => void;
     setOptions: (newOptions: Updater<TableOptions<TFeatures, TData>>) => void;
 }
-interface CellSpanIndex<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CellSpanIndex<TFeatures extends TableFeatures, TData extends RowData> {
     colSpans: Array<Int32Array | undefined>;
     columnIndexes: Record<string, number>;
     rowSpans: Record<string, Int32Array>;
     rows: ReadonlyArray<Row<TFeatures, TData>>;
 }
-interface RowSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface RowSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     anchorRow: Row<TFeatures, TData>;
     anchorValue: TValue;
     column: Column<TFeatures, TData, TValue>;
@@ -11717,12 +16065,12 @@ interface RowSpanContext<in out TFeatures extends TableFeatures, in out TData ex
     table: Table$1<TFeatures, TData>;
     value: TValue;
 }
-interface ColSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface ColSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     row: Row<TFeatures, TData>;
     table: Table$1<TFeatures, TData>;
 }
-interface ColumnDef_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface ColumnDef_CellSpanning<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     enableCellSpanning?: boolean;
     spanColumns?: number | ((context: ColSpanContext<TFeatures, TData, TValue>) => number);
     spanRows?: boolean | ((context: RowSpanContext<TFeatures, TData, TValue>) => boolean);
@@ -11735,10 +16083,10 @@ interface Cell_CellSpanning {
     getIsCovered: () => boolean;
     getRowSpan: () => number;
 }
-interface Table_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_CellSpanning<TFeatures extends TableFeatures, TData extends RowData> {
     getCellSpanIndex: () => CellSpanIndex<TFeatures, TData>;
 }
-interface TableOptions_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
+interface TableOptions_Core<TFeatures extends TableFeatures, TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
 }
 type DebugKeysFor<TFeatures extends TableFeatures> = {
     [K in Exclude<keyof TFeatures & string, NonFeatureKeys> as `debug${Capitalize<K>}`]?: boolean;
@@ -11752,7 +16100,7 @@ type DebugOptions<TFeatures extends TableFeatures> = {
     debugRows?: boolean;
     debugTable?: boolean;
 } & DebugKeysFor<CoreFeatures & TFeatures>;
-interface TableOptions_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     cellSelectionFeature: TableOptions_CellSelection<TFeatures, TData>;
     cellSpanningFeature: TableOptions_CellSpanning;
     columnFilteringFeature: TableOptions_ColumnFiltering<TFeatures, TData>;
@@ -11778,9 +16126,9 @@ type TableOptions_PluginFeatureMapTypes<TFeatures extends TableFeatures, TData e
 ] ? unknown : UnionToIntersection<TableOptions_FeatureMap<TFeatures, TData>[Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>]>;
 type TableOptions<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, TableOptions_FeatureMap<TFeatures, TData>> & DebugOptions<TFeatures>;
 type TableOptions_All<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & Partial<TableOptions_RowAggregation & TableOptions_CellSelection<TFeatures, TData> & TableOptions_CellSpanning & TableOptions_ColumnFiltering<TFeatures, TData> & TableOptions_ColumnGrouping & TableOptions_ColumnOrdering & TableOptions_ColumnPinning & TableOptions_ColumnResizing & TableOptions_ColumnSizing & TableOptions_ColumnVisibility & TableOptions_GlobalFiltering<TFeatures, TData> & TableOptions_RowExpanding<TFeatures, TData> & TableOptions_RowPagination & TableOptions_RowPinning<TFeatures, TData> & TableOptions_RowSelection<TFeatures, TData> & TableOptions_RowSorting & TableOptions_PluginFeatureMapTypes<TFeatures, TData>>;
-interface Table_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
+interface Table_Core<TFeatures extends TableFeatures, TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
 }
-interface Table_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     cellSelectionFeature: Table_CellSelection<TFeatures, TData>;
     cellSpanningFeature: Table_CellSpanning<TFeatures, TData>;
     columnFacetingFeature: Table_ColumnFaceting<TFeatures, TData>;
@@ -11800,7 +16148,7 @@ interface Table_FeatureMap<in out TFeatures extends TableFeatures, in out TData 
     rowSortingFeature: Table_RowSorting<TFeatures, TData>;
 }
 type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
-interface CellContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface CellContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     cell: Cell<TFeatures, TData, TValue>;
     column: Column<TFeatures, TData, TValue>;
     getValue: Getter<TValue>;
@@ -11808,13 +16156,13 @@ interface CellContext<in out TFeatures extends TableFeatures, in out TData exten
     row: Row<TFeatures, TData>;
     table: Table$1<TFeatures, TData>;
 }
-interface Cell_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface Cell_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     id: string;
     row: Row<TFeatures, TData>;
     table: Table$1<TFeatures, TData>;
 }
-interface Cell_Cell<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
+interface Cell_Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
     getContext: () => CellContext<TFeatures, TData, TValue>;
     getValue: CellContext<TFeatures, TData, TValue>["getValue"];
     renderValue: CellContext<TFeatures, TData, TValue>["renderValue"];
@@ -11822,7 +16170,7 @@ interface Cell_Cell<in out TFeatures extends TableFeatures, in out TData extends
 interface TableOptions_Cell {
     renderFallbackValue?: any;
 }
-interface Cell_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
+interface Cell_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
 }
 interface Cell_FeatureMap {
     cellSelectionFeature: Cell_CellSelection;
@@ -11861,7 +16209,7 @@ interface SelectCellRangeOptions {
     mode?: CellSelectionRangeMode;
     additive?: boolean;
 }
-interface TableOptions_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface TableOptions_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
     autoResetCellSelection?: boolean;
     enableCellRangeSelection?: boolean;
     enableCellSelection?: boolean | ((cell: Cell<TFeatures, TData, any>) => boolean);
@@ -11883,7 +16231,7 @@ interface Cell_CellSelection {
     getSelectionStartHandler: (contextDocument?: Document) => (event: unknown) => void;
     getTabIndex: () => number;
 }
-interface Table_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_CellSelection<TFeatures extends TableFeatures, TData extends RowData> {
     _isSelectingCells: boolean;
     autoResetCellSelection: () => void;
     extendCellSelection: (direction: CellSelectionDirection) => void;
@@ -11903,9 +16251,9 @@ interface Table_CellSelection<in out TFeatures extends TableFeatures, in out TDa
     setCellSelection: (updater: Updater<CellSelectionState>) => void;
     setFocusedCell: (rowId: string, columnId: string) => void;
 }
-interface ColumnMeta<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface ColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
 }
-type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$1<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
+type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$3<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
     columnMeta: infer TMeta extends object;
 } ? TMeta : ColumnMeta<TFeatures, TData, TValue>;
 type AccessorFn<TData extends RowData, TValue extends CellData = CellData> = (originalRow: TData, index: number) => TValue;
@@ -11915,7 +16263,7 @@ interface StringHeaderIdentifier {
     header: string;
     id?: string;
 }
-interface IdIdentifier<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface IdIdentifier<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     id: string;
     header?: StringOrTemplateHeader<TFeatures, TData, TValue>;
 }
@@ -11926,7 +16274,7 @@ interface ColumnDefBase_Core<TFeatures extends TableFeatures, TData extends RowD
     cell?: ColumnDefTemplate<CellContext<TFeatures, TData, TValue>>;
     meta?: ExtractColumnMeta<TFeatures, TData, TValue>;
 }
-interface ColumnDef_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData> {
+interface ColumnDef_FeatureMap<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData> {
     cellSelectionFeature: ColumnDef_CellSelection;
     cellSpanningFeature: ColumnDef_CellSpanning<TFeatures, TData, TValue>;
     columnFilteringFeature: ColumnDef_ColumnFiltering<TFeatures, TData>;
@@ -11957,9 +16305,9 @@ type AccessorKeyColumnDefBase<TFeatures extends TableFeatures, TData extends Row
 type AccessorKeyColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDefBase<TFeatures, TData, TValue> & Partial<ColumnIdentifiers<TFeatures, TData, TValue>>;
 type AccessorColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDef<TFeatures, TData, TValue> | AccessorFnColumnDef<TFeatures, TData, TValue>;
 type ColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = DisplayColumnDef<TFeatures, TData, TValue> | GroupColumnDef<TFeatures, TData, TValue> | AccessorColumnDef<TFeatures, TData, TValue>;
-interface Column_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
+interface Column_Core<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
 }
-interface Column_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Column_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     rowAggregationFeature: Column_RowAggregation<TFeatures, TData>;
     columnFacetingFeature: Column_ColumnFaceting<TFeatures, TData>;
     columnFilteringFeature: Column_ColumnFiltering<TFeatures, TData>;
@@ -11973,18 +16321,18 @@ interface Column_FeatureMap<in out TFeatures extends TableFeatures, in out TData
     rowSortingFeature: Column_RowSorting<TFeatures, TData>;
 }
 type Column<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = Column_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Column_FeatureMap<TFeatures, TData>>;
-interface Table_Headers<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_Headers<TFeatures extends TableFeatures, TData extends RowData> {
     getHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
     getFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
     getFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
     getLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
 }
-interface HeaderContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface HeaderContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     header: Header<TFeatures, TData, TValue>;
     table: Table$1<TFeatures, TData>;
 }
-interface Header_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface Header_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     colSpan: number;
     column: Column<TFeatures, TData, TValue>;
     depth: number;
@@ -11997,18 +16345,18 @@ interface Header_CoreProperties<in out TFeatures extends TableFeatures, in out T
     subHeaders: Array<Header<TFeatures, TData, TValue>>;
     table: Table$1<TFeatures, TData>;
 }
-interface Header_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
+interface Header_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
     getContext: () => HeaderContext<TFeatures, TData, TValue>;
     getLeafHeaders: () => Array<Header<TFeatures, TData, TValue>>;
 }
-interface HeaderGroup_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+interface HeaderGroup_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     depth: number;
     headers: Array<Header<TFeatures, TData, TValue>>;
     id: string;
 }
-interface HeaderGroup_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
+interface HeaderGroup_Core<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
 }
-interface HeaderGroup<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
+interface HeaderGroup<TFeatures extends TableFeatures, TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
 }
 type ColumnPinningPosition = false | "start" | "end";
 interface ColumnPinningState {
@@ -12031,12 +16379,12 @@ interface Column_ColumnPinning {
     getPinnedIndex: () => number;
     pin: (position: ColumnPinningPosition) => void;
 }
-interface Row_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Row_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
     getCenterVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
     getStartVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
     getEndVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
 }
-interface Table_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_ColumnPinning<TFeatures extends TableFeatures, TData extends RowData> {
     _orderByColumnPinning: <TItem>(items: Array<TItem>, getColumnId: (item: TItem) => string, getItemsByColumnId?: () => Record<string, TItem | undefined>) => Array<TItem>;
     getCenterFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
     getCenterFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
@@ -12062,9 +16410,9 @@ interface Table_ColumnPinning<in out TFeatures extends TableFeatures, in out TDa
     getPinnedLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
     getPinnedVisibleLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
 }
-interface Row_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_Row<TFeatures, TData> {
+interface Row_Core<TFeatures extends TableFeatures, TData extends RowData> extends Row_Row<TFeatures, TData> {
 }
-interface Row_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Row_FeatureMap<TFeatures extends TableFeatures, TData extends RowData> {
     rowAggregationFeature: Row_RowAggregation;
     columnFilteringFeature: Row_ColumnFiltering<TFeatures, TData>;
     columnGroupingFeature: Row_ColumnGrouping;
@@ -12084,27 +16432,27 @@ type SortingState = Array<ColumnSort>;
 interface TableState_RowSorting {
     sorting: SortingState;
 }
-interface RowModelFns_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface RowModelFns_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
     sortFns: Record<string, SortFn<TFeatures, TData>>;
 }
 interface SortFns {
 }
-interface SortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface SortFn<TFeatures extends TableFeatures, TData extends RowData> {
     (rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string): number;
     resolveDataValue?: TransformDataValueFn;
 }
-interface SortFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface SortFnDef<TFeatures extends TableFeatures, TData extends RowData> {
     sort: (dataValueA: any, dataValueB: any, rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string) => number;
     resolveDataValue?: TransformDataValueFn;
 }
-interface CreatedSortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends SortFnDef<TFeatures, TData> {
+interface CreatedSortFn<TFeatures extends TableFeatures, TData extends RowData> extends SortFnDef<TFeatures, TData> {
     <TRowFeatures extends TableFeatures, TRowData extends RowData>(rowA: Row<TRowFeatures, TRowData>, rowB: Row<TRowFeatures, TRowData>, columnId: string): number;
 }
-type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$1<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
+type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
     sortFns: infer TSortFns extends object;
 } ? Extract<keyof TSortFns, string> : keyof SortFns;
 type SortFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractSortFnKeys<TFeatures> | SortFn<TFeatures, TData>;
-interface ColumnDef_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface ColumnDef_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
     enableMultiSort?: boolean;
     enableSorting?: boolean;
     invertSorting?: boolean;
@@ -12112,7 +16460,7 @@ interface ColumnDef_RowSorting<in out TFeatures extends TableFeatures, in out TD
     sortFn?: SortFnOption<TFeatures, TData>;
     sortUndefined?: false | -1 | 1 | "first" | "last";
 }
-interface Column_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Column_RowSorting<TFeatures extends TableFeatures, TData extends RowData> {
     clearSorting: () => void;
     getAutoSortDir: () => SortDirection;
     getAutoSortFn: () => SortFn<TFeatures, TData>;
@@ -12138,16 +16486,16 @@ interface TableOptions_RowSorting {
     onSortingChange?: OnChangeFn<SortingState>;
     sortDescFirst?: boolean;
 }
-interface Table_RowSorting<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+interface Table_RowSorting<_TFeatures extends TableFeatures, _TData extends RowData> {
     autoResetSorting: () => void;
     resetSorting: (defaultState?: boolean) => void;
     setSorting: (updater: Updater<SortingState>) => void;
 }
-interface Table_RowModels_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface Table_RowModels_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
     getPreSortedRowModel: () => RowModel<TFeatures, TData>;
     getSortedRowModel: () => RowModel<TFeatures, TData>;
 }
-interface CachedRowModel_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+interface CachedRowModel_Sorted<TFeatures extends TableFeatures, TData extends RowData> {
     sortedRowModel: () => RowModel<TFeatures, TData>;
 }
 const cellSelectionFeature: TableFeature;
@@ -12186,13 +16534,13 @@ interface StockFeatures {
     rowSelectionFeature: typeof rowSelectionFeature;
     rowSortingFeature: typeof rowSortingFeature;
 }
-type IsAny$1<T> = 0 extends 1 & T ? true : false;
+type IsAny$3<T> = 0 extends 1 & T ? true : false;
 type UnionToIntersectionOrEmpty<T> = [
     T
 ] extends [
     never
 ] ? {} : UnionToIntersection<T> & {};
-type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$1<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
+type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$3<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
 interface Plugins {
 }
 type NonFeatureKeys = "aggregationFns" | "columnMeta" | "coreRowModel" | "expandedRowModel" | "facetedMinMaxValues" | "facetedRowModel" | "facetedUniqueValues" | "filterFns" | "filterMeta" | "filteredRowModel" | "groupedRowModel" | "paginatedRowModel" | "sortFns" | "sortedRowModel" | "tableMeta";
@@ -12212,7 +16560,7 @@ interface FeatureSlotPrereqs {
     sortedRowModel: "rowSortingFeature";
     sortFns: "rowSortingFeature";
 }
-type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$1<TFeatures> extends true ? {} : {
+type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? {} : {
     [K in keyof TFeatures as K extends keyof FeatureSlotPrereqs ? K : never]: K extends keyof FeatureSlotPrereqs ? [
         Extract<FeatureSlotPrereqs[K], keyof TFeatures>
     ] extends [
@@ -12321,7 +16669,7 @@ export function FieldGroup({ className, ...props }: React$1.ComponentProps<"div"
 const fieldVariants: (props?: ({
     orientation?: "horizontal" | "vertical" | "responsive" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function Field({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
+function Field$1({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
 export function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 export function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
 export function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
@@ -12329,7 +16677,7 @@ export function FieldDescription({ className, ...props }: React$1.ComponentProps
 export function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
     children?: React$1.ReactNode;
 }): React$1.JSX.Element;
-export function FieldError({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
+function FieldError$1({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
     errors?: Array<{
         message?: string;
     } | undefined>;
@@ -12340,7 +16688,7 @@ const inputGroupAddonVariants: (props?: ({
 } & ClassProp) | undefined) => string;
 export function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
 const inputGroupButtonVariants: (props?: ({
-    size?: "xs" | "sm" | "icon-xs" | "icon-sm" | null | undefined;
+    size?: "sm" | "xs" | "icon-xs" | "icon-sm" | null | undefined;
 } & ClassProp) | undefined) => string;
 export function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
     type?: "button" | "submit" | "reset";
@@ -12485,7 +16833,7 @@ type DayPickerProps = PropsBase & (PropsSingle | PropsSingleRequired | PropsMult
     required?: undefined;
 });
 interface PropsBase {
-    mode?: Mode | undefined;
+    mode?: Mode$1 | undefined;
     required?: boolean | undefined;
     className?: string;
     classNames?: Partial<ClassNames>;
@@ -12730,7 +17078,7 @@ enum Animation$1 {
     caption_before_enter = "caption_before_enter",
     caption_before_exit = "caption_before_exit"
 }
-type Mode = "single" | "multiple" | "range";
+type Mode$1 = "single" | "multiple" | "range";
 type CustomComponents = {
     Chevron: typeof Chevron;
     CaptionLabel: typeof CaptionLabel;
@@ -12885,6 +17233,41 @@ function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
 export function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
     buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
 }): React$1.JSX.Element;
+type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+type ISOTimeString = string & {
+    readonly __brand: "ISOTimeString";
+};
+export function DateInput({ ref, ...props }: FieldProps & Pick<React$1.ComponentProps<"input">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
+    value?: ISODateString;
+    defaultValue?: ISODateString;
+    onChange?: (value: ISODateString | undefined) => void;
+    min?: ISODateString;
+    max?: ISODateString;
+    dateConstraints?: readonly ((date: Date) => boolean)[];
+    placeholder?: string;
+}): React$1.JSX.Element;
+export function TimeInput({ ref, ...props }: FieldProps & Pick<React$1.ComponentProps<"input">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
+    value?: ISOTimeString;
+    defaultValue?: ISOTimeString;
+    onChange?: (value: ISOTimeString | undefined) => void;
+    min?: ISOTimeString;
+    max?: ISOTimeString;
+    hasSeconds?: boolean;
+    hourFormat?: "12h" | "24h";
+    increment?: number;
+    placeholder?: string;
+}): React$1.JSX.Element;
+type FileInputProps = FieldProps & Pick<React$1.ComponentProps<"button">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
+    value?: File | File[] | null;
+    onChange?: (value: File | File[] | null) => void;
+    accept?: string;
+    multiple?: boolean;
+    maxSize?: number;
+    maxFiles?: number;
+    placeholder?: string;
+    mode?: "input" | "dropzone";
+};
+export function FileInput({ ref, ...props }: FileInputProps): React$1.JSX.Element;
 function PopoverContent({ className, align, alignOffset, side, sideOffset, ...props }: PopoverPopup.Props & Pick<PopoverPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
 export type TimePickerTime = {
     hour: number;
@@ -13061,6 +17444,7 @@ export function StepperContent({ value, forceMount, children, className, ...prop
 type StepProps = {
     step?: number;
     label: string;
+    fields?: string[];
     description?: string;
     children?: React$1.ReactNode;
 };
@@ -13381,7 +17765,7 @@ interface Props$3<TValue extends ValueType = ValueType, TName extends NameType =
     accessibilityLayer?: boolean;
 }
 type ChartData<DataPointType = unknown> = ReadonlyArray<DataPointType>;
-interface Path {
+interface Path$1 {
     moveTo(x: number, y: number): void;
     closePath(): void;
     lineTo(x: number, y: number): void;
@@ -13401,7 +17785,7 @@ interface CurveGenerator extends CurveGeneratorLineOnly {
     areaStart(): void;
     areaEnd(): void;
 }
-type CurveFactory = (context: CanvasRenderingContext2D | Path) => CurveGenerator;
+type CurveFactory = (context: CanvasRenderingContext2D | Path$1) => CurveGenerator;
 type CurveType = "basis" | "basisClosed" | "basisOpen" | "bumpX" | "bumpY" | "bump" | "linear" | "linearClosed" | "natural" | "monotoneX" | "monotoneY" | "monotone" | "step" | "stepBefore" | "stepAfter" | CurveFactory;
 type BaseLineType = number | ReadonlyArray<NullableCoordinate>;
 interface CurveProps {
@@ -15963,7 +20347,7 @@ interface FiltersProps<V = unknown, O = unknown> {
 export function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
 const frameVariants: (props?: ({
     variant?: "default" | "ghost" | "inverse" | null | undefined;
-    spacing?: "default" | "xs" | "sm" | "lg" | null | undefined;
+    spacing?: "default" | "sm" | "lg" | "xs" | null | undefined;
     stacked?: boolean | null | undefined;
     dense?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
@@ -15976,7 +20360,7 @@ export function FrameTitle({ className, ...props }: React$1.ComponentProps<"div"
 export function FrameFooter({ className, ...props }: React$1.ComponentProps<"footer">): React$1.JSX.Element;
 const iconTileVariants: (props?: ({
     variant?: "outline" | "solid" | "frame" | "elevated" | "soft" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
+    size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface IconTileProps extends useRender.ComponentProps<"span"> {
@@ -15989,11 +20373,48 @@ export function useDownload(): {
     download: (path: string, name: string) => Promise<void>;
     error: string | undefined;
 };
+export function zodResolver<Input extends FieldValues, Context, Output extends FieldValues>(schema: z.ZodType<Output, Input>, schemaOptions?: z.core.ParseContext<z.core.$ZodIssue>, resolverOptions?: {
+    mode?: "async" | "sync";
+    raw?: false;
+}): Resolver<Input, Context, Output>;
+export function zodResolver<Input extends FieldValues, Context, Output extends FieldValues>(schema: z.ZodType<Output, Input>, schemaOptions: z.core.ParseContext<z.core.$ZodIssue> | undefined, resolverOptions: {
+    mode?: "async" | "sync";
+    raw: true;
+}): Resolver<Input, Context, Input>;
 export type FrontendElement = React$1.JSX.Element;
-export type FrontendFormProps = React$1.JSX.IntrinsicElements["form"];
 export type FrontendElementType = React$1.JSX.ElementType;
 namespace CSS$1 {
     export { AdvancedPseudos, AtRule, AtRules, DataType, Fallback, Globals, HtmlAttributes, ObsoleteProperties, ObsoletePropertiesFallback, ObsoletePropertiesHyphen, ObsoletePropertiesHyphenFallback, Properties, PropertiesFallback, PropertiesHyphen, PropertiesHyphenFallback, Property, PropertyValue, Pseudos, SimplePseudos, StandardLonghandProperties, StandardLonghandPropertiesFallback, StandardLonghandPropertiesHyphen, StandardLonghandPropertiesHyphenFallback, StandardProperties, StandardPropertiesFallback, StandardPropertiesHyphen, StandardPropertiesHyphenFallback, StandardShorthandProperties, StandardShorthandPropertiesFallback, StandardShorthandPropertiesHyphen, StandardShorthandPropertiesHyphenFallback, SvgAttributes, SvgProperties, SvgPropertiesFallback, SvgPropertiesHyphen, SvgPropertiesHyphenFallback, VendorLonghandProperties, VendorLonghandPropertiesFallback, VendorLonghandPropertiesHyphen, VendorLonghandPropertiesHyphenFallback, VendorProperties, VendorPropertiesFallback, VendorPropertiesHyphen, VendorPropertiesHyphenFallback, VendorShorthandProperties, VendorShorthandPropertiesFallback, VendorShorthandPropertiesHyphen, VendorShorthandPropertiesHyphenFallback };
+}
+namespace JSONSchema$1 {
+    export { ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, JSONSchema, NullSchema, NumberSchema, ObjectSchema, Schema, SchemaType, StringSchema, _JSONSchema };
+}
+namespace util {
+    export { AnyFunc, AssertEqual, AssertExtends, AssertNotEqual, BIGINT_FORMAT_RANGES, BuiltIn, CONSTANT_CATCH, Class, CleanKey, Constructor, EmptyObject, EmptyToNever, EnumLike, EnumValue, Exactly, Extend, ExtractIndexSignature, Flatten, FromCleanMap, HasLength, HasSize, HashAlgorithm, HashEncoding, HashFormat, IPVersion, Identity, InexactPartial$1 as InexactPartial, IsAny, IsProp, JSONType, JWTAlgorithm, KeyOf, Keys, KeysArray, KeysEnum, Literal, LiteralArray, LoosePartial, MakePartial, MakeReadonly, MakeRequired, Mapped, Mask, MaybeAsync, MimeTypes, NUMBER_FORMAT_RANGES, NoNever, NoNeverKeys, NoUndefined, Normalize, Numeric, Omit$1 as Omit, OmitIndexSignature, OmitKeys, ParsedTypes, Prettify, Primitive, PrimitiveArray, PrimitiveSet, PropValues, ProtoOf, SafeParseError, SafeParseResult, SafeParseSuccess, SchemaClass, ShapeGetter, SomeObject, ToCleanMap, ToEnum, TupleItems, Whatever, Widen, Writeable, aborted, allowsEval, assert, assertEqual, assertIs, assertNever, assertNotEqual, assignProp, attachSchema, base64ToUint8Array, base64urlToUint8Array, cached, captureStackTrace, cleanEnum, cleanRegex, clone, cloneDef, codePointLength, constantCatch, createTransparentProxy, defineLazy, defineLazyInternal, derived, esc, escapeRegex, explicitlyAborted, extend, finalizeIssue, floatSafeRemainder, getElementAtPath, getEnumValues, getLengthableOrigin, getParsedType, getSizableOrigin, hexToUint8Array, hide, installLazyProp, isObject, isPlainObject, issue, joinValues, jsonStringifyReplacer, members, merge, mergeDefs, normalizeParams, nullish, numKeys, objectClone, omit, optionalKeys, own, parsedType, partial, pick, prefixIssues, primitiveTypes, promiseAllObject, propertyKeyTypes, randomString, rawShape, required, safeExtend, shallowClone, sizeCaps, slugify, stringifyPrimitive, toZod, uint8ArrayToBase64, uint8ArrayToBase64url, uint8ArrayToHex, unwrapMessage };
+}
+namespace coerce {
+    export { ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, bigint$2 as bigint, boolean$2 as boolean, date$3 as date, number$2 as number, string$2 as string };
+}
+namespace schemas {
+    export { $DiscriminatedOption, $DiscriminatorValue, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $PartsToTemplateLiteral, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntInternals, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUIDDef, $ZodCUIDInternals, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberInternals, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringDef, $ZodStringFormat, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatTypes, $ZodStringInternals, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodType, $ZodTypeDef, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXor, $ZodXorInternals, $catchall, $loose, $partial, $strict, $strip, CheckFn, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, File$1 as File, ParseContext, ParseContextInternal, ParsePayload, SomeType, ToTemplateLiteral, URL_BAD_FORMAT, URL_UNPARSEABLE, _$ZodType, _$ZodTypeInternals, base64Charset, base64urlCharset, canParseURL, clone, getDiscriminatedOption, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, mergeValues, parseURLObject, standardProps, stripTabAndNewline, urlHostnameOk, urlProtocolOk, validateURL };
+}
+namespace regexes {
+    export { _null as null, _undefined as undefined, anyString, base64, base64url, bigint, boolean, browserEmail, cidrv4, cidrv6, creditCard, cuid, cuid2, currencyCode, date, datetime, domain, duration, e164, email, emoji, extendedDuration, guid, hex, hostname, html5Email, httpProtocol, iban, idnEmail, integer, ipv4, ipv6, ksuid, lowercase, mac, md5_base64, md5_base64url, md5_hex, nanoid, nanoidOfLength, number, rfc5322Email, sha1_base64, sha1_base64url, sha1_hex, sha256_base64, sha256_base64url, sha256_hex, sha384_base64, sha384_base64url, sha384_hex, sha512_base64, sha512_base64url, sha512_hex, string, time, ulid, unicodeEmail, uppercase, uuid, uuid4, uuid6, uuid7, xid };
+}
+namespace locales {
+    export { _default as ar, _default$1 as az, _default$10 as el, _default$11 as en, _default$12 as eo, _default$13 as es, _default$14 as fa, _default$15 as fi, _default$16 as fr, _default$17 as frCA, _default$18 as gu, _default$19 as he, _default$2 as be, _default$20 as hi, _default$21 as hr, _default$22 as hu, _default$23 as hy, _default$24 as id, _default$25 as is, _default$26 as it, _default$27 as ja, _default$28 as ka, _default$29 as kh, _default$3 as bg, _default$30 as km, _default$31 as kn, _default$32 as ko, _default$33 as lt, _default$34 as mk, _default$35 as ms, _default$36 as ne, _default$37 as nl, _default$38 as nn, _default$39 as no, _default$4 as bn, _default$40 as ota, _default$41 as ps, _default$42 as pl, _default$43 as pt, _default$44 as ptBR, _default$45 as ro, _default$46 as ru, _default$47 as sk, _default$48 as sl, _default$49 as sv, _default$5 as ca, _default$50 as ta, _default$51 as tg, _default$52 as th, _default$53 as tk, _default$54 as tr, _default$55 as ua, _default$56 as uk, _default$57 as ur, _default$58 as uz, _default$59 as vi, _default$6 as ckb, _default$60 as zhCN, _default$61 as zhTW, _default$62 as yo, _default$7 as cs, _default$8 as da, _default$9 as de };
+}
+namespace schemas$1 {
+    export { SafeExtendShape, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodExactOptional, ZodFile, ZodFloat32, ZodFloat64, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRecord, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _enum$1 as enum, _function, _function as function, _instanceof as instanceof, _null$2 as null, _undefined$2 as undefined, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, codec, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, exactOptional, file, float32, float64, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, looseObject, looseRecord, mac$1 as mac, map, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, partialRecord, pipe, prefault, preprocess, promise, readonly, record, refine, set, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, transform, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, xid$1 as xid, xor };
+}
+namespace core {
+    export { $Decode, $DecodeAsync, $DiscriminatedOption, $DiscriminatorValue, $Encode, $EncodeAsync, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $Parse, $ParseAsync, $PartsToTemplateLiteral, $RefinementCtx, $SafeDecode, $SafeDecodeAsync, $SafeEncode, $SafeEncodeAsync, $SafeParse, $SafeParseAsync, $Validate, $ValidateAsync, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodAnyParams, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodArrayParams, $ZodAsyncError, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64Params, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBase64URLParams, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntFormatParams, $ZodBigIntFormats, $ZodBigIntInternals, $ZodBigIntParams, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodBooleanParams, $ZodBranded, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv4Params, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCIDRv6Params, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUID2Params, $ZodCUIDDef, $ZodCUIDInternals, $ZodCUIDParams, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCatchParams, $ZodCheck, $ZodCheckBase64Params, $ZodCheckBase64URLParams, $ZodCheckBigIntFormat, $ZodCheckBigIntFormatDef, $ZodCheckBigIntFormatInternals, $ZodCheckBigIntFormatParams, $ZodCheckCIDRv4Params, $ZodCheckCIDRv6Params, $ZodCheckCUID2Params, $ZodCheckCUIDParams, $ZodCheckCreditCardParams, $ZodCheckDef, $ZodCheckE164Params, $ZodCheckEmailParams, $ZodCheckEmojiParams, $ZodCheckEndsWith, $ZodCheckEndsWithDef, $ZodCheckEndsWithInternals, $ZodCheckEndsWithParams, $ZodCheckGUIDParams, $ZodCheckGreaterThan, $ZodCheckGreaterThanDef, $ZodCheckGreaterThanInternals, $ZodCheckGreaterThanParams, $ZodCheckIBANParams, $ZodCheckIPv4Params, $ZodCheckIPv6Params, $ZodCheckISODateParams, $ZodCheckISODateTimeParams, $ZodCheckISODurationParams, $ZodCheckISOTimeParams, $ZodCheckIncludes, $ZodCheckIncludesDef, $ZodCheckIncludesInternals, $ZodCheckIncludesParams, $ZodCheckInternals, $ZodCheckJWTParams, $ZodCheckKSUIDParams, $ZodCheckLengthEquals, $ZodCheckLengthEqualsDef, $ZodCheckLengthEqualsInternals, $ZodCheckLengthEqualsParams, $ZodCheckLessThan, $ZodCheckLessThanDef, $ZodCheckLessThanInternals, $ZodCheckLessThanParams, $ZodCheckLowerCase, $ZodCheckLowerCaseDef, $ZodCheckLowerCaseInternals, $ZodCheckLowerCaseParams, $ZodCheckMACParams, $ZodCheckMaxLength, $ZodCheckMaxLengthDef, $ZodCheckMaxLengthInternals, $ZodCheckMaxLengthParams, $ZodCheckMaxSize, $ZodCheckMaxSizeDef, $ZodCheckMaxSizeInternals, $ZodCheckMaxSizeParams, $ZodCheckMimeType, $ZodCheckMimeTypeDef, $ZodCheckMimeTypeInternals, $ZodCheckMimeTypeParams, $ZodCheckMinLength, $ZodCheckMinLengthDef, $ZodCheckMinLengthInternals, $ZodCheckMinLengthParams, $ZodCheckMinSize, $ZodCheckMinSizeDef, $ZodCheckMinSizeInternals, $ZodCheckMinSizeParams, $ZodCheckMultipleOf, $ZodCheckMultipleOfDef, $ZodCheckMultipleOfInternals, $ZodCheckMultipleOfParams, $ZodCheckNanoIDParams, $ZodCheckNumberFormat, $ZodCheckNumberFormatDef, $ZodCheckNumberFormatInternals, $ZodCheckNumberFormatParams, $ZodCheckOverwrite, $ZodCheckOverwriteDef, $ZodCheckOverwriteInternals, $ZodCheckProperties, $ZodCheckPropertiesDef, $ZodCheckPropertiesInput, $ZodCheckPropertiesInternals, $ZodCheckPropertiesParams, $ZodCheckProperty, $ZodCheckPropertyDef, $ZodCheckPropertyInternals, $ZodCheckPropertyParams, $ZodCheckRegex, $ZodCheckRegexDef, $ZodCheckRegexInternals, $ZodCheckRegexParams, $ZodCheckSizeEquals, $ZodCheckSizeEqualsDef, $ZodCheckSizeEqualsInternals, $ZodCheckSizeEqualsParams, $ZodCheckStartsWith, $ZodCheckStartsWithDef, $ZodCheckStartsWithInternals, $ZodCheckStartsWithParams, $ZodCheckStringFormat, $ZodCheckStringFormatDef, $ZodCheckStringFormatInternals, $ZodCheckStringFormatParams, $ZodCheckULIDParams, $ZodCheckURLParams, $ZodCheckUUIDParams, $ZodCheckUUIDv4Params, $ZodCheckUUIDv6Params, $ZodCheckUUIDv7Params, $ZodCheckUpperCase, $ZodCheckUpperCaseDef, $ZodCheckUpperCaseInternals, $ZodCheckUpperCaseParams, $ZodCheckXIDParams, $ZodChecks, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodConfig, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCreditCardParams, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomParams, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodCyclicError, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDateParams, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDefaultParams, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodDiscriminatedUnionParams, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodE164Params, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmailParams, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEmojiParams, $ZodEncodeError, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodEnumParams, $ZodError, $ZodErrorClass, $ZodErrorMap, $ZodErrorTree, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFileParams, $ZodFlattenedError, $ZodFormattedError, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodGUIDParams, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIBANParams, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv4Params, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodIPv6Params, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateParams, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODateTimeParams, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISODurationParams, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodISOTimeParams, $ZodInternalIssue, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodIntersectionParams, $ZodInvalidTypeExpected, $ZodIssue, $ZodIssueBase, $ZodIssueCode, $ZodIssueCustom, $ZodIssueInvalidElement, $ZodIssueInvalidKey, $ZodIssueInvalidStringFormat, $ZodIssueInvalidType, $ZodIssueInvalidUnion, $ZodIssueInvalidValue, $ZodIssueNotMultipleOf, $ZodIssueStringCommonFormats, $ZodIssueStringEndsWith, $ZodIssueStringIncludes, $ZodIssueStringInvalidJWT, $ZodIssueStringInvalidRegex, $ZodIssueStringStartsWith, $ZodIssueTooBig, $ZodIssueTooSmall, $ZodIssueUnrecognizedKeys, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodJWTParams, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodKSUIDParams, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLazyParams, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLiteralParams, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMACParams, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMapParams, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNaNParams, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNanoIDParams, $ZodNarrow, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNeverParams, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNonOptionalParams, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullParams, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNullableParams, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberFormatParams, $ZodNumberFormats, $ZodNumberInternals, $ZodNumberParams, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodObjectParams, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodOptionalParams, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPipeParams, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodPromiseParams, $ZodRawIssue, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodReadonlyParams, $ZodRealError$1 as $ZodRealError, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodRecordParams, $ZodRegistry, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodSetParams, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringBoolParams, $ZodStringDef, $ZodStringFormat, $ZodStringFormatChecks, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatIssues, $ZodStringFormatParams, $ZodStringFormatTypes, $ZodStringFormats, $ZodStringInternals, $ZodStringParams, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSuccessParams, $ZodSuperRefineIssue, $ZodSuperRefineParams, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodSymbolParams, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralParams, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTransformParams, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodTupleParams, $ZodType, $ZodTypeDef, $ZodTypeDiscriminable, $ZodTypeDiscriminableInternals, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodULIDParams, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodURLParams, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUUIDParams, $ZodUUIDv4Params, $ZodUUIDv6Params, $ZodUUIDv7Params, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUndefinedParams, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnionParams, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodUnknownParams, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodVoidParams, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXIDParams, $ZodXor, $ZodXorInternals, $ZodXorParams, $brand, $catchall, $constructor, $constructorParams, $input, $loose, $output, $partial, $replace, $strict, $strip, CheckFn, CheckParams, CheckStringFormatParams, CheckTypeParams, CompileOptions, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, Doc, File$1 as File, GlobalMeta, INVALID, JSONSchema$1 as JSONSchema, JSONSchemaGenerator, JSONSchemaGeneratorParams, JSONSchemaMeta, NEVER, Params, ParseContext, ParseContextInternal, ParsePayload, ProcessParams, Processor, RegistryToJSONSchemaParams, Seen, SomeType, StringFormatParams, TimePrecision, ToJSONSchemaContext, ToJSONSchemaParams, ToTemplateLiteral, TypeParams, URL_BAD_FORMAT, URL_UNPARSEABLE, UnrepresentableHandler, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodStandardJSONSchemaPayload, ZodStandardSchemaWithJSON, _$ZodType, _$ZodTypeInternals, _any, _array, _base64, _base64url, _bigint, _boolean, _catch, _check, _cidrv4, _cidrv6, _coercedBigint, _coercedBoolean, _coercedDate, _coercedNumber, _coercedString, _creditCard, _cuid, _cuid2, _custom, _date, _decode, _decodeAsync, _default$63 as _default, _discriminatedUnion, _e164, _email, _emoji, _encode, _encodeAsync, _endsWith, _enum, _file, _float32, _float64, _gt, _gte, _gte as _min, _guid, _iban, _includes, _int, _int32, _int64, _intersection, _ipv4, _ipv6, _isoDate, _isoDateTime, _isoDuration, _isoTime, _jwt, _ksuid, _lazy, _length, _literal, _lowercase, _lt, _lte, _lte as _max, _mac, _map, _maxLength, _maxSize, _mime, _minLength, _minSize, _multipleOf, _nan, _nanoid, _nativeEnum, _negative, _never, _nonnegative, _nonoptional, _nonpositive, _normalize, _null$1 as _null, _nullable, _number, _optional, _overwrite, _parse, _parseAsync, _pipe, _positive, _promise, _properties, _property, _readonly, _record, _refine, _regex, _safeDecode, _safeDecodeAsync, _safeEncode, _safeEncodeAsync, _safeParse, _safeParseAsync, _set, _size, _slugify, _startsWith, _string, _stringFormat, _stringbool, _success, _superRefine, _symbol, _templateLiteral, _toLowerCase, _toUpperCase, _transform, _trim, _tuple, _uint32, _uint64, _ulid, _undefined$1 as _undefined, _union, _unknown, _uppercase, _url, _uuid, _uuidv4, _uuidv6, _uuidv7, _void, _xid, _xor, base64Charset, base64urlCharset, canParseURL, clone, compile, compileFn, config, createStandardJSONSchemaMethod, createToJSONSchemaMethod, decode, decodeAsync, describe, encode, encodeAsync, extractDefs, finalize, flattenError, formatError, getDiscriminatedOption, globalConfig, globalRegistry, handleUnrepresentable, initializeContext, input, isBackEdge, isRecursiveSchema, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, locales, memoizer, mergeValues, meta, output, output as infer, parse, parseAsync, parseURLObject, prettifyError, processSchema, processSchema as process, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, standardProps, stripTabAndNewline, toDotPath, toJSONSchema, toZod, treeifyError, urlHostnameOk, urlProtocolOk, util, validate, validateAsync, validateURL, version, withParser };
+}
+namespace iso {
+    export { ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, date$2 as date, datetime$1 as datetime, duration$1 as duration, time$1 as time };
+}
+namespace z {
+    export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, withParser, xid$1 as xid, xor };
 }
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
@@ -16019,7 +20440,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, };
+export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Cell$1 as Cell, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Field$1 as Field, FieldError$1 as FieldError, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, z, };
 }
 
 declare const ActionButton: typeof NativeFrontend.ActionButton;
@@ -16086,6 +20507,7 @@ declare const ComboboxSeparator: typeof NativeFrontend.ComboboxSeparator;
 declare const ComboboxTrigger: typeof NativeFrontend.ComboboxTrigger;
 declare const ComboboxValue: typeof NativeFrontend.ComboboxValue;
 declare const ComposedChart: typeof NativeFrontend.ComposedChart;
+declare const Controller: typeof NativeFrontend.Controller;
 declare const CountryChart: typeof NativeFrontend.CountryChart;
 declare const DEFAULT_TIME_PICKER_I18N: typeof NativeFrontend.DEFAULT_TIME_PICKER_I18N;
 declare const DataGrid: typeof NativeFrontend.DataGrid;
@@ -16095,6 +20517,7 @@ declare const DataGridPagination: typeof NativeFrontend.DataGridPagination;
 declare const DataGridScrollArea: typeof NativeFrontend.DataGridScrollArea;
 declare const DataGridTable: typeof NativeFrontend.DataGridTable;
 declare const DataTable: typeof NativeFrontend.DataTable;
+declare const DateInput: typeof NativeFrontend.DateInput;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const DialogClose: typeof NativeFrontend.DialogClose;
 declare const DialogContent: typeof NativeFrontend.DialogContent;
@@ -16138,9 +20561,11 @@ declare const FieldLegend: typeof NativeFrontend.FieldLegend;
 declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
 declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
+declare const FileInput: typeof NativeFrontend.FileInput;
 declare const FileType: typeof NativeFrontend.FileType;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
 declare const Filters: typeof NativeFrontend.Filters;
+declare const FormProvider: typeof NativeFrontend.FormProvider;
 declare const Frame: typeof NativeFrontend.Frame;
 declare const FrameFooter: typeof NativeFrontend.FrameFooter;
 declare const FrameHeader: typeof NativeFrontend.FrameHeader;
@@ -16148,7 +20573,6 @@ declare const FramePanel: typeof NativeFrontend.FramePanel;
 declare const FrameTitle: typeof NativeFrontend.FrameTitle;
 declare const FramedDialog: typeof NativeFrontend.FramedDialog;
 type FrontendElementType = NativeFrontend.FrontendElementType;
-type FrontendFormProps = NativeFrontend.FrontendFormProps;
 declare const GeneratedAvatar: typeof NativeFrontend.GeneratedAvatar;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridSpan: typeof NativeFrontend.GridSpan;
@@ -16162,7 +20586,7 @@ declare const InputGroupInput: typeof NativeFrontend.InputGroupInput;
 declare const InputGroupText: typeof NativeFrontend.InputGroupText;
 declare const InputGroupTextarea: typeof NativeFrontend.InputGroupTextarea;
 declare const InteractiveCard: typeof NativeFrontend.InteractiveCard;
-declare const Label: typeof NativeFrontend.Label;
+import Label = NativeFrontend.Label;
 declare const LabelList: typeof NativeFrontend.LabelList;
 declare const Line: typeof NativeFrontend.Line;
 declare const LineChart: typeof NativeFrontend.LineChart;
@@ -16243,6 +20667,7 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
+declare const TimeInput: typeof NativeFrontend.TimeInput;
 declare const TimePicker: typeof NativeFrontend.TimePicker;
 type TimePickerActionProps = NativeFrontend.TimePickerActionProps;
 type TimePickerApi = NativeFrontend.TimePickerApi;
@@ -16294,5 +20719,10 @@ declare const useCodeBlockFolding: typeof NativeFrontend.useCodeBlockFolding;
 declare const useCodeBlockSelection: typeof NativeFrontend.useCodeBlockSelection;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;
 declare const useDownload: typeof NativeFrontend.useDownload;
+declare const useForm: typeof NativeFrontend.useForm;
+declare const useFormContext: typeof NativeFrontend.useFormContext;
+declare const useSubmit: typeof NativeFrontend.useSubmit;
 declare const useTable: typeof NativeFrontend.useTable;
 declare const useTimePicker: typeof NativeFrontend.useTimePicker;
+import z = NativeFrontend.z;
+declare const zodResolver: typeof NativeFrontend.zodResolver;

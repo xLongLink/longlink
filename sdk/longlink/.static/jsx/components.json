@@ -912,7 +912,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Connects named checkbox values to LongLink Form validation, reset, and boolean callbacks."
+            "justification": "Composes a labeled checkbox with boolean callbacks, native naming, and reset support."
         },
         {
             "name": "CodeBlock",
@@ -1150,7 +1150,7 @@
             ],
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/date-picker",
-            "justification": "Composes the shadcn InputGroup, Popover, and Calendar with ISO date values and LongLink Form integration."
+            "justification": "Composes InputGroup, Popover, and Calendar with canonical ISO dates, editable drafts, and native constraints."
         },
         {
             "name": "Dialog",
@@ -1355,7 +1355,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Validates selected files and submission constraints through LongLink Form while leaving upload ownership with the Solution."
+            "justification": "Filters file selections and exposes accepted Files to controlled callers or native FormData; upload ownership stays with the Solution."
         },
         {
             "name": "FileViewer",
@@ -1373,55 +1373,42 @@
             "justification": "Loads scoped attachment bytes and renders supported media inline without exposing host credentials or weakening the Solution sandbox."
         },
         {
-            "name": "Form",
+            "name": "FormProvider",
             "category": "Form",
-            "introduction": "Collects and submits named fields through the Solution runtime.",
+            "introduction": "Shares React Hook Form methods with nested controls and Wizard.",
             "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
-            "guidance": "Compose layout explicitly with FieldGroup or native classes. Standard form properties and cancelable submit/reset handlers are supported. Validate and authorize mutations on the server.",
+            "guidance": "Use useForm with zodResolver(schema), Controller, and shadcn Field components. Render a form with onSubmit={form.handleSubmit(save)}. Spread form methods onto FormProvider when descendants need useFormContext. useSubmit owns only the scoped request. Validate and authorize mutations on the server.",
             "properties": [
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Named fields and layout, including the custom Wizard."
-                },
-                {
-                    "name": "action",
-                    "type": "string | ((data: FormData) => void | Promise<void>)",
-                    "description": "Solution-relative API path or a callback owning submission."
-                },
-                {
-                    "name": "method",
-                    "type": "\"delete\" | \"post\" | \"put\" | \"patch\"",
-                    "description": "Write method used to submit the form; defaults to post."
-                },
-                {
-                    "name": "id",
-                    "type": "string",
-                    "description": "Native form ID for associating external submit or reset buttons."
-                },
-                {
-                    "name": "submitDisabled",
-                    "type": "boolean",
-                    "description": "Prevents submission while workflow requirements are not satisfied."
-                },
-                {
-                    "name": "className / style / ref",
-                    "type": "native form props",
-                    "description": "Native presentation and form ref. Form does not provide an implicit field layout."
-                },
-                {
-                    "name": "onSubmit / onReset",
-                    "type": "native form event handlers",
-                    "description": "Calling preventDefault cancels the managed submission or reset."
-                },
-                {
-                    "name": "onSuccess",
-                    "type": "(data: ViewData) => void | Promise<void>",
-                    "description": "Runs after a successful write and automatic cached-data refresh."
+                    "name": "...form",
+                    "type": "UseFormReturn",
+                    "description": "Methods returned by useForm, including control, handleSubmit, reset, trigger, setError, and formState."
                 }
             ],
-            "source": "custom",
-            "justification": "Submits named fields to Solution endpoints and coordinates field validation, request state, and recovery."
+            "source": "react-hook-form",
+            "reference": "https://ui.shadcn.com/docs/forms/react-hook-form"
+        },
+        {
+            "name": "Controller",
+            "category": "Form",
+            "introduction": "Connects a controlled input to React Hook Form without a LongLink field adapter.",
+            "guidance": "Render shadcn Field with data-invalid, associate FieldLabel and Input, pass field props to the input, and render FieldError with fieldState.error. Use field.value and field.onChange for Select and other controlled inputs. Connect field.ref to the focusable control. Use form.reset() to restore defaults.",
+            "properties": [
+                { "name": "name", "type": "FieldPath", "description": "Registered form value path." },
+                { "name": "control", "type": "Control", "description": "The control returned by useForm." },
+                {
+                    "name": "rules",
+                    "type": "validation rules",
+                    "description": "Field validation when not using a schema resolver."
+                },
+                {
+                    "name": "render",
+                    "type": "({ field, fieldState, formState }) => ReactElement",
+                    "description": "Renders the controlled input and its feedback."
+                }
+            ],
+            "source": "react-hook-form",
+            "reference": "https://ui.shadcn.com/docs/forms/react-hook-form"
         },
         {
             "name": "Functions",
@@ -1556,6 +1543,14 @@
             "keywords": ["state", "loading", "query", "fetch", "data", "effect"],
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
+                {
+                    "name": "useForm(options)",
+                    "description": "Standard React Hook Form state, validation, errors, reset, and submitting state. Use zodResolver(schema) with Zod, Controller with shadcn Field components, and FormProvider/useFormContext for nested forms and Wizard."
+                },
+                {
+                    "name": "useSubmit(path, options)",
+                    "description": "Returns an awaitable, duplicate-protected scoped write function accepting FormData. Options: method (POST by default, PUT, PATCH, DELETE), onSuccess(data), and onError(error). Cache refresh completes before onSuccess. In onError, call form.setError('root', { message }) so failure is visible and isSubmitSuccessful stays false. Unhandled failures reject. Append repeated values and binary files explicitly; React Hook Form owns submitting state."
+                },
                 {
                     "name": "useState(initial)",
                     "description": "Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state."
@@ -2161,7 +2156,7 @@
         {
             "name": "Wizard",
             "category": "Layouts",
-            "introduction": "Custom LongLink wizard with persistent Step panels, validated Next/Back navigation, and guarded asynchronous actions. Inside Form, Next validates current and shared fields; a submit Button in the last Step submits all fields.",
+            "introduction": "Custom LongLink wizard with persistent Step panels, React Hook Form validation, and guarded asynchronous actions. Wrap the form in FormProvider and declare Step.fields. Next validates those field paths; a submit Button in the last Step invokes the form's handleSubmit. Set shouldFocusError: false so Wizard can reveal invalid hidden steps before focusing them.",
             "properties": [
                 {
                     "name": "height",
@@ -2209,6 +2204,11 @@
                 },
                 { "name": "Step.label", "type": "string", "description": "Visible label identifying the step." },
                 {
+                    "name": "Step.fields",
+                    "type": "string[]",
+                    "description": "React Hook Form field paths to validate before leaving the step. Include shared fields in every step that requires them."
+                },
+                {
                     "name": "Step.description",
                     "type": "string",
                     "description": "Supporting text displayed below the step label."
@@ -2220,7 +2220,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Keeps drafts mounted and coordinates scoped field validation, guarded asynchronous advancement, and final Form submission."
+            "justification": "Keeps drafts mounted and coordinates explicit RHF step validation, invalid-step focus recovery, and guarded asynchronous advancement."
         },
         {
             "name": "Switch",
@@ -2285,7 +2285,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Connects native Switch behavior to LongLink Form boolean callbacks, naming, validation, and reset."
+            "justification": "Composes a labeled Switch with boolean callbacks, native naming, and reset support."
         },
         {
             "name": "Table",
@@ -2459,7 +2459,7 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/time-picker",
             "introduction": "Native ReUI time picker with composable input, columns, and footer.",
-            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use custom TimeInput when invalid drafts must block LongLink Form submission.",
+            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use custom TimeInput when malformed drafts must remain visible and fail native constraint validation.",
             "properties": [
                 {
                     "name": "value / defaultValue",
@@ -2589,7 +2589,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Keeps malformed or forbidden drafts visible and blocks submission instead of snapping or silently restoring them; preserves ISO validation, controlled ownership, and LongLink Form integration."
+            "justification": "Keeps malformed or forbidden drafts visible instead of silently restoring them; preserves ISO values, controlled ownership, and native constraints."
         },
         {
             "name": "Timestamp",

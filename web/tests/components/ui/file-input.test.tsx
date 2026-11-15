@@ -47,7 +47,7 @@ it.each(['input', 'dropzone'] as const)(
                 expect(input.files?.length).toBe(0);
                 expect(collect(form)).toEqual([file]);
                 expect(collect(form)[0]).toBe(file);
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
+                expect(form.checkValidity()).toBe(true);
                 form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
                 await act(async () => form.reset());
                 expect(collect(form)).toEqual([file]);
@@ -58,7 +58,7 @@ it.each(['input', 'dropzone'] as const)(
                 expect(collect(form)).toEqual([]);
                 expect(document.activeElement).toBe(output.querySelector('button'));
                 await act(async () => {
-                    expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                    expect(form.checkValidity()).toBe(false);
                 });
             }
         );
@@ -95,7 +95,7 @@ it('filters MIME, extension and size constraints before publishing, truncates co
             expect(output.querySelector('[role="alert"]')?.textContent).toContain('secret.txt');
             expect(output.querySelector('[role="alert"]')?.textContent).toContain('large.png');
             await act(async () => {
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                expect(form.checkValidity()).toBe(false);
             });
             await act(async () => user.upload(input, text));
             expect(changes.at(-1)).toBeNull();
@@ -104,7 +104,7 @@ it('filters MIME, extension and size constraints before publishing, truncates co
             expect(changes.at(-1)).toEqual([pdf]);
             expect(collect(form)).toEqual([pdf]);
             expect(output.querySelector('[aria-invalid="true"]')).toBeNull();
-            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
+            expect(form.checkValidity()).toBe(true);
         }
     );
 });
@@ -233,9 +233,7 @@ it('retains trusted Platform read failures as blocking, associated validation st
                 'Cannot read this file.'
             );
             await act(async () => {
-                expect(
-                    control(output, 'form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-                ).toBe(false);
+                expect(control<HTMLFormElement>(output, 'form').reportValidity()).toBe(false);
             });
             expect(document.activeElement).toBe(trigger);
         }
@@ -297,7 +295,7 @@ it('does not let an untyped View suppress file validation through native-only st
             expect(output.textContent).not.toContain('Approved by the View');
             expect(output.querySelector('[role="alert"]')?.textContent).toContain('wrong.txt');
             await act(async () => {
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                expect(form.checkValidity()).toBe(false);
             });
         }
     );

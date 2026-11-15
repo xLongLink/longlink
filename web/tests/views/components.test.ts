@@ -19,7 +19,6 @@ it('exposes native card composition separately from LongLink surface interaction
 
 it('exposes the authored View API without privileged host providers', () => {
     // Assert
-    expect(components).toHaveProperty('Form');
     expect(components).toHaveProperty('Stack');
     expect(Object.hasOwn(components, 'Root')).toBe(false);
     expect(Object.hasOwn(components, 'FileRequestContext')).toBe(false);

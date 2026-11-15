@@ -2,11 +2,10 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Form } from '@/components/custom/form';
 import { Button } from '@/components/shadcn/button';
 import userEvent from '@testing-library/user-event';
+import { FormProvider, useForm } from 'react-hook-form';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { TextInput } from '@/components/custom/text-input';
 
 /** Lets the owner accept navigation independently of the wizard's request. */
 function ControlledWizard({ onStepClick }: { onStepClick: (index: number) => void }) {
@@ -67,91 +66,104 @@ it('preserves step drafts through navigation, final validation, submission, and 
     // Arrange
     const submissions: [string, FormDataEntryValue][][] = [];
     const user = userEvent.setup();
+    let rejectCustomer = false;
+
+    function Example() {
+        const form = useForm({ defaultValues: { customer: '', notes: '' }, shouldFocusError: false });
+
+        return (
+            <FormProvider {...form}>
+                <form
+                    noValidate
+                    onReset={() => form.reset({ customer: '', notes: '' })}
+                    onSubmit={(event) => {
+                        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
+                        void form.handleSubmit(() => {
+                            submissions.push([...data.entries()]);
+                        })(event);
+                    }}
+                >
+                    <Wizard>
+                        <Step label="Customer" fields={['customer']}>
+                            <input
+                                {...form.register('customer', { required: true, validate: () => !rejectCustomer })}
+                            />
+                        </Step>
+                        <Step label="Notes" fields={['notes']}>
+                            <input {...form.register('notes')} />
+                            <Button variant="outline" type="submit" name="intent" value="save">
+                                Save
+                            </Button>
+                        </Step>
+                    </Wizard>
+                </form>
+            </FormProvider>
+        );
+    }
 
     // Act
-    await withMounted(
-        <Form
-            action={(data) => {
-                submissions.push([...data.entries()]);
-            }}
-        >
-            <Wizard>
-                <Step label="Customer">
-                    <TextInput label="Customer" name="customer" required />
-                </Step>
-                <Step label="Notes">
-                    <TextInput label="Notes" name="notes" />
-                    <Button variant="outline" type="submit" name="intent" value="save">
-                        Save
-                    </Button>
-                </Step>
-            </Wizard>
-        </Form>,
-        async (output) => {
-            const form = output.querySelector('form');
-            const customer = output.querySelector<HTMLInputElement>('input[name="customer"]');
-            const notes = output.querySelector<HTMLInputElement>('input[name="notes"]');
+    await withMounted(<Example />, async (output) => {
+        const form = output.querySelector('form');
+        const customer = output.querySelector<HTMLInputElement>('input[name="customer"]');
+        const notes = output.querySelector<HTMLInputElement>('input[name="notes"]');
 
-            if (!form || !customer || !notes) throw new Error('Expected persistent form fields');
+        if (!form || !customer || !notes) throw new Error('Expected persistent form fields');
 
-            /** Finds an actual navigation or submission control. */
-            function button(label: string) {
-                const control = Array.from(output.querySelectorAll('button')).find(
-                    (item) => item.textContent === label
-                );
+        /** Finds an actual navigation or submission control. */
+        function button(label: string) {
+            const control = Array.from(output.querySelectorAll('button')).find((item) => item.textContent === label);
 
-                if (!control) throw new Error(`Expected ${label} button`);
+            if (!control) throw new Error(`Expected ${label} button`);
 
-                return control;
-            }
-
-            // Hidden fields remain enabled and Enter cannot submit an intermediate panel.
-            expect(notes.closest('fieldset')?.hidden).toBe(true);
-            expect(notes.matches(':disabled')).toBe(false);
-            await act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-            });
-            expect(submissions).toEqual([]);
-            expect(customer.closest('fieldset')?.hidden).toBe(false);
-
-            // Next validates only the current panel and preserves its draft when advancing.
-            await act(async () => user.type(customer, 'Acme'));
-            await act(async () => button('Next').click());
-            expect(notes.closest('fieldset')?.hidden).toBe(false);
-            await act(async () => user.type(notes, 'Deliver tomorrow'));
-
-            // Final validation reveals an invalid earlier panel before focusing its field.
-            customer.setCustomValidity('Please review the customer');
-            await act(async () => {
-                form.dispatchEvent(
-                    new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button('Save') })
-                );
-            });
-            expect(submissions).toEqual([]);
-            expect(customer.closest('fieldset')?.hidden).toBe(false);
-            expect(document.activeElement).toBe(customer);
-            customer.setCustomValidity('');
-
-            // One final write includes both panels and the submitter, then reset restores the first step.
-            await act(async () => button('Next').click());
-            await act(async () => {
-                form.dispatchEvent(
-                    new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button('Save') })
-                );
-            });
-            expect(submissions).toEqual([
-                [
-                    ['customer', 'Acme'],
-                    ['notes', 'Deliver tomorrow'],
-                    ['intent', 'save']
-                ]
-            ]);
-            await act(async () => form.reset());
-            expect(customer.closest('fieldset')?.hidden).toBe(false);
-            expect(customer.value).toBe('');
-            expect(notes.value).toBe('');
+            return control;
         }
-    );
+
+        // Hidden fields remain enabled and Enter cannot submit an intermediate panel.
+        expect(notes.closest('fieldset')?.hidden).toBe(true);
+        expect(notes.matches(':disabled')).toBe(false);
+        await act(async () => {
+            form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toEqual([]);
+        expect(customer.closest('fieldset')?.hidden).toBe(false);
+
+        // Next validates only the current panel and preserves its draft when advancing.
+        await act(async () => user.type(customer, 'Acme'));
+        await act(async () => button('Next').click());
+        expect(notes.closest('fieldset')?.hidden).toBe(false);
+        await act(async () => user.type(notes, 'Deliver tomorrow'));
+
+        // Final validation reveals an invalid earlier panel before focusing its field.
+        rejectCustomer = true;
+        await act(async () => {
+            form.dispatchEvent(
+                new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button('Save') })
+            );
+        });
+        expect(submissions).toEqual([]);
+        expect(customer.closest('fieldset')?.hidden).toBe(false);
+        await vi.waitFor(() => expect(document.activeElement).toBe(customer));
+        rejectCustomer = false;
+
+        // One final write includes both panels and the submitter, then reset restores the first step.
+        await act(async () => button('Next').click());
+        await act(async () => {
+            form.dispatchEvent(
+                new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button('Save') })
+            );
+        });
+        expect(submissions).toEqual([
+            [
+                ['customer', 'Acme'],
+                ['notes', 'Deliver tomorrow'],
+                ['intent', 'save']
+            ]
+        ]);
+        await act(async () => form.reset());
+        expect(customer.closest('fieldset')?.hidden).toBe(false);
+        expect(customer.value).toBe('');
+        expect(notes.value).toBe('');
+    });
 });
 
 it('guards pending actions, announces failure, and permits retry without losing drafts', async () => {

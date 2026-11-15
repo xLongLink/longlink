@@ -30,7 +30,7 @@ class Component(BaseModel):
 
     # Identity and authored guidance.
     name: str
-    source: Literal["shadcn", "reui", "custom", "recharts"]
+    source: Literal["shadcn", "reui", "custom", "recharts", "react-hook-form"]
     category: str
     guidance: str = ""
     keywords: list[str] = Field(default_factory=list)

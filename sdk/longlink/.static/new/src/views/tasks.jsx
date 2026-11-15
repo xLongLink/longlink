@@ -1,3 +1,81 @@
+const taskSchema = z.object({
+    title: z
+        .string()
+        .trim()
+        .min(1, 'Enter a title.')
+        .refine((value) => Array.from(value).length <= 255, 'Use no more than 255 characters.'),
+    attachment: z
+        .instanceof(File)
+        .nullable()
+        .refine((file) => file !== null, 'Choose an attachment.')
+        .refine((file) => file === null || file.size <= 10485760, 'Choose a file smaller than 10 MB.')
+});
+
+/** Validates task values with the standard shadcn React Hook Form pattern. */
+function TaskForm({ onSuccess, onCancel }) {
+    const form = useForm({ resolver: zodResolver(taskSchema), defaultValues: { title: '', attachment: null } });
+    const submit = useSubmit('/api/tasks', {
+        onSuccess,
+        onError: () => form.setError('root', { message: 'Could not create the task. Please try again.' })
+    });
+
+    /** Preserves the attachment as binary form data rather than serializing it as JSON. */
+    async function createTask(values) {
+        const data = new FormData();
+
+        data.append('title', values.title);
+        if (values.attachment) data.append('attachment', values.attachment);
+        await submit(data);
+    }
+
+    return (
+        <form onSubmit={form.handleSubmit(createTask)} noValidate aria-busy={form.formState.isSubmitting}>
+            <fieldset disabled={form.formState.isSubmitting} className="contents">
+                <FieldGroup>
+                    <Controller
+                        name="title"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="task-title">Title</FieldLabel>
+                                <Input {...field} id="task-title" aria-invalid={fieldState.invalid} />
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="attachment"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <div className="flex flex-col gap-2">
+                                <FileInput
+                                    ref={field.ref}
+                                    onBlur={field.onBlur}
+                                    label="Attachment"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    maxSize={10485760}
+                                    aria-invalid={fieldState.invalid}
+                                    aria-describedby="task-attachment-error"
+                                    required
+                                />
+                                <FieldError id="task-attachment-error" errors={[fieldState.error]} />
+                            </div>
+                        )}
+                    />
+                    <Stack direction="horizontal" justify="end" gap={2}>
+                        <Button type="button" variant="ghost" onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button type="submit">Create task</Button>
+                    </Stack>
+                    <FieldError errors={[form.formState.errors.root]} />
+                </FieldGroup>
+            </fieldset>
+        </form>
+    );
+}
+
 /** Lists saved tasks and creates new tasks through a dialog form. */
 export default function Tasks() {
     // Load persisted tasks and keep the dialog's open state local to this View.
@@ -56,23 +134,7 @@ export default function Tasks() {
                 ]}
             />
             <FramedDialog title="Add task" open={isOpen} onOpenChange={setIsOpen}>
-                {isOpen && (
-                    <Form action="/api/tasks" onSuccess={() => setIsOpen(false)}>
-                        <FieldGroup>
-                            <Field>
-                                <FieldLabel htmlFor="task-title">Title</FieldLabel>
-                                <Input id="task-title" name="title" maxLength={255} required />
-                            </Field>
-                            <FileInput name="attachment" label="Attachment" maxSize={10485760} required />
-                            <Stack direction="horizontal" justify="end" gap={2}>
-                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit">Create task</Button>
-                            </Stack>
-                        </FieldGroup>
-                    </Form>
-                )}
+                {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
             </FramedDialog>
         </Stack>
     );

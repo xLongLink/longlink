@@ -59,27 +59,18 @@ it('ignores a mismatched session and releases an admitted port when its mount is
 
 it('loads gallery images concurrently without a request cap', async () => {
     // Arrange
-    vi.resetModules();
-    const previousSession = window.__VIEW_SESSION__;
-    const previousTheme = document.documentElement.getAttribute('data-theme');
-    const previousAccent = document.documentElement.getAttribute('data-accent');
-    window.__VIEW_SESSION__ = 'gallery-test-session';
-    const mount = document.createElement('div');
-    mount.id = 'view';
-    document.body.append(mount);
-    const channel = new MessageChannel();
+    const runtime = await initializeRuntime(
+        "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }"
+    );
+
     const requests: { id: number; path: string }[] = [];
 
-    // happy-dom clones Blobs into plain objects over MessagePort, so replies reach the runtime's handler directly.
-    const reply = (data: ViewReply) =>
-        channel.port1.onmessage?.call(channel.port1, new MessageEvent('message', { data }));
-
     // Hold image responses until every request is in flight.
-    channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
         if (command.type === 'icon') {
-            reply({ id: command.id, ok: false, error: 'No icons in this test' });
+            runtime.send({ id: command.id, ok: false, error: 'No icons in this test' });
 
             return;
         }
@@ -88,132 +79,122 @@ it('loads gallery images concurrently without a request cap', async () => {
         requests.push(command);
     };
 
-    // Act
     try {
-        await import('@/views/runtime');
-        window.dispatchEvent(
-            new MessageEvent('message', {
-                source: window,
-                ports: [channel.port1],
-                data: {
-                    session: 'gallery-test-session',
-                    source: "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }",
-                    params: {},
-                    navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' }
-                }
-            })
-        );
-
         // Assert
         await vi.waitFor(() => expect(requests).toHaveLength(12), { timeout: 10_000 });
         expect(new Set(requests.map((request) => request.path)).size).toBe(12);
 
         // Act
         for (const request of requests) {
-            reply({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
+            runtime.send({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
         }
 
         // Assert
-        await vi.waitFor(() => expect(mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
-        expect(mount.textContent).not.toContain('Photo unavailable');
+        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
+        expect(runtime.mount.textContent).not.toContain('Photo unavailable');
     } finally {
-        window.dispatchEvent(new Event('pagehide'));
-        channel.port1.close();
-        channel.port2.close();
-        mount.remove();
-        window.__VIEW_SESSION__ = previousSession;
-
-        for (const [name, value] of [
-            ['data-theme', previousTheme],
-            ['data-accent', previousAccent]
-        ] as const) {
-            if (value === null) document.documentElement.removeAttribute(name);
-            else document.documentElement.setAttribute(name, value);
-        }
+        runtime.close();
     }
 }, 30_000);
 
 it('rejects an unfinished authored request with View closed on pagehide before its deadline', async () => {
     // Arrange
-    vi.resetModules();
-    const previousSession = window.__VIEW_SESSION__;
-    const previousTheme = document.documentElement.getAttribute('data-theme');
-    const previousAccent = document.documentElement.getAttribute('data-accent');
-    window.__VIEW_SESSION__ = 'pagehide-test-session';
-    const mount = document.createElement('div');
-    mount.id = 'view';
-    document.body.append(mount);
-    const channel = new MessageChannel();
-    const close = vi.spyOn(channel.port1, 'close');
+    const started = performance.now();
+
+    const runtime = await initializeRuntime(`export default function View() {
+        useEffect(() => {
+            request('/api/pending').then(
+                () => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: 'Request completed' })),
+                error => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: error.message }))
+            );
+        }, []);
+        return <p role="status">Request pending</p>;
+    }`);
+
+    const close = vi.spyOn(runtime.channel.port1, 'close');
     const received = vi.fn();
-    channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+    const settled = vi.fn();
+    window.addEventListener('pending-request-settled', settled);
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
         if (command.type === 'request') received(command);
     };
 
     try {
-        await import('@/views/runtime');
-        const started = performance.now();
-        window.dispatchEvent(
-            new MessageEvent('message', {
-                source: window,
-                ports: [channel.port1],
-                data: {
-                    session: 'pagehide-test-session',
-                    source: `export default function View() {
-                        const [caughtError, setCaughtError] = useState(null);
-                        useEffect(() => {
-                            request('/api/pending').then(
-                                () => setCaughtError('Request completed'),
-                                error => setCaughtError(error.message)
-                            );
-                        }, []);
-                        return <p role="status">{caughtError ?? 'Request pending'}</p>;
-                    }`,
-                    params: {},
-                    navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' }
-                }
-            })
-        );
-
         // Act
         await vi.waitFor(() =>
             expect(received).toHaveBeenCalledExactlyOnceWith(
                 expect.objectContaining({ type: 'request', path: '/api/pending', method: 'GET' })
             )
         );
-        expect(mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
+        expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
+        expect(settled).not.toHaveBeenCalled();
         expect(close).not.toHaveBeenCalled();
         window.dispatchEvent(new Event('pagehide'));
 
         // Assert
         expect(close).toHaveBeenCalled();
-        await vi.waitFor(() => expect(mount.querySelector('[role="status"]')?.textContent).toBe('View closed'), {
-            timeout: 2_000
-        });
+        await vi.waitFor(
+            () => expect(settled).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ detail: 'View closed' })),
+            { timeout: 2_000 }
+        );
         expect(performance.now() - started).toBeLessThan(REQUEST_TIMEOUT);
     } finally {
-        window.dispatchEvent(new Event('pagehide'));
-        channel.port1.close();
-        channel.port2.close();
+        runtime.close();
         close.mockRestore();
-        mount.remove();
-        window.__VIEW_SESSION__ = previousSession;
-
-        for (const [name, value] of [
-            ['data-theme', previousTheme],
-            ['data-accent', previousAccent]
-        ] as const) {
-            if (value === null) document.documentElement.removeAttribute(name);
-            else document.documentElement.setAttribute(name, value);
-        }
-
-        vi.resetModules();
+        window.removeEventListener('pending-request-settled', settled);
     }
 }, 10_000);
+
+it('cleans authored effects and releases the host file slot before closing the port on pagehide', async () => {
+    // Observe real unmount cleanup without keeping the authored tree alive.
+    const cleaned = vi.fn();
+    window.addEventListener('authored-cleanup', cleaned);
+    const frames = vi.spyOn(globalThis, 'requestAnimationFrame');
+    const cancelFrame = vi.spyOn(globalThis, 'cancelAnimationFrame');
+
+    const runtime = await initializeRuntime(`export default function View() {
+        useEffect(() => () => window.dispatchEvent(new Event('authored-cleanup')), []);
+        return <FileViewer src="/api/report" title="Report" />;
+    }`);
+
+    const post = vi.spyOn(runtime.channel.port1, 'postMessage');
+    const close = vi.spyOn(runtime.channel.port1, 'close');
+
+    try {
+        await vi.waitFor(() =>
+            expect(
+                post.mock.calls.some(
+                    ([command]) =>
+                        command.type === 'file-viewer' && command.path === '/api/report' && command.bounds !== null
+                )
+            ).toBe(true)
+        );
+        const animation: unknown = frames.mock.results.at(-1)?.value;
+        expect(animation).toBeDefined();
+        expect(cleaned).not.toHaveBeenCalled();
+        window.dispatchEvent(new Event('pagehide'));
+
+        // A closed port must not strand host UI or its measuring loop.
+        expect(cleaned).toHaveBeenCalledOnce();
+        expect(cancelFrame).toHaveBeenCalledWith(animation);
+
+        const release = post.mock.calls.findIndex(
+            ([command]) => command.type === 'file-viewer' && command.path === '/api/report' && command.bounds === null
+        );
+
+        expect(release).toBeGreaterThanOrEqual(0);
+        expect(post.mock.invocationCallOrder[release]).toBeLessThan(close.mock.invocationCallOrder[0]);
+    } finally {
+        runtime.close();
+        post.mockRestore();
+        close.mockRestore();
+        frames.mockRestore();
+        cancelFrame.mockRestore();
+        window.removeEventListener('authored-cleanup', cleaned);
+    }
+});
 
 /** Admits real authored source and restores the sandbox-owned document after each regression. */
 async function initializeRuntime(source: string) {

@@ -6,6 +6,7 @@ import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
+import type { Appearance } from '@/lib/appearance';
 import type { ViewRuntime } from '@/views/manifest';
 import { SolutionFile } from '@/components/solution-file';
 import { ViewBackdrop } from '@/components/view-backdrop';
@@ -17,7 +18,7 @@ import { PageError, PageLoading } from '@/components/ui/utils';
 import { TextPreview } from '@/components/dialogs/text-preview';
 import { MediaPreview } from '@/components/dialogs/media-preview';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { commandSchema, parametersSchema, iconDataSchema, type ViewData, type ViewAppearance } from '@/views/protocol';
+import { commandSchema, parametersSchema, iconDataSchema, type ViewData } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
 
@@ -46,7 +47,7 @@ export function JsxView({
 
     const { theme, accent } = useAppearance();
 
-    const currentAppearance = useRef<ViewAppearance>({ theme, accent });
+    const currentAppearance = useRef<Appearance>({ theme, accent });
 
     const appearancePort = useRef<MessagePort | null>(null);
     const navigate = useNavigate();

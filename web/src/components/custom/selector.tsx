@@ -3,10 +3,9 @@ import { useId } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { useValue } from '@/components/custom/value';
-import { FormField } from '@/components/custom/form-field';
 import type { FieldProps } from '@/components/custom/types';
-import { FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { selectorOptions, type SelectorOptionType, type SelectorOptionData } from './options';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import {
     Select,
     SelectContent,
@@ -44,23 +43,16 @@ type SelectorProps = FieldProps & {
 /** Connects standard selection controls to View form submission and reset. */
 export function Selector(props: SelectorProps) {
     const id = useId();
-    const field = useValue<string | null>(props.value, props.defaultValue ?? null, props.onChange);
+    const { ref, ...field } = useValue<string | null>(props.value, props.defaultValue ?? null, props.onChange);
     const groups = selectorOptions(props.options);
     const items = groups.flatMap((group) => group.items);
 
     const selected =
         field.value === null ? null : (items.find((item) => item.value === field.value) ?? { value: field.value });
 
-    // The form adapter remains the sole owner of submitted values.
+    // Base UI owns selection and native form serialization.
     return (
-        <FormField
-            name={props.name}
-            required={props.required}
-            disabled={props.disabled}
-            fieldRef={field.ref}
-            values={[field.value ?? '']}
-            serialize
-        >
+        <Field ref={ref}>
             <FieldContent>
                 <FieldLabel htmlFor={id}>
                     {props.label}
@@ -70,6 +62,9 @@ export function Selector(props: SelectorProps) {
             </FieldContent>
             {props.hasSearch ? (
                 <Combobox<SelectorOptionData>
+                    name={props.name}
+                    required={props.required}
+                    itemToStringValue={(item) => item.value}
                     items={groups.filter((group) => !group.divider)}
                     value={selected}
                     onValueChange={(item) => field.onChange(item?.value ?? null)}
@@ -114,6 +109,8 @@ export function Selector(props: SelectorProps) {
                 </Combobox>
             ) : (
                 <Select
+                    name={props.name}
+                    required={props.required}
                     value={field.value}
                     onValueChange={field.onChange}
                     disabled={props.disabled}
@@ -166,6 +163,6 @@ export function Selector(props: SelectorProps) {
                     </SelectContent>
                 </Select>
             )}
-        </FormField>
+        </Field>
     );
 }

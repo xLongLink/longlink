@@ -68,12 +68,27 @@ export default function SwitchPage() {
                 ),
                 code: `/** Submits an enabled preference using checkbox semantics. */
 export default function PreferenceForm() {
+  const form = useForm({ defaultValues: { notifications: true } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    if (values.notifications) data.append("notifications", "on");
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
+    <form onSubmit={form.handleSubmit(save)}>
       <div className="mx-auto w-fit">
-        <SwitchField name="notifications" label="Notifications" defaultChecked />
+        <Controller name="notifications" control={form.control} render={({ field }) => (
+          <SwitchField label="Notifications" value={field.value} onChange={field.onChange} />
+        )} />
       </div>
-    </Form>
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

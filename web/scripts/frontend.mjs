@@ -30,6 +30,9 @@ const [bundle] = generateDtsBundle(
                     '@dnd-kit/sortable',
                     '@dnd-kit/accessibility',
                     'react',
+                    'react-hook-form',
+                    'zod',
+                    '@standard-schema/spec',
                     '@types/react',
                     'csstype',
                     'class-variance-authority',
@@ -57,9 +60,29 @@ const [bundle] = generateDtsBundle(
     ],
     { preferredConfigPath: `${root}tsconfig.app.json` }
 );
-const generated = ts.createSourceFile('native.d.ts', bundle, ts.ScriptTarget.Latest, true);
+// Merging library modules into one namespace changes variance inference; infer it from the bundled structural types.
+const normalized = ts.transform(ts.createSourceFile('native.d.ts', bundle, ts.ScriptTarget.Latest, true), [
+    (context) => {
+        const visit = (node) => {
+            if (ts.isTypeParameterDeclaration(node)) {
+                return ts.factory.updateTypeParameterDeclaration(
+                    node,
+                    node.modifiers?.filter((modifier) => modifier.kind !== ts.SyntaxKind.InKeyword && modifier.kind !== ts.SyntaxKind.OutKeyword),
+                    node.name,
+                    node.constraint,
+                    node.default
+                );
+            }
+            return ts.visitEachChild(node, visit, context);
+        };
+        return (node) => ts.visitNode(node, visit);
+    },
+]);
+const generated = normalized.transformed[0];
 const exports = new Set();
 const typeExports = new Set();
+const namespaceExports = new Set();
+const namespaceNames = new Set(generated.statements.filter(ts.isModuleDeclaration).map((node) => node.name.text));
 const typeNames = new Set(
     generated.statements
         .filter((node) => ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
@@ -97,6 +120,9 @@ const statements = generated.statements.filter((node) => {
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
             for (const specifier of node.exportClause.elements) {
                 exports.add(specifier.name.text);
+                if (namespaceNames.has((specifier.propertyName ?? specifier.name).text)) {
+                    namespaceExports.add(specifier.name.text);
+                }
                 if (typeNames.has((specifier.propertyName ?? specifier.name).text)) {
                     typeExports.add(specifier.name.text);
                 }
@@ -131,7 +157,9 @@ const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
 const aliases = names
     .filter((name) => name !== 'Image' && name !== 'Text')
     .map((name) =>
-        typeExports.has(name)
+        namespaceExports.has(name)
+            ? `import ${name} = NativeFrontend.${name};`
+            : typeExports.has(name)
             ? `type ${name} = NativeFrontend.${name};`
             : `declare const ${name}: typeof NativeFrontend.${name};`
     )

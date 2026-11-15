@@ -1,8 +1,10 @@
 import { api } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
-import { Form } from '@/components/custom/form';
 import { useQuery } from '@tanstack/react-query';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -11,6 +13,7 @@ import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */
 export default function McpAuthorization() {
     const [params] = useSearchParams();
+    const form = useForm();
     const { data: user, isLoading: loadingUser } = useCurrentUser();
     const query = params.toString();
 
@@ -39,6 +42,10 @@ export default function McpAuthorization() {
         window.location.assign(result.url);
     }
 
+    const submit = useSubmit(decide, {
+        onError: () => form.setError('root', { message: 'Could not submit the decision. Please try again.' })
+    });
+
     // Preserve only this first-party approval route across password or provider login.
     if (loadingUser) return <title>Authorize MCP | LongLink</title>;
 
@@ -53,40 +60,51 @@ export default function McpAuthorization() {
             {isLoading ? <p>Loading authorization request…</p> : null}
             {error ? <p>This request is invalid or you do not have access to the Solution.</p> : null}
             {consent ? (
-                <Form action={decide}>
-                    <Stack gap={4}>
-                        <Stack gap={2}>
-                            <p>
-                                {consent.client_name} requests access to {consent.solution_name}.
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                This client uses your current Solution permissions. Permission changes apply
-                                automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
-                            </p>
-                            <p className="text-sm font-medium">Client callback</p>
-                            <p className="text-xs text-muted-foreground break-all">{consent.redirect_uri}</p>
-                            <p className="text-xs text-muted-foreground">
-                                Client names are self-reported. Approve only if you recognize this callback.
-                            </p>
+                <form
+                    onSubmit={(event) => {
+                        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
+                        void form.handleSubmit(async () => {
+                            await submit(data);
+                        })(event);
+                    }}
+                    aria-busy={form.formState.isSubmitting}
+                >
+                    <fieldset disabled={form.formState.isSubmitting} className="contents">
+                        <Stack gap={4}>
+                            <Stack gap={2}>
+                                <p>
+                                    {consent.client_name} requests access to {consent.solution_name}.
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    This client uses your current Solution permissions. Permission changes apply
+                                    automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
+                                </p>
+                                <p className="text-sm font-medium">Client callback</p>
+                                <p className="text-xs text-muted-foreground break-all">{consent.redirect_uri}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Client names are self-reported. Approve only if you recognize this callback.
+                                </p>
+                            </Stack>
+                            <Button
+                                label="Allow access"
+                                variant="default"
+                                style={{ width: '100%' }}
+                                type="submit"
+                                name="decision"
+                                value="allow"
+                            />
+                            <Button
+                                label="Deny"
+                                variant="outline"
+                                style={{ width: '100%' }}
+                                type="submit"
+                                name="decision"
+                                value="deny"
+                            />
                         </Stack>
-                        <Button
-                            label="Allow access"
-                            variant="default"
-                            style={{ width: '100%' }}
-                            type="submit"
-                            name="decision"
-                            value="allow"
-                        />
-                        <Button
-                            label="Deny"
-                            variant="outline"
-                            style={{ width: '100%' }}
-                            type="submit"
-                            name="decision"
-                            value="deny"
-                        />
-                    </Stack>
-                </Form>
+                    </fieldset>
+                    <FieldError errors={[form.formState.errors.root]} />
+                </form>
             ) : null}
         </AuthLayout>
     );

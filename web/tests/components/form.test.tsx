@@ -1,179 +1,96 @@
 // @vitest-environment happy-dom
+import { z } from 'zod';
+import { act } from 'react';
 import { it, expect } from 'vitest';
-import { act, createRef } from 'react';
 import { withMounted } from '../render';
-import { Form } from '@/components/custom/form';
+import { ReportedError } from '@/lib/reported';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import userEvent from '@testing-library/user-event';
-import { TextInput } from '@/components/custom/text-input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 
-it('prevents submission when the caller disables the final mutation', async () => {
-    // Arrange
-    const submissions: FormData[] = [];
+it('rejects invalid values, guards duplicate writes, and preserves the draft after a reported failure for retry', async () => {
+    // A pending or failed write must not duplicate a mutation or destroy an edited draft.
+    const schema = z.object({ email: z.email() });
+    const submissions: { email: string }[] = [];
+    let reject: (error: Error) => void = () => {};
 
-    // Act
-    await withMounted(
-        <Form
-            action={(data) => {
-                submissions.push(data);
-            }}
-            submitDisabled
-        >
-            <TextInput label="Name" name="name" defaultValue="Acme" />
-        </Form>,
-        async (output) => {
-            // Require a submission target so missing markup cannot pass silently.
-            const form = output.querySelector('form');
+    const user = userEvent.setup();
 
-            if (!form) throw new Error('Expected Form to render a form element');
+    function Example() {
+        const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: '' } });
 
-            await act(async () => {
-                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            });
+        const submit = useSubmit(
+            async (values: z.output<typeof schema>) => {
+                submissions.push(values);
 
-            // Assert
-            expect(submissions).toEqual([]);
-        }
-    );
-});
+                if (submissions.length === 1)
+                    await new Promise<void>((_resolve, fail) => {
+                        reject = fail;
+                    });
+            },
+            { onError: () => form.setError('root', { message: 'Could not save. Please try again.' }) }
+        );
 
-it('lets a native submit handler cancel a write and preserves submitter data when allowed', async () => {
-    const submissions: FormData[] = [];
-    const ref = createRef<HTMLFormElement>();
-    let canceled = true;
-
-    await withMounted(
-        <>
-            <Form
-                ref={ref}
-                id="order"
-                className="w-full"
-                style={{ maxWidth: 640 }}
-                aria-label="Order"
+        return (
+            <form
                 onSubmit={(event) => {
-                    if (canceled) event.preventDefault();
+                    void form.handleSubmit(submit)(event);
                 }}
-                action={(data) => {
-                    submissions.push(data);
-                }}
+                noValidate
+                data-success={form.formState.isSubmitSuccessful}
             >
-                <input name="name" defaultValue="Acme" />
-            </Form>
-            <button form="order" type="submit" name="decision" value="save">
-                Save
-            </button>
-        </>,
-        async (output) => {
-            const form = output.querySelector('form');
-            const button = output.querySelector('button');
-
-            if (!form || !button) throw new Error('Expected the order form and external submit button');
-
-            expect(ref.current).toBe(form);
-            expect(button.form).toBe(form);
-            expect(form.className).toBe('w-full');
-            expect(form.style.maxWidth).toBe('640px');
-            expect(form.getAttribute('aria-label')).toBe('Order');
-
-            await act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button }));
-            });
-            expect(submissions).toHaveLength(0);
-
-            canceled = false;
-            await act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button }));
-            });
-            expect(submissions).toHaveLength(1);
-            expect([...submissions[0].entries()]).toEqual([
-                ['name', 'Acme'],
-                ['decision', 'save']
-            ]);
-        }
-    );
-});
-
-it('honors a canceled native reset without losing edited custom field values', async () => {
-    const user = userEvent.setup();
-    const submissions: FormData[] = [];
-    let canceled = true;
-
-    await withMounted(
-        <Form
-            onReset={(event) => {
-                if (canceled) event.preventDefault();
-            }}
-            action={(data) => {
-                submissions.push(data);
-            }}
-        >
-            <TextInput label="Name" name="name" defaultValue="Original" />
-        </Form>,
-        async (output) => {
-            const form = output.querySelector('form');
-            const input = output.querySelector<HTMLInputElement>('input[name="name"]');
-
-            if (!form || !input) throw new Error('Expected the editable name form');
-
-            await act(async () => user.clear(input));
-            await act(async () => user.type(input, 'Edited'));
-            await act(async () => form.reset());
-            await act(async () => {
-                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            });
-            expect(submissions[0]?.get('name')).toBe('Edited');
-
-            canceled = false;
-            await act(async () => form.reset());
-            await act(async () => {
-                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            });
-            expect(submissions[1]?.get('name')).toBe('Original');
-        }
-    );
-});
-
-it('validates externally associated controls without blocking on another form or disabled fields', async () => {
-    const user = userEvent.setup();
-    const submissions: FormData[] = [];
-
-    await withMounted(
-        <>
-            <Form
-                id="customer"
-                action={(data) => {
-                    submissions.push(data);
-                }}
-            >
-                <input name="name" defaultValue="Acme" required />
-            </Form>
-            <input form="customer" name="email" type="email" defaultValue="invalid" required />
-            <input form="customer" name="disabled" required disabled />
-            <form id="unrelated">
-                <input name="foreign" required />
+                <fieldset disabled={form.formState.isSubmitting}>
+                    <Controller
+                        name="email"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="email">Email</FieldLabel>
+                                <Input {...field} id="email" aria-invalid={fieldState.invalid} />
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <button type="submit">Save</button>
+                    <FieldError errors={[form.formState.errors.root]} />
+                </fieldset>
             </form>
-        </>,
-        async (output) => {
-            const form = output.querySelector('form');
-            const email = output.querySelector<HTMLInputElement>('input[name="email"]');
+        );
+    }
 
-            if (!form || !email) throw new Error('Expected the customer form and external email field');
+    await withMounted(<Example />, async (output) => {
+        const form = output.querySelector('form');
+        const input = output.querySelector('input');
 
-            await act(async () => {
-                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            });
-            expect(submissions).toHaveLength(0);
-            expect(document.activeElement).toBe(email);
+        if (!form || !input) throw new Error('Expected the email form');
 
-            await act(async () => user.clear(email));
-            await act(async () => user.type(email, 'customer@example.com'));
-            await act(async () => {
-                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            });
-            expect(submissions).toHaveLength(1);
-            expect([...submissions[0].entries()]).toEqual([
-                ['name', 'Acme'],
-                ['email', 'customer@example.com']
-            ]);
-        }
-    );
+        await act(async () => {
+            form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toEqual([]);
+        expect(output.querySelector('[role="alert"]')?.textContent).toBeTruthy();
+        expect(document.activeElement).toBe(input);
+
+        await act(async () => user.type(input, 'mara@example.com'));
+        await act(async () => {
+            form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+            form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toEqual([{ email: 'mara@example.com' }]);
+        expect(input.closest('fieldset')?.disabled).toBe(true);
+
+        await act(async () => reject(new ReportedError('Unavailable')));
+        expect(input.value).toBe('mara@example.com');
+        expect(input.closest('fieldset')?.disabled).toBe(false);
+        expect(form.getAttribute('data-success')).toBe('false');
+        expect(output.textContent).toContain('Could not save. Please try again.');
+        await act(async () => {
+            form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+        });
+        expect(submissions).toEqual([{ email: 'mara@example.com' }, { email: 'mara@example.com' }]);
+        expect(form.getAttribute('data-success')).toBe('true');
+    });
 });

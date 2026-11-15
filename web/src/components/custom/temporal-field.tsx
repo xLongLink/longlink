@@ -1,17 +1,20 @@
 import { useValue } from './value';
 import { flushSync } from 'react-dom';
-import { FormField } from './form-field';
 import type { FieldProps } from './types';
 import { Button } from '@/components/shadcn/button';
 import { CalendarDays, Clock, X } from 'lucide-react';
-import { FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
-import { useEffect, useEffectEvent, useId, useRef, useState, type ReactNode } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/shadcn/popover';
+import { useEffect, useEffectEvent, useId, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 /** Owns editable temporal drafts while only the accepted ISO value owns submission. */
-export function TemporalField<T extends string>(
-    props: FieldProps & {
+export function TemporalField<T extends string>({
+    ref,
+    ...props
+}: FieldProps &
+    Pick<ComponentProps<'input'>, 'ref' | 'onBlur' | 'aria-invalid' | 'aria-describedby'> & {
         value?: T;
         defaultValue?: T;
         controlled: boolean;
@@ -24,10 +27,16 @@ export function TemporalField<T extends string>(
         accepts: (value: T) => boolean;
         step?: (value: T | undefined, direction: number) => T | null;
         picker: (value: T | undefined, select: (value: T, close?: boolean) => void) => ReactNode;
-    }
-) {
-    const field = useValue<T | undefined>(props.value, props.defaultValue, props.onChange, props.controlled);
+    }) {
+    const { ref: rootRef, ...field } = useValue<T | undefined>(
+        props.value,
+        props.defaultValue,
+        props.onChange,
+        props.controlled
+    );
+
     const input = useRef<HTMLInputElement>(null);
+    const inputRef = useMergedRefs(input, ref);
     const id = useId();
     const [open, setOpen] = useState(false);
     const [coarse, setCoarse] = useState(false);
@@ -68,6 +77,11 @@ export function TemporalField<T extends string>(
           ? 'Please complete this field.'
           : undefined;
 
+    // Local parsing constraints also protect ordinary native forms; RHF schemas own application validation.
+    useEffect(() => {
+        input.current?.setCustomValidity(props.disabled ? '' : (error ?? ''));
+    }, [error, props.disabled]);
+
     /** Commits only valid edits and immediately returns display ownership to controlled callers. */
     function commit() {
         if (!draft || blocked() || invalid) return;
@@ -81,7 +95,7 @@ export function TemporalField<T extends string>(
 
     // Enter, submit-button, and programmatic submits share the same accepted draft.
     useEffect(() => {
-        const form = field.ref.current?.closest('form');
+        const form = rootRef.current?.closest('form');
 
         if (!form) return;
 
@@ -101,7 +115,7 @@ export function TemporalField<T extends string>(
             form.removeEventListener('submit', submit, true);
             form.removeEventListener('reset', reset);
         };
-    }, [field.ref]);
+    }, [rootRef]);
 
     /** Picker selections cannot bypass constraints or controlled ownership. */
     function select(value: T, close = true) {
@@ -115,17 +129,15 @@ export function TemporalField<T extends string>(
 
     // Draft validation is separate from the sole canonical submission carrier.
     return (
-        <FormField
-            name={props.name}
-            disabled={props.disabled}
-            className="view-text-field"
-            data-disabled={props.disabled || undefined}
-            required={false}
-            fieldRef={field.ref}
-            values={[field.value && validValue ? field.value : '']}
-            serialize
-            error={error}
-        >
+        <Field className="view-text-field" data-disabled={props.disabled || undefined} ref={rootRef}>
+            {props.name && (
+                <input
+                    type="hidden"
+                    name={props.name}
+                    value={field.value && validValue ? field.value : ''}
+                    disabled={props.disabled}
+                />
+            )}
             <FieldContent>
                 <FieldLabel htmlFor={id} id={`${id}-label`}>
                     {props.label}
@@ -144,16 +156,21 @@ export function TemporalField<T extends string>(
             >
                 <InputGroup className="data-disabled:opacity-50" data-disabled={props.disabled || undefined}>
                     <InputGroupInput
-                        ref={input}
+                        ref={inputRef}
+                        required={props.required && !props.disabled}
                         id={id}
                         value={text}
                         autoComplete="off"
                         aria-labelledby={`${id}-label`}
-                        aria-describedby={props.description ? `${id}-description` : undefined}
+                        aria-describedby={
+                            [props['aria-describedby'], props.description && `${id}-description`]
+                                .filter(Boolean)
+                                .join(' ') || undefined
+                        }
                         aria-disabled={props.disabled || undefined}
                         readOnly={props.disabled || coarse || undefined}
                         aria-required={props.required || undefined}
-                        aria-invalid={invalid || undefined}
+                        aria-invalid={props['aria-invalid'] || invalid || undefined}
                         placeholder={props.placeholder}
                         onClick={() => {
                             if (coarse && !blocked()) {
@@ -170,12 +187,18 @@ export function TemporalField<T extends string>(
 
                             const complete = !composing && (props.isComplete?.(text) ?? true);
                             const accepted = complete && next !== null && props.accepts(next);
+                            event.target.setCustomValidity(
+                                text.trim() && !accepted ? `Enter a valid ${props.kind} within the allowed range.` : ''
+                            );
 
                             // Complete edits notify immediately; incomplete text remains an editable draft.
                             if (accepted && next !== field.value) field.onChange(next);
                             setDraft({ source: accepted && !props.controlled ? next : field.value, text });
                         }}
-                        onBlur={commit}
+                        onBlur={(event) => {
+                            commit();
+                            props.onBlur?.(event);
+                        }}
                         onKeyDown={(event) => {
                             if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
 
@@ -276,6 +299,6 @@ export function TemporalField<T extends string>(
                     {validValue && field.value ? props.format(field.value) : ''}
                 </span>
             )}
-        </FormField>
+        </Field>
     );
 }

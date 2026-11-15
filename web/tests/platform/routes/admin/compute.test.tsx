@@ -80,7 +80,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(textarea.getAttribute('rows')).toBe('8');
                 expect(textarea.getAttribute('spellcheck')).toBe('false');
                 expect(textarea.required).toBe(true);
-                expect(textarea.hasAttribute('name')).toBe(false);
+                expect(textarea.name).toBe('kubeconfig');
                 await act(async () => user.type(textarea, 'previous draft'));
                 await act(async () => user.upload(upload, file));
                 expect(textarea.value).toBe('');

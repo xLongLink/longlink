@@ -111,8 +111,13 @@ export { Dialog } from '@/components/custom/native-dialog';
 /** Custom fixed or fullscreen modal frame with isolated View host coordination. @category Layouts */
 export { FramedDialog } from '@/components/custom/framed-dialog';
 
-/** Custom scoped submission and Wizard validation with native form properties and caller-owned layout. @category Form */
-export { Form } from '@/components/custom/form';
+export { useForm, Controller, FormProvider, useFormContext } from 'react-hook-form';
+
+export { z } from 'zod';
+
+export { zodResolver } from '@hookform/resolvers/zod';
+
+export { useSubmit } from '@/lib/hooks/use-submit';
 
 /** @category Form */
 export { DateInput } from '@/components/custom/date-input';

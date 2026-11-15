@@ -357,28 +357,50 @@ const nativeComposition = (
     </Card>
 );
 
+const formSchema = z.object({ name: z.string().trim().min(1) });
+/** @type {z.infer<typeof formSchema>} */
+const schemaValue = { name: 'Order' };
+// @ts-expect-error Zod's namespace types must retain schema inference in standalone SDK declarations.
+schemaValue.name = 42;
+const orderForm = useForm({ resolver: zodResolver(formSchema), defaultValues: { name: '' } });
+// @ts-expect-error Controller names must match the form's values.
+const unknownField = <Controller name="missing" control={orderForm.control} render={() => <div />} />;
+const convertedForm = useForm({
+    resolver: zodResolver(z.object({ quantity: z.string().transform(Number) })),
+    defaultValues: { quantity: '3' }
+});
+convertedForm.handleSubmit((values) => {
+    values.quantity.toFixed();
+    // @ts-expect-error A resolver transformation must change the submitted value's type.
+    values.quantity.toUpperCase();
+});
+const submitOrder = useSubmit('/api/orders', { method: 'PATCH' });
 const nativeForm = (
-    <Form
+    <FormProvider {...orderForm}>
+    <form
         ref={formRef}
-        action="/api/orders"
-        method="patch"
         id="order"
         className="w-full"
         style={{ maxWidth: 640 }}
         aria-label="Order"
-        onSubmit={(event) => {
-            event.currentTarget.checkValidity();
-            event.preventDefault();
-        }}
-        onReset={(event) => event.preventDefault()}
+        onSubmit={orderForm.handleSubmit(async (values) => {
+            const data = new FormData();
+            data.append('name', values.name);
+            await submitOrder(data);
+        })}
+        noValidate
     >
         <FieldGroup>
-            <Field>
+            <Controller name="name" control={orderForm.control} render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="order-name">Name</FieldLabel>
-                <Input id="order-name" name="name" required />
+                <Input {...field} id="order-name" aria-invalid={fieldState.invalid} />
+                <FieldError errors={[fieldState.error]} />
             </Field>
+            )} />
         </FieldGroup>
-    </Form>
+    </form>
+    </FormProvider>
 );
 
 const _adapters = (

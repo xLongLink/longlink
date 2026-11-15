@@ -32,7 +32,10 @@ it('releases owned previews on source changes and ignores late responses', async
     const pending = new Map<string, (blob: Blob) => void>();
 
     const files = {
-        preview: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
+        load: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
+        preview: async () => {
+            throw new Error('Images must not open a host preview');
+        },
         download: async () => undefined
     };
 
@@ -85,9 +88,12 @@ it('never renders a remote source directly when the scoped host rejects it', asy
     const requests: string[] = [];
 
     const files = {
-        preview: async (path: string) => {
+        load: async (path: string) => {
             requests.push(path);
             throw new Error('Denied');
+        },
+        preview: async () => {
+            throw new Error('Images must not open a host preview');
         },
         download: async () => undefined
     };
@@ -147,7 +153,14 @@ it('recovers from an inline decode failure on source change without revoking cal
 
 it('releases a scoped preview after a decode failure and reports the original image error', async () => {
     // A failed decode must still notify callers and release the host-owned URL on unmount.
-    const files = { preview: async () => new Blob(['broken'], { type: 'image/png' }), download: async () => undefined };
+    const files = {
+        load: async () => new Blob(['broken'], { type: 'image/png' }),
+        preview: async () => {
+            throw new Error('Images must not open a host preview');
+        },
+        download: async () => undefined
+    };
+
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:broken-scoped');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const onError = vi.fn();

@@ -69,10 +69,29 @@ export default function FileInputPage() {
                 ),
                 code: `/** Submits multiple attachments with their original filenames. */
 export default function AttachmentsForm() {
+  const schema = z.object({
+    attachments: z.array(z.instanceof(File)).min(1).max(3)
+      .refine((files) => files.every((file) => file.size <= 512 * 1024), "Choose files smaller than 512 KB.")
+  });
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: { attachments: [] } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    for (const file of values.attachments) data.append("attachments", file);
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="attachments" control={form.control} render={({ field, fieldState }) => (
+      <div className="flex flex-col gap-2">
       <FileInput
-        name="attachments"
+        ref={field.ref}
+        value={field.value}
+        onChange={(value) => field.onChange(value ?? [])}
         label="Attachments"
         accept=".pdf"
         multiple
@@ -80,7 +99,12 @@ export default function AttachmentsForm() {
         maxFiles={3}
         required
       />
-    </Form>
+      <FieldError errors={[fieldState.error]} />
+      </div>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

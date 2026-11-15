@@ -1,8 +1,8 @@
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
+import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/shadcn/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
-import { FormValidationContext } from '@/components/custom/contexts';
 import {
     Stepper,
     StepperDescription,
@@ -35,6 +35,8 @@ type StepProps = {
     /** Zero-based progress index; defaults to child order inside ProgressStepper. */
     step?: number;
     label: string;
+    /** React Hook Form field paths validated before leaving this step. */
+    fields?: string[];
     description?: string;
     /** Persistent panel content in wizard mode; inline content in progress mode. */
     children?: ReactNode;
@@ -83,12 +85,16 @@ export function ProgressStepper(props: ProgressStepperProps) {
     );
 }
 
-/** Keeps wizard drafts mounted and delegates field validation to an enclosing Form. */
+/** Keeps drafts mounted and validates declared step fields through React Hook Form. */
 export function Wizard(props: WizardProps) {
     const rootRef = useRef<HTMLDivElement>(null);
     const pending = useRef(false);
     const navigation = useRef(0);
-    const validate = useContext(FormValidationContext);
+    const form = useFormContext();
+    const invalidField = useRef<string | undefined>(undefined);
+    const lastSubmit = useRef(0);
+    const subscribe = form?.subscribe;
+    const submitting = form?.formState.isSubmitting ?? false;
     const [selection, setSelection] = useState(0);
     const [advancing, setAdvancing] = useState(false);
     const [error, setError] = useState<string>();
@@ -102,34 +108,72 @@ export function Wizard(props: WizardProps) {
     const next = activeStep < steps.length - 1 ? props.next?.(activeStep) : undefined;
     const previousStep = useRef(activeStep);
 
-    // Move keyboard focus with navigation without stealing it when a wizard first mounts.
-    useEffect(() => {
-        if (previousStep.current !== activeStep) {
-            rootRef.current?.querySelector<HTMLElement>(`[data-step-panel="${activeStep}"]`)?.focus();
-            previousStep.current = activeStep;
-        }
-    }, [activeStep]);
-
     /** Updates local navigation and notifies a controlled caller. */
     function select(index: number) {
         setSelection(index);
         props.onStepClick?.(index);
     }
 
+    // Move keyboard focus with navigation without stealing it when a wizard first mounts.
+    useEffect(() => {
+        if (invalidField.current && form && !advancing && !submitting) {
+            form.setFocus(invalidField.current);
+            invalidField.current = undefined;
+        } else if (previousStep.current !== activeStep) {
+            rootRef.current?.querySelector<HTMLElement>(`[data-step-panel="${activeStep}"]`)?.focus();
+        }
+
+        previousStep.current = activeStep;
+    }, [activeStep, advancing, form, submitting]);
+
+    // Final validation can fail in a hidden step; reveal it before asking RHF to focus its registered control.
+    const revealInvalid = useEffectEvent(() => {
+        if (!form) return;
+        const index = steps.findIndex((step) => step.props.fields?.some((name) => form.getFieldState(name).invalid));
+        const name = steps[index]?.props.fields?.find((name) => form.getFieldState(name).invalid);
+
+        if (index >= 0 && name) {
+            invalidField.current = name;
+            select(index);
+        }
+    });
+
+    useEffect(
+        () =>
+            subscribe?.({
+                formState: { submitCount: true },
+                callback: ({ submitCount, isSubmitting }) => {
+                    if (isSubmitting || submitCount === undefined || submitCount === lastSubmit.current) return;
+                    lastSubmit.current = submitCount;
+                    revealInvalid();
+                }
+            }),
+        [subscribe]
+    );
+
     /** Validates before running intermediate work, retaining drafts on failure. */
     async function advance() {
-        if (pending.current || activeStep >= steps.length - 1) return;
-        const panel = rootRef.current?.querySelector<HTMLElement>(`[data-step-panel="${activeStep}"]`);
-
-        if (!panel || (validate && !validate(panel))) return;
+        if (pending.current || submitting || activeStep >= steps.length - 1) return;
         pending.current = true;
         const request = ++navigation.current;
 
         setAdvancing(true);
         setError(undefined);
 
-        // Keep asynchronous domain checks separate from final Form submission.
+        // Keep asynchronous domain checks separate from final form submission.
         try {
+            const fields = steps[activeStep]?.props.fields;
+
+            const valid = !form || !fields?.length || (await form.trigger(fields));
+
+            if (request !== navigation.current) return;
+
+            if (!valid && form && fields) {
+                invalidField.current = fields.find((name) => form.getFieldState(name).invalid);
+
+                return;
+            }
+
             const result = await next?.action();
 
             if (request === navigation.current && result !== false) select(activeStep + 1);
@@ -149,21 +193,14 @@ export function Wizard(props: WizardProps) {
         }
     }
 
-    // Enter advances intermediate panels, while the last panel's explicit submit button belongs to Form.
+    // Enter advances intermediate panels; the last panel submits through React Hook Form.
     const interceptSubmit = useEffectEvent((event: SubmitEvent) => {
         if (event.defaultPrevented) return;
 
-        if (pending.current || activeStep < steps.length - 1) {
+        if (pending.current || submitting || activeStep < steps.length - 1) {
             event.preventDefault();
+            event.stopPropagation();
             void advance();
-        }
-    });
-
-    const reveal = useEffectEvent((event: Event) => {
-        const panel = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-step-panel]') : null;
-
-        if (panel && panel.closest('[data-stepper-wizard]') === rootRef.current) {
-            select(Number(panel.dataset.stepPanel));
         }
     });
 
@@ -184,14 +221,12 @@ export function Wizard(props: WizardProps) {
         const root = rootRef.current;
         const form = root?.closest('form');
 
-        root?.addEventListener('longlink:reveal', reveal);
         form?.addEventListener('submit', interceptSubmit, true);
         form?.addEventListener('reset', reset);
 
         return () => {
             navigation.current += 1;
             pending.current = false;
-            root?.removeEventListener('longlink:reveal', reveal);
             form?.removeEventListener('submit', interceptSubmit, true);
             form?.removeEventListener('reset', reset);
         };
@@ -213,7 +248,7 @@ export function Wizard(props: WizardProps) {
                     key={child.key}
                     data-step-panel={index}
                     hidden={index !== activeStep}
-                    disabled={advancing}
+                    disabled={advancing || submitting}
                     className="m-0 min-w-0 border-0 p-0"
                     aria-label={child.props.label}
                     tabIndex={-1}
@@ -224,14 +259,20 @@ export function Wizard(props: WizardProps) {
             <div className="flex items-center justify-between gap-2">
                 <div className="flex gap-2">
                     {props.onCancel && (
-                        <Button variant="ghost" disabled={advancing} onClick={props.onCancel}>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={advancing || submitting}
+                            onClick={props.onCancel}
+                        >
                             Cancel
                         </Button>
                     )}
                     {(!props.onCancel || activeStep > 0) && (
                         <Button
                             variant={props.backVariant ?? 'outline'}
-                            disabled={advancing || activeStep === 0}
+                            type="button"
+                            disabled={advancing || submitting || activeStep === 0}
                             onClick={() => select(activeStep - 1)}
                         >
                             Back
@@ -241,15 +282,20 @@ export function Wizard(props: WizardProps) {
                 {activeStep < steps.length - 1 ? (
                     <Button
                         variant="default"
+                        type="button"
                         onClick={() => {
                             void advance();
                         }}
-                        disabled={advancing}
+                        disabled={advancing || submitting}
                     >
                         {next?.label ?? 'Next'}
                     </Button>
                 ) : (
-                    props.finalAction
+                    props.finalAction && (
+                        <fieldset disabled={submitting} className="contents">
+                            {props.finalAction}
+                        </fieldset>
+                    )
                 )}
             </div>
             <div className="contents" aria-live="assertive" aria-atomic="true">

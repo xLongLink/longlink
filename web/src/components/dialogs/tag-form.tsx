@@ -1,13 +1,20 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
-import { Form } from '@/components/custom/form';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { Selector } from '@/components/custom/selector';
-import { TextInput } from '@/components/custom/text-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { NativeButton as Button } from '@/components/custom/native-button';
+
+const tagSchema = schemas.zOrganizationTagWrite.extend({
+    name: z.string().trim().pipe(schemas.zOrganizationTagWrite.shape.name)
+});
 
 export function TagForm({
     base,
@@ -20,12 +27,12 @@ export function TagForm({
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
 }) {
-    async function save(data: FormData) {
-        const json = schemas.zOrganizationTagWrite.parse({
-            name: z.string().trim().parse(data.get('name')),
-            icon: data.get('icon')
-        });
+    const form = useForm({
+        resolver: zodResolver(tagSchema),
+        defaultValues: { name: tag?.name ?? '', icon: tag?.icon ?? 'tag' }
+    });
 
+    async function save(json: z.output<typeof tagSchema>) {
         if (tag) {
             await api.patch(`${base}/tags/${tag.id}`, { json });
         } else {
@@ -35,6 +42,10 @@ export function TagForm({
         await onSuccess();
     }
 
+    const submit = useSubmit(save, {
+        onError: () => form.setError('root', { message: 'Could not save the tab. Please try again.' })
+    });
+
     return (
         <Dialog {...dialogProps} onClose={onClose}>
             <Stack padding={8} minHeight="100%" justify="center" className="shrink-0">
@@ -42,27 +53,55 @@ export function TagForm({
                     <h2 className="font-semibold tracking-tight text-3xl text-center">
                         {tag ? 'Edit tab' : 'New tab'}
                     </h2>
-                    <Form action={save}>
-                        <Stack gap={3}>
-                            <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
-                            <Selector
-                                label="Icon"
-                                name="icon"
-                                defaultValue={tag?.icon ?? 'tag'}
-                                options={Object.entries(tabs.icons).map(([value, option]) => ({
-                                    value,
-                                    label: option.label,
-                                    icon: schemas.zTagIcon.parse(value)
-                                }))}
-                                hasSearch
-                                hasClear={false}
-                            />
-                            <Stack direction="horizontal" gap={2}>
-                                <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
-                                <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
+                    <form
+                        onSubmit={(event) => {
+                            void form.handleSubmit(submit)(event);
+                        }}
+                        noValidate
+                        aria-busy={form.formState.isSubmitting}
+                    >
+                        <fieldset disabled={form.formState.isSubmitting} className="contents">
+                            <Stack gap={3}>
+                                <Controller
+                                    name="name"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel htmlFor="tag-name">Name</FieldLabel>
+                                            <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                                <Controller
+                                    name="icon"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <div className="flex flex-col gap-2">
+                                            <Selector
+                                                label="Icon"
+                                                value={field.value}
+                                                onChange={(value) => field.onChange(value ?? 'tag')}
+                                                options={Object.entries(tabs.icons).map(([value, option]) => ({
+                                                    value,
+                                                    label: option.label,
+                                                    icon: schemas.zTagIcon.parse(value)
+                                                }))}
+                                                hasSearch
+                                                hasClear={false}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </div>
+                                    )}
+                                />
+                                <Stack direction="horizontal" gap={2}>
+                                    <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
+                                    <Button label="Cancel" type="button" variant="ghost" onClick={onClose} />
+                                </Stack>
                             </Stack>
-                        </Stack>
-                    </Form>
+                        </fieldset>
+                        <FieldError errors={[form.formState.errors.root]} />
+                    </form>
                 </Stack>
             </Stack>
         </Dialog>

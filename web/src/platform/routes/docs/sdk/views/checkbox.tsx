@@ -72,13 +72,28 @@ export default function CheckboxPage() {
                 ),
                 code: `/** Submits approval only when the checkbox is checked. */
 export default function ApprovalForm() {
+  const form = useForm({ defaultValues: { approved: true } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    if (values.approved) data.append("approved", "on");
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="approved" control={form.control} render={({ field }) => (
       <FieldLabel>
-        <Checkbox name="approved" defaultChecked />
+        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
         Approved
       </FieldLabel>
-    </Form>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

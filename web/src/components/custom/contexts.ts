@@ -8,9 +8,6 @@ export const ButtonGroupContext = createContext<{ orientation: 'horizontal' | 'v
     null
 );
 
-// Form exposes validation without owning the navigation of its descendants.
-export const FormValidationContext = createContext<((panel?: HTMLElement) => boolean) | null>(null);
-
 export const FormRequestContext = createContext<
     | ((
           path: string,

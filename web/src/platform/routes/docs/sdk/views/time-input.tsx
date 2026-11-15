@@ -77,10 +77,28 @@ export default function TimeInputPage() {
                 ),
                 code: `/** Submits a local time using the themed time picker. */
 export default function StartTimeForm() {
+  const form = useForm({ defaultValues: { start_time: undefined } });
+  const submit = useSubmit("/api/example", {
+    onError: () => form.setError("root", { message: "Could not save. Please try again." })
+  });
+
+  async function save(values) {
+    const data = new FormData();
+    data.append("start_time", values.start_time);
+    await submit(data);
+  }
+
   return (
-    <Form action="/api/example" method="post">
-      <TimeInput name="start_time" label="Start time" required />
-    </Form>
+    <form onSubmit={form.handleSubmit(save)}>
+      <Controller name="start_time" control={form.control} rules={{ required: "Choose a time." }} render={({ field, fieldState }) => (
+        <div className="flex flex-col gap-2">
+          <TimeInput ref={field.ref} onBlur={field.onBlur} label="Start time" value={field.value} onChange={field.onChange} aria-invalid={fieldState.invalid} aria-describedby="start-time-error" required />
+          <FieldError id="start-time-error" errors={[fieldState.error]} />
+        </div>
+      )} />
+      <Button type="submit" disabled={form.formState.isSubmitting}>Save</Button>
+      <FieldError errors={[form.formState.errors.root]} />
+    </form>
   );
 }`
             }}

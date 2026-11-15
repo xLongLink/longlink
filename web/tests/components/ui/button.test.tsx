@@ -1,6 +1,5 @@
 import { it, expect, vi } from 'vitest';
 import { ReportedError } from '@/lib/reported';
-import { Form } from '@/components/custom/form';
 import { Icon } from '@/components/custom/icon';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -160,8 +159,10 @@ it('retains submitter data and reset behavior through the real form', async () =
     // The migration must preserve native submit/reset instead of reducing every action to a click-only button.
     const submissions: [string, FormDataEntryValue][][] = [];
     await withMounted(
-        <Form
-            action={(data) => {
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
                 submissions.push([...data.entries()]);
             }}
         >
@@ -170,7 +171,7 @@ it('retains submitter data and reset behavior through the real form', async () =
                 Publish
             </ActionButton>
             <ActionButton type="reset">Reset</ActionButton>
-        </Form>,
+        </form>,
         async (output) => {
             const buttons = output.querySelectorAll<HTMLButtonElement>('button');
             const input = output.querySelector<HTMLInputElement>('input');

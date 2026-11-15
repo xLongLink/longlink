@@ -1,5 +1,21 @@
 import type { JSX } from 'react';
+import type { z } from 'zod';
+import type { FieldValues, Resolver } from 'react-hook-form';
 
+export { useForm, Controller, FormProvider, useFormContext } from 'react-hook-form';
+export { z } from 'zod';
+// Keep the SDK's Zod 4 resolver declarations independent of the library's legacy Zod 3 fallback types.
+export declare function zodResolver<Input extends FieldValues, Context, Output extends FieldValues>(
+    schema: z.ZodType<Output, Input>,
+    schemaOptions?: z.core.ParseContext<z.core.$ZodIssue>,
+    resolverOptions?: { mode?: 'async' | 'sync'; raw?: false }
+): Resolver<Input, Context, Output>;
+export declare function zodResolver<Input extends FieldValues, Context, Output extends FieldValues>(
+    schema: z.ZodType<Output, Input>,
+    schemaOptions: z.core.ParseContext<z.core.$ZodIssue> | undefined,
+    resolverOptions: { mode?: 'async' | 'sync'; raw: true }
+): Resolver<Input, Context, Input>;
+export { useSubmit } from '../src/lib/hooks/use-submit';
 export { Badge } from '../src/components/reui/badge';
 export { FileType } from '../src/components/reui/file-type';
 export { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '../src/components/shadcn/button-group';
@@ -40,6 +56,9 @@ export * from '../src/components/shadcn/input-group';
 export { Disclosure } from '../src/components/custom/disclosure';
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../src/components/shadcn/collapsible';
 export { Calendar } from '../src/components/shadcn/calendar';
+export { DateInput } from '../src/components/custom/date-input';
+export { TimeInput } from '../src/components/custom/time-input';
+export { FileInput } from '../src/components/custom/file-input';
 export * from '../src/components/reui/time-picker';
 export { Switch } from '../src/components/shadcn/switch';
 export { SwitchField } from '../src/components/custom/switch-field';
@@ -64,7 +83,6 @@ export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '..
 export { SliderField } from '../src/components/custom/slider-field';
 export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from '../src/components/shadcn/progress';
 export type FrontendElement = JSX.Element;
-export type FrontendFormProps = JSX.IntrinsicElements['form'];
 export type FrontendElementType = JSX.ElementType;
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/components/shadcn/chart';
 export type { ChartConfig } from '../src/components/shadcn/chart';

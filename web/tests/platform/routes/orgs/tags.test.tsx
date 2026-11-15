@@ -5,6 +5,7 @@ import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
+import userEvent from '@testing-library/user-event';
 import { IconRequestContext } from '@/components/custom/contexts';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -20,6 +21,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
     const writes: unknown[] = [];
     const completed = vi.fn();
     const close = vi.fn();
+    const user = userEvent.setup();
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
@@ -63,25 +65,25 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only ex
 
                 const picker = label?.htmlFor ? document.getElementById(label.htmlFor) : null;
 
-                if (!dialog || !(picker instanceof HTMLButtonElement)) throw new Error('Expected the tag editor');
+                if (!dialog || !(picker instanceof HTMLInputElement)) throw new Error('Expected the tag editor');
 
-                expect(picker.textContent).toContain('Purchases');
+                expect(picker.closest('[data-slot="combobox-chips"]')?.textContent).toContain('Purchases');
 
-                // Edit through the real picker so its hidden form carriers stay in the contract.
+                // Edit through the real picker so the controlled selection reaches the write.
                 if (edit === 'changed') {
-                    await act(async () => picker.click());
+                    await act(async () => user.click(picker));
                     const options = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]'));
                     const operations = options.find((option) => option.textContent?.includes('Operations'));
 
                     if (!operations) throw new Error('Expected the Operations option');
 
                     expect(options.some((option) => option.textContent?.includes('All Solutions'))).toBe(false);
-                    await act(async () => operations.click());
-                    await act(async () => picker.click());
+                    await act(async () => user.click(operations));
+                    await act(async () => user.keyboard('{Escape}'));
                 }
 
                 if (edit === 'cleared') {
-                    const clear = dialog.querySelector<HTMLButtonElement>('button[aria-label^="Clear"]');
+                    const clear = dialog.querySelector<HTMLButtonElement>('button[data-slot="combobox-chip-remove"]');
 
                     if (!clear) throw new Error('Expected the clear selection action');
 

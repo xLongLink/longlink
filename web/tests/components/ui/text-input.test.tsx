@@ -1,5 +1,4 @@
 import { it, expect } from 'vitest';
-import { Form } from '@/components/custom/form';
 // @vitest-environment happy-dom
 import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
@@ -16,8 +15,12 @@ it('forwards native textarea events, required validation, refs, and disabled sta
         const [notes, setNotes] = useState('');
 
         return (
-            <Form
-                action={(data) => {
+            <form
+                onSubmit={(event) => {
+                    event.preventDefault();
+
+                    if (!event.currentTarget.reportValidity()) return;
+                    const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
                     submissions.push(data);
                 }}
             >
@@ -34,7 +37,7 @@ it('forwards native textarea events, required validation, refs, and disabled sta
                     required
                 />
                 <NativeTextArea label="Excluded" defaultValue="Private" disabled required />
-            </Form>
+            </form>
         );
     }
 
@@ -224,28 +227,28 @@ it('validates whitespace and Unicode code-point limits without truncation, then 
 
             if (!form || !input) throw new Error('Expected the validated field');
 
-            // The real FormField submission listener accepts the code point boundary.
-            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
+            // Native constraints retain the control's Python-compatible length policy.
+            expect(form.checkValidity()).toBe(true);
             expect(input.hasAttribute('maxlength')).toBe(false);
             await act(async () => user.type(input, 'a'));
             expect(input.value).toBe('😀a');
             await act(async () => {
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                expect(form.checkValidity()).toBe(false);
             });
-            expect(output.querySelector('[role="alert"]')?.textContent).toBe('Use no more than 1 characters.');
+            expect(input.validationMessage).toBe('Use no more than 1 characters.');
             expect(new FormData(form).get('name')).toBe('😀a');
 
             // Required validation rejects blank text, and stale failure feedback disappears after a valid edit.
             await act(async () => user.clear(input));
             await act(async () => user.type(input, ' '));
             await act(async () => {
-                expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                expect(form.checkValidity()).toBe(false);
             });
-            expect(output.querySelector('[role="alert"]')?.textContent).toBe('Please complete this field.');
+            expect(input.validationMessage).toBe('Please complete this field.');
             await act(async () => user.clear(input));
             await act(async () => user.type(input, 'A'));
             expect(output.querySelector('[role="alert"]')).toBeNull();
-            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
+            expect(form.checkValidity()).toBe(true);
         }
     );
 });

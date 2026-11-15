@@ -9,10 +9,13 @@ it('does not request host capability for an inline image', async () => {
     const requests: string[] = [];
 
     const files = {
-        preview: async (path: string) => {
+        load: async (path: string) => {
             requests.push(path);
 
             return new Blob();
+        },
+        preview: async () => {
+            throw new Error('Inline images must not open a host preview');
         },
         download: async () => undefined
     };

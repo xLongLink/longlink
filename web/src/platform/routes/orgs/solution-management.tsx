@@ -79,7 +79,7 @@ export default function SolutionManagement({
 
     /** Refreshes Solutions before closing only the attempt that completed successfully. */
     async function onSuccess() {
-        // Keep refresh failures in Form and leave any replacement dialog untouched.
+        // Keep refresh failures in the submitting workflow and leave any replacement dialog untouched.
         await invalidateSolutions();
         closeSelected();
     }

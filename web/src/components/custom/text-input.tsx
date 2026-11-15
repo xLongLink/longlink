@@ -1,9 +1,8 @@
 import { X } from 'lucide-react';
 import { useValue } from './value';
-import { useId, useRef, type ReactNode } from 'react';
-import { FormField } from '@/components/custom/form-field';
 import type { FieldProps } from '@/components/custom/types';
-import { FieldDescription, FieldLabel } from '@/components/shadcn/field';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { Field, FieldDescription, FieldLabel } from '@/components/shadcn/field';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 
 type TextInputProps = FieldProps & {
@@ -22,28 +21,26 @@ type TextInputProps = FieldProps & {
 /** Custom form adapter with string callbacks, clear/reset, and Unicode code-point validation. */
 export function TextInput(props: TextInputProps) {
     // Let the wrapper own state only when the Solution does not provide a value.
-    const field = useValue(props.value, props.defaultValue ?? '', props.onChange);
+    const { ref, ...field } = useValue(props.value, props.defaultValue ?? '', props.onChange);
     const input = useRef<HTMLInputElement>(null);
     const id = useId();
     const descriptionId = `${id}-description`;
 
+    useEffect(() => {
+        input.current?.setCustomValidity(
+            props.disabled
+                ? ''
+                : props.required && !field.value.trim()
+                  ? 'Please complete this field.'
+                  : props.maxLength !== undefined && Array.from(field.value).length > props.maxLength
+                    ? `Use no more than ${props.maxLength} characters.`
+                    : ''
+        );
+    }, [field.value, props.disabled, props.required, props.maxLength]);
+
     // Validate nonblank text and Python-compatible lengths without changing the submitted value.
     return (
-        <FormField
-            name={props.name}
-            required={props.required}
-            disabled={props.disabled}
-            data-disabled={props.disabled || undefined}
-            fieldRef={field.ref}
-            values={[field.value]}
-            error={
-                props.required && !field.value.trim()
-                    ? 'Please complete this field.'
-                    : props.maxLength !== undefined && Array.from(field.value).length > props.maxLength
-                      ? `Use no more than ${props.maxLength} characters.`
-                      : undefined
-            }
-        >
+        <Field data-disabled={props.disabled || undefined} ref={ref}>
             <FieldLabel htmlFor={id} id={`${id}-label`}>
                 {props.label}
                 {props.required && (
@@ -57,6 +54,7 @@ export function TextInput(props: TextInputProps) {
                     ref={input}
                     id={id}
                     name={props.disabled ? undefined : props.name}
+                    required={props.required}
                     value={field.value}
                     onChange={(event) => {
                         if (!props.disabled) field.onChange(event.target.value);
@@ -105,6 +103,6 @@ export function TextInput(props: TextInputProps) {
                 )}
             </InputGroup>
             {props.description && <FieldDescription id={descriptionId}>{props.description}</FieldDescription>}
-        </FormField>
+        </Field>
     );
 }

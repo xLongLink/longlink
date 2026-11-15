@@ -114,11 +114,16 @@ it('returns to the first page when a search narrows results from a later file pa
 
 it('wires filtered file rows to scoped previews with their own asset path and title without eager loading', async () => {
     const user = userEvent.setup();
-    const preview = vi.fn(async (_path: string, _title?: string) => null);
+    const preview = vi.fn(async (_path: string, _title: string) => {});
+
+    const load = vi.fn(async () => {
+        throw new Error('Attachment links must not load file bytes');
+    });
+
     const download = vi.fn(async (_path: string, _filename: string) => {});
 
     await withMounted(
-        <FileRequestContext value={{ preview, download }}>
+        <FileRequestContext value={{ load, preview, download }}>
             <List />
         </FileRequestContext>,
         async (output) => {
@@ -142,6 +147,7 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
                 expect(preview).toHaveBeenLastCalledWith(`/assets/${filename}`, filename);
             }
 
+            expect(load).not.toHaveBeenCalled();
             expect(download).not.toHaveBeenCalled();
         }
     );

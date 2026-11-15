@@ -28,8 +28,8 @@ test('published component provenance matches the implementation exposed to Views
         const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
         const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
         assert.ok(
-            component.source === 'recharts'
-                ? filename?.includes('/node_modules/recharts/')
+                component.source === 'recharts' || component.source === 'react-hook-form'
+                    ? filename?.includes(`/node_modules/${component.source}/`)
                 : component.source === 'custom'
                   ? filename?.includes('/components/custom/') || filename?.includes('/components/dialogs/')
                 : filename?.includes(`/components/${component.source}/`),

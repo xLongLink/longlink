@@ -39,8 +39,7 @@ it.each([false, true])('keeps a rejected controlled single change out of submiss
             await act(async () => user.click(option));
             expect(change).toHaveBeenCalledWith('Bob');
             expect(new FormData(form).getAll('owner')).toEqual(['']);
-            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(false);
-            expect(document.activeElement).toBe(control);
+            expect(form.checkValidity()).toBe(false);
         }
     );
 });
@@ -70,10 +69,7 @@ it('recovers from a required denial, clears to null, and honors canceled and com
 
             await act(async () => user.click(clear));
             expect(change).toHaveBeenLastCalledWith(null);
-            const denied = new Event('submit', { bubbles: true, cancelable: true });
-            await act(async () => form.dispatchEvent(denied));
-            expect(denied.defaultPrevented).toBe(true);
-            expect(output.querySelector('[role="alert"]')?.textContent).toContain('Please complete this field.');
+            expect(form.checkValidity()).toBe(false);
             const label = output.querySelector<HTMLLabelElement>(`label[for="${trigger.id}"]`);
 
             if (!label) throw new Error('Expected associated owner label');
@@ -89,7 +85,7 @@ it('recovers from a required denial, clears to null, and honors canceled and com
             await act(async () => user.click(bob));
             expect(new FormData(form).getAll('owner')).toEqual(['Bob']);
             expect(output.querySelector('[role="alert"]')).toBeNull();
-            expect(form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).toBe(true);
+            expect(form.checkValidity()).toBe(true);
             form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
             await act(async () => form.reset());
             expect(new FormData(form).getAll('owner')).toEqual(['Bob']);

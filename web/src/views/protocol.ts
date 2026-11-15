@@ -1,12 +1,8 @@
 import { z } from 'zod';
 import { appearanceSchema } from '@/lib/appearance';
 
-export const viewAppearanceSchema = appearanceSchema;
-
-export type ViewAppearance = z.output<typeof viewAppearanceSchema>;
-
 export const appearanceMessageSchema = z
-    .object({ type: z.literal('appearance'), appearance: viewAppearanceSchema })
+    .object({ type: z.literal('appearance'), appearance: appearanceSchema })
     .strict();
 
 export type AppearanceMessage = z.output<typeof appearanceMessageSchema>;

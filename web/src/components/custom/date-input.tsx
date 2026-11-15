@@ -1,12 +1,16 @@
 import type { FieldProps } from './types';
 import { format, parseISO } from 'date-fns';
+import type { ComponentProps } from 'react';
 import { TemporalField } from './temporal-field';
 import { Calendar } from '@/components/shadcn/calendar';
 import { displayDate, readDate, validDate, type ISODateString } from './temporal';
 
 /** Selects or types a real calendar date using inclusive bounds and additional constraints. */
-export function DateInput(
-    props: FieldProps & {
+export function DateInput({
+    ref,
+    ...props
+}: FieldProps &
+    Pick<ComponentProps<'input'>, 'ref' | 'onBlur' | 'aria-invalid' | 'aria-describedby'> & {
         value?: ISODateString;
         defaultValue?: ISODateString;
         onChange?: (value: ISODateString | undefined) => void;
@@ -14,8 +18,7 @@ export function DateInput(
         max?: ISODateString;
         dateConstraints?: readonly ((date: Date) => boolean)[];
         placeholder?: string;
-    }
-) {
+    }) {
     // Every entry path, including caller values, uses the same calendar constraints.
     const validBounds = (!props.min || validDate(props.min)) && (!props.max || validDate(props.max));
 
@@ -28,6 +31,10 @@ export function DateInput(
 
     return (
         <TemporalField
+            ref={ref}
+            onBlur={props.onBlur}
+            aria-invalid={props['aria-invalid']}
+            aria-describedby={props['aria-describedby']}
             label={props.label}
             description={props.description}
             name={props.name}
