@@ -4,19 +4,18 @@ import { Form } from '@/components/custom/form';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeTextInput } from '@/components/custom/native-text-input';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
-type DeploymentReviewProps = {
+type DeploymentReviewProps = DialogProps & {
     item: { id: string; name: string };
     onSuccess: () => void | Promise<void>;
-    onClose: () => void;
 };
 
 /** Abbreviates digest references for release comparison while preserving tag-only images. */
@@ -26,7 +25,7 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ item, onSuccess, onClose }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onClose, ...dialogProps }: DeploymentReviewProps) {
     // Scope inspection and drafts to one freshly opened review attempt.
     const [attemptId] = useState(() => crypto.randomUUID());
     const [envs, setEnvs] = useState<Record<string, { value?: string; removed?: boolean }>>({});
@@ -81,12 +80,7 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
 
     // Share wizard navigation while retaining revision fencing and configured-secret semantics.
     return (
-        <FramedDialog
-            open
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
+        <Dialog {...dialogProps} onClose={onClose}>
             {!candidate ? (
                 <div className="h-[min(560px,calc(100dvh-calc(var(--spacing)*10)*4))] min-h-0 min-w-0 overflow-hidden">
                     <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
@@ -212,6 +206,6 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
                     </Wizard>
                 </Form>
             )}
-        </FramedDialog>
+        </Dialog>
     );
 }

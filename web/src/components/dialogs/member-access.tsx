@@ -1,5 +1,5 @@
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 
@@ -7,19 +7,15 @@ export function MemberAccess({
     name,
     action,
     onClose,
-    onConfirm
-}: {
+    onConfirm,
+    ...dialogProps
+}: DialogProps & {
     name: string;
     action: { kind: 'role'; role: string } | { kind: 'remove' };
-    onClose: () => void;
     onConfirm: () => Promise<void>;
 }) {
     return (
-        <FramedDialog
-            open
-            title={action.kind === 'remove' ? 'Remove member' : 'Change role'}
-            onOpenChange={(open) => !open && onClose()}
-        >
+        <Dialog title={action.kind === 'remove' ? 'Remove member' : 'Change role'} {...dialogProps} onClose={onClose}>
             <Stack gap={3}>
                 <Text className="text-muted-foreground">
                     {action.kind === 'remove'
@@ -35,6 +31,6 @@ export function MemberAccess({
                     />
                 </Stack>
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

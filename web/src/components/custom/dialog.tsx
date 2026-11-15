@@ -1,30 +1,23 @@
-import { use, useEffect, useState } from 'react';
-import { DialogActivityContext } from './contexts';
-import { Dialog as BaseDialog } from '@base-ui/react/dialog';
-import { Dialog as NativeDialog } from '@/components/shadcn/dialog';
+import type { ComponentProps } from 'react';
+import { FramedDialog } from './framed-dialog';
 
-/** Coordinates native dialog visibility with the isolated View host. */
-export function Dialog(props: BaseDialog.Root.Props) {
-    const activity = use(DialogActivityContext);
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(Boolean(props.defaultOpen));
-    const open = props.open ?? uncontrolledOpen;
+export type DialogProps = Omit<ComponentProps<typeof FramedDialog>, 'children' | 'open' | 'onOpenChange'> & {
+    open?: boolean;
+    onClose: () => void;
+};
 
-    // Let an isolated runtime extend the backdrop without moving the native dialog out of its document.
-    useEffect(() => {
-        if (!open || !activity) return;
-        activity(true, false);
-
-        return () => activity(false, false);
-    }, [open, activity]);
-
-    // Preserve native composition and track uncontrolled visibility for the isolated host.
+/** Shares frame options and dismissal handling across application dialogs. */
+export function Dialog({
+    open = true,
+    onClose,
+    ...props
+}: DialogProps & Pick<ComponentProps<typeof FramedDialog>, 'children'>) {
     return (
-        <NativeDialog
+        <FramedDialog
             {...props}
-            onOpenChange={(open, details) => {
-                props.onOpenChange?.(open, details);
-
-                if (!details.isCanceled) setUncontrolledOpen(open);
+            open={open}
+            onOpenChange={(open) => {
+                if (!open) onClose();
             }}
         />
     );

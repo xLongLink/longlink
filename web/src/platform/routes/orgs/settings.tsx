@@ -473,7 +473,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 />
             </Stack>
             <InviteMember
-                isOpen={invitationAttempt !== null}
+                open={invitationAttempt !== null}
                 canInviteAdmin={canInviteAdmin}
                 onClose={closeInvitation}
                 onSubmit={inviteMember}

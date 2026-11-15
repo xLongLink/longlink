@@ -103,7 +103,7 @@ export {
 } from '@/components/shadcn/dialog';
 
 /** Native Dialog root props with isolated View host coordination. @category Layouts */
-export { Dialog } from '@/components/custom/dialog';
+export { Dialog } from '@/components/custom/native-dialog';
 
 /** Custom fixed or fullscreen modal frame with isolated View host coordination. @category Layouts */
 export { FramedDialog } from '@/components/custom/framed-dialog';

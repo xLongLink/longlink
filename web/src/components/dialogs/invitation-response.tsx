@@ -1,22 +1,19 @@
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 
 export function InvitationResponse({
     invitation,
     onClose,
-    onConfirm
-}: {
-    invitation: { type: 'accept' | 'decline'; name: string };
-    onClose: () => void;
-    onConfirm: () => Promise<void>;
-}) {
+    onConfirm,
+    ...dialogProps
+}: DialogProps & { invitation: { type: 'accept' | 'decline'; name: string }; onConfirm: () => Promise<void> }) {
     return (
-        <FramedDialog
-            open
+        <Dialog
             title={invitation.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
-            onOpenChange={(open) => !open && onClose()}
+            {...dialogProps}
+            onClose={onClose}
         >
             <Stack gap={3}>
                 <Text className="text-muted-foreground">
@@ -33,6 +30,6 @@ export function InvitationResponse({
                     />
                 </Stack>
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

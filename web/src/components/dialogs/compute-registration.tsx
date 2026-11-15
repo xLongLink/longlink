@@ -5,8 +5,8 @@ import { Form } from '@/components/custom/form';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { TextInput } from '@/components/custom/text-input';
 import { NativeFileInput } from '@/components/custom/file-input';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeTextArea } from '@/components/custom/native-text-area';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -16,7 +16,7 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
-export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => Promise<void>; onClose: () => void }) {
+export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps & { onSuccess: () => Promise<void> }) {
     const [kubeconfig, setKubeconfig] = useState('');
     const [file, setFile] = useState<File | null>(null);
 
@@ -70,7 +70,7 @@ export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => P
     }
 
     return (
-        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog {...dialogProps}>
             <Form action={registerCompute} submitDisabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
                 <Wizard height="min(560px, calc(100dvh - var(--spacing) * 40))" backVariant="ghost">
                     <Step label="Metadata">
@@ -140,6 +140,6 @@ export function ComputeRegistration({ onSuccess, onClose }: { onSuccess: () => P
                     </Step>
                 </Wizard>
             </Form>
-        </FramedDialog>
+        </Dialog>
     );
 }

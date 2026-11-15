@@ -1,10 +1,10 @@
 import { NativeFile } from '@/components/custom/native-file';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 
-export function MediaPreview({ body, title, onClose }: { body: Blob; title: string; onClose: () => void }) {
+export function MediaPreview({ body, title, ...dialogProps }: DialogProps & { body: Blob; title: string }) {
     return (
-        <FramedDialog title={title} variant="fullscreen" open onOpenChange={(open) => !open && onClose()}>
+        <Dialog title={title} variant="fullscreen" {...dialogProps}>
             <NativeFile body={body} title={title} />
-        </FramedDialog>
+        </Dialog>
     );
 }

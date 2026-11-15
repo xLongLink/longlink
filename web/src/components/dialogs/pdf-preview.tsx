@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 
 /** Displays only host-fetched PDF bytes in the browser's native viewer. */
-export function PdfPreview({ body, title, onClose }: { body: Blob; title: string; onClose: () => void }) {
+export function PdfPreview({ body, title, ...dialogProps }: DialogProps & { body: Blob; title: string }) {
     const frame = useRef<HTMLIFrameElement>(null);
 
     // Keep the document URL alive only while this PDF is displayed.
@@ -21,15 +21,8 @@ export function PdfPreview({ body, title, onClose }: { body: Blob; title: string
 
     // Render outside the Solution sandbox without granting it navigation or plugin permissions.
     return (
-        <FramedDialog
-            title={title}
-            variant="fullscreen"
-            open
-            onOpenChange={(open) => !open && onClose()}
-            paddingInline={0}
-            gap={0}
-        >
+        <Dialog title={title} variant="fullscreen" paddingInline={0} gap={0} {...dialogProps}>
             <iframe ref={frame} title={title} className="h-full min-h-0 w-full flex-1 border-0" />
-        </FramedDialog>
+        </Dialog>
     );
 }

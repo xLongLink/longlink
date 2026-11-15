@@ -6,9 +6,9 @@ import { ApiBoundary } from '@/components/api';
 import { Picker } from '@/components/custom/picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -19,18 +19,15 @@ import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onClose
-}: {
-    solutionId: string;
-    organizationId: string;
-    onClose: () => void;
-}) {
+    onClose,
+    ...dialogProps
+}: DialogProps & { solutionId: string; organizationId: string }) {
     return (
-        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog {...dialogProps} onClose={onClose}>
             <ApiBoundary key={solutionId}>
                 <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
             </ApiBoundary>
-        </FramedDialog>
+        </Dialog>
     );
 }
 

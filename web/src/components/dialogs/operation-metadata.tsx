@@ -1,18 +1,15 @@
 import type { z } from 'zod';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 export function OperationMetadata({
     metadata,
-    onClose
-}: {
-    metadata: z.output<typeof schemas.zOperationResponse>;
-    onClose: () => void;
-}) {
+    ...dialogProps
+}: DialogProps & { metadata: z.output<typeof schemas.zOperationResponse> }) {
     return (
-        <FramedDialog title="Operation metadata" open onOpenChange={(open) => !open && onClose()}>
+        <Dialog title="Operation metadata" {...dialogProps}>
             <Stack gap={2} padding={8}>
                 <Text>
                     <b>Operation</b> {metadata.kind}
@@ -40,6 +37,6 @@ export function OperationMetadata({
                     </Text>
                 )}
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

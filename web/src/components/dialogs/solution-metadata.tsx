@@ -1,21 +1,17 @@
 import type { z } from 'zod';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/custom/native-button';
 
 export function SolutionMetadata({
     metadata,
-    onClose,
-    onDelete
-}: {
-    metadata: z.output<typeof schemas.zSolutionResponse>;
-    onClose: () => void;
-    onDelete: () => void;
-}) {
+    onDelete,
+    ...dialogProps
+}: DialogProps & { metadata: z.output<typeof schemas.zSolutionResponse>; onDelete: () => void }) {
     return (
-        <FramedDialog title="Solution metadata" open onOpenChange={(open) => !open && onClose()}>
+        <Dialog title="Solution metadata" {...dialogProps}>
             <Stack gap={2} padding={8}>
                 <Text>
                     <b>Status</b> {metadata.status}
@@ -47,6 +43,6 @@ export function SolutionMetadata({
                     <Button label="Delete" variant="destructive" onClick={onDelete} />
                 </Stack>
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

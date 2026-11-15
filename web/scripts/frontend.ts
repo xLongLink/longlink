@@ -52,7 +52,7 @@ export { ActionButtonGroup } from '../src/components/custom/action-button-group'
 export { FileViewer } from '../src/components/custom/file-viewer';
 export * from '../src/components/shadcn/card';
 export * from '../src/components/custom/interactive-card';
-export { Dialog } from '../src/components/custom/dialog';
+export { Dialog } from '../src/components/custom/native-dialog';
 export { FramedDialog } from '../src/components/custom/framed-dialog';
 export { Link } from '../src/components/custom/link';
 export { AttachmentLink } from '../src/components/custom/attachment-link';

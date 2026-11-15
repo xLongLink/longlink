@@ -8,9 +8,9 @@ import { Step, Wizard } from '@/components/custom/wizard';
 import { TextInput } from '@/components/custom/text-input';
 import { buttonVariants } from '@/components/shadcn/button';
 import { Illustration } from '@/components/ui/illustration';
-import { FramedDialog } from '@/components/custom/framed-dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -18,12 +18,9 @@ import { NativeHeading as Heading } from '@/components/custom/native-heading';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onClose
-}: {
-    organizationId: string;
-    onSuccess: () => void | Promise<void>;
-    onClose: () => void;
-}) {
+    onClose,
+    ...dialogProps
+}: DialogProps & { organizationId: string; onSuccess: () => void | Promise<void> }) {
     // Retain image metadata while named controls own drafts and Wizard owns navigation.
     const [image, setImage] = useState('');
 
@@ -68,12 +65,7 @@ export default function CreateSolution({
 
     // Keep the existing dialog frame and content width while sharing all wizard mechanics.
     return (
-        <FramedDialog
-            open
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
+        <Dialog {...dialogProps} onClose={onClose}>
             <Form action={createSolution}>
                 <Wizard
                     height="min(560px, calc(100dvh - var(--spacing) * 40))"
@@ -191,6 +183,6 @@ export default function CreateSolution({
                     </Step>
                 </Wizard>
             </Form>
-        </FramedDialog>
+        </Dialog>
     );
 }

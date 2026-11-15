@@ -5,6 +5,7 @@ import { withMounted } from '../../render';
 import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
 import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog as NativeDialog } from '@/components/custom/native-dialog';
 import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
 import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
@@ -28,6 +29,38 @@ it('dismisses the FramedDialog without submitting its form', async () => {
         expect(button?.getAttribute('type')).toBe('button');
     });
 });
+
+it.each([undefined, 'fullscreen'] as const)(
+    'dismisses a standard dialog in %s mode without submitting its form',
+    async (variant) => {
+        const close = vi.fn();
+        const submit = vi.fn((event: React.SubmitEvent) => event.preventDefault());
+        const activity = vi.fn();
+        const user = userEvent.setup();
+
+        // Keep visibility caller-owned while exercising the shared close adapter.
+        await withMounted(
+            <DialogActivityContext value={activity}>
+                <Dialog title="Edit order" variant={variant} onClose={close}>
+                    <form onSubmit={submit}>
+                        <input aria-label="Order name" />
+                    </form>
+                </Dialog>
+            </DialogActivityContext>,
+            async () => {
+                const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
+
+                if (!button) throw new Error('Missing close button');
+
+                await act(async () => user.click(button));
+                expect(close).toHaveBeenCalledExactlyOnceWith();
+                expect(submit).not.toHaveBeenCalled();
+                expect(activity).toHaveBeenCalledExactlyOnceWith(true, variant === 'fullscreen');
+            }
+        );
+        expect(activity).toHaveBeenLastCalledWith(false, variant === 'fullscreen');
+    }
+);
 
 it('conditionally unmounts an open dialog without changing caller-owned state', async () => {
     // Arrange
@@ -160,7 +193,7 @@ it('keeps native dialog host coordination active after canceled dismissal and re
     // Keep Escape canceled while allowing an explicit close action.
     await withMounted(
         <DialogActivityContext value={activity}>
-            <Dialog
+            <NativeDialog
                 onOpenChange={(_open, details) => {
                     if (details.reason === 'escape-key') details.cancel();
                 }}
@@ -170,7 +203,7 @@ it('keeps native dialog host coordination active after canceled dismissal and re
                     <DialogTitle>Order details</DialogTitle>
                     <DialogClose>Done</DialogClose>
                 </DialogContent>
-            </Dialog>
+            </NativeDialog>
         </DialogActivityContext>,
         async (output) => {
             const trigger = output.querySelector('button');
