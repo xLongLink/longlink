@@ -56,12 +56,17 @@ export function DeletionDialog({
             }}
         >
             <span
-                className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                className="flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit] transition-opacity duration-0 aria-hidden:opacity-0 aria-hidden:delay-200 motion-reduce:aria-hidden:delay-0"
                 aria-hidden={isDeleting || undefined}
             >
                 <span className="min-w-0 overflow-hidden text-ellipsis">Delete</span>
             </span>
-            {isDeleting && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+            {isDeleting && (
+                <LoaderCircle
+                    aria-hidden="true"
+                    className="absolute inset-0 m-auto size-3.5 transition-opacity duration-0 delay-200 motion-safe:animate-spin motion-reduce:delay-0 starting:opacity-0"
+                />
+            )}
         </Button>
     );
 

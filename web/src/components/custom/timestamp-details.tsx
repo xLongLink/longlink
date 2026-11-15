@@ -74,7 +74,7 @@ export function TimestampDetails({
                 render={(props) => (
                     <time
                         {...props}
-                        className="view-timestamp-trigger"
+                        className="text-inherit underline decoration-input decoration-dashed underline-offset-2 [font:inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         dateTime={dateTime}
                         aria-label={label}
                         role={undefined}

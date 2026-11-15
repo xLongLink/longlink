@@ -79,7 +79,10 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
 /** Keeps loaded Views and compilation errors in the same content region. */
 function ViewLayout({ children }: { children: React.ReactNode }) {
     return (
-        <section className="view-runtime-content" aria-label="Solution View">
+        <section
+            className="min-h-full min-w-0 p-0 [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+            aria-label="Solution View"
+        >
             {children}
         </section>
     );
@@ -410,7 +413,7 @@ function initialize(event: MessageEvent<unknown>): void {
                         >
                             <React.Suspense
                                 fallback={
-                                    <div className="view-runtime-loading">
+                                    <div className="grid min-h-dvh w-full place-items-center">
                                         <NativeLoading label="Loading View" />
                                     </div>
                                 }
