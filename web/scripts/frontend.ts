@@ -61,7 +61,7 @@ export { RadioGroup, RadioGroupItem } from '../src/views/adapter/form/radio-grou
 export { Wizard, Step } from '../src/views/adapter/layouts/wizard';
 export { Button } from '../src/views/adapter/action/button';
 export { FileViewer } from '../src/views/adapter/display/file-viewer';
-export * from '../src/views/adapter/layouts/card';
+export { Card } from '../src/views/adapter/layouts/card';
 export { Link } from '../src/views/adapter/action/link';
 export * from '../src/views/adapter/form/select';
 export * from '../src/views/adapter/form/combobox';
@@ -71,8 +71,7 @@ export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from '..
 export { Progress } from '../src/views/adapter/display/progress';
 export type FrontendElement = JSX.Element;
 export type FrontendElementType = JSX.ElementType;
-export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../src/views/adapter/charts/chart';
-export type { ChartConfig } from '../src/views/adapter/charts/chart';
+export type { ChartConfig, ChartSeries, SankeyNode, SankeyLink } from '../src/views/adapter/charts/chart';
 export { MetricCard, MetricGrid, ProviderChart, UsageChart } from '../src/views/adapter/charts/analytics';
 export { CountryChart } from '../src/views/adapter/charts/country-chart';
 export { RevenueFlow } from '../src/views/adapter/charts/revenue-flow';
@@ -85,7 +84,5 @@ export { Frame, FrameHeader, FrameTitle, FramePanel, FrameFooter } from '../src/
 export { IconTile } from '../src/views/adapter/display/icon';
 export { useDownload } from '../src/views/hooks/use-download';
 export {
-    AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, RadarChart, Radar,
-    RadialBarChart, RadialBar, Sankey, CartesianGrid, XAxis, YAxis, PolarGrid, PolarAngleAxis,
-    PolarRadiusAxis, ResponsiveContainer, Label, LabelList, ReferenceLine, ComposedChart
+    AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialBarChart, Sankey, ChartLegend
 } from '../src/views/adapter/charts/chart';

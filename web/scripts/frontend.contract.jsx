@@ -62,12 +62,14 @@ const configuredTable = (
 const filters = <Filters fields={[]} query={query} onQueryChange={(next) => flattenFilterConditions(next)} />;
 
 const nativeComposition = (
-    <Card id="settings" onPointerDown={(event) => event.currentTarget.focus()}>
-        <CardHeader>
-            <CardTitle>{label}</CardTitle>
-            <CardDescription>Settings</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <Card
+        id="settings"
+        header={{ title: label, description: 'Settings', action: <Button>More</Button> }}
+        footer={<Button onClick={() => {}}>Save</Button>}
+        label="Open settings"
+        onClick={(event) => event.currentTarget.focus()}
+        onPointerDown={(event) => event.currentTarget.focus()}
+    >
             <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
             <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
             <Currency value={1234.5} currency="USD" locale="en-US" aria-label="Total" onClick={(event) => event.currentTarget.focus()} />
@@ -342,8 +344,6 @@ const nativeComposition = (
                     </ComboboxList>
                 </ComboboxContent>
             </Combobox>
-        </CardContent>
-        <CardFooter>Actions</CardFooter>
     </Card>
 );
 
@@ -394,8 +394,7 @@ const nativeForm = (
 );
 
 const _adapters = (
-    <InteractiveCard size="sm" isSelected onChange={() => {}}>
-        <CardContent>
+    <Card size="sm" isSelected onChange={() => {}}>
             <Dialog fullscreen open onOpenChange={() => {}}>
                 <DialogContent>
                     <DialogHeader>
@@ -404,8 +403,7 @@ const _adapters = (
                     {nativeComposition}
                 </DialogContent>
             </Dialog>
-        </CardContent>
-    </InteractiveCard>
+    </Card>
 );
 
 // @ts-expect-error Native variants must not silently accept arbitrary strings.
@@ -461,9 +459,9 @@ const _columnClasses = {
     }
 };
 // @ts-expect-error Chart components retain their installed container styling.
-const _chartStyle = <ChartContainer config={{}} style={{ height: 280 }}><AreaChart /></ChartContainer>;
-// @ts-expect-error Recharts primitives also exclude arbitrary CSS.
-const _seriesStyle = <Area dataKey="total" style={{ opacity: 0 }} />;
+const _chartStyle = <BarChart data={[{ month: 'Jan', total: 1 }]} xKey="month" series={[{ key: 'total' }]} style={{ height: 280 }} />;
+// @ts-expect-error Series must select numeric fields, not category labels.
+const _seriesKey = <AreaChart data={[{ month: 'Jan', total: 1 }]} xKey="month" series={[{ key: 'month' }]} />;
 // @ts-expect-error Avatar geometry is selected through shape, not an owner kind.
 const _avatarKind = <Avatar kind="organization" />;
 // @ts-expect-error Avatar artwork uses a fixed internal seed.
@@ -491,6 +489,14 @@ const _buttonPrimaryVariant = <Button variant="primary">Save</Button>;
 const _dropdownContentClasses = <DropdownContent className="hidden" />;
 // @ts-expect-error DropdownItem styling is owned by the component.
 const _dropdownItemClasses = <DropdownItem className="hidden">Archive</DropdownItem>;
+// @ts-expect-error Card styling is owned by the component.
+const _cardClasses = <Card className="hidden" />;
+// @ts-expect-error Card styling is owned by the component.
+const _cardStyle = <Card style={{ display: 'none' }} />;
+// @ts-expect-error Card owns its content sections.
+const _cardHeader = <CardHeader>Settings</CardHeader>;
+// @ts-expect-error Card includes surface interactions without a separate component.
+const _interactiveCard = <InteractiveCard onClick={() => {}} />;
 // @ts-expect-error Text no longer provides truncation tooltips.
 const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
 // @ts-expect-error Heading uses level for both its HTML element and accessible outline.
@@ -502,35 +508,28 @@ const _removedCollapsible = <Collapsible />;
 // @ts-expect-error Stepper is not currently exposed to Views.
 const _removedStepper = <Stepper />;
 
-const _nativeCharts = (
+const _charts = (
     <>
-        <ChartContainer
-            config={{ total: { label: 'Total', color: 'var(--chart-1)' } }}
-            aria-label="Revenue"
-        >
-            <AreaChart data={[{ period: 'January', total: 120 }]} accessibilityLayer>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="period" />
-                <YAxis />
-                <Area dataKey="total" fill="var(--color-total)" stroke="var(--color-total)" />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-            </AreaChart>
-        </ChartContainer>
-        <ChartContainer config={{}} aria-label="Revenue allocation">
-            <Sankey
-                data={{
-                    nodes: [{ name: 'Revenue' }, { name: 'Profit' }],
-                    links: [{ source: 0, target: 1, value: 40 }]
-                }}
-                node={{ fill: 'var(--chart-1)' }}
-                link={({ sourceX, targetX, sourceY, targetY }) => (
-                    <path d={`M ${sourceX},${sourceY} L ${targetX},${targetY}`} />
-                )}
-            />
-        </ChartContainer>
+        <Box height={280}>
+            <AreaChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total', label: 'Total' }]} aria-label="Revenue" />
+            <BarChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total' }]} />
+            <LineChart data={[{ period: 'January', total: null }, { period: 'February', total: 0 }]} xKey="period" series={[{ key: 'total' }]} />
+            <RadarChart data={[{ category: 'Speed', total: 120 }]} categoryKey="category" series={[{ key: 'total' }]} />
+            <PieChart data={[{ label: 'Revenue', total: 120 }]} nameKey="label" valueKey="total" />
+            <RadialBarChart data={[{ label: 'Target', total: 40 }]} nameKey="label" valueKey="total" max={100} />
+            <Sankey nodes={[{ name: 'Revenue' }, { name: 'Profit' }]} links={[{ source: 0, target: 1, value: 40 }]} aria-label="Revenue allocation" />
+        </Box>
     </>
 );
 
-// @ts-expect-error Charts use native marks and axes, not LongLink's category/series adapter.
+// @ts-expect-error Cartesian charts use xKey, not a categoryKey alias.
 const _legacyChart = <AreaChart data={[]} categoryKey="month" series={[]} />;
+
+const _externalSeriesLegend = <ChartLegend series={[{ key: 'total', label: 'Total' }]} />;
+const _externalSegmentLegend = <ChartLegend data={[{ title: 'Complete', count: 12 }]} nameKey="title" />;
+// @ts-expect-error Segment legends must select a field from their data.
+const _legendKey = <ChartLegend data={[{ title: 'Complete' }]} nameKey="missing" />;
+// @ts-expect-error Legend modes cannot be combined.
+const _legendModes = <ChartLegend series={[{ key: 'total' }]} data={[{ title: 'Complete' }]} nameKey="title" />;
+// @ts-expect-error Legends retain theme-owned presentation.
+const _legendStyle = <ChartLegend series={[{ key: 'total' }]} style={{ color: 'red' }} />;

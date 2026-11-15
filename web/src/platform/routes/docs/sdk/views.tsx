@@ -19,6 +19,7 @@ import { TimestampExample } from './views/timestamp';
 import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
+import { ChartLegendExample } from './views/chart-legend';
 import { Icon } from '@/components/longlink/display/icon';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
@@ -27,6 +28,7 @@ import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
@@ -64,6 +66,7 @@ const previews = new Map(
         RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
         RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
         Sankey: <ChartExample name="Sankey" height={160} isCompact />,
+        ChartLegend: <ChartLegendExample isCompact />,
         Maps: (
             <div className="flex aspect-square w-full items-center justify-center overflow-hidden [&_svg]:h-full! [&_svg]:w-[200%] [&_svg]:max-w-none [&_svg]:shrink-0">
                 <MapsExample />
@@ -87,11 +90,7 @@ const previews = new Map(
         ),
         Button: <Button>Button</Button>,
         Box: <Box width={160} maxWidth="100%" height={96} background="outline" />,
-        Card: (
-            <Card>
-                <CardContent>Lorem ipsum dolor sit amet.</CardContent>
-            </Card>
-        ),
+        Card: <LongLinkCard>Order summary</LongLinkCard>,
         Checkbox: <CheckboxExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
         Dialog: (

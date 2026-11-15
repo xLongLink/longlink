@@ -380,133 +380,173 @@
             "justification": "Validates GeoJSON or TopoJSON and renders geographic boundaries; neither library supplies the geographic renderer."
         },
         {
-            "name": "AreaChart",
+            "name": "ChartLegend",
             "category": "Charts",
-            "introduction": "Native Recharts area chart. Compose Area, axes, tooltip, and legend inside a shadcn ChartContainer.",
+            "introduction": "Renders a standalone chart legend in a card footer or another layout region.",
+            "guidance": "Set legend={false} on the chart. For area, bar, line, and radar charts, pass the same series in the same order. For pie and radial charts, pass the same data and nameKey in the same order. Colors follow the chart theme; no chart context is needed. Empty legends render nothing.",
             "properties": [
                 {
-                    "name": "data",
-                    "type": "object[]",
-                    "description": "Rows in your own shape. Select fields with native dataKey props on Area and axes."
+                    "name": "series",
+                    "type": "readonly { key: string; label?: string }[]",
+                    "description": "Series keys and optional labels. Use instead of data and nameKey."
                 },
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native chart marks, axes, grids, tooltip, and legend."
-                }
+                    "name": "data",
+                    "type": "readonly Row[]",
+                    "description": "Segment rows, in chart order. Requires nameKey; cannot be combined with series."
+                },
+                { "name": "nameKey", "type": "keyof Row", "description": "Text or finite numeric segment label field." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns a context-independent legend with the same ordered theme colors as LongLink charts.",
+            "reference": "https://ui.shadcn.com/docs/components/chart"
+        },
+        {
+            "name": "AreaChart",
+            "category": "Charts",
+            "introduction": "Plots numeric area series with theme-owned colors, axes, tooltip, and legend.",
+            "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Null values leave gaps; zero values are preserved. Loading and retry belong to the caller.",
+            "properties": [
+                { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
+                { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
+                {
+                    "name": "series",
+                    "type": "readonly ChartSeries<Row>[]",
+                    "description": "Numeric field keys and optional labels. Colors are assigned internally."
+                },
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
+            ],
+            "source": "custom",
+            "justification": "Owns chart presentation, data admission, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "BarChart",
             "category": "Charts",
-            "introduction": "Native Recharts bar chart. Compose Bar, axes, tooltip, and legend inside a shadcn ChartContainer.",
+            "introduction": "Compares grouped numeric series with fixed chart presentation.",
+            "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Loading and retry belong to the caller.",
             "properties": [
+                { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
+                { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
-                    "name": "data",
-                    "type": "object[]",
-                    "description": "Rows in your own shape. Select fields with native dataKey props on Bar and axes."
+                    "name": "series",
+                    "type": "readonly ChartSeries<Row>[]",
+                    "description": "Numeric field keys and optional labels. Colors are assigned internally."
                 },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native chart marks, axes, grids, tooltip, and legend."
-                }
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns chart presentation, data admission, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "LineChart",
             "category": "Charts",
-            "introduction": "Native Recharts line chart. Compose Line, axes, tooltip, and legend inside a shadcn ChartContainer.",
+            "introduction": "Plots numeric line series without joining missing data points.",
+            "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Null values leave gaps; zero values are preserved. Loading and retry belong to the caller.",
             "properties": [
+                { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
+                { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
-                    "name": "data",
-                    "type": "object[]",
-                    "description": "Rows in your own shape. Select fields with native dataKey props on Line and axes."
+                    "name": "series",
+                    "type": "readonly ChartSeries<Row>[]",
+                    "description": "Numeric field keys and optional labels. Colors are assigned internally."
                 },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native chart marks, axes, grids, tooltip, and legend."
-                }
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns chart presentation, data admission, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "PieChart",
             "category": "Charts",
-            "introduction": "Native Recharts pie chart. Compose Pie with its own data, dataKey, and nameKey inside a shadcn ChartContainer.",
+            "introduction": "Shows nonnegative contributions as themed doughnut segments.",
+            "guidance": "Place inside a Box with an explicit height. Supply label and numeric value keys. Empty data or a zero total displays No data; invalid segment values are rejected.",
             "keywords": ["doughnut", "donut", "pie"],
             "properties": [
+                { "name": "data", "type": "readonly Row[]" },
+                { "name": "nameKey", "type": "keyof Row", "description": "Segment label field." },
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Pie marks, tooltip, and legend. Pass row data directly to Pie."
-                }
+                    "name": "valueKey",
+                    "type": "numeric keyof Row",
+                    "description": "Finite, nonnegative segment value field."
+                },
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns segment colors, labels, validation, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "RadarChart",
             "category": "Charts",
-            "introduction": "Native Recharts radar chart. Compose Radar, polar axes, tooltip, and legend inside a shadcn ChartContainer.",
+            "introduction": "Compares numeric series across named categories on polar axes.",
+            "guidance": "Place inside a Box with an explicit height. Supply categoryKey and numeric series keys. Presentation is owned by the component.",
             "properties": [
+                { "name": "data", "type": "readonly Row[]" },
+                { "name": "categoryKey", "type": "keyof Row", "description": "Category label field." },
                 {
-                    "name": "data",
-                    "type": "object[]",
-                    "description": "Rows in your own shape. Select fields with native dataKey props on Radar and polar axes."
+                    "name": "series",
+                    "type": "readonly ChartSeries<Row>[]",
+                    "description": "Numeric field keys and optional labels."
                 },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native chart marks, polar axes, grids, tooltip, and legend."
-                }
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns chart presentation, data admission, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "RadialBarChart",
             "category": "Charts",
-            "introduction": "Native Recharts radial bar chart. Compose RadialBar, polar axes, tooltip, and legend inside a shadcn ChartContainer.",
+            "introduction": "Shows radial values against an explicit zero-to-maximum scale.",
+            "guidance": "Place inside a Box with an explicit height. Set max to the actual scale limit, such as 100 for percentages. Values must be between zero and max; zeros remain valid data.",
             "properties": [
-                {
-                    "name": "data",
-                    "type": "object[]",
-                    "description": "Rows in your own shape. Select numeric fields with native dataKey props on RadialBar."
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native chart marks, polar axes, grids, tooltip, and legend."
-                }
+                { "name": "data", "type": "readonly Row[]" },
+                { "name": "nameKey", "type": "keyof Row", "description": "Radial bar label field." },
+                { "name": "valueKey", "type": "numeric keyof Row", "description": "Finite, nonnegative value field." },
+                { "name": "max", "type": "number", "description": "Required finite, positive upper scale limit." },
+                { "name": "legend", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Owns the radial scale, colors, data admission, and empty states while Recharts renders the geometry.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
             "name": "Sankey",
             "category": "Charts",
-            "introduction": "Native Recharts Sankey diagram. Supply valid acyclic nodes and links through the data prop inside a shadcn ChartContainer.",
+            "introduction": "Shows directed flows between named nodes with fixed node and link presentation.",
+            "guidance": "Place inside a Box with an explicit height. Links reference nodes by zero-based indexes and must form an acyclic graph. Invalid endpoints, cycles, and nonfinite values are rejected before layout.",
             "keywords": ["flow", "sankey"],
             "properties": [
                 {
-                    "name": "data",
-                    "type": "{ nodes: object[]; links: object[] }",
-                    "description": "Native Sankey data. Links reference nodes by zero-based source and target indexes. Supply valid acyclic flows."
+                    "name": "nodes",
+                    "type": "readonly { name: string }[]",
+                    "description": "Named flow nodes in index order."
                 },
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native tooltip and other supported Recharts children."
-                }
+                    "name": "links",
+                    "type": "readonly { source: number; target: number; value: number }[]",
+                    "description": "Indexed links with finite, nonnegative values."
+                },
+                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
-            "source": "recharts",
+            "source": "custom",
+            "justification": "Validates flow topology and owns chart presentation while Recharts computes the acyclic layout.",
             "reference": "https://ui.shadcn.com/docs/components/chart"
         },
         {
@@ -692,68 +732,23 @@
         {
             "name": "Card",
             "category": "Layouts",
-            "introduction": "Native shadcn card composition.",
-            "guidance": "Compose CardHeader, CardTitle, CardDescription, CardAction, CardContent, and CardFooter. Use InteractiveCard for surface actions or selection.",
+            "introduction": "A standalone card with optional header and footer content and accessible surface interactions.",
+            "guidance": "Pass header as an object with title, optional description, and an optional right-aligned action. Pass footer as JSX and body content as children. Supply label with onClick, href, or onChange for interactive cards. Selection takes priority over onClick and href; nested controls remain independent. Use Box for sizing.",
             "properties": [
-                { "name": "children", "type": "ReactNode", "description": "Card sections." },
+                { "name": "header", "type": "{ title: ReactNode; description?: ReactNode; action?: ReactNode }" },
+                { "name": "children", "type": "ReactNode" },
+                { "name": "footer", "type": "ReactNode" },
                 { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" },
                 {
                     "name": "aria-* / data-*",
                     "type": "Native div props",
-                    "description": "All card parts accept their native DOM attributes, events, and refs."
-                }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/card"
-        },
-        {
-            "name": "InteractiveCard",
-            "category": "Layouts",
-            "introduction": "Groups dashboard widgets, gallery items, or settings sections.",
-            "keywords": ["widget", "gallery", "settings"],
-            "guidance": "Do not wrap dense lists or individual table rows in cards.",
-            "properties": [
-                { "name": "children", "type": "ReactNode", "description": "Content rendered inside the card." },
-                {
-                    "name": "padding",
-                    "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10",
-                    "description": "Inner spacing using the theme spacing scale.",
-                    "default": 4
+                    "description": "Native DOM attributes, events, and refs are supported without className or style overrides."
                 },
-                {
-                    "name": "isClipped",
-                    "type": "boolean",
-                    "description": "Clips full-bleed content to the card's rounded edges.",
-                    "default": false
-                },
-                {
-                    "name": "variant",
-                    "type": "\"default\" | \"transparent\" | \"muted\"",
-                    "description": "Background color variant, independent of the interaction mode.",
-                    "default": "default"
-                },
-                {
-                    "name": "width",
-                    "type": "string | number",
-                    "description": "Card width; numbers are pixels and strings are CSS sizes."
-                },
-                {
-                    "name": "height",
-                    "type": "string | number",
-                    "description": "Card height; numbers are pixels and strings are CSS sizes."
-                },
-                { "name": "maxWidth", "type": "string | number", "description": "Maximum card width." },
-                { "name": "minHeight", "type": "string | number", "description": "Minimum card height." },
+                { "name": "label", "type": "string", "default": "Card" },
                 {
                     "name": "inert",
                     "type": "boolean",
                     "description": "Makes the card and its descendants non-interactive."
-                },
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Accessible label for interactive cards; supply a descriptive label.",
-                    "default": "Card"
                 },
                 {
                     "name": "onClick",
@@ -786,7 +781,8 @@
                 }
             ],
             "source": "custom",
-            "justification": "Adds scoped navigation, selection, actions, and layout constraints to the native Card composition."
+            "justification": "Owns card section spacing and accessible action, navigation, and selection behavior with fixed styling.",
+            "reference": "https://ui.shadcn.com/docs/components/card"
         },
         {
             "name": "CodeBlock",

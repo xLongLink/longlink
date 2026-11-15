@@ -1,95 +1,84 @@
-import { Link } from 'react-router';
+import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { ArrowRight } from 'lucide-react';
+import { Box } from '@/components/longlink/layout/box';
+import { Card } from '@/components/longlink/layout/card';
 import { Button } from '@/components/longlink/action/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/shadcn/card';
+import { AreaChart } from '@/components/longlink/charts/area';
 
-/** Documents native card composition and the custom interactive wrapper. */
+const requests = [
+    { month: 'Jan', requests: 1842 },
+    { month: 'Feb', requests: 2167 },
+    { month: 'Mar', requests: 1935 },
+    { month: 'Apr', requests: 2841 },
+    { month: 'May', requests: 2596 },
+    { month: 'Jun', requests: 3284 }
+];
+
+/** Documents the standalone Card and its optional surface interactions. */
 export default function CardPage() {
-    // Keep native composition distinct from the custom interaction contract.
     return (
         <ViewLayout
             name="Card"
             properties={[
-                {
-                    name: 'size',
-                    type: '"default" | "sm"',
-                    description: 'Native card spacing. Card and its parts also accept native div props.'
-                },
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description:
-                        'Compose CardHeader, CardTitle, CardDescription, CardAction, CardContent, and CardFooter.'
-                },
-                ...[
-                    {
-                        name: 'size',
-                        type: '"default" | "sm"',
-                        description:
-                            'Native Card spacing; compose the same CardHeader, CardContent, and CardFooter parts.'
-                    },
-                    {
-                        name: 'className',
-                        type: 'string',
-                        description: 'Native Card classes. Also accepts style and other native div props.'
-                    },
-                    {
-                        name: 'inert',
-                        type: 'boolean',
-                        description: 'Makes the card and its descendants non-interactive.'
-                    },
-                    {
-                        name: 'label',
-                        type: 'string',
-                        description: 'Accessible label for interactive cards; supply a descriptive label.'
-                    },
-                    {
-                        name: 'onClick',
-                        type: '(event: ViewMouseEvent) => void',
-                        description: 'Runs when the card surface is activated.'
-                    },
-                    { name: 'href', type: 'string', description: 'Link destination, used when onChange is absent.' },
-                    {
-                        name: 'target',
-                        type: 'string',
-                        description: 'Link target; external URLs open in a new tab in Views.'
-                    },
-                    { name: 'isDisabled', type: 'boolean', description: 'Disables activation of an interactive card.' },
-                    { name: 'isSelected', type: 'boolean', description: 'Whether the card is selected.' },
-                    {
-                        name: 'onChange',
-                        type: '(isSelected: boolean) => void',
-                        description: 'Enables selection and receives its next state, overriding onClick and href.'
-                    }
-                ].map((property) => ({ ...property, name: `InteractiveCard.${property.name}` }))
+                { name: 'header', type: '{ title: ReactNode; description?: ReactNode; action?: ReactNode }' },
+                { name: 'children', type: 'ReactNode' },
+                { name: 'footer', type: 'ReactNode' },
+                { name: 'size', type: '"default" | "sm"' },
+                { name: 'label', type: 'string' },
+                { name: 'onClick', type: '(event: MouseEvent<HTMLElement>) => void' },
+                { name: 'href', type: 'string' },
+                { name: 'target', type: 'string' },
+                { name: 'isDisabled', type: 'boolean' },
+                { name: 'isSelected', type: 'boolean' },
+                { name: 'onChange', type: '(isSelected: boolean) => void' },
+                { name: 'inert', type: 'boolean' }
             ]}
             example={{
-                title: 'Card with an image',
+                title: 'Card',
                 preview: <CardExample />,
                 code: `function Example() {
+  const [months, setMonths] = useState(6);
+  const requests = [
+    { month: 'Jan', requests: 1842 },
+    { month: 'Feb', requests: 2167 },
+    { month: 'Mar', requests: 1935 },
+    { month: 'Apr', requests: 2841 },
+    { month: 'May', requests: 2596 },
+    { month: 'Jun', requests: 3284 },
+  ];
+  const data = requests.slice(-months);
+  const total = data.reduce((sum, row) => sum + row.requests, 0);
+
   return (
-    <Card className="w-4/5">
-      <img
-        src="/images/organized-work.webp"
-        alt="Illustrated library with curved bookshelves and sweeping staircases"
-        className="aspect-[2/1] w-full object-cover"
-        width={1672}
-        height={941}
-      />
-      <CardHeader>
-        <CardTitle>Views component library</CardTitle>
-        <CardDescription>
-          Forms, layouts, and data displays for LongLink solutions.
-        </CardDescription>
-      </CardHeader>
-      <CardFooter className="justify-end">
-        <Button nativeButton={false} render={<a href="/docs/sdk/views/" />}>
-          Browse components
-          <Icon icon="arrow-right" size="sm" />
-        </Button>
-      </CardFooter>
-    </Card>
+    <Box width="100%" maxWidth={560}>
+      <Card
+        header={{
+          title: 'API requests',
+          description: 'Monthly request volume',
+          action: (
+            <Button size="sm" variant="outline" onClick={() => setMonths(months === 6 ? 3 : 6)}>
+              Show {months === 6 ? 3 : 6} months
+            </Button>
+          )
+        }}
+        footer={
+          <>
+            <span>{total.toLocaleString('en-US')} requests</span>
+            <span>{data[0].month} – {data[data.length - 1].month} 2026</span>
+          </>
+        }
+      >
+        <Box height={200}>
+          <AreaChart
+            data={data}
+            xKey="month"
+            series={[{ key: 'requests', label: 'Requests' }]}
+            legend={false}
+            aria-label="Monthly API requests"
+          />
+        </Box>
+      </Card>
+    </Box>
   );
 }`
             }}
@@ -97,28 +86,43 @@ export default function CardPage() {
     );
 }
 
-/** Shows native card composition with an image and a navigation action. */
+/** Shows a chart card whose header action changes the range and footer summary. */
 export function CardExample() {
-    // Keep the image flush with the card while its parts own content spacing.
+    const [months, setMonths] = useState(6);
+    const data = requests.slice(-months);
+    const total = data.reduce((sum, row) => sum + row.requests, 0);
+
     return (
-        <Card className="w-4/5">
-            <img
-                src="/images/organized-work.webp"
-                alt="Illustrated library with curved bookshelves and sweeping staircases"
-                className="aspect-[2/1] w-full object-cover"
-                width={1672}
-                height={941}
-            />
-            <CardHeader>
-                <CardTitle>Views component library</CardTitle>
-                <CardDescription>Forms, layouts, and data displays for LongLink solutions.</CardDescription>
-            </CardHeader>
-            <CardFooter className="justify-end">
-                <Button nativeButton={false} render={<Link to="/docs/sdk/views/" />}>
-                    Browse components
-                    <ArrowRight aria-hidden="true" />
-                </Button>
-            </CardFooter>
-        </Card>
+        <Box width="100%" maxWidth={560}>
+            <Card
+                header={{
+                    title: 'API requests',
+                    description: 'Monthly request volume',
+                    action: (
+                        <Button size="sm" variant="outline" onClick={() => setMonths(months === 6 ? 3 : 6)}>
+                            Show {months === 6 ? 3 : 6} months
+                        </Button>
+                    )
+                }}
+                footer={
+                    <>
+                        <span>{total.toLocaleString('en-US')} requests</span>
+                        <span>
+                            {data[0].month} – {data[data.length - 1].month} 2026
+                        </span>
+                    </>
+                }
+            >
+                <Box height={200}>
+                    <AreaChart
+                        data={data}
+                        xKey="month"
+                        series={[{ key: 'requests', label: 'Requests' }]}
+                        legend={false}
+                        aria-label="Monthly API requests"
+                    />
+                </Box>
+            </Card>
+        </Box>
     );
 }

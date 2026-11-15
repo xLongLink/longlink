@@ -88,6 +88,7 @@ export const componentDocumentation = [
     { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
     { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge },
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
+    { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
     { name: 'Maps', category: 'Others', icon: Map },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
