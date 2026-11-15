@@ -2,8 +2,8 @@ import * as icons from '@/lib/icons';
 // @vitest-environment happy-dom
 import { act, createRef } from 'react';
 import { withMounted } from '../../render';
-import { Icon } from '@/components/longlink/icon';
 import { it, expect, vi, afterEach } from 'vitest';
+import { Icon } from '@/components/longlink/display/icon';
 
 afterEach(() => {
     vi.restoreAllMocks();

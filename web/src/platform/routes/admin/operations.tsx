@@ -8,8 +8,8 @@ import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const kinds = {
     'solution.deploy': 'Solution deployment',
@@ -121,4 +121,4 @@ export default function Operations() {
         </Stack>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

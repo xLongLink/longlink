@@ -5,7 +5,7 @@ import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
@@ -93,4 +93,4 @@ function InvoiceTable({ base }: { base: string }) {
         </Table>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

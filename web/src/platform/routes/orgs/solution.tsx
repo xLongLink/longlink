@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { Empty } from '@/components/longlink/empty';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
 import * as permissions from '@/platform/permissions';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
+import { Empty } from '@/components/longlink/display/empty';
 import { SolutionPage } from '@/components/ui/solution-page';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';

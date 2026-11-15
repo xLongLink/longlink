@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
-import { Icon } from '@/components/longlink/icon';
 import { Box } from '@/components/longlink/layout/box';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Icon } from '@/components/longlink/display/icon';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Documents Table in LongLink Views. */
 export default function TablePage() {

@@ -1,7 +1,7 @@
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     CodeBlock,
     CodeBlockCopyButton,

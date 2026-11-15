@@ -1,6 +1,6 @@
-import { Badge } from '@/components/longlink/badge';
-import { Empty } from '@/components/longlink/empty';
 import { IconTile } from '@/components/reui/icon-tile';
+import { Badge } from '@/components/longlink/display/badge';
+import { Empty } from '@/components/longlink/display/empty';
 import { useId, useState, type ReactNode, type ComponentProps } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis, YAxis } from 'recharts';

@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useRef, useState } from 'react';
-import { Avatar } from '@/components/longlink/avatar';
 import { renderStatic, withMounted } from '../../render';
+import { Avatar } from '@/components/longlink/display/avatar';
 
 it('recovers failed URLs to stable artwork and retries a newly supplied source', async () => {
     function Owner() {

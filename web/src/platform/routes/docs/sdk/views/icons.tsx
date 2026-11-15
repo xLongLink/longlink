@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Icon } from '@/components/longlink/icon';
+import { Icon } from '@/components/longlink/display/icon';
 
 /** Documents Icon in LongLink Views. */
 export default function IconsPage() {

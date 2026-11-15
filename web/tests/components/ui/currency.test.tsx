@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { Currency } from '@/components/longlink/currency';
+import { Currency } from '@/components/longlink/display/currency';
 
 it.each([
     [1234.5, 'USD', 'en-US', '$1,234.50'],

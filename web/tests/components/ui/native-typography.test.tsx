@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { Text } from '@/components/longlink/text';
 import userEvent from '@testing-library/user-event';
-import { Heading } from '@/components/longlink/heading';
 import { renderStatic, withMounted } from '../../render';
+import { Text } from '@/components/longlink/display/text';
+import { Heading } from '@/components/longlink/display/heading';
 
 it('preserves heading targets with native document outline semantics', () => {
     const output = renderStatic(

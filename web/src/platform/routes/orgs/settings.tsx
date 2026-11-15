@@ -9,13 +9,13 @@ import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
-import { Avatar } from '@/components/longlink/avatar';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
@@ -25,7 +25,7 @@ import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -504,4 +504,4 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
         </>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

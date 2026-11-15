@@ -10,7 +10,7 @@ import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 type ViewProperty = { name: string; type: string; description?: string };
 

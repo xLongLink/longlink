@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Heading } from '@/components/longlink/heading';
+import { Heading } from '@/components/longlink/display/heading';
 import { Stack } from '@/components/custom/stack';
 
 /** Documents Heading in LongLink Views. */

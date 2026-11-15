@@ -18,7 +18,7 @@ import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -364,4 +364,4 @@ export default function SolutionManagement({
         </>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

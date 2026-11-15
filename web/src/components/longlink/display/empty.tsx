@@ -1,6 +1,6 @@
-import { Icon } from '@/components/longlink/icon';
 import type { IconName } from 'lucide-react/dynamic';
 import type { ComponentProps, ReactNode } from 'react';
+import { Icon } from '@/components/longlink/display/icon';
 
 /** Displays an empty state with optional actions below its description. */
 export function Empty({

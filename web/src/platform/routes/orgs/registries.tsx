@@ -8,7 +8,7 @@ import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -114,4 +114,4 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
         </>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

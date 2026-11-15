@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Timestamp } from '@/components/longlink/timestamp';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 
 /** Documents Timestamp in LongLink Views. */
 export default function TimestampPage() {

@@ -10,7 +10,7 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -174,4 +174,4 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         </>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
-import { Text } from '@/components/longlink/text';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
+import { Text } from '@/components/longlink/display/text';
 
 it('keeps absent children empty and preserves nested text without adding button semantics', () => {
     const empty = renderStatic(<Text />);

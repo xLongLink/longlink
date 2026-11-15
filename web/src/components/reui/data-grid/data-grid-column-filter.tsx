@@ -1,11 +1,10 @@
 'use no memo';
 
 import { useMemo, useState } from 'react';
-import { Badge } from '@/components/longlink/badge';
+import { Badge } from '@/components/longlink/display/badge';
 import { useDataGrid } from '@/components/reui/data-grid/data-grid';
 import type { DataGridFeatures } from '@/components/reui/data-grid/data-grid';
 import type { Column } from '@tanstack/react-table';
-
 import { cn } from 'cn';
 import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';

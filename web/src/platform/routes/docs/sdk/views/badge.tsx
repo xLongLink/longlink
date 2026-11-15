@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Badge } from '@/components/longlink/badge';
+import { Badge } from '@/components/longlink/display/badge';
 
 /** Documents Badge in LongLink Views. */
 export default function BadgePage() {

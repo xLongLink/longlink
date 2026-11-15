@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 
 /** Documents Empty in LongLink Views. */

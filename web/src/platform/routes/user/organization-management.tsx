@@ -2,10 +2,10 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { ExternalLink, Plus } from 'lucide-react';
-import { Badge } from '@/components/longlink/badge';
 import { apiQueryOptions } from '@/lib/react-query';
-import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
+import { Badge } from '@/components/longlink/display/badge';
+import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
@@ -14,7 +14,7 @@ import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -239,4 +239,4 @@ export default function OrganizationManagement({ presentation }: { presentation:
         </>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

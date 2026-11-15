@@ -1,5 +1,5 @@
 import { viewComponent } from '../props';
-import * as table from '@/components/longlink/table';
+import * as table from '@/components/longlink/display/table';
 
 export const Table = viewComponent(table.Table);
 

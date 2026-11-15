@@ -26,9 +26,8 @@ import type {
 import { flexRender, Subscribe } from '@tanstack/react-table';
 import type { Cell, Column, Header, Row } from '@tanstack/react-table';
 import { cn } from 'cn';
-
 import { Button } from '@/components/shadcn/button';
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Spinner } from '@/components/shadcn/spinner';
 import { PlusIcon } from 'lucide-react';

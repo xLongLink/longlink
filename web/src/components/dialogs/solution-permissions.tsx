@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
-import { Avatar } from '@/components/longlink/avatar';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 export function SolutionPermissionsDialog({
     solutionId,
@@ -221,4 +221,4 @@ function MemberPermissions({
         </Stack>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

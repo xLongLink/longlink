@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Currency } from '@/components/longlink/currency';
+import { Currency } from '@/components/longlink/display/currency';
 
 /** Documents locale-aware currency formatting. */
 export default function CurrencyPage() {

@@ -4,7 +4,7 @@ import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { formatRelativeTimestamp } from '@/lib/timestamp';
-import { Timestamp } from '@/components/longlink/timestamp';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 
 it.each([
     ['date', 'Feb 19, 2026'],

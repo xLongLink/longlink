@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Empty } from '@/components/longlink/empty';
 import { prepareMap, type MapData } from './map-data';
 import { ZoomableGroup } from 'react-simple-maps/zoom';
+import { Empty } from '@/components/longlink/display/empty';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps/core';
 
 /** Renders generic polygon boundaries from supplied GeoJSON or TopoJSON data. */

@@ -1,5 +1,5 @@
-import { Empty } from '@/components/longlink/empty';
 import { Spinner } from '@/components/shadcn/spinner';
+import { Empty } from '@/components/longlink/display/empty';
 
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {

@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { FileType } from '@/components/longlink/file-type';
+import { FileType } from '@/components/longlink/display/file-type';
 
 /** Documents FileType in LongLink Views. */
 export default function FileTypePage() {

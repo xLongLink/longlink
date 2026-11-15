@@ -1,6 +1,6 @@
 import { SidebarContext } from '@/lib/sidebar';
-import { Avatar } from '@/components/longlink/avatar';
 import { Separator } from '@/components/shadcn/separator';
+import { Avatar } from '@/components/longlink/display/avatar';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';

@@ -1,9 +1,9 @@
 import { cn } from 'cn';
 import { spacing } from './layout';
 import { ChevronDown } from 'lucide-react';
-import { Icon } from '@/components/longlink/icon';
 import { MenuNavigationContext } from './contexts';
 import type { IconName } from 'lucide-react/dynamic';
+import { Icon } from '@/components/longlink/display/icon';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';

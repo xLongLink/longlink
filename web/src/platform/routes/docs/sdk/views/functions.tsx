@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [

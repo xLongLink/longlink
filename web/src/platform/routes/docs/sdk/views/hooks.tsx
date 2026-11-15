@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
 import { viewHooks } from '@/lib/documentation';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Documents the hooks exposed by the View runtime. */
 export default function HooksPage() {

@@ -1,8 +1,8 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { Progress } from '@/components/longlink/progress';
 import { Separator } from '@/components/shadcn/separator';
+import { Progress } from '@/components/longlink/display/progress';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';

@@ -2,14 +2,14 @@ import { useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Avatar } from '@/components/longlink/avatar';
-import { Timestamp } from '@/components/longlink/timestamp';
+import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/table';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
@@ -103,4 +103,4 @@ export default function Users() {
         </Stack>
     );
 }
-import { Empty } from '@/components/longlink/empty';
+import { Empty } from '@/components/longlink/display/empty';

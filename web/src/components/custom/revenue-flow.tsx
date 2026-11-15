@@ -1,6 +1,6 @@
 import { Sankey } from 'recharts';
 import { useId, useState } from 'react';
-import { Badge } from '@/components/longlink/badge';
+import { Badge } from '@/components/longlink/display/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import { formatFlowValue, traceFlow, type FlowNode, type RevenueQuarter } from './flow';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/shadcn/chart';
