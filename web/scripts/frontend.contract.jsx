@@ -30,7 +30,6 @@ const table = useTable({
     getRowId: (row) => row.id
 });
 const query = createFilterQuery();
-const downloads = useDownload();
 const icon = <Icon icon="triangle-exclamation-point" size="sm" />;
 const token = <Token icon="user-round" label="Owner" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
@@ -52,7 +51,7 @@ const configuredTable = (
     <DataGrid
         table={table}
         recordCount={records.length}
-        emptyMessage={<Button onClick={async () => { await downloads.download('/api/export', 'shipments.csv'); }}>Export</Button>}
+        emptyMessage={<Link href="/api/export" download="shipments.csv">Export</Link>}
     >
         <DataGridContainer>
             <DataGridScrollArea><DataGridTable /></DataGridScrollArea>

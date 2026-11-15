@@ -134,7 +134,11 @@ export default function ViewLayout({
                 <h1 className="font-semibold tracking-tight text-4xl" id="introduction">
                     {component.label}
                 </h1>
-                <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
+                <CodeBlock
+                    code={`longlink docs component ${component.category === 'Hooks' ? 'Hooks' : name}`}
+                    language="bash"
+                    wrap
+                >
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 {runtime ? (
@@ -145,9 +149,11 @@ export default function ViewLayout({
                             <TabsTrigger value="example">Example</TabsTrigger>
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="example">
+                        <TabsContent value="example" className="flex min-w-0 flex-col gap-5">
                             {example ? (
                                 <ExampleWindow key={name} example={example} />
+                            ) : children ? (
+                                children
                             ) : (
                                 <p>No standalone example is available for this component.</p>
                             )}

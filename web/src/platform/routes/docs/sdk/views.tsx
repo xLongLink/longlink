@@ -24,9 +24,9 @@ import { Icon } from '@/components/longlink/display/icon';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
+import { Tabs, Tab } from '@/components/longlink/layout/tabs';
 import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
-import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
@@ -206,10 +206,8 @@ const previews = new Map(
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
             <Tabs defaultValue="overview">
-                <TabsList>
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="activity">Activity</TabsTrigger>
-                </TabsList>
+                <Tab value="overview" label="Overview" />
+                <Tab value="activity" label="Activity" />
             </Tabs>
         ),
         Text: <TextExample />,
@@ -322,8 +320,19 @@ export default function Item({ params }) {
                                                         }
                                                         gap={0}
                                                     >
-                                                        {previews.get(component.name) ?? (
-                                                            <InlineCode>{`<${component.name} />`}</InlineCode>
+                                                        {component.category === 'Hooks' ? (
+                                                            <Stack align="center" gap={2}>
+                                                                {(component.name === 'ReactHooks'
+                                                                    ? ['useState', 'useEffect', 'useMemo', 'useRef']
+                                                                    : [component.name]
+                                                                ).map((name) => (
+                                                                    <InlineCode key={name}>{`${name}()`}</InlineCode>
+                                                                ))}
+                                                            </Stack>
+                                                        ) : (
+                                                            (previews.get(component.name) ?? (
+                                                                <InlineCode>{`<${component.name} />`}</InlineCode>
+                                                            ))
                                                         )}
                                                     </Stack>
                                                 </div>

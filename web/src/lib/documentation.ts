@@ -3,6 +3,7 @@ export const documentationLastUpdated = '2026-10-02';
 
 export const documentationCategories: string[] = [
     'Runtime',
+    'Hooks',
     'Action',
     'Display',
     'Form',
@@ -13,6 +14,16 @@ export const documentationCategories: string[] = [
 
 // Describe the runtime bindings exposed to Views.
 export const viewHooks = [
+    {
+        name: 'useFormContext()',
+        description:
+            'Reads the nearest FormProvider form methods. Call it in a descendant component to share validation, values, and submission state without passing the form through props.'
+    },
+    {
+        name: 'useTable(options, selector?)',
+        description:
+            'Creates a TanStack table for DataGrid. Pass data, columns, and dataGridFeatures; the View runtime preserves column behavior while excluding authored header and cell styling.'
+    },
     {
         name: 'useForm(options)',
         description:

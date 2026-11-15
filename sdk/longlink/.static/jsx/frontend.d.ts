@@ -15739,17 +15739,6 @@ export function parseTimeInput(text: string, options?: {
     period?: TimePickerPeriod;
     labels?: Pick<TimePickerLabels, "am" | "pm">;
 }): TimePickerTime | null;
-export type TimePickerApi = {
-    value: string | null;
-    time: TimePickerTime | null;
-    open: boolean;
-    setOpen: (open: boolean) => void;
-    setValue: (value: string | null) => void;
-    now: () => void;
-    clear: () => void;
-    confirm: () => void;
-};
-export function useTimePicker(): TimePickerApi;
 type TimePickerProps = {
     value?: string | null;
     defaultValue?: string | null;
@@ -18167,10 +18156,6 @@ interface IconTileProps extends useRender.ComponentProps<"span"> {
 }
 function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 const IconTile$1: ViewComponent<typeof IconTile>;
-export function useDownload(): {
-    download: (path: string, name: string) => Promise<void>;
-    error: string | undefined;
-};
 export function zodResolver<Input extends FieldValues, Context, Output extends FieldValues>(schema: z.ZodType<Output, Input>, schemaOptions?: z.core.ParseContext<z.core.$ZodIssue>, resolverOptions?: {
     mode?: "async" | "sync";
     raw?: false;
@@ -18416,7 +18401,6 @@ declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
 declare const TimePicker: typeof NativeFrontend.TimePicker;
 import TimePickerActionProps = NativeFrontend.TimePickerActionProps;
-import TimePickerApi = NativeFrontend.TimePickerApi;
 declare const TimePickerClear: typeof NativeFrontend.TimePickerClear;
 declare const TimePickerColumn: typeof NativeFrontend.TimePickerColumn;
 import TimePickerColumnProps = NativeFrontend.TimePickerColumnProps;
@@ -18460,11 +18444,9 @@ declare const mergeTimePickerI18n: typeof NativeFrontend.mergeTimePickerI18n;
 declare const parseTimeInput: typeof NativeFrontend.parseTimeInput;
 declare const parseTimeValue: typeof NativeFrontend.parseTimeValue;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;
-declare const useDownload: typeof NativeFrontend.useDownload;
 declare const useForm: typeof NativeFrontend.useForm;
 declare const useFormContext: typeof NativeFrontend.useFormContext;
 declare const useSubmit: typeof NativeFrontend.useSubmit;
 declare const useTable: typeof NativeFrontend.useTable;
-declare const useTimePicker: typeof NativeFrontend.useTimePicker;
 import z = NativeFrontend.z;
 declare const zodResolver: typeof NativeFrontend.zodResolver;

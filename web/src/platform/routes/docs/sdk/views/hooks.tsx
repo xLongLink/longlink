@@ -1,35 +1,32 @@
+import { Link } from 'react-router';
 import ViewLayout from './view-layout';
-import { viewHooks } from '@/lib/documentation';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { componentDocumentation } from '@/platform/publications';
+import { Card, CardHeader, CardTitle } from '@/components/shadcn/card';
 
-/** Documents the hooks exposed by the View runtime. */
+/** Links to each View hook reference, with React hooks grouped together. */
 export default function HooksPage() {
-    // Render the runtime-specific hooks table.
     return (
         <ViewLayout name="Hooks" toc={[{ id: 'hooks', label: 'Hooks', level: 2 }]}>
             <h2 className="font-semibold tracking-tight text-3xl" id="hooks">
                 Hooks
             </h2>
-            <Table wrap>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Hook</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {viewHooks.map((row) => (
-                        <TableRow key={row.name}>
-                            <TableCell>
-                                <Stack gap={0}>
-                                    <span>{row.name}</span>
-                                    <span className="text-xs text-muted-foreground">{row.description}</span>
-                                </Stack>
-                            </TableCell>
-                        </TableRow>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {componentDocumentation
+                    .filter((component) => component.category === 'Hooks')
+                    .map((component) => (
+                        <Link
+                            key={component.slug}
+                            to={`/docs/sdk/views/${component.slug}/`}
+                            className="min-w-0 outline-offset-4 focus-visible:outline-ring"
+                        >
+                            <Card size="sm" className="h-full transition-colors hover:bg-muted">
+                                <CardHeader>
+                                    <CardTitle>{component.label}</CardTitle>
+                                </CardHeader>
+                            </Card>
+                        </Link>
                     ))}
-                </TableBody>
-            </Table>
+            </div>
         </ViewLayout>
     );
 }

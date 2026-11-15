@@ -106,6 +106,13 @@ export const componentDocumentation = [
     { name: 'Grid', category: 'Layouts', icon: Grip },
     { name: 'Heading', category: 'Display', icon: Heading },
     { name: 'Hooks', category: 'Runtime' },
+    { name: 'useApi', category: 'Hooks', icon: Database },
+    { name: 'useForm', category: 'Hooks', icon: FileText },
+    { name: 'useFormContext', category: 'Hooks', icon: FileText },
+    { name: 'useSubmit', category: 'Hooks', icon: Waypoints },
+    { name: 'useConfirm', category: 'Hooks', icon: ShieldCheck },
+    { name: 'useTable', category: 'Hooks', icon: Table2 },
+    { name: 'ReactHooks', category: 'Hooks', icon: FileCode2 },
     { name: 'Icon', category: 'Display', icon: Gem },
     { name: 'Image', category: 'Display', icon: Image },
     { name: 'Input', category: 'Form', icon: TextCursorInput },
@@ -125,7 +132,14 @@ export const componentDocumentation = [
     { name: 'Timestamp', category: 'Display', icon: CalendarClock }
 ].map((component) => ({
     ...component,
-    label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
+    label:
+        component.name === 'ReactHooks'
+            ? 'React hooks'
+            : component.name === 'Button'
+              ? 'Buttons'
+              : component.name === 'Icon'
+                ? 'Icons'
+                : component.name,
     slug:
         component.name === 'RadialBarChart'
             ? 'radial-chart'
@@ -181,6 +195,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                 ],
                 pages: [
                     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
+                    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
                     { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
                     { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },

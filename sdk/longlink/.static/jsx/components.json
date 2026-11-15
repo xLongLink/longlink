@@ -203,15 +203,6 @@
             "properties": []
         },
         {
-            "name": "useDownload",
-            "category": "Action",
-            "source": "custom",
-            "justification": "Connects download actions to the isolated View host capability and shared failure handling.",
-            "introduction": "Returns download(path, filename) and recoverable error feedback.",
-            "guidance": "Keep endpoint selection and export parameters in the View. Await download(path, filename) from a Button handler and manage pending state and error feedback in the View.",
-            "properties": []
-        },
-        {
             "name": "Input",
             "category": "Form",
             "introduction": "Native shadcn Input with HTML input attributes and DOM change events.",
