@@ -8,6 +8,7 @@ import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
+import { createViewElement } from './adapter/runtime/element';
 import { FileRequestContext } from '@/components/custom/preview';
 import { FileViewerContext } from '@/components/custom/file-context';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
@@ -374,7 +375,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const bindings = {
             // Keep JSX compilation separate from the public View API.
-            __jsx: React.createElement,
+            __jsx: createViewElement(components),
             ...components,
             request,
             navigate

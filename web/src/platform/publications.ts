@@ -115,7 +115,6 @@ export const componentDocumentation = [
     { name: 'Combobox', category: 'Form', icon: ListFilter },
     { name: 'Slider', category: 'Form', icon: Settings2 },
     { name: 'Stack', category: 'Layouts', icon: Layers },
-    { name: 'Stepper', category: 'Layouts', icon: Waypoints },
     { name: 'Switch', category: 'Form', icon: ToggleLeft },
     { name: 'Table', category: 'Display', icon: Table2 },
     { name: 'Tabs', category: 'Layouts', icon: PanelsTopLeft },

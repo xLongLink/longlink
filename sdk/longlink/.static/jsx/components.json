@@ -618,7 +618,7 @@
                 {
                     "name": "render",
                     "type": "ReactElement | ((props) => ReactElement)",
-                    "description": "Replaces the default span. Native span attributes, className, style, events, and refs are supported."
+                    "description": "Replaces the default span. Native span attributes, events, and refs are supported; component styling is fixed."
                 }
             ],
             "source": "reui",
@@ -657,11 +657,6 @@
                     "name": "icon",
                     "type": "ReactNode",
                     "description": "Custom icon replacing the label and family glyph."
-                },
-                {
-                    "name": "labelClassName",
-                    "type": "string",
-                    "description": "Classes applied to the label badge. Native span attributes, className, style, events, and refs are supported on the root."
                 }
             ],
             "source": "reui",
@@ -707,7 +702,7 @@
                 {
                     "name": "render",
                     "type": "ReactElement | ((props, state) => ReactElement)",
-                    "description": "Native element composition. DOM attributes, refs, className, style, and event handlers are supported."
+                    "description": "Native element composition. DOM attributes, refs, and event handlers are supported; component styling is fixed."
                 },
                 { "name": "disabled", "type": "boolean", "description": "Disables the button." },
                 {
@@ -734,7 +729,7 @@
                 { "name": "children", "type": "ReactNode", "description": "Card sections." },
                 { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" },
                 {
-                    "name": "className / style",
+                    "name": "aria-* / data-*",
                     "type": "Native div props",
                     "description": "All card parts accept their native DOM attributes, events, and refs."
                 }
@@ -882,44 +877,6 @@
             "source": "reui"
         },
         {
-            "name": "Collapsible",
-            "category": "Layouts",
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/base/collapsible",
-            "introduction": "Native collapsible composition using CollapsibleTrigger and CollapsibleContent.",
-            "properties": [
-                { "name": "open", "type": "boolean", "description": "Controlled visibility." },
-                {
-                    "name": "defaultOpen",
-                    "type": "boolean",
-                    "description": "Initial uncontrolled visibility.",
-                    "default": false
-                },
-                { "name": "disabled", "type": "boolean", "description": "Prevents trigger interaction." },
-                {
-                    "name": "onOpenChange",
-                    "type": "(open, details) => void",
-                    "description": "Receives visibility changes and cancellable native event details."
-                },
-                {
-                    "name": "CollapsibleTrigger.render",
-                    "type": "ReactElement | function",
-                    "description": "Customizes the trigger element, including native Button composition."
-                },
-                {
-                    "name": "CollapsibleContent.keepMounted",
-                    "type": "boolean",
-                    "description": "Retains closed content in the DOM.",
-                    "default": false
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Compose CollapsibleTrigger and CollapsibleContent; parts support native DOM attributes and refs."
-                }
-            ]
-        },
-        {
             "name": "Currency",
             "category": "Display",
             "introduction": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter.",
@@ -1006,9 +963,9 @@
                     "default": "horizontal"
                 },
                 {
-                    "name": "className / style / aria-*",
+                    "name": "aria-* / data-*",
                     "type": "native element props",
-                    "description": "Native presentation and accessibility attributes."
+                    "description": "Native accessibility and data attributes."
                 }
             ],
             "source": "shadcn",
@@ -1048,8 +1005,8 @@
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Native empty-state parts." },
                 {
-                    "name": "className",
-                    "type": "string",
+                    "name": "aria-* / data-*",
+                    "type": "native element props",
                     "description": "Standard HTML props are forwarded to the root div."
                 }
             ],
@@ -1132,7 +1089,7 @@
             "name": "Grid",
             "category": "Layouts",
             "introduction": "Arranges View content into fixed or width-responsive columns.",
-            "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
+            "guidance": "Accepts native div attributes, events, and refs. Configure layout through the supported layout props; component styling is fixed.",
             "keywords": ["columns", "layout", "dashboard"],
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Grid content." },
@@ -1212,7 +1169,7 @@
             "name": "Heading",
             "category": "Display",
             "introduction": "Displays a semantic HTML heading with standard Tailwind typography.",
-            "guidance": "Accepts native heading attributes, events, refs, className, and style. Use className or style for presentation rather than custom typography props.",
+            "guidance": "Accepts native heading attributes, events, and refs. Typography follows the installed component styling.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Heading content." },
                 {
@@ -1225,11 +1182,6 @@
                     "name": "accessibilityLevel",
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
                     "description": "Accessible heading level when it differs from the rendered heading element."
-                },
-                {
-                    "name": "className / style",
-                    "type": "native heading props",
-                    "description": "Standard CSS presentation on the heading element."
                 }
             ],
             "source": "custom",
@@ -1475,7 +1427,7 @@
                 {
                     "name": "ProgressTrack / ProgressIndicator",
                     "type": "Native component props",
-                    "description": "Exported native parts. All progress components support DOM attributes, refs, render, and state-based className and style."
+                    "description": "Exported native parts. All progress components support DOM attributes, refs, and render; component styling is fixed."
                 }
             ],
             "source": "shadcn",
@@ -1541,7 +1493,7 @@
                 },
                 { "name": "SelectTrigger.size", "type": "\"default\" | \"sm\"", "default": "default" },
                 {
-                    "name": "render / className / style",
+                    "name": "render",
                     "type": "Native part props",
                     "description": "Native parts accept DOM attributes, events, and refs."
                 }
@@ -1581,7 +1533,7 @@
                     "description": "Controls input trigger and clear buttons."
                 },
                 {
-                    "name": "render / className / style",
+                    "name": "render",
                     "type": "Native part props",
                     "description": "Native parts accept DOM attributes, events, and refs."
                 }
@@ -1667,7 +1619,7 @@
                 {
                     "name": "SliderThumb.getAriaValueText",
                     "type": "(formattedValue: string, value: number, index: number) => string",
-                    "description": "Accessible text for each thumb value. All parts support native DOM attributes, refs, render, and state-based className and style."
+                    "description": "Accessible text for each thumb value. All parts support native DOM attributes, refs, and render; component styling is fixed."
                 }
             ],
             "source": "shadcn",
@@ -1677,7 +1629,7 @@
             "name": "Stack",
             "category": "Layouts",
             "introduction": "Arranges View content using Tailwind spacing steps.",
-            "guidance": "Accepts native div attributes, events, refs, className, and style. Explicit style values override layout props.",
+            "guidance": "Accepts native div attributes, events, and refs. Configure layout through the supported layout props; component styling is fixed.",
             "keywords": ["spacing", "horizontal", "vertical", "layout"],
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Stack content." },
@@ -1769,44 +1721,6 @@
             "justification": "Provides a flex layout composition with independently scrollable children; no Stack primitive exists in shadcn/ui or ReUI."
         },
         {
-            "name": "Stepper",
-            "category": "Layouts",
-            "introduction": "Native ReUI Stepper composition with default styling and one-based values.",
-            "guidance": "Compose StepperNav, StepperItem, StepperTrigger, StepperIndicator, StepperSeparator, StepperTitle, StepperDescription, StepperPanel, and StepperContent. Use Wizard only for custom validated navigation and persistent drafts.",
-            "properties": [
-                {
-                    "name": "value / defaultValue",
-                    "type": "number",
-                    "description": "Controlled or initial active step; defaultValue defaults to 1."
-                },
-                { "name": "onValueChange", "type": "(value: number) => void", "description": "Active step callback." },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Installed ReUI layout."
-                },
-                { "name": "StepperItem.step", "type": "number", "description": "Unique step number." },
-                {
-                    "name": "StepperItem.completed / disabled / loading",
-                    "type": "boolean",
-                    "description": "Explicit item state."
-                },
-                {
-                    "name": "StepperTrigger.render",
-                    "type": "ReactElement",
-                    "description": "Base UI element composition."
-                },
-                { "name": "StepperContent.value", "type": "number", "description": "Step associated with this panel." },
-                {
-                    "name": "StepperContent.forceMount",
-                    "type": "boolean",
-                    "description": "Preserves inactive panel state when explicitly enabled."
-                }
-            ],
-            "source": "reui",
-            "reference": "https://reui.io/docs/components/base/stepper"
-        },
-        {
             "name": "Wizard",
             "category": "Layouts",
             "introduction": "Custom LongLink wizard with persistent Step panels, React Hook Form validation, and guarded asynchronous actions. Wrap the form in FormProvider and declare Step.fields. Next validates those field paths; a submit Button in the last Step invokes the form's handleSubmit. Set shouldFocusError: false so Wizard can reveal invalid hidden steps before focusing them.",
@@ -1861,11 +1775,7 @@
                     "type": "string",
                     "description": "Supporting text displayed below the step label."
                 },
-                {
-                    "name": "Step.children",
-                    "type": "ReactNode",
-                    "description": "Persistent Wizard panel content."
-                }
+                { "name": "Step.children", "type": "ReactNode", "description": "Persistent Wizard panel content." }
             ],
             "source": "custom",
             "justification": "Keeps drafts mounted and coordinates explicit RHF step validation, invalid-step focus recovery, and guarded asynchronous advancement."
@@ -1959,7 +1869,7 @@
                 {
                     "name": "TabsTrigger.children / TabsContent.children",
                     "type": "ReactNode",
-                    "description": "Visible tab label or panel content. All parts support native DOM attributes, refs, render, and state-based className and style."
+                    "description": "Visible tab label or panel content. All parts support native DOM attributes, refs, and render; component styling is fixed."
                 },
                 {
                     "name": "TabsTrigger.nativeButton",
@@ -1981,7 +1891,7 @@
             "name": "Text",
             "category": "Display",
             "introduction": "Adds optional truncation and overflow tooltips to a semantic HTML element.",
-            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, className, style, event handlers, and refs are forwarded to the rendered element. Use ordinary HTML for text that does not need truncation.",
+            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, event handlers, and refs are forwarded to the rendered element; component styling is fixed. Use ordinary HTML for text that does not need truncation.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Text content." },
                 {
@@ -2001,15 +1911,10 @@
                     "type": "boolean | \"start\" | \"end\" | \"above\" | \"below\"",
                     "description": "Enables, disables, or positions the tooltip for truncated text.",
                     "default": true
-                },
-                {
-                    "name": "className / style",
-                    "type": "native element props",
-                    "description": "Standard CSS typography, wrapping, alignment, and decoration."
                 }
             ],
             "source": "custom",
-            "justification": "Measures overflow and shows current truncated content in an accessible tooltip; presentation remains native HTML and Tailwind."
+            "justification": "Measures overflow and shows current truncated content in an accessible tooltip using the installed component styling."
         },
         {
             "name": "TimePicker",

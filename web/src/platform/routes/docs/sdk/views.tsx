@@ -11,7 +11,6 @@ import { SwitchExample } from './views/switch';
 import { Grid } from '@/components/custom/grid';
 import { Icon } from '@/components/custom/icon';
 import { Badge } from '@/components/reui/badge';
-import { StepperExample } from './views/stepper';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
@@ -180,7 +179,6 @@ const previews = new Map(
         Combobox: <ComboboxExample />,
         Slider: <SliderExample />,
         Stack: <StackExample />,
-        Stepper: <StepperExample />,
         Switch: <SwitchExample />,
         Table: <TableExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.

@@ -69,13 +69,6 @@ const nativeComposition = (
             <CardDescription>Settings</CardDescription>
         </CardHeader>
         <CardContent>
-            <Collapsible onOpenChange={(open, details) => {
-                open.valueOf();
-                details.cancel();
-            }}>
-                <CollapsibleTrigger render={<Button />}>Details</CollapsibleTrigger>
-                <CollapsibleContent keepMounted>Order details</CollapsibleContent>
-            </Collapsible>
             <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
             <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
             <Text
@@ -85,8 +78,6 @@ const nativeComposition = (
                 aria-live="polite"
                 data-publication="current"
                 ref={textRef}
-                className="text-muted-foreground"
-                style={{ textWrap: 'balance' }}
                 onClick={(event) => event.currentTarget.focus()}
             >
                 Ready to publish
@@ -99,11 +90,10 @@ const nativeComposition = (
             <GeneratedAvatar name="Account" src="/account.png" />
             <Stack
                 aria-label="Preview"
-                className="gap-4"
-                style={{ gap: 16 }}
+                gap={4}
                 onFocus={(event) => event.currentTarget.focus()}
             >
-                <Grid id="preview" style={{ gridTemplateColumns: '1fr' }} />
+                <Grid id="preview" columns={1} />
             </Stack>
             <Separator orientation="vertical" id="account-divider" aria-label="Account sections" />
             <FieldSeparator><a href="/login">Sign in</a></FieldSeparator>
@@ -112,7 +102,6 @@ const nativeComposition = (
                 href="/orders"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline"
                 aria-label="Orders"
                 onClick={(event) => event.currentTarget.href.trim()}
             >
@@ -222,10 +211,6 @@ const nativeComposition = (
                     details.cancel();
                 }}
             />
-            <Collapsible>
-                <CollapsibleTrigger>Details</CollapsibleTrigger>
-                <CollapsibleContent>Order details</CollapsibleContent>
-            </Collapsible>
             <DropdownMenu
                 open={selected === 'menu'}
                 onOpenChange={(open, details) => {
@@ -268,25 +253,10 @@ const nativeComposition = (
                     <EmptyDescription>Change the search filters.</EmptyDescription>
                 </EmptyHeader>
             </Empty>
-            <Stepper defaultValue={1} onValueChange={(step) => step.toFixed()}>
-                <StepperNav>
-                    <StepperItem step={1}>
-                        <StepperTrigger>
-                            <StepperIndicator>1</StepperIndicator>
-                        </StepperTrigger>
-                        <StepperSeparator />
-                    </StepperItem>
-                </StepperNav>
-                <StepperPanel>
-                    <StepperContent value={1} forceMount>
-                        Draft
-                    </StepperContent>
-                </StepperPanel>
-            </Stepper>
             <Wizard>
                 <Step label="Details">Draft</Step>
             </Wizard>
-            <Badge onAnimationStart={(event) => event.currentTarget.focus()} style={{ textWrap: 'balance' }}>
+            <Badge onAnimationStart={(event) => event.currentTarget.focus()}>
                 Ready
             </Badge>
             <Token label="Priority" size="xs" />
@@ -431,7 +401,7 @@ const nativeForm = (
 );
 
 const _adapters = (
-    <InteractiveCard size="sm" className="w-full" style={{ minHeight: 100 }} isSelected onChange={() => {}}>
+    <InteractiveCard size="sm" isSelected onChange={() => {}}>
         <CardContent>
             <Dialog fullscreen open onOpenChange={() => {}}>
                 <DialogContent>
@@ -473,11 +443,41 @@ const _missingLinkAction = <Link>Report</Link>;
 // @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
 const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
 
+// @ts-expect-error Views select supported variants instead of overriding component classes.
+const _buttonClasses = <Button className="bg-red-500" />;
+// @ts-expect-error Authored inline styling is excluded from View components.
+const _inputStyle = <Input style={{ color: 'red' }} />;
+// @ts-expect-error Calendar slots retain their installed styling.
+const _calendarClasses = <Calendar classNames={{ root: 'custom-calendar' }} />;
+// @ts-expect-error Calendar style maps are excluded too.
+const _calendarStyles = <Calendar styles={{ root: { color: 'red' } }} />;
+// @ts-expect-error Calendar implementation replacement is not a View styling API.
+const _calendarComponents = <Calendar components={{}} />;
+// @ts-expect-error Nested-component class overrides are not exposed.
+const _fileTypeClasses = <FileType type="pdf" labelClassName="text-red-500" />;
+// @ts-expect-error DataGrid styling cannot be overridden through its slot map.
+const _gridClasses = <DataGrid recordCount={0} tableClassNames={{ body: 'custom-body' }} />;
+/** @type {ColumnDef<DataGridFeatures, { name: string }>} */
+const _columnClasses = {
+    accessorKey: 'name',
+    meta: {
+        // @ts-expect-error Column metadata cannot override installed cell styling.
+        cellClassName: 'custom-cell'
+    }
+};
+// @ts-expect-error Chart components retain their installed container styling.
+const _chartStyle = <ChartContainer config={{}} style={{ height: 280 }}><AreaChart /></ChartContainer>;
+// @ts-expect-error Recharts primitives also exclude arbitrary CSS.
+const _seriesStyle = <Area dataKey="total" style={{ opacity: 0 }} />;
+// @ts-expect-error Collapsible is not currently exposed to Views.
+const _removedCollapsible = <Collapsible />;
+// @ts-expect-error Stepper is not currently exposed to Views.
+const _removedStepper = <Stepper />;
+
 const _nativeCharts = (
     <>
         <ChartContainer
             config={{ total: { label: 'Total', color: 'var(--chart-1)' } }}
-            style={{ height: 280 }}
             aria-label="Revenue"
         >
             <AreaChart data={[{ period: 'January', total: 120 }]} accessibilityLayer>
@@ -489,7 +489,7 @@ const _nativeCharts = (
                 <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
         </ChartContainer>
-        <ChartContainer config={{}} style={{ height: 280 }} aria-label="Revenue allocation">
+        <ChartContainer config={{}} aria-label="Revenue allocation">
             <Sankey
                 data={{
                     nodes: [{ name: 'Revenue' }, { name: 'Profit' }],

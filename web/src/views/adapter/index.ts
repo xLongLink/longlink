@@ -4,9 +4,6 @@ export { Stack, StackItem } from './layouts/stack';
 /** @category Layouts */
 export { Grid, GridSpan } from './layouts/grid';
 
-/** @category Layouts */
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './layouts/collapsible';
-
 /** @category Display */
 export { Heading } from './display/heading';
 
@@ -249,20 +246,7 @@ export type {
 export { Progress, ProgressLabel, ProgressValue, ProgressTrack, ProgressIndicator } from './display/progress';
 
 /** @category Layouts */
-export {
-    Stepper,
-    StepperNav,
-    StepperItem,
-    StepperTrigger,
-    StepperIndicator,
-    StepperSeparator,
-    StepperTitle,
-    StepperDescription,
-    StepperPanel,
-    StepperContent,
-    Wizard,
-    Step
-} from './layouts/stepper';
+export { Wizard, Step } from './layouts/wizard';
 
 /** @category Layouts */
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './layouts/tabs';

@@ -60,7 +60,23 @@ test('published component provenance matches the implementation exposed to Views
             /^use[A-Z]/.test(component.name) ? 'hooks' : component.category.toLowerCase(),
             `${component.name} must follow its documentation category.`
         );
-        const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        let implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        const adapter = implementation.declarations?.[0];
+        if (adapter && ts.isVariableDeclaration(adapter) && adapter.getSourceFile().fileName.includes('/views/adapter/')) {
+            let initializer = adapter.initializer;
+            if (initializer && ts.isCallExpression(initializer)) {
+                const factory = checker.getSymbolAtLocation(initializer.expression);
+                const resolved = factory.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(factory) : factory;
+                assert.equal(resolved.name, 'viewComponent');
+                assert.ok(resolved.declarations?.[0]?.getSourceFile().fileName.endsWith('/views/adapter/props.ts'));
+                assert.equal(initializer.arguments.length, 1);
+                [initializer] = initializer.arguments;
+            }
+            assert.ok(initializer && ts.isPropertyAccessExpression(initializer), `${component.name} must retain its implementation.`);
+            const original = checker.getSymbolAtLocation(initializer);
+            assert.ok(original);
+            implementation = original.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(original) : original;
+        }
         const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
         assert.ok(
                 component.source === 'recharts' || component.source === 'react-hook-form'

@@ -336,45 +336,113 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
-it('preserves native Collapsible composition and cancellable authored visibility changes', async () => {
-    // Adapter substitution must not discard native trigger composition or cancellation details.
+it('ignores authored styling overrides while preserving composed controls and form updates', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        const [locked, setLocked] = useState(true);
-        const [open, setOpen] = useState(false);
+        const [name, setName] = useState('Draft');
+        const [saved, setSaved] = useState('');
+        const overrides = { className: 'authored-override', style: { color: 'red', padding: 100 } };
+        return <Card {...overrides}>
+            <CardContent {...overrides}>
+                <Input {...overrides} id="order-name" aria-label="Order name"
+                    value={name} onChange={(event) => setName(event.target.value)} />
+                <Button {...overrides} variant="outline" size="sm" onClick={() => setSaved(name)}>
+                    Save order
+                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger render={<Button {...overrides} variant="outline" />}>
+                        Actions
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent {...overrides}>
+                        <DropdownMenuItem onClick={() => setSaved('Archived')}>Archive</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <output>{saved}</output>
+            </CardContent>
+        </Card>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('#order-name')).not.toBeNull());
+        const input = runtime.mount.querySelector<HTMLInputElement>('#order-name');
+
+        const save = Array.from(runtime.mount.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Save order'
+        );
+
+        const actions = runtime.mount.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
+
+        if (!input || !save || !actions) throw new Error('Expected editable order controls');
+        expect(runtime.mount.querySelector('.authored-override')).toBeNull();
+        expect(runtime.mount.querySelector('[style*="red"]')).toBeNull();
+        expect(input.className).not.toBe('');
+        expect(save.className).not.toBe('');
+
+        const user = userEvent.setup();
+        await user.clear(input);
+        await user.type(input, 'Purchase order');
+        await user.click(save);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Purchase order'));
+        await user.click(actions);
+        await vi.waitFor(() => expect(document.querySelector('[role="menuitem"]')).not.toBeNull());
+        const archive = document.querySelector<HTMLElement>('[role="menuitem"]');
+
+        if (!archive) throw new Error('Expected archive action');
+        expect(document.querySelector('.authored-override')).toBeNull();
+        expect(archive.closest('[role="menu"]')?.getAttribute('style')).not.toContain('red');
+        await user.click(archive);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Archived'));
+    } finally {
+        runtime.close();
+    }
+});
+
+it('ignores grid slot and column styling without losing native sorting or mutating column definitions', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        const [selected, setSelected] = useState('');
+        const columns = useMemo(() => [{
+            header: 'Orders',
+            meta: { headerClassName: 'authored-group' },
+            columns: [{
+                accessorKey: 'name',
+                header: ({ column }) => <DataGridColumnHeader column={column} title="Order" className="authored-header" />,
+                meta: { headerClassName: 'authored-column', cellClassName: 'authored-cell' }
+            }]
+        }], []);
+        const table = useTable({
+            features: dataGridFeatures,
+            data: [{ name: 'Zebra' }, { name: 'Alpha' }],
+            columns,
+            defaultColumn: { meta: { cellClassName: 'authored-default' } }
+        });
         return <>
-            <Collapsible open={open} onOpenChange={(next, details) => {
-                if (locked) details.cancel();
-                else setOpen(next);
-            }}>
-                <CollapsibleTrigger render={<Button variant="outline" />}>Order details</CollapsibleTrigger>
-                <CollapsibleContent><p>PO-871</p></CollapsibleContent>
-            </Collapsible>
-            <button onClick={() => setLocked(false)}>Unlock</button>
+            <DataGrid table={table} recordCount={2} className="authored-root"
+                tableClassNames={{ body: 'authored-body', bodyRow: 'authored-row' }}
+                onRowClick={(row) => setSelected(row.name)}>
+                <DataGridContainer className="authored-container">
+                    <DataGridTable />
+                </DataGridContainer>
+            </DataGrid>
+            <output>{selected}</output>
+            <output data-original>{columns[0].columns[0].meta.cellClassName}</output>
         </>;
     }`);
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="collapsible-trigger"]')).not.toBeNull());
-        const trigger = runtime.mount.querySelector('[data-slot="collapsible-trigger"]');
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody tr')?.textContent).toBe('Zebra'));
+        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
+        const sort = runtime.mount.querySelector<HTMLButtonElement>('thead button');
 
-        if (!trigger) throw new Error('Expected composed Collapsible trigger');
-
-        const unlock = Array.from(runtime.mount.querySelectorAll('button')).find(
-            (button) => button.textContent === 'Unlock'
-        );
-
-        if (!unlock) throw new Error('Expected authored unlock action');
+        if (!sort) throw new Error('Expected order sorting control');
         const user = userEvent.setup();
-        await user.click(trigger);
-        expect(trigger.getAttribute('aria-expanded')).toBe('false');
-        expect(runtime.mount.textContent).not.toContain('PO-871');
-        await user.click(unlock);
-        await user.click(trigger);
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
-        expect(runtime.mount.querySelector('[data-slot="collapsible-content"]')?.textContent).toBe('PO-871');
-        await user.click(trigger);
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
-        await vi.waitFor(() => expect(runtime.mount.textContent).not.toContain('PO-871'));
+        await user.click(sort);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody tr')?.textContent).toBe('Alpha'));
+        const first = runtime.mount.querySelector<HTMLElement>('tbody tr');
+
+        if (!first) throw new Error('Expected sorted order');
+        await user.click(first);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Alpha'));
+        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
+        expect(runtime.mount.querySelector('[data-original]')?.textContent).toBe('authored-cell');
     } finally {
         runtime.close();
     }
@@ -386,6 +454,11 @@ it('returns native Calendar ranges to authored state without selecting disabled 
         const [range, setRange] = useState(undefined);
         return <>
             <Calendar mode="range" defaultMonth={new Date(2026, 0, 1)}
+                classNames={{ root: 'authored-calendar' }}
+                styles={{ root: { color: 'red' } }}
+                modifiersClassNames={{ selected: 'authored-selected' }}
+                modifiersStyles={{ selected: { background: 'red' } }}
+                components={{ DayButton: () => <button>Replacement day</button> }}
                 selected={range} onSelect={setRange} disabled={new Date(2026, 0, 12)} />
             <output>{range?.from?.getDate() ?? '-'}:{range?.to?.getDate() ?? '-'}</output>
         </>;
@@ -411,6 +484,9 @@ it('returns native Calendar ranges to authored state without selecting disabled 
         await user.click(end);
         await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:14'));
         expect(runtime.mount.querySelector('button[data-range-middle="true"]')).not.toBeNull();
+        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
+        expect(runtime.mount.querySelector('[style*="red"]')).toBeNull();
+        expect(runtime.mount.textContent).not.toContain('Replacement day');
     } finally {
         runtime.close();
     }

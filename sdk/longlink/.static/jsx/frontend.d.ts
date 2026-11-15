@@ -9387,7 +9387,11 @@ interface BadgeProps extends useRender.ComponentProps<"span"> {
     size?: VariantProps<typeof badgeVariants>["size"];
     radius?: VariantProps<typeof badgeVariants>["radius"];
 }
-export function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+function Badge({ className, variant, size, radius, render, ...props }: BadgeProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+type StylingProp = "className" | "classNames" | "style" | "styles" | `${string}ClassName` | `${string}ClassNames` | `${string}Style` | `${string}Styles` | "components" | "dangerouslySetInnerHTML";
+type ViewProps<Props> = Props extends unknown ? Omit<Props, StylingProp> : never;
+type ViewComponent<Component extends React$1.ElementType> = (props: ViewProps<React$1.ComponentProps<Component>>) => React$1.ReactNode;
+const Badge$1: ViewComponent<typeof Badge>;
 const FILE_TYPE_EXTENSIONS: {
     pdf: {
         category: "document";
@@ -10110,7 +10114,8 @@ type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children"> & {
     icon?: React$1.ReactNode;
     labelClassName?: string;
 };
-export function FileType({ type, variant, size, label, glyph, icon, labelClassName, className, ...props }: FileTypeProps): React$1.JSX.Element;
+function FileType({ type, variant, size, label, glyph, icon, labelClassName, className, ...props }: FileTypeProps): React$1.JSX.Element;
+const FileType$1: ViewComponent<typeof FileType>;
 const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface ButtonState {
     disabled: boolean;
@@ -10123,7 +10128,7 @@ namespace Button {
     type Props = ButtonProps;
 }
 const buttonVariants: (props?: ({
-    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
+    variant?: "default" | "link" | "outline" | "secondary" | "destructive" | "ghost" | null | undefined;
     size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
@@ -10142,9 +10147,13 @@ function Separator$1({ className, orientation, ...props }: Separator.Props): Rea
 const buttonGroupVariants: (props?: ({
     orientation?: "horizontal" | "vertical" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
-export function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-export function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
+function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
+function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
+const Button$2: ViewComponent<typeof Button$1>;
+const ButtonGroup$1: ViewComponent<typeof ButtonGroup>;
+const ButtonGroupText$1: ViewComponent<typeof ButtonGroupText>;
+const ButtonGroupSeparator$1: ViewComponent<typeof ButtonGroupSeparator>;
 type TransitionStatus = "starting" | "ending" | "idle" | undefined;
 const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
@@ -10527,35 +10536,6 @@ type PopupTriggerDataStore<State extends PopupStoreState<unknown>> = Pick<ReactS
 type PayloadChildRenderFunction<Payload> = (arg: {
     payload: Payload | undefined;
 }) => React$1.ReactNode;
-const CollapsibleRoot: React$1.ForwardRefExoticComponent<Omit<CollapsibleRootProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsibleRootState extends Pick<UseCollapsibleRootReturnValue, "open" | "disabled" | "transitionStatus"> {
-}
-interface CollapsibleRootProps extends BaseUIComponentProps<"div", CollapsibleRootState> {
-    open?: boolean | undefined;
-    defaultOpen?: boolean | undefined;
-    onOpenChange?: ((open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void) | undefined;
-    disabled?: boolean | undefined;
-}
-type CollapsibleRootChangeEventReason = typeof triggerPress | typeof none;
-type CollapsibleRootChangeEventDetails = BaseUIChangeEventDetails<CollapsibleRootChangeEventReason>;
-namespace CollapsibleRoot {
-    type State = CollapsibleRootState;
-    type Props = CollapsibleRootProps;
-    type ChangeEventReason = CollapsibleRootChangeEventReason;
-    type ChangeEventDetails = CollapsibleRootChangeEventDetails;
-}
-interface UseCollapsibleRootReturnValue {
-    defaultPanelId: React$1.HTMLAttributes<Element>["id"];
-    disabled: boolean;
-    handleTrigger: (event: React$1.MouseEvent | React$1.KeyboardEvent) => void;
-    mounted: boolean;
-    open: boolean;
-    panelId: React$1.HTMLAttributes<Element>["id"];
-    setMounted: (nextMounted: boolean) => void;
-    setOpen: (open: boolean) => void;
-    setPanelIdState: React$1.Dispatch<React$1.SetStateAction<string | null | undefined>>;
-    transitionStatus: TransitionStatus;
-}
 const DialogTitle: React$1.ForwardRefExoticComponent<Omit<DialogTitleProps, "ref"> & React$1.RefAttributes<HTMLHeadingElement>>;
 interface DialogTitleProps extends BaseUIComponentProps<"h2", DialogTitleState> {
 }
@@ -11072,27 +11052,6 @@ interface CheckboxIndicatorProps extends BaseUIComponentProps<"span", CheckboxIn
 namespace CheckboxIndicator {
     type State = CheckboxIndicatorState;
     type Props = CheckboxIndicatorProps;
-}
-const CollapsibleTrigger: React$1.ForwardRefExoticComponent<Omit<CollapsibleTriggerProps, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
-interface CollapsibleTriggerState extends CollapsibleRootState {
-}
-interface CollapsibleTriggerProps extends NativeButtonProps, BaseUIComponentProps<"button", CollapsibleTriggerState> {
-}
-namespace CollapsibleTrigger {
-    type State = CollapsibleTriggerState;
-    type Props = CollapsibleTriggerProps;
-}
-const CollapsiblePanel: React$1.ForwardRefExoticComponent<Omit<CollapsiblePanelProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
-interface CollapsiblePanelState extends CollapsibleRootState {
-    transitionStatus: TransitionStatus;
-}
-interface CollapsiblePanelProps extends BaseUIComponentProps<"div", CollapsiblePanelState> {
-    hiddenUntilFound?: boolean | undefined;
-    keepMounted?: boolean | undefined;
-}
-namespace CollapsiblePanel {
-    type State = CollapsiblePanelState;
-    type Props = CollapsiblePanelProps;
 }
 function ComboboxRoot<Value, Multiple extends boolean | undefined = false, Item = Value>(props: ComboboxRoot.Props<Value, Multiple, Item>): React$1.JSX.Element;
 type ModeFromMultiple<Multiple extends boolean | undefined> = Multiple extends true ? "multiple" : "single";
@@ -13914,79 +13873,126 @@ namespace DialogRoot {
     type ChangeEventReason = DialogRootChangeEventReason;
     type ChangeEventDetails = DialogRootChangeEventDetails;
 }
-export function Dialog({ fullscreen, ...props }: DialogRoot.Props & {
-    fullscreen?: boolean;
-}): React$1.JSX.Element;
 function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
 function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
 function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
-export function DialogOverlay({ className, ...props }: DialogBackdrop.Props): React$1.JSX.Element;
-export function DialogContent({ className, children, showCloseButton, ...props }: DialogPopup.Props & {
+function DialogOverlay({ className, ...props }: DialogBackdrop.Props): React$1.JSX.Element;
+function DialogContent({ className, children, showCloseButton, ...props }: DialogPopup.Props & {
     showCloseButton?: boolean;
 }): React$1.JSX.Element;
-export function DialogHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function DialogFooter({ className, showCloseButton, children, ...props }: React$1.ComponentProps<"div"> & {
+function DialogHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function DialogFooter({ className, showCloseButton, children, ...props }: React$1.ComponentProps<"div"> & {
     showCloseButton?: boolean;
 }): React$1.JSX.Element;
 function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.Element;
 function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
-export function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
-export function PaginationContent({ className, ...props }: React$1.ComponentProps<"ul">): React$1.JSX.Element;
-export function PaginationItem({ ...props }: React$1.ComponentProps<"li">): React$1.JSX.Element;
+function Dialog({ fullscreen, ...props }: DialogRoot.Props & {
+    fullscreen?: boolean;
+}): React$1.JSX.Element;
+const Dialog$1: ViewComponent<typeof Dialog>;
+const DialogTrigger$2: ViewComponent<typeof DialogTrigger$1>;
+const DialogPortal$2: ViewComponent<typeof DialogPortal$1>;
+const DialogClose$2: ViewComponent<typeof DialogClose$1>;
+const DialogOverlay$1: ViewComponent<typeof DialogOverlay>;
+const DialogContent$1: ViewComponent<typeof DialogContent>;
+const DialogHeader$1: ViewComponent<typeof DialogHeader>;
+const DialogFooter$1: ViewComponent<typeof DialogFooter>;
+const DialogTitle$2: ViewComponent<typeof DialogTitle$1>;
+const DialogDescription$2: ViewComponent<typeof DialogDescription$1>;
+function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
+function PaginationContent({ className, ...props }: React$1.ComponentProps<"ul">): React$1.JSX.Element;
+function PaginationItem({ ...props }: React$1.ComponentProps<"li">): React$1.JSX.Element;
 type PaginationLinkProps = {
     isActive?: boolean;
 } & Pick<React$1.ComponentProps<typeof Button$1>, "size"> & React$1.ComponentProps<"a">;
-export function PaginationLink({ className, isActive, size, ...props }: PaginationLinkProps): React$1.JSX.Element;
-export function PaginationPrevious({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
+function PaginationLink({ className, isActive, size, ...props }: PaginationLinkProps): React$1.JSX.Element;
+function PaginationPrevious({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
     text?: string;
 }): React$1.JSX.Element;
-export function PaginationNext({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
+function PaginationNext({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
     text?: string;
 }): React$1.JSX.Element;
-export function PaginationEllipsis({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function Empty({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function PaginationEllipsis({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+const Pagination$1: ViewComponent<typeof Pagination>;
+const PaginationContent$1: ViewComponent<typeof PaginationContent>;
+const PaginationItem$1: ViewComponent<typeof PaginationItem>;
+const PaginationLink$1: ViewComponent<typeof PaginationLink>;
+const PaginationPrevious$1: ViewComponent<typeof PaginationPrevious>;
+const PaginationNext$1: ViewComponent<typeof PaginationNext>;
+const PaginationEllipsis$1: ViewComponent<typeof PaginationEllipsis>;
+function Empty({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function EmptyHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 const emptyMediaVariants: (props?: ({
     variant?: "default" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function EmptyMedia({ className, variant, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>): React$1.JSX.Element;
-export function EmptyTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function EmptyDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
-export function EmptyContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function DropdownMenu({ ...props }: MenuRoot.Props): React$1.JSX.Element;
-export function DropdownMenuPortal({ ...props }: MenuPortal.Props): React$1.JSX.Element;
-export function DropdownMenuTrigger({ ...props }: MenuTrigger.Props): React$1.JSX.Element;
-export function DropdownMenuContent({ align, alignOffset, side, sideOffset, className, ...props }: MenuPopup.Props & Pick<MenuPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
-export function DropdownMenuGroup({ ...props }: MenuGroup.Props): React$1.JSX.Element;
-export function DropdownMenuLabel({ className, inset, ...props }: MenuGroupLabel.Props & {
+function EmptyMedia({ className, variant, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>): React$1.JSX.Element;
+function EmptyTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function EmptyDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
+function EmptyContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const Empty$1: ViewComponent<typeof Empty>;
+const EmptyHeader$1: ViewComponent<typeof EmptyHeader>;
+const EmptyTitle$1: ViewComponent<typeof EmptyTitle>;
+const EmptyDescription$1: ViewComponent<typeof EmptyDescription>;
+const EmptyContent$1: ViewComponent<typeof EmptyContent>;
+const EmptyMedia$1: ViewComponent<typeof EmptyMedia>;
+function DropdownMenu({ ...props }: MenuRoot.Props): React$1.JSX.Element;
+function DropdownMenuPortal({ ...props }: MenuPortal.Props): React$1.JSX.Element;
+function DropdownMenuTrigger({ ...props }: MenuTrigger.Props): React$1.JSX.Element;
+function DropdownMenuContent({ align, alignOffset, side, sideOffset, className, ...props }: MenuPopup.Props & Pick<MenuPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
+function DropdownMenuGroup({ ...props }: MenuGroup.Props): React$1.JSX.Element;
+function DropdownMenuLabel({ className, inset, ...props }: MenuGroupLabel.Props & {
     inset?: boolean;
 }): React$1.JSX.Element;
-export function DropdownMenuItem({ className, inset, variant, ...props }: MenuItem.Props & {
+function DropdownMenuItem({ className, inset, variant, ...props }: MenuItem.Props & {
     inset?: boolean;
     variant?: "default" | "destructive";
 }): React$1.JSX.Element;
-export function DropdownMenuSub({ ...props }: MenuSubmenuRoot.Props): React$1.JSX.Element;
-export function DropdownMenuSubTrigger({ className, inset, children, ...props }: MenuSubmenuTrigger.Props & {
+function DropdownMenuSub({ ...props }: MenuSubmenuRoot.Props): React$1.JSX.Element;
+function DropdownMenuSubTrigger({ className, inset, children, ...props }: MenuSubmenuTrigger.Props & {
     inset?: boolean;
 }): React$1.JSX.Element;
-export function DropdownMenuSubContent({ align, alignOffset, side, sideOffset, className, ...props }: React$1.ComponentProps<typeof DropdownMenuContent>): React$1.JSX.Element;
-export function DropdownMenuCheckboxItem({ className, children, checked, inset, ...props }: MenuCheckboxItem.Props & {
+function DropdownMenuSubContent({ align, alignOffset, side, sideOffset, className, ...props }: React$1.ComponentProps<typeof DropdownMenuContent>): React$1.JSX.Element;
+function DropdownMenuCheckboxItem({ className, children, checked, inset, ...props }: MenuCheckboxItem.Props & {
     inset?: boolean;
 }): React$1.JSX.Element;
-export function DropdownMenuRadioGroup({ ...props }: MenuRadioGroup.Props): React$1.JSX.Element;
-export function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRadioItem.Props & {
+function DropdownMenuRadioGroup({ ...props }: MenuRadioGroup.Props): React$1.JSX.Element;
+function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRadioItem.Props & {
     inset?: boolean;
 }): React$1.JSX.Element;
-export function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
-export function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function Table({ className, ...props }: React$1.ComponentProps<"table">): React$1.JSX.Element;
-export function TableHeader({ className, ...props }: React$1.ComponentProps<"thead">): React$1.JSX.Element;
-export function TableBody({ className, ...props }: React$1.ComponentProps<"tbody">): React$1.JSX.Element;
-export function TableFooter({ className, ...props }: React$1.ComponentProps<"tfoot">): React$1.JSX.Element;
-export function TableRow({ className, ...props }: React$1.ComponentProps<"tr">): React$1.JSX.Element;
-export function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
-export function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
-export function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
+function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
+function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+const DropdownMenu$1: ViewComponent<typeof DropdownMenu>;
+const DropdownMenuPortal$1: ViewComponent<typeof DropdownMenuPortal>;
+const DropdownMenuTrigger$1: ViewComponent<typeof DropdownMenuTrigger>;
+const DropdownMenuContent$1: ViewComponent<typeof DropdownMenuContent>;
+const DropdownMenuGroup$1: ViewComponent<typeof DropdownMenuGroup>;
+const DropdownMenuLabel$1: ViewComponent<typeof DropdownMenuLabel>;
+const DropdownMenuItem$1: ViewComponent<typeof DropdownMenuItem>;
+const DropdownMenuCheckboxItem$1: ViewComponent<typeof DropdownMenuCheckboxItem>;
+const DropdownMenuRadioGroup$1: ViewComponent<typeof DropdownMenuRadioGroup>;
+const DropdownMenuRadioItem$1: ViewComponent<typeof DropdownMenuRadioItem>;
+const DropdownMenuSeparator$1: ViewComponent<typeof DropdownMenuSeparator>;
+const DropdownMenuShortcut$1: ViewComponent<typeof DropdownMenuShortcut>;
+const DropdownMenuSub$1: ViewComponent<typeof DropdownMenuSub>;
+const DropdownMenuSubTrigger$1: ViewComponent<typeof DropdownMenuSubTrigger>;
+const DropdownMenuSubContent$1: ViewComponent<typeof DropdownMenuSubContent>;
+function Table({ className, ...props }: React$1.ComponentProps<"table">): React$1.JSX.Element;
+function TableHeader({ className, ...props }: React$1.ComponentProps<"thead">): React$1.JSX.Element;
+function TableBody({ className, ...props }: React$1.ComponentProps<"tbody">): React$1.JSX.Element;
+function TableFooter({ className, ...props }: React$1.ComponentProps<"tfoot">): React$1.JSX.Element;
+function TableRow({ className, ...props }: React$1.ComponentProps<"tr">): React$1.JSX.Element;
+function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
+function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
+function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
+const Table$1: ViewComponent<typeof Table>;
+const TableHeader$1: ViewComponent<typeof TableHeader>;
+const TableBody$1: ViewComponent<typeof TableBody>;
+const TableFooter$1: ViewComponent<typeof TableFooter>;
+const TableRow$1: ViewComponent<typeof TableRow>;
+const TableHead$1: ViewComponent<typeof TableHead>;
+const TableCell$1: ViewComponent<typeof TableCell>;
+const TableCaption$1: ViewComponent<typeof TableCaption>;
+const Separator$2: ViewComponent<typeof Separator$1>;
 type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     src: string;
     alt: string;
@@ -13997,6 +14003,7 @@ type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
     dangerouslySetInnerHTML?: never;
 };
 function Image$1(props: ImageProps): React$1.JSX.Element;
+const Image$2: ViewComponent<typeof Image$1>;
 type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
     as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
     maxLines?: number;
@@ -14004,45 +14011,48 @@ type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
     ref?: React$1.Ref<HTMLElement>;
 };
 function Text$1({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: TextProps): React$1.JSX.Element;
+const Text$2: ViewComponent<typeof Text$1>;
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
-export function Heading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
+function Heading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
     level?: HeadingLevel;
     accessibilityLevel?: HeadingLevel;
     ref?: React$1.Ref<HTMLHeadingElement>;
 }): React$1.JSX.Element;
-type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+const Heading$1: ViewComponent<typeof Heading>;
 type StackLayoutProps = {
     direction?: "horizontal" | "vertical";
     justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
     align?: "start" | "center" | "end" | "stretch";
     wrap?: "nowrap" | "wrap" | "wrap-reverse";
-    gap?: Spacing;
-    padding?: Spacing;
-    paddingInline?: Spacing;
-    paddingBlock?: Spacing;
+    gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
     width?: React$1.CSSProperties["width"];
     height?: React$1.CSSProperties["height"];
     maxWidth?: React$1.CSSProperties["maxWidth"];
     minHeight?: React$1.CSSProperties["minHeight"];
     background?: "muted";
 };
-export function Stack({ className, ...props }: React$1.ComponentPropsWithRef<"div"> & StackLayoutProps): React$1.JSX.Element;
-export function StackItem(props: {
+function Stack({ className, ...props }: React$1.ComponentPropsWithRef<"div"> & StackLayoutProps): React$1.JSX.Element;
+function StackItem(props: {
     children?: React$1.ReactNode;
     size?: "static" | "fill";
     isScrollable?: boolean;
     crossAlignSelf?: "start" | "center" | "end" | "stretch";
 }): React$1.JSX.Element;
-export function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, columnGap, align, justify, width, height, maxWidth, minHeight, className, style, ref, children, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+const Stack$1: ViewComponent<typeof Stack>;
+const StackItem$1: ViewComponent<typeof StackItem>;
+function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, columnGap, align, justify, width, height, maxWidth, minHeight, className, style, ref, children, ...props }: React$1.ComponentPropsWithRef<"div"> & {
     columns?: number | {
         minWidth: number;
         max?: number;
         repeat?: "fill" | "fit";
     };
     collapseBelow?: number;
-    gap?: Spacing;
-    rowGap?: Spacing;
-    columnGap?: Spacing;
+    gap?: number;
+    rowGap?: number;
+    columnGap?: number;
     align?: "start" | "center" | "end" | "stretch";
     justify?: "start" | "center" | "end" | "stretch";
     width?: number | string;
@@ -14050,9 +14060,19 @@ export function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, c
     maxWidth?: number | string;
     minHeight?: number | string;
 }): React$1.JSX.Element;
-export function GridSpan({ columns, className, style, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+function GridSpan({ columns, className, style, ...props }: React$1.ComponentPropsWithRef<"div"> & {
     columns?: number | "full";
 }): React$1.JSX.Element;
+const Grid$1: ViewComponent<typeof Grid>;
+const GridSpan$1: ViewComponent<typeof GridSpan>;
+function Avatar({ className, size, ...props }: AvatarRoot.Props & {
+    size?: "default" | "sm" | "lg";
+}): React$1.JSX.Element;
+function AvatarImage$1({ className, ...props }: AvatarImage.Props): React$1.JSX.Element;
+function AvatarFallback$1({ className, ...props }: AvatarFallback.Props): React$1.JSX.Element;
+function AvatarBadge({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function AvatarGroupCount({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 type AvatarProps = {
     shape?: undefined | "circle" | "rounded" | "square";
 } & {
@@ -14063,15 +14083,14 @@ type AvatarProps = {
     alt?: string;
     size?: "sm" | "default" | "lg";
 };
-export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps): React$1.JSX.Element;
-export function Avatar({ className, size, ...props }: AvatarRoot.Props & {
-    size?: "default" | "sm" | "lg";
-}): React$1.JSX.Element;
-function AvatarImage$1({ className, ...props }: AvatarImage.Props): React$1.JSX.Element;
-function AvatarFallback$1({ className, ...props }: AvatarFallback.Props): React$1.JSX.Element;
-export function AvatarBadge({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function AvatarGroupCount({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps): React$1.JSX.Element;
+const GeneratedAvatar$1: ViewComponent<typeof GeneratedAvatar>;
+const Avatar$1: ViewComponent<typeof Avatar>;
+const AvatarImage$2: ViewComponent<typeof AvatarImage$1>;
+const AvatarFallback$2: ViewComponent<typeof AvatarFallback$1>;
+const AvatarBadge$1: ViewComponent<typeof AvatarBadge>;
+const AvatarGroup$1: ViewComponent<typeof AvatarGroup>;
+const AvatarGroupCount$1: ViewComponent<typeof AvatarGroupCount>;
 interface Data {
 }
 interface Point {
@@ -14739,14 +14758,14 @@ type ElementContent = ElementContentMap[keyof ElementContentMap];
 interface ElementContentMap {
     comment: Comment$1;
     element: Element$1;
-    text: Text$2;
+    text: Text$3;
 }
 type RootContent = RootContentMap[keyof RootContentMap];
 interface RootContentMap {
     comment: Comment$1;
     doctype: Doctype;
     element: Element$1;
-    text: Text$2;
+    text: Text$3;
 }
 interface Node$2 extends Node$1 {
     data?: Data$1 | undefined;
@@ -14786,7 +14805,7 @@ interface Root extends Parent {
 }
 interface RootData extends Data$1 {
 }
-interface Text$2 extends Literal$1 {
+interface Text$3 extends Literal$1 {
     type: "text";
     data?: TextData | undefined;
 }
@@ -15061,13 +15080,13 @@ type CodeBlockProps = {
     onFoldedChange?: (folded: number[]) => void;
     children?: React$1.ReactNode;
 } & Omit<React$1.ComponentProps<"div">, "children" | "onSelect">;
-export function CodeBlock({ code, language, lines: linesProp, themes, highlight, showLineNumbers, startLine, wrap: wrapProp, defaultWrap, onWrapChange, maxLines, variant, label, highlightedLines, highlightedWords, focusedLines, diff, lineLevels, transformers, streaming, selectable, selectedLines, defaultSelectedLines, onSelectedLinesChange, completeAnnouncement, expanded: expandedProp, defaultExpanded, onExpandedChange, foldable, foldRegions: foldRegionsProp, folded, defaultFolded, onFoldedChange, className, children, ...props }: CodeBlockProps): React$1.JSX.Element;
-export function CodeBlockContent({ className }: {
+function CodeBlock({ code, language, lines: linesProp, themes, highlight, showLineNumbers, startLine, wrap: wrapProp, defaultWrap, onWrapChange, maxLines, variant, label, highlightedLines, highlightedWords, focusedLines, diff, lineLevels, transformers, streaming, selectable, selectedLines, defaultSelectedLines, onSelectedLinesChange, completeAnnouncement, expanded: expandedProp, defaultExpanded, onExpandedChange, foldable, foldRegions: foldRegionsProp, folded, defaultFolded, onFoldedChange, className, children, ...props }: CodeBlockProps): React$1.JSX.Element;
+function CodeBlockContent({ className }: {
     className?: string;
 }): React$1.JSX.Element;
-export function CodeBlockHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CodeBlockTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CodeBlockLanguage({ className, children, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element | null;
+function CodeBlockHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CodeBlockTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CodeBlockLanguage({ className, children, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element | null;
 type CodeBlockCopyButtonProps = {
     value?: string;
     timeout?: number;
@@ -15080,9 +15099,9 @@ type CodeBlockCopyButtonProps = {
     position?: "auto" | "pinned" | "inline";
     alwaysVisible?: boolean;
 } & Omit<React$1.ComponentProps<typeof Button$1>, "value" | "onCopy">;
-export function CodeBlockCopyButton({ value, timeout, onCopy, onCopyError, labels, position, alwaysVisible, className, variant, size, children, ...props }: CodeBlockCopyButtonProps): React$1.JSX.Element;
-export function CodeBlockWrapToggle({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element;
-export function CodeBlockExpandButton({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element | null;
+function CodeBlockCopyButton({ value, timeout, onCopy, onCopyError, labels, position, alwaysVisible, className, variant, size, children, ...props }: CodeBlockCopyButtonProps): React$1.JSX.Element;
+function CodeBlockWrapToggle({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element;
+function CodeBlockExpandButton({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element | null;
 type CodeBlockLineActionsProps = {
     children: CodeBlockLineActionsRender;
     side?: CodeBlockLineActionsSide;
@@ -15095,25 +15114,37 @@ type CodeBlockDownloadButtonProps = {
     alwaysVisible?: boolean;
     label?: string;
 } & Omit<React$1.ComponentProps<typeof Button$1>, "value">;
-export function CodeBlockDownloadButton({ value, filename, onDownload, position, alwaysVisible, label, className, variant, size, children, ...props }: CodeBlockDownloadButtonProps): React$1.JSX.Element;
-export function CodeBlockLineActions({ children, side }: CodeBlockLineActionsProps): null;
-export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
-export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+function CodeBlockDownloadButton({ value, filename, onDownload, position, alwaysVisible, label, className, variant, size, children, ...props }: CodeBlockDownloadButtonProps): React$1.JSX.Element;
+function CodeBlockLineActions({ children, side }: CodeBlockLineActionsProps): null;
+const CodeBlock$1: ViewComponent<typeof CodeBlock>;
+const CodeBlockContent$1: ViewComponent<typeof CodeBlockContent>;
+const CodeBlockCopyButton$1: ViewComponent<typeof CodeBlockCopyButton>;
+const CodeBlockDownloadButton$1: ViewComponent<typeof CodeBlockDownloadButton>;
+const CodeBlockExpandButton$1: ViewComponent<typeof CodeBlockExpandButton>;
+const CodeBlockHeader$1: ViewComponent<typeof CodeBlockHeader>;
+const CodeBlockLanguage$1: ViewComponent<typeof CodeBlockLanguage>;
+const CodeBlockLineActions$1: ViewComponent<typeof CodeBlockLineActions>;
+const CodeBlockTitle$1: ViewComponent<typeof CodeBlockTitle>;
+const CodeBlockWrapToggle$1: ViewComponent<typeof CodeBlockWrapToggle>;
+function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+const Input$1: ViewComponent<typeof Input>;
+function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+const Textarea$1: ViewComponent<typeof Textarea>;
 function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
-export function FieldSet({ className, ...props }: React$1.ComponentProps<"fieldset">): React$1.JSX.Element;
-export function FieldLegend({ className, variant, ...props }: React$1.ComponentProps<"legend"> & {
+function FieldSet({ className, ...props }: React$1.ComponentProps<"fieldset">): React$1.JSX.Element;
+function FieldLegend({ className, variant, ...props }: React$1.ComponentProps<"legend"> & {
     variant?: "legend" | "label";
 }): React$1.JSX.Element;
-export function FieldGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function FieldGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 const fieldVariants: (props?: ({
     orientation?: "horizontal" | "vertical" | "responsive" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Field$1({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof fieldVariants>): React$1.JSX.Element;
-export function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
-export function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function FieldDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
-export function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
+function FieldContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function FieldLabel({ className, ...props }: React$1.ComponentProps<typeof Label>): React$1.JSX.Element;
+function FieldTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function FieldDescription({ className, ...props }: React$1.ComponentProps<"p">): React$1.JSX.Element;
+function FieldSeparator({ children, className, ...props }: React$1.ComponentProps<"div"> & {
     children?: React$1.ReactNode;
 }): React$1.JSX.Element;
 function FieldError$1({ className, children, errors, ...props }: React$1.ComponentProps<"div"> & {
@@ -15121,23 +15152,36 @@ function FieldError$1({ className, children, errors, ...props }: React$1.Compone
         message?: string;
     } | undefined>;
 }): React$1.JSX.Element | null;
-export function InputGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+const Field$2: ViewComponent<typeof Field$1>;
+const FieldLabel$1: ViewComponent<typeof FieldLabel>;
+const FieldDescription$1: ViewComponent<typeof FieldDescription>;
+const FieldError$2: ViewComponent<typeof FieldError$1>;
+const FieldGroup$1: ViewComponent<typeof FieldGroup>;
+const FieldLegend$1: ViewComponent<typeof FieldLegend>;
+const FieldSeparator$1: ViewComponent<typeof FieldSeparator>;
+const FieldSet$1: ViewComponent<typeof FieldSet>;
+const FieldContent$1: ViewComponent<typeof FieldContent>;
+const FieldTitle$1: ViewComponent<typeof FieldTitle>;
+function InputGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 const inputGroupAddonVariants: (props?: ({
     align?: "inline-start" | "inline-end" | "block-end" | "block-start" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
+function InputGroupAddon({ className, align, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React$1.JSX.Element;
 const inputGroupButtonVariants: (props?: ({
     size?: "sm" | "xs" | "icon-xs" | "icon-sm" | null | undefined;
 } & ClassProp) | undefined) => string;
-export function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
+function InputGroupButton({ className, type, variant, size, ...props }: Omit<React$1.ComponentProps<typeof Button$1>, "size" | "type"> & VariantProps<typeof inputGroupButtonVariants> & {
     type?: "button" | "submit" | "reset";
 }): React$1.JSX.Element;
-export function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
-export function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-function Collapsible$1({ ...props }: Collapsible.Root.Props): React$1.JSX.Element;
-function CollapsibleTrigger$1({ ...props }: Collapsible.Trigger.Props): React$1.JSX.Element;
-export function CollapsibleContent({ ...props }: Collapsible.Panel.Props): React$1.JSX.Element;
+function InputGroupText({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+function InputGroupInput({ className, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+function InputGroupTextarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+const InputGroup$1: ViewComponent<typeof InputGroup>;
+const InputGroupAddon$1: ViewComponent<typeof InputGroupAddon>;
+const InputGroupButton$1: ViewComponent<typeof InputGroupButton>;
+const InputGroupInput$1: ViewComponent<typeof InputGroupInput>;
+const InputGroupTextarea$1: ViewComponent<typeof InputGroupTextarea>;
+const InputGroupText$1: ViewComponent<typeof InputGroupText>;
 interface Locale {
     code: string;
     formatDistance: FormatDistanceFn;
@@ -15661,9 +15705,10 @@ class CalendarDay {
     isEqualTo(day: CalendarDay): boolean;
 }
 function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
-export function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
+function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
     buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
 }): React$1.JSX.Element;
+const Calendar$1: ViewComponent<typeof Calendar>;
 function PopoverContent({ className, align, alignOffset, side, sideOffset, ...props }: PopoverPopup.Props & Pick<PopoverPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
 export type TimePickerTime = {
     hour: number;
@@ -15729,7 +15774,7 @@ export type TimePickerApi = {
     confirm: () => void;
 };
 export function useTimePicker(): TimePickerApi;
-export type TimePickerProps = {
+type TimePickerProps = {
     value?: string | null;
     defaultValue?: string | null;
     onValueChange?: (value: string | null) => void;
@@ -15763,75 +15808,66 @@ export type TimePickerProps = {
     className?: string;
     children?: React$1.ReactNode;
 };
-export function TimePicker({ value, defaultValue, onValueChange, open: openProp, defaultOpen, onOpenChange, hourCycle, granularity, periodPosition, hourStep, minuteStep, secondStep, min, max, isTimeDisabled, requireConfirm, fade, disabled, readOnly, invalid, name, form, required, inputRef, id: idProp, "aria-label": label, "aria-labelledby": labelledBy, "aria-describedby": describedBy, i18n: i18nProp, placeholder, className, children }: TimePickerProps): React$1.JSX.Element;
-export type TimePickerValueProps = Omit<React$1.ComponentProps<"span">, "children"> & {
+function TimePicker({ value, defaultValue, onValueChange, open: openProp, defaultOpen, onOpenChange, hourCycle, granularity, periodPosition, hourStep, minuteStep, secondStep, min, max, isTimeDisabled, requireConfirm, fade, disabled, readOnly, invalid, name, form, required, inputRef, id: idProp, "aria-label": label, "aria-labelledby": labelledBy, "aria-describedby": describedBy, i18n: i18nProp, placeholder, className, children }: TimePickerProps): React$1.JSX.Element;
+type TimePickerValueProps = Omit<React$1.ComponentProps<"span">, "children"> & {
     placeholder?: React$1.ReactNode;
 };
-export function TimePickerValue({ placeholder, className, ...props }: TimePickerValueProps): React$1.JSX.Element;
-export type TimePickerTriggerProps = React$1.ComponentProps<typeof Button$1> & {
+function TimePickerValue({ placeholder, className, ...props }: TimePickerValueProps): React$1.JSX.Element;
+type TimePickerTriggerProps = React$1.ComponentProps<typeof Button$1> & {
     placeholder?: React$1.ReactNode;
 };
-export function TimePickerTrigger({ className, variant, placeholder, children, ref, ...props }: TimePickerTriggerProps): React$1.JSX.Element;
-export type TimePickerInputProps = Omit<React$1.ComponentProps<typeof InputGroupInput>, "value" | "defaultValue">;
-export function TimePickerInput({ className, placeholder, onBlur, onKeyDown, onChange, ref, ...props }: TimePickerInputProps): React$1.JSX.Element;
-export type TimePickerContentProps = React$1.ComponentProps<typeof PopoverContent>;
-export function TimePickerContent({ className, align, onKeyDown, children, ...props }: TimePickerContentProps): React$1.JSX.Element;
-export type TimePickerPanelProps = React$1.ComponentProps<"div">;
-export function TimePickerPanel({ className, children, ...props }: TimePickerPanelProps): React$1.JSX.Element;
-export type TimePickerColumnsProps = React$1.ComponentProps<"div">;
-export function TimePickerColumns({ className, children, ref, ...props }: TimePickerColumnsProps): React$1.JSX.Element;
-export type TimePickerColumnProps = Omit<React$1.ComponentProps<"div">, "children"> & {
+function TimePickerTrigger({ className, variant, placeholder, children, ref, ...props }: TimePickerTriggerProps): React$1.JSX.Element;
+type TimePickerInputProps = Omit<React$1.ComponentProps<typeof InputGroupInput>, "value" | "defaultValue">;
+function TimePickerInput({ className, placeholder, onBlur, onKeyDown, onChange, ref, ...props }: TimePickerInputProps): React$1.JSX.Element;
+type TimePickerContentProps = React$1.ComponentProps<typeof PopoverContent>;
+function TimePickerContent({ className, align, onKeyDown, children, ...props }: TimePickerContentProps): React$1.JSX.Element;
+type TimePickerPanelProps = React$1.ComponentProps<"div">;
+function TimePickerPanel({ className, children, ...props }: TimePickerPanelProps): React$1.JSX.Element;
+type TimePickerColumnsProps = React$1.ComponentProps<"div">;
+function TimePickerColumns({ className, children, ref, ...props }: TimePickerColumnsProps): React$1.JSX.Element;
+type TimePickerColumnProps = Omit<React$1.ComponentProps<"div">, "children"> & {
     type: TimePickerColumnType;
     label?: React$1.ReactNode;
 };
-export function TimePickerColumn({ type, label, className, ...props }: TimePickerColumnProps): React$1.JSX.Element | null;
-export type TimePickerFooterProps = React$1.ComponentProps<"div">;
-export function TimePickerFooter({ className, children, ...props }: TimePickerFooterProps): React$1.JSX.Element;
-export type TimePickerActionProps = React$1.ComponentProps<typeof Button$1>;
-export function TimePickerNow({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
-export function TimePickerClear({ variant, size, className, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
-export function TimePickerConfirm({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+function TimePickerColumn({ type, label, className, ...props }: TimePickerColumnProps): React$1.JSX.Element | null;
+type TimePickerFooterProps = React$1.ComponentProps<"div">;
+function TimePickerFooter({ className, children, ...props }: TimePickerFooterProps): React$1.JSX.Element;
+type TimePickerActionProps = React$1.ComponentProps<typeof Button$1>;
+function TimePickerNow({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+function TimePickerClear({ variant, size, className, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+function TimePickerConfirm({ variant, size, onClick, children, ...props }: TimePickerActionProps): React$1.JSX.Element;
+const TimePicker$1: ViewComponent<typeof TimePicker>;
+const TimePickerTrigger$1: ViewComponent<typeof TimePickerTrigger>;
+const TimePickerValue$1: ViewComponent<typeof TimePickerValue>;
+const TimePickerInput$1: ViewComponent<typeof TimePickerInput>;
+const TimePickerContent$1: ViewComponent<typeof TimePickerContent>;
+const TimePickerPanel$1: ViewComponent<typeof TimePickerPanel>;
+const TimePickerColumns$1: ViewComponent<typeof TimePickerColumns>;
+const TimePickerColumn$1: ViewComponent<typeof TimePickerColumn>;
+const TimePickerFooter$1: ViewComponent<typeof TimePickerFooter>;
+const TimePickerNow$1: ViewComponent<typeof TimePickerNow>;
+const TimePickerClear$1: ViewComponent<typeof TimePickerClear>;
+const TimePickerConfirm$1: ViewComponent<typeof TimePickerConfirm>;
+type TimePickerProps$1 = ViewProps<TimePickerProps>;
+type TimePickerTriggerProps$1 = ViewProps<TimePickerTriggerProps>;
+type TimePickerValueProps$1 = ViewProps<TimePickerValueProps>;
+type TimePickerInputProps$1 = ViewProps<TimePickerInputProps>;
+type TimePickerContentProps$1 = ViewProps<TimePickerContentProps>;
+type TimePickerPanelProps$1 = ViewProps<TimePickerPanelProps>;
+type TimePickerColumnsProps$1 = ViewProps<TimePickerColumnsProps>;
+type TimePickerColumnProps$1 = ViewProps<TimePickerColumnProps>;
+type TimePickerFooterProps$1 = ViewProps<TimePickerFooterProps>;
+type TimePickerActionProps$1 = ViewProps<TimePickerActionProps>;
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
+const Switch$2: ViewComponent<typeof Switch$1>;
 function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
+const Checkbox$2: ViewComponent<typeof Checkbox$1>;
 function RadioGroup$1({ className, ...props }: RadioGroup.Props): React$1.JSX.Element;
-export function RadioGroupItem({ className, ...props }: Radio.Root.Props): React$1.JSX.Element;
-type StepperOrientation = "horizontal" | "vertical";
-type StepIndicators = {
-    active?: React$1.ReactNode;
-    completed?: React$1.ReactNode;
-    inactive?: React$1.ReactNode;
-    loading?: React$1.ReactNode;
-};
-interface StepperProps extends React$1.HTMLAttributes<HTMLDivElement> {
-    defaultValue?: number;
-    value?: number;
-    onValueChange?: (value: number) => void;
-    orientation?: StepperOrientation;
-    indicators?: StepIndicators;
-}
-export function Stepper({ defaultValue, value, onValueChange, orientation, className, children, indicators, ...props }: StepperProps): React$1.JSX.Element;
-interface StepperItemProps extends React$1.HTMLAttributes<HTMLDivElement> {
-    step: number;
-    completed?: boolean;
-    disabled?: boolean;
-    loading?: boolean;
-}
-export function StepperItem({ step, completed, disabled, loading, className, children, ...props }: StepperItemProps): React$1.JSX.Element;
-type StepperTriggerProps = UseRenderComponentProps<"button">;
-export function StepperTrigger({ className, children, tabIndex, render, ...props }: StepperTriggerProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-export function StepperIndicator({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperSeparator({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperTitle({ children, className, ...props }: React$1.ComponentProps<"h3">): React$1.JSX.Element;
-export function StepperDescription({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function StepperNav({ children, className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
-export function StepperPanel({ children, className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-interface StepperContentProps extends React$1.ComponentProps<"div"> {
-    value: number;
-    forceMount?: boolean;
-}
-export function StepperContent({ value, forceMount, children, className, ...props }: StepperContentProps): React$1.JSX.Element | null;
+function RadioGroupItem({ className, ...props }: Radio.Root.Props): React$1.JSX.Element;
+const RadioGroup$2: ViewComponent<typeof RadioGroup$1>;
+const RadioGroupItem$1: ViewComponent<typeof RadioGroupItem>;
 type StepProps = {
     label: string;
     fields?: string[];
@@ -15853,21 +15889,24 @@ type WizardProps = {
     finalAction?: React$1.ReactNode;
     backVariant?: "outline" | "ghost";
 };
-export function Wizard(props: WizardProps): React$1.JSX.Element;
-export function Step(props: StepProps): React$1.ReactNode;
-export function FileViewer({ src, title }: {
+function Wizard(props: WizardProps): React$1.JSX.Element;
+function Step(props: StepProps): React$1.ReactNode;
+const Wizard$1: ViewComponent<typeof Wizard>;
+const Step$1: ViewComponent<typeof Step>;
+function FileViewer({ src, title }: {
     src: string;
     title: string;
 }): React$1.JSX.Element;
-export function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
+const FileViewer$1: ViewComponent<typeof FileViewer>;
+function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
     size?: "default" | "sm";
 }): React$1.JSX.Element;
-export function CardHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardDescription({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardAction({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CardFooter({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardDescription({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardAction({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardContent({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function CardFooter({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
 type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" | "onChange"> & {
     label?: string;
     onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
@@ -15877,7 +15916,15 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     isSelected?: boolean;
     onChange?: (isSelected: boolean) => void;
 };
-export function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
+function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
+const Card$1: ViewComponent<typeof Card>;
+const CardHeader$1: ViewComponent<typeof CardHeader>;
+const CardTitle$1: ViewComponent<typeof CardTitle>;
+const CardDescription$1: ViewComponent<typeof CardDescription>;
+const CardAction$1: ViewComponent<typeof CardAction>;
+const CardContent$1: ViewComponent<typeof CardContent>;
+const CardFooter$1: ViewComponent<typeof CardFooter>;
+const InteractiveCard$1: ViewComponent<typeof InteractiveCard>;
 type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type"> & ({
     href: string;
     preview: string;
@@ -15900,19 +15947,29 @@ type LinkProps = (Omit<React$1.ComponentPropsWithRef<"a">, "download"> & {
     download?: never;
     disabled?: boolean;
 }) | ActionLinkProps;
-export function Link(props: LinkProps): React$1.JSX.Element;
+function Link(props: LinkProps): React$1.JSX.Element;
+const Link$1: ViewComponent<typeof Link>;
 const Select$1: typeof SelectRoot;
 function SelectGroup$1({ className, ...props }: SelectGroup.Props): React$1.JSX.Element;
 function SelectValue$1({ className, ...props }: SelectValue.Props): React$1.JSX.Element;
 function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
-export function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
+function SelectContent({ className, children, side, sideOffset, align, alignOffset, alignItemWithTrigger, ...props }: SelectPopup.Props & Pick<SelectPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger">): React$1.JSX.Element;
 function SelectLabel$1({ className, ...props }: SelectGroupLabel.Props): React$1.JSX.Element;
 function SelectItem$1({ className, children, ...props }: SelectItem.Props): React$1.JSX.Element;
 function SelectSeparator$1({ className, ...props }: SelectSeparator.Props): React$1.JSX.Element;
-export function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
-export function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
+function SelectScrollUpButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollUpArrow>): React$1.JSX.Element;
+function SelectScrollDownButton({ className, ...props }: React$1.ComponentProps<typeof SelectScrollDownArrow>): React$1.JSX.Element;
+const SelectContent$1: ViewComponent<typeof SelectContent>;
+const SelectGroup$2: ViewComponent<typeof SelectGroup$1>;
+const SelectItem$2: ViewComponent<typeof SelectItem$1>;
+const SelectLabel$2: ViewComponent<typeof SelectLabel$1>;
+const SelectScrollDownButton$1: ViewComponent<typeof SelectScrollDownButton>;
+const SelectScrollUpButton$1: ViewComponent<typeof SelectScrollUpButton>;
+const SelectSeparator$2: ViewComponent<typeof SelectSeparator$1>;
+const SelectTrigger$2: ViewComponent<typeof SelectTrigger$1>;
+const SelectValue$2: ViewComponent<typeof SelectValue$1>;
 export const Combobox: typeof ComboboxRoot;
 function ComboboxValue$1({ ...props }: ComboboxValue.Props): React$1.JSX.Element;
 function ComboboxTrigger$1({ className, children, ...props }: ComboboxTrigger.Props): React$1.JSX.Element;
@@ -15920,7 +15977,7 @@ function ComboboxInput$1({ className, children, disabled, showTrigger, showClear
     showTrigger?: boolean;
     showClear?: boolean;
 }): React$1.JSX.Element;
-export function ComboboxContent({ className, side, sideOffset, align, alignOffset, anchor, ...props }: ComboboxPopup.Props & Pick<ComboboxPositioner.Props, "side" | "align" | "sideOffset" | "alignOffset" | "anchor">): React$1.JSX.Element;
+function ComboboxContent({ className, side, sideOffset, align, alignOffset, anchor, ...props }: ComboboxPopup.Props & Pick<ComboboxPositioner.Props, "side" | "align" | "sideOffset" | "alignOffset" | "anchor">): React$1.JSX.Element;
 function ComboboxList$1({ className, ...props }: ComboboxList.Props): React$1.JSX.Element;
 function ComboboxItem$1({ className, children, ...props }: ComboboxItem.Props): React$1.JSX.Element;
 function ComboboxGroup$1({ className, ...props }: ComboboxGroup.Props): React$1.JSX.Element;
@@ -15932,25 +15989,53 @@ function ComboboxChips$1({ className, ...props }: React$1.ComponentPropsWithRef<
 function ComboboxChip$1({ className, children, showRemove, ...props }: ComboboxChip.Props & {
     showRemove?: boolean;
 }): React$1.JSX.Element;
-export function ComboboxChipsInput({ className, ...props }: ComboboxInput.Props): React$1.JSX.Element;
+function ComboboxChipsInput({ className, ...props }: ComboboxInput.Props): React$1.JSX.Element;
 export function useComboboxAnchor(): React$1.RefObject<HTMLDivElement | null>;
+const ComboboxInput$2: ViewComponent<typeof ComboboxInput$1>;
+const ComboboxContent$1: ViewComponent<typeof ComboboxContent>;
+const ComboboxList$2: ViewComponent<typeof ComboboxList$1>;
+const ComboboxItem$2: ViewComponent<typeof ComboboxItem$1>;
+const ComboboxGroup$2: ViewComponent<typeof ComboboxGroup$1>;
+const ComboboxLabel$2: ViewComponent<typeof ComboboxLabel$1>;
+const ComboboxCollection$2: ViewComponent<typeof ComboboxCollection$1>;
+const ComboboxEmpty$2: ViewComponent<typeof ComboboxEmpty$1>;
+const ComboboxSeparator$2: ViewComponent<typeof ComboboxSeparator$1>;
+const ComboboxChips$2: ViewComponent<typeof ComboboxChips$1>;
+const ComboboxChip$2: ViewComponent<typeof ComboboxChip$1>;
+const ComboboxChipsInput$1: ViewComponent<typeof ComboboxChipsInput>;
+const ComboboxTrigger$2: ViewComponent<typeof ComboboxTrigger$1>;
+const ComboboxValue$2: ViewComponent<typeof ComboboxValue$1>;
 function Tabs$1({ className, orientation, ...props }: Tabs.Root.Props): React$1.JSX.Element;
 const tabsListVariants: (props?: ({
     variant?: "default" | "line" | null | undefined;
 } & ClassProp) | undefined) => string;
 function TabsList$1({ className, variant, ...props }: Tabs.List.Props & VariantProps<typeof tabsListVariants>): React$1.JSX.Element;
-export function TabsTrigger({ className, ...props }: Tabs.Tab.Props): React$1.JSX.Element;
-export function TabsContent({ className, ...props }: Tabs.Panel.Props): React$1.JSX.Element;
+function TabsTrigger({ className, ...props }: Tabs.Tab.Props): React$1.JSX.Element;
+function TabsContent({ className, ...props }: Tabs.Panel.Props): React$1.JSX.Element;
+const Tabs$2: ViewComponent<typeof Tabs$1>;
+const TabsList$2: ViewComponent<typeof TabsList$1>;
+const TabsTrigger$1: ViewComponent<typeof TabsTrigger>;
+const TabsContent$1: ViewComponent<typeof TabsContent>;
 function Slider$1<Value extends number | readonly number[]>({ className, defaultValue, value, min, max, children, ...props }: Slider.Root.Props<Value>): React$1.JSX.Element;
 function SliderControl$1({ className, ...props }: Slider.Control.Props): React$1.JSX.Element;
 function SliderTrack$1({ className, ...props }: Slider.Track.Props): React$1.JSX.Element;
-export function SliderRange({ className, ...props }: Slider.Indicator.Props): React$1.JSX.Element;
+function SliderRange({ className, ...props }: Slider.Indicator.Props): React$1.JSX.Element;
 function SliderThumb$1({ className, ...props }: Slider.Thumb.Props): React$1.JSX.Element;
+const Slider$2: <Value extends number | readonly number[]>(props: ViewProps<Parameters<typeof Slider$1<Value>>[0]>) => ReturnType<typeof Slider$1>;
+const SliderControl$2: ViewComponent<typeof SliderControl$1>;
+const SliderTrack$2: ViewComponent<typeof SliderTrack$1>;
+const SliderRange$1: ViewComponent<typeof SliderRange>;
+const SliderThumb$2: ViewComponent<typeof SliderThumb$1>;
 function Progress$1({ className, children, value, ...props }: Progress.Root.Props): React$1.JSX.Element;
 function ProgressTrack$1({ className, ...props }: Progress.Track.Props): React$1.JSX.Element;
 function ProgressIndicator$1({ className, ...props }: Progress.Indicator.Props): React$1.JSX.Element;
 function ProgressLabel$1({ className, ...props }: Progress.Label.Props): React$1.JSX.Element;
 function ProgressValue$1({ className, ...props }: Progress.Value.Props): React$1.JSX.Element;
+const Progress$2: ViewComponent<typeof Progress$1>;
+const ProgressLabel$2: ViewComponent<typeof ProgressLabel$1>;
+const ProgressValue$2: ViewComponent<typeof ProgressValue$1>;
+const ProgressTrack$2: ViewComponent<typeof ProgressTrack$1>;
+const ProgressIndicator$2: ViewComponent<typeof ProgressIndicator$1>;
 interface DotProps {
     className?: string;
     cx?: number;
@@ -16211,8 +16296,8 @@ interface LabelListProps extends ZIndexable {
 type SvgTextProps = React$1.PropsWithoutRef<React$1.SVGProps<SVGTextElement>>;
 type Props$5 = Omit<SvgTextProps, "children"> & LabelListProps;
 type ImplicitLabelListType = boolean | LabelContentType | Props$5;
-export function LabelList({ valueAccessor, ...restProps }: Props$5): React$1.JSX.Element | null;
-export namespace LabelList {
+function LabelList({ valueAccessor, ...restProps }: Props$5): React$1.JSX.Element | null;
+namespace LabelList {
     var displayName: string;
 }
 type ContentType = React$1.ReactElement | ((props: Props$6) => React$1.ReactNode);
@@ -16358,7 +16443,6 @@ interface AreaProps<DataPointType = any, DataValueType = any> extends DataProvid
 }
 type AreaSvgProps = Omit<Props$4, "points" | "ref" | "layout" | "path" | "pathRef" | "baseLine" | "dangerouslySetInnerHTML">;
 type Props$8<DataPointType, ValueAxisType> = AreaSvgProps & AreaProps<DataPointType, ValueAxisType>;
-export const Area: <DataPointType = any, ValueAxisType = any>(props: Props$8<DataPointType, ValueAxisType>) => React$1.ReactElement;
 type RectRadius = number | [
     number,
     number,
@@ -16457,7 +16541,6 @@ interface BarEvents {
 }
 type BarSvgProps = Omit<PresentationAttributesAdaptChildEvent<BarRectangleItem, SVGPathElement>, "radius" | "name" | "ref">;
 type Props$10<DataPointType = any, ValueAxisType = any> = Partial<BarEvents> & BarProps<DataPointType, ValueAxisType> & Omit<BarSvgProps, keyof BarEvents>;
-export const Bar: <DataPointType = any, ValueAxisType = any>(props: Props$10<DataPointType, ValueAxisType>) => React$1.ReactElement;
 type MinPointSize = number | ((value: number | undefined | null, index: number) => number);
 const SVGElementPropKeys: readonly [
     "aria-activedescendant",
@@ -16809,8 +16892,8 @@ interface ReferenceLineProps<XValueType extends ReferenceCoordinateValue = any, 
     strokeWidth?: number | string;
 }
 type Props$11<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any> = Omit<React$1.SVGProps<SVGLineElement>, "viewBox"> & ReferenceLineProps<XValueType, YValueType>;
-export function ReferenceLine<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any>(outsideProps: Props$11<XValueType, YValueType>): React$1.JSX.Element;
-export namespace ReferenceLine {
+function ReferenceLine<XValueType extends ReferenceCoordinateValue = any, YValueType extends ReferenceCoordinateValue = any>(outsideProps: Props$11<XValueType, YValueType>): React$1.JSX.Element;
+namespace ReferenceLine {
     var displayName: string;
 }
 type LineDrawShapeProps = Omit<Props$4, "pathRef"> & ShapeAnimationProps & {
@@ -16856,10 +16939,6 @@ interface LineProps<DataPointType = any, DataValueType = any> extends DataProvid
 }
 type LineSvgProps = Omit<Props$4, "points" | "pathRef" | "ref" | "layout" | "baseLine">;
 type Props$12<DataPointType = any, ValueAxisType = any> = LineSvgProps & LineProps<DataPointType, ValueAxisType>;
-export const Line: {
-    <DataPointType = any, ValueAxisType = any>(props: Props$12<DataPointType, ValueAxisType>): React$1.ReactElement;
-    (props: Props$12<any, any>): React$1.ReactElement;
-};
 const DATA_ITEM_INDEX_ATTRIBUTE_NAME = "data-recharts-item-index";
 const DATA_ITEM_GRAPHICAL_ITEM_ID_ATTRIBUTE_NAME = "data-recharts-item-id";
 type GetTicksInput = {
@@ -16927,8 +17006,8 @@ type LineItemProps = Props$13 & {
     key: string;
     index: number;
 };
-export function CartesianGrid(props: Props$13): React$1.JSX.Element | null;
-export namespace CartesianGrid {
+function CartesianGrid(props: Props$13): React$1.JSX.Element | null;
+namespace CartesianGrid {
     var displayName: string;
 }
 type AxisRange = readonly [
@@ -17631,12 +17710,11 @@ interface Props$14 extends Omit<React$1.HTMLAttributes<HTMLDivElement>, "id" | "
     style?: React$1.CSSProperties;
     onResize?: (width: number, height: number) => void;
 }
-export const ResponsiveContainer: React$1.ForwardRefExoticComponent<Props$14 & React$1.RefAttributes<HTMLDivElement>>;
+const ResponsiveContainer: React$1.ForwardRefExoticComponent<Props$14 & React$1.RefAttributes<HTMLDivElement>>;
 interface Props$15 extends React$1.SVGProps<SVGElement> {
     fill?: string;
     stroke?: string;
 }
-export const Cell: React$1.FunctionComponent<Props$15>;
 interface SectorProps {
     className?: string;
     cx?: number;
@@ -17677,10 +17755,6 @@ interface PolarGridProps extends ZIndexable {
     fillOpacity?: number | string;
 }
 type Props$17 = React$1.SVGProps<SVGLineElement> & PolarGridProps;
-export const PolarGrid: {
-    (outsideProps: Props$17): React$1.JSX.Element | null;
-    displayName: string;
-};
 type TickOrientation = "left" | "right" | "middle";
 interface PolarRadiusAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "angle" | "type" | "tickSize" | "domain" | "scale" | "tick">, ZIndexable {
     axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
@@ -17706,8 +17780,8 @@ interface PolarRadiusAxisProps<DataPointType = any, DataValueType = any> extends
 }
 type AxisSvgProps = Omit<PresentationAttributesAdaptChildEvent<any, SVGTextElement>, "scale" | "type">;
 type Props$18<DataPointType = any, DataValueType = any> = AxisSvgProps & PolarRadiusAxisProps<DataPointType, DataValueType>;
-export function PolarRadiusAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$18<DataPointType, DataValueType>): React$1.JSX.Element;
-export namespace PolarRadiusAxis {
+function PolarRadiusAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$18<DataPointType, DataValueType>): React$1.JSX.Element;
+namespace PolarRadiusAxis {
     var displayName: string;
 }
 interface PolarAngleAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "tickCount" | "domain" | "scale" | "tick">, ZIndexable {
@@ -17733,8 +17807,8 @@ interface PolarAngleAxisProps<DataPointType = any, DataValueType = any> extends 
 }
 type AxisSvgProps$1 = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "type" | "dangerouslySetInnerHTML">;
 type Props$19<DataPointType = any, DataValueType = any> = AxisSvgProps$1 & PolarAngleAxisProps<DataPointType, DataValueType>;
-export function PolarAngleAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$19<DataPointType, DataValueType>): React$1.ReactNode;
-export namespace PolarAngleAxis {
+function PolarAngleAxis<DataPointType = any, DataValueType = any>(outsideProps: Props$19<DataPointType, DataValueType>): React$1.ReactNode;
+namespace PolarAngleAxis {
     var displayName: string;
 }
 type TooltipTriggerInfo = {
@@ -17830,10 +17904,6 @@ type PieCoordinate = {
     outerRadius: number;
     maxRadius: number;
 };
-export const Pie: {
-    <DataPointType = any, DataValueType = any>(outsideProps: Props$20<DataPointType, DataValueType>): React$1.ReactElement;
-    (outsideProps: Props$20<any, any>): React$1.ReactElement;
-};
 interface RadarPoint {
     x: number;
     y: number;
@@ -17895,8 +17965,8 @@ const defaultRadarProps: {
 };
 type PropsWithDefaults = RequiresDefaultProps<Props$21, typeof defaultRadarProps>;
 type InternalRadarProps = WithIdRequired<PropsWithDefaults> & RadarComposedData;
-export function Radar<DataPointType = any, DataValueType = any>(outsideProps: Props$21<DataPointType, DataValueType>): React$1.JSX.Element;
-export namespace Radar {
+function Radar<DataPointType = any, DataValueType = any>(outsideProps: Props$21<DataPointType, DataValueType>): React$1.JSX.Element;
+namespace Radar {
     var displayName: string;
 }
 interface RadialBarSectorProps extends RadialBarDataItem, ShapeAnimationProps {
@@ -17951,8 +18021,8 @@ interface InternalRadialBarProps<DataPointType = any, DataValueType = any> exten
     zIndex?: number;
 }
 type RadialBarProps<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<RadialBarDataItem, SVGElement>, "ref" | keyof InternalRadialBarProps<DataPointType, DataValueType>> & Omit<InternalRadialBarProps<DataPointType, DataValueType>, "sectors">;
-export function RadialBar<DataPointType = any, DataValueType = any>(outsideProps: RadialBarProps<DataPointType, DataValueType>): React$1.JSX.Element;
-export namespace RadialBar {
+function RadialBar<DataPointType = any, DataValueType = any>(outsideProps: RadialBarProps<DataPointType, DataValueType>): React$1.JSX.Element;
+namespace RadialBar {
     var displayName: string;
 }
 interface XAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "domain" | "scale" | "tick"> {
@@ -17974,7 +18044,6 @@ interface XAxisProps<DataPointType = any, DataValueType = any> extends Omit<Rend
     niceTicks?: NiceTicksAlgorithm;
 }
 type Props$22<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref" | "height"> & XAxisProps<DataPointType, DataValueType>;
-export const XAxis: <DataPointType = any, DataValueType = any>(props: Props$22<DataPointType, DataValueType>) => React$1.ReactElement;
 interface YAxisProps<DataPointType = any, DataValueType = any> extends Omit<RenderableAxisProps<DataPointType, DataValueType>, "axisLine" | "domain" | "scale" | "tick"> {
     axisLine?: boolean | React$1.SVGProps<SVGLineElement>;
     type?: AxisDomainTypeInput;
@@ -17995,16 +18064,6 @@ interface YAxisProps<DataPointType = any, DataValueType = any> extends Omit<Rend
     niceTicks?: NiceTicksAlgorithm;
 }
 type Props$23<DataPointType = any, DataValueType = any> = Omit<PresentationAttributesAdaptChildEvent<TickItem, SVGTextElement>, "scale" | "ref"> & YAxisProps<DataPointType, DataValueType>;
-export const YAxis: <DataPointType = any, DataValueType = any>(props: Props$23<DataPointType, DataValueType>) => React$1.ReactElement;
-export const LineChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
-export const BarChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
-export const PieChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
 type SankeyVerticalAlign = "justify" | "top";
 interface LinkDataItem {
     source: number;
@@ -18069,22 +18128,10 @@ interface SankeyProps extends EventThrottlingProps {
 }
 type Props$24 = Omit<React$1.SVGProps<SVGSVGElement>, keyof SankeyProps> & SankeyProps;
 type SankeyElementType = "node" | "link";
-export function Sankey(outsideProps: Props$24): React$1.JSX.Element;
-export namespace Sankey {
+function Sankey(outsideProps: Props$24): React$1.JSX.Element;
+namespace Sankey {
     var displayName: string;
 }
-export const RadarChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
-export const AreaChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
-export const RadialBarChart: <DataPointType = any>(props: PolarChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
-export const ComposedChart: <DataPointType = any>(props: CartesianChartProps<DataPointType> & {
-    ref?: React$1.Ref<SVGSVGElement>;
-}) => React$1.ReactElement;
 type TooltipNameType = number | string;
 export type ChartConfig = Record<string, {
     label?: React$1.ReactNode;
@@ -18096,7 +18143,7 @@ export type ChartConfig = Record<string, {
     color?: never;
     theme: Record<"light" | "dark", string>;
 })>;
-export function ChartContainer({ id, className, children, config, initialDimension, ...props }: React$1.ComponentProps<"div"> & {
+function ChartContainer({ id, className, children, config, initialDimension, ...props }: React$1.ComponentProps<"div"> & {
     config: ChartConfig;
     children: React$1.ComponentProps<typeof ResponsiveContainer>["children"];
     initialDimension?: {
@@ -18104,19 +18151,70 @@ export function ChartContainer({ id, className, children, config, initialDimensi
         height: number;
     };
 }): React$1.JSX.Element;
-export const ChartTooltip: typeof Tooltip;
-export function ChartTooltipContent({ active, payload, className, indicator, hideLabel, hideIndicator, label, labelFormatter, labelClassName, formatter, color, nameKey, labelKey }: React$1.ComponentProps<typeof Tooltip> & React$1.ComponentProps<"div"> & {
+function ChartTooltipContent({ active, payload, className, indicator, hideLabel, hideIndicator, label, labelFormatter, labelClassName, formatter, color, nameKey, labelKey }: React$1.ComponentProps<typeof Tooltip> & React$1.ComponentProps<"div"> & {
     hideLabel?: boolean;
     hideIndicator?: boolean;
     indicator?: "line" | "dot" | "dashed";
     nameKey?: string;
     labelKey?: string;
 } & Omit<Props$3<ValueType, TooltipNameType>, "accessibilityLayer">): React$1.JSX.Element | null;
-export const ChartLegend: React$1.MemoExoticComponent<(outsideProps: Props$7) => React$1.ReactPortal | null>;
-export function ChartLegendContent({ className, hideIcon, payload, verticalAlign, nameKey }: React$1.ComponentProps<"div"> & {
+function ChartLegendContent({ className, hideIcon, payload, verticalAlign, nameKey }: React$1.ComponentProps<"div"> & {
     hideIcon?: boolean;
     nameKey?: string;
 } & Props$6): React$1.JSX.Element | null;
+export const AreaChart: ViewComponent<(<DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+export const Area: ViewComponent<(<DataPointType = any, ValueAxisType = any>(props: Props$8<DataPointType, ValueAxisType>) => React$1.ReactElement)>;
+export const BarChart: ViewComponent<(<DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+export const Bar: ViewComponent<(<DataPointType = any, ValueAxisType = any>(props: Props$10<DataPointType, ValueAxisType>) => React$1.ReactElement)>;
+export const LineChart: ViewComponent<(<DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+export const Line: ViewComponent<{
+    <DataPointType = any, ValueAxisType = any>(props: Props$12<DataPointType, ValueAxisType>): React$1.ReactElement;
+    (props: Props$12<any, any>): React$1.ReactElement;
+}>;
+export const PieChart: ViewComponent<(<DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+export const Pie: ViewComponent<{
+    <DataPointType = any, DataValueType = any>(outsideProps: Props$20<DataPointType, DataValueType>): React$1.ReactElement;
+    (outsideProps: Props$20<any, any>): React$1.ReactElement;
+}>;
+export const Cell: ViewComponent<React$1.FunctionComponent<Props$15>>;
+export const RadarChart: ViewComponent<(<DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+const Radar$1: ViewComponent<typeof Radar>;
+export const RadialBarChart: ViewComponent<(<DataPointType = any>(props: PolarChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+const RadialBar$1: ViewComponent<typeof RadialBar>;
+const Sankey$1: ViewComponent<typeof Sankey>;
+const CartesianGrid$1: ViewComponent<typeof CartesianGrid>;
+export const XAxis: ViewComponent<(<DataPointType = any, DataValueType = any>(props: Props$22<DataPointType, DataValueType>) => React$1.ReactElement)>;
+export const YAxis: ViewComponent<(<DataPointType = any, DataValueType = any>(props: Props$23<DataPointType, DataValueType>) => React$1.ReactElement)>;
+export const PolarGrid: ViewComponent<{
+    (outsideProps: Props$17): React$1.JSX.Element | null;
+    displayName: string;
+}>;
+const PolarAngleAxis$1: ViewComponent<typeof PolarAngleAxis>;
+const PolarRadiusAxis$1: ViewComponent<typeof PolarRadiusAxis>;
+const ResponsiveContainer$1: ViewComponent<React$1.ForwardRefExoticComponent<Props$14 & React$1.RefAttributes<HTMLDivElement>>>;
+const Label$2: ViewComponent<typeof Label$1>;
+const LabelList$1: ViewComponent<typeof LabelList>;
+const ReferenceLine$1: ViewComponent<typeof ReferenceLine>;
+export const ComposedChart: ViewComponent<(<DataPointType = any>(props: CartesianChartProps<DataPointType> & {
+    ref?: React$1.Ref<SVGSVGElement>;
+}) => React$1.ReactElement)>;
+const ChartContainer$1: ViewComponent<typeof ChartContainer>;
+export const ChartTooltip: ViewComponent<typeof Tooltip>;
+const ChartTooltipContent$1: ViewComponent<typeof ChartTooltipContent>;
+export const ChartLegend: ViewComponent<React$1.MemoExoticComponent<(outsideProps: Props$7) => React$1.ReactPortal | null>>;
+const ChartLegendContent$1: ViewComponent<typeof ChartLegendContent>;
 type AnalyticsMetric = {
     label: string;
     value: string;
@@ -18208,46 +18306,6 @@ type RevenueQuarter = {
 export function RevenueFlow({ quarters }: {
     quarters: RevenueQuarter[];
 }): React$1.JSX.Element | null;
-interface DataGridI18nLabels {
-    sortAscending: string;
-    sortDescending: string;
-    pinColumnStart: string;
-    pinColumnEnd: string;
-    moveColumnStart: string;
-    moveColumnEnd: string;
-    columnsMenu: string;
-    unpinColumn: (title: string) => string;
-    toggleColumns: string;
-    rowCreate: string;
-    pinRow: string;
-    unpinRow: string;
-    selectRow: string;
-    selectAll: string;
-    expandRow: string;
-    collapseRow: string;
-    dragToReorder: string;
-    dragToReorderRow: string;
-    reorderingUnavailable: string;
-    loading: string;
-    empty: string;
-    allRowsLoaded: string;
-    rowsPerPage: string;
-    paginationInfo: (info: {
-        from: number;
-        to: number;
-        count: number;
-    }) => string;
-    previousPage: string;
-    nextPage: string;
-    goToPage: (page: number) => string;
-    paginationEllipsis: string;
-    filterSelectedCount: (count: number) => string;
-    filterNoResults: string;
-    filterClear: string;
-}
-type DataGridI18nOverrides = {
-    labels?: Partial<DataGridI18nLabels>;
-};
 type Updater<T> = T | ((old: T) => T);
 type OnChangeFn<T> = (updaterOrValue: Updater<T>) => void;
 type RowData = Record<string, any> | Array<any>;
@@ -18760,7 +18818,7 @@ interface AggregationContext<TFeatures extends TableFeatures, TData extends RowD
     getValue: (row: Row<TFeatures, TData>) => TValue;
     groupingRow?: Row<TFeatures, TData>;
     rows: ReadonlyArray<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface AggregationMergeContext<TFeatures extends TableFeatures, TData extends RowData, TValue, TResult> extends AggregationContext<TFeatures, TData, TValue> {
     subRowResults: ReadonlyArray<TResult>;
@@ -18820,7 +18878,7 @@ interface AggregationValueContext<TFeatures extends TableFeatures, TData extends
     column: Column<TFeatures, TData, TValue>;
     maxDepth: number;
     rows?: ReadonlyArray<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface AggregationValueResult<TResult = unknown> {
     value: TResult;
@@ -18859,7 +18917,7 @@ interface Column_CoreProperties<TFeatures extends TableFeatures, TData extends R
     depth: number;
     id: string;
     parent?: Column<TFeatures, TData, TValue>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Column_Column<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
     getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
@@ -18996,7 +19054,7 @@ interface Row_CoreProperties<TFeatures extends TableFeatures, TData extends RowD
     originalSubRows?: ReadonlyArray<TData>;
     parentId?: string;
     subRows: Array<Row<TFeatures, TData>>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Row_Row<TFeatures extends TableFeatures, TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
     getDisplayIndex: () => number;
@@ -19115,13 +19173,13 @@ interface RowSpanContext<TFeatures extends TableFeatures, TData extends RowData,
     column: Column<TFeatures, TData, TValue>;
     previousRow: Row<TFeatures, TData>;
     row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
     value: TValue;
 }
 interface ColSpanContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface ColumnDef_CellSpanning<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     enableCellSpanning?: boolean;
@@ -19200,20 +19258,20 @@ interface Table_FeatureMap<TFeatures extends TableFeatures, TData extends RowDat
     rowSelectionFeature: Table_RowSelection<TFeatures, TData>;
     rowSortingFeature: Table_RowSorting<TFeatures, TData>;
 }
-type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
+type Table$2<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
 export interface CellContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     cell: Cell$1<TFeatures, TData, TValue>;
     column: Column<TFeatures, TData, TValue>;
     getValue: Getter<TValue>;
     renderValue: Getter<TValue | null>;
     row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Cell_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     id: string;
     row: Row<TFeatures, TData>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Cell_Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
     getContext: () => CellContext<TFeatures, TData, TValue>;
@@ -19383,7 +19441,7 @@ interface Table_Headers<TFeatures extends TableFeatures, TData extends RowData> 
 interface HeaderContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     column: Column<TFeatures, TData, TValue>;
     header: Header<TFeatures, TData, TValue>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Header_CoreProperties<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
     colSpan: number;
@@ -19396,7 +19454,7 @@ interface Header_CoreProperties<TFeatures extends TableFeatures, TData extends R
     placeholderId?: string;
     rowSpan: number;
     subHeaders: Array<Header<TFeatures, TData, TValue>>;
-    table: Table$1<TFeatures, TData>;
+    table: Table$2<TFeatures, TData>;
 }
 interface Header_Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
     getContext: () => HeaderContext<TFeatures, TData, TValue>;
@@ -19641,21 +19699,21 @@ interface TableFeatures extends Partial<CoreFeatures>, Partial<StockFeatures>, P
     tableMeta?: object;
 }
 interface TableFeature {
-    assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-    constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+    assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$2<TFeatures, TData>) => void;
+    assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$2<TFeatures, TData>) => void;
+    assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$2<TFeatures, TData>) => void;
+    assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$2<TFeatures, TData>) => void;
+    constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$2<TFeatures, TData>) => void;
     getDefaultColumnDef?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>() => ColumnDefBase_All<TFeatures, TData, TValue>;
-    getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
+    getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$2<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
     getInitialState?: (initialState: Partial<TableState_All>) => TableState_All;
-    initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+    initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$2<TFeatures, TData>) => void;
     initCellInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(cell: Cell$1<TFeatures, TData, TValue>) => void;
     initColumnInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => void;
     initHeaderGroupInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(headerGroup: HeaderGroup<TFeatures, TData>) => void;
     initHeaderInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(header: Header<TFeatures, TData, TValue>) => void;
     initRowInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(row: Row<TFeatures, TData>) => void;
-    resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+    resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$2<TFeatures, TData>) => void;
 }
 const coreCellsFeature: TableFeature;
 type FlexRenderProps<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = {
@@ -19677,8 +19735,8 @@ type SubscribePropsWithStore<TFeatures extends TableFeatures, TSelected> = {
     selector: (state: TableState<TFeatures>) => TSelected;
     children: ((state: TSelected) => React$1.ReactNode) | React$1.ReactNode;
 };
-type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$1<TFeatures, TData>, "store"> & {
-    readonly store: Table$1<TFeatures, TData>["store"];
+type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$2<TFeatures, TData>, "store"> & {
+    readonly store: Table$2<TFeatures, TData>["store"];
     Subscribe: {
         <TSourceValue>(props: {
             source: SubscribeSource<TSourceValue>;
@@ -19695,7 +19753,47 @@ type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelecte
     FlexRender: <TValue extends CellData = CellData>(props: FlexRenderProps<TFeatures, TData, TValue>) => React$1.ReactNode;
     readonly state: Readonly<TSelected>;
 };
-export function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
+function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
+interface DataGridI18nLabels {
+    sortAscending: string;
+    sortDescending: string;
+    pinColumnStart: string;
+    pinColumnEnd: string;
+    moveColumnStart: string;
+    moveColumnEnd: string;
+    columnsMenu: string;
+    unpinColumn: (title: string) => string;
+    toggleColumns: string;
+    rowCreate: string;
+    pinRow: string;
+    unpinRow: string;
+    selectRow: string;
+    selectAll: string;
+    expandRow: string;
+    collapseRow: string;
+    dragToReorder: string;
+    dragToReorderRow: string;
+    reorderingUnavailable: string;
+    loading: string;
+    empty: string;
+    allRowsLoaded: string;
+    rowsPerPage: string;
+    paginationInfo: (info: {
+        from: number;
+        to: number;
+        count: number;
+    }) => string;
+    previousPage: string;
+    nextPage: string;
+    goToPage: (page: number) => string;
+    paginationEllipsis: string;
+    filterSelectedCount: (count: number) => string;
+    filterNoResults: string;
+    filterClear: string;
+}
+type DataGridI18nOverrides = {
+    labels?: Partial<DataGridI18nLabels>;
+};
 interface DataGridColumnCellEdit<TData> {
     editable?: boolean | ((row: TData) => boolean);
     parse?: (raw: string, row: TData) => unknown;
@@ -19703,7 +19801,7 @@ interface DataGridColumnCellEdit<TData> {
     clearValue?: unknown;
     control?: "text" | "textarea";
 }
-export interface DataGridColumnMeta<TData> {
+interface DataGridColumnMeta<TData> {
     headerTitle?: string;
     headerClassName?: string;
     cellClassName?: string;
@@ -19714,7 +19812,7 @@ export interface DataGridColumnMeta<TData> {
     cellEdit?: DataGridColumnCellEdit<TData>;
     fillWidth?: boolean;
 }
-export const dataGridFeatures: {
+const dataGridFeatures: {
     columnVisibilityFeature: TableFeature;
     columnOrderingFeature: TableFeature;
     columnPinningFeature: TableFeature;
@@ -19729,12 +19827,12 @@ export const dataGridFeatures: {
     rowExpandingFeature: TableFeature;
     rowPinningFeature: TableFeature;
     cellSelectionFeature: TableFeature;
-    sortedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-    filteredRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-    paginatedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-    expandedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-    facetedRowModel: (table: Table$1<any, any>, columnId: string) => () => RowModel<any, any>;
-    facetedUniqueValues: (table: Table$1<TableFeatures, any>, columnId: string) => () => Map<any, number>;
+    sortedRowModel: (table: Table$2<any, any>) => () => RowModel<any, any>;
+    filteredRowModel: (table: Table$2<any, any>) => () => RowModel<any, any>;
+    paginatedRowModel: (table: Table$2<any, any>) => () => RowModel<any, any>;
+    expandedRowModel: (table: Table$2<any, any>) => () => RowModel<any, any>;
+    facetedRowModel: (table: Table$2<any, any>, columnId: string) => () => RowModel<any, any>;
+    facetedUniqueValues: (table: Table$2<TableFeatures, any>, columnId: string) => () => Map<any, number>;
     sortFns: {
         alphanumeric: CreatedSortFn<any, any>;
         alphanumericCaseSensitive: CreatedSortFn<any, any>;
@@ -19745,7 +19843,7 @@ export const dataGridFeatures: {
     };
     columnMeta: DataGridColumnMeta<any>;
 };
-export type DataGridFeatures = typeof dataGridFeatures;
+type DataGridFeatures = typeof dataGridFeatures;
 export type DataGridTableInstance<TData extends object> = ReactTable<DataGridFeatures, TData>;
 type DataGridCellsChangeSource = "paste" | "cut" | "clear" | "fill" | "edit";
 interface DataGridCellChange<TData> {
@@ -19795,9 +19893,9 @@ interface DataGridCellsChangeDetails<TData> {
     changes: DataGridCellChange<TData>[];
     rejected: DataGridCellRejection[];
 }
-export interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
+interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
     className?: string;
-    table?: Table$1<TFeatures, TData>;
+    table?: Table$2<TFeatures, TData>;
     recordCount: number;
     children?: React$1.ReactNode;
     onRowClick?: (row: TData) => void;
@@ -19860,8 +19958,8 @@ export interface DataGridProps<TFeatures extends TableFeatures, TData extends ob
         cellFillHandle?: string;
     };
 }
-export function DataGrid<TFeatures extends TableFeatures, TData extends object>({ children, table, ...props }: DataGridProps<TFeatures, TData>): React$1.JSX.Element;
-export function DataGridContainer({ children, className }: {
+function DataGrid<TFeatures extends TableFeatures, TData extends object>({ children, table, ...props }: DataGridProps<TFeatures, TData>): React$1.JSX.Element;
+function DataGridContainer({ children, className }: {
     children: React$1.ReactNode;
     className?: string;
     border?: boolean;
@@ -19869,11 +19967,17 @@ export function DataGridContainer({ children, className }: {
 export function DataGridTableRowSelect<TData extends object>({ row }: {
     row: Row<DataGridFeatures, TData>;
 }): React$1.JSX.Element;
-export function DataGridTableRowSelectAll(): React$1.JSX.Element;
+function DataGridTableRowSelectAll(): React$1.JSX.Element;
 export function DataGridTable<_TData extends object>({ footerContent, renderHeader }: {
     footerContent?: React$1.ReactNode;
     renderHeader?: boolean;
 }): React$1.JSX.Element;
+type DataGridScrollAreaOrientation = "horizontal" | "vertical" | "both";
+type DataGridScrollAreaProps = Omit<ScrollArea.Root.Props, "children"> & {
+    children: React$1.ReactNode;
+    orientation?: DataGridScrollAreaOrientation;
+};
+function DataGridScrollArea({ children, className, orientation, ...props }: DataGridScrollAreaProps): React$1.JSX.Element;
 interface DataGridColumnHeaderProps<TData extends object, TValue> extends React$1.HTMLAttributes<HTMLDivElement> {
     column: Column<DataGridFeatures, TData, TValue>;
     title?: string;
@@ -19882,7 +19986,7 @@ interface DataGridColumnHeaderProps<TData extends object, TValue> extends React$
     filter?: React$1.ReactNode;
     visibility?: boolean;
 }
-export function DataGridColumnHeader<TData extends object, TValue>(props: DataGridColumnHeaderProps<TData, TValue>): React$1.JSX.Element;
+function DataGridColumnHeader<TData extends object, TValue>(props: DataGridColumnHeaderProps<TData, TValue>): React$1.JSX.Element;
 interface DataGridPaginationProps {
     sizes?: number[];
     sizesInfo?: string;
@@ -19899,13 +20003,20 @@ interface DataGridPaginationProps {
     nextPageLabel?: string;
     ellipsisText?: string;
 }
-export function DataGridPagination(props: DataGridPaginationProps): React$1.JSX.Element;
-type DataGridScrollAreaOrientation = "horizontal" | "vertical" | "both";
-type DataGridScrollAreaProps = Omit<ScrollArea.Root.Props, "children"> & {
-    children: React$1.ReactNode;
-    orientation?: DataGridScrollAreaOrientation;
+function DataGridPagination(props: DataGridPaginationProps): React$1.JSX.Element;
+const dataGridFeatures$1: Omit<DataGridFeatures, "columnMeta"> & {
+    columnMeta: ViewProps<DataGridFeatures["columnMeta"]>;
 };
-export function DataGridScrollArea({ children, className, orientation, ...props }: DataGridScrollAreaProps): React$1.JSX.Element;
+type DataGridFeatures$1 = typeof dataGridFeatures$1;
+type DataGridProps$1<Features extends TableFeatures, Data extends object> = ViewProps<DataGridProps<Features, Data>>;
+type DataGridColumnMeta$1<Data> = ViewProps<DataGridColumnMeta<Data>>;
+const DataGrid$1: <Features extends TableFeatures, Data extends object>(props: DataGridProps$1<Features, Data>) => ReturnType<typeof DataGrid>;
+const DataGridContainer$1: ViewComponent<typeof DataGridContainer>;
+const DataGridTableRowSelectAll$1: ViewComponent<typeof DataGridTableRowSelectAll>;
+const DataGridColumnHeader$1: <Data extends object, Value>(props: ViewProps<Parameters<typeof DataGridColumnHeader<Data, Value>>[0]>) => ReturnType<typeof DataGridColumnHeader>;
+const DataGridPagination$1: ViewComponent<typeof DataGridPagination>;
+const DataGridScrollArea$1: ViewComponent<typeof DataGridScrollArea>;
+const useTable$1: typeof useTable;
 type FilterCombinator = "and" | "or";
 interface FilterRule<V = unknown> {
     id: string;
@@ -20167,20 +20278,26 @@ interface FiltersProps<V = unknown, O = unknown> {
     className?: string;
     children?: React$1.ReactNode;
 }
-export function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
+function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
+const Filters$1: <Value = unknown, Option = unknown>(props: ViewProps<Parameters<typeof Filters<Value, Option>>[0]>) => ReturnType<typeof Filters>;
 const frameVariants: (props?: ({
     variant?: "default" | "ghost" | "inverse" | null | undefined;
     spacing?: "default" | "sm" | "lg" | "xs" | null | undefined;
     stacked?: boolean | null | undefined;
     dense?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
-export function Frame({ className, variant, spacing, stacked, dense, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof frameVariants>): React$1.JSX.Element;
-export function FramePanel({ className, fit, ...props }: React$1.ComponentProps<"div"> & {
+function Frame({ className, variant, spacing, stacked, dense, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof frameVariants>): React$1.JSX.Element;
+function FramePanel({ className, fit, ...props }: React$1.ComponentProps<"div"> & {
     fit?: boolean;
 }): React$1.JSX.Element;
-export function FrameHeader({ className, ...props }: React$1.ComponentProps<"header">): React$1.JSX.Element;
-export function FrameTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function FrameFooter({ className, ...props }: React$1.ComponentProps<"footer">): React$1.JSX.Element;
+function FrameHeader({ className, ...props }: React$1.ComponentProps<"header">): React$1.JSX.Element;
+function FrameTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+function FrameFooter({ className, ...props }: React$1.ComponentProps<"footer">): React$1.JSX.Element;
+const Frame$1: ViewComponent<typeof Frame>;
+const FrameHeader$1: ViewComponent<typeof FrameHeader>;
+const FrameTitle$1: ViewComponent<typeof FrameTitle>;
+const FramePanel$1: ViewComponent<typeof FramePanel>;
+const FrameFooter$1: ViewComponent<typeof FrameFooter>;
 const iconTileVariants: (props?: ({
     variant?: "outline" | "solid" | "frame" | "elevated" | "soft" | null | undefined;
     size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
@@ -20191,7 +20308,8 @@ interface IconTileProps extends useRender.ComponentProps<"span"> {
     size?: VariantProps<typeof iconTileVariants>["size"];
     radius?: VariantProps<typeof iconTileVariants>["radius"];
 }
-export function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+const IconTile$1: ViewComponent<typeof IconTile>;
 export function useDownload(): {
     download: (path: string, name: string) => Promise<void>;
     error: string | undefined;
@@ -20242,9 +20360,6 @@ namespace z {
 namespace Checkbox {
     export { CheckboxIndicator as Indicator, CheckboxRoot as Root };
 }
-namespace Collapsible {
-    export { CollapsiblePanel as Panel, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
-}
 namespace Progress {
     export { ProgressIndicator as Indicator, ProgressLabel as Label, ProgressRoot as Root, ProgressStatus as Status, ProgressTrack as Track, ProgressValue as Value };
 }
@@ -20263,7 +20378,7 @@ namespace Switch {
 namespace Tabs {
     export { TabsIndicator as Indicator, TabsList as List, TabsPanel as Panel, TabsRoot as Root, TabsTab as Tab };
 }
-export { AvatarFallback$1 as AvatarFallback, AvatarImage$1 as AvatarImage, Button$1 as Button, Checkbox$1 as Checkbox, Collapsible$1 as Collapsible, CollapsibleTrigger$1 as CollapsibleTrigger, ComboboxChip$1 as ComboboxChip, ComboboxChips$1 as ComboboxChips, ComboboxCollection$1 as ComboboxCollection, ComboboxEmpty$1 as ComboboxEmpty, ComboboxGroup$1 as ComboboxGroup, ComboboxInput$1 as ComboboxInput, ComboboxItem$1 as ComboboxItem, ComboboxLabel$1 as ComboboxLabel, ComboboxList$1 as ComboboxList, ComboboxSeparator$1 as ComboboxSeparator, ComboboxTrigger$1 as ComboboxTrigger, ComboboxValue$1 as ComboboxValue, DialogClose$1 as DialogClose, DialogDescription$1 as DialogDescription, DialogPortal$1 as DialogPortal, DialogTitle$1 as DialogTitle, DialogTrigger$1 as DialogTrigger, Field$1 as Field, FieldError$1 as FieldError, Image$1 as Image, Label$1 as Label, Progress$1 as Progress, ProgressIndicator$1 as ProgressIndicator, ProgressLabel$1 as ProgressLabel, ProgressTrack$1 as ProgressTrack, ProgressValue$1 as ProgressValue, RadioGroup$1 as RadioGroup, Select$1 as Select, SelectGroup$1 as SelectGroup, SelectItem$1 as SelectItem, SelectLabel$1 as SelectLabel, SelectSeparator$1 as SelectSeparator, SelectTrigger$1 as SelectTrigger, SelectValue$1 as SelectValue, Separator$1 as Separator, Slider$1 as Slider, SliderControl$1 as SliderControl, SliderThumb$1 as SliderThumb, SliderTrack$1 as SliderTrack, Switch$1 as Switch, Tabs$1 as Tabs, TabsList$1 as TabsList, Text$1 as Text, z, };
+export { Avatar$1 as Avatar, AvatarBadge$1 as AvatarBadge, AvatarFallback$2 as AvatarFallback, AvatarGroup$1 as AvatarGroup, AvatarGroupCount$1 as AvatarGroupCount, AvatarImage$2 as AvatarImage, Badge$1 as Badge, Button$2 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Calendar$1 as Calendar, Card$1 as Card, CardAction$1 as CardAction, CardContent$1 as CardContent, CardDescription$1 as CardDescription, CardFooter$1 as CardFooter, CardHeader$1 as CardHeader, CardTitle$1 as CardTitle, CartesianGrid$1 as CartesianGrid, ChartContainer$1 as ChartContainer, ChartLegendContent$1 as ChartLegendContent, ChartTooltipContent$1 as ChartTooltipContent, Checkbox$2 as Checkbox, CodeBlock$1 as CodeBlock, CodeBlockContent$1 as CodeBlockContent, CodeBlockCopyButton$1 as CodeBlockCopyButton, CodeBlockDownloadButton$1 as CodeBlockDownloadButton, CodeBlockExpandButton$1 as CodeBlockExpandButton, CodeBlockHeader$1 as CodeBlockHeader, CodeBlockLanguage$1 as CodeBlockLanguage, CodeBlockLineActions$1 as CodeBlockLineActions, CodeBlockTitle$1 as CodeBlockTitle, CodeBlockWrapToggle$1 as CodeBlockWrapToggle, ComboboxChip$2 as ComboboxChip, ComboboxChips$2 as ComboboxChips, ComboboxChipsInput$1 as ComboboxChipsInput, ComboboxCollection$2 as ComboboxCollection, ComboboxContent$1 as ComboboxContent, ComboboxEmpty$2 as ComboboxEmpty, ComboboxGroup$2 as ComboboxGroup, ComboboxInput$2 as ComboboxInput, ComboboxItem$2 as ComboboxItem, ComboboxLabel$2 as ComboboxLabel, ComboboxList$2 as ComboboxList, ComboboxSeparator$2 as ComboboxSeparator, ComboboxTrigger$2 as ComboboxTrigger, ComboboxValue$2 as ComboboxValue, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DialogClose$2 as DialogClose, DialogContent$1 as DialogContent, DialogDescription$2 as DialogDescription, DialogFooter$1 as DialogFooter, DialogHeader$1 as DialogHeader, DialogOverlay$1 as DialogOverlay, DialogPortal$2 as DialogPortal, DialogTitle$2 as DialogTitle, DialogTrigger$2 as DialogTrigger, DropdownMenu$1 as DropdownMenu, DropdownMenuCheckboxItem$1 as DropdownMenuCheckboxItem, DropdownMenuContent$1 as DropdownMenuContent, DropdownMenuGroup$1 as DropdownMenuGroup, DropdownMenuItem$1 as DropdownMenuItem, DropdownMenuLabel$1 as DropdownMenuLabel, DropdownMenuPortal$1 as DropdownMenuPortal, DropdownMenuRadioGroup$1 as DropdownMenuRadioGroup, DropdownMenuRadioItem$1 as DropdownMenuRadioItem, DropdownMenuSeparator$1 as DropdownMenuSeparator, DropdownMenuShortcut$1 as DropdownMenuShortcut, DropdownMenuSub$1 as DropdownMenuSub, DropdownMenuSubContent$1 as DropdownMenuSubContent, DropdownMenuSubTrigger$1 as DropdownMenuSubTrigger, DropdownMenuTrigger$1 as DropdownMenuTrigger, Empty$1 as Empty, EmptyContent$1 as EmptyContent, EmptyDescription$1 as EmptyDescription, EmptyHeader$1 as EmptyHeader, EmptyMedia$1 as EmptyMedia, EmptyTitle$1 as EmptyTitle, Field$2 as Field, FieldContent$1 as FieldContent, FieldDescription$1 as FieldDescription, FieldError$2 as FieldError, FieldGroup$1 as FieldGroup, FieldLabel$1 as FieldLabel, FieldLegend$1 as FieldLegend, FieldSeparator$1 as FieldSeparator, FieldSet$1 as FieldSet, FieldTitle$1 as FieldTitle, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$1 as Frame, FrameFooter$1 as FrameFooter, FrameHeader$1 as FrameHeader, FramePanel$1 as FramePanel, FrameTitle$1 as FrameTitle, GeneratedAvatar$1 as GeneratedAvatar, Grid$1 as Grid, GridSpan$1 as GridSpan, Heading$1 as Heading, IconTile$1 as IconTile, Image$2 as Image, Input$1 as Input, InputGroup$1 as InputGroup, InputGroupAddon$1 as InputGroupAddon, InputGroupButton$1 as InputGroupButton, InputGroupInput$1 as InputGroupInput, InputGroupText$1 as InputGroupText, InputGroupTextarea$1 as InputGroupTextarea, InteractiveCard$1 as InteractiveCard, Label$2 as Label, LabelList$1 as LabelList, Link$1 as Link, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, PolarAngleAxis$1 as PolarAngleAxis, PolarRadiusAxis$1 as PolarRadiusAxis, Progress$2 as Progress, ProgressIndicator$2 as ProgressIndicator, ProgressLabel$2 as ProgressLabel, ProgressTrack$2 as ProgressTrack, ProgressValue$2 as ProgressValue, Radar$1 as Radar, RadialBar$1 as RadialBar, RadioGroup$2 as RadioGroup, RadioGroupItem$1 as RadioGroupItem, ReferenceLine$1 as ReferenceLine, ResponsiveContainer$1 as ResponsiveContainer, Sankey$1 as Sankey, Select$1 as Select, SelectContent$1 as SelectContent, SelectGroup$2 as SelectGroup, SelectItem$2 as SelectItem, SelectLabel$2 as SelectLabel, SelectScrollDownButton$1 as SelectScrollDownButton, SelectScrollUpButton$1 as SelectScrollUpButton, SelectSeparator$2 as SelectSeparator, SelectTrigger$2 as SelectTrigger, SelectValue$2 as SelectValue, Separator$2 as Separator, Slider$2 as Slider, SliderControl$2 as SliderControl, SliderRange$1 as SliderRange, SliderThumb$2 as SliderThumb, SliderTrack$2 as SliderTrack, Stack$1 as Stack, StackItem$1 as StackItem, Step$1 as Step, Switch$2 as Switch, Table$1 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$2 as Tabs, TabsContent$1 as TabsContent, TabsList$2 as TabsList, TabsTrigger$1 as TabsTrigger, Text$2 as Text, Textarea$1 as Textarea, TimePicker$1 as TimePicker, TimePickerActionProps$1 as TimePickerActionProps, TimePickerClear$1 as TimePickerClear, TimePickerColumn$1 as TimePickerColumn, TimePickerColumnProps$1 as TimePickerColumnProps, TimePickerColumns$1 as TimePickerColumns, TimePickerColumnsProps$1 as TimePickerColumnsProps, TimePickerConfirm$1 as TimePickerConfirm, TimePickerContent$1 as TimePickerContent, TimePickerContentProps$1 as TimePickerContentProps, TimePickerFooter$1 as TimePickerFooter, TimePickerFooterProps$1 as TimePickerFooterProps, TimePickerInput$1 as TimePickerInput, TimePickerInputProps$1 as TimePickerInputProps, TimePickerNow$1 as TimePickerNow, TimePickerPanel$1 as TimePickerPanel, TimePickerPanelProps$1 as TimePickerPanelProps, TimePickerProps$1 as TimePickerProps, TimePickerTrigger$1 as TimePickerTrigger, TimePickerTriggerProps$1 as TimePickerTriggerProps, TimePickerValue$1 as TimePickerValue, TimePickerValueProps$1 as TimePickerValueProps, Wizard$1 as Wizard, dataGridFeatures$1 as dataGridFeatures, useTable$1 as useTable, z, };
 }
 
 declare const Area: typeof NativeFrontend.Area;
@@ -20309,9 +20424,6 @@ declare const CodeBlockLanguage: typeof NativeFrontend.CodeBlockLanguage;
 declare const CodeBlockLineActions: typeof NativeFrontend.CodeBlockLineActions;
 declare const CodeBlockTitle: typeof NativeFrontend.CodeBlockTitle;
 declare const CodeBlockWrapToggle: typeof NativeFrontend.CodeBlockWrapToggle;
-declare const Collapsible: typeof NativeFrontend.Collapsible;
-declare const CollapsibleContent: typeof NativeFrontend.CollapsibleContent;
-declare const CollapsibleTrigger: typeof NativeFrontend.CollapsibleTrigger;
 import ColumnDef = NativeFrontend.ColumnDef;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const ComboboxChip: typeof NativeFrontend.ComboboxChip;
@@ -20408,7 +20520,7 @@ declare const InputGroupInput: typeof NativeFrontend.InputGroupInput;
 declare const InputGroupText: typeof NativeFrontend.InputGroupText;
 declare const InputGroupTextarea: typeof NativeFrontend.InputGroupTextarea;
 declare const InteractiveCard: typeof NativeFrontend.InteractiveCard;
-import Label = NativeFrontend.Label;
+declare const Label: typeof NativeFrontend.Label;
 declare const LabelList: typeof NativeFrontend.LabelList;
 declare const Line: typeof NativeFrontend.Line;
 declare const LineChart: typeof NativeFrontend.LineChart;
@@ -20464,16 +20576,6 @@ import SortingState = NativeFrontend.SortingState;
 declare const Stack: typeof NativeFrontend.Stack;
 declare const StackItem: typeof NativeFrontend.StackItem;
 declare const Step: typeof NativeFrontend.Step;
-declare const Stepper: typeof NativeFrontend.Stepper;
-declare const StepperContent: typeof NativeFrontend.StepperContent;
-declare const StepperDescription: typeof NativeFrontend.StepperDescription;
-declare const StepperIndicator: typeof NativeFrontend.StepperIndicator;
-declare const StepperItem: typeof NativeFrontend.StepperItem;
-declare const StepperNav: typeof NativeFrontend.StepperNav;
-declare const StepperPanel: typeof NativeFrontend.StepperPanel;
-declare const StepperSeparator: typeof NativeFrontend.StepperSeparator;
-declare const StepperTitle: typeof NativeFrontend.StepperTitle;
-declare const StepperTrigger: typeof NativeFrontend.StepperTrigger;
 declare const Switch: typeof NativeFrontend.Switch;
 declare const Table: typeof NativeFrontend.Table;
 declare const TableBody: typeof NativeFrontend.TableBody;

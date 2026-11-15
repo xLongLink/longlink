@@ -1,1 +1,4 @@
-export { Input } from '@/components/shadcn/input';
+import { viewComponent } from '../props';
+import * as input from '@/components/shadcn/input';
+
+export const Input = viewComponent(input.Input);
