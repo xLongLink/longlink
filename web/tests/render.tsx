@@ -1,11 +1,9 @@
 import { act } from 'react';
-import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppearanceProvider } from '@/components/appearance';
-import { IconRequestContext } from '@/components/custom/contexts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 /** Renders a component through real theme, routing, and query providers without browser automation. */
@@ -24,9 +22,7 @@ export function renderStatic(
             <MemoryRouter initialEntries={[path]}>
                 <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
                     <div data-theme-scope="stone" data-theme="dark">
-                        <QueryClientProvider client={client}>
-                            <IconRequestContext value={icons.load}>{children}</IconRequestContext>
-                        </QueryClientProvider>
+                        <QueryClientProvider client={client}>{children}</QueryClientProvider>
                     </div>
                 </AppearanceProvider>
             </MemoryRouter>
@@ -56,9 +52,7 @@ export async function withMounted(children: ReactNode, check: (output: HTMLEleme
                 <MemoryRouter initialEntries={[path]}>
                     <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
                         <div data-theme-scope="stone" data-theme="dark">
-                            <QueryClientProvider client={client}>
-                                <IconRequestContext value={icons.load}>{children}</IconRequestContext>
-                            </QueryClientProvider>
+                            <QueryClientProvider client={client}>{children}</QueryClientProvider>
                         </div>
                     </AppearanceProvider>
                 </MemoryRouter>

@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { ApiError } from '@/lib/api';
-import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import { Route, Routes } from 'react-router';
@@ -10,7 +9,6 @@ import Organization from '@/platform/layouts/organization';
 import Layout from '@/platform/layouts/organization-access';
 import { renderPlatform, membership, user } from '../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { IconRequestContext } from '@/components/custom/contexts';
 
 it('keeps unresolved organization reads behind their loading boundary', () => {
     // Act
@@ -48,18 +46,13 @@ it.each([
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
                 <AuthenticatedUserContext value={user}>
-                    <IconRequestContext value={icons.load}>
-                        <Routes>
-                            <Route element={<Layout />}>
-                                <Route element={<Organization />}>
-                                    <Route
-                                        path="/orgs/:organization"
-                                        element={<h1>Protected organization content</h1>}
-                                    />
-                                </Route>
+                    <Routes>
+                        <Route element={<Layout />}>
+                            <Route element={<Organization />}>
+                                <Route path="/orgs/:organization" element={<h1>Protected organization content</h1>} />
                             </Route>
-                        </Routes>
-                    </IconRequestContext>
+                        </Route>
+                    </Routes>
                 </AuthenticatedUserContext>
             </ApiErrorContext>,
             async (output) => {

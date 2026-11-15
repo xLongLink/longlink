@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
-import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { renderPlatform } from '../../render';
@@ -9,7 +8,6 @@ import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import Registries from '@/platform/routes/orgs/registries';
-import { IconRequestContext } from '@/components/custom/contexts';
 import { zRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -81,11 +79,9 @@ it('preserves a replacement credential draft when an earlier registry save compl
         await withMounted(
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={(error) => errors.push(error)}>
-                    <IconRequestContext value={icons.load}>
-                        <ApiBoundary>
-                            <Registries base="/api/v1/organizations/acme" canMaintain />
-                        </ApiBoundary>
-                    </IconRequestContext>
+                    <ApiBoundary>
+                        <Registries base="/api/v1/organizations/acme" canMaintain />
+                    </ApiBoundary>
                 </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => {

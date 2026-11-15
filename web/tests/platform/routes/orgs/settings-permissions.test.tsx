@@ -2,14 +2,12 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import { it, expect } from 'vitest';
-import * as icons from '@/lib/icons';
 import { ApiErrorContext } from '@/lib/errors';
 import { membership, user } from '../../render';
 import { Outlet, Route, Routes } from 'react-router';
 import Settings from '@/platform/routes/orgs/settings';
 import { renderStatic, withMounted } from '../../../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { IconRequestContext } from '@/components/custom/contexts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
@@ -37,13 +35,11 @@ function settingsFor(role: OrganizationContext['role']) {
             }}
         >
             <AuthenticatedUserContext value={caller}>
-                <IconRequestContext value={icons.load}>
-                    <Routes>
-                        <Route element={<Outlet context={access} />}>
-                            <Route path="/orgs/:organization/settings" element={<Settings />} />
-                        </Route>
-                    </Routes>
-                </IconRequestContext>
+                <Routes>
+                    <Route element={<Outlet context={access} />}>
+                        <Route path="/orgs/:organization/settings" element={<Settings />} />
+                    </Route>
+                </Routes>
             </AuthenticatedUserContext>
         </ApiErrorContext>
     );

@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import { spacing } from './layout';
 import { ChevronDown } from 'lucide-react';
-import { Icon } from '@/components/custom/icon';
+import { Icon } from '@/components/longlink/icon';
 import { MenuNavigationContext } from './contexts';
 import type { IconName } from 'lucide-react/dynamic';
 import { Button, buttonVariants } from '@/components/shadcn/button';

@@ -8,7 +8,7 @@ import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
 import { Grid } from '@/components/custom/grid';
-import { Icon } from '@/components/custom/icon';
+import { Icon } from '@/components/longlink/icon';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';

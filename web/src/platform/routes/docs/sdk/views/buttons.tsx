@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Icon } from '@/components/custom/icon';
+import { Icon } from '@/components/longlink/icon';
 import { Button } from '@/components/shadcn/button';
 import { ButtonGroup } from '@/components/shadcn/button-group';
 import { NativeStack as Stack } from '@/components/custom/native-stack';

@@ -1,7 +1,7 @@
 import { cn } from 'cn';
-import { Icon } from './icon';
 import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
+import { Icon } from '@/components/longlink/icon';
 import { Badge } from '@/components/longlink/badge';
 import { Button } from '@/components/shadcn/button';
 import type { IconName } from 'lucide-react/dynamic';

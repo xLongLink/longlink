@@ -1,13 +1,11 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import * as icons from '@/lib/icons';
 import { act, Suspense } from 'react';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import { ApiProvider } from '@/components/api';
 import userEvent from '@testing-library/user-event';
-import { IconRequestContext } from '@/components/custom/contexts';
 import Management from '@/platform/routes/orgs/solution-management';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
@@ -49,14 +47,12 @@ async function withSolutions(role: OrganizationContext['role'], check: (output: 
     try {
         await withMounted(
             <ApiProvider>
-                <IconRequestContext value={icons.load}>
-                    <Suspense fallback={<p>Loading solutions</p>}>
-                        <Management
-                            membership={{ ...membership, role, tags: [], activeTag: undefined }}
-                            presentation="settings"
-                        />
-                    </Suspense>
-                </IconRequestContext>
+                <Suspense fallback={<p>Loading solutions</p>}>
+                    <Management
+                        membership={{ ...membership, role, tags: [], activeTag: undefined }}
+                        presentation="settings"
+                    />
+                </Suspense>
             </ApiProvider>,
             async (output) => {
                 await vi.waitFor(() => expect(output.querySelector('tbody tr')?.textContent).toContain(solution.name));

@@ -2,7 +2,6 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import type { z } from 'zod';
-import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { useApi } from '@/lib/hooks/use-api';
 import { Route, Routes } from 'react-router';
@@ -14,7 +13,6 @@ import Settings from '@/platform/routes/orgs/settings';
 import Organization from '@/platform/layouts/organization';
 import { renderPlatform, membership, user } from '../../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { IconRequestContext } from '@/components/custom/contexts';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import OrganizationAccess from '@/platform/layouts/organization-access';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -67,21 +65,17 @@ async function withOrganizationSettings(
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={(error) => errors.push(error)}>
                     <AuthenticatedUserContext value={user}>
-                        <IconRequestContext value={icons.load}>
-                            <>
-                                <ApiBoundary>
-                                    <AccountRole />
-                                </ApiBoundary>
-                                <Routes>
-                                    <Route path="/user/organizations" element={<h1>Organizations overview</h1>} />
-                                    <Route element={<OrganizationAccess />}>
-                                        <Route element={<Organization />}>
-                                            <Route path="/orgs/:organization/settings" element={<Settings />} />
-                                        </Route>
-                                    </Route>
-                                </Routes>
-                            </>
-                        </IconRequestContext>
+                        <ApiBoundary>
+                            <AccountRole />
+                        </ApiBoundary>
+                        <Routes>
+                            <Route path="/user/organizations" element={<h1>Organizations overview</h1>} />
+                            <Route element={<OrganizationAccess />}>
+                                <Route element={<Organization />}>
+                                    <Route path="/orgs/:organization/settings" element={<Settings />} />
+                                </Route>
+                            </Route>
+                        </Routes>
                     </AuthenticatedUserContext>
                 </ApiErrorContext>
             </QueryClientProvider>,

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
-import * as icons from '@/lib/icons';
 import { CircleX } from 'lucide-react';
 import * as components from './adapter';
 import { createRoot } from 'react-dom/client';
@@ -17,7 +16,6 @@ import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/r
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
     FormRequestContext,
-    IconRequestContext,
     LinkNavigationContext,
     MenuNavigationContext,
     DialogActivityContext
@@ -416,23 +414,21 @@ function initialize(event: MessageEvent<unknown>): void {
                                     </div>
                                 }
                             >
-                                <IconRequestContext value={icons.load}>
-                                    <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
-                                        <MenuNavigationProvider>
-                                            <FileRequestContext value={fileRequests}>
-                                                <FileViewerContext value={mountFileViewer}>
-                                                    <DialogActivityContext value={modalActivity}>
-                                                        <FormRequestContext value={request}>
-                                                            <ViewRequestContext value={request}>
-                                                                <View params={params} />
-                                                            </ViewRequestContext>
-                                                        </FormRequestContext>
-                                                    </DialogActivityContext>
-                                                </FileViewerContext>
-                                            </FileRequestContext>
-                                        </MenuNavigationProvider>
-                                    </LinkNavigationContext>
-                                </IconRequestContext>
+                                <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
+                                    <MenuNavigationProvider>
+                                        <FileRequestContext value={fileRequests}>
+                                            <FileViewerContext value={mountFileViewer}>
+                                                <DialogActivityContext value={modalActivity}>
+                                                    <FormRequestContext value={request}>
+                                                        <ViewRequestContext value={request}>
+                                                            <View params={params} />
+                                                        </ViewRequestContext>
+                                                    </FormRequestContext>
+                                                </DialogActivityContext>
+                                            </FileViewerContext>
+                                        </FileRequestContext>
+                                    </MenuNavigationProvider>
+                                </LinkNavigationContext>
                             </React.Suspense>
                         </ErrorBoundary>
                     )}
