@@ -1,9 +1,9 @@
 import { ApiError } from '@/lib/api';
-import { CircleX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Brand from '@/platform/layouts/brand';
 import { Navigate, Outlet } from 'react-router';
 import { PageLoading } from '@/components/ui/utils';
+import { LoadError } from '@/components/custom/load-error';
 import { Button } from '@/components/longlink/action/button';
 import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
@@ -26,16 +26,10 @@ export default function AuthenticatedLayout() {
             <Brand>
                 <title>Unable to Load Account | LongLink</title>
                 <div className="flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-calc(var(--spacing)*4))] w-full items-center justify-center">
-                    <div className="flex max-w-full flex-col items-center gap-4">
-                        <div
-                            role="status"
-                            className="flex max-w-full items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 font-[inherit] text-destructive-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
-                        >
-                            <CircleX aria-hidden="true" className="size-5 shrink-0" />
-                            <p className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
-                                Unable to load your account.
-                            </p>
-                        </div>
+                    <LoadError
+                        message="Unable to load your account."
+                        className="flex max-w-full flex-col items-center gap-4"
+                    >
                         <Button
                             type="button"
                             variant="primary"
@@ -46,7 +40,7 @@ export default function AuthenticatedLayout() {
                         >
                             Retry
                         </Button>
-                    </div>
+                    </LoadError>
                 </div>
             </Brand>
         );

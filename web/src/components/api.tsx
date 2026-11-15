@@ -1,8 +1,8 @@
-import { CircleX } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { PageLoading } from '@/components/ui/utils';
 import { Toaster } from '@/components/shadcn/sonner';
 import { createQueryRuntime } from '@/lib/react-query';
+import { LoadError } from '@/components/custom/load-error';
 import { ApiErrorContext, useApiError } from '@/lib/errors';
 import { Button } from '@/components/longlink/action/button';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
@@ -62,20 +62,14 @@ export function ApiBoundary({
                     fallbackRender={
                         fallbackRender ??
                         (({ resetErrorBoundary }) => (
-                            <div className="flex flex-col items-center gap-4 p-6">
-                                <div
-                                    role="status"
-                                    className="flex max-w-full items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 font-[inherit] text-destructive-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
-                                >
-                                    <CircleX aria-hidden="true" className="size-5 shrink-0" />
-                                    <p className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
-                                        Unable to load this page.
-                                    </p>
-                                </div>
+                            <LoadError
+                                message="Unable to load this page."
+                                className="flex flex-col items-center gap-4 p-6"
+                            >
                                 <Button type="button" variant="primary" onClick={resetErrorBoundary}>
                                     Retry
                                 </Button>
-                            </div>
+                            </LoadError>
                         ))
                     }
                 >

@@ -55,18 +55,41 @@ export function PublicArticle({
                     ) : null}
                 </div>
             </header>
-            <div className="p-6">
-                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
-                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                        <article className="space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:calc(var(--spacing)*8)] [&_p]:opacity-90">
-                            {children}
-                            <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
-                        </article>
-                    </div>
-                    {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
-                </div>
-            </div>
+            <ArticleBody
+                article={article}
+                paths={paths}
+                className="space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:calc(var(--spacing)*8)] [&_p]:opacity-90"
+            >
+                {children}
+            </ArticleBody>
         </Page>
+    );
+}
+
+/** Keeps article columns, metadata, and outline placement shared across publications. */
+export function ArticleBody({
+    article,
+    children,
+    className,
+    paths
+}: {
+    article: ArticleMetadata;
+    children: ReactNode;
+    className: string;
+    paths?: readonly string[];
+}) {
+    return (
+        <div className="p-6">
+            <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                    <article className={className}>
+                        {children}
+                        <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
+                    </article>
+                </div>
+                {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
+            </div>
+        </div>
     );
 }
 

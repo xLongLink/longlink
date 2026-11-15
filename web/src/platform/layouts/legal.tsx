@@ -14,7 +14,7 @@ export default function Legal() {
 
     return (
         <Publication
-            className="min-h-0! [&_.publication-sidebar]:h-fit! [&_.publication-sidebar]:max-h-dvh"
+            className="[&_.publication-sidebar]:h-fit! [&_.publication-sidebar]:max-h-dvh"
             sideNav={
                 <PublicationNavigation label="Legal and branding navigation">
                     <PublicationNavigationSection title="Legal">

@@ -9,7 +9,7 @@ import { PublicationNavigation } from '@/components/dialogs/publication-navigati
 export default function Publication({
     navigation,
     sideNav,
-    className = 'min-h-0!'
+    className = ''
 }: {
     navigation?: ReactNode;
     sideNav: ReactElement;
@@ -23,7 +23,7 @@ export default function Publication({
         <section className="flex min-h-dvh flex-col">
             <Navbar maxWidth={1272} navigation={navigation} />
             <section
-                className={`relative mx-auto flex min-h-dvh w-full max-w-[1320px] flex-1 flex-col overflow-clip bg-background ${className}`}
+                className={`relative mx-auto flex min-h-0 w-full max-w-[1320px] flex-1 flex-col overflow-clip bg-background ${className}`}
             >
                 <a
                     className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:bg-surface focus:px-4 focus:py-2 focus:font-semibold focus:whitespace-nowrap focus:text-primary focus:no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
