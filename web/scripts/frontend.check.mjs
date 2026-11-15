@@ -17,12 +17,17 @@ test('published component provenance matches the implementation exposed to Views
     const exports = new Map(
         checker.getExportsOfModule(checker.getSymbolAtLocation(source)).map((symbol) => [symbol.name, symbol])
     );
+    const catalog = JSON.parse(
+        await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
+    );
+    const categories = new Set(catalog.components.map((component) => component.category.toLowerCase()));
 
     // Keep public bindings behind the LongLink component and hook entry points.
     for (const statement of source.statements) {
         assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
         const target = statement.moduleSpecifier.text;
-        assert.match(target, /^\.\/(adapter|hooks)\//);
+        assert.match(target, /^\.\/(?:adapter\/[^/]+|hooks)\/[^/]+$/);
+        if (target.startsWith('./adapter/')) assert.ok(categories.has(target.split('/')[2]));
         if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
             for (const specifier of statement.exportClause.elements) {
                 assert.equal(target.startsWith('./hooks/'), /^use[A-Z]/.test(specifier.name.text));
@@ -38,17 +43,21 @@ test('published component provenance matches the implementation exposed to Views
         true
     );
     for (const statement of frontend.statements.filter(ts.isExportDeclaration)) {
-        assert.match(statement.moduleSpecifier?.text ?? '', /^\.\.\/src\/views\/(adapter|hooks)\//);
+        assert.match(statement.moduleSpecifier?.text ?? '', /^\.\.\/src\/views\/(?:adapter\/[^/]+|hooks)\/[^/]+$/);
     }
-
-    const catalog = JSON.parse(
-        await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
-    );
 
     // Resolve actual TypeScript aliases so a custom wrapper cannot masquerade as a native component.
     for (const component of catalog.components.filter((component) => component.category !== 'Runtime')) {
         const symbol = exports.get(component.name);
         assert.ok(symbol, `${component.name} is documented but not exposed to Views.`);
+        const declaration = symbol.declarations?.find(ts.isExportSpecifier);
+        assert.ok(declaration, `${component.name} must have an explicit public entry point.`);
+        const target = declaration.parent.parent.moduleSpecifier.text;
+        assert.equal(
+            target.startsWith('./hooks/') ? 'hooks' : target.split('/')[2],
+            /^use[A-Z]/.test(component.name) ? 'hooks' : component.category.toLowerCase(),
+            `${component.name} must follow its documentation category.`
+        );
         const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
         const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
         assert.ok(
