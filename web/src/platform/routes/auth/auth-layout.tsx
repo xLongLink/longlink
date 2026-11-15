@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { ReactNode } from 'react';
 
 /** Renders the shared standalone account page frame. */
@@ -11,9 +10,6 @@ export function AuthLayout({
     description: ReactNode;
     title: ReactNode;
 }) {
-    // Only plain text needs typography; authored elements keep their own presentation.
-    const descriptionText = z.string().safeParse(description);
-
     return (
         <div className="flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-calc(var(--spacing)*4))] w-full items-center justify-center">
             <div
@@ -24,9 +20,9 @@ export function AuthLayout({
                     <h1 className="m-0 text-center font-sans text-4xl leading-(--text-4xl--line-height) font-semibold wrap-anywhere text-foreground">
                         {title}
                     </h1>
-                    {descriptionText.success ? (
+                    {typeof description === 'string' ? (
                         <p className="m-0 text-center font-sans text-sm leading-(--text-sm--line-height) font-normal wrap-anywhere text-muted-foreground">
-                            {descriptionText.data}
+                            {description}
                         </p>
                     ) : (
                         description

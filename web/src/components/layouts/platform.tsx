@@ -1,14 +1,25 @@
 import { PanelLeft } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { Button } from '@base-ui/react/button';
-import { useId, useRef, useState } from 'react';
 import Content from '@/components/layouts/content';
 import { Separator } from '@/components/shadcn/separator';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Link as RouterLink, useLocation } from 'react-router';
-import type { NavigationTab, PlatformProps } from '@/components/layouts/types';
+import { useId, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
+
+type NavigationTab = { href: string; icon?: ReactElement; label: string };
+
+type PlatformProps = {
+    action: ReactNode;
+    activeTab?: string;
+    breadcrumb?: ReactNode;
+    children: ReactNode;
+    homeHref?: string;
+    sidebarHeader?: ReactNode;
+    tabs: readonly NavigationTab[];
+};
 
 /** Finds the longest platform tab path that matches a pathname. */
 function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {

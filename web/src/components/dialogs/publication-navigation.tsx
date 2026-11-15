@@ -1,18 +1,20 @@
 import { Menu, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { Dialog } from '@base-ui/react/dialog';
+import { useState, type ReactNode } from 'react';
 
-export function PublicationNavigation({
-    open,
-    onOpenChange,
-    children
-}: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    children: ReactNode;
-}) {
+/** Owns a mobile navigation session until routing changes or the layout unmounts it. */
+export function PublicationNavigation({ children }: { children: ReactNode }) {
+    const { key } = useLocation();
+    const [openedLocationKey, setOpenedLocationKey] = useState<string | null>(null);
+
+    // Close after routing without remounting retained navigation content.
+    if (openedLocationKey !== null && openedLocationKey !== key) {
+        setOpenedLocationKey(null);
+    }
+
     return (
-        <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <Dialog.Root open={openedLocationKey === key} onOpenChange={(open) => setOpenedLocationKey(open ? key : null)}>
             <header className="sticky top-0 z-1 flex h-12 items-center bg-background px-2 pt-[env(safe-area-inset-top,0px)]">
                 <Dialog.Trigger
                     aria-label="Open section navigation"
@@ -23,6 +25,7 @@ export function PublicationNavigation({
                 </Dialog.Trigger>
             </header>
             <Dialog.Portal keepMounted>
+                {/* Base UI owns the modal overlay and its focus management. */}
                 <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50 [&[hidden]]:hidden" />
                 <Dialog.Popup
                     className="fixed inset-y-0 start-0 z-50 flex min-h-0 w-[320px] max-w-[85vw] flex-col overflow-hidden border-e border-border bg-sidebar pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] text-foreground outline-none [&[hidden]]:hidden"
