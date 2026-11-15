@@ -21,14 +21,7 @@ const code = transform(source, {
     production: true
 }).code;
 
-const bindings = {
-    __jsx: React.createElement,
-    useState: React.useState,
-    useEffect: React.useEffect,
-    useMemo: React.useMemo,
-    useRef: React.useRef,
-    ...components
-};
+const bindings = { __jsx: React.createElement, ...components };
 
 const module = { exports: {} };
 

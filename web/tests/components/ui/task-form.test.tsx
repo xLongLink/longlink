@@ -16,7 +16,7 @@ const code = transform(source, {
     production: true
 }).code;
 
-const bindings = { __jsx: React.createElement, useState: React.useState, useApi: () => [[]], ...components };
+const bindings = { __jsx: React.createElement, ...components, useApi: () => [[]] };
 
 const module = { exports: {} };
 

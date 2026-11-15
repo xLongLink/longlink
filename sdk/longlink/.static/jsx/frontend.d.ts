@@ -10155,6 +10155,22 @@ type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children"> & {
     labelClassName?: string;
 };
 export function FileType({ type, variant, size, label, glyph, icon, labelClassName, className, ...props }: FileTypeProps): React$1.JSX.Element;
+const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface ButtonState {
+    disabled: boolean;
+}
+interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
+    focusableWhenDisabled?: boolean | undefined;
+}
+namespace Button {
+    type State = ButtonState;
+    type Props = ButtonProps;
+}
+const buttonVariants: (props?: ({
+    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
+    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+} & ClassProp) | undefined) => string;
+function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 const Separator: React$1.ForwardRefExoticComponent<Omit<SeparatorProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface SeparatorProps extends BaseUIComponentProps<"div", SeparatorState> {
     orientation?: Orientation | undefined;
@@ -11057,17 +11073,6 @@ interface AvatarFallbackProps extends BaseUIComponentProps<"span", AvatarFallbac
 namespace AvatarFallback {
     type State = AvatarFallbackState;
     type Props = AvatarFallbackProps;
-}
-const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface ButtonState {
-    disabled: boolean;
-}
-interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
-    focusableWhenDisabled?: boolean | undefined;
-}
-namespace Button {
-    type State = ButtonState;
-    type Props = ButtonProps;
 }
 const CheckboxRoot: React$1.ForwardRefExoticComponent<Omit<CheckboxRootProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface CheckboxRootState extends FieldRootState {
@@ -13953,6 +13958,25 @@ namespace DialogRoot {
     type ChangeEventReason = DialogRootChangeEventReason;
     type ChangeEventDetails = DialogRootChangeEventDetails;
 }
+export function Dialog(props: DialogRoot.Props): React$1.JSX.Element;
+type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+type FieldProps = {
+    label: string;
+    description?: string;
+    name?: string;
+    required?: boolean;
+    disabled?: boolean;
+};
+type FramedDialogProps = {
+    children?: React$1.ReactNode;
+    title?: string;
+    variant?: "standard" | "fullscreen";
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    gap?: Spacing;
+    paddingInline?: Spacing;
+};
+export function FramedDialog(props: FramedDialogProps): React$1.JSX.Element;
 function DialogTrigger$1({ ...props }: DialogTrigger.Props): React$1.JSX.Element;
 function DialogPortal$1({ ...props }: DialogPortal.Props): React$1.JSX.Element;
 function DialogClose$1({ ...props }: DialogClose.Props): React$1.JSX.Element;
@@ -13966,11 +13990,6 @@ export function DialogFooter({ className, showCloseButton, children, ...props }:
 }): React$1.JSX.Element;
 function DialogTitle$1({ className, ...props }: DialogTitle.Props): React$1.JSX.Element;
 function DialogDescription$1({ className, ...props }: DialogDescription.Props): React$1.JSX.Element;
-const buttonVariants: (props?: ({
-    variant?: "default" | "outline" | "secondary" | "destructive" | "link" | "ghost" | null | undefined;
-    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
-} & ClassProp) | undefined) => string;
-function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 export function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
 export function PaginationContent({ className, ...props }: React$1.ComponentProps<"ul">): React$1.JSX.Element;
 export function PaginationItem({ ...props }: React$1.ComponentProps<"li">): React$1.JSX.Element;
@@ -14028,1157 +14047,6 @@ export function TableRow({ className, ...props }: React$1.ComponentProps<"tr">):
 export function TableHead({ className, ...props }: React$1.ComponentProps<"th">): React$1.JSX.Element;
 export function TableCell({ className, ...props }: React$1.ComponentProps<"td">): React$1.JSX.Element;
 export function TableCaption({ className, ...props }: React$1.ComponentProps<"caption">): React$1.JSX.Element;
-export function Divider({ label, orientation, className, ...props }: Omit<React$1.ComponentProps<"div">, "children"> & {
-    label: React$1.ReactNode;
-    orientation?: "horizontal" | "vertical";
-}): React$1.JSX.Element;
-type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
-    src: string;
-    alt: string;
-    ratio?: number;
-    srcSet?: never;
-    srcset?: never;
-    children?: never;
-    dangerouslySetInnerHTML?: never;
-};
-function Image$1(props: ImageProps): React$1.JSX.Element;
-type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
-    as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-    maxLines?: number;
-    hasTruncateTooltip?: boolean | "above" | "below" | "start" | "end";
-    ref?: React$1.Ref<HTMLElement>;
-};
-function Text$1({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: TextProps): React$1.JSX.Element;
-type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
-export function Heading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
-    level?: HeadingLevel;
-    accessibilityLevel?: HeadingLevel;
-    ref?: React$1.Ref<HTMLHeadingElement>;
-}): React$1.JSX.Element;
-type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-type FieldProps = {
-    label: string;
-    description?: string;
-    name?: string;
-    required?: boolean;
-    disabled?: boolean;
-};
-type StackLayoutProps = {
-    direction?: "horizontal" | "vertical";
-    justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
-    align?: "start" | "center" | "end" | "stretch";
-    wrap?: "nowrap" | "wrap" | "wrap-reverse";
-    gap?: Spacing;
-    padding?: Spacing;
-    paddingInline?: Spacing;
-    paddingBlock?: Spacing;
-    width?: React$1.CSSProperties["width"];
-    height?: React$1.CSSProperties["height"];
-    maxWidth?: React$1.CSSProperties["maxWidth"];
-    minHeight?: React$1.CSSProperties["minHeight"];
-    background?: "muted";
-};
-export function Stack({ className, ...props }: React$1.ComponentPropsWithRef<"div"> & StackLayoutProps): React$1.JSX.Element;
-export function StackItem(props: {
-    children?: React$1.ReactNode;
-    size?: "static" | "fill";
-    isScrollable?: boolean;
-    crossAlignSelf?: "start" | "center" | "end" | "stretch";
-}): React$1.JSX.Element;
-export function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, columnGap, align, justify, width, height, maxWidth, minHeight, className, style, ref, children, ...props }: React$1.ComponentPropsWithRef<"div"> & {
-    columns?: number | {
-        minWidth: number;
-        max?: number;
-        repeat?: "fill" | "fit";
-    };
-    collapseBelow?: number;
-    gap?: Spacing;
-    rowGap?: Spacing;
-    columnGap?: Spacing;
-    align?: "start" | "center" | "end" | "stretch";
-    justify?: "start" | "center" | "end" | "stretch";
-    width?: number | string;
-    height?: number | string;
-    maxWidth?: number | string;
-    minHeight?: number | string;
-}): React$1.JSX.Element;
-export function GridSpan({ columns, className, style, ...props }: React$1.ComponentPropsWithRef<"div"> & {
-    columns?: number | "full";
-}): React$1.JSX.Element;
-type AvatarProps = {
-    shape?: undefined | "circle" | "rounded" | "square";
-} & {
-    name?: string;
-    seed?: string;
-    kind?: "user" | "organization";
-    src?: string | null;
-    alt?: string;
-    size?: "sm" | "default" | "lg";
-};
-export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps): React$1.JSX.Element;
-export function Avatar({ className, size, ...props }: AvatarRoot.Props & {
-    size?: "default" | "sm" | "lg";
-}): React$1.JSX.Element;
-function AvatarImage$1({ className, ...props }: AvatarImage.Props): React$1.JSX.Element;
-function AvatarFallback$1({ className, ...props }: AvatarFallback.Props): React$1.JSX.Element;
-export function AvatarBadge({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-export function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function AvatarGroupCount({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-interface Data {
-}
-interface Point {
-    line: number;
-    column: number;
-    offset?: number | undefined;
-}
-interface Position {
-    start: Point;
-    end: Point;
-}
-interface Node$1 {
-    type: string;
-    data?: Data | undefined;
-    position?: Position | undefined;
-}
-interface Data$1 extends Data {
-}
-interface Properties$1 {
-    abbr?: string | undefined;
-    about?: Array<string> | undefined;
-    accentHeight?: number | string | undefined;
-    accept?: Array<string> | undefined;
-    acceptCharset?: Array<string> | undefined;
-    accessKey?: Array<string> | undefined;
-    accumulate?: string | undefined;
-    action?: string | undefined;
-    additive?: string | undefined;
-    align?: string | undefined;
-    alignmentBaseline?: string | undefined;
-    aLink?: string | undefined;
-    allow?: string | undefined;
-    allowFullScreen?: boolean | string | undefined;
-    allowPaymentRequest?: boolean | string | undefined;
-    allowTransparency?: string | undefined;
-    allowUserMedia?: boolean | string | undefined;
-    alpha?: boolean | string | undefined;
-    alphabetic?: number | string | undefined;
-    alt?: string | undefined;
-    amplitude?: number | string | undefined;
-    arabicForm?: string | undefined;
-    archive?: Array<string> | undefined;
-    ariaActiveDescendant?: string | undefined;
-    ariaAtomic?: "false" | "true" | (string & {}) | undefined;
-    ariaAutoComplete?: string | undefined;
-    ariaBusy?: "false" | "true" | (string & {}) | undefined;
-    ariaChecked?: "false" | "true" | (string & {}) | undefined;
-    ariaColCount?: number | string | undefined;
-    ariaColIndex?: number | string | undefined;
-    ariaColSpan?: number | string | undefined;
-    ariaControls?: Array<string> | undefined;
-    ariaCurrent?: string | undefined;
-    ariaDescribedBy?: Array<string> | undefined;
-    ariaDetails?: string | undefined;
-    ariaDisabled?: "false" | "true" | (string & {}) | undefined;
-    ariaDropEffect?: Array<string> | undefined;
-    ariaErrorMessage?: string | undefined;
-    ariaExpanded?: "false" | "true" | (string & {}) | undefined;
-    ariaFlowTo?: Array<string> | undefined;
-    ariaGrabbed?: "false" | "true" | (string & {}) | undefined;
-    ariaHasPopup?: string | undefined;
-    ariaHidden?: "false" | "true" | (string & {}) | undefined;
-    ariaInvalid?: string | undefined;
-    ariaKeyShortcuts?: string | undefined;
-    ariaLabel?: string | undefined;
-    ariaLabelledBy?: Array<string> | undefined;
-    ariaLevel?: number | string | undefined;
-    ariaLive?: string | undefined;
-    ariaModal?: "false" | "true" | (string & {}) | undefined;
-    ariaMultiLine?: "false" | "true" | (string & {}) | undefined;
-    ariaMultiSelectable?: "false" | "true" | (string & {}) | undefined;
-    ariaOrientation?: string | undefined;
-    ariaOwns?: Array<string> | undefined;
-    ariaPlaceholder?: string | undefined;
-    ariaPosInSet?: number | string | undefined;
-    ariaPressed?: "false" | "true" | (string & {}) | undefined;
-    ariaReadOnly?: "false" | "true" | (string & {}) | undefined;
-    ariaRelevant?: string | undefined;
-    ariaRequired?: "false" | "true" | (string & {}) | undefined;
-    ariaRoleDescription?: Array<string> | undefined;
-    ariaRowCount?: number | string | undefined;
-    ariaRowIndex?: number | string | undefined;
-    ariaRowSpan?: number | string | undefined;
-    ariaSelected?: "false" | "true" | (string & {}) | undefined;
-    ariaSetSize?: number | string | undefined;
-    ariaSort?: string | undefined;
-    ariaValueMax?: number | string | undefined;
-    ariaValueMin?: number | string | undefined;
-    ariaValueNow?: number | string | undefined;
-    ariaValueText?: string | undefined;
-    as?: string | undefined;
-    ascent?: number | string | undefined;
-    async?: boolean | string | undefined;
-    attributeName?: string | undefined;
-    attributeType?: string | undefined;
-    autoCapitalize?: string | undefined;
-    autoComplete?: Array<string> | undefined;
-    autoCorrect?: string | undefined;
-    autoFocus?: boolean | string | undefined;
-    autoPlay?: boolean | string | undefined;
-    autoSave?: string | undefined;
-    axis?: string | undefined;
-    azimuth?: number | string | undefined;
-    background?: string | undefined;
-    bandwidth?: string | undefined;
-    baseFrequency?: string | undefined;
-    baselineShift?: string | undefined;
-    baseProfile?: string | undefined;
-    bbox?: string | undefined;
-    begin?: string | undefined;
-    bgColor?: string | undefined;
-    bias?: number | string | undefined;
-    blocking?: Array<string> | undefined;
-    border?: number | string | undefined;
-    borderColor?: string | undefined;
-    bottomMargin?: number | string | undefined;
-    by?: string | undefined;
-    calcMode?: string | undefined;
-    capHeight?: number | string | undefined;
-    capture?: string | undefined;
-    cellPadding?: string | undefined;
-    cellSpacing?: string | undefined;
-    char?: string | undefined;
-    charOff?: string | undefined;
-    charSet?: string | undefined;
-    checked?: boolean | string | undefined;
-    cite?: string | undefined;
-    classId?: string | undefined;
-    className?: Array<string> | undefined;
-    clear?: string | undefined;
-    clip?: string | undefined;
-    clipPath?: string | undefined;
-    clipPathUnits?: string | undefined;
-    clipRule?: string | undefined;
-    closedBy?: string | undefined;
-    code?: string | undefined;
-    codeBase?: string | undefined;
-    codeType?: string | undefined;
-    color?: string | undefined;
-    colorInterpolation?: string | undefined;
-    colorInterpolationFilters?: string | undefined;
-    colorProfile?: string | undefined;
-    colorRendering?: string | undefined;
-    colorSpace?: string | undefined;
-    cols?: number | string | undefined;
-    colSpan?: number | string | undefined;
-    command?: string | undefined;
-    commandFor?: string | undefined;
-    compact?: boolean | string | undefined;
-    content?: string | undefined;
-    contentEditable?: "false" | "true" | (string & {}) | undefined;
-    contentScriptType?: string | undefined;
-    contentStyleType?: string | undefined;
-    controls?: boolean | string | undefined;
-    controlsList?: Array<string> | undefined;
-    coords?: Array<number | string> | undefined;
-    credentialless?: boolean | string | undefined;
-    crossOrigin?: string | undefined;
-    cursor?: string | undefined;
-    cx?: string | undefined;
-    cy?: string | undefined;
-    d?: string | undefined;
-    data?: string | undefined;
-    dataType?: string | undefined;
-    dateTime?: string | undefined;
-    declare?: boolean | string | undefined;
-    decoding?: string | undefined;
-    default?: boolean | string | undefined;
-    defaultAction?: string | undefined;
-    defer?: boolean | string | undefined;
-    descent?: number | string | undefined;
-    diffuseConstant?: number | string | undefined;
-    dir?: string | undefined;
-    direction?: string | undefined;
-    dirName?: string | undefined;
-    disabled?: boolean | string | undefined;
-    disablePictureInPicture?: boolean | string | undefined;
-    disableRemotePlayback?: boolean | string | undefined;
-    display?: string | undefined;
-    divisor?: number | string | undefined;
-    dominantBaseline?: string | undefined;
-    download?: boolean | string | undefined;
-    draggable?: "false" | "true" | (string & {}) | undefined;
-    dur?: string | undefined;
-    dx?: string | undefined;
-    dy?: string | undefined;
-    edgeMode?: string | undefined;
-    editable?: string | undefined;
-    elevation?: number | string | undefined;
-    enableBackground?: string | undefined;
-    encType?: string | undefined;
-    end?: string | undefined;
-    enterKeyHint?: string | undefined;
-    event?: string | undefined;
-    exponent?: number | string | undefined;
-    exportParts?: Array<string> | undefined;
-    externalResourcesRequired?: string | undefined;
-    face?: string | undefined;
-    fetchPriority?: string | undefined;
-    fill?: string | undefined;
-    fillOpacity?: number | string | undefined;
-    fillRule?: string | undefined;
-    filter?: string | undefined;
-    filterRes?: string | undefined;
-    filterUnits?: string | undefined;
-    floodColor?: string | undefined;
-    floodOpacity?: string | undefined;
-    focusable?: string | undefined;
-    focusHighlight?: string | undefined;
-    fontFamily?: string | undefined;
-    fontSize?: string | undefined;
-    fontSizeAdjust?: string | undefined;
-    fontStretch?: string | undefined;
-    fontStyle?: string | undefined;
-    fontVariant?: string | undefined;
-    fontWeight?: string | undefined;
-    form?: string | undefined;
-    formAction?: string | undefined;
-    format?: string | undefined;
-    formEncType?: string | undefined;
-    formMethod?: string | undefined;
-    formNoValidate?: boolean | string | undefined;
-    formTarget?: string | undefined;
-    fr?: string | undefined;
-    frame?: string | undefined;
-    frameBorder?: string | undefined;
-    from?: string | undefined;
-    fx?: string | undefined;
-    fy?: string | undefined;
-    g1?: Array<string> | undefined;
-    g2?: Array<string> | undefined;
-    glyphName?: Array<string> | undefined;
-    glyphOrientationHorizontal?: string | undefined;
-    glyphOrientationVertical?: string | undefined;
-    glyphRef?: string | undefined;
-    gradientTransform?: string | undefined;
-    gradientUnits?: string | undefined;
-    handler?: string | undefined;
-    hanging?: number | string | undefined;
-    hatchContentUnits?: string | undefined;
-    hatchUnits?: string | undefined;
-    headers?: Array<string> | undefined;
-    height?: number | string | undefined;
-    hidden?: boolean | string | undefined;
-    high?: number | string | undefined;
-    horizAdvX?: number | string | undefined;
-    horizOriginX?: number | string | undefined;
-    horizOriginY?: number | string | undefined;
-    href?: string | undefined;
-    hrefLang?: string | undefined;
-    hSpace?: number | string | undefined;
-    htmlFor?: Array<string> | undefined;
-    httpEquiv?: Array<string> | undefined;
-    id?: string | undefined;
-    ideographic?: number | string | undefined;
-    imageRendering?: string | undefined;
-    imageSizes?: string | undefined;
-    imageSrcSet?: string | undefined;
-    in?: string | undefined;
-    in2?: string | undefined;
-    inert?: boolean | string | undefined;
-    initialVisibility?: string | undefined;
-    inputMode?: string | undefined;
-    integrity?: string | undefined;
-    intercept?: number | string | undefined;
-    is?: string | undefined;
-    isMap?: boolean | string | undefined;
-    itemId?: string | undefined;
-    itemProp?: Array<string> | undefined;
-    itemRef?: Array<string> | undefined;
-    itemScope?: boolean | string | undefined;
-    itemType?: Array<string> | undefined;
-    k?: number | string | undefined;
-    k1?: number | string | undefined;
-    k2?: number | string | undefined;
-    k3?: number | string | undefined;
-    k4?: number | string | undefined;
-    kernelMatrix?: Array<string> | undefined;
-    kernelUnitLength?: string | undefined;
-    kerning?: string | undefined;
-    keyPoints?: string | undefined;
-    keySplines?: string | undefined;
-    keyTimes?: string | undefined;
-    kind?: string | undefined;
-    label?: string | undefined;
-    lang?: string | undefined;
-    language?: string | undefined;
-    leftMargin?: number | string | undefined;
-    lengthAdjust?: string | undefined;
-    letterSpacing?: string | undefined;
-    lightingColor?: string | undefined;
-    limitingConeAngle?: number | string | undefined;
-    link?: string | undefined;
-    list?: string | undefined;
-    loading?: string | undefined;
-    local?: string | undefined;
-    longDesc?: string | undefined;
-    loop?: boolean | string | undefined;
-    low?: number | string | undefined;
-    lowSrc?: string | undefined;
-    manifest?: string | undefined;
-    marginHeight?: number | string | undefined;
-    marginWidth?: number | string | undefined;
-    markerEnd?: string | undefined;
-    markerHeight?: string | undefined;
-    markerMid?: string | undefined;
-    markerStart?: string | undefined;
-    markerUnits?: string | undefined;
-    markerWidth?: string | undefined;
-    mask?: string | undefined;
-    maskContentUnits?: string | undefined;
-    maskType?: string | undefined;
-    maskUnits?: string | undefined;
-    mathematical?: string | undefined;
-    max?: string | undefined;
-    maxLength?: number | string | undefined;
-    media?: string | undefined;
-    mediaCharacterEncoding?: string | undefined;
-    mediaContentEncodings?: string | undefined;
-    mediaSize?: number | string | undefined;
-    mediaTime?: string | undefined;
-    method?: string | undefined;
-    min?: string | undefined;
-    minLength?: number | string | undefined;
-    mode?: string | undefined;
-    multiple?: boolean | string | undefined;
-    muted?: boolean | string | undefined;
-    name?: string | undefined;
-    navDown?: string | undefined;
-    navDownLeft?: string | undefined;
-    navDownRight?: string | undefined;
-    navLeft?: string | undefined;
-    navNext?: string | undefined;
-    navPrev?: string | undefined;
-    navRight?: string | undefined;
-    navUp?: string | undefined;
-    navUpLeft?: string | undefined;
-    navUpRight?: string | undefined;
-    noHref?: boolean | string | undefined;
-    noModule?: boolean | string | undefined;
-    nonce?: string | undefined;
-    noResize?: boolean | string | undefined;
-    noShade?: boolean | string | undefined;
-    noValidate?: boolean | string | undefined;
-    noWrap?: boolean | string | undefined;
-    numOctaves?: string | undefined;
-    object?: string | undefined;
-    observer?: string | undefined;
-    offset?: string | undefined;
-    onAbort?: string | undefined;
-    onActivate?: string | undefined;
-    onAfterPrint?: string | undefined;
-    onAuxClick?: string | undefined;
-    onBeforeMatch?: string | undefined;
-    onBeforePrint?: string | undefined;
-    onBeforeToggle?: string | undefined;
-    onBeforeUnload?: string | undefined;
-    onBegin?: string | undefined;
-    onBlur?: string | undefined;
-    onCancel?: string | undefined;
-    onCanPlay?: string | undefined;
-    onCanPlayThrough?: string | undefined;
-    onChange?: string | undefined;
-    onClick?: string | undefined;
-    onClose?: string | undefined;
-    onContextLost?: string | undefined;
-    onContextMenu?: string | undefined;
-    onContextRestored?: string | undefined;
-    onCopy?: string | undefined;
-    onCueChange?: string | undefined;
-    onCut?: string | undefined;
-    onDblClick?: string | undefined;
-    onDrag?: string | undefined;
-    onDragEnd?: string | undefined;
-    onDragEnter?: string | undefined;
-    onDragExit?: string | undefined;
-    onDragLeave?: string | undefined;
-    onDragOver?: string | undefined;
-    onDragStart?: string | undefined;
-    onDrop?: string | undefined;
-    onDurationChange?: string | undefined;
-    onEmptied?: string | undefined;
-    onEnd?: string | undefined;
-    onEnded?: string | undefined;
-    onError?: string | undefined;
-    onFocus?: string | undefined;
-    onFocusIn?: string | undefined;
-    onFocusOut?: string | undefined;
-    onFormData?: string | undefined;
-    onHashChange?: string | undefined;
-    onInput?: string | undefined;
-    onInvalid?: string | undefined;
-    onKeyDown?: string | undefined;
-    onKeyPress?: string | undefined;
-    onKeyUp?: string | undefined;
-    onLanguageChange?: string | undefined;
-    onLoad?: string | undefined;
-    onLoadedData?: string | undefined;
-    onLoadedMetadata?: string | undefined;
-    onLoadEnd?: string | undefined;
-    onLoadStart?: string | undefined;
-    onMessage?: string | undefined;
-    onMessageError?: string | undefined;
-    onMouseDown?: string | undefined;
-    onMouseEnter?: string | undefined;
-    onMouseLeave?: string | undefined;
-    onMouseMove?: string | undefined;
-    onMouseOut?: string | undefined;
-    onMouseOver?: string | undefined;
-    onMouseUp?: string | undefined;
-    onMouseWheel?: string | undefined;
-    onOffline?: string | undefined;
-    onOnline?: string | undefined;
-    onPageHide?: string | undefined;
-    onPageShow?: string | undefined;
-    onPaste?: string | undefined;
-    onPause?: string | undefined;
-    onPlay?: string | undefined;
-    onPlaying?: string | undefined;
-    onPopState?: string | undefined;
-    onProgress?: string | undefined;
-    onRateChange?: string | undefined;
-    onRejectionHandled?: string | undefined;
-    onRepeat?: string | undefined;
-    onReset?: string | undefined;
-    onResize?: string | undefined;
-    onScroll?: string | undefined;
-    onScrollEnd?: string | undefined;
-    onSecurityPolicyViolation?: string | undefined;
-    onSeeked?: string | undefined;
-    onSeeking?: string | undefined;
-    onSelect?: string | undefined;
-    onShow?: string | undefined;
-    onSlotChange?: string | undefined;
-    onStalled?: string | undefined;
-    onStorage?: string | undefined;
-    onSubmit?: string | undefined;
-    onSuspend?: string | undefined;
-    onTimeUpdate?: string | undefined;
-    onToggle?: string | undefined;
-    onUnhandledRejection?: string | undefined;
-    onUnload?: string | undefined;
-    onVolumeChange?: string | undefined;
-    onWaiting?: string | undefined;
-    onWheel?: string | undefined;
-    onZoom?: string | undefined;
-    opacity?: string | undefined;
-    open?: boolean | string | undefined;
-    operator?: string | undefined;
-    optimum?: number | string | undefined;
-    order?: string | undefined;
-    orient?: string | undefined;
-    orientation?: string | undefined;
-    origin?: string | undefined;
-    overflow?: string | undefined;
-    overlay?: string | undefined;
-    overlinePosition?: number | string | undefined;
-    overlineThickness?: number | string | undefined;
-    paintOrder?: string | undefined;
-    panose1?: string | undefined;
-    part?: Array<string> | undefined;
-    path?: string | undefined;
-    pathLength?: number | string | undefined;
-    pattern?: string | undefined;
-    patternContentUnits?: string | undefined;
-    patternTransform?: string | undefined;
-    patternUnits?: string | undefined;
-    phase?: string | undefined;
-    ping?: Array<string> | undefined;
-    pitch?: string | undefined;
-    placeholder?: string | undefined;
-    playbackOrder?: string | undefined;
-    playsInline?: boolean | string | undefined;
-    pointerEvents?: string | undefined;
-    points?: string | undefined;
-    pointsAtX?: number | string | undefined;
-    pointsAtY?: number | string | undefined;
-    pointsAtZ?: number | string | undefined;
-    popover?: string | undefined;
-    popoverTarget?: string | undefined;
-    popoverTargetAction?: string | undefined;
-    poster?: string | undefined;
-    prefix?: string | undefined;
-    preload?: string | undefined;
-    preserveAlpha?: string | undefined;
-    preserveAspectRatio?: string | undefined;
-    primitiveUnits?: string | undefined;
-    profile?: string | undefined;
-    prompt?: string | undefined;
-    propagate?: string | undefined;
-    property?: string | Array<string> | undefined;
-    r?: string | undefined;
-    radius?: string | undefined;
-    readOnly?: boolean | string | undefined;
-    referrerPolicy?: string | undefined;
-    refX?: string | undefined;
-    refY?: string | undefined;
-    rel?: Array<string> | undefined;
-    renderingIntent?: string | undefined;
-    repeatCount?: string | undefined;
-    repeatDur?: string | undefined;
-    required?: boolean | string | undefined;
-    requiredExtensions?: Array<string> | undefined;
-    requiredFeatures?: Array<string> | undefined;
-    requiredFonts?: Array<string> | undefined;
-    requiredFormats?: Array<string> | undefined;
-    resource?: string | undefined;
-    restart?: string | undefined;
-    result?: string | undefined;
-    results?: number | string | undefined;
-    rev?: string | Array<string> | undefined;
-    reversed?: boolean | string | undefined;
-    rightMargin?: number | string | undefined;
-    role?: string | undefined;
-    rotate?: string | undefined;
-    rows?: number | string | undefined;
-    rowSpan?: number | string | undefined;
-    rules?: string | undefined;
-    rx?: string | undefined;
-    ry?: string | undefined;
-    sandbox?: Array<string> | undefined;
-    scale?: string | undefined;
-    scheme?: string | undefined;
-    scope?: string | undefined;
-    scoped?: boolean | string | undefined;
-    scrolling?: "false" | "true" | (string & {}) | undefined;
-    seamless?: boolean | string | undefined;
-    security?: string | undefined;
-    seed?: string | undefined;
-    selected?: boolean | string | undefined;
-    shadowRootClonable?: boolean | string | undefined;
-    shadowRootCustomElementRegistry?: boolean | string | undefined;
-    shadowRootDelegatesFocus?: boolean | string | undefined;
-    shadowRootMode?: string | undefined;
-    shadowRootSerializable?: boolean | string | undefined;
-    shape?: string | undefined;
-    shapeRendering?: string | undefined;
-    side?: string | undefined;
-    size?: number | string | undefined;
-    sizes?: string | undefined;
-    slope?: string | undefined;
-    slot?: string | undefined;
-    snapshotTime?: string | undefined;
-    spacing?: string | undefined;
-    span?: number | string | undefined;
-    specularConstant?: number | string | undefined;
-    specularExponent?: number | string | undefined;
-    spellCheck?: "false" | "true" | (string & {}) | undefined;
-    spreadMethod?: string | undefined;
-    src?: string | undefined;
-    srcDoc?: string | undefined;
-    srcLang?: string | undefined;
-    srcSet?: string | undefined;
-    standby?: string | undefined;
-    start?: number | string | undefined;
-    startOffset?: string | undefined;
-    stdDeviation?: string | undefined;
-    stemh?: string | undefined;
-    stemv?: string | undefined;
-    step?: string | undefined;
-    stitchTiles?: string | undefined;
-    stopColor?: string | undefined;
-    stopOpacity?: string | undefined;
-    strikethroughPosition?: number | string | undefined;
-    strikethroughThickness?: number | string | undefined;
-    string?: string | undefined;
-    stroke?: string | undefined;
-    strokeDashArray?: Array<string> | undefined;
-    strokeDashOffset?: string | undefined;
-    strokeLineCap?: string | undefined;
-    strokeLineJoin?: string | undefined;
-    strokeMiterLimit?: number | string | undefined;
-    strokeOpacity?: number | string | undefined;
-    strokeWidth?: string | undefined;
-    style?: string | undefined;
-    summary?: string | undefined;
-    surfaceScale?: number | string | undefined;
-    syncBehavior?: string | undefined;
-    syncBehaviorDefault?: string | undefined;
-    syncMaster?: string | undefined;
-    syncTolerance?: string | undefined;
-    syncToleranceDefault?: string | undefined;
-    systemLanguage?: Array<string> | undefined;
-    tabIndex?: number | string | undefined;
-    tableValues?: string | undefined;
-    target?: string | undefined;
-    targetX?: number | string | undefined;
-    targetY?: number | string | undefined;
-    text?: string | undefined;
-    textAnchor?: string | undefined;
-    textDecoration?: string | undefined;
-    textLength?: string | undefined;
-    textRendering?: string | undefined;
-    timelineBegin?: string | undefined;
-    title?: string | undefined;
-    to?: string | undefined;
-    topMargin?: number | string | undefined;
-    transform?: string | undefined;
-    transformBehavior?: string | undefined;
-    transformOrigin?: string | undefined;
-    translate?: string | undefined;
-    type?: string | undefined;
-    typeMustMatch?: boolean | string | undefined;
-    typeOf?: Array<string> | undefined;
-    u1?: string | undefined;
-    u2?: string | undefined;
-    underlinePosition?: number | string | undefined;
-    underlineThickness?: number | string | undefined;
-    unicode?: string | undefined;
-    unicodeBidi?: string | undefined;
-    unicodeRange?: string | undefined;
-    unitsPerEm?: number | string | undefined;
-    unselectable?: string | undefined;
-    useMap?: string | undefined;
-    vAlign?: string | undefined;
-    vAlphabetic?: number | string | undefined;
-    value?: "false" | "true" | (string & {}) | undefined;
-    values?: string | undefined;
-    valueType?: string | undefined;
-    vectorEffect?: string | undefined;
-    version?: string | undefined;
-    vertAdvY?: number | string | undefined;
-    vertOriginX?: number | string | undefined;
-    vertOriginY?: number | string | undefined;
-    vHanging?: number | string | undefined;
-    vIdeographic?: number | string | undefined;
-    viewBox?: string | undefined;
-    viewTarget?: string | undefined;
-    visibility?: string | undefined;
-    vLink?: string | undefined;
-    vMathematical?: number | string | undefined;
-    vSpace?: number | string | undefined;
-    width?: number | string | undefined;
-    widths?: string | undefined;
-    wordSpacing?: string | undefined;
-    wrap?: string | undefined;
-    writingMode?: string | undefined;
-    writingSuggestions?: string | undefined;
-    x?: string | undefined;
-    x1?: string | undefined;
-    x2?: string | undefined;
-    xChannelSelector?: string | undefined;
-    xHeight?: number | string | undefined;
-    xLinkActuate?: string | undefined;
-    xLinkArcRole?: string | undefined;
-    xLinkHref?: string | undefined;
-    xLinkRole?: string | undefined;
-    xLinkShow?: string | undefined;
-    xLinkTitle?: string | undefined;
-    xLinkType?: string | undefined;
-    xmlBase?: string | undefined;
-    xmlLang?: string | undefined;
-    xmlns?: string | undefined;
-    xmlnsXLink?: string | undefined;
-    xmlSpace?: string | undefined;
-    y?: string | undefined;
-    y1?: string | undefined;
-    y2?: string | undefined;
-    yChannelSelector?: string | undefined;
-    z?: string | undefined;
-    zoomAndPan?: string | undefined;
-    [PropertyName: string]: boolean | number | string | null | undefined | Array<string | number>;
-}
-type ElementContent = ElementContentMap[keyof ElementContentMap];
-interface ElementContentMap {
-    comment: Comment$1;
-    element: Element$1;
-    text: Text$2;
-}
-type RootContent = RootContentMap[keyof RootContentMap];
-interface RootContentMap {
-    comment: Comment$1;
-    doctype: Doctype;
-    element: Element$1;
-    text: Text$2;
-}
-interface Node$2 extends Node$1 {
-    data?: Data$1 | undefined;
-}
-interface Literal$1 extends Node$2 {
-    value: string;
-}
-interface Parent extends Node$2 {
-    children: RootContent[];
-}
-interface Comment$1 extends Literal$1 {
-    type: "comment";
-    data?: CommentData | undefined;
-}
-interface CommentData extends Data$1 {
-}
-interface Doctype extends Node$1 {
-    type: "doctype";
-    data?: DoctypeData | undefined;
-}
-interface DoctypeData extends Data$1 {
-}
-interface Element$1 extends Parent {
-    type: "element";
-    tagName: string;
-    properties: Properties$1;
-    children: ElementContent[];
-    content?: Root | undefined;
-    data?: ElementData | undefined;
-}
-interface ElementData extends Data$1 {
-}
-interface Root extends Parent {
-    type: "root";
-    children: RootContent[];
-    data?: RootData | undefined;
-}
-interface RootData extends Data$1 {
-}
-interface Text$2 extends Literal$1 {
-    type: "text";
-    data?: TextData | undefined;
-}
-interface TextData extends Data$1 {
-}
-type ScopePattern = string;
-interface IRawTheme {
-    readonly name?: string;
-    readonly settings: IRawThemeSetting[];
-}
-interface IRawThemeSetting {
-    readonly name?: string;
-    readonly scope?: ScopePattern | ScopePattern[];
-    readonly settings: {
-        readonly fontStyle?: string;
-        readonly foreground?: string;
-        readonly background?: string;
-    };
-}
-const enum FontStyle {
-    NotSet = -1,
-    None = 0,
-    Italic = 1,
-    Bold = 2,
-    Underline = 4,
-    Strikethrough = 8
-}
-interface StateStack {
-    _stackElementBrand: void;
-    readonly depth: number;
-    clone(): StateStack;
-    equals(other: StateStack): boolean;
-}
-interface Nothing {
-}
-type StringLiteralUnion<T extends U, U = string> = T | (U & Nothing);
-type PlainTextLanguage = "text" | "plaintext" | "txt" | "plain";
-type AnsiLanguage = "ansi";
-type SpecialLanguage = PlainTextLanguage | AnsiLanguage;
-interface DecorationOptions {
-    decorations?: DecorationItem[];
-}
-interface DecorationItem {
-    start: OffsetOrPosition;
-    end: OffsetOrPosition;
-    tagName?: string;
-    properties?: Element$1["properties"];
-    transform?: (element: Element$1, type: DecorationTransformType) => Element$1 | void;
-    alwaysWrap?: boolean;
-}
-type DecorationTransformType = "wrapper" | "line" | "token";
-interface Position$1 {
-    line: number;
-    character: number;
-}
-type Offset = number;
-type OffsetOrPosition = Position$1 | Offset;
-type SpecialTheme = "none";
-interface ThemeRegistrationRaw extends IRawTheme, Partial<Omit<ThemeRegistration, "name" | "settings">> {
-}
-interface ThemeRegistration extends Partial<ThemeRegistrationResolved> {
-}
-interface ThemeRegistrationResolved extends IRawTheme {
-    name: string;
-    displayName?: string;
-    type: "light" | "dark";
-    settings: IRawThemeSetting[];
-    tokenColors?: IRawThemeSetting[];
-    fg: string;
-    bg: string;
-    colorReplacements?: Record<string, string>;
-    colors?: Record<string, string>;
-    $schema?: string;
-    semanticHighlighting?: boolean;
-    semanticTokenColors?: Record<string, string>;
-}
-type ThemeRegistrationAny = ThemeRegistrationRaw | ThemeRegistration | ThemeRegistrationResolved;
-interface GrammarState {
-    readonly lang: string;
-    readonly theme: string;
-    readonly themes: string[];
-    getInternalStack: (theme?: string) => StateStack | undefined;
-    getScopes: (theme?: string) => string[] | undefined;
-}
-interface CodeToTokensBaseOptions<Languages extends string = string, Themes extends string = string> extends TokenizeWithThemeOptions {
-    lang?: Languages | SpecialLanguage;
-    theme?: Themes | ThemeRegistrationAny | SpecialTheme;
-}
-type CodeToTokensOptions<Languages extends string = string, Themes extends string = string> = Omit<CodeToTokensBaseOptions<Languages, Themes>, "theme"> & CodeOptionsThemes<Themes>;
-interface ThemedTokenScopeExplanation {
-    scopeName: string;
-    themeMatches?: IRawThemeSetting[];
-}
-interface ThemedTokenExplanation {
-    content: string;
-    scopes: ThemedTokenScopeExplanation[];
-}
-interface ThemedToken extends TokenStyles, TokenBase {
-}
-interface TokenBase {
-    content: string;
-    offset: number;
-    type?: number;
-    explanation?: ThemedTokenExplanation[];
-}
-interface TokenStyles {
-    color?: string;
-    bgColor?: string;
-    fontStyle?: FontStyle;
-    htmlStyle?: Record<string, string>;
-    htmlAttrs?: Record<string, string>;
-}
-interface TokenizeWithThemeOptions {
-    includeExplanation?: boolean | "scopeName" | "tokenType";
-    colorReplacements?: Record<string, string | Record<string, string>>;
-    tokenizeMaxLineLength?: number;
-    tokenizeTimeLimit?: number;
-    grammarState?: GrammarState;
-    grammarContextCode?: string;
-}
-interface TokensResult {
-    tokens: ThemedToken[][];
-    fg?: string;
-    bg?: string;
-    themeName?: string;
-    rootStyle?: string | false;
-    grammarState?: GrammarState;
-}
-interface TransformerOptions {
-    transformers?: ShikiTransformer[];
-}
-interface ShikiTransformerContextMeta {
-}
-interface ShikiTransformerContextCommon {
-    meta: ShikiTransformerContextMeta;
-    options: CodeToHastOptions;
-    codeToHast: (code: string, options: CodeToHastOptions) => Root;
-    codeToTokens: (code: string, options: CodeToTokensOptions) => TokensResult;
-}
-interface ShikiTransformerContextSource extends ShikiTransformerContextCommon {
-    readonly source: string;
-}
-interface ShikiTransformerContext extends ShikiTransformerContextSource {
-    readonly tokens: ThemedToken[][];
-    readonly root: Root;
-    readonly pre: Element$1;
-    readonly code: Element$1;
-    readonly lines: Element$1[];
-    readonly structure: CodeToHastOptions["structure"];
-    addClassToHast: (hast: Element$1, className: string | string[]) => Element$1;
-}
-interface ShikiTransformer {
-    name?: string;
-    enforce?: "pre" | "post";
-    preprocess?: (this: ShikiTransformerContextCommon, code: string, options: CodeToHastOptions) => string | void;
-    tokens?: (this: ShikiTransformerContextSource, tokens: ThemedToken[][]) => ThemedToken[][] | void;
-    root?: (this: ShikiTransformerContext, hast: Root) => Root | void;
-    pre?: (this: ShikiTransformerContext, hast: Element$1) => Element$1 | void;
-    code?: (this: ShikiTransformerContext, hast: Element$1) => Element$1 | void;
-    line?: (this: ShikiTransformerContext, hast: Element$1, line: number) => Element$1 | void;
-    span?: (this: ShikiTransformerContext, hast: Element$1, line: number, col: number, lineElement: Element$1, token: ThemedToken) => Element$1 | void;
-    postprocess?: (this: ShikiTransformerContextCommon, html: string, options: CodeToHastOptions) => string | void;
-}
-interface CodeOptionsSingleTheme<Themes extends string = string> {
-    theme: ThemeRegistrationAny | StringLiteralUnion<Themes>;
-}
-interface CodeOptionsMultipleThemes<Themes extends string = string> {
-    themes: Partial<Record<string, ThemeRegistrationAny | StringLiteralUnion<Themes>>>;
-    defaultColor?: StringLiteralUnion<"light" | "dark"> | "light-dark()" | false;
-    colorsRendering?: "css-vars" | "none";
-    cssVariablePrefix?: string;
-}
-type CodeOptionsThemes<Themes extends string = string> = CodeOptionsSingleTheme<Themes> | CodeOptionsMultipleThemes<Themes>;
-type CodeToHastOptions<Languages extends string = string, Themes extends string = string> = CodeToHastOptionsCommon<Languages> & CodeOptionsThemes<Themes> & CodeOptionsMeta;
-interface CodeToHastOptionsCommon<Languages extends string = string> extends TransformerOptions, DecorationOptions, Pick<TokenizeWithThemeOptions, "colorReplacements" | "tokenizeMaxLineLength" | "tokenizeTimeLimit" | "grammarState" | "grammarContextCode" | "includeExplanation"> {
-    data?: Record<string, unknown>;
-    lang: StringLiteralUnion<Languages | SpecialLanguage>;
-    rootStyle?: string | false;
-    mergeWhitespaces?: boolean | "never";
-    mergeSameStyleTokens?: boolean;
-    structure?: "classic" | "inline";
-    tabindex?: number | string | false;
-}
-interface CodeOptionsMeta {
-    meta?: {
-        __raw?: string;
-        [key: string]: any;
-    };
-}
-type CodeBlockToken = {
-    content: string;
-    color?: string;
-    colorDark?: string;
-    fontStyle?: CodeBlockFontStyle;
-    word?: boolean;
-};
-type CodeBlockFontStyle = "italic" | "bold" | "underline";
-type CodeBlockDiffKind = "add" | "remove";
-type CodeBlockLevel = "error" | "warning" | "info";
-type CodeBlockLineState = {
-    highlighted?: boolean;
-    diff?: CodeBlockDiffKind;
-    focused?: boolean;
-    level?: CodeBlockLevel;
-};
-type CodeBlockLine = {
-    tokens: CodeBlockToken[];
-    number: number;
-    text: string;
-    state?: CodeBlockLineState;
-    gutter?: string;
-};
-type CodeBlockLineSpec = number[] | string;
-type CodeBlockDiffSpec = {
-    added?: CodeBlockLineSpec;
-    removed?: CodeBlockLineSpec;
-};
-type CodeBlockLevelSpec = Partial<Record<CodeBlockLevel, CodeBlockLineSpec>>;
-type CodeBlockWordSpec = string | {
-    word: string;
-    lines?: CodeBlockLineSpec;
-};
-type CodeBlockThemes = {
-    light: string;
-    dark: string;
-};
-type CodeBlockTransformer = ShikiTransformer;
-type CodeBlockLineActionContext = {
-    line: number;
-    text: string;
-    state?: CodeBlockLineState;
-};
-type CodeBlockLineActionsRender = (context: CodeBlockLineActionContext) => React$1.ReactNode;
-type CodeBlockConfigValue = {
-    language?: string;
-    resolvedLanguage?: string;
-    showLineNumbers: boolean;
-    wrap: boolean;
-    setWrap: (wrap: boolean) => void;
-    wrapControlled: boolean;
-    expanded: boolean;
-    setExpanded: (expanded: boolean) => void;
-    collapsible: boolean;
-    streaming: boolean;
-    contentId: string;
-};
-type CodeBlockLineActionsSide = "end" | "gutter";
-export function useCodeBlockConfig(part: string): CodeBlockConfigValue & {
-    code: string;
-};
-type CodeBlockFoldRegion = {
-    start: number;
-    end: number;
-};
-type CodeBlockProps = {
-    code?: string;
-    language?: string;
-    lines?: CodeBlockLine[];
-    themes?: CodeBlockThemes;
-    highlight?: boolean;
-    showLineNumbers?: boolean;
-    startLine?: number;
-    wrap?: boolean;
-    defaultWrap?: boolean;
-    onWrapChange?: (wrap: boolean) => void;
-    maxLines?: number;
-    variant?: "default" | "ghost";
-    label?: string;
-    highlightedLines?: CodeBlockLineSpec;
-    highlightedWords?: CodeBlockWordSpec[];
-    focusedLines?: CodeBlockLineSpec;
-    diff?: CodeBlockDiffSpec;
-    lineLevels?: CodeBlockLevelSpec;
-    transformers?: CodeBlockTransformer[];
-    streaming?: boolean;
-    selectable?: boolean;
-    selectedLines?: number[];
-    defaultSelectedLines?: number[];
-    onSelectedLinesChange?: (lines: number[]) => void;
-    completeAnnouncement?: string;
-    expanded?: boolean;
-    defaultExpanded?: boolean;
-    onExpandedChange?: (expanded: boolean) => void;
-    foldable?: boolean;
-    foldRegions?: CodeBlockFoldRegion[];
-    folded?: number[];
-    defaultFolded?: number[];
-    onFoldedChange?: (folded: number[]) => void;
-    children?: React$1.ReactNode;
-} & Omit<React$1.ComponentProps<"div">, "children" | "onSelect">;
-export function CodeBlock({ code, language, lines: linesProp, themes, highlight, showLineNumbers, startLine, wrap: wrapProp, defaultWrap, onWrapChange, maxLines, variant, label, highlightedLines, highlightedWords, focusedLines, diff, lineLevels, transformers, streaming, selectable, selectedLines, defaultSelectedLines, onSelectedLinesChange, completeAnnouncement, expanded: expandedProp, defaultExpanded, onExpandedChange, foldable, foldRegions: foldRegionsProp, folded, defaultFolded, onFoldedChange, className, children, ...props }: CodeBlockProps): React$1.JSX.Element;
-export function CodeBlockContent({ className }: {
-    className?: string;
-}): React$1.JSX.Element;
-export function CodeBlockHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CodeBlockTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
-export function CodeBlockLanguage({ className, children, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element | null;
-type CodeBlockCopyButtonProps = {
-    value?: string;
-    timeout?: number;
-    onCopy?: (value: string) => void;
-    onCopyError?: (error: unknown) => void;
-    labels?: {
-        copy?: string;
-        copied?: string;
-    };
-    position?: "auto" | "pinned" | "inline";
-    alwaysVisible?: boolean;
-} & Omit<React$1.ComponentProps<typeof Button$1>, "value" | "onCopy">;
-export function CodeBlockCopyButton({ value, timeout, onCopy, onCopyError, labels, position, alwaysVisible, className, variant, size, children, ...props }: CodeBlockCopyButtonProps): React$1.JSX.Element;
-export function CodeBlockWrapToggle({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element;
-export function CodeBlockExpandButton({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element | null;
-type CodeBlockLineActionsProps = {
-    children: CodeBlockLineActionsRender;
-    side?: CodeBlockLineActionsSide;
-};
-type CodeBlockDownloadButtonProps = {
-    value?: string;
-    filename?: string;
-    onDownload?: (filename: string) => void;
-    position?: "auto" | "pinned" | "inline";
-    alwaysVisible?: boolean;
-    label?: string;
-} & Omit<React$1.ComponentProps<typeof Button$1>, "value">;
-export function CodeBlockDownloadButton({ value, filename, onDownload, position, alwaysVisible, label, className, variant, size, children, ...props }: CodeBlockDownloadButtonProps): React$1.JSX.Element;
-export function CodeBlockLineActions({ children, side }: CodeBlockLineActionsProps): null;
-export function useCodeBlockFolding(): {
-    foldable: boolean;
-    regions: CodeBlockFoldRegion[];
-    foldedStarts: number[];
-    toggleFold: (start: number) => void;
-    foldAll: () => void;
-    unfoldAll: () => void;
-};
-export function useCodeBlockSelection(): {
-    selectable: boolean;
-    selectedLines: number[];
-    toggleLine: (line: number, extend: boolean) => void;
-    clearSelection: () => void;
-};
 type ColumnWidth = {
     type: "proportional";
     value: number;
@@ -16658,6 +15526,1149 @@ export function DataTable<T extends Record<string, unknown>>({ data, columns, ha
     emptyMessage?: React$1.ReactNode;
     verticalAlign?: "top" | "middle" | "bottom";
 }): React$1.JSX.Element;
+export function Divider({ label, orientation, className, ...props }: Omit<React$1.ComponentProps<"div">, "children"> & {
+    label: React$1.ReactNode;
+    orientation?: "horizontal" | "vertical";
+}): React$1.JSX.Element;
+type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
+    src: string;
+    alt: string;
+    ratio?: number;
+    srcSet?: never;
+    srcset?: never;
+    children?: never;
+    dangerouslySetInnerHTML?: never;
+};
+function Image$1(props: ImageProps): React$1.JSX.Element;
+type TextProps = Omit<React$1.HTMLAttributes<HTMLElement>, "color"> & {
+    as?: "span" | "p" | "div" | "label" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+    maxLines?: number;
+    hasTruncateTooltip?: boolean | "above" | "below" | "start" | "end";
+    ref?: React$1.Ref<HTMLElement>;
+};
+function Text$1({ children, as: Component, maxLines, hasTruncateTooltip, className, style, ref, ...props }: TextProps): React$1.JSX.Element;
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+export function Heading({ level, accessibilityLevel, className, ...props }: Omit<React$1.HTMLAttributes<HTMLHeadingElement>, "color"> & {
+    level?: HeadingLevel;
+    accessibilityLevel?: HeadingLevel;
+    ref?: React$1.Ref<HTMLHeadingElement>;
+}): React$1.JSX.Element;
+type StackLayoutProps = {
+    direction?: "horizontal" | "vertical";
+    justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
+    align?: "start" | "center" | "end" | "stretch";
+    wrap?: "nowrap" | "wrap" | "wrap-reverse";
+    gap?: Spacing;
+    padding?: Spacing;
+    paddingInline?: Spacing;
+    paddingBlock?: Spacing;
+    width?: React$1.CSSProperties["width"];
+    height?: React$1.CSSProperties["height"];
+    maxWidth?: React$1.CSSProperties["maxWidth"];
+    minHeight?: React$1.CSSProperties["minHeight"];
+    background?: "muted";
+};
+export function Stack({ className, ...props }: React$1.ComponentPropsWithRef<"div"> & StackLayoutProps): React$1.JSX.Element;
+export function StackItem(props: {
+    children?: React$1.ReactNode;
+    size?: "static" | "fill";
+    isScrollable?: boolean;
+    crossAlignSelf?: "start" | "center" | "end" | "stretch";
+}): React$1.JSX.Element;
+export function Grid({ columns: configuredColumns, collapseBelow, gap, rowGap, columnGap, align, justify, width, height, maxWidth, minHeight, className, style, ref, children, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+    columns?: number | {
+        minWidth: number;
+        max?: number;
+        repeat?: "fill" | "fit";
+    };
+    collapseBelow?: number;
+    gap?: Spacing;
+    rowGap?: Spacing;
+    columnGap?: Spacing;
+    align?: "start" | "center" | "end" | "stretch";
+    justify?: "start" | "center" | "end" | "stretch";
+    width?: number | string;
+    height?: number | string;
+    maxWidth?: number | string;
+    minHeight?: number | string;
+}): React$1.JSX.Element;
+export function GridSpan({ columns, className, style, ...props }: React$1.ComponentPropsWithRef<"div"> & {
+    columns?: number | "full";
+}): React$1.JSX.Element;
+type AvatarProps = {
+    shape?: undefined | "circle" | "rounded" | "square";
+} & {
+    name?: string;
+    seed?: string;
+    kind?: "user" | "organization";
+    src?: string | null;
+    alt?: string;
+    size?: "sm" | "default" | "lg";
+};
+export function GeneratedAvatar({ kind, src, name, seed, ...props }: AvatarProps): React$1.JSX.Element;
+export function Avatar({ className, size, ...props }: AvatarRoot.Props & {
+    size?: "default" | "sm" | "lg";
+}): React$1.JSX.Element;
+function AvatarImage$1({ className, ...props }: AvatarImage.Props): React$1.JSX.Element;
+function AvatarFallback$1({ className, ...props }: AvatarFallback.Props): React$1.JSX.Element;
+export function AvatarBadge({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
+export function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function AvatarGroupCount({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+interface Data {
+}
+interface Point {
+    line: number;
+    column: number;
+    offset?: number | undefined;
+}
+interface Position {
+    start: Point;
+    end: Point;
+}
+interface Node$1 {
+    type: string;
+    data?: Data | undefined;
+    position?: Position | undefined;
+}
+interface Data$1 extends Data {
+}
+interface Properties$1 {
+    abbr?: string | undefined;
+    about?: Array<string> | undefined;
+    accentHeight?: number | string | undefined;
+    accept?: Array<string> | undefined;
+    acceptCharset?: Array<string> | undefined;
+    accessKey?: Array<string> | undefined;
+    accumulate?: string | undefined;
+    action?: string | undefined;
+    additive?: string | undefined;
+    align?: string | undefined;
+    alignmentBaseline?: string | undefined;
+    aLink?: string | undefined;
+    allow?: string | undefined;
+    allowFullScreen?: boolean | string | undefined;
+    allowPaymentRequest?: boolean | string | undefined;
+    allowTransparency?: string | undefined;
+    allowUserMedia?: boolean | string | undefined;
+    alpha?: boolean | string | undefined;
+    alphabetic?: number | string | undefined;
+    alt?: string | undefined;
+    amplitude?: number | string | undefined;
+    arabicForm?: string | undefined;
+    archive?: Array<string> | undefined;
+    ariaActiveDescendant?: string | undefined;
+    ariaAtomic?: "false" | "true" | (string & {}) | undefined;
+    ariaAutoComplete?: string | undefined;
+    ariaBusy?: "false" | "true" | (string & {}) | undefined;
+    ariaChecked?: "false" | "true" | (string & {}) | undefined;
+    ariaColCount?: number | string | undefined;
+    ariaColIndex?: number | string | undefined;
+    ariaColSpan?: number | string | undefined;
+    ariaControls?: Array<string> | undefined;
+    ariaCurrent?: string | undefined;
+    ariaDescribedBy?: Array<string> | undefined;
+    ariaDetails?: string | undefined;
+    ariaDisabled?: "false" | "true" | (string & {}) | undefined;
+    ariaDropEffect?: Array<string> | undefined;
+    ariaErrorMessage?: string | undefined;
+    ariaExpanded?: "false" | "true" | (string & {}) | undefined;
+    ariaFlowTo?: Array<string> | undefined;
+    ariaGrabbed?: "false" | "true" | (string & {}) | undefined;
+    ariaHasPopup?: string | undefined;
+    ariaHidden?: "false" | "true" | (string & {}) | undefined;
+    ariaInvalid?: string | undefined;
+    ariaKeyShortcuts?: string | undefined;
+    ariaLabel?: string | undefined;
+    ariaLabelledBy?: Array<string> | undefined;
+    ariaLevel?: number | string | undefined;
+    ariaLive?: string | undefined;
+    ariaModal?: "false" | "true" | (string & {}) | undefined;
+    ariaMultiLine?: "false" | "true" | (string & {}) | undefined;
+    ariaMultiSelectable?: "false" | "true" | (string & {}) | undefined;
+    ariaOrientation?: string | undefined;
+    ariaOwns?: Array<string> | undefined;
+    ariaPlaceholder?: string | undefined;
+    ariaPosInSet?: number | string | undefined;
+    ariaPressed?: "false" | "true" | (string & {}) | undefined;
+    ariaReadOnly?: "false" | "true" | (string & {}) | undefined;
+    ariaRelevant?: string | undefined;
+    ariaRequired?: "false" | "true" | (string & {}) | undefined;
+    ariaRoleDescription?: Array<string> | undefined;
+    ariaRowCount?: number | string | undefined;
+    ariaRowIndex?: number | string | undefined;
+    ariaRowSpan?: number | string | undefined;
+    ariaSelected?: "false" | "true" | (string & {}) | undefined;
+    ariaSetSize?: number | string | undefined;
+    ariaSort?: string | undefined;
+    ariaValueMax?: number | string | undefined;
+    ariaValueMin?: number | string | undefined;
+    ariaValueNow?: number | string | undefined;
+    ariaValueText?: string | undefined;
+    as?: string | undefined;
+    ascent?: number | string | undefined;
+    async?: boolean | string | undefined;
+    attributeName?: string | undefined;
+    attributeType?: string | undefined;
+    autoCapitalize?: string | undefined;
+    autoComplete?: Array<string> | undefined;
+    autoCorrect?: string | undefined;
+    autoFocus?: boolean | string | undefined;
+    autoPlay?: boolean | string | undefined;
+    autoSave?: string | undefined;
+    axis?: string | undefined;
+    azimuth?: number | string | undefined;
+    background?: string | undefined;
+    bandwidth?: string | undefined;
+    baseFrequency?: string | undefined;
+    baselineShift?: string | undefined;
+    baseProfile?: string | undefined;
+    bbox?: string | undefined;
+    begin?: string | undefined;
+    bgColor?: string | undefined;
+    bias?: number | string | undefined;
+    blocking?: Array<string> | undefined;
+    border?: number | string | undefined;
+    borderColor?: string | undefined;
+    bottomMargin?: number | string | undefined;
+    by?: string | undefined;
+    calcMode?: string | undefined;
+    capHeight?: number | string | undefined;
+    capture?: string | undefined;
+    cellPadding?: string | undefined;
+    cellSpacing?: string | undefined;
+    char?: string | undefined;
+    charOff?: string | undefined;
+    charSet?: string | undefined;
+    checked?: boolean | string | undefined;
+    cite?: string | undefined;
+    classId?: string | undefined;
+    className?: Array<string> | undefined;
+    clear?: string | undefined;
+    clip?: string | undefined;
+    clipPath?: string | undefined;
+    clipPathUnits?: string | undefined;
+    clipRule?: string | undefined;
+    closedBy?: string | undefined;
+    code?: string | undefined;
+    codeBase?: string | undefined;
+    codeType?: string | undefined;
+    color?: string | undefined;
+    colorInterpolation?: string | undefined;
+    colorInterpolationFilters?: string | undefined;
+    colorProfile?: string | undefined;
+    colorRendering?: string | undefined;
+    colorSpace?: string | undefined;
+    cols?: number | string | undefined;
+    colSpan?: number | string | undefined;
+    command?: string | undefined;
+    commandFor?: string | undefined;
+    compact?: boolean | string | undefined;
+    content?: string | undefined;
+    contentEditable?: "false" | "true" | (string & {}) | undefined;
+    contentScriptType?: string | undefined;
+    contentStyleType?: string | undefined;
+    controls?: boolean | string | undefined;
+    controlsList?: Array<string> | undefined;
+    coords?: Array<number | string> | undefined;
+    credentialless?: boolean | string | undefined;
+    crossOrigin?: string | undefined;
+    cursor?: string | undefined;
+    cx?: string | undefined;
+    cy?: string | undefined;
+    d?: string | undefined;
+    data?: string | undefined;
+    dataType?: string | undefined;
+    dateTime?: string | undefined;
+    declare?: boolean | string | undefined;
+    decoding?: string | undefined;
+    default?: boolean | string | undefined;
+    defaultAction?: string | undefined;
+    defer?: boolean | string | undefined;
+    descent?: number | string | undefined;
+    diffuseConstant?: number | string | undefined;
+    dir?: string | undefined;
+    direction?: string | undefined;
+    dirName?: string | undefined;
+    disabled?: boolean | string | undefined;
+    disablePictureInPicture?: boolean | string | undefined;
+    disableRemotePlayback?: boolean | string | undefined;
+    display?: string | undefined;
+    divisor?: number | string | undefined;
+    dominantBaseline?: string | undefined;
+    download?: boolean | string | undefined;
+    draggable?: "false" | "true" | (string & {}) | undefined;
+    dur?: string | undefined;
+    dx?: string | undefined;
+    dy?: string | undefined;
+    edgeMode?: string | undefined;
+    editable?: string | undefined;
+    elevation?: number | string | undefined;
+    enableBackground?: string | undefined;
+    encType?: string | undefined;
+    end?: string | undefined;
+    enterKeyHint?: string | undefined;
+    event?: string | undefined;
+    exponent?: number | string | undefined;
+    exportParts?: Array<string> | undefined;
+    externalResourcesRequired?: string | undefined;
+    face?: string | undefined;
+    fetchPriority?: string | undefined;
+    fill?: string | undefined;
+    fillOpacity?: number | string | undefined;
+    fillRule?: string | undefined;
+    filter?: string | undefined;
+    filterRes?: string | undefined;
+    filterUnits?: string | undefined;
+    floodColor?: string | undefined;
+    floodOpacity?: string | undefined;
+    focusable?: string | undefined;
+    focusHighlight?: string | undefined;
+    fontFamily?: string | undefined;
+    fontSize?: string | undefined;
+    fontSizeAdjust?: string | undefined;
+    fontStretch?: string | undefined;
+    fontStyle?: string | undefined;
+    fontVariant?: string | undefined;
+    fontWeight?: string | undefined;
+    form?: string | undefined;
+    formAction?: string | undefined;
+    format?: string | undefined;
+    formEncType?: string | undefined;
+    formMethod?: string | undefined;
+    formNoValidate?: boolean | string | undefined;
+    formTarget?: string | undefined;
+    fr?: string | undefined;
+    frame?: string | undefined;
+    frameBorder?: string | undefined;
+    from?: string | undefined;
+    fx?: string | undefined;
+    fy?: string | undefined;
+    g1?: Array<string> | undefined;
+    g2?: Array<string> | undefined;
+    glyphName?: Array<string> | undefined;
+    glyphOrientationHorizontal?: string | undefined;
+    glyphOrientationVertical?: string | undefined;
+    glyphRef?: string | undefined;
+    gradientTransform?: string | undefined;
+    gradientUnits?: string | undefined;
+    handler?: string | undefined;
+    hanging?: number | string | undefined;
+    hatchContentUnits?: string | undefined;
+    hatchUnits?: string | undefined;
+    headers?: Array<string> | undefined;
+    height?: number | string | undefined;
+    hidden?: boolean | string | undefined;
+    high?: number | string | undefined;
+    horizAdvX?: number | string | undefined;
+    horizOriginX?: number | string | undefined;
+    horizOriginY?: number | string | undefined;
+    href?: string | undefined;
+    hrefLang?: string | undefined;
+    hSpace?: number | string | undefined;
+    htmlFor?: Array<string> | undefined;
+    httpEquiv?: Array<string> | undefined;
+    id?: string | undefined;
+    ideographic?: number | string | undefined;
+    imageRendering?: string | undefined;
+    imageSizes?: string | undefined;
+    imageSrcSet?: string | undefined;
+    in?: string | undefined;
+    in2?: string | undefined;
+    inert?: boolean | string | undefined;
+    initialVisibility?: string | undefined;
+    inputMode?: string | undefined;
+    integrity?: string | undefined;
+    intercept?: number | string | undefined;
+    is?: string | undefined;
+    isMap?: boolean | string | undefined;
+    itemId?: string | undefined;
+    itemProp?: Array<string> | undefined;
+    itemRef?: Array<string> | undefined;
+    itemScope?: boolean | string | undefined;
+    itemType?: Array<string> | undefined;
+    k?: number | string | undefined;
+    k1?: number | string | undefined;
+    k2?: number | string | undefined;
+    k3?: number | string | undefined;
+    k4?: number | string | undefined;
+    kernelMatrix?: Array<string> | undefined;
+    kernelUnitLength?: string | undefined;
+    kerning?: string | undefined;
+    keyPoints?: string | undefined;
+    keySplines?: string | undefined;
+    keyTimes?: string | undefined;
+    kind?: string | undefined;
+    label?: string | undefined;
+    lang?: string | undefined;
+    language?: string | undefined;
+    leftMargin?: number | string | undefined;
+    lengthAdjust?: string | undefined;
+    letterSpacing?: string | undefined;
+    lightingColor?: string | undefined;
+    limitingConeAngle?: number | string | undefined;
+    link?: string | undefined;
+    list?: string | undefined;
+    loading?: string | undefined;
+    local?: string | undefined;
+    longDesc?: string | undefined;
+    loop?: boolean | string | undefined;
+    low?: number | string | undefined;
+    lowSrc?: string | undefined;
+    manifest?: string | undefined;
+    marginHeight?: number | string | undefined;
+    marginWidth?: number | string | undefined;
+    markerEnd?: string | undefined;
+    markerHeight?: string | undefined;
+    markerMid?: string | undefined;
+    markerStart?: string | undefined;
+    markerUnits?: string | undefined;
+    markerWidth?: string | undefined;
+    mask?: string | undefined;
+    maskContentUnits?: string | undefined;
+    maskType?: string | undefined;
+    maskUnits?: string | undefined;
+    mathematical?: string | undefined;
+    max?: string | undefined;
+    maxLength?: number | string | undefined;
+    media?: string | undefined;
+    mediaCharacterEncoding?: string | undefined;
+    mediaContentEncodings?: string | undefined;
+    mediaSize?: number | string | undefined;
+    mediaTime?: string | undefined;
+    method?: string | undefined;
+    min?: string | undefined;
+    minLength?: number | string | undefined;
+    mode?: string | undefined;
+    multiple?: boolean | string | undefined;
+    muted?: boolean | string | undefined;
+    name?: string | undefined;
+    navDown?: string | undefined;
+    navDownLeft?: string | undefined;
+    navDownRight?: string | undefined;
+    navLeft?: string | undefined;
+    navNext?: string | undefined;
+    navPrev?: string | undefined;
+    navRight?: string | undefined;
+    navUp?: string | undefined;
+    navUpLeft?: string | undefined;
+    navUpRight?: string | undefined;
+    noHref?: boolean | string | undefined;
+    noModule?: boolean | string | undefined;
+    nonce?: string | undefined;
+    noResize?: boolean | string | undefined;
+    noShade?: boolean | string | undefined;
+    noValidate?: boolean | string | undefined;
+    noWrap?: boolean | string | undefined;
+    numOctaves?: string | undefined;
+    object?: string | undefined;
+    observer?: string | undefined;
+    offset?: string | undefined;
+    onAbort?: string | undefined;
+    onActivate?: string | undefined;
+    onAfterPrint?: string | undefined;
+    onAuxClick?: string | undefined;
+    onBeforeMatch?: string | undefined;
+    onBeforePrint?: string | undefined;
+    onBeforeToggle?: string | undefined;
+    onBeforeUnload?: string | undefined;
+    onBegin?: string | undefined;
+    onBlur?: string | undefined;
+    onCancel?: string | undefined;
+    onCanPlay?: string | undefined;
+    onCanPlayThrough?: string | undefined;
+    onChange?: string | undefined;
+    onClick?: string | undefined;
+    onClose?: string | undefined;
+    onContextLost?: string | undefined;
+    onContextMenu?: string | undefined;
+    onContextRestored?: string | undefined;
+    onCopy?: string | undefined;
+    onCueChange?: string | undefined;
+    onCut?: string | undefined;
+    onDblClick?: string | undefined;
+    onDrag?: string | undefined;
+    onDragEnd?: string | undefined;
+    onDragEnter?: string | undefined;
+    onDragExit?: string | undefined;
+    onDragLeave?: string | undefined;
+    onDragOver?: string | undefined;
+    onDragStart?: string | undefined;
+    onDrop?: string | undefined;
+    onDurationChange?: string | undefined;
+    onEmptied?: string | undefined;
+    onEnd?: string | undefined;
+    onEnded?: string | undefined;
+    onError?: string | undefined;
+    onFocus?: string | undefined;
+    onFocusIn?: string | undefined;
+    onFocusOut?: string | undefined;
+    onFormData?: string | undefined;
+    onHashChange?: string | undefined;
+    onInput?: string | undefined;
+    onInvalid?: string | undefined;
+    onKeyDown?: string | undefined;
+    onKeyPress?: string | undefined;
+    onKeyUp?: string | undefined;
+    onLanguageChange?: string | undefined;
+    onLoad?: string | undefined;
+    onLoadedData?: string | undefined;
+    onLoadedMetadata?: string | undefined;
+    onLoadEnd?: string | undefined;
+    onLoadStart?: string | undefined;
+    onMessage?: string | undefined;
+    onMessageError?: string | undefined;
+    onMouseDown?: string | undefined;
+    onMouseEnter?: string | undefined;
+    onMouseLeave?: string | undefined;
+    onMouseMove?: string | undefined;
+    onMouseOut?: string | undefined;
+    onMouseOver?: string | undefined;
+    onMouseUp?: string | undefined;
+    onMouseWheel?: string | undefined;
+    onOffline?: string | undefined;
+    onOnline?: string | undefined;
+    onPageHide?: string | undefined;
+    onPageShow?: string | undefined;
+    onPaste?: string | undefined;
+    onPause?: string | undefined;
+    onPlay?: string | undefined;
+    onPlaying?: string | undefined;
+    onPopState?: string | undefined;
+    onProgress?: string | undefined;
+    onRateChange?: string | undefined;
+    onRejectionHandled?: string | undefined;
+    onRepeat?: string | undefined;
+    onReset?: string | undefined;
+    onResize?: string | undefined;
+    onScroll?: string | undefined;
+    onScrollEnd?: string | undefined;
+    onSecurityPolicyViolation?: string | undefined;
+    onSeeked?: string | undefined;
+    onSeeking?: string | undefined;
+    onSelect?: string | undefined;
+    onShow?: string | undefined;
+    onSlotChange?: string | undefined;
+    onStalled?: string | undefined;
+    onStorage?: string | undefined;
+    onSubmit?: string | undefined;
+    onSuspend?: string | undefined;
+    onTimeUpdate?: string | undefined;
+    onToggle?: string | undefined;
+    onUnhandledRejection?: string | undefined;
+    onUnload?: string | undefined;
+    onVolumeChange?: string | undefined;
+    onWaiting?: string | undefined;
+    onWheel?: string | undefined;
+    onZoom?: string | undefined;
+    opacity?: string | undefined;
+    open?: boolean | string | undefined;
+    operator?: string | undefined;
+    optimum?: number | string | undefined;
+    order?: string | undefined;
+    orient?: string | undefined;
+    orientation?: string | undefined;
+    origin?: string | undefined;
+    overflow?: string | undefined;
+    overlay?: string | undefined;
+    overlinePosition?: number | string | undefined;
+    overlineThickness?: number | string | undefined;
+    paintOrder?: string | undefined;
+    panose1?: string | undefined;
+    part?: Array<string> | undefined;
+    path?: string | undefined;
+    pathLength?: number | string | undefined;
+    pattern?: string | undefined;
+    patternContentUnits?: string | undefined;
+    patternTransform?: string | undefined;
+    patternUnits?: string | undefined;
+    phase?: string | undefined;
+    ping?: Array<string> | undefined;
+    pitch?: string | undefined;
+    placeholder?: string | undefined;
+    playbackOrder?: string | undefined;
+    playsInline?: boolean | string | undefined;
+    pointerEvents?: string | undefined;
+    points?: string | undefined;
+    pointsAtX?: number | string | undefined;
+    pointsAtY?: number | string | undefined;
+    pointsAtZ?: number | string | undefined;
+    popover?: string | undefined;
+    popoverTarget?: string | undefined;
+    popoverTargetAction?: string | undefined;
+    poster?: string | undefined;
+    prefix?: string | undefined;
+    preload?: string | undefined;
+    preserveAlpha?: string | undefined;
+    preserveAspectRatio?: string | undefined;
+    primitiveUnits?: string | undefined;
+    profile?: string | undefined;
+    prompt?: string | undefined;
+    propagate?: string | undefined;
+    property?: string | Array<string> | undefined;
+    r?: string | undefined;
+    radius?: string | undefined;
+    readOnly?: boolean | string | undefined;
+    referrerPolicy?: string | undefined;
+    refX?: string | undefined;
+    refY?: string | undefined;
+    rel?: Array<string> | undefined;
+    renderingIntent?: string | undefined;
+    repeatCount?: string | undefined;
+    repeatDur?: string | undefined;
+    required?: boolean | string | undefined;
+    requiredExtensions?: Array<string> | undefined;
+    requiredFeatures?: Array<string> | undefined;
+    requiredFonts?: Array<string> | undefined;
+    requiredFormats?: Array<string> | undefined;
+    resource?: string | undefined;
+    restart?: string | undefined;
+    result?: string | undefined;
+    results?: number | string | undefined;
+    rev?: string | Array<string> | undefined;
+    reversed?: boolean | string | undefined;
+    rightMargin?: number | string | undefined;
+    role?: string | undefined;
+    rotate?: string | undefined;
+    rows?: number | string | undefined;
+    rowSpan?: number | string | undefined;
+    rules?: string | undefined;
+    rx?: string | undefined;
+    ry?: string | undefined;
+    sandbox?: Array<string> | undefined;
+    scale?: string | undefined;
+    scheme?: string | undefined;
+    scope?: string | undefined;
+    scoped?: boolean | string | undefined;
+    scrolling?: "false" | "true" | (string & {}) | undefined;
+    seamless?: boolean | string | undefined;
+    security?: string | undefined;
+    seed?: string | undefined;
+    selected?: boolean | string | undefined;
+    shadowRootClonable?: boolean | string | undefined;
+    shadowRootCustomElementRegistry?: boolean | string | undefined;
+    shadowRootDelegatesFocus?: boolean | string | undefined;
+    shadowRootMode?: string | undefined;
+    shadowRootSerializable?: boolean | string | undefined;
+    shape?: string | undefined;
+    shapeRendering?: string | undefined;
+    side?: string | undefined;
+    size?: number | string | undefined;
+    sizes?: string | undefined;
+    slope?: string | undefined;
+    slot?: string | undefined;
+    snapshotTime?: string | undefined;
+    spacing?: string | undefined;
+    span?: number | string | undefined;
+    specularConstant?: number | string | undefined;
+    specularExponent?: number | string | undefined;
+    spellCheck?: "false" | "true" | (string & {}) | undefined;
+    spreadMethod?: string | undefined;
+    src?: string | undefined;
+    srcDoc?: string | undefined;
+    srcLang?: string | undefined;
+    srcSet?: string | undefined;
+    standby?: string | undefined;
+    start?: number | string | undefined;
+    startOffset?: string | undefined;
+    stdDeviation?: string | undefined;
+    stemh?: string | undefined;
+    stemv?: string | undefined;
+    step?: string | undefined;
+    stitchTiles?: string | undefined;
+    stopColor?: string | undefined;
+    stopOpacity?: string | undefined;
+    strikethroughPosition?: number | string | undefined;
+    strikethroughThickness?: number | string | undefined;
+    string?: string | undefined;
+    stroke?: string | undefined;
+    strokeDashArray?: Array<string> | undefined;
+    strokeDashOffset?: string | undefined;
+    strokeLineCap?: string | undefined;
+    strokeLineJoin?: string | undefined;
+    strokeMiterLimit?: number | string | undefined;
+    strokeOpacity?: number | string | undefined;
+    strokeWidth?: string | undefined;
+    style?: string | undefined;
+    summary?: string | undefined;
+    surfaceScale?: number | string | undefined;
+    syncBehavior?: string | undefined;
+    syncBehaviorDefault?: string | undefined;
+    syncMaster?: string | undefined;
+    syncTolerance?: string | undefined;
+    syncToleranceDefault?: string | undefined;
+    systemLanguage?: Array<string> | undefined;
+    tabIndex?: number | string | undefined;
+    tableValues?: string | undefined;
+    target?: string | undefined;
+    targetX?: number | string | undefined;
+    targetY?: number | string | undefined;
+    text?: string | undefined;
+    textAnchor?: string | undefined;
+    textDecoration?: string | undefined;
+    textLength?: string | undefined;
+    textRendering?: string | undefined;
+    timelineBegin?: string | undefined;
+    title?: string | undefined;
+    to?: string | undefined;
+    topMargin?: number | string | undefined;
+    transform?: string | undefined;
+    transformBehavior?: string | undefined;
+    transformOrigin?: string | undefined;
+    translate?: string | undefined;
+    type?: string | undefined;
+    typeMustMatch?: boolean | string | undefined;
+    typeOf?: Array<string> | undefined;
+    u1?: string | undefined;
+    u2?: string | undefined;
+    underlinePosition?: number | string | undefined;
+    underlineThickness?: number | string | undefined;
+    unicode?: string | undefined;
+    unicodeBidi?: string | undefined;
+    unicodeRange?: string | undefined;
+    unitsPerEm?: number | string | undefined;
+    unselectable?: string | undefined;
+    useMap?: string | undefined;
+    vAlign?: string | undefined;
+    vAlphabetic?: number | string | undefined;
+    value?: "false" | "true" | (string & {}) | undefined;
+    values?: string | undefined;
+    valueType?: string | undefined;
+    vectorEffect?: string | undefined;
+    version?: string | undefined;
+    vertAdvY?: number | string | undefined;
+    vertOriginX?: number | string | undefined;
+    vertOriginY?: number | string | undefined;
+    vHanging?: number | string | undefined;
+    vIdeographic?: number | string | undefined;
+    viewBox?: string | undefined;
+    viewTarget?: string | undefined;
+    visibility?: string | undefined;
+    vLink?: string | undefined;
+    vMathematical?: number | string | undefined;
+    vSpace?: number | string | undefined;
+    width?: number | string | undefined;
+    widths?: string | undefined;
+    wordSpacing?: string | undefined;
+    wrap?: string | undefined;
+    writingMode?: string | undefined;
+    writingSuggestions?: string | undefined;
+    x?: string | undefined;
+    x1?: string | undefined;
+    x2?: string | undefined;
+    xChannelSelector?: string | undefined;
+    xHeight?: number | string | undefined;
+    xLinkActuate?: string | undefined;
+    xLinkArcRole?: string | undefined;
+    xLinkHref?: string | undefined;
+    xLinkRole?: string | undefined;
+    xLinkShow?: string | undefined;
+    xLinkTitle?: string | undefined;
+    xLinkType?: string | undefined;
+    xmlBase?: string | undefined;
+    xmlLang?: string | undefined;
+    xmlns?: string | undefined;
+    xmlnsXLink?: string | undefined;
+    xmlSpace?: string | undefined;
+    y?: string | undefined;
+    y1?: string | undefined;
+    y2?: string | undefined;
+    yChannelSelector?: string | undefined;
+    z?: string | undefined;
+    zoomAndPan?: string | undefined;
+    [PropertyName: string]: boolean | number | string | null | undefined | Array<string | number>;
+}
+type ElementContent = ElementContentMap[keyof ElementContentMap];
+interface ElementContentMap {
+    comment: Comment$1;
+    element: Element$1;
+    text: Text$2;
+}
+type RootContent = RootContentMap[keyof RootContentMap];
+interface RootContentMap {
+    comment: Comment$1;
+    doctype: Doctype;
+    element: Element$1;
+    text: Text$2;
+}
+interface Node$2 extends Node$1 {
+    data?: Data$1 | undefined;
+}
+interface Literal$1 extends Node$2 {
+    value: string;
+}
+interface Parent extends Node$2 {
+    children: RootContent[];
+}
+interface Comment$1 extends Literal$1 {
+    type: "comment";
+    data?: CommentData | undefined;
+}
+interface CommentData extends Data$1 {
+}
+interface Doctype extends Node$1 {
+    type: "doctype";
+    data?: DoctypeData | undefined;
+}
+interface DoctypeData extends Data$1 {
+}
+interface Element$1 extends Parent {
+    type: "element";
+    tagName: string;
+    properties: Properties$1;
+    children: ElementContent[];
+    content?: Root | undefined;
+    data?: ElementData | undefined;
+}
+interface ElementData extends Data$1 {
+}
+interface Root extends Parent {
+    type: "root";
+    children: RootContent[];
+    data?: RootData | undefined;
+}
+interface RootData extends Data$1 {
+}
+interface Text$2 extends Literal$1 {
+    type: "text";
+    data?: TextData | undefined;
+}
+interface TextData extends Data$1 {
+}
+type ScopePattern = string;
+interface IRawTheme {
+    readonly name?: string;
+    readonly settings: IRawThemeSetting[];
+}
+interface IRawThemeSetting {
+    readonly name?: string;
+    readonly scope?: ScopePattern | ScopePattern[];
+    readonly settings: {
+        readonly fontStyle?: string;
+        readonly foreground?: string;
+        readonly background?: string;
+    };
+}
+const enum FontStyle {
+    NotSet = -1,
+    None = 0,
+    Italic = 1,
+    Bold = 2,
+    Underline = 4,
+    Strikethrough = 8
+}
+interface StateStack {
+    _stackElementBrand: void;
+    readonly depth: number;
+    clone(): StateStack;
+    equals(other: StateStack): boolean;
+}
+interface Nothing {
+}
+type StringLiteralUnion<T extends U, U = string> = T | (U & Nothing);
+type PlainTextLanguage = "text" | "plaintext" | "txt" | "plain";
+type AnsiLanguage = "ansi";
+type SpecialLanguage = PlainTextLanguage | AnsiLanguage;
+interface DecorationOptions {
+    decorations?: DecorationItem[];
+}
+interface DecorationItem {
+    start: OffsetOrPosition;
+    end: OffsetOrPosition;
+    tagName?: string;
+    properties?: Element$1["properties"];
+    transform?: (element: Element$1, type: DecorationTransformType) => Element$1 | void;
+    alwaysWrap?: boolean;
+}
+type DecorationTransformType = "wrapper" | "line" | "token";
+interface Position$1 {
+    line: number;
+    character: number;
+}
+type Offset = number;
+type OffsetOrPosition = Position$1 | Offset;
+type SpecialTheme = "none";
+interface ThemeRegistrationRaw extends IRawTheme, Partial<Omit<ThemeRegistration, "name" | "settings">> {
+}
+interface ThemeRegistration extends Partial<ThemeRegistrationResolved> {
+}
+interface ThemeRegistrationResolved extends IRawTheme {
+    name: string;
+    displayName?: string;
+    type: "light" | "dark";
+    settings: IRawThemeSetting[];
+    tokenColors?: IRawThemeSetting[];
+    fg: string;
+    bg: string;
+    colorReplacements?: Record<string, string>;
+    colors?: Record<string, string>;
+    $schema?: string;
+    semanticHighlighting?: boolean;
+    semanticTokenColors?: Record<string, string>;
+}
+type ThemeRegistrationAny = ThemeRegistrationRaw | ThemeRegistration | ThemeRegistrationResolved;
+interface GrammarState {
+    readonly lang: string;
+    readonly theme: string;
+    readonly themes: string[];
+    getInternalStack: (theme?: string) => StateStack | undefined;
+    getScopes: (theme?: string) => string[] | undefined;
+}
+interface CodeToTokensBaseOptions<Languages extends string = string, Themes extends string = string> extends TokenizeWithThemeOptions {
+    lang?: Languages | SpecialLanguage;
+    theme?: Themes | ThemeRegistrationAny | SpecialTheme;
+}
+type CodeToTokensOptions<Languages extends string = string, Themes extends string = string> = Omit<CodeToTokensBaseOptions<Languages, Themes>, "theme"> & CodeOptionsThemes<Themes>;
+interface ThemedTokenScopeExplanation {
+    scopeName: string;
+    themeMatches?: IRawThemeSetting[];
+}
+interface ThemedTokenExplanation {
+    content: string;
+    scopes: ThemedTokenScopeExplanation[];
+}
+interface ThemedToken extends TokenStyles, TokenBase {
+}
+interface TokenBase {
+    content: string;
+    offset: number;
+    type?: number;
+    explanation?: ThemedTokenExplanation[];
+}
+interface TokenStyles {
+    color?: string;
+    bgColor?: string;
+    fontStyle?: FontStyle;
+    htmlStyle?: Record<string, string>;
+    htmlAttrs?: Record<string, string>;
+}
+interface TokenizeWithThemeOptions {
+    includeExplanation?: boolean | "scopeName" | "tokenType";
+    colorReplacements?: Record<string, string | Record<string, string>>;
+    tokenizeMaxLineLength?: number;
+    tokenizeTimeLimit?: number;
+    grammarState?: GrammarState;
+    grammarContextCode?: string;
+}
+interface TokensResult {
+    tokens: ThemedToken[][];
+    fg?: string;
+    bg?: string;
+    themeName?: string;
+    rootStyle?: string | false;
+    grammarState?: GrammarState;
+}
+interface TransformerOptions {
+    transformers?: ShikiTransformer[];
+}
+interface ShikiTransformerContextMeta {
+}
+interface ShikiTransformerContextCommon {
+    meta: ShikiTransformerContextMeta;
+    options: CodeToHastOptions;
+    codeToHast: (code: string, options: CodeToHastOptions) => Root;
+    codeToTokens: (code: string, options: CodeToTokensOptions) => TokensResult;
+}
+interface ShikiTransformerContextSource extends ShikiTransformerContextCommon {
+    readonly source: string;
+}
+interface ShikiTransformerContext extends ShikiTransformerContextSource {
+    readonly tokens: ThemedToken[][];
+    readonly root: Root;
+    readonly pre: Element$1;
+    readonly code: Element$1;
+    readonly lines: Element$1[];
+    readonly structure: CodeToHastOptions["structure"];
+    addClassToHast: (hast: Element$1, className: string | string[]) => Element$1;
+}
+interface ShikiTransformer {
+    name?: string;
+    enforce?: "pre" | "post";
+    preprocess?: (this: ShikiTransformerContextCommon, code: string, options: CodeToHastOptions) => string | void;
+    tokens?: (this: ShikiTransformerContextSource, tokens: ThemedToken[][]) => ThemedToken[][] | void;
+    root?: (this: ShikiTransformerContext, hast: Root) => Root | void;
+    pre?: (this: ShikiTransformerContext, hast: Element$1) => Element$1 | void;
+    code?: (this: ShikiTransformerContext, hast: Element$1) => Element$1 | void;
+    line?: (this: ShikiTransformerContext, hast: Element$1, line: number) => Element$1 | void;
+    span?: (this: ShikiTransformerContext, hast: Element$1, line: number, col: number, lineElement: Element$1, token: ThemedToken) => Element$1 | void;
+    postprocess?: (this: ShikiTransformerContextCommon, html: string, options: CodeToHastOptions) => string | void;
+}
+interface CodeOptionsSingleTheme<Themes extends string = string> {
+    theme: ThemeRegistrationAny | StringLiteralUnion<Themes>;
+}
+interface CodeOptionsMultipleThemes<Themes extends string = string> {
+    themes: Partial<Record<string, ThemeRegistrationAny | StringLiteralUnion<Themes>>>;
+    defaultColor?: StringLiteralUnion<"light" | "dark"> | "light-dark()" | false;
+    colorsRendering?: "css-vars" | "none";
+    cssVariablePrefix?: string;
+}
+type CodeOptionsThemes<Themes extends string = string> = CodeOptionsSingleTheme<Themes> | CodeOptionsMultipleThemes<Themes>;
+type CodeToHastOptions<Languages extends string = string, Themes extends string = string> = CodeToHastOptionsCommon<Languages> & CodeOptionsThemes<Themes> & CodeOptionsMeta;
+interface CodeToHastOptionsCommon<Languages extends string = string> extends TransformerOptions, DecorationOptions, Pick<TokenizeWithThemeOptions, "colorReplacements" | "tokenizeMaxLineLength" | "tokenizeTimeLimit" | "grammarState" | "grammarContextCode" | "includeExplanation"> {
+    data?: Record<string, unknown>;
+    lang: StringLiteralUnion<Languages | SpecialLanguage>;
+    rootStyle?: string | false;
+    mergeWhitespaces?: boolean | "never";
+    mergeSameStyleTokens?: boolean;
+    structure?: "classic" | "inline";
+    tabindex?: number | string | false;
+}
+interface CodeOptionsMeta {
+    meta?: {
+        __raw?: string;
+        [key: string]: any;
+    };
+}
+type CodeBlockToken = {
+    content: string;
+    color?: string;
+    colorDark?: string;
+    fontStyle?: CodeBlockFontStyle;
+    word?: boolean;
+};
+type CodeBlockFontStyle = "italic" | "bold" | "underline";
+type CodeBlockDiffKind = "add" | "remove";
+type CodeBlockLevel = "error" | "warning" | "info";
+type CodeBlockLineState = {
+    highlighted?: boolean;
+    diff?: CodeBlockDiffKind;
+    focused?: boolean;
+    level?: CodeBlockLevel;
+};
+type CodeBlockLine = {
+    tokens: CodeBlockToken[];
+    number: number;
+    text: string;
+    state?: CodeBlockLineState;
+    gutter?: string;
+};
+type CodeBlockLineSpec = number[] | string;
+type CodeBlockDiffSpec = {
+    added?: CodeBlockLineSpec;
+    removed?: CodeBlockLineSpec;
+};
+type CodeBlockLevelSpec = Partial<Record<CodeBlockLevel, CodeBlockLineSpec>>;
+type CodeBlockWordSpec = string | {
+    word: string;
+    lines?: CodeBlockLineSpec;
+};
+type CodeBlockThemes = {
+    light: string;
+    dark: string;
+};
+type CodeBlockTransformer = ShikiTransformer;
+type CodeBlockLineActionContext = {
+    line: number;
+    text: string;
+    state?: CodeBlockLineState;
+};
+type CodeBlockLineActionsRender = (context: CodeBlockLineActionContext) => React$1.ReactNode;
+type CodeBlockConfigValue = {
+    language?: string;
+    resolvedLanguage?: string;
+    showLineNumbers: boolean;
+    wrap: boolean;
+    setWrap: (wrap: boolean) => void;
+    wrapControlled: boolean;
+    expanded: boolean;
+    setExpanded: (expanded: boolean) => void;
+    collapsible: boolean;
+    streaming: boolean;
+    contentId: string;
+};
+type CodeBlockLineActionsSide = "end" | "gutter";
+export function useCodeBlockConfig(part: string): CodeBlockConfigValue & {
+    code: string;
+};
+type CodeBlockFoldRegion = {
+    start: number;
+    end: number;
+};
+type CodeBlockProps = {
+    code?: string;
+    language?: string;
+    lines?: CodeBlockLine[];
+    themes?: CodeBlockThemes;
+    highlight?: boolean;
+    showLineNumbers?: boolean;
+    startLine?: number;
+    wrap?: boolean;
+    defaultWrap?: boolean;
+    onWrapChange?: (wrap: boolean) => void;
+    maxLines?: number;
+    variant?: "default" | "ghost";
+    label?: string;
+    highlightedLines?: CodeBlockLineSpec;
+    highlightedWords?: CodeBlockWordSpec[];
+    focusedLines?: CodeBlockLineSpec;
+    diff?: CodeBlockDiffSpec;
+    lineLevels?: CodeBlockLevelSpec;
+    transformers?: CodeBlockTransformer[];
+    streaming?: boolean;
+    selectable?: boolean;
+    selectedLines?: number[];
+    defaultSelectedLines?: number[];
+    onSelectedLinesChange?: (lines: number[]) => void;
+    completeAnnouncement?: string;
+    expanded?: boolean;
+    defaultExpanded?: boolean;
+    onExpandedChange?: (expanded: boolean) => void;
+    foldable?: boolean;
+    foldRegions?: CodeBlockFoldRegion[];
+    folded?: number[];
+    defaultFolded?: number[];
+    onFoldedChange?: (folded: number[]) => void;
+    children?: React$1.ReactNode;
+} & Omit<React$1.ComponentProps<"div">, "children" | "onSelect">;
+export function CodeBlock({ code, language, lines: linesProp, themes, highlight, showLineNumbers, startLine, wrap: wrapProp, defaultWrap, onWrapChange, maxLines, variant, label, highlightedLines, highlightedWords, focusedLines, diff, lineLevels, transformers, streaming, selectable, selectedLines, defaultSelectedLines, onSelectedLinesChange, completeAnnouncement, expanded: expandedProp, defaultExpanded, onExpandedChange, foldable, foldRegions: foldRegionsProp, folded, defaultFolded, onFoldedChange, className, children, ...props }: CodeBlockProps): React$1.JSX.Element;
+export function CodeBlockContent({ className }: {
+    className?: string;
+}): React$1.JSX.Element;
+export function CodeBlockHeader({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CodeBlockTitle({ className, ...props }: React$1.ComponentProps<"div">): React$1.JSX.Element;
+export function CodeBlockLanguage({ className, children, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element | null;
+type CodeBlockCopyButtonProps = {
+    value?: string;
+    timeout?: number;
+    onCopy?: (value: string) => void;
+    onCopyError?: (error: unknown) => void;
+    labels?: {
+        copy?: string;
+        copied?: string;
+    };
+    position?: "auto" | "pinned" | "inline";
+    alwaysVisible?: boolean;
+} & Omit<React$1.ComponentProps<typeof Button$1>, "value" | "onCopy">;
+export function CodeBlockCopyButton({ value, timeout, onCopy, onCopyError, labels, position, alwaysVisible, className, variant, size, children, ...props }: CodeBlockCopyButtonProps): React$1.JSX.Element;
+export function CodeBlockWrapToggle({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element;
+export function CodeBlockExpandButton({ className, children, variant, size, onClick, ...props }: React$1.ComponentProps<typeof Button$1>): React$1.JSX.Element | null;
+type CodeBlockLineActionsProps = {
+    children: CodeBlockLineActionsRender;
+    side?: CodeBlockLineActionsSide;
+};
+type CodeBlockDownloadButtonProps = {
+    value?: string;
+    filename?: string;
+    onDownload?: (filename: string) => void;
+    position?: "auto" | "pinned" | "inline";
+    alwaysVisible?: boolean;
+    label?: string;
+} & Omit<React$1.ComponentProps<typeof Button$1>, "value">;
+export function CodeBlockDownloadButton({ value, filename, onDownload, position, alwaysVisible, label, className, variant, size, children, ...props }: CodeBlockDownloadButtonProps): React$1.JSX.Element;
+export function CodeBlockLineActions({ children, side }: CodeBlockLineActionsProps): null;
+export function useCodeBlockFolding(): {
+    foldable: boolean;
+    regions: CodeBlockFoldRegion[];
+    foldedStarts: number[];
+    toggleFold: (start: number) => void;
+    foldAll: () => void;
+    unfoldAll: () => void;
+};
+export function useCodeBlockSelection(): {
+    selectable: boolean;
+    selectedLines: number[];
+    toggleLine: (line: number, extend: boolean) => void;
+    clearSelection: () => void;
+};
 export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
 export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
 function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
@@ -17491,17 +17502,6 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     onChange?: (isSelected: boolean) => void;
 };
 export function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
-export function Dialog(props: DialogRoot.Props): React$1.JSX.Element;
-type FramedDialogProps = {
-    children?: React$1.ReactNode;
-    title?: string;
-    variant?: "standard" | "fullscreen";
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    gap?: Spacing;
-    paddingInline?: Spacing;
-};
-export function FramedDialog(props: FramedDialogProps): React$1.JSX.Element;
 export function Link({ className, ...props }: Omit<React$1.ComponentPropsWithRef<"a">, "download">): React$1.JSX.Element;
 type AttachmentLinkProps = {
     href: string;

@@ -23,6 +23,7 @@ it('exposes the authored View API without privileged host providers', () => {
     expect(Object.hasOwn(components, 'Root')).toBe(false);
     expect(Object.hasOwn(components, 'FileRequestContext')).toBe(false);
     expect(Object.hasOwn(components, 'FormRequestContext')).toBe(false);
+    expect(Object.hasOwn(components, 'ViewRequestContext')).toBe(false);
 });
 
 it('exposes native chart components without a LongLink data adapter', () => {

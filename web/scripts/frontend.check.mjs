@@ -17,6 +17,30 @@ test('published component provenance matches the implementation exposed to Views
     const exports = new Map(
         checker.getExportsOfModule(checker.getSymbolAtLocation(source)).map((symbol) => [symbol.name, symbol])
     );
+
+    // Keep public bindings behind the LongLink component and hook entry points.
+    for (const statement of source.statements) {
+        assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
+        const target = statement.moduleSpecifier.text;
+        assert.match(target, /^\.\/(adapter|hooks)\//);
+        if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+            for (const specifier of statement.exportClause.elements) {
+                assert.equal(target.startsWith('./hooks/'), /^use[A-Z]/.test(specifier.name.text));
+            }
+        }
+    }
+
+    // Declaration generation must use the same adapters, including its curated SDK subset.
+    const frontend = ts.createSourceFile(
+        'frontend.ts',
+        await readFile(path.join(root, 'scripts/frontend.ts'), 'utf8'),
+        ts.ScriptTarget.Latest,
+        true
+    );
+    for (const statement of frontend.statements.filter(ts.isExportDeclaration)) {
+        assert.match(statement.moduleSpecifier?.text ?? '', /^\.\.\/src\/views\/(adapter|hooks)\//);
+    }
+
     const catalog = JSON.parse(
         await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
     );

@@ -4,15 +4,15 @@ import { transform } from 'sucrase';
 import { CircleX } from 'lucide-react';
 import * as components from './components';
 import { createRoot } from 'react-dom/client';
+import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useConfirm } from '@/components/custom/confirmation';
 import { FileRequestContext } from '@/components/custom/preview';
 import { NativeLoading } from '@/components/custom/native-loading';
 import { FileViewerContext } from '@/components/custom/file-context';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
-import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
     FormRequestContext,
     IconRequestContext,
@@ -264,19 +264,6 @@ function initialize(event: MessageEvent<unknown>): void {
         port.postMessage({ type: 'navigate', path, newTab });
     }
 
-    /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
-    function useApi(path: string): readonly [ViewData, () => Promise<void>] {
-        // Use the full request path as cache identity, including pagination parameters.
-        const { data } = useSuspenseQuery({ queryKey: ['api', path], queryFn: () => request(path) });
-
-        const invalidate = React.useCallback(
-            () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
-            [path]
-        );
-
-        return [data, invalidate];
-    }
-
     port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage | ViewportMessage>) => {
         // Host viewport geometry keeps native dialogs inside the visible portion of long Views.
         if ('type' in reply.data && reply.data.type === 'viewport') {
@@ -377,16 +364,9 @@ function initialize(event: MessageEvent<unknown>): void {
         const bindings = {
             // Keep JSX compilation separate from the public View API.
             __jsx: React.createElement,
-            Fragment: React.Fragment,
-            useState: React.useState,
-            useEffect: React.useEffect,
-            useMemo: React.useMemo,
-            useRef: React.useRef,
             ...components,
             request,
-            navigate,
-            useApi,
-            useConfirm
+            navigate
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
@@ -442,7 +422,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                                 <FileViewerContext value={mountFileViewer}>
                                                     <DialogActivityContext value={modalActivity}>
                                                         <FormRequestContext value={request}>
-                                                            <View params={params} />
+                                                            <ViewRequestContext value={request}>
+                                                                <View params={params} />
+                                                            </ViewRequestContext>
                                                         </FormRequestContext>
                                                     </DialogActivityContext>
                                                 </FileViewerContext>
