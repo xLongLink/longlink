@@ -379,9 +379,3 @@ export { useTable } from '../hooks/use-table';
 export { useComboboxAnchor } from '../hooks/use-combobox-anchor';
 
 export { useTimePicker } from '../hooks/use-time-picker';
-
-export { useCodeBlockConfig } from '../hooks/use-code-block-config';
-
-export { useCodeBlockFolding } from '../hooks/use-code-block-folding';
-
-export { useCodeBlockSelection } from '../hooks/use-code-block-selection';

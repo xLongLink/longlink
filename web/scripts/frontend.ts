@@ -45,9 +45,6 @@ export {
     CodeBlockTitle,
     CodeBlockWrapToggle
 } from '../src/views/adapter/display/code-block';
-export { useCodeBlockConfig } from '../src/views/hooks/use-code-block-config';
-export { useCodeBlockFolding } from '../src/views/hooks/use-code-block-folding';
-export { useCodeBlockSelection } from '../src/views/hooks/use-code-block-selection';
 export { DataTable } from '../src/views/adapter/display/table';
 export { Input } from '../src/views/adapter/form/input';
 export { Textarea } from '../src/views/adapter/form/textarea';

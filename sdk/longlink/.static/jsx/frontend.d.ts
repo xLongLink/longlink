@@ -16525,23 +16525,7 @@ type CodeBlockLineActionContext = {
     state?: CodeBlockLineState;
 };
 type CodeBlockLineActionsRender = (context: CodeBlockLineActionContext) => React$1.ReactNode;
-type CodeBlockConfigValue = {
-    language?: string;
-    resolvedLanguage?: string;
-    showLineNumbers: boolean;
-    wrap: boolean;
-    setWrap: (wrap: boolean) => void;
-    wrapControlled: boolean;
-    expanded: boolean;
-    setExpanded: (expanded: boolean) => void;
-    collapsible: boolean;
-    streaming: boolean;
-    contentId: string;
-};
 type CodeBlockLineActionsSide = "end" | "gutter";
-export function useCodeBlockConfig(part: string): CodeBlockConfigValue & {
-    code: string;
-};
 type CodeBlockFoldRegion = {
     start: number;
     end: number;
@@ -16618,20 +16602,6 @@ type CodeBlockDownloadButtonProps = {
 } & Omit<React$1.ComponentProps<typeof Button$1>, "value">;
 export function CodeBlockDownloadButton({ value, filename, onDownload, position, alwaysVisible, label, className, variant, size, children, ...props }: CodeBlockDownloadButtonProps): React$1.JSX.Element;
 export function CodeBlockLineActions({ children, side }: CodeBlockLineActionsProps): null;
-export function useCodeBlockFolding(): {
-    foldable: boolean;
-    regions: CodeBlockFoldRegion[];
-    foldedStarts: number[];
-    toggleFold: (start: number) => void;
-    foldAll: () => void;
-    unfoldAll: () => void;
-};
-export function useCodeBlockSelection(): {
-    selectable: boolean;
-    selectedLines: number[];
-    toggleLine: (line: number, extend: boolean) => void;
-    clearSelection: () => void;
-};
 export function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
 export function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
 function Label({ className, ...props }: React$1.ComponentProps<"label">): React$1.JSX.Element;
@@ -20623,9 +20593,6 @@ declare const formatTimeValue: typeof NativeFrontend.formatTimeValue;
 declare const mergeTimePickerI18n: typeof NativeFrontend.mergeTimePickerI18n;
 declare const parseTimeInput: typeof NativeFrontend.parseTimeInput;
 declare const parseTimeValue: typeof NativeFrontend.parseTimeValue;
-declare const useCodeBlockConfig: typeof NativeFrontend.useCodeBlockConfig;
-declare const useCodeBlockFolding: typeof NativeFrontend.useCodeBlockFolding;
-declare const useCodeBlockSelection: typeof NativeFrontend.useCodeBlockSelection;
 declare const useComboboxAnchor: typeof NativeFrontend.useComboboxAnchor;
 declare const useDownload: typeof NativeFrontend.useDownload;
 declare const useForm: typeof NativeFrontend.useForm;
