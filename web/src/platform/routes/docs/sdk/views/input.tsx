@@ -18,7 +18,13 @@ export default function InputPage() {
                 {
                     name: 'min / max / step',
                     type: 'string | number',
-                    description: 'Native bounds and step validation for type="number". Use step="any" for decimals.'
+                    description: 'Native number, date, and time constraints. Use step="any" for decimals.'
+                },
+                {
+                    name: 'accept / multiple',
+                    type: 'string / boolean',
+                    description:
+                        'File picker hints and multiple selection for type="file". Validate files in your form schema and on the server.'
                 },
                 {
                     name: 'disabled',
@@ -139,6 +145,18 @@ export function InputExample() {
                     step={1}
                     required
                 />
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="native-date">Due date</FieldLabel>
+                <Input id="native-date" name="due_date" type="date" defaultValue="2026-10-02" required />
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="native-time">Start time</FieldLabel>
+                <Input id="native-time" name="start_time" type="time" required />
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="native-file">Attachment</FieldLabel>
+                <Input id="native-file" name="attachment" type="file" />
             </Field>
             <Field>
                 <FieldLabel htmlFor="native-notes">Notes</FieldLabel>

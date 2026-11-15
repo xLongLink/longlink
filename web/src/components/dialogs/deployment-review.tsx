@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { ArrowRight, RefreshCw } from 'lucide-react';
-import { FieldError } from '@/components/shadcn/field';
+import { Checkbox } from '@/components/shadcn/checkbox';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { CheckboxInput } from '@/components/custom/checkbox-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeTextInput } from '@/components/custom/native-text-input';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
@@ -219,11 +219,19 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                                                         name={`envs.${environment.name}.removed`}
                                                         control={form.control}
                                                         render={({ field }) => (
-                                                            <CheckboxInput
-                                                                label={`Remove ${environment.name}`}
-                                                                value={field.value ?? false}
-                                                                onChange={field.onChange}
-                                                            />
+                                                            <Field orientation="horizontal">
+                                                                <Checkbox
+                                                                    id={`remove-${environment.name}`}
+                                                                    name={field.name}
+                                                                    inputRef={field.ref}
+                                                                    checked={field.value ?? false}
+                                                                    onCheckedChange={field.onChange}
+                                                                    onBlur={field.onBlur}
+                                                                />
+                                                                <FieldLabel htmlFor={`remove-${environment.name}`}>
+                                                                    Remove {environment.name}
+                                                                </FieldLabel>
+                                                            </Field>
                                                         )}
                                                     />
                                                 )}

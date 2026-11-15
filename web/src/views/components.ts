@@ -97,13 +97,7 @@ export { Controller, FormProvider } from './adapter/form/form';
 export { z, zodResolver } from './adapter/form/validation';
 
 /** @category Form */
-export { DateInput } from './adapter/form/date-input';
-
-/** @category Form */
 export { Calendar } from './adapter/form/calendar';
-
-/** @category Form */
-export { TimeInput } from './adapter/form/time-input';
 
 /** @category Form */
 export {
@@ -159,16 +153,13 @@ export {
 } from './adapter/form/input-group';
 
 /** @category Form */
-export { Checkbox, CheckboxInput } from './adapter/form/checkbox';
+export { Checkbox } from './adapter/form/checkbox';
 
 /** @category Form */
 export { Switch } from './adapter/form/switch';
 
 /** @category Form */
 export { Slider, SliderControl, SliderTrack, SliderRange, SliderThumb } from './adapter/form/slider';
-
-/** @category Form */
-export { FileInput } from './adapter/form/file-input';
 
 /** @category Form */
 export {

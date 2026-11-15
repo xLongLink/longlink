@@ -21,9 +21,6 @@ import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
-import { DateInputExample } from './views/date-input';
-import { FileInputExample } from './views/file-input';
-import { TimeInputExample } from './views/time-input';
 import { Divider } from '@/components/custom/divider';
 import { RadioGroupExample } from './views/radio-group';
 import { Currency } from '@/components/custom/currency';
@@ -93,7 +90,6 @@ const previews = new Map(
         ),
         Checkbox: <CheckboxExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
-        DateInput: <DateInputExample />,
         Dialog: (
             <Card size="sm" className="w-full">
                 <CardHeader>
@@ -120,7 +116,6 @@ const previews = new Map(
                 </EmptyHeader>
             </Empty>
         ),
-        FileInput: <FileInputExample />,
         FileViewer: (
             <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">
                 <CardHeader>
@@ -200,7 +195,6 @@ const previews = new Map(
         ),
         Text: <TextExample />,
         Textarea: <TextareaExample />,
-        TimeInput: <TimeInputExample />,
         Timestamp: <TimestampExample />
     })
 );

@@ -118,29 +118,8 @@ declare function request<T = unknown>(
  */
 declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
 
-/** @category Form @group DateInput */
-type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-
-/** @category Form @group TimeInput */
-type ISOTimeString = string & { readonly __brand: 'ISOTimeString' };
-
 /** @category Display @group Table */
 type ColumnWidth = { type: 'proportional'; value: number; minWidth?: number } | { type: 'pixel'; value: number };
-
-/** @category Form @group DateInput */
-type DateInputProps = Parameters<typeof NativeFrontend.DateInput>[0];
-
-/** Shared props for form controls. */
-type FieldProps = {
-    label: string;
-    description?: string;
-    /** Includes the themed control's value under this form submission name. */
-    name?: string;
-    /** Requires a value before native form submission. */
-    required?: boolean;
-    /** Prevents interaction and excludes the field from submission. */
-    disabled?: boolean;
-};
 
 /** @category Display */
 declare function Text(props: Parameters<typeof NativeFrontend.Text>[0]): React.JSX.Element;
@@ -162,15 +141,6 @@ declare function Token(props: {
     /** Shows a remove button and runs when it is clicked. */
     onRemove?: () => void;
 }): React.JSX.Element;
-
-/** @category Form */
-declare function CheckboxInput(
-    props: FieldProps & {
-        value?: boolean | 'indeterminate';
-        defaultChecked?: boolean;
-        onChange?: (value: boolean) => void;
-    }
-): React.JSX.Element;
 
 /** @category Action */
 declare function DataPagination(props: {
@@ -13960,13 +13930,6 @@ namespace DialogRoot {
 }
 export function Dialog(props: DialogRoot.Props): React$1.JSX.Element;
 type Spacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
-type FieldProps = {
-    label: string;
-    description?: string;
-    name?: string;
-    required?: boolean;
-    disabled?: boolean;
-};
 type FramedDialogProps = {
     children?: React$1.ReactNode;
     title?: string;
@@ -17244,41 +17207,6 @@ function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
 export function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
     buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
 }): React$1.JSX.Element;
-type ISODateString = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-type ISOTimeString = string & {
-    readonly __brand: "ISOTimeString";
-};
-export function DateInput({ ref, ...props }: FieldProps & Pick<React$1.ComponentProps<"input">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
-    value?: ISODateString;
-    defaultValue?: ISODateString;
-    onChange?: (value: ISODateString | undefined) => void;
-    min?: ISODateString;
-    max?: ISODateString;
-    dateConstraints?: readonly ((date: Date) => boolean)[];
-    placeholder?: string;
-}): React$1.JSX.Element;
-export function TimeInput({ ref, ...props }: FieldProps & Pick<React$1.ComponentProps<"input">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
-    value?: ISOTimeString;
-    defaultValue?: ISOTimeString;
-    onChange?: (value: ISOTimeString | undefined) => void;
-    min?: ISOTimeString;
-    max?: ISOTimeString;
-    hasSeconds?: boolean;
-    hourFormat?: "12h" | "24h";
-    increment?: number;
-    placeholder?: string;
-}): React$1.JSX.Element;
-type FileInputProps = FieldProps & Pick<React$1.ComponentProps<"button">, "ref" | "onBlur" | "aria-invalid" | "aria-describedby"> & {
-    value?: File | File[] | null;
-    onChange?: (value: File | File[] | null) => void;
-    accept?: string;
-    multiple?: boolean;
-    maxSize?: number;
-    maxFiles?: number;
-    placeholder?: string;
-    mode?: "input" | "dropzone";
-};
-export function FileInput({ ref, ...props }: FileInputProps): React$1.JSX.Element;
 function PopoverContent({ className, align, alignOffset, side, sideOffset, ...props }: PopoverPopup.Props & Pick<PopoverPositioner.Props, "align" | "alignOffset" | "side" | "sideOffset">): React$1.JSX.Element;
 export type TimePickerTime = {
     hour: number;
@@ -20503,7 +20431,6 @@ declare const DataGridPagination: typeof NativeFrontend.DataGridPagination;
 declare const DataGridScrollArea: typeof NativeFrontend.DataGridScrollArea;
 declare const DataGridTable: typeof NativeFrontend.DataGridTable;
 declare const DataTable: typeof NativeFrontend.DataTable;
-declare const DateInput: typeof NativeFrontend.DateInput;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const DialogClose: typeof NativeFrontend.DialogClose;
 declare const DialogContent: typeof NativeFrontend.DialogContent;
@@ -20547,7 +20474,6 @@ declare const FieldLegend: typeof NativeFrontend.FieldLegend;
 declare const FieldSeparator: typeof NativeFrontend.FieldSeparator;
 declare const FieldSet: typeof NativeFrontend.FieldSet;
 declare const FieldTitle: typeof NativeFrontend.FieldTitle;
-declare const FileInput: typeof NativeFrontend.FileInput;
 declare const FileType: typeof NativeFrontend.FileType;
 declare const FileViewer: typeof NativeFrontend.FileViewer;
 declare const Filters: typeof NativeFrontend.Filters;
@@ -20651,7 +20577,6 @@ declare const TabsContent: typeof NativeFrontend.TabsContent;
 declare const TabsList: typeof NativeFrontend.TabsList;
 declare const TabsTrigger: typeof NativeFrontend.TabsTrigger;
 declare const Textarea: typeof NativeFrontend.Textarea;
-declare const TimeInput: typeof NativeFrontend.TimeInput;
 declare const TimePicker: typeof NativeFrontend.TimePicker;
 type TimePickerActionProps = NativeFrontend.TimePickerActionProps;
 type TimePickerApi = NativeFrontend.TimePickerApi;

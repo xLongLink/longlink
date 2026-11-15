@@ -215,7 +215,7 @@
             "name": "Input",
             "category": "Form",
             "introduction": "Native shadcn Input with HTML input attributes and DOM change events.",
-            "guidance": "Compose with Field, FieldLabel, FieldDescription, and FieldError. Use InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupButton, and InputGroupText for addons.",
+            "guidance": "Compose with Field, FieldLabel, FieldDescription, and FieldError. Use type=\"date\", type=\"time\", or type=\"file\" for browser-native pickers. For files, read event.currentTarget.files and keep the input uncontrolled; React Hook Form and the form schema own selection and validation. Use InputGroup, InputGroupInput, InputGroupTextarea, InputGroupAddon, InputGroupButton, and InputGroupText for addons.",
             "properties": [
                 {
                     "name": "name / type / required / disabled / readOnly / maxLength",
@@ -225,17 +225,22 @@
                 {
                     "name": "min / max / step",
                     "type": "string | number",
-                    "description": "Native bounds and step validation for type=\"number\". Use step=\"any\" for decimals."
+                    "description": "Native number, date, and time constraints. Use step=\"any\" for decimals."
                 },
                 {
                     "name": "onChange",
                     "type": "ChangeEventHandler<HTMLInputElement>",
-                    "description": "DOM event; read event.currentTarget.value."
+                    "description": "DOM event; read event.currentTarget.value, or event.currentTarget.files for file inputs."
                 },
                 {
                     "name": "value / defaultValue",
                     "type": "string | number",
-                    "description": "Controlled or uncontrolled value."
+                    "description": "Controlled or uncontrolled value. File inputs remain uncontrolled."
+                },
+                {
+                    "name": "accept / multiple",
+                    "type": "string / boolean",
+                    "description": "File picker hints and multiple selection. Validate file types, counts, and sizes in the form schema and on the server."
                 },
                 {
                     "name": "Field / FieldLabel / FieldDescription / FieldError / FieldSet / FieldLegend / FieldGroup / FieldContent / FieldTitle / FieldSeparator",
@@ -274,7 +279,7 @@
         {
             "name": "Checkbox",
             "category": "Form",
-            "introduction": "Native shadcn Checkbox with Base UI props and default styling. CheckboxInput is the custom labeled adapter.",
+            "introduction": "Native shadcn Checkbox with Base UI props and default styling. Compose Field and FieldLabel for labeled inputs.",
             "properties": [
                 {
                     "name": "checked / defaultChecked",
@@ -820,51 +825,6 @@
             "justification": "Adds scoped navigation, selection, actions, and layout constraints to the native Card composition."
         },
         {
-            "name": "CheckboxInput",
-            "category": "Form",
-            "introduction": "Edits a boolean or indeterminate field.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the checkbox (always rendered for accessibility)."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed below the label."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "boolean | \"indeterminate\"",
-                    "description": "Whether the checkbox is checked, unchecked, or indeterminate."
-                },
-                { "name": "defaultChecked", "type": "boolean", "description": "Initial checked state." },
-                {
-                    "name": "onChange",
-                    "type": "(value: boolean) => void",
-                    "description": "Callback fired when the checkbox state changes."
-                }
-            ],
-            "source": "custom",
-            "justification": "Composes a labeled checkbox with boolean callbacks, native naming, and reset support."
-        },
-        {
             "name": "CodeBlock",
             "reference": "https://reui.io/docs/components/base/code-block",
             "category": "Display",
@@ -1040,69 +1000,6 @@
             ]
         },
         {
-            "name": "DateInput",
-            "category": "Form",
-            "introduction": "Selects a constrained date with standard month and week presentation.",
-            "properties": [
-                { "name": "label", "type": "string", "description": "Label text." },
-                { "name": "description", "type": "string", "description": "Helper text displayed below the label." },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                    "description": "Selected date in YYYY-MM-DD format."
-                },
-                {
-                    "name": "defaultValue",
-                    "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                    "description": "Initial value."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: `${number}${number}${number}${number}-${number}${number}-${number}${number}` | undefined) => void",
-                    "description": "Callback invoked when the selected date changes."
-                },
-                {
-                    "name": "min",
-                    "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                    "description": "Minimum selectable date (YYYY-MM-DD)."
-                },
-                {
-                    "name": "max",
-                    "type": "`${number}${number}${number}${number}-${number}${number}-${number}${number}`",
-                    "description": "Maximum selectable date (YYYY-MM-DD)."
-                },
-                {
-                    "name": "dateConstraints",
-                    "type": "readonly ((date: Date) => boolean)[]",
-                    "description": "Additional constraints applied to the themed calendar picker."
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown in the text input.",
-                    "default": "Select a date"
-                }
-            ],
-            "source": "custom",
-            "reference": "https://ui.shadcn.com/docs/components/base/date-picker",
-            "justification": "Composes InputGroup, Popover, and Calendar with canonical ISO dates, editable drafts, and native constraints."
-        },
-        {
             "name": "Dialog",
             "category": "Layouts",
             "source": "custom",
@@ -1238,74 +1135,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/empty"
-        },
-        {
-            "name": "FileInput",
-            "category": "Form",
-            "introduction": "Selects files with explicit upload constraints; uploading remains a Solution operation.",
-            "properties": [
-                { "name": "label", "type": "string", "description": "Accessible label for the file input." },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed between the label and input."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "File | File[] | null",
-                    "description": "Currently selected file(s). Controlled component."
-                },
-                {
-                    "name": "onChange",
-                    "type": "(value: File | File[] | null) => void",
-                    "description": "Callback fired when files are selected or removed."
-                },
-                {
-                    "name": "accept",
-                    "type": "string",
-                    "description": "Accepted file types. Uses the HTML accept attribute format (e.g. \"image/*\", \".pdf,.doc\")."
-                },
-                { "name": "multiple", "type": "boolean", "description": "Allows selecting multiple files." },
-                {
-                    "name": "maxSize",
-                    "type": "number",
-                    "description": "Maximum file size in bytes. Files exceeding this are rejected with an error status."
-                },
-                {
-                    "name": "maxFiles",
-                    "type": "number",
-                    "description": "Maximum file count when multiple selection is enabled."
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Placeholder text shown when no file is selected.",
-                    "default": "(multiple ? 'Choose files' : 'Choose file')"
-                },
-                {
-                    "name": "mode",
-                    "type": "\"input\" | \"dropzone\"",
-                    "description": "Compact input or drag-and-drop area.",
-                    "default": "input"
-                }
-            ],
-            "source": "custom",
-            "justification": "Filters file selections and exposes accepted Files to controlled callers or native FormData; upload ownership stays with the Solution."
         },
         {
             "name": "FileViewer",
@@ -2335,7 +2164,7 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/time-picker",
             "introduction": "Native ReUI time picker with composable input, columns, and footer.",
-            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use custom TimeInput when malformed drafts must remain visible and fail native constraint validation.",
+            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use Input type=\"time\" for a browser-native time input.",
             "properties": [
                 {
                     "name": "value / defaultValue",
@@ -2387,85 +2216,6 @@
                     "description": "Native TimePickerTrigger, TimePickerInput, TimePickerContent, TimePickerPanel, TimePickerColumns, TimePickerColumn, TimePickerFooter, TimePickerNow, TimePickerClear, TimePickerConfirm, and TimePickerValue composition."
                 }
             ]
-        },
-        {
-            "name": "TimeInput",
-            "category": "Form",
-            "introduction": "Custom validated time input composed with native ReUI time columns.",
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Label text for the input (required for accessibility)."
-                },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Description text displayed between the label and input."
-                },
-                {
-                    "name": "name",
-                    "type": "string",
-                    "description": "Includes the themed control's value under this form submission name."
-                },
-                {
-                    "name": "required",
-                    "type": "boolean",
-                    "description": "Requires a value before native form submission."
-                },
-                {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "description": "Prevents interaction and excludes the field from submission."
-                },
-                {
-                    "name": "value",
-                    "type": "ISOTimeString",
-                    "description": "Controlled time value in ISO format (HH:MM or HH:MM:SS)."
-                },
-                { "name": "defaultValue", "type": "ISOTimeString", "description": "Initial value." },
-                {
-                    "name": "onChange",
-                    "type": "(value: ISOTimeString | undefined) => void",
-                    "description": "Callback fired when the time changes. Receives undefined when the input is cleared."
-                },
-                {
-                    "name": "min",
-                    "type": "ISOTimeString",
-                    "description": "Minimum selectable time in ISO format. Values outside the range are rejected."
-                },
-                {
-                    "name": "max",
-                    "type": "ISOTimeString",
-                    "description": "Maximum selectable time in ISO format. Values outside the range are rejected."
-                },
-                {
-                    "name": "hasSeconds",
-                    "type": "boolean",
-                    "description": "Includes seconds in the time display and parsing.",
-                    "default": false
-                },
-                {
-                    "name": "hourFormat",
-                    "type": "\"12h\" | \"24h\"",
-                    "description": "12-hour or 24-hour time display.",
-                    "default": "12h"
-                },
-                {
-                    "name": "increment",
-                    "type": "number",
-                    "description": "Number of minutes to add or subtract when the user presses the up or down arrow key.",
-                    "default": 1
-                },
-                {
-                    "name": "placeholder",
-                    "type": "string",
-                    "description": "Empty-field text, replaced by a format hint on focus.",
-                    "default": "Select a time"
-                }
-            ],
-            "source": "custom",
-            "justification": "Keeps malformed or forbidden drafts visible instead of silently restoring them; preserves ISO values, controlled ownership, and native constraints."
         },
         {
             "name": "Timestamp",

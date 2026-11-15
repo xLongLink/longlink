@@ -67,6 +67,15 @@ it('validates the shipped task form, retains the file and draft on failure, and 
             expect(document.querySelectorAll('[role="alert"]').length).toBeGreaterThan(0);
 
             await React.act(async () => user.type(title, 'Review invoice'));
+
+            // Native file inputs leave size validation to the form schema before any scoped write.
+            await React.act(async () => user.upload(upload, new File([new Uint8Array(10485761)], 'oversized.pdf')));
+            await React.act(async () => {
+                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+            });
+            expect(writes).toEqual([]);
+            expect(form.textContent).toContain('Choose a file smaller than 10 MB.');
+
             await React.act(async () => user.upload(upload, file));
             await React.act(async () => {
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
@@ -79,7 +88,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
             ]);
             expect(document.contains(form)).toBe(true);
             expect(title.value).toBe('Review invoice');
-            expect(form.textContent).toContain('invoice.pdf');
+            expect(upload.files?.[0]).toBe(file);
             expect(form.textContent).toContain('Could not create the task. Please try again.');
 
             await React.act(async () => {

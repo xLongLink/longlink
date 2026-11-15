@@ -47,20 +47,21 @@ function TaskForm({ onSuccess, onCancel }) {
                         name="attachment"
                         control={form.control}
                         render={({ field, fieldState }) => (
-                            <div className="flex flex-col gap-2">
-                                <FileInput
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="task-attachment">Attachment</FieldLabel>
+                                <Input
+                                    id="task-attachment"
+                                    name={field.name}
+                                    type="file"
                                     ref={field.ref}
                                     onBlur={field.onBlur}
-                                    label="Attachment"
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    maxSize={10485760}
+                                    onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
                                     aria-invalid={fieldState.invalid}
                                     aria-describedby="task-attachment-error"
                                     required
                                 />
                                 <FieldError id="task-attachment-error" errors={[fieldState.error]} />
-                            </div>
+                            </Field>
                         )}
                     />
                     <Stack direction="horizontal" justify="end" gap={2}>

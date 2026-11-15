@@ -6,7 +6,6 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
 import { Step, Wizard } from '@/components/custom/wizard';
-import { NativeFileInput } from '@/components/custom/file-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -128,23 +127,39 @@ export function ComputeRegistration({ onSuccess, ...dialogProps }: DialogProps &
                                     Connect your cluster
                                 </h2>
                                 <Stack gap={3}>
-                                    <NativeFileInput
-                                        label="Kubeconfig file"
-                                        accept=".yaml,.yml"
-                                        value={file}
-                                        status={
-                                            fileRead.kind === 'error'
-                                                ? { type: 'error', message: fileRead.message }
-                                                : undefined
-                                        }
-                                        onChange={(files) => {
-                                            // Clear previous contents immediately so invalid or pending files cannot submit stale YAML.
-                                            const selected = Array.isArray(files) ? (files[0] ?? null) : files;
-                                            setFile(selected);
-                                            setFileRead({ kind: selected ? 'reading' : 'idle' });
-                                            form.setValue('kubeconfig', '');
-                                        }}
-                                    />
+                                    <Field data-invalid={fileRead.kind === 'error'}>
+                                        <FieldLabel htmlFor="compute-kubeconfig-file">Kubeconfig file</FieldLabel>
+                                        <Input
+                                            id="compute-kubeconfig-file"
+                                            type="file"
+                                            accept=".yaml,.yml"
+                                            aria-invalid={fileRead.kind === 'error'}
+                                            aria-describedby={
+                                                fileRead.kind === 'error' ? 'compute-file-error' : undefined
+                                            }
+                                            onChange={(event) => {
+                                                // Replacing a file invalidates both the previous read and its YAML.
+                                                const selected = event.target.files?.[0] ?? null;
+                                                form.setValue('kubeconfig', '');
+
+                                                if (selected && !/\.ya?ml$/i.test(selected.name)) {
+                                                    setFile(null);
+                                                    setFileRead({
+                                                        kind: 'error',
+                                                        message: `"${selected.name}" is not an accepted file type`
+                                                    });
+
+                                                    return;
+                                                }
+
+                                                setFile(selected);
+                                                setFileRead({ kind: selected ? 'reading' : 'idle' });
+                                            }}
+                                        />
+                                        {fileRead.kind === 'error' && (
+                                            <FieldError id="compute-file-error">{fileRead.message}</FieldError>
+                                        )}
+                                    </Field>
                                     <Controller
                                         name="kubeconfig"
                                         control={form.control}
