@@ -1,12 +1,29 @@
 import { it, expect, vi } from 'vitest';
 import { ReportedError } from '@/lib/reported';
-import { Link } from '@/components/custom/link';
 // @vitest-environment happy-dom
 import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
+import { Link } from '@/components/longlink/action/link';
 import { FileRequestContext } from '@/components/custom/preview';
 import { LinkNavigationContext } from '@/components/custom/contexts';
+
+it.each(['navigation', 'action'] as const)('ignores injected class overrides on a %s link', (kind) => {
+    const overrides = { className: 'hidden' };
+    const output = renderStatic(
+        kind === 'navigation' ? (
+            <Link {...overrides} href="/orders">
+                Orders
+            </Link>
+        ) : (
+            <Link {...overrides} onClick={() => {}}>
+                Orders
+            </Link>
+        )
+    );
+
+    expect(output.querySelector('a, button')?.classList.contains('hidden')).toBe(false);
+});
 
 it('keeps a Solution-relative destination on the rendered link', () => {
     // Act
@@ -353,14 +370,7 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
 
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-            <Link
-                href="/invoices"
-                ref={anchorRef}
-                target="_blank"
-                rel="nofollow"
-                className="custom-link"
-                title="Invoices"
-            >
+            <Link href="/invoices" ref={anchorRef} target="_blank" rel="nofollow" title="Invoices">
                 <strong>Invoices</strong>
             </Link>
         </LinkNavigationContext>,
@@ -371,7 +381,6 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
             expect(anchorRef.current).toBe(anchor);
             expect(anchor.firstElementChild?.tagName).toBe('STRONG');
             expect(anchor.title).toBe('Invoices');
-            expect(anchor.classList.contains('custom-link')).toBe(true);
             expect(anchor.rel).toBe('nofollow noopener noreferrer');
             let preventedByLink = true;
 

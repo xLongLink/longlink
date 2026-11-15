@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Link } from '@/components/custom/link';
+import { Link } from '@/components/longlink/action/link';
 import { Dialog } from '@/components/custom/native-dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';

@@ -1,7 +1,7 @@
 import { cn } from 'cn';
-import { NavigationLink } from './link';
 import type { ComponentProps, MouseEvent } from 'react';
 import { Card as Surface } from '@/components/shadcn/card';
+import { NavigationLink } from '@/components/longlink/action/link';
 
 /** Surface gestures must not steal nested controls, portal events, or text selection. */
 function isSurfaceActivation(event: MouseEvent<HTMLElement>) {

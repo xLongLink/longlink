@@ -15897,7 +15897,7 @@ const CardAction$1: ViewComponent<typeof CardAction>;
 const CardContent$1: ViewComponent<typeof CardContent>;
 const CardFooter$1: ViewComponent<typeof CardFooter>;
 const InteractiveCard$1: ViewComponent<typeof InteractiveCard>;
-type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type"> & ({
+type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type" | "className"> & ({
     href: string;
     preview: string;
     download?: never;
@@ -15913,7 +15913,7 @@ type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" |
     download?: never;
     onClick: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 });
-type LinkProps = (Omit<React$1.ComponentPropsWithRef<"a">, "download"> & {
+type LinkProps = (Omit<React$1.ComponentPropsWithRef<"a">, "download" | "className"> & {
     href: string;
     preview?: never;
     download?: never;

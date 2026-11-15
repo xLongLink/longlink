@@ -2,13 +2,13 @@ import { cn } from 'cn';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { resolveNavigationUrl } from '@/lib/url';
-import { LinkNavigationContext } from './contexts';
 import { Spinner } from '@/components/shadcn/spinner';
-import { FileRequestContext, useDownload } from './preview';
+import { LinkNavigationContext } from '@/components/custom/contexts';
 import { buttonVariants } from '@/components/longlink/action/button';
+import { FileRequestContext, useDownload } from '@/components/custom/preview';
 import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
 
-type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type'> &
+type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type' | 'className'> &
     (
         | {
               href: string;
@@ -31,7 +31,7 @@ type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type'>
     );
 
 type LinkProps =
-    | (Omit<ComponentPropsWithRef<'a'>, 'download'> & {
+    | (Omit<ComponentPropsWithRef<'a'>, 'download' | 'className'> & {
           href: string;
           preview?: never;
           download?: never;
@@ -108,7 +108,7 @@ export function Link(props: LinkProps) {
         return <ActionLink {...props} />;
     }
 
-    const { className, disabled, onClick, ...navigation } = props;
+    const { disabled, onClick, ...navigation } = props;
 
     // Disabled navigation remains focusable without exposing an active destination.
     return (
@@ -129,8 +129,7 @@ export function Link(props: LinkProps) {
             }}
             className={cn(
                 buttonVariants({ variant: 'link', size: null }),
-                'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
-                className
+                'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
             )}
         />
     );
@@ -144,7 +143,6 @@ function ActionLink({
     disabled = false,
     onClick,
     onKeyDown,
-    className,
     children,
     ...props
 }: ActionLinkProps) {
@@ -223,8 +221,7 @@ function ActionLink({
                 }}
                 className={cn(
                     buttonVariants({ variant: 'link', size: null }),
-                    'gap-1.5 align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
-                    className
+                    'gap-1.5 align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
                 )}
             >
                 {isPending && (
