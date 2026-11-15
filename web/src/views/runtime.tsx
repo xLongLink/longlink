@@ -41,7 +41,6 @@ import {
     type ViewportMessage
 } from './protocol';
 import '../index.css';
-import './dialog.css';
 
 declare global {
     interface Window {
