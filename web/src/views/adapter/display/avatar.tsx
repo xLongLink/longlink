@@ -1,6 +1,6 @@
 import { viewComponent } from '../props';
 import * as avatar from '@/components/shadcn/avatar';
-import * as generated from '@/components/custom/generated-avatar';
+import * as generated from '@/components/longlink/avatar';
 
 export const GeneratedAvatar = viewComponent(generated.GeneratedAvatar);
 

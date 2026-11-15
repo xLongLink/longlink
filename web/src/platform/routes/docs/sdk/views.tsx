@@ -25,12 +25,12 @@ import { Currency } from '@/components/custom/currency';
 import { DropdownMenuExample } from './views/dropdown-menu';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { FileText, FolderCode, ImageIcon } from 'lucide-react';
+import { componentDocumentation } from '@/platform/publications';
 import { GeneratedAvatarExample } from './views/generated-avatar';
 import { Heading as ViewHeading } from '@/components/custom/heading';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { viewHooks, documentationCategories } from '@/lib/documentation';
-import { componentDocumentation } from '@/platform/component-documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/shadcn/empty';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
@@ -308,8 +308,6 @@ export default function Item({ params }) {
                                                 {component.category === 'Action' || component.category === 'Form'
                                                     ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
                                                     : component.label}
-                                                {' · '}
-                                                {component.sourceLabel}
                                             </span>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}

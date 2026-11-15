@@ -7,9 +7,9 @@ import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
 import {
     DropdownMenu,

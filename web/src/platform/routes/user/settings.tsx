@@ -9,9 +9,9 @@ import { UserRound, Building2 } from 'lucide-react';
 import { Separator } from '@/components/shadcn/separator';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
+import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */

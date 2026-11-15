@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { GeneratedAvatar } from '@/components/longlink/avatar';
 
 /** Documents GeneratedAvatar in LongLink Views. */
 export default function GeneratedAvatarPage() {

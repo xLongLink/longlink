@@ -1,10 +1,10 @@
+import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
-import { Circle, ExternalLink } from 'lucide-react';
 import { documentationLastUpdated } from '@/lib/documentation';
+import { componentDocumentation } from '@/platform/publications';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { componentDocumentation } from '@/platform/component-documentation';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -121,29 +121,9 @@ export default function ViewLayout({
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Stack gap={0}>
-                    <h1 className="font-semibold tracking-tight text-4xl" id="introduction">
-                        {component.label}
-                    </h1>
-                    {!runtime && (
-                        <p className="text-xs text-muted-foreground">
-                            {component.reference ? (
-                                <a
-                                    href={component.reference}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 underline underline-offset-4"
-                                >
-                                    {component.sourceLabel}
-                                    <ExternalLink className="size-3" aria-hidden="true" />
-                                    <span className="sr-only"> (opens in a new tab)</span>
-                                </a>
-                            ) : (
-                                `${component.sourceLabel}: ${component.justification}`
-                            )}
-                        </p>
-                    )}
-                </Stack>
+                <h1 className="font-semibold tracking-tight text-4xl" id="introduction">
+                    {component.label}
+                </h1>
                 <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
                     <CodeBlockCopyButton />
                 </CodeBlock>

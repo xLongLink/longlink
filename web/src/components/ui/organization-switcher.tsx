@@ -5,9 +5,9 @@ import { ChevronsUpDown } from 'lucide-react';
 import { SidebarContext } from '@/lib/sidebar';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
+import { GeneratedAvatar } from '@/components/longlink/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { Button, buttonVariants } from '@/components/shadcn/button';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
     DropdownMenu,

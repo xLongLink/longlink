@@ -3,7 +3,7 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { renderStatic, withMounted } from '../../render';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { GeneratedAvatar } from '@/components/longlink/avatar';
 
 it('recovers failed URLs to stable artwork and retries a newly supplied source', async () => {
     function Owner() {

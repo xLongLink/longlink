@@ -41,6 +41,8 @@ def test_docs_command_resolves_a_component_name_case_insensitively(capsys: pytes
     assert "undefined" not in output
     assert "onClick" in output
     assert "Example" not in output
+    assert "Source:" not in output
+    assert "https://ui.shadcn.com/" not in output
 
 
 def test_docs_command_reports_an_unknown_component_without_a_traceback(capsys: pytest.CaptureFixture[str]) -> None:
