@@ -61,9 +61,9 @@ export default function Users() {
                         }
                     ]}
                 />
-                <Stack as="footer" align="center" paddingBlock={2}>
+                <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={users.total} />
-                </Stack>
+                </footer>
             </Stack>
         </Stack>
     );

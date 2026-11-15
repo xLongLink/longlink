@@ -80,9 +80,9 @@ export default function Compute() {
                         }
                     ]}
                 />
-                <Stack as="footer" align="center" paddingBlock={2}>
+                <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={computes.total} />
-                </Stack>
+                </footer>
             </Stack>
             {dialog?.kind === 'registration' && (
                 <ComputeRegistration

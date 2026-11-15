@@ -85,9 +85,9 @@ export default function Organizations() {
                         }
                     ]}
                 />
-                <Stack as="footer" align="center" paddingBlock={2}>
+                <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={organizations.total} />
-                </Stack>
+                </footer>
             </Stack>
             {metadata && (
                 <OrganizationMetadata

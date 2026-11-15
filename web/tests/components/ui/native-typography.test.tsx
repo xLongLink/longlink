@@ -3,14 +3,14 @@ import { act, createRef } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Text } from '@/components/custom/text';
 import userEvent from '@testing-library/user-event';
+import { Heading } from '@/components/custom/heading';
 import { renderStatic, withMounted } from '../../render';
-import { NativeHeading } from '@/components/custom/native-heading';
 
 it('preserves heading targets while separating the accessible level from visual sizing', () => {
     const output = renderStatic(
-        <NativeHeading id="account" level={4} accessibilityLevel={1}>
+        <Heading id="account" level={4} accessibilityLevel={1}>
             Account
-        </NativeHeading>
+        </Heading>
     );
 
     const heading = output.querySelector('#account');
@@ -26,9 +26,9 @@ it('forwards native heading refs and focus without introducing a wrapper', async
     const user = userEvent.setup();
 
     await withMounted(
-        <NativeHeading ref={ref} level={3} accessibilityLevel={2} tabIndex={0} onFocus={onFocus}>
+        <Heading ref={ref} level={3} accessibilityLevel={2} tabIndex={0} onFocus={onFocus}>
             Account
-        </NativeHeading>,
+        </Heading>,
         async (output) => {
             const heading = output.querySelector('h3');
 

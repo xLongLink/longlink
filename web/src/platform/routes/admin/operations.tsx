@@ -92,9 +92,9 @@ export default function Operations() {
                         }
                     ]}
                 />
-                <Stack as="footer" align="center" paddingBlock={2}>
+                <footer className="flex flex-col items-center py-2">
                     <DataPagination {...pagination} totalItems={operations.total} />
-                </Stack>
+                </footer>
             </Stack>
             {metadata && <OperationMetadata metadata={metadata} onClose={() => setMetadataId(null)} />}
         </Stack>
