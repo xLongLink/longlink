@@ -1,9 +1,9 @@
 import ViewLayout from './view-layout';
-import { FileType } from '@/components/reui/file-type';
+import { FileType } from '@/components/longlink/file-type';
 
 /** Documents FileType in LongLink Views. */
 export default function FileTypePage() {
-    // Preserve the native ReUI properties in the SDK reference.
+    // Document the fixed FileType appearance and supported presets.
     return (
         <ViewLayout
             name="FileType"
@@ -21,8 +21,8 @@ export default function FileTypePage() {
                 },
                 {
                     name: 'size',
-                    type: '"mini" | "xs" | "sm" | "default" | "lg" | "xl"',
-                    description: 'Icon size. Defaults to "default".'
+                    type: '"mini" | "xs" | "sm" | "md" | "lg" | "xl"',
+                    description: 'Icon size. Defaults to "md".'
                 },
                 {
                     name: 'label',
@@ -30,8 +30,7 @@ export default function FileTypePage() {
                     description: 'Replaces the extension label. Use null or an empty string to hide it.'
                 },
                 { name: 'glyph', type: 'boolean', description: 'Shows the family glyph instead of the label.' },
-                { name: 'icon', type: 'ReactNode', description: 'Custom icon replacing the label and family glyph.' },
-                { name: 'labelClassName', type: 'string', description: 'Classes applied to the label badge.' }
+                { name: 'icon', type: 'ReactNode', description: 'Custom icon replacing the label and family glyph.' }
             ]}
             example={{
                 title: 'File types',

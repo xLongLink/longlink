@@ -10102,19 +10102,18 @@ const FILE_TYPE_CATEGORIES: readonly [
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 const fileTypeVariants: (props?: ({
-    size?: "default" | "sm" | "lg" | "xs" | "xl" | "mini" | null | undefined;
+    size?: "sm" | "md" | "lg" | "xs" | "xl" | "mini" | null | undefined;
 } & ClassProp) | undefined) => string;
 type FileTypeVariant = "outline" | "solid" | "light" | "mono";
-type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children"> & {
+type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "className" | "style"> & {
     type?: FileTypeName | (string & {});
     variant?: FileTypeVariant;
     size?: VariantProps<typeof fileTypeVariants>["size"];
     label?: React$1.ReactNode;
     glyph?: boolean;
     icon?: React$1.ReactNode;
-    labelClassName?: string;
 };
-function FileType({ type, variant, size, label, glyph, icon, labelClassName, className, ...props }: FileTypeProps): React$1.JSX.Element;
+function FileType({ type, variant, size, label, glyph, icon, ...props }: FileTypeProps): React$1.JSX.Element;
 const FileType$1: ViewComponent<typeof FileType>;
 const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface ButtonState {

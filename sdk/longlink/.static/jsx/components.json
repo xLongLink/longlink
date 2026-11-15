@@ -572,7 +572,7 @@
         {
             "name": "FileType",
             "category": "Display",
-            "introduction": "Displays a file extension or family using the native ReUI file type icon.",
+            "introduction": "Displays a file extension or family with fixed file type artwork.",
             "keywords": ["file", "extension", "document", "folder"],
             "properties": [
                 {
@@ -588,9 +588,9 @@
                 },
                 {
                     "name": "size",
-                    "type": "\"mini\" | \"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
+                    "type": "\"mini\" | \"xs\" | \"sm\" | \"md\" | \"lg\" | \"xl\"",
                     "description": "Icon size.",
-                    "default": "default"
+                    "default": "md"
                 },
                 {
                     "name": "label",
@@ -604,7 +604,8 @@
                     "description": "Custom icon replacing the label and family glyph."
                 }
             ],
-            "source": "reui",
+            "source": "custom",
+            "justification": "Provides fixed file type styling with named size presets and no styling overrides.",
             "reference": "https://reui.io/components/file-type"
         },
         {

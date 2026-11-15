@@ -1,6 +1,6 @@
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
+import { cva, type VariantProps } from 'class-variance-authority';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -741,12 +741,12 @@ const fileTypeVariants = cva(
                 mini: '[--file-type-size:--spacing(4.5)]',
                 xs: '[--file-type-size:--spacing(6)]',
                 sm: '[--file-type-size:--spacing(8)]',
-                default: '[--file-type-size:--spacing(10)]',
+                md: '[--file-type-size:--spacing(10)]',
                 lg: '[--file-type-size:--spacing(12)]',
                 xl: '[--file-type-size:--spacing(14)]'
             }
         },
-        defaultVariants: { size: 'default' }
+        defaultVariants: { size: 'md' }
     }
 );
 
@@ -800,8 +800,7 @@ const GLYPH_CLASS: Record<FileTypeVariant, string> = {
  * height a side (20% elsewhere) so the round ends clear the text, and the text
  * fit reads the same padding. A label wider than the fit expects (WEBM: W and M
  * run past 0.72em) spends that extra padding, centered, before it truncates,
- * and never grows past the band's own 95% cap, so a smaller `px-*` from
- * `labelClassName` still ends in a whole ellipsis. The no-style fallbacks
+ * and never grows past the band's own 95% cap. The no-style fallbacks
  * live in the `var()`s, not in bare rungs: the registry flattens each ladder
  * to one bare rung per style, and a second one would win or lose on class
  * order. The capitals are trimmed to their own height (`text-box`), so they
@@ -826,7 +825,7 @@ const LABEL_CLASS: Record<FileTypeVariant, string> = {
 /*                                  Component                                 */
 /* -------------------------------------------------------------------------- */
 
-type FileTypeProps = Omit<ComponentProps<'span'>, 'children'> & {
+type FileTypeProps = Omit<ComponentProps<'span'>, 'children' | 'className' | 'style'> & {
     /**
      * An extension (`"pdf"`, `".docx"`), a family (`"image"`, `"folder"`) or
      * `"empty"`. Unknown extensions render as a neutral file with their label.
@@ -835,7 +834,7 @@ type FileTypeProps = Omit<ComponentProps<'span'>, 'children'> & {
     type?: FileTypeName | (string & {});
     /** `mono` draws every type in the theme's gray instead of its own color. */
     variant?: FileTypeVariant;
-    /** A preset box size. A Tailwind `size-*` class in `className` overrides it. */
+    /** A preset box size. */
     size?: VariantProps<typeof fileTypeVariants>['size'];
     /** Replaces the extension label, for a version tag or a document code. */
     label?: ReactNode;
@@ -849,25 +848,9 @@ type FileTypeProps = Omit<ComponentProps<'span'>, 'children'> & {
      * the glyph's color: a lock on a protected file, a link on a shortcut.
      */
     icon?: ReactNode;
-    /**
-     * Classes for the label badge, merged last, so its background, radius,
-     * padding, font and position can all be replaced. The text is a child of
-     * the badge: recolor it with `*:text-*`.
-     */
-    labelClassName?: string;
 };
 
-function FileType({
-    type,
-    variant = 'outline',
-    size = 'default',
-    label,
-    glyph,
-    icon,
-    labelClassName,
-    className,
-    ...props
-}: FileTypeProps) {
+function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, ...props }: FileTypeProps) {
     const resolved = resolveFileType(type);
     // `null` hides the label like "", where `??` would fall back to it.
     const text = label !== undefined ? label : resolved.label;
@@ -894,7 +877,7 @@ function FileType({
             data-category={resolved.category}
             data-variant={variant}
             data-size={size}
-            className={cn(fileTypeVariants({ size }), variant === 'mono' ? MONO : resolved.color, className)}
+            className={cn(fileTypeVariants({ size }), variant === 'mono' ? MONO : resolved.color)}
             {...props}
         >
             <svg
@@ -965,8 +948,7 @@ function FileType({
                         '@max-[21px]:px-[4cqw] @max-[21px]:text-[length:min(32.5cqw,5.8px,calc(87cqw/(var(--file-type-chars)*0.88)))] @max-[21px]:font-semibold @max-[21px]:[--file-type-label-h:45%] @max-[21px]:[--file-type-label-y:40%]',
                         '[--file-type-label-radius:10cqw]',
                         '[--file-type-label-px:7cqw]',
-                        LABEL_CLASS[variant],
-                        labelClassName
+                        LABEL_CLASS[variant]
                     )}
                 >
                     <span
