@@ -4,7 +4,6 @@ import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { Card, CardContent } from '@/components/shadcn/card';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -39,7 +38,7 @@ export default function AppearanceSettings() {
                             }}
                         >
                             <CardContent className="flex flex-col gap-2">
-                                <Text>{label}</Text>
+                                <span>{label}</span>
                                 <img
                                     src={`/images/${image}`}
                                     alt=""
@@ -58,7 +57,7 @@ export default function AppearanceSettings() {
                 </Heading>
                 <Card size="sm">
                     <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
-                        <Text>Accent color</Text>
+                        <span>Accent color</span>
                         <div className="flex flex-wrap gap-2">
                             {accentColors.map((accent) => (
                                 <Button
@@ -90,9 +89,9 @@ export default function AppearanceSettings() {
                 </Card>
             </div>
             {userUpdate.isPending && (
-                <Text role="status" className="text-xs text-muted-foreground">
+                <span role="status" className="text-xs text-muted-foreground">
                     Saving appearance…
-                </Text>
+                </span>
             )}
         </div>
     );

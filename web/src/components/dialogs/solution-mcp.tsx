@@ -5,7 +5,6 @@ import { OpenAI } from '@/components/svg/open-ai';
 import { useNotification } from '@/lib/notifications';
 import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -30,9 +29,7 @@ export function SolutionMcpDialog({ solutionId, onClose, ...dialogProps }: Dialo
                                 <Heading level={2} className="text-center">
                                     Model Context Protocol
                                 </Heading>
-                                <Text as="p" className="text-muted-foreground text-center">
-                                    Connect your solution to AI tools
-                                </Text>
+                                <p className="text-muted-foreground text-center">Connect your solution to AI tools</p>
                             </Stack>
                         </Stack>
                         <Stack gap={4} width={0} className="min-w-full">

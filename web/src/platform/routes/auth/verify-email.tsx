@@ -12,7 +12,6 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -138,7 +137,7 @@ export default function VerifyEmail() {
     return (
         <AuthLayout
             description={null}
-            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
         >
             {pageMetadata}
             <Stack gap={3}>
@@ -146,7 +145,7 @@ export default function VerifyEmail() {
                 <form noValidate action={() => form.handleSubmit(handleComplete)()}>
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-col gap-1">
-                            <Text className="text-sm font-medium">Name</Text>
+                            <span className="text-sm font-medium">Name</span>
                             <TextField
                                 control={form.control}
                                 name="name"
@@ -157,7 +156,7 @@ export default function VerifyEmail() {
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <Text className="text-sm font-medium">Password</Text>
+                            <span className="text-sm font-medium">Password</span>
                             <TextField
                                 control={form.control}
                                 name="password"
@@ -172,7 +171,7 @@ export default function VerifyEmail() {
                     </div>
                 </form>
                 <Separator />
-                <Text as="p" className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground">
                     By continuing, you agree to our <br />
                     <Link href="/terms/" hasUnderline>
                         Terms of Service
@@ -182,7 +181,7 @@ export default function VerifyEmail() {
                         Privacy Policy
                     </Link>
                     .
-                </Text>
+                </p>
             </Stack>
         </AuthLayout>
     );

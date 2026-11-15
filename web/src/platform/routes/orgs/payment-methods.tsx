@@ -4,7 +4,6 @@ import { ApiBoundary } from '@/components/api';
 import { Token } from '@/components/custom/token';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -34,17 +33,13 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
             </Stack>
             <Separator />
             {!usage.stripe_enabled ? (
-                <Text as="p" className="text-muted-foreground">
-                    Card registration is not enabled on this deployment.
-                </Text>
+                <p className="text-muted-foreground">Card registration is not enabled on this deployment.</p>
             ) : canManage ? (
-                <ApiBoundary fallback={<Text className="text-muted-foreground">Loading registered cards…</Text>}>
+                <ApiBoundary fallback={<span className="text-muted-foreground">Loading registered cards…</span>}>
                     <RegisteredCards base={base} />
                 </ApiBoundary>
             ) : (
-                <Text as="p" className="text-muted-foreground">
-                    An organization owner can view and register cards.
-                </Text>
+                <p className="text-muted-foreground">An organization owner can view and register cards.</p>
             )}
         </Stack>
     );
@@ -65,9 +60,9 @@ function RegisteredCards({ base }: { base: string }) {
                     header: 'Card',
                     width: proportional(2),
                     renderCell: (card) => (
-                        <Text className="capitalize">
+                        <span className="capitalize">
                             {card.brand.replaceAll('_', ' ')} •••• {card.last4}
-                        </Text>
+                        </span>
                     )
                 },
                 {

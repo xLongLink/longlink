@@ -1,6 +1,5 @@
 import { DataTable } from '@/components/custom/data-table';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import {
@@ -28,17 +27,17 @@ export default function DocsArticleRoute() {
                 <Heading id="building" level={1}>
                     Building
                 </Heading>
-                <Text as="p">
+                <p>
                     Package your solution into a standard container image. LongLink builds the solution together with
                     its locked dependencies, configuration requirements, and metadata.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         Get the deployment model used by modern software teams, reproducible, versioned container
                         images, without setting up and maintaining the build infrastructure yourself. Each update
                         becomes a consistent, self-contained artifact that can be deployed with a single click.
-                    </Text>
+                    </p>
                 </Stack>
                 <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash">
                     <CodeBlockCopyButton />

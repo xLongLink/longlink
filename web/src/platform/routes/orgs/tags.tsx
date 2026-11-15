@@ -7,7 +7,6 @@ import { TagForm } from '@/components/dialogs/tag-form';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { Button as MenuTriggerButton } from '@/components/shadcn/button';
@@ -68,7 +67,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                 return (
                                     <Stack direction="horizontal" gap={2} align="center">
                                         <Icon className="size-4" aria-hidden="true" />
-                                        <Text>{tab.name}</Text>
+                                        <span>{tab.name}</span>
                                     </Stack>
                                 );
                             }

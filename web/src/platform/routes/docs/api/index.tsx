@@ -1,5 +1,4 @@
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -18,12 +17,12 @@ export default function DocsArticleRoute() {
                 <Heading id="platform" level={1}>
                     Platform
                 </Heading>
-                <Text as="p">
+                <p>
                     The Platform exists to keep an organization’s processes and data in a single place. This keeps both
                     the work and the information organized: work is done locally, while the cloud provides validation
                     and stores data in a consistent structure. This makes processes easier to review, manage, and
                     improve over time.
-                </Text>
+                </p>
             </Stack>
         </DocumentationArticle>
     );

@@ -1,6 +1,5 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -23,21 +22,21 @@ export default function DocsArticleRoute() {
                 <Heading id="testing" level={1}>
                     Testing
                 </Heading>
-                <Text as="p">
+                <p>
                     Test your application with standard{' '}
                     <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink>
                         pytest
                     </Link>{' '}
                     workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
                     services, without configuring a separate test environment.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         Tests stay fast, isolated, and reproducible while using the same application code as development
                         and production. The database and storage are created in memory for each test run, so tests do
                         not depend on external services or local setup.
-                    </Text>
+                    </p>
                 </Stack>
                 <CodeBlock code="uv run pytest <filename>" language="bash">
                     <CodeBlockCopyButton />

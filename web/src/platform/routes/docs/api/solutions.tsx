@@ -1,7 +1,6 @@
 import { DataTable } from '@/components/custom/data-table';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -35,14 +34,14 @@ export default function Solutions() {
                 <Heading id="solutions" level={1}>
                     Solutions
                 </Heading>
-                <Text as="p">
+                <p>
                     Solutions belong to an organization and run as separate services. The Platform manages their
                     deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL
                     database and its own dedicated prefix in the storage bucket. When not in use, Solutions
                     automatically scale to zero.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">User permissions</Text>
+                    <span className="font-semibold">User permissions</span>
                     <DataTable
                         data={solutionRoles}
                         idKey="name"
@@ -55,9 +54,9 @@ export default function Solutions() {
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" gap={2} align="center">
                                             <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                            <Text className="font-semibold capitalize">{name}</Text>
+                                            <span className="font-semibold capitalize">{name}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{access}</Text>
+                                        <span className="text-xs text-muted-foreground">{access}</span>
                                     </Stack>
                                 )
                             }

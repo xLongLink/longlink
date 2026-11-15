@@ -11,7 +11,6 @@ import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -59,12 +58,12 @@ export default function Home() {
                                 <br />
                                 Defined as code.
                             </Heading>
-                            <Text as="p" className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
+                            <p className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
                                 Design, build, operate, and improve.
                                 <br />
                                 One source of truth for how work gets done.
-                            </Text>
-                            <Text as="p" className="text-xs text-white/80">
+                            </p>
+                            <p className="text-xs text-white/80">
                                 Currently in testing Beta.{' '}
                                 <Link
                                     href="https://github.com/xLongLink/longlink"
@@ -74,7 +73,7 @@ export default function Home() {
                                 >
                                     Star LongLink on GitHub.
                                 </Link>
-                            </Text>
+                            </p>
                         </Stack>
                     </Stack>
                 </section>
@@ -89,14 +88,11 @@ export default function Home() {
                             src="/images/organized-work.webp"
                             width={1672}
                         />
-                        <Text
-                            as="p"
-                            className="text-muted-foreground text-pretty max-w-3xl text-center text-xl sm:text-2xl"
-                        >
+                        <p className="text-muted-foreground text-pretty max-w-3xl text-center text-xl sm:text-2xl">
                             Think about how easy it is to find a book in a library.
                             <br />
                             We create the tools you need to organize and validate your data, documents, and processes.
-                        </Text>
+                        </p>
                     </Stack>
                 </section>
                 <section className="py-16 sm:py-24">
@@ -118,16 +114,14 @@ export default function Home() {
                                     width={56}
                                 />
                             ))}
-                            <Text aria-hidden="true" className="text-xl leading-none">
+                            <span aria-hidden="true" className="text-xl leading-none">
                                 🇨🇭
-                            </Text>
+                            </span>
                             <Stack gap={0} align="center">
                                 <Heading level={2} className="text-balance text-center tracking-wide">
                                     Made in Switzerland
                                 </Heading>
-                                <Text as="p" className="text-muted-foreground text-balance">
-                                    Using open-source technologies
-                                </Text>
+                                <p className="text-muted-foreground text-balance">Using open-source technologies</p>
                             </Stack>
                             <Grid columns={2} gap={3}>
                                 <Button

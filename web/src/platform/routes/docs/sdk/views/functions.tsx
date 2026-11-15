@@ -1,5 +1,4 @@
 import ViewLayout from './view-layout';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -37,8 +36,8 @@ export default function FunctionsPage() {
                         width: proportional(1),
                         renderCell: (functionEntry) => (
                             <Stack gap={0}>
-                                <Text>{functionEntry.name}</Text>
-                                <Text className="text-xs text-muted-foreground">{functionEntry.description}</Text>
+                                <span>{functionEntry.name}</span>
+                                <span className="text-xs text-muted-foreground">{functionEntry.description}</span>
                             </Stack>
                         )
                     }

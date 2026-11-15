@@ -7,7 +7,6 @@ import * as permissions from '@/platform/permissions';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
 import { SolutionPage } from '@/components/ui/solution-page';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -82,7 +81,7 @@ export default function OrganizationSolution() {
                     <Stack gap={6} maxWidth={1200} width="100%">
                         {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
-                                fallback={<Text className="text-muted-foreground">Loading pod logs…</Text>}
+                                fallback={<span className="text-muted-foreground">Loading pod logs…</span>}
                                 fallbackRender={() => notice}
                             >
                                 <DeploymentLogs key={solutionAccess.id} solutionId={solutionAccess.id} />
@@ -123,7 +122,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
                     </div>
                 </CodeBlock>
             ) : (
-                <Text className="text-muted-foreground">No pod logs are available for this deployment.</Text>
+                <span className="text-muted-foreground">No pod logs are available for this deployment.</span>
             )}
         </Stack>
     );

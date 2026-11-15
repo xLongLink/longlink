@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -13,18 +12,18 @@ export function ComputeMetadata({
     return (
         <Dialog title="Compute metadata" {...dialogProps}>
             <Stack gap={2} padding={8}>
-                <Text>
+                <span>
                     <b>Gateway</b> {metadata.gateway_url}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Database storage class</b> {metadata.database_storage_class}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>ID</b> {metadata.id}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Storage endpoint</b> {metadata.storage_endpoint}
-                </Text>
+                </span>
                 <Stack direction="horizontal" justify="end">
                     <Button label="Delete" variant="destructive" onClick={onDelete} />
                 </Stack>

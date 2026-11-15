@@ -4,7 +4,6 @@ import { Token } from '@/components/custom/token';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -20,13 +19,11 @@ export default function Invoices({ base, canManage }: { base: string; canManage:
             </Stack>
             <Separator />
             {canManage ? (
-                <ApiBoundary fallback={<Text className="text-muted-foreground">Loading invoices…</Text>}>
+                <ApiBoundary fallback={<span className="text-muted-foreground">Loading invoices…</span>}>
                     <InvoiceTable base={base} />
                 </ApiBoundary>
             ) : (
-                <Text as="p" className="text-muted-foreground">
-                    An organization owner can view invoices.
-                </Text>
+                <p className="text-muted-foreground">An organization owner can view invoices.</p>
             )}
         </Stack>
     );
@@ -52,7 +49,7 @@ function InvoiceTable({ base }: { base: string }) {
                                 {invoice.number ?? invoice.id}
                             </Link>
                         ) : (
-                            <Text>{invoice.number ?? invoice.id}</Text>
+                            <span>{invoice.number ?? invoice.id}</span>
                         )
                 },
                 {

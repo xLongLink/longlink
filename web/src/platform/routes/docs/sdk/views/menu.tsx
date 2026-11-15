@@ -1,7 +1,6 @@
 import ViewLayout from './view-layout';
 import { useLocation, useNavigate } from 'react-router';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/custom/menu';
 
@@ -120,22 +119,22 @@ function MenuExample() {
                 <Menu>
                     <MenuSection title="Settings">
                         <MenuItem label="Profile" icon="user-round">
-                            <Text>Profile settings</Text>
+                            <span>Profile settings</span>
                         </MenuItem>
                         <MenuSubSection label="Workflow" icon="wrench">
                             <MenuItem label="Automation" icon="refresh-cw">
-                                <Text>Automation settings</Text>
+                                <span>Automation settings</span>
                             </MenuItem>
                             <MenuItem label="Schedule" icon="calendar">
-                                <Text>Schedule settings</Text>
+                                <span>Schedule settings</span>
                             </MenuItem>
                         </MenuSubSection>
                         <MenuSubSection label="Workspace" icon="building-complex">
                             <MenuItem label="Members" icon="users">
-                                <Text>Workspace members</Text>
+                                <span>Workspace members</span>
                             </MenuItem>
                             <MenuItem label="Data" icon="database">
-                                <Text>Workspace data</Text>
+                                <span>Workspace data</span>
                             </MenuItem>
                         </MenuSubSection>
                     </MenuSection>

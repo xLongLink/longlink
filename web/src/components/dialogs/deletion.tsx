@@ -1,6 +1,5 @@
 import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
-import { Text } from '@/components/custom/text';
 import { Button } from '@/components/shadcn/button';
 import { Heading } from '@/components/custom/heading';
 import {
@@ -100,7 +99,7 @@ export function DeletionDialog({
                     </Button>
                 </header>
                 <AlertDialogDescription render={<div />}>
-                    <Text className="text-muted-foreground">{confirmation.description}</Text>
+                    <span className="text-muted-foreground">{confirmation.description}</span>
                 </AlertDialogDescription>
                 <AlertDialogFooter>
                     {cancelButton}

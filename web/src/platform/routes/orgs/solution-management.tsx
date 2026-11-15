@@ -10,7 +10,6 @@ import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import DeploymentReview from '@/components/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -123,9 +122,9 @@ export default function SolutionManagement({
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
-                    <Text as="p" className="text-muted-foreground">
+                    <p className="text-muted-foreground">
                         No tabs configured. Add tabs in organization settings under General.
-                    </Text>
+                    </p>
                 ) : onboarding ? (
                     <Stack gap={6} align="center">
                         <Illustration
@@ -140,9 +139,7 @@ export default function SolutionManagement({
                             <Heading level={1} className="text-center">
                                 Your Solutions
                             </Heading>
-                            <Text as="p" className="text-muted-foreground text-center">
-                                Bring your business processes to life
-                            </Text>
+                            <p className="text-muted-foreground text-center">Bring your business processes to life</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
                             <Button
@@ -164,9 +161,7 @@ export default function SolutionManagement({
                         </Stack>
                     </Stack>
                 ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
-                    <Text as="p" className="text-muted-foreground">
-                        No Solutions in this category.
-                    </Text>
+                    <p className="text-muted-foreground">No Solutions in this category.</p>
                 ) : (
                     <DataTable
                         data={visibleSolutions}
@@ -186,7 +181,7 @@ export default function SolutionManagement({
                                                     {row.name}
                                                 </Link>
                                                 {row.status !== 'running' && (
-                                                    <Text
+                                                    <span
                                                         className={
                                                             row.status === 'creating'
                                                                 ? 'text-xs text-info-foreground'
@@ -194,7 +189,7 @@ export default function SolutionManagement({
                                                         }
                                                     >
                                                         {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                    </Text>
+                                                    </span>
                                                 )}
                                             </Stack>
                                         ) : (
@@ -203,7 +198,7 @@ export default function SolutionManagement({
                                             </Link>
                                         )}
                                         {row.description && (
-                                            <Text className="text-xs text-muted-foreground">{row.description}</Text>
+                                            <span className="text-xs text-muted-foreground">{row.description}</span>
                                         )}
                                     </Stack>
                                 )

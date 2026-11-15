@@ -4,7 +4,6 @@ import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { TextInput } from '@/components/custom/text-input';
 import { DataPagination } from '@/components/custom/data-pagination';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -56,11 +55,11 @@ export default function Operations() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>{kinds[row.kind]}</Text>
-                                    <Text className="text-xs text-muted-foreground">
+                                    <span>{kinds[row.kind]}</span>
+                                    <span className="text-xs text-muted-foreground">
                                         {statuses[row.status]}
                                         {row.finished_at && ` - ${row.finished_at}`}
-                                    </Text>
+                                    </span>
                                 </Stack>
                             )
                         },
@@ -70,10 +69,10 @@ export default function Operations() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>{row.resource_name ?? 'Resource unavailable'}</Text>
-                                    <Text className="text-xs text-muted-foreground">
+                                    <span>{row.resource_name ?? 'Resource unavailable'}</span>
+                                    <span className="text-xs text-muted-foreground">
                                         {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
-                                    </Text>
+                                    </span>
                                 </Stack>
                             )
                         },

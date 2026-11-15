@@ -7,7 +7,6 @@ import { TextInput } from '@/components/custom/text-input';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -59,7 +58,7 @@ export default function Solutions() {
                                             {row.name}
                                         </Link>
                                         {row.status !== 'running' && (
-                                            <Text
+                                            <span
                                                 className={
                                                     row.status === 'creating'
                                                         ? 'text-xs text-info-foreground'
@@ -67,11 +66,11 @@ export default function Solutions() {
                                                 }
                                             >
                                                 {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                            </Text>
+                                            </span>
                                         )}
                                     </Stack>
                                     {row.description && (
-                                        <Text className="text-xs text-muted-foreground">{row.description}</Text>
+                                        <span className="text-xs text-muted-foreground">{row.description}</span>
                                     )}
                                 </Stack>
                             )
@@ -85,7 +84,7 @@ export default function Solutions() {
                                     <GeneratedAvatar kind="organization" name={row.organization.name} />
                                     <Stack align="start">
                                         <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
-                                        <Text className="text-xs text-muted-foreground">Organization</Text>
+                                        <span className="text-xs text-muted-foreground">Organization</span>
                                     </Stack>
                                 </Stack>
                             )
@@ -96,12 +95,12 @@ export default function Solutions() {
                             width: proportional(2),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>
+                                    <span>
                                         {row.image_desired.replace(/@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/, '@sha25...$1')}
-                                    </Text>
-                                    <Text className="text-xs text-muted-foreground">
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
                                         Revision: {row.desired_revision_id ?? 'Not selected'}
-                                    </Text>
+                                    </span>
                                 </Stack>
                             )
                         },

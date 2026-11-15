@@ -8,7 +8,6 @@ import { Separator } from '@/components/shadcn/separator';
 import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -107,9 +106,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             <Heading level={1} className="text-center">
                                 Your Organizations
                             </Heading>
-                            <Text as="p" className="text-muted-foreground text-center">
-                                A place for your workflows and data
-                            </Text>
+                            <p className="text-muted-foreground text-center">A place for your workflows and data</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
                             <Button
@@ -144,7 +141,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                         <GeneratedAvatar kind="organization" name={row.organization.name} />
                                         <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
                                             {row.kind === 'invitation' ? (
-                                                <Text>{row.organization.name}</Text>
+                                                <span>{row.organization.name}</span>
                                             ) : presentation === 'settings' ? (
                                                 <Stack direction="horizontal" gap={1} align="center">
                                                     <Link href={`/orgs/${row.organization.id}`}>
@@ -157,11 +154,11 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                     {row.organization.name}
                                                 </Link>
                                             )}
-                                            <Text className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-muted-foreground">
                                                 {row.kind === 'invitation'
                                                     ? `Invitation · ${row.role}`
                                                     : 'Organization'}
-                                            </Text>
+                                            </span>
                                         </Stack>
                                     </Stack>
                                 )

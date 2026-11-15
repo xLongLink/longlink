@@ -2,7 +2,6 @@ import { Form } from '@/components/custom/form';
 import { Selector } from '@/components/custom/selector';
 import { TextInput } from '@/components/custom/text-input';
 import { Illustration } from '@/components/ui/illustration';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -33,9 +32,9 @@ export function InviteMember({
                                         <Heading level={2} className="text-center">
                                             Invite user
                                         </Heading>
-                                        <Text as="p" className="text-muted-foreground text-center">
+                                        <p className="text-muted-foreground text-center">
                                             Send an invitation to join this organization.
-                                        </Text>
+                                        </p>
                                     </Stack>
                                 </Stack>
                                 <Stack gap={4} width={0} className="min-w-full">

@@ -1,6 +1,5 @@
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -23,7 +22,7 @@ export default function Values() {
                 </Heading>
                 <blockquote className="m-0 border-s-2 border-orange-600 ps-4 wrap-break-word text-orange-600 dark:border-orange-400 dark:text-orange-400">
                     <Stack gap={0}>
-                        <Text>Beta notice: This page is being built.</Text>
+                        <span>Beta notice: This page is being built.</span>
                         <Link href={article.editUrl} hasUnderline isExternalLink className="text-inherit">
                             Edit on GitHub
                         </Link>

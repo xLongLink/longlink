@@ -19,7 +19,6 @@ import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Button as ShadcnButton } from '@/components/shadcn/button';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -77,7 +76,7 @@ export default function OrganizationSettings() {
                     <Heading level={4} accessibilityLevel={1}>
                         {membership.organization.name}
                     </Heading>
-                    <Text className="text-xs text-muted-foreground">Organization</Text>
+                    <span className="text-xs text-muted-foreground">Organization</span>
                 </Stack>
             </Stack>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
@@ -200,10 +199,10 @@ function GeneralSection({
                         className="rounded-lg border border-red-600 dark:border-red-400"
                     >
                         <Stack gap={0}>
-                            <Text className="font-bold">Delete this organization</Text>
-                            <Text className="text-muted-foreground">
+                            <span className="font-bold">Delete this organization</span>
+                            <span className="text-muted-foreground">
                                 Once deleted, it will be gone forever. Please be certain.
-                            </Text>
+                            </span>
                         </Stack>
                         <Button label="Delete" variant="destructive" onClick={() => setIsConfirming(true)} />
                     </Stack>
@@ -275,10 +274,10 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                     <GeneratedAvatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
-                                            <Text>{row.user.name}</Text>
-                                            <Text className="text-xs text-muted-foreground">{row.role}</Text>
+                                            <span>{row.user.name}</span>
+                                            <span className="text-xs text-muted-foreground">{row.role}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{row.user.email}</Text>
+                                        <span className="text-xs text-muted-foreground">{row.user.email}</span>
                                     </Stack>
                                 </Stack>
                             )
@@ -446,7 +445,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                             key: 'role',
                             header: 'Role',
                             width: proportional(1),
-                            renderCell: (row) => <Text className="text-xs text-muted-foreground">{row.role}</Text>
+                            renderCell: (row) => <span className="text-xs text-muted-foreground">{row.role}</span>
                         },
                         ...(canMaintain
                             ? [

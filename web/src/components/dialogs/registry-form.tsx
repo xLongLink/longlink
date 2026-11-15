@@ -3,7 +3,6 @@ import { Form } from '@/components/custom/form';
 import { TextInput } from '@/components/custom/text-input';
 import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -36,14 +35,14 @@ export function RegistryForm({
                             <Heading level={2} className="text-center">
                                 Connect a registry
                             </Heading>
-                            <Text as="p" className="text-muted-foreground text-center">
+                            <p className="text-muted-foreground text-center">
                                 Allow LongLink to pull your private container images
-                            </Text>
+                            </p>
                         </Stack>
                     </Stack>
                     <Form action={save}>
                         <Stack gap={3}>
-                            <Text as="p">GitHub Container Registry (ghcr.io)</Text>
+                            <p>GitHub Container Registry (ghcr.io)</p>
                             <Stack>
                                 <TextInput
                                     label="Personal access token (classic)"

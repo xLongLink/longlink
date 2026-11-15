@@ -2,7 +2,6 @@ import { Link } from 'react-router';
 import { Grid } from '@/components/custom/grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
@@ -29,10 +28,10 @@ export default function DocsIndex() {
                 <Heading id="documentation" level={1}>
                     Documentation
                 </Heading>
-                <Text as="p">
+                <p>
                     Learn how to build, run, and manage solutions with LongLink. Start with the basics, create your
                     first Solution, or explore the platform in more detail.
-                </Text>
+                </p>
                 <Stack as="section" gap={3}>
                     <Heading id="start-here" level={2}>
                         Start here
@@ -42,10 +41,10 @@ export default function DocsIndex() {
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Lightbulb aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Explore LongLink</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Explore LongLink</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Learn the core concepts and discover what you can build.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>
@@ -53,10 +52,10 @@ export default function DocsIndex() {
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Code2 aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Build a Solution</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Build a Solution</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Create a Solution and see how the pieces fit together.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>
@@ -64,10 +63,10 @@ export default function DocsIndex() {
                             <Stack className="flex-1" gap={6} justify="between">
                                 <ServerCog aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Explore the Platform</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Explore the Platform</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Learn how LongLink runs and manages your Solutions.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>

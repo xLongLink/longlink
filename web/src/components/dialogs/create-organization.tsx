@@ -3,7 +3,6 @@ import { api } from '@/lib/api';
 import { Form } from '@/components/custom/form';
 import { TextInput } from '@/components/custom/text-input';
 import { Illustration } from '@/components/ui/illustration';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -46,9 +45,9 @@ export default function CreateOrganization({
                                         <Heading level={2} className="text-center">
                                             New organization
                                         </Heading>
-                                        <Text as="p" className="text-muted-foreground text-center">
+                                        <p className="text-muted-foreground text-center">
                                             A place for your workflows and data
-                                        </Text>
+                                        </p>
                                     </Stack>
                                 </Stack>
                                 {/* Let the subtitle size the column, then stretch the controls to match. */}

@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
 import { viewHooks } from '@/lib/documentation';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -24,8 +23,8 @@ export default function HooksPage() {
                         width: proportional(1),
                         renderCell: (hook) => (
                             <Stack gap={0}>
-                                <Text>{hook.name}</Text>
-                                <Text className="text-xs text-muted-foreground">{hook.description}</Text>
+                                <span>{hook.name}</span>
+                                <span className="text-xs text-muted-foreground">{hook.description}</span>
                             </Stack>
                         )
                     }

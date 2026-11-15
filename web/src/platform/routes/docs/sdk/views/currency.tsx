@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
 import { Currency } from '@/components/custom/currency';
-import { NativeText as Text } from '@/components/custom/native-text';
 
 /** Documents locale-aware currency formatting. */
 export default function CurrencyPage() {
@@ -32,8 +31,8 @@ export default function CurrencyPage() {
 function CurrencyExample() {
     // Format a sample amount using the real View component.
     return (
-        <Text>
+        <span>
             <Currency value={1234.5} currency="USD" />
-        </Text>
+        </span>
     );
 }

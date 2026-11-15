@@ -1,6 +1,5 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -25,14 +24,14 @@ export default function Platform() {
                 <Heading id="platform" level={1}>
                     Platform
                 </Heading>
-                <Text as="p">
+                <p>
                     The Platform API and web interface are released as a{' '}
                     <Link href="https://ghcr.io/xlonglink/longlink" isExternalLink>
                         single container image
                     </Link>
                     . Provide a separate PostgreSQL database, an SMTP server, and an HTTPS reverse proxy for public
                     access. Compute runs your Solutions and is installed separately.
-                </Text>
+                </p>
                 <CodeBlock language="bash" code="docker run ghcr.io/xlonglink/longlink:latest">
                     <CodeBlockCopyButton />
                 </CodeBlock>
@@ -40,13 +39,13 @@ export default function Platform() {
                     <Heading id="environment" level={2}>
                         Environment variables
                     </Heading>
-                    <Text as="p">
+                    <p>
                         See the{' '}
                         <Link href="https://github.com/xLongLink/longlink/blob/main/api/.env.sample" isExternalLink>
                             environment example
                         </Link>{' '}
                         for their settings.
-                    </Text>
+                    </p>
                     <DataTable
                         density="compact"
                         hasHover={false}
@@ -160,10 +159,10 @@ export default function Platform() {
                                 renderCell: (environment) => (
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
-                                            <Text>{environment.name}</Text>
+                                            <span>{environment.name}</span>
                                             <InlineCode>{environment.type}</InlineCode>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{environment.description}</Text>
+                                        <span className="text-xs text-muted-foreground">{environment.description}</span>
                                     </Stack>
                                 )
                             }

@@ -5,7 +5,6 @@ import { Circle, ExternalLink } from 'lucide-react';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -128,7 +127,7 @@ export default function ViewLayout({
                         {component.label}
                     </Heading>
                     {!runtime && (
-                        <Text as="p" className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                             {component.reference ? (
                                 <a
                                     href={component.reference}
@@ -143,7 +142,7 @@ export default function ViewLayout({
                             ) : (
                                 `${component.sourceLabel}: ${component.justification}`
                             )}
-                        </Text>
+                        </p>
                     )}
                 </Stack>
                 <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
@@ -161,7 +160,7 @@ export default function ViewLayout({
                             {example ? (
                                 <ExampleWindow key={name} example={example} />
                             ) : (
-                                <Text as="p">No standalone example is available for this component.</Text>
+                                <p>No standalone example is available for this component.</p>
                             )}
                         </TabsContent>
                         <TabsContent
@@ -182,10 +181,10 @@ export default function ViewLayout({
                                             width: proportional(1),
                                             renderCell: (property) => (
                                                 <Stack gap={0}>
-                                                    <Text>{property.name}</Text>
-                                                    <Text className="text-xs text-muted-foreground">
+                                                    <span>{property.name}</span>
+                                                    <span className="text-xs text-muted-foreground">
                                                         {property.description}
-                                                    </Text>
+                                                    </span>
                                                 </Stack>
                                             )
                                         }

@@ -4,7 +4,6 @@ import { Form } from '@/components/custom/form';
 import { useQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { Navigate, useSearchParams } from 'react-router';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -51,28 +50,24 @@ export default function McpAuthorization() {
     return (
         <AuthLayout title="Authorize MCP access" description={null}>
             <title>Authorize MCP | LongLink</title>
-            {isLoading ? <Text as="p">Loading authorization request…</Text> : null}
-            {error ? <Text as="p">This request is invalid or you do not have access to the Solution.</Text> : null}
+            {isLoading ? <p>Loading authorization request…</p> : null}
+            {error ? <p>This request is invalid or you do not have access to the Solution.</p> : null}
             {consent ? (
                 <Form action={decide}>
                     <Stack gap={4}>
                         <Stack gap={2}>
-                            <Text as="p">
+                            <p>
                                 {consent.client_name} requests access to {consent.solution_name}.
-                            </Text>
-                            <Text as="p" className="text-xs text-muted-foreground">
+                            </p>
+                            <p className="text-xs text-muted-foreground">
                                 This client uses your current Solution permissions. Permission changes apply
                                 automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
-                            </Text>
-                            <Text as="p" className="text-sm font-medium">
-                                Client callback
-                            </Text>
-                            <Text as="p" className="text-xs text-muted-foreground break-all">
-                                {consent.redirect_uri}
-                            </Text>
-                            <Text as="p" className="text-xs text-muted-foreground">
+                            </p>
+                            <p className="text-sm font-medium">Client callback</p>
+                            <p className="text-xs text-muted-foreground break-all">{consent.redirect_uri}</p>
+                            <p className="text-xs text-muted-foreground">
                                 Client names are self-reported. Approve only if you recognize this callback.
-                            </Text>
+                            </p>
                         </Stack>
                         <Button
                             label="Allow access"

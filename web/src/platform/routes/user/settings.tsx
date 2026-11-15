@@ -9,7 +9,6 @@ import { Separator } from '@/components/shadcn/separator';
 import OrganizationManagement from './organization-management';
 import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeTextInput } from '@/components/custom/native-text-input';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
@@ -58,7 +57,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                     <Heading level={4} accessibilityLevel={1}>
                         {name}
                     </Heading>
-                    <Text className="text-xs text-muted-foreground">{user.email}</Text>
+                    <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
             </div>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">

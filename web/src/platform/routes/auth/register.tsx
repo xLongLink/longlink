@@ -10,7 +10,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 
@@ -30,7 +29,7 @@ export default function Register() {
     return (
         <AuthLayout
             description={null}
-            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
         >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>

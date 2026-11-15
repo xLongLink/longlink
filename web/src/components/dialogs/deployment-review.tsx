@@ -6,7 +6,6 @@ import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Step, Wizard } from '@/components/custom/wizard';
 import { CheckboxInput } from '@/components/custom/checkbox-input';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeTextInput } from '@/components/custom/native-text-input';
@@ -86,9 +85,7 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                     <div className="box-border h-full min-h-0 min-w-0 flex-1 overflow-auto p-8">
                         <Stack gap={4} align="center" justify="center" minHeight="100%">
                             <Heading level={2}>Update {item.name}</Heading>
-                            <Text as="p" role="status">
-                                {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
-                            </Text>
+                            <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
                             <Stack direction="horizontal" gap={2}>
                                 <Button label="Cancel" variant="ghost" onClick={onClose} />
                                 {!isPending && <Button label="Retry" onClick={() => void refetch()} />}
@@ -121,17 +118,17 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                                 <Stack direction="horizontal" gap={4} align="center">
                                     <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
-                                            <Text className="font-mono text-sm text-muted-foreground block text-center break-all">
+                                            <span className="font-mono text-sm text-muted-foreground block text-center break-all">
                                                 {candidate.current_version || imageDigest(candidate.current_image)}
-                                            </Text>
+                                            </span>
                                         </Stack>
                                     </div>
                                     <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                                     <div className="min-h-0 min-w-0 grow">
                                         <Stack padding={3} className="rounded-lg bg-muted">
-                                            <Text className="font-mono text-sm block text-center break-all">
+                                            <span className="font-mono text-sm block text-center break-all">
                                                 {candidate.metadata.version || imageDigest(candidate.metadata.image)}
-                                            </Text>
+                                            </span>
                                         </Stack>
                                     </div>
                                 </Stack>
@@ -146,9 +143,9 @@ export default function DeploymentReview({ item, onSuccess, onClose, ...dialogPr
                                     </Heading>
                                 </Stack>
                                 {!candidate.metadata.environments?.length && (
-                                    <Text className="text-muted-foreground">
+                                    <span className="text-muted-foreground">
                                         This solution does not require environment variables.
-                                    </Text>
+                                    </span>
                                 )}
                                 {(candidate.metadata.environments ?? []).map((environment) => {
                                     // Resolve the configured secret and its local draft without exposing its value.

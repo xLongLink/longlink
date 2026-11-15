@@ -3,7 +3,6 @@ import ViewLayout from './view-layout';
 import { Link } from '@/components/custom/link';
 import { ActionButton } from '@/components/custom/action-button';
 import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Documents Link in LongLink Views. */
@@ -85,7 +84,7 @@ export function LinkExample() {
             </ActionButton>
             <FramedDialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
                 <Stack padding={4}>
-                    <Text>Document details opened without navigation.</Text>
+                    <span>Document details opened without navigation.</span>
                 </Stack>
             </FramedDialog>
         </Stack>

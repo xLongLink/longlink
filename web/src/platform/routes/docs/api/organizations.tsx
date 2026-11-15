@@ -1,6 +1,5 @@
 import { DataTable } from '@/components/custom/data-table';
 import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
@@ -40,13 +39,13 @@ export default function Organizations() {
                 <Heading id="organizations" level={1}>
                     Organizations
                 </Heading>
-                <Text as="p">
+                <p>
                     The organization defines the boundary for work. It manages the members and Solutions that belong to
                     it, keeping access and responsibilities clearly separated. Each organization gets its own dedicated
                     PostgreSQL database, storage bucket (S3), and compute space.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">User permissions</Text>
+                    <span className="font-semibold">User permissions</span>
                     <DataTable
                         data={organizationRoles}
                         idKey="name"
@@ -59,9 +58,9 @@ export default function Organizations() {
                                     <Stack gap={0}>
                                         <Stack direction="horizontal" gap={2} align="center">
                                             <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                            <Text className="font-semibold capitalize">{name}</Text>
+                                            <span className="font-semibold capitalize">{name}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{access}</Text>
+                                        <span className="text-xs text-muted-foreground">{access}</span>
                                     </Stack>
                                 )
                             }

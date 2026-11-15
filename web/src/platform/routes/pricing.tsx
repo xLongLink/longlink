@@ -3,7 +3,6 @@ import { Grid } from '@/components/custom/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -51,9 +50,7 @@ export default function Pricing() {
                             >
                                 Pricing
                             </Heading>
-                            <Text as="p" className="text-muted-foreground">
-                                Billed per Organization
-                            </Text>
+                            <p className="text-muted-foreground">Billed per Organization</p>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
                             {resources.map((resource) => {
@@ -78,21 +75,15 @@ export default function Pricing() {
                                             </Stack>
                                             <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
-                                                <Text as="p" className="font-semibold text-center">
-                                                    {resource.publicIncluded}
-                                                </Text>
-                                                <Text as="p" className="text-muted-foreground text-center">
-                                                    Included free
-                                                </Text>
+                                                <p className="font-semibold text-center">{resource.publicIncluded}</p>
+                                                <p className="text-muted-foreground text-center">Included free</p>
                                             </Stack>
                                             <Separator className="data-[orientation=horizontal]:w-1/3" />
                                             <Stack gap={2} align="center">
-                                                <Text as="p" className="font-semibold text-center">
-                                                    {resource.rate}
-                                                </Text>
-                                                <Text as="p" className="text-xs text-center text-muted-foreground">
+                                                <p className="font-semibold text-center">{resource.rate}</p>
+                                                <p className="text-xs text-center text-muted-foreground">
                                                     Per month, above included usage
-                                                </Text>
+                                                </p>
                                             </Stack>
                                         </Stack>
                                     </div>
@@ -100,9 +91,9 @@ export default function Pricing() {
                             })}
                         </Grid>
                         <Button href="/user/organizations/" label="Get started" variant="default" />
-                        <Text as="p" className="text-xs text-center text-muted-foreground">
+                        <p className="text-xs text-center text-muted-foreground">
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
-                        </Text>
+                        </p>
                     </Stack>
                 </section>
             </main>

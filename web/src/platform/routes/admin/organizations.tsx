@@ -8,7 +8,6 @@ import { TextInput } from '@/components/custom/text-input';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -65,7 +64,7 @@ export default function Organizations() {
                                                 </Badge>
                                             )}
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">Organization</Text>
+                                        <span className="text-xs text-muted-foreground">Organization</span>
                                     </Stack>
                                 </Stack>
                             )

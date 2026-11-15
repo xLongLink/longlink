@@ -34,7 +34,6 @@ import { componentDocumentation } from '@/platform/publications';
 import { GeneratedAvatarExample } from './views/generated-avatar';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { Heading as ViewHeading } from '@/components/custom/heading';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Tabs, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -215,11 +214,11 @@ export default function DocsArticleRoute() {
                 <Heading id="views" level={1}>
                     Views
                 </Heading>
-                <Text as="p">
+                <p>
                     Create each interface as a .jsx file exporting a default React component. LongLink supplies UI
                     components, hooks such as useState() and useEffect(), fragments, queries, and scoped requests
                     directly, without imports or a React. prefix. Your Python Solution needs no frontend build.
-                </Text>
+                </p>
                 <CodeBlock
                     code={`/** @param {ViewProps} props */
 export default function Item({ params }) {
@@ -260,7 +259,7 @@ export default function Item({ params }) {
                                 renderCell: (api) => (
                                     <Stack gap={0}>
                                         <InlineCode className="self-start">{api.name}</InlineCode>
-                                        <Text className="text-xs text-muted-foreground">{api.description}</Text>
+                                        <span className="text-xs text-muted-foreground">{api.description}</span>
                                     </Stack>
                                 )
                             }
@@ -307,13 +306,13 @@ export default function Item({ params }) {
                                                     </Stack>
                                                 </div>
                                             </Card>
-                                            <Text className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-muted-foreground">
                                                 {component.category === 'Action' || component.category === 'Form'
                                                     ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
                                                     : component.label}
                                                 {' · '}
                                                 {component.sourceLabel}
-                                            </Text>
+                                            </span>
                                             <RouterLink
                                                 aria-label={`Open ${component.label} documentation`}
                                                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -13,32 +12,32 @@ export function SolutionMetadata({
     return (
         <Dialog title="Solution metadata" {...dialogProps}>
             <Stack gap={2} padding={8}>
-                <Text>
+                <span>
                     <b>Status</b> {metadata.status}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Organization</b> {metadata.organization.name}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Desired image</b> {metadata.image_desired}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>ID</b> {metadata.id}
-                </Text>
+                </span>
                 {metadata.description && (
-                    <Text>
+                    <span>
                         <b>Description</b> {metadata.description}
-                    </Text>
+                    </span>
                 )}
-                <Text>
+                <span>
                     <b>Created</b> {metadata.created_at}
-                </Text>
+                </span>
                 <Stack direction="horizontal" justify="end">
                     <Button label="Delete" variant="destructive" onClick={onDelete} />
                 </Stack>

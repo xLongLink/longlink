@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAnnouncement } from '@/components/custom/announcement';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 
@@ -21,7 +20,7 @@ export default function ForgotPassword() {
 
     return (
         <AuthLayout
-            title={<Text className="text-2xl block text-nowrap text-center">Reset your password</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Reset your password</span>}
             description={null}
         >
             <title>Reset Your Password | LongLink</title>

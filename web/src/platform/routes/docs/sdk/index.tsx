@@ -1,7 +1,6 @@
 import { MoveRight } from 'lucide-react';
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
@@ -26,21 +25,21 @@ export default function DocsArticleRoute() {
                 <Heading id="solution-sdk" level={1}>
                     Business processes, defined as code
                 </Heading>
-                <Text as="p">
+                <p>
                     Business processes evolve over time. Requirements change, exceptions happen, and the people involved
                     may change. As information becomes fragmented, more time is spent finding data, reconstructing
                     decisions, coordinating people, and correcting mistakes.
-                </Text>
+                </p>
                 <Stack direction="horizontal" gap={6} justify="center" paddingBlock={6} align="center" width="100%">
-                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
+                    <span className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Problem
-                    </Text>
+                    </span>
                     <MoveRight aria-hidden className="text-muted-foreground" size={32} />
-                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
+                    <span className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Solution
-                    </Text>
+                    </span>
                 </Stack>
-                <Text as="p">
+                <p>
                     Build dedicated tools with established Python libraries: use{' '}
                     <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink>
                         FastAPI
@@ -55,7 +54,7 @@ export default function DocsArticleRoute() {
                     </Link>{' '}
                     for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
                     LongLink handles the infrastructure.
-                </Text>
+                </p>
                 <Heading id="create-a-solution" level={2}>
                     Create a Solution
                 </Heading>
@@ -81,13 +80,13 @@ export default function DocsArticleRoute() {
                 <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Text as="p">
+                <p>
                     Open{' '}
                     <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink>
                         http://127.0.0.1:1707
                     </Link>{' '}
                     to preview your Solution.
-                </Text>
+                </p>
             </Stack>
         </DocumentationArticle>
     );

@@ -9,7 +9,6 @@ import { TextInput } from '@/components/custom/text-input';
 import { buttonVariants } from '@/components/shadcn/button';
 import { Illustration } from '@/components/ui/illustration';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -87,9 +86,9 @@ export default function CreateSolution({
                                     <Heading level={2} className="text-center">
                                         Choose a Solution image
                                     </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
+                                    <p className="text-muted-foreground text-center">
                                         Start with a container image or try the sample Solution
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                             <Stack className="relative">
@@ -108,7 +107,7 @@ export default function CreateSolution({
                                     )}
                                     onClick={() => setImage('ghcr.io/xlonglink/sample:latest')}
                                 >
-                                    <Text className="text-muted-foreground text-base">Use sample image</Text>
+                                    <span className="text-muted-foreground text-base">Use sample image</span>
                                 </button>
                             </Stack>
                         </Stack>
@@ -128,9 +127,9 @@ export default function CreateSolution({
                                     <Heading level={2} className="text-center">
                                         Make it yours
                                     </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
+                                    <p className="text-muted-foreground text-center">
                                         Give your Solution a name and description
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                             <Stack gap={3}>
@@ -160,9 +159,9 @@ export default function CreateSolution({
                                     <Heading level={2} className="text-center">
                                         Configure your environment
                                     </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
+                                    <p className="text-muted-foreground text-center">
                                         Set the values your Solution needs to run
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                             <Stack key={inspection?.generation} gap={3}>

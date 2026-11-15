@@ -1,6 +1,5 @@
 import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -24,7 +23,7 @@ export default function DocsArticleRoute() {
                 <Heading id="storage" level={1}>
                     Storage
                 </Heading>
-                <Text as="p">
+                <p>
                     Use <InlineCode>ctx.storage</InlineCode> to read and write files asynchronously through a normalized{' '}
                     <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink>
                         fsspec
@@ -35,14 +34,14 @@ export default function DocsArticleRoute() {
                     </Link>{' '}
                     with native async S3 I/O through aiobotocore. Synchronous local and memory filesystems are adapted
                     internally, using worker threads rather than blocking async routes.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         The interface stays the same in every environment: in-memory storage for isolated tests, local
                         files during development for easy inspection, and an S3 storage space when deployed on the
                         LongLink platform.
-                    </Text>
+                    </p>
                 </Stack>
                 <Heading id="example" level={2}>
                     Example
@@ -56,21 +55,21 @@ async def write_report(ctx: Context) -> None:
                 >
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Text as="p">
+                <p>
                     <InlineCode>write(path, bytes)</InlineCode> creates parent directories automatically. Use{' '}
                     <InlineCode>await ctx.storage.exists(path)</InlineCode> to check for a file and{' '}
                     <InlineCode>await ctx.storage.remove(path)</InlineCode> to delete it. Removing a missing file is
                     safe. <InlineCode>open(path)</InlineCode> returns a read-only binary file context.
-                </Text>
+                </p>
                 <Heading id="file-responses" level={2}>
                     Previews and downloads
                 </Heading>
-                <Text as="p">
+                <p>
                     Yield file chunks from a route with <InlineCode>response_class=StreamingResponse</InlineCode>. Set
                     the content type for previews; the frontend decides whether to preview or download the same URL. A
                     request-scoped dependency opens the file before streaming starts and closes it when the response
                     finishes. Missing stored files automatically return HTTP 404 without exposing storage paths.
-                </Text>
+                </p>
                 <CodeBlock
                     code={`from collections.abc import AsyncIterator
 from typing import Annotated
@@ -104,11 +103,11 @@ async def report(
                 >
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Text as="p">
+                <p>
                     Use <InlineCode>FileViewer</InlineCode> for inline file previews, or <InlineCode>Link</InlineCode>{' '}
                     with a <InlineCode>download</InlineCode> filename to download directly. No backend download headers
                     or separate endpoint are required.
-                </Text>
+                </p>
                 <CodeBlock
                     code={`<FileViewer src="/reports/latest" title="report.pdf" />
 <AttachmentLink href="/reports/latest" download="report.pdf">Download report</AttachmentLink>`}

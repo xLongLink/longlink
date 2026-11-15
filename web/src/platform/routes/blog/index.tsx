@@ -2,7 +2,6 @@ import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/ui/page';
 import { Grid } from '@/components/custom/grid';
 import { Separator } from '@/components/shadcn/separator';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { NativeButton as Button } from '@/components/custom/native-button';
 import { NativeHeading as Heading } from '@/components/custom/native-heading';
@@ -22,9 +21,9 @@ export default function Blog() {
                             >
                                 Blog
                             </Heading>
-                            <Text as="p" className="text-muted-foreground text-pretty text-lg sm:text-xl">
+                            <p className="text-muted-foreground text-pretty text-lg sm:text-xl">
                                 Ideas, stories, and updates from LongLink
-                            </Text>
+                            </p>
                         </Stack>
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
                             <div className="min-w-0 overflow-clip rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*3)-1px)]">
@@ -36,9 +35,9 @@ export default function Blog() {
                                         </Heading>
                                     </Stack>
                                     <Separator className="my-10 data-[orientation=horizontal]:w-1/3 self-center" />
-                                    <Text as="p" className="text-muted-foreground text-pretty text-center">
+                                    <p className="text-muted-foreground text-pretty text-center">
                                         The idea behind LongLink
-                                    </Text>
+                                    </p>
                                     <Stack className="mt-auto pt-8" align="center">
                                         <Button href="/blog/why-longlink/" label="Read article" variant="default" />
                                     </Stack>

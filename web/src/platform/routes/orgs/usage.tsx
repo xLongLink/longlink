@@ -3,7 +3,6 @@ import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
 import { NativeButton as Button } from '@/components/custom/native-button';
@@ -31,9 +30,9 @@ export default function Usage({ base }: { base: string }) {
                         <Heading level={4} accessibilityLevel={3}>
                             Monthly usage
                         </Heading>
-                        <Text className="text-muted-foreground">
+                        <span className="text-muted-foreground">
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
-                        </Text>
+                        </span>
                     </Stack>
                     <Button
                         label="See prices"
@@ -57,13 +56,13 @@ export default function Usage({ base }: { base: string }) {
                     {(['storage', 'database'] as const).map((resource) => (
                         <ApiBoundary
                             key={resource}
-                            fallback={<Text className="text-muted-foreground">Loading {resource} usage…</Text>}
+                            fallback={<span className="text-muted-foreground">Loading {resource} usage…</span>}
                             fallbackRender={({ resetErrorBoundary }) => (
                                 <Stack direction="horizontal" align="center" justify="between" gap={4}>
-                                    <Text className="text-muted-foreground">
+                                    <span className="text-muted-foreground">
                                         {resource === 'storage' ? 'File storage' : 'Database storage'} usage
                                         unavailable.
-                                    </Text>
+                                    </span>
                                     <Button label="Retry" onClick={resetErrorBoundary} />
                                 </Stack>
                             )}

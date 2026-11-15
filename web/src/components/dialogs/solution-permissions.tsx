@@ -7,7 +7,6 @@ import { Picker } from '@/components/custom/picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Dialog, type DialogProps } from '@/components/custom/dialog';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -58,7 +57,7 @@ export default function SolutionPermissions({
         <Stack gap={4} padding={6}>
             <Heading level={2}>Solution permissions</Heading>
             {settings.roles.length === 0 ? (
-                <Text>Rebuild and deploy the Solution to load its roles.</Text>
+                <span>Rebuild and deploy the Solution to load its roles.</span>
             ) : (
                 <ApiBoundary key={`${solutionId}:${settings.revision_id}`}>
                     <MemberPermissions base={base} members={members} settings={settings} onClose={onClose} />
@@ -136,8 +135,8 @@ function MemberPermissions({
                             <Stack direction="horizontal" gap={3} align="center">
                                 <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
                                 <Stack gap={0}>
-                                    <Text>{member.name}</Text>
-                                    <Text className="text-xs text-muted-foreground">{member.email}</Text>
+                                    <span>{member.name}</span>
+                                    <span className="text-xs text-muted-foreground">{member.email}</span>
                                 </Stack>
                             </Stack>
                         )

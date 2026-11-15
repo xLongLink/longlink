@@ -7,7 +7,6 @@ import { TextInput } from '@/components/custom/text-input';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { DataPagination } from '@/components/custom/data-pagination';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -60,8 +59,8 @@ export default function Compute() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>{row.name}</Text>
-                                    <Text className="text-xs text-muted-foreground">{row.gateway_url}</Text>
+                                    <span>{row.name}</span>
+                                    <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
                                 </Stack>
                             )
                         },

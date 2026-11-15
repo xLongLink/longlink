@@ -1,5 +1,4 @@
 import ViewLayout from './view-layout';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 
 /** Documents native tab composition and selection. */
@@ -68,10 +67,10 @@ function TabsExample() {
                 <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
-                <Text>Overview content</Text>
+                <span>Overview content</span>
             </TabsContent>
             <TabsContent value="activity">
-                <Text>Activity content</Text>
+                <span>Activity content</span>
             </TabsContent>
         </Tabs>
     );

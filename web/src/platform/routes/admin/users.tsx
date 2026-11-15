@@ -4,7 +4,6 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Timestamp } from '@/components/custom/timestamp';
 import { TextInput } from '@/components/custom/text-input';
 import { DataPagination } from '@/components/custom/data-pagination';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DataTable, proportional } from '@/components/custom/data-table';
@@ -38,12 +37,12 @@ export default function Users() {
                                     <GeneratedAvatar name={row.name} src={row.avatar} seed={row.id} />
                                     <Stack align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
-                                            <Text>{row.name}</Text>
-                                            <Text className="text-xs text-muted-foreground">
+                                            <span>{row.name}</span>
+                                            <span className="text-xs text-muted-foreground">
                                                 {row.administrator ? 'Administrator' : 'User'}
-                                            </Text>
+                                            </span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{row.email}</Text>
+                                        <span className="text-xs text-muted-foreground">{row.email}</span>
                                     </Stack>
                                 </Stack>
                             )
@@ -54,10 +53,10 @@ export default function Users() {
                             width: proportional(1),
                             renderCell: (row) => (
                                 <Stack align="start">
-                                    <Text>
+                                    <span>
                                         Created: <Timestamp value={row.created_at} format="date_time" />
-                                    </Text>
-                                    <Text className="text-xs text-muted-foreground">ID: {row.id}</Text>
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">ID: {row.id}</span>
                                 </Stack>
                             )
                         }
