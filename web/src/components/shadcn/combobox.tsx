@@ -17,7 +17,10 @@ function ComboboxTrigger({ className, children, ...props }: ComboboxPrimitive.Tr
     return (
         <ComboboxPrimitive.Trigger
             data-slot="combobox-trigger"
-            className={cn("[&_svg:not([class*='size-'])]:size-4", className)}
+            className={cn(
+                "not-disabled:not-data-disabled:not-aria-disabled:cursor-pointer [&_svg:not([class*='size-'])]:size-4",
+                className
+            )}
             {...props}
         >
             {children}
@@ -120,6 +123,7 @@ function ComboboxItem({ className, children, ...props }: ComboboxPrimitive.Item.
         <ComboboxPrimitive.Item
             data-slot="combobox-item"
             className={cn(
+                'not-data-disabled:not-aria-disabled:cursor-pointer',
                 "relative flex w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
                 className
             )}

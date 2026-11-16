@@ -12,6 +12,7 @@ class ViewRuntime(BaseModel):
 
     # Content identity for the conventional packaged runtime assets.
     version: str = Field(pattern=r"^[a-f0-9]{64}$")
+    modules: dict[str, str] | None = None
 
 
 @dataclass(slots=True)

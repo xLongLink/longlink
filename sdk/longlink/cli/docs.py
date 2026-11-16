@@ -30,7 +30,7 @@ class Component(BaseModel):
 
     # Identity and authored guidance.
     name: str
-    source: Literal["shadcn", "reui", "custom", "recharts"]
+    source: Literal["shadcn", "reui", "mapcn", "custom", "recharts", "react-hook-form"]
     category: str
     guidance: str = ""
     keywords: list[str] = Field(default_factory=list)
@@ -207,12 +207,7 @@ def component_command(name: str, /) -> None:
     if component is None:
         raise errors.Error(f'Unknown component: {name}. Run `longlink docs search "{name}"` to find available APIs.')
     print(f"{component.name} [{component.category}]")
-    print(f"Source: {component.source}")
-    if component.reference:
-        print(component.reference)
-    if component.justification:
-        print(component.justification)
-    if component.introduction and component.introduction != component.justification:
+    if component.introduction:
         print(component.introduction)
 
     # Keep usage guidance separate from the component introduction.

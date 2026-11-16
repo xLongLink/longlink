@@ -1,36 +1,32 @@
+import { Link } from 'react-router';
 import ViewLayout from './view-layout';
-import { viewHooks } from '@/lib/documentation';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { componentDocumentation } from '@/platform/publications';
+import { Card, CardHeader, CardTitle } from '@/components/shadcn/card';
 
-/** Documents the hooks exposed by the View runtime. */
+/** Links to each View hook reference, with React hooks grouped together. */
 export default function HooksPage() {
-    // Render the runtime-specific hooks table.
     return (
         <ViewLayout name="Hooks" toc={[{ id: 'hooks', label: 'Hooks', level: 2 }]}>
-            <Heading id="hooks" level={2}>
+            <h2 className="font-semibold tracking-tight text-3xl" id="hooks">
                 Hooks
-            </Heading>
-            <DataTable
-                data={viewHooks}
-                idKey="name"
-                density="compact"
-                columns={[
-                    {
-                        key: 'name',
-                        header: 'Hook',
-                        width: proportional(1),
-                        renderCell: (hook) => (
-                            <Stack gap={0}>
-                                <Text>{hook.name}</Text>
-                                <Text className="text-xs text-muted-foreground">{hook.description}</Text>
-                            </Stack>
-                        )
-                    }
-                ]}
-            />
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {componentDocumentation
+                    .filter((component) => component.category === 'Hooks')
+                    .map((component) => (
+                        <Link
+                            key={component.slug}
+                            to={`/docs/sdk/views/${component.slug}/`}
+                            className="min-w-0 outline-offset-4 focus-visible:outline-ring"
+                        >
+                            <Card size="sm" className="h-full transition-colors hover:bg-muted">
+                                <CardHeader>
+                                    <CardTitle>{component.label}</CardTitle>
+                                </CardHeader>
+                            </Card>
+                        </Link>
+                    ))}
+            </div>
         </ViewLayout>
     );
 }

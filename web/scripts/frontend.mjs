@@ -30,6 +30,9 @@ const [bundle] = generateDtsBundle(
                     '@dnd-kit/sortable',
                     '@dnd-kit/accessibility',
                     'react',
+                    'react-hook-form',
+                    'zod',
+                    '@standard-schema/spec',
                     '@types/react',
                     'csstype',
                     'class-variance-authority',
@@ -47,6 +50,17 @@ const [bundle] = generateDtsBundle(
                     'victory-vendor',
                     '@types/d3-shape',
                     '@types/d3-path',
+                    '@types/geojson',
+                    'maplibre-gl',
+                    '@maplibre/maplibre-gl-style-spec',
+                    '@mapbox/point-geometry',
+                    '@mapbox/tiny-sdf',
+                    '@mapbox/vector-tile',
+                    '@maplibre/geojson-vt',
+                    '@maplibre/vt-pbf',
+                    '@maplibre/mlt',
+                    'gl-matrix',
+                    'kdbush',
                     'react-day-picker',
                     'date-fns',
                 ],
@@ -57,9 +71,29 @@ const [bundle] = generateDtsBundle(
     ],
     { preferredConfigPath: `${root}tsconfig.app.json` }
 );
-const generated = ts.createSourceFile('native.d.ts', bundle, ts.ScriptTarget.Latest, true);
+// Merging library modules into one namespace changes variance inference; infer it from the bundled structural types.
+const normalized = ts.transform(ts.createSourceFile('native.d.ts', bundle, ts.ScriptTarget.Latest, true), [
+    (context) => {
+        const visit = (node) => {
+            if (ts.isTypeParameterDeclaration(node)) {
+                return ts.factory.updateTypeParameterDeclaration(
+                    node,
+                    node.modifiers?.filter((modifier) => modifier.kind !== ts.SyntaxKind.InKeyword && modifier.kind !== ts.SyntaxKind.OutKeyword),
+                    node.name,
+                    node.constraint,
+                    node.default
+                );
+            }
+            return ts.visitEachChild(node, visit, context);
+        };
+        return (node) => ts.visitNode(node, visit);
+    },
+]);
+const generated = normalized.transformed[0];
 const exports = new Set();
 const typeExports = new Set();
+const namespaceExports = new Set();
+const namespaceNames = new Set(generated.statements.filter(ts.isModuleDeclaration).map((node) => node.name.text));
 const typeNames = new Set(
     generated.statements
         .filter((node) => ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
@@ -82,6 +116,18 @@ const dom = ts.createSourceFile(
 );
 const standardDomNames = new Set(dom.statements.filter((node) => node.name).map((node) => node.name.text));
 const statements = generated.statements.filter((node) => {
+    // IconName is published from the installed Lucide catalog below.
+    if (
+        ts.isImportDeclaration(node) &&
+        ts.isStringLiteral(node.moduleSpecifier) &&
+        node.moduleSpecifier.text === 'lucide-react/dynamic' &&
+        !node.importClause?.name &&
+        node.importClause?.namedBindings &&
+        ts.isNamedImports(node.importClause.namedBindings) &&
+        node.importClause.namedBindings.elements.every((specifier) => specifier.name.text === 'IconName' && !specifier.propertyName)
+    )
+        return false;
+
     if (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node)) {
         throw new Error(`Frontend declarations must not require external imports: ${node.getText(generated)}`);
     }
@@ -97,6 +143,9 @@ const statements = generated.statements.filter((node) => {
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
             for (const specifier of node.exportClause.elements) {
                 exports.add(specifier.name.text);
+                if (namespaceNames.has((specifier.propertyName ?? specifier.name).text)) {
+                    namespaceExports.add(specifier.name.text);
+                }
                 if (typeNames.has((specifier.propertyName ?? specifier.name).text)) {
                     typeExports.add(specifier.name.text);
                 }
@@ -127,12 +176,12 @@ const namespace = statements
     )
     .join('\n');
 const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
-// Image and Text keep callable declarations above to avoid block-scoped collisions with lib.dom.
+// Image and Text retain callable declarations; Map uses JSX metadata without shadowing the collection constructor.
 const aliases = names
-    .filter((name) => name !== 'Image' && name !== 'Text')
+    .filter((name) => name !== 'Image' && name !== 'Text' && name !== 'Map')
     .map((name) =>
-        typeExports.has(name)
-            ? `type ${name} = NativeFrontend.${name};`
+        namespaceExports.has(name) || typeExports.has(name)
+            ? `import ${name} = NativeFrontend.${name};`
             : `declare const ${name}: typeof NativeFrontend.${name};`
     )
     .join('\n');

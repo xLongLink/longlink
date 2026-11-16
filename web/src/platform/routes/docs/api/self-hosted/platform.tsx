@@ -1,10 +1,9 @@
-import { DocumentationArticle } from '@/components/layouts/article';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const article = {
     title: 'Platform | LongLink Self Hosted Documentation',
@@ -22,157 +21,157 @@ export default function Platform() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="platform" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="platform">
                     Platform
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     The Platform API and web interface are released as a{' '}
                     <Link href="https://ghcr.io/xlonglink/longlink" isExternalLink>
                         single container image
                     </Link>
                     . Provide a separate PostgreSQL database, an SMTP server, and an HTTPS reverse proxy for public
                     access. Compute runs your Solutions and is installed separately.
-                </Text>
+                </p>
                 <CodeBlock language="bash" code="docker run ghcr.io/xlonglink/longlink:latest">
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack as="section" gap={3}>
-                    <Heading id="environment" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="environment">
                         Environment variables
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         See the{' '}
                         <Link href="https://github.com/xLongLink/longlink/blob/main/api/.env.sample" isExternalLink>
                             environment example
                         </Link>{' '}
                         for their settings.
-                    </Text>
-                    <DataTable
-                        density="compact"
-                        hasHover={false}
-                        isStriped={false}
-                        data={[
-                            {
-                                name: 'PUBLIC_URL',
-                                type: 'string · default: http://localhost:5173',
-                                description:
-                                    'Public HTTPS origin without a path. HTTP is allowed only for loopback development.'
-                            },
-                            {
-                                name: 'SESSION_KEY',
-                                type: 'string · required',
-                                description:
-                                    'Session signing secret with at least 32 characters. Keep stable across restarts and replicas.'
-                            },
-                            {
-                                name: 'ENCRYPTION_KEY',
-                                type: 'string · required',
-                                description:
-                                    'Encrypts stored infrastructure credentials. At least 32 characters; retain and back up this key.'
-                            },
-                            {
-                                name: 'ADMIN_EMAIL',
-                                type: 'email · required',
-                                description:
-                                    'Platform administrator email. The sole administrator is reconciled on startup.'
-                            },
-                            {
-                                name: 'ADMIN_PASSWORD',
-                                type: 'string · required',
-                                description:
-                                    'Platform administrator password, reconciled on startup. Use a strong password.'
-                            },
-                            {
-                                name: 'DATABASE_URL',
-                                type: 'string · required',
-                                description:
-                                    'Platform database connection URL, including its asynchronous driver, credentials, and database name.'
-                            },
-                            {
-                                name: 'SMTP_HOST',
-                                type: 'string · required',
-                                description: 'SMTP server for account verification and password reset emails.'
-                            },
-                            {
-                                name: 'SMTP_PORT',
-                                type: 'integer · default: 587',
-                                description: 'SMTP server port, from 1 to 65535.'
-                            },
-                            {
-                                name: 'SMTP_TRANSPORT',
-                                type: '"plain" | "starttls" | "tls" · default: starttls',
-                                description: 'SMTP connection security. Use starttls or tls for hosted deployments.'
-                            },
-                            {
-                                name: 'SMTP_FROM',
-                                type: 'email · default: no-reply@longlink.dev',
-                                description: 'Sender address. Configure an address your SMTP provider permits.'
-                            },
-                            {
-                                name: 'SMTP_USERNAME',
-                                type: 'string · optional',
-                                description:
-                                    'SMTP authentication username. Configure together with SMTP_PASSWORD or omit both.'
-                            },
-                            {
-                                name: 'SMTP_PASSWORD',
-                                type: 'string · optional',
-                                description: 'SMTP authentication password. Requires SMTP_USERNAME.'
-                            },
-                            {
-                                name: 'GOOGLE_OAUTH_CLIENT_ID',
-                                type: 'string · optional',
-                                description: 'Enables Google sign-in when configured with GOOGLE_OAUTH_CLIENT_SECRET.'
-                            },
-                            {
-                                name: 'GOOGLE_OAUTH_CLIENT_SECRET',
-                                type: 'string · optional',
-                                description: 'Google OAuth client secret. Requires GOOGLE_OAUTH_CLIENT_ID.'
-                            },
-                            {
-                                name: 'GITHUB_OAUTH_CLIENT_ID',
-                                type: 'string · optional',
-                                description: 'Enables GitHub sign-in when configured with GITHUB_OAUTH_CLIENT_SECRET.'
-                            },
-                            {
-                                name: 'GITHUB_OAUTH_CLIENT_SECRET',
-                                type: 'string · optional',
-                                description: 'GitHub OAuth client secret. Requires GITHUB_OAUTH_CLIENT_ID.'
-                            },
-                            {
-                                name: 'STRIPE_SECRET_KEY',
-                                type: 'string · optional',
-                                description:
-                                    'Stripe secret or restricted API key. Configure with STRIPE_WEBHOOK_SECRET to enable payments.'
-                            },
-                            {
-                                name: 'STRIPE_WEBHOOK_SECRET',
-                                type: 'string · optional',
-                                description:
-                                    'Stripe webhook signing secret beginning with whsec_. Requires STRIPE_SECRET_KEY.'
-                            }
-                        ]}
-                        columns={[
-                            {
-                                key: 'name',
-                                header: 'Environment variables',
-                                width: proportional(1),
-                                renderCell: (environment) => (
-                                    <Stack gap={0}>
-                                        <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
-                                            <Text>{environment.name}</Text>
-                                            <InlineCode>{environment.type}</InlineCode>
+                    </p>
+                    <Table wrap>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Environment variables</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[
+                                {
+                                    name: 'PUBLIC_URL',
+                                    type: 'string · default: http://localhost:5173',
+                                    description:
+                                        'Public HTTPS origin without a path. HTTP is allowed only for loopback development.'
+                                },
+                                {
+                                    name: 'SESSION_KEY',
+                                    type: 'string · required',
+                                    description:
+                                        'Session signing secret with at least 32 characters. Keep stable across restarts and replicas.'
+                                },
+                                {
+                                    name: 'ENCRYPTION_KEY',
+                                    type: 'string · required',
+                                    description:
+                                        'Encrypts stored infrastructure credentials. At least 32 characters; retain and back up this key.'
+                                },
+                                {
+                                    name: 'ADMIN_EMAIL',
+                                    type: 'email · required',
+                                    description:
+                                        'Platform administrator email. The sole administrator is reconciled on startup.'
+                                },
+                                {
+                                    name: 'ADMIN_PASSWORD',
+                                    type: 'string · required',
+                                    description:
+                                        'Platform administrator password, reconciled on startup. Use a strong password.'
+                                },
+                                {
+                                    name: 'DATABASE_URL',
+                                    type: 'string · required',
+                                    description:
+                                        'Platform database connection URL, including its asynchronous driver, credentials, and database name.'
+                                },
+                                {
+                                    name: 'SMTP_HOST',
+                                    type: 'string · required',
+                                    description: 'SMTP server for account verification and password reset emails.'
+                                },
+                                {
+                                    name: 'SMTP_PORT',
+                                    type: 'integer · default: 587',
+                                    description: 'SMTP server port, from 1 to 65535.'
+                                },
+                                {
+                                    name: 'SMTP_TRANSPORT',
+                                    type: '"plain" | "starttls" | "tls" · default: starttls',
+                                    description: 'SMTP connection security. Use starttls or tls for hosted deployments.'
+                                },
+                                {
+                                    name: 'SMTP_FROM',
+                                    type: 'email · default: no-reply@longlink.dev',
+                                    description: 'Sender address. Configure an address your SMTP provider permits.'
+                                },
+                                {
+                                    name: 'SMTP_USERNAME',
+                                    type: 'string · optional',
+                                    description:
+                                        'SMTP authentication username. Configure together with SMTP_PASSWORD or omit both.'
+                                },
+                                {
+                                    name: 'SMTP_PASSWORD',
+                                    type: 'string · optional',
+                                    description: 'SMTP authentication password. Requires SMTP_USERNAME.'
+                                },
+                                {
+                                    name: 'GOOGLE_OAUTH_CLIENT_ID',
+                                    type: 'string · optional',
+                                    description:
+                                        'Enables Google sign-in when configured with GOOGLE_OAUTH_CLIENT_SECRET.'
+                                },
+                                {
+                                    name: 'GOOGLE_OAUTH_CLIENT_SECRET',
+                                    type: 'string · optional',
+                                    description: 'Google OAuth client secret. Requires GOOGLE_OAUTH_CLIENT_ID.'
+                                },
+                                {
+                                    name: 'GITHUB_OAUTH_CLIENT_ID',
+                                    type: 'string · optional',
+                                    description:
+                                        'Enables GitHub sign-in when configured with GITHUB_OAUTH_CLIENT_SECRET.'
+                                },
+                                {
+                                    name: 'GITHUB_OAUTH_CLIENT_SECRET',
+                                    type: 'string · optional',
+                                    description: 'GitHub OAuth client secret. Requires GITHUB_OAUTH_CLIENT_ID.'
+                                },
+                                {
+                                    name: 'STRIPE_SECRET_KEY',
+                                    type: 'string · optional',
+                                    description:
+                                        'Stripe secret or restricted API key. Configure with STRIPE_WEBHOOK_SECRET to enable payments.'
+                                },
+                                {
+                                    name: 'STRIPE_WEBHOOK_SECRET',
+                                    type: 'string · optional',
+                                    description:
+                                        'Stripe webhook signing secret beginning with whsec_. Requires STRIPE_SECRET_KEY.'
+                                }
+                            ].map((row) => (
+                                <TableRow key={row.name}>
+                                    <TableCell>
+                                        <Stack gap={0}>
+                                            <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
+                                                <span>{row.name}</span>
+                                                <InlineCode>{row.type}</InlineCode>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{row.description}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{environment.description}</Text>
-                                    </Stack>
-                                )
-                            }
-                        ]}
-                    />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>
     );
 }
-
-import { InlineCode } from '@/components/shadcn/inline-code';

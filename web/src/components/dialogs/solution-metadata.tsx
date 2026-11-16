@@ -1,52 +1,55 @@
 import type { z } from 'zod';
-import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 export function SolutionMetadata({
     metadata,
-    onClose,
-    onDelete
-}: {
+    onDelete,
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     metadata: z.output<typeof schemas.zSolutionResponse>;
-    onClose: () => void;
     onDelete: () => void;
 }) {
     return (
-        <FramedDialog title="Solution metadata" open onOpenChange={(open) => !open && onClose()}>
-            <Stack gap={2} padding={8}>
-                <Text>
+        <Dialog
+            {...dialogProps}
+            title="Solution metadata"
+            footer={
+                <Button type="button" variant="destructive" onClick={onDelete}>
+                    Delete
+                </Button>
+            }
+        >
+            <Stack gap={2}>
+                <span>
                     <b>Status</b> {metadata.status}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Organization</b> {metadata.organization.name}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Desired image</b> {metadata.image_desired}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>ID</b> {metadata.id}
-                </Text>
+                </span>
                 {metadata.description && (
-                    <Text>
+                    <span>
                         <b>Description</b> {metadata.description}
-                    </Text>
+                    </span>
                 )}
-                <Text>
+                <span>
                     <b>Created</b> {metadata.created_at}
-                </Text>
-                <Stack direction="horizontal" justify="end">
-                    <Button label="Delete" variant="destructive" onClick={onDelete} />
-                </Stack>
+                </span>
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

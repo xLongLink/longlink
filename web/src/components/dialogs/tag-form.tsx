@@ -1,32 +1,46 @@
 import { z } from 'zod';
+import { useId } from 'react';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
-import { FormDialog } from './form-dialog';
-import { Form } from '@/components/custom/form';
-import { Selector } from '@/components/custom/selector';
-import { TextInput } from '@/components/custom/text-input';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList
+} from '@/components/shadcn/combobox';
+
+const tagSchema = schemas.zOrganizationTagWrite.extend({
+    name: z.string().trim().pipe(schemas.zOrganizationTagWrite.shape.name)
+});
 
 export function TagForm({
     base,
     tag,
     onSuccess,
-    onCancel
-}: {
+    onOpenChange,
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
-    onCancel: () => void;
 }) {
-    async function save(data: FormData) {
-        const json = schemas.zOrganizationTagWrite.parse({
-            name: z.string().trim().parse(data.get('name')),
-            icon: data.get('icon')
-        });
+    const formId = useId();
+    const form = useForm({
+        resolver: zodResolver(tagSchema),
+        defaultValues: { name: tag?.name ?? '', icon: tag?.icon ?? 'tag' }
+    });
 
+    async function save(json: z.output<typeof tagSchema>) {
         if (tag) {
             await api.patch(`${base}/tags/${tag.id}`, { json });
         } else {
@@ -36,32 +50,97 @@ export function TagForm({
         await onSuccess();
     }
 
+    const submit = useSubmit(save, {
+        onError: () => form.setError('root', { message: 'Could not save the tab. Please try again.' })
+    });
+
     return (
-        <FormDialog gap={6} onClose={onCancel}>
-            <Heading level={2} className="text-center">
-                {tag ? 'Edit tab' : 'New tab'}
-            </Heading>
-            <Form action={save}>
-                <Stack gap={3}>
-                    <TextInput label="Name" name="name" defaultValue={tag?.name ?? ''} required />
-                    <Selector
-                        label="Icon"
-                        name="icon"
-                        defaultValue={tag?.icon ?? 'tag'}
-                        options={Object.entries(tabs.icons).map(([value, option]) => ({
-                            value,
-                            label: option.label,
-                            icon: schemas.zTagIcon.parse(value)
-                        }))}
-                        hasSearch
-                        hasClear={false}
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title={tag ? 'Edit tab' : 'New tab'}
+            footer={
+                <>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
+                        {tag ? 'Save' : 'Create tab'}
+                    </Button>
+                </>
+            }
+        >
+            <form
+                id={formId}
+                className="flex flex-col gap-4"
+                onSubmit={(event) => {
+                    void form.handleSubmit(submit)(event);
+                }}
+                noValidate
+                aria-busy={form.formState.isSubmitting}
+            >
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                    <Controller
+                        name="name"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="tag-name">Name</FieldLabel>
+                                <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
                     />
-                    <Stack direction="horizontal" gap={2}>
-                        <Button label={tag ? 'Save' : 'Create tab'} type="submit" variant="default" />
-                        <Button label="Cancel" type="button" variant="ghost" onClick={onCancel} />
-                    </Stack>
-                </Stack>
-            </Form>
-        </FormDialog>
+                    <Controller
+                        name="icon"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="tag-icon">Icon</FieldLabel>
+                                <Combobox
+                                    items={schemas.zTagIcon.options}
+                                    value={field.value}
+                                    onValueChange={(value) => field.onChange(value ?? 'tag')}
+                                    itemToStringLabel={(icon) => tabs.icons[icon].label}
+                                    disabled={form.formState.isSubmitting}
+                                >
+                                    <ComboboxInput
+                                        ref={field.ref}
+                                        id="tag-icon"
+                                        onBlur={field.onBlur}
+                                        aria-invalid={fieldState.invalid}
+                                        disabled={form.formState.isSubmitting}
+                                        className="w-full"
+                                    />
+                                    <ComboboxContent>
+                                        <ComboboxEmpty>No results found</ComboboxEmpty>
+                                        <ComboboxList>
+                                            {(icon: z.output<typeof schemas.zTagIcon>) => {
+                                                const option = tabs.icons[icon];
+                                                const Icon = option.component;
+
+                                                return (
+                                                    <ComboboxItem key={icon} value={icon}>
+                                                        <Icon aria-hidden="true" />
+                                                        {option.label}
+                                                    </ComboboxItem>
+                                                );
+                                            }}
+                                        </ComboboxList>
+                                    </ComboboxContent>
+                                </Combobox>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                </fieldset>
+                <FieldError errors={[form.formState.errors.root]} />
+            </form>
+        </Dialog>
     );
 }

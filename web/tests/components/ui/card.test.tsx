@@ -4,16 +4,98 @@ import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { CardContent } from '@/components/shadcn/card';
 import { renderStatic, withMounted } from '../../render';
+import { Card } from '@/components/longlink/layout/card';
 import { LinkNavigationContext } from '@/components/custom/contexts';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 
+it('owns section layout and ignores injected styling', () => {
+    const overrides = { className: 'hidden', style: { display: 'none' } };
+    const output = renderStatic(
+        <Card
+            {...overrides}
+            aria-labelledby="order-title"
+            title={<h3 id="order-title">Order</h3>}
+            description="Ready to ship"
+            action={<button type="button">Details</button>}
+            footer={<button type="button">Edit</button>}
+        >
+            Order contents
+        </Card>
+    );
+
+    for (const part of output.querySelectorAll('[data-slot]')) {
+        expect(part.classList.contains('hidden')).toBe(false);
+        expect(part.hasAttribute('style')).toBe(false);
+    }
+    expect(output.querySelector('[aria-labelledby="order-title"]')).not.toBeNull();
+    expect(output.querySelector('#order-title')?.textContent).toBe('Order');
+    expect(output.querySelector('[data-slot="card-header"] h3')).not.toBeNull();
+    expect(output.querySelector('[data-slot="card-description"]')?.textContent).toBe('Ready to ship');
+    expect(output.querySelector('[data-slot="card-action"] button')?.textContent).toBe('Details');
+    expect(output.querySelector('[data-slot="card-content"]')?.textContent).toBe('Order contents');
+    expect(output.querySelector('[data-slot="card-footer"] button')?.textContent).toBe('Edit');
+});
+
+it.each([true, false])(
+    'keeps header and footer actions independent of surface activation (titled: %s)',
+    async (titled) => {
+        const action = vi.fn();
+        const edit = vi.fn();
+        const user = userEvent.setup();
+
+        await withMounted(
+            <Card
+                label="Open order"
+                onClick={action}
+                title={titled ? 'Order' : undefined}
+                description={titled ? 'Ready to ship' : undefined}
+                action={
+                    <button type="button" onClick={edit}>
+                        Details
+                    </button>
+                }
+                footer={
+                    <button type="button" onClick={edit}>
+                        Edit
+                    </button>
+                }
+            >
+                Order contents
+            </Card>,
+            async (output) => {
+                const body = output.querySelector<HTMLElement>('[data-slot="card-content"]');
+                const control = output.querySelector<HTMLButtonElement>('[data-slot="card-control"]');
+                const footerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-footer"] button');
+                const headerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-action"] button');
+
+                if (!body || !control || !footerAction || !headerAction) throw new Error('Missing card controls');
+                await act(async () => user.click(headerAction));
+                expect(edit).toHaveBeenCalledOnce();
+                expect(action).not.toHaveBeenCalled();
+                await act(async () => user.click(footerAction));
+                expect(edit).toHaveBeenCalledTimes(2);
+                expect(action).not.toHaveBeenCalled();
+
+                await act(async () => user.click(body));
+                expect(action).toHaveBeenCalledTimes(1);
+                await act(async () => control.focus());
+                await act(async () => user.keyboard('{Enter}'));
+                expect(action).toHaveBeenCalledTimes(2);
+                await act(async () => user.keyboard(' '));
+                expect(action).toHaveBeenCalledTimes(3);
+            }
+        );
+    }
+);
+
 it('retains content without making a plain card an action', () => {
     // Act
-    const output = renderStatic(<InteractiveCard>Order summary</InteractiveCard>);
+    const output = renderStatic(<Card>Order summary</Card>);
 
     // Assert
     expect(output.textContent).toContain('Order summary');
     expect(output.querySelector('a, button')).toBeNull();
+    expect(output.querySelector('[data-slot="card-header"], [data-slot="card-footer"]')).toBeNull();
 });
 
 it('gives selection priority over actions and navigation and leaves nested controls independent', async () => {

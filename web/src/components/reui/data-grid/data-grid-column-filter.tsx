@@ -1,7 +1,7 @@
 'use no memo';
 
 import { useMemo, useState } from 'react';
-import { Badge } from '@/components/reui/badge';
+import { Badge } from '@/components/longlink/display/badge';
 import { useDataGrid } from '@/components/reui/data-grid/data-grid';
 import type { DataGridFeatures } from '@/components/reui/data-grid/data-grid';
 import type { Column } from '@tanstack/react-table';
@@ -45,23 +45,19 @@ function DataGridColumnFilter<TData extends object, TValue>({
                         {selectedValues?.size > 0 && (
                             <>
                                 <Separator orientation="vertical" className="mx-2 h-4" />
-                                <Badge variant="secondary" className="px-1 font-normal lg:hidden">
-                                    {selectedValues.size}
-                                </Badge>
+                                <span className="lg:hidden">
+                                    <Badge variant="secondary">{selectedValues.size}</Badge>
+                                </span>
                                 <div className="hidden gap-x-1 lg:flex">
                                     {selectedValues.size > 2 ? (
-                                        <Badge variant="secondary" className="px-1 font-normal">
+                                        <Badge variant="secondary">
                                             {i18n.labels.filterSelectedCount(selectedValues.size)}
                                         </Badge>
                                     ) : (
                                         options
                                             .filter((option) => selectedValues.has(option.value))
                                             .map((option) => (
-                                                <Badge
-                                                    variant="secondary"
-                                                    key={option.value}
-                                                    className="px-1 font-normal"
-                                                >
+                                                <Badge variant="secondary" key={option.value}>
                                                     {option.label}
                                                 </Badge>
                                             ))

@@ -1,9 +1,9 @@
 import { Package } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { Wordmark } from '@/components/ui/wordmark';
+import { GitHubIcon } from '@/components/svg/github';
+import { LinkedInIcon } from '@/components/svg/linkedin';
 import { Separator } from '@/components/shadcn/separator';
-import { GitHubIcon } from '@/components/svg/git-hub-icon';
-import { LinkedInIcon } from '@/components/svg/linked-in-icon';
 
 /** Renders the public footer at the page's content width. */
 export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {

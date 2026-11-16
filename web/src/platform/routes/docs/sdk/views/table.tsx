@@ -1,9 +1,9 @@
 import ViewLayout from './view-layout';
-import { ModelDirectory } from '@/components/ui/model-directory';
-import modelDirectorySource from '@/components/ui/model-directory?raw';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/shadcn/table';
+import { Box } from '@/components/longlink/layout/box';
+import { Icon } from '@/components/longlink/display/icon';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
-/** Documents native shadcn table composition in LongLink Views. */
+/** Documents Table in LongLink Views. */
 export default function TablePage() {
     // Render this component's authored examples in the shared documentation layout.
     return (
@@ -16,47 +16,83 @@ export default function TablePage() {
                     description:
                         'Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption.'
                 },
-                {
-                    name: 'className',
-                    type: 'string',
-                    description: 'Native table classes. Table parts also accept standard HTML attributes and events.'
-                }
+                { name: 'wrap', type: 'boolean', description: 'Wraps cell text instead of keeping it on one line.' },
+                { name: 'TableHead.align', type: '"start" | "center" | "end"', description: 'Header text alignment.' },
+                { name: 'TableCell.align', type: '"start" | "center" | "end"', description: 'Cell text alignment.' }
             ]}
             example={{
-                title: 'Model directory',
-                preview: <ModelDirectory />,
-                code: modelDirectorySource,
-                language: 'tsx'
+                title: 'Projects',
+                preview: <TableExample />,
+                code: `function Example() {
+  const projects = [
+    { name: 'Website', status: 'Active', icon: 'globe' },
+    { name: 'Mobile app', status: 'Draft', icon: 'smartphone' },
+    { name: 'Dashboard', status: 'Active', icon: 'layout-dashboard' }
+  ];
+
+  return (
+    <Box width="80%">
+      <Table aria-label="Projects">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Project</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {projects.map((project) => (
+            <TableRow key={project.name}>
+              <TableCell>
+                <span className="flex items-center gap-2">
+                  <Icon icon={project.icon} size="sm" />
+                  {project.name}
+                </span>
+              </TableCell>
+              <TableCell>{project.status}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+}`
             }}
         />
     );
 }
 
-/** Shows a small table using native shadcn parts without a data adapter. */
+/** Shows a small table without a data adapter. */
 export function TableExample() {
     const projects = [
-        { name: 'Website', status: 'Active' },
-        { name: 'Mobile app', status: 'Draft' },
-        { name: 'Dashboard', status: 'Active' }
-    ];
+        { name: 'Website', status: 'Active', icon: 'globe' },
+        { name: 'Mobile app', status: 'Draft', icon: 'smartphone' },
+        { name: 'Dashboard', status: 'Active', icon: 'layout-dashboard' }
+    ] as const;
 
-    // Keep the catalog preview smaller than the full model directory.
+    // Pair each project with an icon in the shared documentation and catalog preview.
     return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Status</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody className="[&_tr]:border-border/50">
-                {projects.map((project) => (
-                    <TableRow key={project.name}>
-                        <TableCell>{project.name}</TableCell>
-                        <TableCell>{project.status}</TableCell>
+        <Box width="80%">
+            <Table aria-label="Projects">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Project</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {projects.map((project) => (
+                        <TableRow key={project.name}>
+                            <TableCell>
+                                <span className="flex items-center gap-2">
+                                    <Icon icon={project.icon} size="sm" />
+                                    {project.name}
+                                </span>
+                            </TableCell>
+                            <TableCell>{project.status}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </Box>
     );
 }

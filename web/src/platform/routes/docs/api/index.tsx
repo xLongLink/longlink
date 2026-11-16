@@ -1,7 +1,5 @@
-import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const article = {
     description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',
@@ -15,15 +13,15 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="platform" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="platform">
                     Platform
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     The Platform exists to keep an organization’s processes and data in a single place. This keeps both
                     the work and the information organized: work is done locally, while the cloud provides validation
                     and stores data in a consistent structure. This makes processes easier to review, manage, and
                     improve over time.
-                </Text>
+                </p>
             </Stack>
         </DocumentationArticle>
     );

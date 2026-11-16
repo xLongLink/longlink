@@ -3,34 +3,38 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
-import { Picker } from '@/components/custom/picker';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onClose
+    onOpenChange,
+    ...dialogProps
 }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     solutionId: string;
     organizationId: string;
-    onClose: () => void;
 }) {
     return (
-        <FramedDialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution permissions">
             <ApiBoundary key={solutionId}>
-                <SolutionPermissions solutionId={solutionId} organizationId={organizationId} onClose={onClose} />
+                <SolutionPermissions
+                    solutionId={solutionId}
+                    organizationId={organizationId}
+                    onClose={() => onOpenChange(false)}
+                />
             </ApiBoundary>
-        </FramedDialog>
+        </Dialog>
     );
 }
 
@@ -58,10 +62,9 @@ export default function SolutionPermissions({
     });
 
     return (
-        <Stack gap={4} padding={6}>
-            <Heading level={2}>Solution permissions</Heading>
+        <Stack gap={4}>
             {settings.roles.length === 0 ? (
-                <Text>Rebuild and deploy the Solution to load its roles.</Text>
+                <span>Rebuild and deploy the Solution to load its roles.</span>
             ) : (
                 <ApiBoundary key={`${solutionId}:${settings.revision_id}`}>
                     <MemberPermissions base={base} members={members} settings={settings} onClose={onClose} />
@@ -126,60 +129,88 @@ function MemberPermissions({
 
     return (
         <Stack gap={4}>
-            <DataTable
-                data={rows}
-                idKey="id"
-                density="compact"
-                columns={[
-                    {
-                        key: 'member',
-                        header: 'Member',
-                        width: proportional(2),
-                        renderCell: (member) => (
-                            <Stack direction="horizontal" gap={3} align="center">
-                                <GeneratedAvatar name={member.name} src={member.avatar} seed={member.id} />
-                                <Stack gap={0}>
-                                    <Text>{member.name}</Text>
-                                    <Text className="text-xs text-muted-foreground">{member.email}</Text>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Member</TableHead>
+                        <TableHead>Role</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {rows.map((member) => (
+                        <TableRow key={member.id}>
+                            <TableCell>
+                                <Stack direction="horizontal" gap={3} align="center">
+                                    <Avatar name={member.name} src={member.avatar} />
+                                    <Stack gap={0}>
+                                        <span>{member.name}</span>
+                                        <span className="text-xs text-muted-foreground">{member.email}</span>
+                                    </Stack>
                                 </Stack>
-                            </Stack>
-                        )
-                    },
-                    {
-                        key: 'role',
-                        header: 'Role',
-                        width: proportional(1),
-                        renderCell: (member) => (
-                            <Picker
-                                label={`Role for ${member.name}`}
-                                labelHidden
-                                disabled={save.isPending}
-                                value={member.role}
-                                options={[
-                                    { value: '', label: 'No access', icon: <Ban /> },
-                                    ...settings.roles.map((value) => ({
-                                        value,
-                                        label: value,
-                                        icon: value === 'read' ? <Eye /> : value === 'write' ? <Pencil /> : <Shield />
-                                    }))
-                                ]}
-                                onChange={(role) => setRoles((current) => ({ ...current, [member.id]: role ?? '' }))}
-                            />
-                        )
-                    }
-                ]}
-            />
+                            </TableCell>
+                            <TableCell>
+                                <Select
+                                    disabled={save.isPending}
+                                    value={member.role}
+                                    items={[
+                                        { value: '', label: 'No access' },
+                                        ...settings.roles.map((value) => ({ value, label: value }))
+                                    ]}
+                                    onValueChange={(role) =>
+                                        setRoles((current) => ({ ...current, [member.id]: role ?? '' }))
+                                    }
+                                >
+                                    <SelectTrigger aria-label={`Role for ${member.name}`} className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">
+                                            <Ban aria-hidden="true" />
+                                            No access
+                                        </SelectItem>
+                                        {settings.roles.map((role) => (
+                                            <SelectItem key={role} value={role}>
+                                                {role === 'read' ? (
+                                                    <Eye aria-hidden="true" />
+                                                ) : role === 'write' ? (
+                                                    <Pencil aria-hidden="true" />
+                                                ) : (
+                                                    <Shield aria-hidden="true" />
+                                                )}
+                                                {role}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                    {rows.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={2} align="center">
+                                <Empty role="status" title="No data" />
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
             <Stack direction="horizontal" gap={2} justify="end">
-                <Button label="Cancel" size="sm" variant="ghost" disabled={save.isPending} onClick={onClose} />
+                <Button size="sm" variant="ghost" disabled={save.isPending} onClick={onClose}>
+                    Cancel
+                </Button>
                 <Button
-                    label="Save"
                     size="sm"
-                    variant="default"
-                    isLoading={save.isPending}
+                    aria-busy={save.isPending || undefined}
                     disabled={save.isPending || Object.keys(roles).length === 0}
                     onClick={() => save.mutate()}
-                />
+                >
+                    Save
+                </Button>
+                <span role="status" className="sr-only">
+                    {save.isPending ? 'Loading' : ''}
+                </span>
             </Stack>
         </Stack>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

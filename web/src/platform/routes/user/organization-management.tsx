@@ -1,22 +1,20 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApiError } from '@/lib/errors';
-import { Badge } from '@/components/reui/badge';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
-import { Illustration } from '@/components/ui/illustration';
+import { Badge } from '@/components/longlink/display/badge';
+import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
 import CreateOrganization from '@/components/dialogs/create-organization';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { InvitationResponse } from '@/components/dialogs/invitation-response';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
 
@@ -73,144 +71,138 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             wrap="wrap"
                             minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading
-                                level={2}
-                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Organizations
-                            </Heading>
-                            <Button
-                                label="Create Organization"
-                                size="sm"
-                                onClick={() => setSelected({ type: 'create' })}
-                            />
+                            </h2>
+                            <Button size="sm" onClick={() => setSelected({ type: 'create' })}>
+                                Create Organization
+                            </Button>
                         </Stack>
                         <Separator />
                     </>
                 ) : !onboarding ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
-                        <Heading level={1}>Organizations</Heading>
-                        <Button label="Create Organization" onClick={() => setSelected({ type: 'create' })} />
+                        <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
+                        <Button onClick={() => setSelected({ type: 'create' })}>Create Organization</Button>
                     </Stack>
                 ) : null}
                 {onboarding ? (
                     <Stack gap={6} align="center">
-                        <Illustration
+                        <img
                             src="/images/organization.png"
                             alt=""
-                            className="size-20 object-contain"
+                            className="size-20 object-contain invert dark:invert-0"
                             width={1254}
                             height={1254}
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} className="text-center">
-                                Your Organizations
-                            </Heading>
-                            <Text as="p" className="text-muted-foreground text-center">
-                                A place for your workflows and data
-                            </Text>
+                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Organizations</h1>
+                            <p className="text-muted-foreground text-center">A place for your workflows and data</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Button
-                                label="Read the docs"
-                                variant="outline"
+                            <NativeNavigationLink
+                                className={buttonVariants({ variant: 'outline' })}
                                 href="/docs/"
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                            />
-                            <Button
-                                label="Create organization"
-                                variant="default"
-                                icon={<Plus className="size-4" aria-hidden="true" />}
-                                onClick={() => setSelected({ type: 'create' })}
-                            />
+                            >
+                                Read the docs
+                                <ExternalLink className="size-4" aria-hidden="true" />
+                            </NativeNavigationLink>
+                            <Button onClick={() => setSelected({ type: 'create' })}>
+                                <Plus className="size-4" aria-hidden="true" />
+                                Create organization
+                            </Button>
                         </Stack>
                     </Stack>
                 ) : (
-                    <DataTable
-                        data={rows}
-                        idKey={(row) => (row.kind === 'invitation' ? row.id : row.organization.id)}
-                        hasHover
-                        density="compact"
-                        columns={[
-                            {
-                                key: 'organization',
-                                header: 'Name',
-                                width: proportional(1),
-                                renderCell: (row) => (
-                                    <Stack direction="horizontal" gap={3} align="center">
-                                        <GeneratedAvatar kind="organization" name={row.organization.name} />
-                                        <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
-                                            {row.kind === 'invitation' ? (
-                                                <Text>{row.organization.name}</Text>
-                                            ) : presentation === 'settings' ? (
-                                                <Stack direction="horizontal" gap={1} align="center">
+                    <Table wrap>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                {invitations.length > 0 && <TableHead align="end"></TableHead>}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {rows.map((row) => (
+                                <TableRow key={row.kind === 'invitation' ? row.id : row.organization.id}>
+                                    <TableCell>
+                                        <Stack direction="horizontal" gap={3} align="center">
+                                            <Avatar shape="rounded" name={row.organization.name} />
+                                            <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
+                                                {row.kind === 'invitation' ? (
+                                                    <span>{row.organization.name}</span>
+                                                ) : presentation === 'settings' ? (
+                                                    <Stack direction="horizontal" gap={1} align="center">
+                                                        <Link href={`/orgs/${row.organization.id}`}>
+                                                            {row.organization.name}
+                                                        </Link>
+                                                        <Badge variant="secondary">{row.role}</Badge>
+                                                    </Stack>
+                                                ) : (
                                                     <Link href={`/orgs/${row.organization.id}`}>
                                                         {row.organization.name}
                                                     </Link>
-                                                    <Badge variant="secondary">{row.role}</Badge>
-                                                </Stack>
-                                            ) : (
-                                                <Link href={`/orgs/${row.organization.id}`}>
-                                                    {row.organization.name}
-                                                </Link>
-                                            )}
-                                            <Text className="text-xs text-muted-foreground">
-                                                {row.kind === 'invitation'
-                                                    ? `Invitation · ${row.role}`
-                                                    : 'Organization'}
-                                            </Text>
+                                                )}
+                                                <span className="text-xs text-muted-foreground">
+                                                    {row.kind === 'invitation'
+                                                        ? `Invitation · ${row.role}`
+                                                        : 'Organization'}
+                                                </span>
+                                            </Stack>
                                         </Stack>
-                                    </Stack>
-                                )
-                            },
-                            ...(invitations.length > 0
-                                ? [
-                                      {
-                                          key: 'actions',
-                                          header: '',
-                                          align: 'end' as const,
-                                          renderCell: (row: (typeof rows)[number]) =>
-                                              row.kind === 'invitation' ? (
-                                                  <Stack direction="horizontal" gap={2} justify="end">
-                                                      <Button
-                                                          label="Decline"
-                                                          size="sm"
-                                                          variant="outline"
-                                                          onClick={() =>
-                                                              setSelected({
-                                                                  type: 'decline',
-                                                                  id: row.id,
-                                                                  name: row.organization.name
-                                                              })
-                                                          }
-                                                      />
-                                                      <Button
-                                                          label="Accept"
-                                                          size="sm"
-                                                          variant="default"
-                                                          onClick={() =>
-                                                              setSelected({
-                                                                  type: 'accept',
-                                                                  id: row.id,
-                                                                  name: row.organization.name
-                                                              })
-                                                          }
-                                                      />
-                                                  </Stack>
-                                              ) : null
-                                      }
-                                  ]
-                                : [])
-                        ]}
-                    />
+                                    </TableCell>
+                                    {invitations.length > 0 && (
+                                        <TableCell align="end">
+                                            {row.kind === 'invitation' ? (
+                                                <Stack direction="horizontal" gap={2} justify="end">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                type: 'decline',
+                                                                id: row.id,
+                                                                name: row.organization.name
+                                                            })
+                                                        }
+                                                    >
+                                                        Decline
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="primary"
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                type: 'accept',
+                                                                id: row.id,
+                                                                name: row.organization.name
+                                                            })
+                                                        }
+                                                    >
+                                                        Accept
+                                                    </Button>
+                                                </Stack>
+                                            ) : null}
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                            {rows.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={invitations.length > 0 ? 2 : 1} align="center">
+                                        <Empty role="status" title="No data" />
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
             </Stack>
             {selected?.type === 'create' && (
                 <CreateOrganization
-                    onClose={closeSelected}
+                    open
+                    onOpenChange={closeSelected}
                     onSuccess={async () => {
                         // Refresh memberships before closing only this creation attempt.
                         await invalidateMemberships();
@@ -220,8 +212,9 @@ export default function OrganizationManagement({ presentation }: { presentation:
             )}
             {selected && selected.type !== 'create' && (
                 <InvitationResponse
+                    open
                     invitation={selected}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                     onConfirm={async () => {
                         // Apply only the confirmed invitation action and report server failures.
                         try {
@@ -246,3 +239,4 @@ export default function OrganizationManagement({ presentation }: { presentation:
         </>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

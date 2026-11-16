@@ -3,16 +3,15 @@ import { TextField } from './field';
 import { Mail } from 'lucide-react';
 import { AuthLayout } from './auth-layout';
 import { useSearchParams } from 'react-router';
+import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
-import { Divider } from '@/components/custom/divider';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
+import { FieldSeparator } from '@/components/shadcn/field';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -30,7 +29,7 @@ export default function Register() {
     return (
         <AuthLayout
             description={null}
-            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
         >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>
@@ -54,25 +53,18 @@ export default function Register() {
                             label="Email"
                             type="email"
                         />
-                        <Button
-                            icon={<Mail aria-hidden="true" size={16} />}
-                            label="Send registration link"
-                            type="submit"
-                            variant="default"
-                            style={{ width: '100%' }}
-                        />
+                        <Button type="submit" variant="primary" className="w-full">
+                            <Mail aria-hidden="true" size={16} />
+                            Send registration link
+                        </Button>
                     </Stack>
                 </form>
-                <Divider
-                    label={
-                        <>
-                            Already have an account?{' '}
-                            <Link href={`/login${signInSearch}`} className="font-medium">
-                                Sign In
-                            </Link>
-                        </>
-                    }
-                />
+                <FieldSeparator>
+                    Already have an account?{' '}
+                    <Link href={`/login${signInSearch}`} className="font-medium">
+                        Sign In
+                    </Link>
+                </FieldSeparator>
             </Stack>
         </AuthLayout>
     );

@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
-import { act, createRef, useState } from 'react';
+import { act, useState } from 'react';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { Grid, GridSpan } from '@/components/custom/grid';
-import { Stack, StackItem } from '@/components/custom/stack';
 import { PageContainer } from '@/components/ui/page-container';
+import { Grid, GridItem } from '@/components/longlink/layout/grid';
+import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
     // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.
@@ -36,65 +36,28 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
 });
 
-it.each([Stack, Grid])(
-    'forwards native container behavior and lets caller styles override layout props',
-    async (Layout) => {
-        const ref = createRef<HTMLDivElement>();
-        const user = userEvent.setup();
-        let resets = 0;
+it.each([Stack, Grid])('forwards native container events alongside layout props', async (Layout) => {
+    const user = userEvent.setup();
+    let resets = 0;
 
-        await withMounted(
-            <Layout
-                ref={ref}
-                role="region"
-                aria-label="Draft preview"
-                className="preview"
-                width={320}
-                gap={4}
-                style={{ width: 640, gap: 0 }}
-                onResetCapture={() => resets++}
-            >
-                <form>
-                    <button type="reset">Reset draft</button>
-                </form>
-            </Layout>,
-            async (output) => {
-                const container = output.querySelector<HTMLDivElement>('[role="region"]');
-                const button = output.querySelector('button');
+    await withMounted(
+        <Layout role="region" aria-label="Draft preview" gap={4} onResetCapture={() => resets++}>
+            <form>
+                <button type="reset">Reset draft</button>
+            </form>
+        </Layout>,
+        async (output) => {
+            const container = output.querySelector<HTMLDivElement>('[role="region"]');
+            const button = output.querySelector('button');
 
-                if (!container || !button) throw new Error('Expected a native preview container');
+            if (!container || !button) throw new Error('Expected a native preview container');
 
-                expect(ref.current).toBe(container);
-                expect(container.getAttribute('aria-label')).toBe('Draft preview');
-                expect(container.classList.contains('preview')).toBe(true);
-                expect(container.style.width).toBe('640px');
-                expect(Number.parseFloat(container.style.gap)).toBe(0);
-                await user.click(button);
-                expect(resets).toBe(1);
-            }
-        );
-
-        expect(ref.current).toBeNull();
-    }
-);
-
-it.each([Stack, Grid])('leaves omitted geometry to caller utilities rather than inline defaults', (Layout) => {
-    const output = renderStatic(
-        <Layout className="gap-6 p-4 grid-cols-2">
-            <p>Caller layout</p>
-        </Layout>
+            expect(container.getAttribute('aria-label')).toBe('Draft preview');
+            expect(container.style.gap).toBe('calc(var(--spacing) * 4)');
+            await user.click(button);
+            expect(resets).toBe(1);
+        }
     );
-
-    const container = output.querySelector('p')?.parentElement;
-
-    if (!container) throw new Error('Expected a layout container');
-
-    expect(container.style.gap).toBe('');
-    expect(container.style.rowGap).toBe('');
-    expect(container.style.columnGap).toBe('');
-    expect(container.style.paddingInline).toBe('');
-    expect(container.style.paddingBlock).toBe('');
-    expect(container.style.gridTemplateColumns).toBe('');
 });
 
 it('retains an unsaved content draft when its toolbar is removed and restored', async () => {
@@ -147,7 +110,7 @@ it('retains an unsaved content draft when its toolbar is removed and restored', 
     });
 });
 
-it('collapses spanning children on viewport changes without collapsing nested independent grids', async () => {
+it('automatically collapses and restores nested grid spans on viewport changes', async () => {
     const originalWidth = window.innerWidth;
 
     try {
@@ -157,31 +120,39 @@ it('collapses spanning children on viewport changes without collapsing nested in
         });
 
         await withMounted(
-            <Grid columns={3} collapseBelow={600}>
-                <GridSpan columns={2}>
+            <Grid columns={3}>
+                <GridItem columns={2}>
                     <Grid columns={2}>
-                        <GridSpan columns={2}>Nested</GridSpan>
+                        <GridItem columns={2}>Nested</GridItem>
                     </Grid>
-                </GridSpan>
+                </GridItem>
             </Grid>,
             async (output) => {
-                const spans = output.querySelectorAll<HTMLElement>('.view-grid-span');
+                const grids = output.querySelectorAll<HTMLElement>('[data-slot="grid"]');
+                const spans = output.querySelectorAll<HTMLElement>('[data-slot="grid-item"]');
+                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
+                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
                 expect(spans[0]?.style.gridColumn).toBe('span 2');
 
                 await act(async () => {
-                    window.innerWidth = 600;
+                    window.innerWidth = 768;
                     window.dispatchEvent(new Event('resize'));
                 });
 
+                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
+                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
                 expect(spans[0]?.style.gridColumn).toBe('1 / -1');
-                expect(spans[1]?.style.gridColumn).toBe('span 2');
+                expect(spans[1]?.style.gridColumn).toBe('1 / -1');
 
                 await act(async () => {
-                    window.innerWidth = 601;
+                    window.innerWidth = 769;
                     window.dispatchEvent(new Event('resize'));
                 });
 
+                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
+                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
                 expect(spans[0]?.style.gridColumn).toBe('span 2');
+                expect(spans[1]?.style.gridColumn).toBe('span 2');
             }
         );
     } finally {
@@ -192,11 +163,13 @@ it('collapses spanning children on viewport changes without collapsing nested in
 
 it('names a scrolling StackItem only while its retained content overflows', async () => {
     await withMounted(
-        <Stack height={100}>
-            <StackItem size="fill" isScrollable>
-                <p>Content</p>
-            </StackItem>
-        </Stack>,
+        <div className="grid h-25 grid-rows-[minmax(0,1fr)]">
+            <Stack>
+                <StackItem size="fill" isScrollable>
+                    <p>Content</p>
+                </StackItem>
+            </Stack>
+        </div>,
         async (output) => {
             const item = output.querySelector<HTMLElement>('.view-stack-item');
 

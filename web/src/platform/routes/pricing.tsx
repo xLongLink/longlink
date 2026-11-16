@@ -1,12 +1,12 @@
 import { Page } from '@/components/ui/page';
-import { Grid } from '@/components/custom/grid';
+import { Box } from '@/components/longlink/layout/box';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { buttonVariants } from '@/components/longlink/action/button';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 // Schema defaults come from the same constants used to calculate monthly invoices.
 const rates = schemas.zOrganizationUsage
@@ -45,64 +45,57 @@ export default function Pricing() {
                 <section className="p-6">
                     <Stack className="mx-auto" width="100%" maxWidth={1000} gap={10} align="center">
                         <Stack gap={3} align="center">
-                            <Heading
-                                level={1}
-                                className="text-5xl font-semibold text-balance text-center tracking-wide"
-                            >
-                                Pricing
-                            </Heading>
-                            <Text as="p" className="text-muted-foreground">
-                                Billed per Organization
-                            </Text>
+                            <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Pricing</h1>
+                            <p className="text-muted-foreground">Billed per Organization</p>
                         </Stack>
-                        <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
-                            {resources.map((resource) => {
-                                const ResourceIcon =
-                                    resource.id === 'users'
-                                        ? UsersRound
-                                        : resource.id === 'database'
-                                          ? Database
-                                          : HardDrive;
+                        <Box width="100%">
+                            <Grid columns={3} gap={0}>
+                                {resources.map((resource) => {
+                                    const ResourceIcon =
+                                        resource.id === 'users'
+                                            ? UsersRound
+                                            : resource.id === 'database'
+                                              ? Database
+                                              : HardDrive;
 
-                                return (
-                                    <div
-                                        key={resource.id}
-                                        className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
-                                    >
-                                        <Stack gap={6} paddingBlock={10} align="center">
-                                            <Stack gap={3} align="center">
-                                                <ResourceIcon aria-hidden className="text-primary" size={20} />
-                                                <Heading level={2} className="text-center">
-                                                    {resource.resource}
-                                                </Heading>
+                                    return (
+                                        <div
+                                            key={resource.id}
+                                            className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
+                                        >
+                                            <Stack gap={6} paddingBlock={10} align="center">
+                                                <Stack gap={3} align="center">
+                                                    <ResourceIcon aria-hidden className="text-primary" size={20} />
+                                                    <h2 className="font-semibold tracking-tight text-3xl text-center">
+                                                        {resource.resource}
+                                                    </h2>
+                                                </Stack>
+                                                <Separator className="data-[orientation=horizontal]:w-1/3" />
+                                                <Stack gap={2} align="center">
+                                                    <p className="font-semibold text-center">
+                                                        {resource.publicIncluded}
+                                                    </p>
+                                                    <p className="text-muted-foreground text-center">Included free</p>
+                                                </Stack>
+                                                <Separator className="data-[orientation=horizontal]:w-1/3" />
+                                                <Stack gap={2} align="center">
+                                                    <p className="font-semibold text-center">{resource.rate}</p>
+                                                    <p className="text-xs text-center text-muted-foreground">
+                                                        Per month, above included usage
+                                                    </p>
+                                                </Stack>
                                             </Stack>
-                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
-                                            <Stack gap={2} align="center">
-                                                <Text as="p" className="font-semibold text-center">
-                                                    {resource.publicIncluded}
-                                                </Text>
-                                                <Text as="p" className="text-muted-foreground text-center">
-                                                    Included free
-                                                </Text>
-                                            </Stack>
-                                            <Separator className="data-[orientation=horizontal]:w-1/3" />
-                                            <Stack gap={2} align="center">
-                                                <Text as="p" className="font-semibold text-center">
-                                                    {resource.rate}
-                                                </Text>
-                                                <Text as="p" className="text-xs text-center text-muted-foreground">
-                                                    Per month, above included usage
-                                                </Text>
-                                            </Stack>
-                                        </Stack>
-                                    </div>
-                                );
-                            })}
-                        </Grid>
-                        <Button href="/user/organizations/" label="Get started" variant="default" />
-                        <Text as="p" className="text-xs text-center text-muted-foreground">
+                                        </div>
+                                    );
+                                })}
+                            </Grid>
+                        </Box>
+                        <NativeNavigationLink href="/user/organizations/" className={buttonVariants()}>
+                            Get started
+                        </NativeNavigationLink>
+                        <p className="text-xs text-center text-muted-foreground">
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
-                        </Text>
+                        </p>
                     </Stack>
                 </section>
             </main>

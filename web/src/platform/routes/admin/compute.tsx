@@ -1,23 +1,23 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
-import { Info, Search } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { TextInput } from '@/components/custom/text-input';
+import { Info, Search, X } from 'lucide-react';
+import { Button } from '@/components/longlink/action/button';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { DataPagination } from '@/components/custom/data-pagination';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
     const { search, pagination, suffix } = useAdminList();
+    const searchInput = useRef<HTMLInputElement>(null);
 
     const [dialog, setDialog] = useState<
         | { kind: 'registration' }
@@ -38,62 +38,90 @@ export default function Compute() {
         <Stack gap={2}>
             <title>Compute | LongLink</title>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                <Heading level={1}>Compute</Heading>
-                <Button label="Register Compute" onClick={() => setDialog({ kind: 'registration' })} />
+                <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
+                <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
-            <TextInput
-                label="Search compute"
-                placeholder="Search by name or endpoint"
-                {...search}
-                startIcon={<Search />}
-            />
+            <Field>
+                <FieldLabel htmlFor="search-compute">Search compute</FieldLabel>
+                <InputGroup>
+                    <InputGroupInput
+                        ref={searchInput}
+                        id="search-compute"
+                        placeholder="Search by name or endpoint"
+                        value={search.value}
+                        onChange={(event) => search.onChange(event.target.value)}
+                    />
+                    <InputGroupAddon aria-hidden="true">
+                        <Search />
+                    </InputGroupAddon>
+                    {search.value !== '' && (
+                        <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                                size="icon-xs"
+                                aria-label="Clear Search compute"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    search.onChange('');
+                                    searchInput.current?.focus({ preventScroll: true });
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
+                        </InputGroupAddon>
+                    )}
+                </InputGroup>
+            </Field>
             <Stack gap={1}>
-                <DataTable
-                    data={computes.items}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'name',
-                            header: 'Compute',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack align="start">
-                                    <Text>{row.name}</Text>
-                                    <Text className="text-xs text-muted-foreground">{row.gateway_url}</Text>
-                                </Stack>
-                            )
-                        },
-                        {
-                            key: 'id',
-                            header: 'Actions',
-                            align: 'end',
-                            width: proportional(0.5),
-                            renderCell: (row) => (
-                                <Button
-                                    label="Metadata"
-                                    icon={<Info />}
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                />
-                            )
-                        }
-                    ]}
-                />
-                <Stack as="footer" align="center" paddingBlock={2}>
-                    <DataPagination {...pagination} totalItems={computes.total} />
-                </Stack>
+                <Table wrap>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Compute</TableHead>
+                            <TableHead align="end">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {computes.items.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>
+                                    <Stack align="start">
+                                        <span>{row.name}</span>
+                                        <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
+                                    </Stack>
+                                </TableCell>
+                                <TableCell align="end">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setDialog({ kind: 'metadata', id: row.id })}
+                                    >
+                                        <Info aria-hidden="true" />
+                                        Metadata
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {computes.items.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={2} align="center">
+                                    <Empty role="status" title="No data" />
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                <footer className="flex flex-col items-center py-2">
+                    <Pagination {...pagination} totalItems={computes.total} />
+                </footer>
             </Stack>
             {dialog?.kind === 'registration' && (
                 <ComputeRegistration
+                    open
                     onSuccess={async () => {
                         // Refresh the list before closing only this registration attempt.
                         await invalidate();
                         setDialog((current) => (current === dialog ? null : current));
                     }}
-                    onClose={() => {
+                    onOpenChange={() => {
                         // An obsolete registration cannot dismiss a replacement dialog selection.
                         setDialog((current) => (current === dialog ? null : current));
                     }}
@@ -101,8 +129,9 @@ export default function Compute() {
             )}
             {metadata && (
                 <ComputeMetadata
+                    open
                     metadata={metadata}
-                    onClose={() => setDialog(null)}
+                    onOpenChange={() => setDialog(null)}
                     onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
                 />
             )}
@@ -124,3 +153,4 @@ export default function Compute() {
         </Stack>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

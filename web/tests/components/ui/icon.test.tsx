@@ -1,10 +1,13 @@
-// @vitest-environment happy-dom
-import { act } from 'react';
 import * as icons from '@/lib/icons';
-import { it, expect, vi } from 'vitest';
+// @vitest-environment happy-dom
+import { act, createRef } from 'react';
 import { withMounted } from '../../render';
-import { Icon } from '@/components/custom/icon';
-import { IconRequestContext } from '@/components/custom/contexts';
+import { it, expect, vi, afterEach } from 'vitest';
+import { Icon } from '@/components/longlink/display/icon';
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 it('shares glyph loading while preserving decorative slots', async () => {
     // A delayed glyph must not duplicate requests or remove either action's icon slot.
@@ -14,22 +17,37 @@ it('shares glyph loading while preserving decorative slots', async () => {
         release = resolve;
     });
 
-    const load = vi.fn(async (name: string) => {
+    const originalLoad = icons.load;
+    const load = vi.spyOn(icons, 'load').mockImplementation(async (name: string) => {
         await pending;
 
-        return icons.load(name);
+        return originalLoad(name);
     });
+
+    const iconRef = createRef<SVGSVGElement>();
 
     try {
         await withMounted(
-            <IconRequestContext value={load}>
-                <Icon icon="search" size="sm" />
-                <Icon icon="search" size="lg" />
-            </IconRequestContext>,
+            <>
+                <Icon icon="search" size="sm" variant="primary" />
+                <Icon
+                    ref={iconRef}
+                    icon="search"
+                    tile="soft"
+                    variant="secondary"
+                    aria-hidden={false}
+                    aria-label="Search"
+                    role="img"
+                />
+            </>,
             async (output) => {
                 expect(load).toHaveBeenCalledExactlyOnceWith('search');
                 expect(output.querySelectorAll('svg')).toHaveLength(2);
                 expect(output.querySelector('svg path')).toBeNull();
+                expect(iconRef.current).toBe(output.querySelector('[data-slot="icon"][role="img"]'));
+                const tile = output.querySelector('[data-slot="icon-tile"]');
+
+                expect(tile?.contains(iconRef.current)).toBe(true);
 
                 await act(async () => {
                     release();
@@ -44,8 +62,12 @@ it('shares glyph loading while preserving decorative slots', async () => {
                     ])
                 ).toEqual([
                     ['sm', 'true'],
-                    ['lg', 'true']
+                    ['md', 'false']
                 ]);
+                expect(iconRef.current).toBe(output.querySelector('[data-slot="icon"][role="img"]'));
+                expect(iconRef.current?.getAttribute('aria-label')).toBe('Search');
+                expect(output.querySelector('[data-slot="icon-tile"]')).toBe(tile);
+                expect(tile?.contains(iconRef.current)).toBe(true);
             }
         );
     } finally {
@@ -55,24 +77,15 @@ it('shares glyph loading while preserving decorative slots', async () => {
 
 it('keeps a decorative warning glyph after deferred loading fails', async () => {
     // A network failure must leave a stable fallback, not an unlabeled image or a broken action.
-    const load = vi.fn(async () => {
-        throw new Error('Icon unavailable');
-    });
+    vi.spyOn(icons, 'load').mockRejectedValue(new Error('Icon unavailable'));
 
-    await withMounted(
-        <IconRequestContext value={load}>
-            <Icon icon="search" size="md" />
-        </IconRequestContext>,
-        async (output) => {
-            await vi.waitFor(
-                () =>
-                    expect(output.querySelector('svg')?.classList.contains('lucide-triangle-exclamation-point')).toBe(
-                        true
-                    ),
-                { timeout: 3000 }
-            );
-            expect(output.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
-            expect(output.querySelector('svg')?.getAttribute('data-size')).toBe('md');
-        }
-    );
+    await withMounted(<Icon icon="search" size="md" />, async (output) => {
+        await vi.waitFor(
+            () =>
+                expect(output.querySelector('svg')?.classList.contains('lucide-triangle-exclamation-point')).toBe(true),
+            { timeout: 3000 }
+        );
+        expect(output.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+        expect(output.querySelector('svg')?.getAttribute('data-size')).toBe('md');
+    });
 });

@@ -2,33 +2,30 @@ import { z } from 'zod';
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
-import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Button as ShadcnButton } from '@/components/shadcn/button';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -72,12 +69,12 @@ export default function OrganizationSettings() {
         <Stack gap={8}>
             <title>Organization Settings | LongLink</title>
             <Stack direction="horizontal" gap={3} align="center">
-                <GeneratedAvatar kind="organization" name={membership.organization.name} />
+                <Avatar shape="rounded" name={membership.organization.name} />
                 <Stack gap={0}>
-                    <Heading level={4} accessibilityLevel={1}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {membership.organization.name}
-                    </Heading>
-                    <Text className="text-xs text-muted-foreground">Organization</Text>
+                    </h4>
+                    <span className="text-xs text-muted-foreground">Organization</span>
                 </Stack>
             </Stack>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
@@ -89,7 +86,7 @@ export default function OrganizationSettings() {
                     ].map((group) => (
                         <Collapsible key={group.label} defaultOpen>
                             <CollapsibleTrigger
-                                render={<ShadcnButton variant="ghost" size="sm" className="w-full justify-start" />}
+                                render={<Button variant="ghost" size="sm" className="w-full justify-start" />}
                             >
                                 <group.icon aria-hidden="true" />
                                 {group.label}
@@ -98,7 +95,7 @@ export default function OrganizationSettings() {
                             <CollapsibleContent>
                                 <div className="flex flex-col gap-0.5 ps-6">
                                     {group.sections.map((item) => (
-                                        <ShadcnButton
+                                        <Button
                                             nativeButton={false}
                                             render={<Link to={`${location.pathname}${location.search}#${item.id}`} />}
                                             variant={section === item.id ? 'secondary' : 'ghost'}
@@ -108,13 +105,13 @@ export default function OrganizationSettings() {
                                             key={item.id}
                                         >
                                             {item.label}
-                                        </ShadcnButton>
+                                        </Button>
                                     ))}
                                 </div>
                             </CollapsibleContent>
                         </Collapsible>
                     ))}
-                    <ShadcnButton
+                    <Button
                         nativeButton={false}
                         render={<Link to={`${location.pathname}${location.search}#solutions`} />}
                         variant={section === 'solutions' ? 'secondary' : 'ghost'}
@@ -124,7 +121,7 @@ export default function OrganizationSettings() {
                     >
                         <Boxes className="size-4" aria-hidden="true" />
                         Solutions
-                    </ShadcnButton>
+                    </Button>
                 </nav>
                 <Stack gap={3} className="min-w-0">
                     <ApiBoundary key={section}>
@@ -177,18 +174,18 @@ function GeneralSection({
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     General
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
                     <Stack className="text-red-600 dark:text-red-400">
-                        <Heading level={4} accessibilityLevel={3} className="text-inherit">
+                        <h4 aria-level={3} className="font-semibold tracking-tight text-xl text-inherit">
                             Danger zone
-                        </Heading>
+                        </h4>
                     </Stack>
                     <Stack
                         direction="horizontal"
@@ -200,12 +197,14 @@ function GeneralSection({
                         className="rounded-lg border border-red-600 dark:border-red-400"
                     >
                         <Stack gap={0}>
-                            <Text className="font-bold">Delete this organization</Text>
-                            <Text className="text-muted-foreground">
+                            <span className="font-bold">Delete this organization</span>
+                            <span className="text-muted-foreground">
                                 Once deleted, it will be gone forever. Please be certain.
-                            </Text>
+                            </span>
                         </Stack>
-                        <Button label="Delete" variant="destructive" onClick={() => setIsConfirming(true)} />
+                        <Button variant="destructive" onClick={() => setIsConfirming(true)}>
+                            Delete
+                        </Button>
                     </Stack>
                 </Stack>
             )}
@@ -255,93 +254,95 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
         <>
             <Stack gap={4}>
                 <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Members
-                    </Heading>
+                    </h2>
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={members}
-                    idKey={(row) => row.user.id}
-                    hasHover
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'user',
-                            header: 'User',
-                            width: proportional(1),
-                            renderCell: (row) => (
-                                <Stack direction="horizontal" gap={3} align="center">
-                                    <GeneratedAvatar name={row.user.name} src={row.user.avatar} seed={row.user.id} />
-                                    <Stack align="start">
-                                        <Stack direction="horizontal" gap={1} align="center">
-                                            <Text>{row.user.name}</Text>
-                                            <Text className="text-xs text-muted-foreground">{row.role}</Text>
+                <Table wrap>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>User</TableHead>
+                            {canAdminister && <TableHead align="end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {members.map((row) => (
+                            <TableRow key={row.user.id}>
+                                <TableCell>
+                                    <Stack direction="horizontal" gap={3} align="center">
+                                        <Avatar name={row.user.name} src={row.user.avatar} />
+                                        <Stack align="start">
+                                            <Stack direction="horizontal" gap={1} align="center">
+                                                <span>{row.user.name}</span>
+                                                <span className="text-xs text-muted-foreground">{row.role}</span>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{row.user.email}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{row.user.email}</Text>
                                     </Stack>
-                                </Stack>
-                            )
-                        },
-                        ...(canAdminister
-                            ? [
-                                  {
-                                      key: 'role',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(0.5),
-                                      renderCell: (row: z.output<typeof schemas.zOrganizationMemberAccessResponse>) =>
-                                          row.role === 'owner' && !canManageOwners ? null : (
-                                              <DropdownMenu>
-                                                  <DropdownMenuTrigger
-                                                      render={
-                                                          <ShadcnButton
-                                                              type="button"
-                                                              variant="ghost"
-                                                              size="icon"
-                                                              aria-label={`Actions for ${row.user.name}`}
-                                                          >
-                                                              <Ellipsis aria-hidden="true" />
-                                                          </ShadcnButton>
-                                                      }
-                                                  />
-                                                  <DropdownMenuContent align="end">
-                                                      {['read', 'write', 'maintain', 'admin'].map((role) =>
-                                                          role === row.role ? null : (
-                                                              <DropdownMenuItem
-                                                                  key={role}
-                                                                  onClick={() =>
-                                                                      setMember({
-                                                                          id: row.user.id,
-                                                                          action: { kind: 'role', role }
-                                                                      })
-                                                                  }
-                                                              >
-                                                                  {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
-                                                              </DropdownMenuItem>
-                                                          )
-                                                      )}
-                                                      <DropdownMenuItem
-                                                          onClick={() =>
-                                                              setMember({ id: row.user.id, action: { kind: 'remove' } })
-                                                          }
-                                                      >
-                                                          Remove member
-                                                      </DropdownMenuItem>
-                                                  </DropdownMenuContent>
-                                              </DropdownMenu>
-                                          )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                                </TableCell>
+                                {canAdminister && (
+                                    <TableCell align="end">
+                                        {row.role === 'owner' && !canManageOwners ? null : (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger
+                                                    render={
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            aria-label={`Actions for ${row.user.name}`}
+                                                        >
+                                                            <Ellipsis aria-hidden="true" />
+                                                        </Button>
+                                                    }
+                                                />
+                                                <DropdownMenuContent align="end">
+                                                    {['read', 'write', 'maintain', 'admin'].map((role) =>
+                                                        role === row.role ? null : (
+                                                            <DropdownMenuItem
+                                                                key={role}
+                                                                onClick={() =>
+                                                                    setMember({
+                                                                        id: row.user.id,
+                                                                        action: { kind: 'role', role }
+                                                                    })
+                                                                }
+                                                            >
+                                                                {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
+                                                            </DropdownMenuItem>
+                                                        )
+                                                    )}
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setMember({ id: row.user.id, action: { kind: 'remove' } })
+                                                        }
+                                                    >
+                                                        Remove member
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {members.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canAdminister ? 2 : 1} align="center">
+                                    <Empty role="status" title="No data" />
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
             {canManageSelectedMember && member && (
                 <MemberAccess
+                    open
                     name={selectedMember.user.name}
                     action={member.action}
-                    onClose={() => setMember(null)}
+                    onOpenChange={() => setMember(null)}
                     onConfirm={async () => {
                         // Update access on the server before refreshing the member list.
                         if (member.action.kind === 'remove') {
@@ -387,6 +388,8 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
     const reportError = useApiError();
+    const revocationInFlight = useRef(false);
+    const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
 
@@ -402,14 +405,11 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     }
 
     /** Sends the validated invitation and refreshes organization access. */
-    async function inviteMember(data: FormData) {
+    async function inviteMember(data: z.output<typeof schemas.zOrganizationInvitationCreate>) {
         // Keep the dialog open on failure, but refresh either way because a failed email still saves the invitation.
         try {
             await api.post(`${base}/invitations`, {
-                json: schemas.zOrganizationInvitationCreate.parse({
-                    role: data.get('role'),
-                    email: z.string().trim().parse(data.get('email'))
-                })
+                json: schemas.zOrganizationInvitationCreate.parse({ role: data.role, email: data.email.trim() })
             });
             closeInvitation();
         } catch (failure) {
@@ -429,55 +429,79 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                     wrap="wrap"
                     minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
-                    </Heading>
-                    {canMaintain && <Button label="Invite" size="sm" onClick={() => setInvitationAttempt(Symbol())} />}
+                    </h2>
+                    {canMaintain && (
+                        <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
+                            Invite
+                        </Button>
+                    )}
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={invitations}
-                    idKey="id"
-                    hasHover
-                    density="compact"
-                    columns={[
-                        { key: 'email', header: 'Email', width: proportional(1) },
-                        {
-                            key: 'role',
-                            header: 'Role',
-                            width: proportional(1),
-                            renderCell: (row) => <Text className="text-xs text-muted-foreground">{row.role}</Text>
-                        },
-                        ...(canMaintain
-                            ? [
-                                  {
-                                      key: 'id',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(0.5),
-                                      renderCell: (row: z.output<typeof schemas.zOrganizationInvitationResponse>) => (
-                                          <Button
-                                              label="Revoke"
-                                              variant="destructive"
-                                              clickAction={async () => {
-                                                  // Refresh organization access only after revocation succeeds.
-                                                  await api.delete(`${base}/invitations/${row.id}`);
-                                                  await invalidateInvitations();
-                                              }}
-                                          />
-                                      )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                <Table wrap>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invitations.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>{row.email}</TableCell>
+                                <TableCell>
+                                    <span className="text-xs text-muted-foreground">{row.role}</span>
+                                </TableCell>
+                                {canMaintain && (
+                                    <TableCell align="end">
+                                        <Button
+                                            variant="destructive"
+                                            disabled={revoking}
+                                            aria-busy={revoking || undefined}
+                                            onClick={() => {
+                                                // Serialize revocation until the refreshed list is available.
+                                                if (revocationInFlight.current) return;
+                                                revocationInFlight.current = true;
+                                                startRevocation(async () => {
+                                                    try {
+                                                        await api.delete(`${base}/invitations/${row.id}`);
+                                                        await invalidateInvitations();
+                                                    } catch (cause) {
+                                                        reportError(cause);
+                                                    } finally {
+                                                        revocationInFlight.current = false;
+                                                    }
+                                                });
+                                            }}
+                                        >
+                                            Revoke
+                                        </Button>
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {invitations.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canMaintain ? 3 : 2} align="center">
+                                    <Empty role="status" title="No data" />
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
+            <span role="status" className="sr-only">
+                {revoking ? 'Loading' : ''}
+            </span>
             <InviteMember
-                isOpen={invitationAttempt !== null}
+                open={invitationAttempt !== null}
                 canInviteAdmin={canInviteAdmin}
-                onClose={closeInvitation}
+                onOpenChange={closeInvitation}
                 onSubmit={inviteMember}
             />
         </>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

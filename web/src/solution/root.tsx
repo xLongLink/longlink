@@ -1,9 +1,7 @@
-import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/ui/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
-import { IconRequestContext } from '@/components/custom/contexts';
 import { CachedAppearanceProvider } from '@/components/appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import '@/index.css';
@@ -19,13 +17,11 @@ export default function SolutionRoot() {
     // Keep theme and API ownership around the active route.
     return (
         <CachedAppearanceProvider>
-            <IconRequestContext value={icons.load}>
-                <ApiProvider>
-                    <ApiBoundary>
-                        <Outlet />
-                    </ApiBoundary>
-                </ApiProvider>
-            </IconRequestContext>
+            <ApiProvider>
+                <ApiBoundary>
+                    <Outlet />
+                </ApiBoundary>
+            </ApiProvider>
         </CachedAppearanceProvider>
     );
 }

@@ -2,31 +2,40 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Dialog } from '@/components/custom/dialog';
 import userEvent from '@testing-library/user-event';
-import { FramedDialog } from '@/components/custom/framed-dialog';
-import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
-import { ButtonGroupContext, ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
-import {
-    DropdownMenu,
-    DropdownMenuItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger
-} from '@/components/shadcn/dropdown-menu';
+import { DialogClose } from '@/components/shadcn/dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { DialogActivityContext } from '@/components/custom/contexts';
+import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
-it('dismisses the FramedDialog without submitting its form', async () => {
-    // Arrange
+it.each([false, true])('closes a dialog without submitting its form (fullscreen host: %s)', async (fullscreen) => {
     const close = vi.fn();
+    const submit = vi.fn((event: React.SubmitEvent) => event.preventDefault());
+    const activity = vi.fn();
+    const user = userEvent.setup();
 
-    // Act
-    await withMounted(<FramedDialog open onOpenChange={close} />, async () => {
-        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Close dialog"]');
-        await act(async () => button?.click());
+    // Keep visibility caller-owned while exercising the modal close control.
+    await withMounted(
+        <DialogActivityContext value={activity}>
+            <Dialog title="Edit order" fullscreen={fullscreen} open onOpenChange={close}>
+                <form onSubmit={submit}>
+                    <input aria-label="Order name" />
+                </form>
+            </Dialog>
+        </DialogActivityContext>,
+        async () => {
+            const button = document.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
 
-        // Assert
-        expect(close).toHaveBeenCalledExactlyOnceWith(false);
-        expect(button?.getAttribute('type')).toBe('button');
-    });
+            if (!button) throw new Error('Missing close button');
+
+            await act(async () => user.click(button));
+            expect(close).toHaveBeenCalledTimes(1);
+            expect(close.mock.calls[0]?.[0]).toBe(false);
+            expect(submit).not.toHaveBeenCalled();
+            expect(activity).toHaveBeenCalledExactlyOnceWith(true, fullscreen);
+        }
+    );
+    expect(activity).toHaveBeenLastCalledWith(false, fullscreen);
 });
 
 it('conditionally unmounts an open dialog without changing caller-owned state', async () => {
@@ -43,9 +52,9 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
                     Hide
                 </button>
                 {!hidden && (
-                    <FramedDialog title="Edit order" open onOpenChange={change}>
+                    <Dialog title="Edit order" open onOpenChange={change}>
                         Draft
-                    </FramedDialog>
+                    </Dialog>
                 )}
             </>
         );
@@ -69,7 +78,7 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
     });
 });
 
-it('traps keyboard focus, ignores backdrop presses, and restores focus after Escape from a disabled group', async () => {
+it('traps keyboard focus, ignores backdrop presses, and restores focus after Escape', async () => {
     const activity = vi.fn();
 
     /** Opens a controlled modal from an independently operable trigger. */
@@ -81,13 +90,16 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
                 <button type="button" onClick={() => setOpen(true)}>
                     Edit
                 </button>
-                <ButtonGroupContext value={{ orientation: 'vertical', isDisabled: true }}>
-                    <ControlSizeContext value="lg">
-                        <FramedDialog title="Edit order" open={open} onOpenChange={setOpen}>
-                            <input aria-label="Order name" />
-                        </FramedDialog>
-                    </ControlSizeContext>
-                </ButtonGroupContext>
+                <Dialog
+                    title="Edit order"
+                    open={open}
+                    onOpenChange={(nextOpen, details) => {
+                        if (details.reason === 'outside-press') details.cancel();
+                        else setOpen(nextOpen);
+                    }}
+                >
+                    <input aria-label="Order name" />
+                </Dialog>
             </DialogActivityContext>
         );
     }
@@ -103,7 +115,7 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
 
         if (!modal) throw new Error('Missing modal');
 
-        const close = modal.querySelector<HTMLButtonElement>('[aria-label="Close dialog"]');
+        const close = modal.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
 
         if (!close) throw new Error('Missing close button');
 
@@ -112,7 +124,7 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         if (!title) throw new Error('Missing accessible title');
 
         expect(title.textContent).toBe('Edit order');
-        expect(document.activeElement).toBe(title);
+        expect(document.activeElement).toBe(modal.querySelector('input'));
         expect(close.disabled).toBe(false);
         expect(close.getAttribute('aria-disabled')).not.toBe('true');
         const backdrop = document.querySelector('[data-slot="dialog-overlay"]');
@@ -141,7 +153,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
 
     await withMounted(
         <DialogActivityContext value={activity}>
-            <FramedDialog title="Preview" variant="fullscreen" open onOpenChange={() => {}} />
+            <Dialog title="Preview" fullscreen open onOpenChange={() => {}} />
         </DialogActivityContext>,
         async () => {
             expect(activity).toHaveBeenCalledExactlyOnceWith(true, true);
@@ -153,7 +165,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
     ]);
 });
 
-it('keeps native dialog host coordination active after canceled dismissal and releases it on close', async () => {
+it('keeps dialog host coordination active after canceled dismissal and releases it on close', async () => {
     const activity = vi.fn();
     const user = userEvent.setup();
 
@@ -161,15 +173,13 @@ it('keeps native dialog host coordination active after canceled dismissal and re
     await withMounted(
         <DialogActivityContext value={activity}>
             <Dialog
+                title="Order details"
+                trigger={<button type="button">Open</button>}
                 onOpenChange={(_open, details) => {
                     if (details.reason === 'escape-key') details.cancel();
                 }}
             >
-                <DialogTrigger>Open</DialogTrigger>
-                <DialogContent showCloseButton={false}>
-                    <DialogTitle>Order details</DialogTitle>
-                    <DialogClose>Done</DialogClose>
-                </DialogContent>
+                <DialogClose>Done</DialogClose>
             </Dialog>
         </DialogActivityContext>,
         async (output) => {
@@ -202,19 +212,22 @@ it('keeps native dialog host coordination active after canceled dismissal and re
 it('keeps a portaled menu operable inside the modal and dismisses the innermost layer first', async () => {
     const action = vi.fn();
     const user = userEvent.setup();
+    const overrides = { className: 'hidden' };
 
     function Probe() {
         const [open, setOpen] = useState(true);
 
         return (
-            <FramedDialog title="Actions" open={open} onOpenChange={setOpen}>
-                <DropdownMenu>
-                    <DropdownMenuTrigger>More</DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={action}>Archive</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </FramedDialog>
+            <Dialog title="Actions" open={open} onOpenChange={setOpen}>
+                <Dropdown>
+                    <DropdownTrigger {...overrides}>More</DropdownTrigger>
+                    <DropdownContent {...overrides}>
+                        <DropdownItem {...overrides} onClick={action}>
+                            Archive
+                        </DropdownItem>
+                    </DropdownContent>
+                </Dropdown>
+            </Dialog>
         );
     }
 
@@ -222,7 +235,10 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         const trigger = document.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
 
         if (!trigger) throw new Error('Expected the modal menu trigger');
+        expect(trigger.classList.contains('hidden')).toBe(false);
         await act(async () => user.click(trigger));
+        expect(document.querySelector('[role="menu"]')?.classList.contains('hidden')).toBe(false);
+        expect(document.querySelector('[role="menuitem"]')?.classList.contains('hidden')).toBe(false);
         await act(async () => user.keyboard('{ArrowDown}{Enter}'));
         expect(action).toHaveBeenCalledTimes(1);
         expect(document.querySelector('[role="menu"]')).toBeNull();
@@ -237,4 +253,41 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         await act(async () => user.keyboard('{Escape}'));
         expect(document.querySelector('[role="dialog"]')).toBeNull();
     });
+});
+
+it('releases only the dismissed nested dialog host capability and restores focus to its trigger', async () => {
+    const activity = vi.fn();
+    const user = userEvent.setup();
+
+    await withMounted(
+        <DialogActivityContext value={activity}>
+            <Dialog title="Order" defaultOpen>
+                <Dialog title="Attachment" fullscreen trigger={<button type="button">Preview attachment</button>} />
+            </Dialog>
+        </DialogActivityContext>,
+        async () => {
+            const trigger = document.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
+
+            if (!trigger) throw new Error('Missing nested dialog trigger');
+            await act(async () => user.click(trigger));
+            expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2);
+            expect(activity.mock.calls).toEqual([
+                [true, false],
+                [true, true]
+            ]);
+
+            await act(async () => user.keyboard('{Escape}'));
+            expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+            expect(activity.mock.calls).toEqual([
+                [true, false],
+                [true, true],
+                [false, true]
+            ]);
+            expect(document.activeElement).toBe(trigger);
+
+            await act(async () => user.keyboard('{Escape}'));
+            expect(document.querySelector('[role="dialog"]')).toBeNull();
+            expect(activity).toHaveBeenLastCalledWith(false, false);
+        }
+    );
 });

@@ -8,9 +8,9 @@ import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { useAnnouncement } from '@/components/custom/announcement';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
@@ -34,11 +34,6 @@ export default function ResetPassword() {
     });
 
     const confirmation = 'Your password has been reset. You can now sign in.';
-
-    const { root, channel } = useAnnouncement(
-        form.formState.isSubmitSuccessful && !form.formState.errors.root?.credential ? confirmation : '',
-        'event'
-    );
 
     /** Returns the credential outcome while preserving cancellation of token-storage cleanup. */
     async function verify({
@@ -82,7 +77,9 @@ export default function ResetPassword() {
             >
                 {pageMetadata}
                 <Separator />
-                <Button href="/auth/forgot-password" label="Request another reset link" variant="default" />
+                <NativeNavigationLink href="/auth/forgot-password" className={buttonVariants()}>
+                    Request another reset link
+                </NativeNavigationLink>
             </AuthLayout>
         );
     }
@@ -92,21 +89,27 @@ export default function ResetPassword() {
             {pageMetadata}
             <Separator />
             {verification?.status !== 'verified' ? (
-                <Button isLoading label="Reset password" variant="default" />
+                <Button disabled aria-busy="true">
+                    Reset password
+                </Button>
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
                     <div
-                        ref={root}
                         className="native-auth-banner flex max-w-full items-start gap-2 rounded-xl bg-success/10 px-4 py-3 font-[inherit] text-success-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
                         data-status="success"
                     >
                         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
-                        <p className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere">
+                        <p
+                            role="status"
+                            aria-atomic="true"
+                            className="m-0 min-w-0 text-sm leading-(--text-sm--line-height) font-semibold wrap-anywhere"
+                        >
                             {confirmation}
                         </p>
-                        <span ref={channel} className="sr-only" role="status" aria-atomic="true" />
                     </div>
-                    <Button href="/login" label="Back to sign in" variant="default" />
+                    <NativeNavigationLink href="/login" className={buttonVariants()}>
+                        Back to sign in
+                    </NativeNavigationLink>
                 </Stack>
             ) : (
                 <form
@@ -133,7 +136,7 @@ export default function ResetPassword() {
                             label="New password"
                             type="password"
                         />
-                        <Button label="Reset password" type="submit" variant="default" />
+                        <Button type="submit">Reset password</Button>
                     </Stack>
                 </form>
             )}

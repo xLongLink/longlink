@@ -1,39 +1,77 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect } from 'vitest';
+import { useForm } from 'react-hook-form';
 import { withMounted } from '../../render';
-import { Form } from '@/components/custom/form';
-import { TextInput } from '@/components/custom/text-input';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { FormRequestContext } from '@/components/custom/contexts';
 
-it.each([undefined, 'post', 'put', 'patch', 'delete'] as const)(
-    'submits named fields using method %s',
+it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
+    'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',
     async (method) => {
-        // Arrange
+        const file = new File(['invoice'], 'invoice.pdf', { type: 'application/pdf' });
         const submissions: [string, string, [string, string | Blob][]][] = [];
+        let completed = false;
 
-        // Act
+        function Example() {
+            const form = useForm();
+
+            const submit = useSubmit('/api/orders', {
+                method,
+                onSuccess: () => {
+                    completed = true;
+                }
+            });
+
+            return (
+                <form
+                    onSubmit={(event) => {
+                        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
+                        data.append('attachment', file);
+                        void form.handleSubmit(async () => {
+                            await submit(data);
+                        })(event);
+                    }}
+                >
+                    <input name="tag" defaultValue="red" />
+                    <input name="tag" defaultValue="blue" />
+                    <input name="excluded" defaultValue="private" disabled />
+                    <button type="submit" name="decision" value="save">
+                        Save
+                    </button>
+                </form>
+            );
+        }
+
         await withMounted(
             <FormRequestContext
                 value={async (path, options) => {
                     submissions.push([path, options.method, options.form]);
+                    expect(completed).toBe(false);
 
                     return null;
                 }}
             >
-                <Form action="/api/orders" method={method}>
-                    <TextInput label="Name" name="name" defaultValue="Acme" />
-                </Form>
+                <Example />
             </FormRequestContext>,
             async (output) => {
-                await act(async () => {
-                    output
-                        .querySelector('form')
-                        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                });
+                const button = output.querySelector('button');
 
-                // Assert
-                expect(submissions).toEqual([['/api/orders', (method ?? 'post').toUpperCase(), [['name', 'Acme']]]]);
+                if (!button) throw new Error('Expected the submit button');
+                await act(async () => button.click());
+                expect(submissions).toEqual([
+                    [
+                        '/api/orders',
+                        method,
+                        [
+                            ['tag', 'red'],
+                            ['tag', 'blue'],
+                            ['decision', 'save'],
+                            ['attachment', file]
+                        ]
+                    ]
+                ]);
+                expect(completed).toBe(true);
             }
         );
     }

@@ -1,5 +1,7 @@
 import ViewLayout from './view-layout';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Box } from '@/components/longlink/layout/box';
+import { Text } from '@/components/longlink/display/text';
+import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 /** Documents Stack in LongLink Views. */
 export default function StackPage() {
@@ -9,56 +11,16 @@ export default function StackPage() {
             name="Stack"
             properties={[
                 { name: 'children', type: 'ReactNode', description: 'Stack content.' },
-                {
-                    name: 'className',
-                    type: 'string',
-                    description: 'Tailwind utilities overriding the default flex column and gap-3 layout.'
-                },
-                { name: 'style', type: 'CSSProperties', description: 'Native inline styles; override layout props.' },
-                {
-                    name: 'ref',
-                    type: 'Ref<HTMLDivElement>',
-                    description:
-                        'Reference to the stack container. Native div attributes and event handlers are supported.'
-                },
-                {
-                    name: 'width',
-                    type: 'string | number',
-                    description: 'Container width; numbers are pixels and strings are CSS sizes.'
-                },
-                {
-                    name: 'height',
-                    type: 'string | number',
-                    description: 'Container height; numbers are pixels and strings are CSS sizes.'
-                },
-                {
-                    name: 'maxWidth',
-                    type: 'string | number',
-                    description: 'Maximum container width; numbers are pixels and strings are CSS sizes.'
-                },
-                {
-                    name: 'minHeight',
-                    type: 'string | number',
-                    description: 'Minimum container height; numbers are pixels and strings are CSS sizes.'
-                },
-                {
-                    name: 'gap',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Explicit spacing between items; otherwise gap-3 can be overridden with className.'
-                },
-                {
-                    name: 'padding',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
-                    description: 'Inner padding using the spacing scale.'
-                },
+                { name: 'gap', type: 'number', description: 'Spacing between items using the shared spacing scale.' },
+                { name: 'padding', type: 'number', description: 'Inner padding using the spacing scale.' },
                 {
                     name: 'paddingInline',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
+                    type: 'number',
                     description: 'Horizontal padding, overriding padding on the inline axis.'
                 },
                 {
                     name: 'paddingBlock',
-                    type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
+                    type: 'number',
                     description: 'Vertical padding, overriding padding on the block axis.'
                 },
                 {
@@ -87,8 +49,16 @@ export default function StackPage() {
                     type: 'ReactNode',
                     description: 'Content rendered inside the stack item.'
                 },
-                { name: 'StackItem.size', type: '"fill" | "static"' },
-                { name: 'StackItem.isScrollable', type: 'boolean' },
+                {
+                    name: 'StackItem.size',
+                    type: '"fill" | "static"',
+                    description: 'Fill items grow into available space; static items keep their intrinsic size.'
+                },
+                {
+                    name: 'StackItem.isScrollable',
+                    type: 'boolean',
+                    description: 'Scroll overflowing content within a size-constrained stack item.'
+                },
                 {
                     name: 'StackItem.crossAlignSelf',
                     type: '"start" | "center" | "end" | "stretch"',
@@ -101,12 +71,22 @@ export default function StackPage() {
                 preview: <StackExample />,
                 code: `function Example() {
   return (
-    <Stack direction="horizontal" gap={3}>
-      <Text>Label</Text>
-      <StackItem size="fill">
-        <Text>Flexible content</Text>
-      </StackItem>
-    </Stack>
+    <Box width={320} maxWidth="100%">
+      <Stack direction="horizontal" align="center" gap={3}>
+        <Box background="outline">
+          <Stack padding={3}>
+            <Text>Label</Text>
+          </Stack>
+        </Box>
+        <StackItem size="fill">
+          <Box background="outline">
+            <Stack padding={3}>
+              <Text>Flexible content</Text>
+            </Stack>
+          </Box>
+        </StackItem>
+      </Stack>
+    </Box>
   );
 }`
             }}
@@ -118,10 +98,21 @@ export default function StackPage() {
 export function StackExample() {
     // Arrange presentation-only items with consistent spacing.
     return (
-        <Stack align="center" gap={2}>
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
-            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-secondary" />
-        </Stack>
+        <Box width={320} maxWidth="100%">
+            <Stack direction="horizontal" align="center" gap={3}>
+                <Box background="outline">
+                    <Stack padding={3}>
+                        <Text>Label</Text>
+                    </Stack>
+                </Box>
+                <StackItem size="fill">
+                    <Box background="outline">
+                        <Stack padding={3}>
+                            <Text>Flexible content</Text>
+                        </Stack>
+                    </Box>
+                </StackItem>
+            </Stack>
+        </Box>
     );
 }

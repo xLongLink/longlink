@@ -1,6 +1,6 @@
 import ChartDocumentation from './chart-documentation';
 
-/** Documents native directed flow chart composition in Views. */
+/** Documents validated directed flows in Views. */
 export default function SankeyChartPage() {
     return <ChartDocumentation name="Sankey" />;
 }

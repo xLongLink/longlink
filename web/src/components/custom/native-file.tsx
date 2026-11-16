@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { PdfFile } from './pdf-file';
 import { textLanguage } from '@/lib/files';
+import { useEffect, useRef, useState } from 'react';
 
-/** Renders only inert media; active text formats are retyped before native display. */
+/** Displays admitted media and inert document content without nested frames. */
 export function NativeFile({ body, title }: { body: Blob; title: string }) {
     const container = useRef<HTMLDivElement>(null);
     const media = body.type.split(';', 1)[0].toLowerCase();
@@ -14,26 +15,24 @@ export function NativeFile({ body, title }: { body: Blob; title: string }) {
 
     // Never grant HTML, SVG, or unknown binary bytes a host-origin document.
     useEffect(() => {
-        if (!supported) return;
+        if (!image && !audio && !video) return;
 
-        const element = container.current?.querySelector<HTMLImageElement | HTMLMediaElement | HTMLIFrameElement>(
-            'img, audio, video, iframe'
-        );
+        const element = container.current?.querySelector<HTMLImageElement | HTMLMediaElement>('img, audio, video');
 
         if (!element) return;
-        const source = URL.createObjectURL(text ? new Blob([body], { type: 'text/plain;charset=utf-8' }) : body);
+        const source = URL.createObjectURL(body);
         element.src = source;
 
         return () => {
             element.removeAttribute('src');
             URL.revokeObjectURL(source);
         };
-    }, [body, supported, text]);
+    }, [body, image, audio, video]);
 
     // Use browser controls rather than a custom attachment toolbar.
     if (!supported) return <span role="status">Preview unavailable for this file type.</span>;
 
-    // Native PDF plugins must run outside the opaque-origin Solution sandbox.
+    // PDF parsing and text rendering remain in the same document as the caller.
     return (
         <div ref={container} className="flex size-full items-center justify-center">
             {image ? (
@@ -42,11 +41,39 @@ export function NativeFile({ body, title }: { body: Blob; title: string }) {
                 <audio controls preload="metadata" aria-label={title} className="w-full" />
             ) : video ? (
                 <video controls preload="metadata" aria-label={title} className="size-full" />
-            ) : text ? (
-                <iframe title={title} sandbox="" className="size-full border-0 bg-white" />
+            ) : pdf ? (
+                <PdfFile body={body} title={title} />
             ) : (
-                <iframe title={title} className="size-full border-0" />
+                <TextFile body={body} />
             )}
         </div>
+    );
+}
+
+/** Treats source documents as text rather than navigable or executable markup. */
+function TextFile({ body }: { body: Blob }) {
+    const [text, setText] = useState<string | Error>();
+
+    // Ignore decoded content after replacing or closing the document.
+    useEffect(() => {
+        let cancelled = false;
+        async function load() {
+            try {
+                const text = await body.text();
+                if (!cancelled) setText(text);
+            } catch {
+                if (!cancelled) setText(new Error('Unable to display this file.'));
+            }
+        }
+        void load();
+        return () => {
+            cancelled = true;
+        };
+    }, [body]);
+
+    return text instanceof Error ? (
+        <span role="status">{text.message}</span>
+    ) : (
+        <pre className="size-full overflow-auto p-3 text-sm whitespace-pre-wrap wrap-anywhere">{text}</pre>
     );
 }

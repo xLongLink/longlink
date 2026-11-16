@@ -4,7 +4,6 @@
 @import '@fontsource-variable/geist-mono';
 @import 'tailwindcss';
 @import 'shadcn/tailwind.css';
-@import './components/custom/styles.css';
 @import './views/runtime.css';
 
 @custom-variant dark {
@@ -279,17 +278,6 @@
     }
 }
 
-.native-toaster[data-sonner-toaster][dir='rtl'] {
-    right: auto;
-    left: var(--offset-left);
-}
-
-@media (hover: none) and (pointer: coarse) {
-    .native-toaster[data-sonner-toaster][data-y-position='bottom'] {
-        bottom: calc(var(--spacing) * 4 + max(env(safe-area-inset-bottom, 0px), 34px));
-    }
-}
-
 @keyframes technology-float {
     to {
         transform: translateY(calc(var(--spacing) * -2));
@@ -359,5 +347,23 @@
 
     html {
         scrollbar-gutter: stable;
+    }
+    .maplibregl-popup-content {
+        @apply bg-transparent! shadow-none! p-0! rounded-none!;
+    }
+    .maplibregl-popup-tip {
+        @apply hidden!;
+    }
+    .maplibregl-ctrl-attrib {
+        @apply bg-background! text-muted-foreground! border-border! rounded-md! border! shadow-sm!;
+    }
+    .maplibregl-ctrl-attrib a {
+        @apply text-muted-foreground!;
+    }
+    .maplibregl-ctrl-attrib a:hover {
+        @apply text-foreground!;
+    }
+    .maplibregl-ctrl-attrib-button {
+        @apply bg-transparent! dark:invert;
     }
 }

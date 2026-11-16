@@ -55,7 +55,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 if (!register) throw new Error('Expected the registration action');
                 await act(async () => user.click(register));
 
-                // Populate otherwise-valid metadata so navigation reaches the real kubeconfig editor.
+                // Populate otherwise-valid metadata before exercising file-read recovery.
                 for (const [name, value] of [
                     ['name', 'Fixture Compute'],
                     ['gateway_url', 'https://gateway.example.com'],
@@ -67,11 +67,6 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                     await act(async () => user.type(input, value));
                 }
 
-                const next = [...document.querySelectorAll('button')].find((button) => button.textContent === 'Next');
-
-                if (!next) throw new Error('Expected the kubeconfig step action');
-                await act(async () => user.click(next));
-
                 const textarea = document.querySelector('textarea');
                 const upload = document.querySelector<HTMLInputElement>('input[type="file"]');
                 const submit = document.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -80,7 +75,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(textarea.getAttribute('rows')).toBe('8');
                 expect(textarea.getAttribute('spellcheck')).toBe('false');
                 expect(textarea.required).toBe(true);
-                expect(textarea.hasAttribute('name')).toBe(false);
+                expect(textarea.name).toBe('kubeconfig');
                 await act(async () => user.type(textarea, 'previous draft'));
                 await act(async () => user.upload(upload, file));
                 expect(textarea.value).toBe('');
@@ -89,7 +84,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(
                     [...document.querySelectorAll('[role="status"]')].some((status) => status.textContent === 'Loading')
                 ).toBe(true);
-                expect(submit.getAttribute('aria-disabled')).toBe('true');
+                expect(submit.disabled).toBe(true);
                 await act(async () => user.type(textarea, 'must not race the file'));
                 expect(textarea.value).toBe('');
 
@@ -102,7 +97,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(
                     [...document.querySelectorAll('[role="status"]')].some((status) => status.textContent === 'Loading')
                 ).toBe(false);
-                expect(submit.getAttribute('aria-disabled')).not.toBe('true');
+                expect(submit.disabled).toBe(false);
 
                 // Rejected formats clear loaded YAML without ever reading the invalid file.
                 let invalidReads = 0;
@@ -118,8 +113,8 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 await act(async () => user.upload(upload, new InvalidFile([], 'config.txt')));
                 expect(invalidReads).toBe(0);
                 expect(textarea.value).toBe('');
-                expect(submit.getAttribute('aria-disabled')).toBe('true');
-                expect(document.querySelector('.view-file-status')?.textContent).toContain('config.txt');
+                expect(submit.disabled).toBe(true);
+                expect(document.querySelector('#compute-file-error')?.textContent).toContain('config.txt');
 
                 // A failed read exposes only the safe error; a later selection can recover.
                 class UnreadableFile extends File {
@@ -130,7 +125,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
 
                 await act(async () => user.upload(upload, new UnreadableFile([], 'broken.yaml')));
                 expect(textarea.value).toBe('');
-                expect(document.querySelector('.view-file-status')?.textContent).toBe(
+                expect(document.querySelector('#compute-file-error')?.textContent).toBe(
                     'Unable to read the kubeconfig file. Choose another file.'
                 );
                 expect(document.body.textContent).not.toContain('private file contents');
@@ -138,7 +133,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(textarea.value).toBe(yaml);
                 expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
 
-                // Clearing an in-flight selection invalidates its eventual completion.
+                // Replacing an in-flight selection invalidates its eventual completion.
                 let finishObsolete: (value: string) => void = () => undefined;
 
                 const obsolete = new Promise<string>((resolve) => {
@@ -153,14 +148,11 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
 
                 await act(async () => user.upload(upload, new PendingFile([], 'pending.yml')));
                 expect(textarea.value).toBe('');
-                const clear = document.querySelector<HTMLButtonElement>('[aria-label="Clear Kubeconfig file"]');
-
-                if (!clear) throw new Error('Expected the file clear action');
-                await act(async () => user.click(clear));
+                await act(async () => user.upload(upload, file));
                 await act(async () => finishObsolete('obsolete credentials'));
-                expect(textarea.value).toBe('');
+                expect(textarea.value).toBe(yaml);
                 expect(textarea.disabled).toBe(false);
-                expect(submit.getAttribute('aria-disabled')).toBe('true');
+                expect(submit.disabled).toBe(false);
             },
             '/admin/compute'
         );

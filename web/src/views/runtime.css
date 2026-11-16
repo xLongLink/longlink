@@ -30,22 +30,3 @@
 @source inline("{relative,absolute,static,sticky,inset-0,top-0,right-0,bottom-0,left-0,z-0,z-10,z-20,z-50,cursor-pointer,cursor-default,cursor-not-allowed,pointer-events-none,pointer-events-auto}");
 @source inline("{hover:,focus-visible:,disabled:,}{opacity-0,opacity-50,opacity-75,opacity-100,underline,no-underline}");
 @source inline("{transition-colors,transition-none,motion-reduce:transition-none}");
-
-@layer components {
-    .view-runtime-content {
-        --container-padding-inline-start: 0px;
-        --container-padding-inline-end: 0px;
-        --container-padding-block-start: 0px;
-        --container-padding-block-end: 0px;
-        min-width: 0;
-        min-height: 100%;
-        padding: 0;
-    }
-
-    .view-runtime-loading {
-        display: grid;
-        place-items: center;
-        width: 100%;
-        min-height: 100dvh;
-    }
-}

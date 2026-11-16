@@ -1,9 +1,7 @@
 import { MoveRight } from 'lucide-react';
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -23,42 +21,42 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="solution-sdk" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="solution-sdk">
                     Business processes, defined as code
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Business processes evolve over time. Requirements change, exceptions happen, and the people involved
                     may change. As information becomes fragmented, more time is spent finding data, reconstructing
                     decisions, coordinating people, and correcting mistakes.
-                </Text>
+                </p>
                 <Stack direction="horizontal" gap={6} justify="center" paddingBlock={6} align="center" width="100%">
-                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
+                    <span className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Problem
-                    </Text>
+                    </span>
                     <MoveRight aria-hidden className="text-muted-foreground" size={32} />
-                    <Text className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
+                    <span className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Solution
-                    </Text>
+                    </span>
                 </Stack>
-                <Text as="p">
+                <p>
                     Build dedicated tools with established Python libraries: use{' '}
-                    <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink>
+                    <Link href="https://github.com/fastapi/fastapi" className="underline" isExternalLink>
                         FastAPI
                     </Link>{' '}
                     for routes,{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink>
+                    <Link href="https://sqlmodel.tiangolo.com/" className="underline" isExternalLink>
                         SQLModel
                     </Link>{' '}
                     for data, and{' '}
-                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink>
+                    <Link href="https://docs.pydantic.dev/latest/" className="underline" isExternalLink>
                         Pydantic
                     </Link>{' '}
                     for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
                     LongLink handles the infrastructure.
-                </Text>
-                <Heading id="create-a-solution" level={2}>
+                </p>
+                <h2 className="font-semibold tracking-tight text-3xl" id="create-a-solution">
                     Create a Solution
-                </Heading>
+                </h2>
                 <Tabs defaultValue="github">
                     <TabsList variant="line">
                         <TabsTrigger value="github">GitHub</TabsTrigger>
@@ -75,19 +73,19 @@ export default function DocsArticleRoute() {
                         </CodeBlock>
                     </TabsContent>
                 </Tabs>
-                <Heading id="local-development" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="local-development">
                     Local Development
-                </Heading>
+                </h2>
                 <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Text as="p">
+                <p>
                     Open{' '}
-                    <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink>
+                    <Link href="http://127.0.0.1:1707" className="underline" isExternalLink>
                         http://127.0.0.1:1707
                     </Link>{' '}
                     to preview your Solution.
-                </Text>
+                </p>
             </Stack>
         </DocumentationArticle>
     );

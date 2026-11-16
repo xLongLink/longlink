@@ -2,13 +2,12 @@ import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
+import { Progress } from '@/components/longlink/display/progress';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/shadcn/progress';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {
@@ -20,51 +19,56 @@ export default function Usage({ base }: { base: string }) {
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Usage
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             <Card>
                 <CardHeader className="flex items-center justify-between border-b">
                     <Stack gap={0}>
-                        <Heading level={4} accessibilityLevel={3}>
+                        <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                             Monthly usage
-                        </Heading>
-                        <Text className="text-muted-foreground">
+                        </h4>
+                        <span className="text-muted-foreground">
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
-                        </Text>
+                        </span>
                     </Stack>
-                    <Button
-                        label="See prices"
-                        variant="outline"
-                        size="sm"
+                    <NativeNavigationLink
+                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
                         href="/pricing/"
                         target="_blank"
-                        rel="noopener noreferrer"
-                        endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                    />
+                    >
+                        See prices
+                        <ExternalLink className="size-4" aria-hidden="true" />
+                    </NativeNavigationLink>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
-                    <Progress value={usage.solutions} max={usage.max_solutions}>
-                        <ProgressLabel>Solutions</ProgressLabel>
-                        <ProgressValue>{() => `${usage.solutions} / ${usage.max_solutions}`}</ProgressValue>
-                    </Progress>
-                    <Progress value={usage.users} max={userScale}>
-                        <ProgressLabel>Users</ProgressLabel>
-                        <ProgressValue>{() => `${usage.users} / ${userScale}`}</ProgressValue>
-                    </Progress>
+                    <Progress
+                        value={usage.solutions}
+                        max={usage.max_solutions}
+                        label="Solutions"
+                        showValue
+                        valueText={`${usage.solutions} / ${usage.max_solutions}`}
+                    />
+                    <Progress
+                        value={usage.users}
+                        max={userScale}
+                        label="Users"
+                        showValue
+                        valueText={`${usage.users} / ${userScale}`}
+                    />
                     {(['storage', 'database'] as const).map((resource) => (
                         <ApiBoundary
                             key={resource}
-                            fallback={<Text className="text-muted-foreground">Loading {resource} usage…</Text>}
+                            fallback={<span className="text-muted-foreground">Loading {resource} usage…</span>}
                             fallbackRender={({ resetErrorBoundary }) => (
                                 <Stack direction="horizontal" align="center" justify="between" gap={4}>
-                                    <Text className="text-muted-foreground">
+                                    <span className="text-muted-foreground">
                                         {resource === 'storage' ? 'File storage' : 'Database storage'} usage
                                         unavailable.
-                                    </Text>
-                                    <Button label="Retry" onClick={resetErrorBoundary} />
+                                    </span>
+                                    <Button onClick={resetErrorBoundary}>Retry</Button>
                                 </Stack>
                             )}
                         >
@@ -100,10 +104,13 @@ function UsageMeter({
     const capacity = hasPaymentMethod ? usage.quota_bytes : included;
 
     return (
-        <Progress value={usage.space_used} max={capacity}>
-            <ProgressLabel>{resource === 'storage' ? 'File storage' : 'Database storage'}</ProgressLabel>
-            <ProgressValue>{() => `${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}</ProgressValue>
-        </Progress>
+        <Progress
+            value={usage.space_used}
+            max={capacity}
+            label={resource === 'storage' ? 'File storage' : 'Database storage'}
+            showValue
+            valueText={`${formatStorage(usage.space_used)} / ${formatStorage(capacity)}`}
+        />
     );
 }
 

@@ -46,9 +46,7 @@ it.each([false, true])(
                 if (!email || !submit) throw new Error('Missing email form');
 
                 expect(output.querySelector('label')?.htmlFor).toBe(email.id);
-                expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')?.textContent).toBe(
-                    'Email · Required'
-                );
+                expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Email');
                 expect(email.required).toBe(true);
                 expect(email.getAttribute('aria-required')).toBe('true');
 

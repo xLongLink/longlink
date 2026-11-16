@@ -1,8 +1,6 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -20,31 +18,31 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="testing" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="testing">
                     Testing
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Test your application with standard{' '}
-                    <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink>
+                    <Link href="https://docs.pytest.org/en/stable/" className="underline" isExternalLink>
                         pytest
                     </Link>{' '}
                     workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
                     services, without configuring a separate test environment.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         Tests stay fast, isolated, and reproducible while using the same application code as development
                         and production. The database and storage are created in memory for each test run, so tests do
                         not depend on external services or local setup.
-                    </Text>
+                    </p>
                 </Stack>
                 <CodeBlock code="uv run pytest <filename>" language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from main import app
 from longlink.testclient import TestClient

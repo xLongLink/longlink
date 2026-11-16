@@ -1,6 +1,5 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const article = {
     title: 'MCP | LongLink Platform Documentation',
@@ -15,9 +14,9 @@ export default function Mcp() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="mcp" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="mcp">
                     MCP
-                </Heading>
+                </h1>
             </Stack>
         </DocumentationArticle>
     );

@@ -1,88 +1,141 @@
-import { Form } from '@/components/custom/form';
-import { Selector } from '@/components/custom/selector';
-import { TextInput } from '@/components/custom/text-input';
-import { Illustration } from '@/components/ui/illustration';
-import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { IllustratedDialogContent } from './illustrated-dialog-content';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { z } from 'zod';
+import { useId } from 'react';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
+import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function InviteMember({
-    isOpen,
     canInviteAdmin,
-    onClose,
-    onSubmit
-}: {
-    isOpen: boolean;
+    onSubmit,
+    onOpenChange,
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     canInviteAdmin: boolean;
-    onClose: () => void;
-    onSubmit: (data: FormData) => Promise<void>;
+    onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
+    const formId = useId();
+    const roles = [
+        { value: 'read', icon: EyeOff },
+        { value: 'write', icon: ArrowUp },
+        { value: 'maintain', icon: Wrench },
+        ...(canInviteAdmin ? [{ value: 'admin', icon: CheckCheck }] : [])
+    ];
+
+    const schema = z.object({
+        email: z.email(),
+        role: z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain'])
+    });
+
+    const form = useForm<z.input<typeof schema>>({
+        resolver: zodResolver(schema),
+        defaultValues: { email: '', role: 'write' }
+    });
+
+    const submit = useSubmit(onSubmit, {
+        onError: () => form.setError('root', { message: 'Could not send the invitation. Please try again.' })
+    });
+
     return (
-        <FramedDialog open={isOpen} paddingInline={0} onOpenChange={(open) => !open && onClose()}>
-            <IllustratedDialogContent
-                illustration={
-                    <Illustration
-                        src="/images/invitation.png"
-                        alt="Hand-drawn envelopes."
-                        className="h-full w-full object-contain"
-                        width={1223}
-                        height={1286}
-                        decoding="async"
-                    />
-                }
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Invite user"
+            footer={
+                <>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
+                        Invite
+                    </Button>
+                </>
+            }
+        >
+            <form
+                id={formId}
+                className="flex flex-col gap-4"
+                onSubmit={(event) => {
+                    void form.handleSubmit(submit)(event);
+                }}
+                noValidate
+                aria-busy={form.formState.isSubmitting}
             >
-                <Stack height="100%" justify="center" width="max-content" maxWidth="100%" className="mx-auto">
-                    <Form action={onSubmit}>
-                        <Stack gap={10}>
-                            <Stack gap={2} align="center">
-                                <Illustration
-                                    src="/images/organization.png"
-                                    alt=""
-                                    className="size-20 object-contain"
-                                    width={1254}
-                                    height={1254}
-                                    decoding="async"
-                                />
-                                <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Invite user
-                                    </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
-                                        Send an invitation to join this organization.
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                            <Stack gap={4} width={0} className="min-w-full">
-                                <TextInput
-                                    label="Email"
+                <img
+                    src="/images/organization.png"
+                    alt=""
+                    width={1254}
+                    height={1254}
+                    decoding="async"
+                    className="size-20 self-center object-contain invert dark:invert-0"
+                />
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                    <Controller
+                        name="email"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                                <Input
+                                    {...field}
+                                    id="invite-email"
                                     type="email"
-                                    name="email"
                                     placeholder="user@example.com"
-                                    required
+                                    aria-invalid={fieldState.invalid}
                                 />
-                                <Selector
-                                    label="Role"
-                                    name="role"
-                                    defaultValue="write"
-                                    hasClear={false}
-                                    options={[
-                                        { value: 'read', label: 'read', icon: 'eye-off' },
-                                        { value: 'write', label: 'write', icon: 'arrow-up' },
-                                        { value: 'maintain', label: 'maintain', icon: 'wrench' },
-                                        ...(canInviteAdmin
-                                            ? [{ value: 'admin', label: 'admin', icon: 'check-check' as const }]
-                                            : [])
-                                    ]}
-                                />
-                                <Button label="Invite" variant="default" type="submit" style={{ width: '100%' }} />
-                            </Stack>
-                        </Stack>
-                    </Form>
-                </Stack>
-            </IllustratedDialogContent>
-        </FramedDialog>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="role"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+                                <Select
+                                    name={field.name}
+                                    value={field.value}
+                                    onValueChange={(value) => field.onChange(value ?? 'write')}
+                                    disabled={form.formState.isSubmitting}
+                                    items={roles.map(({ value }) => ({ value, label: value }))}
+                                >
+                                    <SelectTrigger
+                                        ref={field.ref}
+                                        id="invite-role"
+                                        onBlur={field.onBlur}
+                                        aria-invalid={fieldState.invalid}
+                                        className="w-full"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {roles.map(({ value, icon: Icon }) => (
+                                            <SelectItem key={value} value={value}>
+                                                <Icon aria-hidden="true" />
+                                                {value}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                </fieldset>
+                <FieldError errors={[form.formState.errors.root]} />
+            </form>
+        </Dialog>
     );
 }

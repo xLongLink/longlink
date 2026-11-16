@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Timestamp } from '@/components/custom/timestamp';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 
 /** Documents Timestamp in LongLink Views. */
 export default function TimestampPage() {
@@ -8,15 +8,10 @@ export default function TimestampPage() {
         <ViewLayout
             name="Timestamp"
             properties={[
-                {
-                    name: 'value',
-                    type: 'string | number',
-                    description: 'The date/time to display. Accepts Unix timestamps (seconds) or ISO 8601 strings.'
-                },
+                { name: 'value', type: 'string | number' },
                 {
                     name: 'format',
-                    type: '"date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time"',
-                    description: 'Date, time, relative, or Unix-seconds display format.'
+                    type: '"date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time"'
                 }
             ]}
             example={{
@@ -32,6 +27,6 @@ export default function TimestampPage() {
 
 /** Renders the page's timestamp example for documentation and the catalog. */
 export function TimestampExample() {
-    // Format the sample timestamp as a date.
-    return <Timestamp value="2026-09-30T12:00:00Z" format="date" />;
+    // Format the sample timestamp as a date and time.
+    return <Timestamp value="2026-10-02T12:00:00Z" format="date_time" />;
 }

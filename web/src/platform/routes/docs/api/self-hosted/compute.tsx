@@ -1,8 +1,6 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -27,10 +25,10 @@ export default function Compute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="compute" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="compute">
                     Compute
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Compute runs your Solutions on Kubernetes and is installed using the{' '}
                     <Link href="https://github.com/xLongLink/longlink/tree/main/k8s/chart" isExternalLink>
                         Helm chart
@@ -38,7 +36,7 @@ export default function Compute() {
                     . Use a dedicated cluster with persistent storage, load balancer support, cluster-level installation
                     permissions, and Helm 4.3 or later. The Platform must reach the Kubernetes API and the gateway and
                     storage HTTPS endpoints.
-                </Text>
+                </p>
                 <CodeBlock
                     language="bash"
                     code={`helm upgrade --install longlink-compute oci://ghcr.io/xlonglink/longlink \\
@@ -48,9 +46,9 @@ export default function Compute() {
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack as="section" gap={3}>
-                    <Heading id="configuration" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="configuration">
                         Configuration
-                    </Heading>
+                    </h2>
                     <CodeBlock
                         language="yaml"
                         code={`gateway:
@@ -71,15 +69,15 @@ rustfs:
                     </CodeBlock>
                 </Stack>
                 <Stack as="section" gap={3}>
-                    <Heading id="connect" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="connect">
                         Connect to the Platform
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         Sign in as the Platform administrator, open Compute, and select Register Compute. Enter a name,
                         the gateway and storage HTTPS endpoints, and a kubeconfig with cluster access. The kubeconfig
                         must contain credentials and certificate data and use a Kubernetes API address reachable from
                         the Platform; local file references and exec authentication plugins are not supported.
-                    </Text>
+                    </p>
                 </Stack>
             </Stack>
         </DocumentationArticle>

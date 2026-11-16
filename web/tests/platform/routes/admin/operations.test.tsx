@@ -97,3 +97,71 @@ it('advances again while the previous result page is still loading', async () =>
         transport.mockRestore();
     }
 });
+
+it('resets pagination when searching and restores unfiltered results and input focus when cleared', async () => {
+    const user = userEvent.setup();
+    const requests: { page: number; search: string }[] = [];
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const url = new URL(request.url);
+
+        if (url.pathname !== '/api/v1/operations') throw new Error(`Unexpected request: ${url.pathname}`);
+        const page = Number(url.searchParams.get('page'));
+        const search = url.searchParams.get('search') ?? '';
+        requests.push({ page, search });
+
+        return Response.json({
+            items: [
+                {
+                    id: '00000000-0000-4000-8000-000000000003',
+                    kind: 'solution.deploy',
+                    target_id: '00000000-0000-4000-8000-000000000004',
+                    resource_name: search ? 'Matching deployment' : `Unfiltered page ${page}`,
+                    status: 'completed',
+                    failed: null,
+                    created_at: '2026-10-16T12:00:00Z',
+                    finished_at: '2026-10-16T12:01:00Z'
+                }
+            ],
+            total: search ? 1 : 50
+        });
+    });
+
+    try {
+        await withMounted(
+            <Suspense fallback="Loading operations">
+                <Page />
+            </Suspense>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.textContent).toContain('Unfiltered page 1'));
+                const next = output.querySelector<HTMLButtonElement>('[aria-label="Go to next page"]');
+
+                const label = Array.from(output.querySelectorAll('label')).find(
+                    (element) => element.textContent === 'Search operations'
+                );
+
+                const input = label ? output.querySelector<HTMLInputElement>(`#${label.htmlFor}`) : null;
+
+                if (!next || !input) throw new Error('Expected labeled search and pagination');
+                await act(async () => user.click(next));
+                await vi.waitFor(() => expect(output.textContent).toContain('Unfiltered page 2'));
+                await act(async () => user.type(input, 'deploy'));
+                await vi.waitFor(() => expect(output.textContent).toContain('Matching deployment'));
+                expect(requests.at(-1)).toEqual({ page: 1, search: 'deploy' });
+                expect(requests.some((request) => request.page !== 1 && request.search !== '')).toBe(false);
+                const clear = output.querySelector<HTMLButtonElement>('[aria-label="Clear Search operations"]');
+
+                if (!clear) throw new Error('Expected search clear action');
+                await act(async () => user.click(clear));
+                await vi.waitFor(() => expect(output.textContent).toContain('Unfiltered page 1'));
+                expect(input.value).toBe('');
+                expect(document.activeElement).toBe(input);
+                expect(output.textContent).not.toContain('Matching deployment');
+                expect(output.querySelector('[aria-label="Clear Search operations"]')).toBeNull();
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});

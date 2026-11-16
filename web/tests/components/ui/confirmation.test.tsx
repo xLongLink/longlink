@@ -4,7 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { useConfirm } from '@/components/custom/confirmation';
-import { ButtonGroupContext, ControlSizeContext } from '@/components/custom/contexts';
+import { ControlSizeContext } from '@/components/custom/contexts';
 
 it('keeps a destructive operation open while pending, retains failure for retry, and restores the opener after success', async () => {
     let reject!: (error: Error) => void;
@@ -19,29 +19,27 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         )
         .mockResolvedValueOnce(undefined);
 
-    /** Runs the real confirmation owner inside an otherwise disabled group. */
+    /** Runs the real confirmation owner inside an inherited control size. */
     function Probe() {
         const confirm = useConfirm();
 
         return (
-            <ButtonGroupContext value={{ orientation: 'vertical', isDisabled: true }}>
-                <ControlSizeContext value="lg">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            confirm.show({
-                                title: 'Delete order?',
-                                actionLabel: 'Delete',
-                                actionVariant: 'destructive',
-                                onAction: operation
-                            })
-                        }
-                    >
-                        Open
-                    </button>
-                    {confirm.element}
-                </ControlSizeContext>
-            </ButtonGroupContext>
+            <ControlSizeContext value="lg">
+                <button
+                    type="button"
+                    onClick={() =>
+                        confirm.show({
+                            title: 'Delete order?',
+                            actionLabel: 'Delete',
+                            actionVariant: 'destructive',
+                            onAction: operation
+                        })
+                    }
+                >
+                    Open
+                </button>
+                {confirm.element}
+            </ControlSizeContext>
         );
     }
 

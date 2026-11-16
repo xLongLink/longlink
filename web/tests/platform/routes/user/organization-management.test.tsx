@@ -67,13 +67,13 @@ it('starts invitations before memberships resolve and waits for both responses',
                     )
                 );
 
-                expect(output.textContent).toContain('Loading page');
+                expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading page');
 
                 // Act
                 await act(async () => resolveMemberships(Response.json([membership])));
 
                 // Assert
-                expect(output.textContent).toContain('Loading page');
+                expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading page');
                 expect(output.querySelector('table')).toBeNull();
 
                 // Act
@@ -82,7 +82,7 @@ it('starts invitations before memberships resolve and waits for both responses',
                 // Assert
                 await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain('Invited team'));
                 expect(output.querySelector('table')?.textContent).toContain('Acme');
-                expect(output.textContent).not.toContain('Loading page');
+                expect(output.querySelector('[data-slot="spinner"]')).toBeNull();
             }
         );
     } finally {
@@ -155,7 +155,9 @@ it.each([
                     await act(async () => actionButton?.click());
 
                     const confirm = Array.from(
-                        document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')
+                        document.querySelectorAll<HTMLButtonElement>(
+                            '[role="dialog"] button, [role="alertdialog"] button'
+                        )
                     ).find((button) => button.textContent === action);
 
                     expect(confirm).toBeDefined();

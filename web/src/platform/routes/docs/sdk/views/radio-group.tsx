@@ -1,78 +1,42 @@
-import { useId } from 'react';
-import ViewLayout from './view-layout';
-import FormPreview from './form-preview';
-import { Field, FieldLabel } from '@/components/shadcn/field';
-import { RadioGroup, RadioGroupItem } from '@/components/shadcn/radio-group';
+import { RadioGroup } from '@/components/longlink';
+import FormDocumentation from './form-documentation';
 
-/** Documents the shadcn radio group composition in LongLink Views. */
-export default function RadioGroupPage() {
-    // Keep the preview and published example on the native component API.
+/** Shows independently labeled radio options inside a named group. */
+export function RadioGroupExample() {
     return (
-        <ViewLayout
-            name="RadioGroup"
-            properties={[
-                { name: 'name', type: 'string', description: 'Form submission name.' },
-                { name: 'value', type: 'string', description: 'Controlled selected value.' },
-                { name: 'defaultValue', type: 'string', description: 'Initial uncontrolled selected value.' },
-                {
-                    name: 'onValueChange',
-                    type: '(value: string, eventDetails) => void',
-                    description: 'Called with the next selected value and Base UI event details.'
-                },
-                { name: 'required', type: 'boolean', description: 'Requires a selection before form submission.' },
-                {
-                    name: 'disabled',
-                    type: 'boolean',
-                    description: 'Disables all options, including keyboard focus and form submission.'
-                },
-                { name: 'RadioGroupItem.value', type: 'string', description: 'Value submitted for this option.' },
-                { name: 'RadioGroupItem.id', type: 'string', description: 'Connects the option to its label.' },
-                { name: 'RadioGroupItem.disabled', type: 'boolean', description: 'Disables this option.' }
+        <RadioGroup
+            name="plan"
+            label="Plan"
+            description="Choose a plan for this workspace."
+            defaultValue="team"
+            options={[
+                { value: 'solo', label: 'Solo' },
+                { value: 'team', label: 'Team' }
             ]}
-            example={{
-                title: 'Plan form',
-                preview: (
-                    <FormPreview>
-                        <RadioGroupExample />
-                    </FormPreview>
-                ),
-                code: `/** Submits one plan using shadcn radio controls. */
-export default function PlanForm() {
-  return (
-    <Form action="/api/example" method="post">
-      <RadioGroup className="mx-auto w-fit" name="plan" defaultValue="team" aria-label="Plan" required>
-        <Field orientation="horizontal">
-          <RadioGroupItem id="plan-solo" value="solo" />
-          <FieldLabel htmlFor="plan-solo">Solo</FieldLabel>
-        </Field>
-        <Field orientation="horizontal">
-          <RadioGroupItem id="plan-team" value="team" />
-          <FieldLabel htmlFor="plan-team">Team</FieldLabel>
-        </Field>
-      </RadioGroup>
-    </Form>
-  );
-}`
-            }}
         />
     );
 }
 
-/** Shows the default vertical shadcn radio group with associated labels. */
-export function RadioGroupExample() {
-    const id = useId();
-
-    // Keep label associations unique across catalog and documentation previews.
+/** Documents single-choice groups with caller-owned state. */
+export default function RadioGroupPage() {
     return (
-        <RadioGroup className="mx-auto w-fit" name="plan" defaultValue="team" aria-label="Plan" required>
-            <Field orientation="horizontal">
-                <RadioGroupItem id={`${id}-solo`} value="solo" />
-                <FieldLabel htmlFor={`${id}-solo`}>Solo</FieldLabel>
-            </Field>
-            <Field orientation="horizontal">
-                <RadioGroupItem id={`${id}-team`} value="team" />
-                <FieldLabel htmlFor={`${id}-team`}>Team</FieldLabel>
-            </Field>
-        </RadioGroup>
+        <FormDocumentation
+            name="RadioGroup"
+            preview={<RadioGroupExample />}
+            code={`function Example() {
+  return (
+    <RadioGroup
+      name="plan"
+      label="Plan"
+      description="Choose a plan for this workspace."
+      defaultValue="team"
+      options={[
+        { value: "solo", label: "Solo" },
+        { value: "team", label: "Team" },
+      ]}
+    />
+  );
+}`}
+        />
     );
 }

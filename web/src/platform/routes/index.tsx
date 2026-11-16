@@ -1,20 +1,19 @@
 import { Page } from '@/components/ui/page';
-import { Grid } from '@/components/custom/grid';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Docker } from '@/components/svg/docker';
 import { Python } from '@/components/svg/python';
 import { Fastapi } from '@/components/svg/fastapi';
 import { ReactDark } from '@/components/svg/react-dark';
 import { Foundation } from '@/components/ui/foundation';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { buttonVariants } from '@/components/longlink/action/button';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -51,30 +50,26 @@ export default function Home() {
                         minHeight="100svh"
                     >
                         <Stack className="max-w-xl text-left" gap={6} align="start">
-                            <Heading
-                                level={1}
-                                className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl"
-                            >
+                            <h1 className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl">
                                 Your business.
                                 <br />
                                 Defined as code.
-                            </Heading>
-                            <Text as="p" className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
+                            </h1>
+                            <p className="text-pretty max-w-md text-lg text-white/80 sm:text-xl">
                                 Design, build, operate, and improve.
                                 <br />
                                 One source of truth for how work gets done.
-                            </Text>
-                            <Text as="p" className="text-xs text-white/80">
+                            </p>
+                            <p className="text-xs text-white/80">
                                 Currently in testing Beta.{' '}
                                 <Link
                                     href="https://github.com/xLongLink/longlink"
-                                    hasUnderline
                                     isExternalLink
-                                    className="text-inherit"
+                                    className="underline text-inherit"
                                 >
                                     Star LongLink on GitHub.
                                 </Link>
-                            </Text>
+                            </p>
                         </Stack>
                     </Stack>
                 </section>
@@ -89,14 +84,11 @@ export default function Home() {
                             src="/images/organized-work.webp"
                             width={1672}
                         />
-                        <Text
-                            as="p"
-                            className="text-muted-foreground text-pretty max-w-3xl text-center text-xl sm:text-2xl"
-                        >
+                        <p className="text-muted-foreground text-pretty max-w-3xl text-center text-xl sm:text-2xl">
                             Think about how easy it is to find a book in a library.
                             <br />
                             We create the tools you need to organize and validate your data, documents, and processes.
-                        </Text>
+                        </p>
                     </Stack>
                 </section>
                 <section className="py-16 sm:py-24">
@@ -118,32 +110,30 @@ export default function Home() {
                                     width={56}
                                 />
                             ))}
-                            <Text aria-hidden="true" className="text-xl leading-none">
+                            <span aria-hidden="true" className="text-xl leading-none">
                                 🇨🇭
-                            </Text>
+                            </span>
                             <Stack gap={0} align="center">
-                                <Heading level={2} className="text-balance text-center tracking-wide">
+                                <h2 className="font-semibold text-3xl text-balance text-center tracking-wide">
                                     Made in Switzerland
-                                </Heading>
-                                <Text as="p" className="text-muted-foreground text-balance">
-                                    Using open-source technologies
-                                </Text>
+                                </h2>
+                                <p className="text-muted-foreground text-balance">Using open-source technologies</p>
                             </Stack>
                             <Grid columns={2} gap={3}>
-                                <Button
-                                    className="w-full"
-                                    endContent={<Mail aria-hidden="true" size={16} />}
+                                <NativeNavigationLink
+                                    className={buttonVariants({ variant: 'outline', className: 'w-full' })}
                                     href="mailto:info@longlink.dev"
-                                    label="Contact Us"
-                                    variant="outline"
-                                />
-                                <Button
-                                    className="w-full"
-                                    endContent={<ArrowRight aria-hidden="true" size={16} />}
+                                >
+                                    Contact Us
+                                    <Mail aria-hidden="true" size={16} />
+                                </NativeNavigationLink>
+                                <NativeNavigationLink
+                                    className={buttonVariants({ className: 'w-full' })}
                                     href="/login/"
-                                    label="Get Started"
-                                    variant="default"
-                                />
+                                >
+                                    Get Started
+                                    <ArrowRight aria-hidden="true" size={16} />
+                                </NativeNavigationLink>
                             </Grid>
                         </Stack>
                     </div>

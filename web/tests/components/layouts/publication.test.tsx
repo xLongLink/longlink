@@ -48,15 +48,12 @@ function PublicationRoutes() {
                                         pagePath="/docs/first"
                                         trailingSlash={false}
                                     />
-                                    <PublicationNavigationItem
-                                        page={{
-                                            path: '/docs',
-                                            label: 'More guides',
-                                            icon: BookOpen,
-                                            children: [{ path: '/docs/second', label: 'Second guide', icon: BookOpen }]
-                                        }}
-                                        pagePath="/docs/first"
-                                    />
+                                    <PublicationNavigationSection title="More guides">
+                                        <PublicationNavigationItem
+                                            page={{ path: '/docs/second', label: 'Second guide', icon: BookOpen }}
+                                            pagePath="/docs/first"
+                                        />
+                                    </PublicationNavigationSection>
                                 </PublicationNavigationSection>
                             </PublicationNavigation>
                         }
@@ -117,20 +114,20 @@ it('keeps supplied sidebar sections interactive and dismisses the mobile dialog 
             if (!dialog) throw new Error('Missing mobile navigation');
             expect(dialog.hidden).toBe(false);
 
-            const group = Array.from(dialog.querySelectorAll('button')).find((button) =>
-                button.textContent?.includes('More guides')
+            const section = Array.from(dialog.querySelectorAll('section')).find(
+                (section) => section.querySelector('h2')?.textContent === 'More guides'
             );
 
-            if (!group) throw new Error('Missing supplied section control');
-            expect(group.getAttribute('aria-expanded')).toBe('false');
-            await act(async () => group.click());
-            expect(group.getAttribute('aria-expanded')).toBe('true');
-            await act(async () => dialog.querySelector<HTMLAnchorElement>('a[href="/docs/second/"]')?.click());
+            const link = section?.querySelector<HTMLAnchorElement>('a[href="/docs/second/"]');
+
+            if (!link) throw new Error('Missing supplied section link');
+
+            await act(async () => link.click());
             expect(output.querySelector('[aria-label="Current article"]')?.textContent).toBe('/docs/second/');
             expect(trigger.getAttribute('aria-expanded')).toBe('false');
 
             await act(async () => trigger.click());
-            expect(group.getAttribute('aria-expanded')).toBe('true');
+            expect(trigger.getAttribute('aria-expanded')).toBe('true');
             await act(async () => viewport.setViewport({ width: 1024 }));
             expect(output.querySelector('[aria-label="Open section navigation"]')).toBeNull();
             expect(output.querySelector('aside [aria-label="Article navigation"]')).not.toBeNull();

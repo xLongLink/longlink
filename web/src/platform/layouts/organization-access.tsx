@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api';
+import type { ReactNode } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import Platform from '@/components/layouts/platform';
@@ -26,16 +27,12 @@ export default function OrganizationAccess() {
                         <PageLoading label="Loading solution" />
                     </>
                 ) : (
-                    <Platform
-                        action={<ProfileMenu />}
-                        breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
+                    <OrganizationFallback
+                        organization={organization}
                         sidebarHeader={<OrganizationSwitcher organization={{ id: organization }} />}
-                        tabs={[]}
                     >
-                        <PageContainer gap={8} padding={2}>
-                            <PageLoading label="Loading organization" />
-                        </PageContainer>
-                    </Platform>
+                        <PageLoading label="Loading organization" />
+                    </OrganizationFallback>
                 )
             }
             fallbackRender={({ error }) =>
@@ -49,34 +46,50 @@ export default function OrganizationAccess() {
                         </>
                     )
                 ) : (
-                    <Platform
-                        action={<ProfileMenu />}
-                        breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
-                        tabs={[]}
-                    >
-                        <PageContainer gap={8} padding={2}>
-                            {error instanceof ApiError && error.status === 404 ? (
-                                <NotFoundLayout />
-                            ) : (
-                                <PageError
-                                    description="We couldn't load this organization."
-                                    title="Unable to load organization"
-                                />
-                            )}
-                        </PageContainer>
-                    </Platform>
+                    <OrganizationFallback organization={organization}>
+                        {error instanceof ApiError && error.status === 404 ? (
+                            <NotFoundLayout />
+                        ) : (
+                            <PageError
+                                description="We couldn't load this organization."
+                                title="Unable to load organization"
+                            />
+                        )}
+                    </OrganizationFallback>
                 )
             }
         >
-            <OrganizationMembership />
+            <OrganizationMembership organization={organization} />
         </ApiBoundary>
     );
 }
 
-/** Supplies the resolved membership to the active route branch. */
-function OrganizationMembership() {
-    const { organization = '' } = useParams();
+/** Keeps organization loading and error states within the same application chrome. */
+function OrganizationFallback({
+    organization,
+    sidebarHeader,
+    children
+}: {
+    organization: string;
+    sidebarHeader?: ReactNode;
+    children: ReactNode;
+}) {
+    return (
+        <Platform
+            action={<ProfileMenu />}
+            breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
+            sidebarHeader={sidebarHeader}
+            tabs={[]}
+        >
+            <PageContainer gap={8} padding={2}>
+                {children}
+            </PageContainer>
+        </Platform>
+    );
+}
 
+/** Supplies the resolved membership to the active route branch. */
+function OrganizationMembership({ organization }: { organization: string }) {
     const [membership] = useApi(
         `/api/v1/organizations/${encodeURIComponent(organization)}`,
         zUserOrganizationMembership

@@ -1,11 +1,10 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
-import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
-import { IconRequestContext } from '@/components/custom/contexts';
+import userEvent from '@testing-library/user-event';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -15,110 +14,127 @@ const tags = [
     { id: '00000000-0000-4000-8000-000000000003', name: 'All Solutions', icon: 'layers', kind: 'all' }
 ].map((tag) => zOrganizationTagResponse.parse(tag));
 
-it.each(['unchanged', 'changed', 'cleared', 'cancel'] as const)('submits only explicit tag edits: %s', async (edit) => {
-    // Arrange an existing assignment and observe only the external write boundary.
-    const writes: unknown[] = [];
-    const completed = vi.fn();
-    const close = vi.fn();
+it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
+    'submits only explicit tag edits: %s',
+    async (edit) => {
+        // Arrange an existing assignment and observe only the external write boundary.
+        const writes: unknown[] = [];
+        const completed = vi.fn();
+        const close = vi.fn();
+        const user = userEvent.setup();
 
-    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
-        const request = input instanceof Request ? input : new Request(input, options);
+        const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+            const request = input instanceof Request ? input : new Request(input, options);
 
-        if (
-            request.method !== 'PATCH' ||
-            new URL(request.url).pathname !==
-                `/api/v1/organizations/${membership.organization.id}/solutions/00000000-0000-4000-8000-000000000004/tags`
-        ) {
-            throw new Error(`Unexpected request: ${request.method} ${request.url}`);
-        }
+            if (
+                request.method !== 'PATCH' ||
+                new URL(request.url).pathname !==
+                    `/api/v1/organizations/${membership.organization.id}/solutions/00000000-0000-4000-8000-000000000004/tags`
+            ) {
+                throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+            }
 
-        writes.push(await request.json());
+            writes.push(await request.json());
 
-        return new Response(null, { status: 204 });
-    });
+            return new Response(null, { status: 204 });
+        });
 
-    try {
-        await withMounted(
-            <IconRequestContext value={icons.load}>
-                <SolutionTags
-                    base={`/api/v1/organizations/${membership.organization.id}`}
-                    tags={tags}
-                    solution={{
-                        id: '00000000-0000-4000-8000-000000000004',
-                        name: 'Purchase approvals',
-                        tag_ids: [tags[0].id]
-                    }}
-                    onSuccess={async () => {
-                        completed();
-                    }}
-                    onClose={close}
-                />
-            </IconRequestContext>,
-            async () => {
-                const dialog = document.querySelector('[role="dialog"]');
+        try {
+            await withMounted(
+                <>
+                    <SolutionTags
+                        open
+                        base={`/api/v1/organizations/${membership.organization.id}`}
+                        tags={tags}
+                        solution={{
+                            id: '00000000-0000-4000-8000-000000000004',
+                            name: 'Purchase approvals',
+                            tag_ids:
+                                edit === 'unknown' ? [tags[0].id, '00000000-0000-4000-8000-000000000099'] : [tags[0].id]
+                        }}
+                        onSuccess={async () => {
+                            completed();
+                        }}
+                        onOpenChange={close}
+                    />
+                </>,
+                async () => {
+                    const dialog = document.querySelector('[role="dialog"]');
 
-                const label = Array.from(dialog?.querySelectorAll('label') ?? []).find(
-                    (label) => label.textContent?.trim() === 'Tags'
-                );
-
-                const picker = label?.htmlFor ? document.getElementById(label.htmlFor) : null;
-
-                if (!dialog || !(picker instanceof HTMLButtonElement)) throw new Error('Expected the tag editor');
-
-                expect(picker.textContent).toContain('Purchases');
-
-                // Edit through the real picker so its hidden form carriers stay in the contract.
-                if (edit === 'changed') {
-                    await act(async () => picker.click());
-                    const options = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]'));
-                    const operations = options.find((option) => option.textContent?.includes('Operations'));
-
-                    if (!operations) throw new Error('Expected the Operations option');
-
-                    expect(options.some((option) => option.textContent?.includes('All Solutions'))).toBe(false);
-                    await act(async () => operations.click());
-                    await act(async () => picker.click());
-                }
-
-                if (edit === 'cleared') {
-                    const clear = dialog.querySelector<HTMLButtonElement>('button[aria-label^="Clear"]');
-
-                    if (!clear) throw new Error('Expected the clear selection action');
-
-                    await act(async () => clear.click());
-                }
-
-                expect(writes).toEqual([]);
-
-                // Cancel must never write, while submission must include the complete selection.
-                if (edit === 'cancel') {
-                    const cancel = Array.from(dialog.querySelectorAll('button')).find(
-                        (button) => button.textContent === 'Cancel'
+                    const label = Array.from(dialog?.querySelectorAll('label') ?? []).find(
+                        (label) => label.textContent?.trim() === 'Tags'
                     );
 
-                    if (!cancel) throw new Error('Expected the cancel action');
+                    const picker = label?.htmlFor ? document.getElementById(label.htmlFor) : null;
 
-                    await act(async () => cancel.click());
-                    expect(close).toHaveBeenCalledOnce();
+                    if (!dialog || !(picker instanceof HTMLInputElement)) throw new Error('Expected the tag editor');
+
+                    expect(picker.closest('[data-slot="combobox-chips"]')?.textContent).toContain('Purchases');
+
+                    // Edit through the real picker so the controlled selection reaches the write.
+                    if (edit === 'changed' || edit === 'unknown') {
+                        await act(async () => user.click(picker));
+                        const options = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]'));
+                        const operations = options.find((option) => option.textContent?.includes('Operations'));
+
+                        if (!operations) throw new Error('Expected the Operations option');
+
+                        expect(options.some((option) => option.textContent?.includes('All Solutions'))).toBe(false);
+                        await act(async () => user.click(operations));
+                        await act(async () => user.keyboard('{Escape}'));
+                    }
+
+                    if (edit === 'cleared') {
+                        const clear = dialog.querySelector<HTMLButtonElement>(
+                            'button[data-slot="combobox-chip-remove"]'
+                        );
+
+                        if (!clear) throw new Error('Expected the clear selection action');
+
+                        await act(async () => clear.click());
+                    }
+
                     expect(writes).toEqual([]);
-                    expect(completed).not.toHaveBeenCalled();
 
-                    return;
+                    // Cancel must never write, while submission must include the complete selection.
+                    if (edit === 'cancel') {
+                        const cancel = Array.from(dialog.querySelectorAll('button')).find(
+                            (button) => button.textContent === 'Cancel'
+                        );
+
+                        if (!cancel) throw new Error('Expected the cancel action');
+
+                        await act(async () => cancel.click());
+                        expect(close).toHaveBeenCalledOnce();
+                        expect(writes).toEqual([]);
+                        expect(completed).not.toHaveBeenCalled();
+
+                        return;
+                    }
+
+                    const form = dialog.querySelector('form');
+                    const submit = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+                    if (!form || !submit) throw new Error('Expected the tag form');
+
+                    await act(async () => form.requestSubmit(submit));
+                    await vi.waitFor(() => expect(completed).toHaveBeenCalledOnce());
+                    expect(writes).toEqual([
+                        {
+                            tag_ids:
+                                edit === 'cleared'
+                                    ? []
+                                    : edit === 'unknown'
+                                      ? [tags[0].id, '00000000-0000-4000-8000-000000000099', tags[1].id]
+                                      : edit === 'changed'
+                                        ? [tags[0].id, tags[1].id]
+                                        : [tags[0].id]
+                        }
+                    ]);
                 }
-
-                const form = dialog.querySelector('form');
-                const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
-
-                if (!form || !submit) throw new Error('Expected the tag form');
-
-                await act(async () => form.requestSubmit(submit));
-                await vi.waitFor(() => expect(completed).toHaveBeenCalledOnce());
-                expect(writes).toEqual([
-                    { tag_ids: edit === 'cleared' ? [] : edit === 'changed' ? [tags[0].id, tags[1].id] : [tags[0].id] }
-                ]);
-            }
-        );
-    } finally {
-        transport.mockRestore();
+            );
+        } finally {
+            transport.mockRestore();
+        }
     }
-});
+);

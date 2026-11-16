@@ -1,9 +1,7 @@
-import { DataTable } from '@/components/custom/data-table';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
-import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const solutionRoles = [
     { name: 'read', access: 'View Solution data and send GET requests', icon: EyeOff },
@@ -32,37 +30,39 @@ export default function Solutions() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="solutions" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="solutions">
                     Solutions
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Solutions belong to an organization and run as separate services. The Platform manages their
                     deployment and operation. Each Solution gets its own schema in the organization’s PostgreSQL
                     database and its own dedicated prefix in the storage bucket. When not in use, Solutions
                     automatically scale to zero.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">User permissions</Text>
-                    <DataTable
-                        data={solutionRoles}
-                        idKey="name"
-                        density="compact"
-                        columns={[
-                            {
-                                key: 'name',
-                                header: 'Roles',
-                                renderCell: ({ access, icon: RoleIcon, name }) => (
-                                    <Stack gap={0}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <RoleIcon aria-hidden="true" className="text-primary" size={16} />
-                                            <Text className="font-semibold capitalize">{name}</Text>
+                    <span className="font-semibold">User permissions</span>
+                    <Table wrap>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Roles</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {solutionRoles.map(({ access, icon: RoleIcon, name }) => (
+                                <TableRow key={name}>
+                                    <TableCell>
+                                        <Stack gap={0}>
+                                            <Stack direction="horizontal" gap={2} align="center">
+                                                <RoleIcon aria-hidden="true" className="text-primary" size={16} />
+                                                <span className="font-semibold capitalize">{name}</span>
+                                            </Stack>
+                                            <span className="text-xs text-muted-foreground">{access}</span>
                                         </Stack>
-                                        <Text className="text-xs text-muted-foreground">{access}</Text>
-                                    </Stack>
-                                )
-                            }
-                        ]}
-                    />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>

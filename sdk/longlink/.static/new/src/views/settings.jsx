@@ -21,49 +21,45 @@ export default function ProjectSettings() {
             <Menu>
                 <MenuSection title="Projects">
                     <MenuItem label="General" icon="settings">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>General</Heading>
-                            <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
-                            <Field>
-                                <FieldLabel htmlFor="company-name">Company name</FieldLabel>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>General</Heading>
+                                <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
                                 <Input
                                     id="company-name"
+                                    label="Company name"
                                     value={company}
                                     onChange={(event) => setCompany(event.currentTarget.value)}
                                 />
-                            </Field>
-                            <Field>
-                                <FieldLabel htmlFor="default-currency">Default currency</FieldLabel>
                                 <Select
+                                    id="default-currency"
+                                    label="Default currency"
+                                    options={[
+                                        { value: 'CHF', label: 'CHF' },
+                                        { value: 'EUR', label: 'EUR' },
+                                        { value: 'USD', label: 'USD' }
+                                    ]}
                                     value={currency}
                                     onValueChange={(value) => {
                                         if (value !== null) setCurrency(value);
                                     }}
-                                >
-                                    <SelectTrigger id="default-currency">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CHF">CHF</SelectItem>
-                                        <SelectItem value="EUR">EUR</SelectItem>
-                                        <SelectItem value="USD">USD</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </Field>
-                        </Stack>
+                                />
+                            </Stack>
+                        </Box>
                     </MenuItem>
                     <MenuItem label="Approvals" icon="circle-check">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>Approvals</Heading>
-                            <SwitchField
-                                label="Require project approval"
-                                value={approvalRequired}
-                                onChange={setApprovalRequired}
-                            />
-                            <Field>
-                                <FieldLabel htmlFor="approval-threshold">Approval threshold ({currency})</FieldLabel>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>Approvals</Heading>
+                                <Switch
+                                    id="approval-required"
+                                    label="Require project approval"
+                                    checked={approvalRequired}
+                                    onCheckedChange={setApprovalRequired}
+                                />
                                 <Input
                                     id="approval-threshold"
+                                    label={`Approval threshold (${currency})`}
                                     type="number"
                                     value={approvalThreshold}
                                     onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
@@ -71,67 +67,69 @@ export default function ProjectSettings() {
                                     step="any"
                                     disabled={!approvalRequired}
                                 />
-                            </Field>
-                        </Stack>
+                            </Stack>
+                        </Box>
                     </MenuItem>
                     <MenuItem label="Notifications" icon="bell">
-                        <Stack gap={4} maxWidth={640}>
-                            <Heading level={2}>Notifications</Heading>
-                            <SwitchField
-                                label="Project awaiting approval"
-                                value={pendingNotifications}
-                                onChange={setPendingNotifications}
-                            />
-                            <SwitchField
-                                label="Project approved"
-                                value={approvedNotifications}
-                                onChange={setApprovedNotifications}
-                            />
-                        </Stack>
+                        <Box maxWidth={640}>
+                            <Stack gap={4}>
+                                <Heading level={2}>Notifications</Heading>
+                                <Switch
+                                    id="pending-notifications"
+                                    label="Project awaiting approval"
+                                    checked={pendingNotifications}
+                                    onCheckedChange={setPendingNotifications}
+                                />
+                                <Switch
+                                    id="approved-notifications"
+                                    label="Project approved"
+                                    checked={approvedNotifications}
+                                    onCheckedChange={setApprovedNotifications}
+                                />
+                            </Stack>
+                        </Box>
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <FramedDialog
-                variant="fullscreen"
-                title="Fullscreen settings"
+            <Dialog
+                fullscreen
                 open={isFullscreenOpen}
                 onOpenChange={setIsFullscreenOpen}
+                title="Fullscreen settings"
+                footer={
+                    <Button type="button" onClick={() => setIsFullscreenOpen(false)}>
+                        Done
+                    </Button>
+                }
             >
                 <Stack gap={4}>
-                    <Field>
-                        <FieldLabel htmlFor="fullscreen-company-name">Company name</FieldLabel>
-                        <Input
-                            id="fullscreen-company-name"
-                            value={company}
-                            onChange={(event) => setCompany(event.currentTarget.value)}
-                        />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="fullscreen-default-currency">Default currency</FieldLabel>
-                        <Select
-                            value={currency}
-                            onValueChange={(value) => {
-                                if (value !== null) setCurrency(value);
-                            }}
-                        >
-                            <SelectTrigger id="fullscreen-default-currency">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="CHF">CHF</SelectItem>
-                                <SelectItem value="EUR">EUR</SelectItem>
-                                <SelectItem value="USD">USD</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <SwitchField
-                        label="Require project approval"
-                        value={approvalRequired}
-                        onChange={setApprovalRequired}
+                    <Input
+                        id="fullscreen-company-name"
+                        label="Company name"
+                        value={company}
+                        onChange={(event) => setCompany(event.currentTarget.value)}
                     />
-                    <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
+                    <Select
+                        id="fullscreen-default-currency"
+                        label="Default currency"
+                        options={[
+                            { value: 'CHF', label: 'CHF' },
+                            { value: 'EUR', label: 'EUR' },
+                            { value: 'USD', label: 'USD' }
+                        ]}
+                        value={currency}
+                        onValueChange={(value) => {
+                            if (value !== null) setCurrency(value);
+                        }}
+                    />
+                    <Switch
+                        id="fullscreen-approval-required"
+                        label="Require project approval"
+                        checked={approvalRequired}
+                        onCheckedChange={setApprovalRequired}
+                    />
                 </Stack>
-            </FramedDialog>
+            </Dialog>
         </Stack>
     );
 }

@@ -1,9 +1,7 @@
 import { legalPaths } from '@/platform/publications';
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description: 'Read the LongLink privacy policy.',
@@ -33,367 +31,367 @@ export default function Privacy() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
-                <Heading id="privacy-policy" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="privacy-policy">
                     Privacy Policy
-                </Heading>
+                </h1>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="scope-and-controller" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="scope-and-controller">
                         1. Scope and controller
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         This Policy explains how LongLink handles personal data when you visit our website, use our
                         hosted platform, connect infrastructure, or contact us. The hosted platform is for users aged 18
                         or older. We do not knowingly collect children's data through the platform; contact us if you
                         believe a child has provided it.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent
                         to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         "Service" means our website, hosted platform, and related support, including the SDK and runtime
                         when connected to our platform. Separate service or data processing agreements also apply where
                         relevant.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="our-roles" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="our-roles">
                         2. Our roles
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We are the controller for account, organization, authentication, support, security, and other
                         operational data needed to run our Service. This Policy primarily describes those activities.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         Customers generally control the personal data they put in Solutions and connected databases or
                         storage. When we operate the hosted Service for them, we generally process that Customer Content
                         on their behalf.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         If another organization operates LongLink, that operator is responsible for its own privacy
                         practices. Customers are responsible for notices, lawful bases, retention, and user requests for
                         personal data they process through their Solutions.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="personal-data-we-process" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="personal-data-we-process">
                         3. Personal data we process
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         Depending on how you use the Service, we may process the following categories of personal data:
-                    </Text>
+                    </p>
                     <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
                         <li>
-                            <Text>
+                            <span>
                                 Account and identity data: name, email address, optional avatar, account identifiers,
                                 roles, and sign-in information.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Authentication data: password hashes, signed session and email-verification tokens,
                                 password-reset tokens, and OAuth sign-in data. We do not store plaintext passwords.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Organization and access data: organization details, memberships, roles, invitations,
                                 infrastructure assignments, and audit records.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Solution and deployment data: names, images, versions, configuration, environment
                                 values, deployment status, errors, and runtime information needed to operate Solutions.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Connected infrastructure data: provider settings, endpoints, credentials, resource
                                 identifiers, usage information, and audit records for compute, databases, and storage.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Connection and log data: IP addresses, request and session details, timestamps, errors,
                                 security events, and operational or runtime logs.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Commercial data: billing contacts, invoices, payment status, and accounting records when
                                 we provide a paid service. We do not process full payment-card details in the platform;
                                 a payment or banking provider handles those if a separate payment flow is used.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Communications: messages, attachments, and contact details when you reach out to us for
                                 support, security reports, or other enquiries.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Customer Content: data processed by Solutions, connected databases, storage, and runtime
                                 services. We do not routinely inspect it, but authorized personnel may access it for
                                 support, security, abuse investigations, or legal requirements.
-                            </Text>
+                            </span>
                         </li>
                     </ul>
-                    <Text as="p">
+                    <p>
                         We receive data from you, organizations that invite or administer you, identity providers,
                         connected infrastructure, and your use of the Service.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         We do not sell personal data. We do not currently use third-party advertising trackers or
                         analytics to build advertising profiles about visitors.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="why-we-process-personal-data" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="why-we-process-personal-data">
                         4. Why we process personal data
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We process data to create accounts, manage organizations and access, operate Solutions and
                         connected infrastructure, deliver account and service messages, protect the Service, diagnose
                         problems, and improve reliability. Authenticated Solution requests include the requesting
                         user&apos;s profile, which is stored in that Solution&apos;s database for user relationships and
                         audit attribution. We also respond to enquiries, handle disputes, and meet legal obligations.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         The Service automatically checks access and provisions or removes resources. These operational
                         actions are not behavioral profiling. We do not use personal data for automated decisions that
                         have legal or similarly significant effects. Contact us if an operational action appears
                         incorrect and you want human review.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         Where a legal basis is required, including under the EU or UK GDPR, we rely as appropriate on a
                         contract, legal obligation, legitimate interests in operating and protecting the Service, or
                         consent for optional uses. You may withdraw consent without affecting earlier processing.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="service-providers-and-other-recipients" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="service-providers-and-other-recipients">
                         5. Service providers and other recipients
-                    </Heading>
-                    <Text as="p">We disclose only the data reasonably needed for the recipient's role:</Text>
+                    </h2>
+                    <p>We disclose only the data reasonably needed for the recipient's role:</p>
                     <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
                         <li>
-                            <Text>
+                            <span>
                                 Infrastructure providers and connected registries receive the configuration, secrets,
                                 and request data needed to host and operate Solutions.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Email providers receive contact details and message content to deliver invitations,
                                 account notices, and support messages.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Logging and monitoring providers receive operational data needed for reliability and
                                 security.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Payment, banking, or accounting providers receive billing data if you use a paid service
                                 or separate payment flow.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Advisers and authorities receive data where needed for legal, accounting, security, or
                                 regulatory purposes.
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 A prospective buyer or successor may receive data in a business transaction, subject to
                                 appropriate safeguards.
-                            </Text>
+                            </span>
                         </li>
                     </ul>
-                    <Text as="p">
+                    <p>
                         Some providers also act as independent controllers for their own legal and security purposes.
                         Their privacy policies govern that processing.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="international-transfers" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="international-transfers">
                         6. International transfers
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         Personal data may be processed where we, our providers, or your connected infrastructure
                         operate, including Switzerland, the European Economic Area, the United States, and other
                         countries.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         Where required, we use recognized adequacy decisions, contractual safeguards, or other lawful
                         transfer mechanisms. Contact us for information about safeguards relevant to a particular
                         transfer.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="cookies-and-similar-storage" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="cookies-and-similar-storage">
                         7. Cookies and similar storage
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We use HTTP-only cookies for signed sign-in sessions, email registration, password resets, and
                         OAuth sign-in. These are necessary for account access and security. A separate payment provider
                         may set cookies if you visit its service.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         During registration or password reset, your browser may briefly keep a verification token in
                         session storage to complete the flow. Blocking or deleting these cookies or storage may
                         interrupt sign-in or account setup.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         We do not currently set advertising or cross-site tracking cookies. If that changes, we will
                         update this Policy and provide any choices required by law.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="retention" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="retention">
                         8. Retention
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We keep data for as long as needed to provide the Service or meet legal and security
                         obligations:
-                    </Text>
+                    </p>
                     <ul className="m-0 flex list-disc flex-col gap-0.5 ps-8 [&>li]:pe-2 [&>li]:py-2">
                         <li>
-                            <Text>
+                            <span>
                                 account, membership, and invitation data are generally kept while the account or
                                 organization is active, then deleted or anonymized when no longer needed;
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Solution, infrastructure, operation, and audit records are kept while needed to operate
                                 or secure the Service, and longer for investigations, disputes, or legal duties;
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 access, runtime, and security logs are generally kept for up to 12 months, longer when
                                 needed for an incident, dispute, or legal claim;
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 support and security communications are generally kept for up to three years after
                                 resolution;
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 invoices and accounting records, where applicable, are generally kept for 10 years under
                                 Swiss record-keeping requirements;
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 infrastructure credentials are kept while the related resource is configured, then
                                 deleted or rotated when no longer needed; and
-                            </Text>
+                            </span>
                         </li>
                         <li>
-                            <Text>
+                            <span>
                                 Customer Content may be erased without a recovery period when a Solution, organization,
                                 or connected resource is deleted. Export data and keep independent backups.
-                            </Text>
+                            </span>
                         </li>
                     </ul>
-                    <Text as="p">
+                    <p>
                         Data may remain temporarily in protected backups or with providers subject to their own
                         retention obligations. We delete, anonymize, or isolate it when no longer needed until backups
                         expire.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="security-and-data-incidents" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="security-and-data-incidents">
                         9. Security and data incidents
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We use safeguards appropriate to the risk, including access controls, password hashing, signed
                         session cookies, transport encryption, resource isolation, secret management, and logging. No
                         system is completely secure. You are responsible for securing your accounts, Solutions, and
                         connected infrastructure.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         We assess personal-data breaches and notify the Federal Data Protection and Information
                         Commissioner (FDPIC) where a breach is likely to result in a high risk to a person's personality
                         or fundamental rights. We notify affected individuals where required by law or where
                         notification is necessary for their protection.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="your-rights" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="your-rights">
                         10. Your rights
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         Depending on applicable law, you may request access, correction, deletion, restriction,
                         objection, or transfer of your personal data. You may request account closure and withdraw
                         consent where we rely on it.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         Send requests to{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         . We may verify your identity before responding. We generally respond within 30 days. Access is
                         normally free, subject to fees or exceptions permitted by law.
-                    </Text>
-                    <Text as="p">
+                    </p>
+                    <p>
                         You may lodge a complaint with the Federal Data Protection and Information Commissioner (FDPIC)
                         or another competent data-protection authority.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="changes-to-this-policy" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="changes-to-this-policy">
                         11. Changes to this Policy
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         We may update this Policy as the Service, providers, deployment model, or legal requirements
                         change. We will post the revised Policy with a new update date. If a change materially affects
                         how we use existing account data, we will provide reasonable advance notice through email or the
                         Service where required.
-                    </Text>
+                    </p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="contact" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="contact">
                         12. Contact
-                    </Heading>
-                    <Text as="p">LongLink SAGL, UID CHE-150.642.313.</Text>
-                    <Text as="p">
+                    </h2>
+                    <p>LongLink SAGL, UID CHE-150.642.313.</p>
+                    <p>
                         Privacy enquiries and data-rights requests:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         . Security, technical, and account support:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
                         .
-                    </Text>
+                    </p>
                 </Stack>
             </Stack>
         </PublicArticle>

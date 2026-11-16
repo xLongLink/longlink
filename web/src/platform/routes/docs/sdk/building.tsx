@@ -1,8 +1,7 @@
-import { DataTable } from '@/components/custom/data-table';
-import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -25,28 +24,28 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="building" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="building">
                     Building
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Package your solution into a standard container image. LongLink builds the solution together with
                     its locked dependencies, configuration requirements, and metadata.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         Get the deployment model used by modern software teams, reproducible, versioned container
                         images, without setting up and maintaining the build infrastructure yourself. Each update
                         becomes a consistent, self-contained artifact that can be deployed with a single click.
-                    </Text>
+                    </p>
                 </Stack>
                 <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 <Stack gap={2}>
-                    <Heading id="metadata" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="metadata">
                         Metadata
-                    </Heading>
+                    </h2>
                     <CodeBlock
                         code={`[project]
 name = "orders"
@@ -63,30 +62,31 @@ environments = "src.envs:Env"
                             <CodeBlockCopyButton className="ml-auto" />
                         </CodeBlockHeader>
                     </CodeBlock>
-                    <DataTable
-                        density="compact"
-                        idKey="metadata"
-                        data={[
-                            { metadata: 'description', label: 'org.opencontainers.image.description' },
-                            { metadata: 'environments', label: 'dev.longlink.environments' }
-                        ]}
-                        columns={[
-                            {
-                                key: 'metadata',
-                                header: 'Metadata',
-                                renderCell: (row) => <InlineCode>{row.metadata}</InlineCode>
-                            },
-                            {
-                                key: 'label',
-                                header: 'Image label',
-                                renderCell: (row) => <InlineCode>{row.label}</InlineCode>
-                            }
-                        ]}
-                    />
+                    <Table wrap>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Metadata</TableHead>
+                                <TableHead>Image label</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[
+                                { metadata: 'description', label: 'org.opencontainers.image.description' },
+                                { metadata: 'environments', label: 'dev.longlink.environments' }
+                            ].map((row) => (
+                                <TableRow key={row.metadata}>
+                                    <TableCell>
+                                        <InlineCode>{row.metadata}</InlineCode>
+                                    </TableCell>
+                                    <TableCell>
+                                        <InlineCode>{row.label}</InlineCode>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </Stack>
             </Stack>
         </DocumentationArticle>
     );
 }
-
-import { InlineCode } from '@/components/shadcn/inline-code';

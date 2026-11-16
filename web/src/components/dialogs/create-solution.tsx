@@ -1,196 +1,265 @@
-import { cn } from 'cn';
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
-import { Form } from '@/components/custom/form';
-import { Button } from '@/components/shadcn/button';
-import { Step, Wizard } from '@/components/custom/wizard';
-import { TextInput } from '@/components/custom/text-input';
-import { buttonVariants } from '@/components/shadcn/button';
-import { Illustration } from '@/components/ui/illustration';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 
-/** Owns one creation attempt, shared by the organization list and settings pages. */
+/** Owns image inspection and configuration for one creation attempt. */
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onClose
-}: {
+    onOpenChange,
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     organizationId: string;
     onSuccess: () => void | Promise<void>;
-    onClose: () => void;
 }) {
-    // Retain image metadata while named controls own drafts and Wizard owns navigation.
-    const [image, setImage] = useState('');
-
+    const formId = useId();
+    const [stage, setStage] = useState<'image' | 'configure'>('image');
     const [inspection, setInspection] = useState<{
+        source: string;
         metadata: z.output<typeof schemas.zLongLinkMetadata>;
-        generation: number;
     }>();
+    const [inspecting, setInspecting] = useState(false);
+    const request = useRef<AbortController | null>(null);
 
-    /** Inspects the chosen image before opening its configuration. */
-    async function inspectImage() {
-        if (!image.trim()) return false;
+    // Cancel an unfinished inspection when the dialog's attempt ends.
+    useEffect(() => () => request.current?.abort(), []);
 
-        // Advance only when the image metadata is valid; reinspection resets image-specific drafts.
-        const inspected = schemas.zLongLinkMetadata.parse(
-            await api(`/api/v1/organizations/${organizationId}/image`, { searchParams: { image: image.trim() } }).json()
-        );
-
-        setImage(image.trim());
-        setInspection((previous) => ({ metadata: inspected, generation: (previous?.generation ?? 0) + 1 }));
-    }
-
-    /** Creates the configured Solution before completing the parent-owned success workflow. */
-    async function createSolution(data: FormData) {
-        // Parse the form-owned name before applying Solution request constraints.
-        const name = z.string().trim().parse(data.get('name'));
-
-        // Omit blank optional environments and notify the parent only after creation succeeds.
-        const json = schemas.zSolutionCreate.parse({
-            description: z.string().parse(data.get('description')) || null,
-            envs: Object.fromEntries(
-                (inspection?.metadata.environments ?? [])
-                    .map(({ name }) => [name, z.string().parse(data.get(`envs.${name}`))] as const)
-                    .filter(([, value]) => value !== '')
-            ),
-            image,
-            name
+    const schema = schemas.zSolutionCreate
+        .extend({
+            image: z.string().trim().min(1),
+            name: z.string().trim().pipe(schemas.zSolutionCreate.shape.name),
+            description: z.string().max(255),
+            envs: z.record(z.string(), z.string())
+        })
+        .superRefine((values, context) => {
+            for (const environment of inspection?.metadata.environments ?? []) {
+                if (environment.required && !values.envs[environment.name]?.trim()) {
+                    context.addIssue({
+                        code: 'custom',
+                        path: ['envs', environment.name],
+                        message: 'Please complete this field.'
+                    });
+                }
+            }
         });
 
-        await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
-        await onSuccess();
-    }
+    const form = useForm({
+        resolver: zodResolver(schema),
+        defaultValues: { image: '', name: '', description: '', envs: {} }
+    });
 
-    // Keep the existing dialog frame and content width while sharing all wizard mechanics.
+    // Validate only the image before fetching the configuration it defines.
+    const inspect = useSubmit(
+        async () => {
+            setInspecting(true);
+            form.clearErrors('root');
+
+            try {
+                if (!(await form.trigger('image', { shouldFocus: true }))) return;
+                const image = form.getValues('image').trim();
+
+                if (inspection?.source === image) {
+                    setStage('configure');
+                    return;
+                }
+
+                const controller = new AbortController();
+                request.current = controller;
+                const metadata = await api(`/api/v1/organizations/${organizationId}/image`, {
+                    searchParams: { image },
+                    signal: controller.signal
+                }).json(schemas.zLongLinkMetadata);
+
+                if (controller.signal.aborted) return;
+
+                form.setValue('image', image);
+                form.setValue('description', metadata.description ?? '');
+                form.setValue('envs', Object.fromEntries((metadata.environments ?? []).map(({ name }) => [name, ''])));
+                form.clearErrors();
+                setInspection({ source: image, metadata });
+                setStage('configure');
+            } catch (error) {
+                if (!request.current?.signal.aborted) throw error;
+            } finally {
+                setInspecting(false);
+            }
+        },
+        { onError: () => form.setError('root', { message: 'Could not inspect the image. Please try again.' }) }
+    );
+
+    // Create only the inspected configuration; omit blank optional environments.
+    const submit = useSubmit(
+        async (data: z.output<typeof schema>) => {
+            if (!inspection || data.image !== inspection.source) return;
+            const json = {
+                ...data,
+                description: data.description || null,
+                envs: Object.fromEntries(Object.entries(data.envs).filter(([, value]) => value !== ''))
+            };
+
+            await api.post(`/api/v1/organizations/${organizationId}/solutions`, { json });
+            await onSuccess();
+        },
+        { onError: () => form.setError('root', { message: 'Could not create the Solution. Please try again.' }) }
+    );
+
+    const pending = inspecting || form.formState.isSubmitting;
+
     return (
-        <FramedDialog
-            open
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Create solution"
+            footer={
+                <>
+                    <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                    {stage === 'configure' && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={pending}
+                            onClick={() => {
+                                form.clearErrors('root');
+                                setStage('image');
+                            }}
+                        >
+                            Back
+                        </Button>
+                    )}
+                    <Button type="submit" form={formId} disabled={pending}>
+                        {stage === 'image' ? 'Inspect' : 'Create'}
+                    </Button>
+                </>
+            }
         >
-            <Form action={createSolution}>
-                <Wizard
-                    height="min(560px, calc(100dvh - var(--spacing) * 40))"
-                    onCancel={onClose}
-                    next={(step) => (step === 0 ? { label: 'Inspect', action: inspectImage } : undefined)}
-                >
-                    <Step label="Image">
-                        <Stack gap={8}>
-                            <Stack gap={3} align="center">
-                                <Illustration
-                                    src="/images/solution.png"
-                                    alt=""
-                                    className="size-20 object-contain"
-                                    width={272}
-                                    height={279}
-                                    decoding="async"
-                                />
-                                <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Choose a Solution image
-                                    </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
-                                        Start with a container image or try the sample Solution
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                            <Stack className="relative">
-                                <TextInput
-                                    label="Image"
-                                    value={image}
-                                    placeholder="ghcr.io/longlink/dashboard:latest"
-                                    required
-                                    onChange={setImage}
-                                />
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        buttonVariants({ variant: 'link', size: null }),
-                                        'absolute top-0 right-0 underline'
+            <form
+                id={formId}
+                className="flex min-h-0 flex-col gap-4"
+                onSubmit={(event) => {
+                    if (stage === 'image') {
+                        event.preventDefault();
+                        void inspect(undefined);
+                    } else {
+                        void form.handleSubmit(submit)(event);
+                    }
+                }}
+                noValidate
+                aria-busy={pending}
+            >
+                <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                    {stage === 'image' ? (
+                        <>
+                            <img
+                                src="/images/solution.png"
+                                alt=""
+                                width={272}
+                                height={279}
+                                decoding="async"
+                                className="size-20 self-center object-contain invert dark:invert-0"
+                            />
+                            <Controller
+                                name="image"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldLabel htmlFor="solution-image">Image</FieldLabel>
+                                        <Input
+                                            {...field}
+                                            id="solution-image"
+                                            autoFocus
+                                            placeholder="ghcr.io/longlink/dashboard:latest"
+                                            aria-invalid={fieldState.invalid}
+                                        />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </Field>
+                                )}
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => form.setValue('image', 'ghcr.io/xlonglink/sample:latest')}
+                            >
+                                Use sample image
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <img
+                                src="/images/nametag.png"
+                                alt=""
+                                width={1448}
+                                height={1086}
+                                decoding="async"
+                                className="size-20 self-center object-contain invert dark:invert-0"
+                            />
+                            {(['name', 'description'] as const).map((name) => (
+                                <Controller
+                                    key={name}
+                                    name={name}
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel htmlFor={`solution-${name}`}>
+                                                {name === 'name' ? 'Name' : 'Description'}
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                id={`solution-${name}`}
+                                                autoFocus={name === 'name'}
+                                                aria-invalid={fieldState.invalid}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
                                     )}
-                                    onClick={() => setImage('ghcr.io/xlonglink/sample:latest')}
-                                >
-                                    <Text className="text-muted-foreground text-base">Use sample image</Text>
-                                </button>
-                            </Stack>
-                        </Stack>
-                    </Step>
-                    <Step label="Metadata">
-                        <Stack gap={8}>
-                            <Stack gap={3} align="center">
-                                <Illustration
-                                    src="/images/nametag.png"
-                                    alt=""
-                                    className="size-20 object-contain"
-                                    width={1448}
-                                    height={1086}
-                                    decoding="async"
                                 />
-                                <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Make it yours
-                                    </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
-                                        Give your Solution a name and description
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                            <Stack gap={3}>
-                                <TextInput label="Name" name="name" required />
-                                <TextInput
-                                    key={inspection?.generation}
-                                    label="Description"
-                                    name="description"
-                                    defaultValue={inspection?.metadata.description ?? ''}
-                                    placeholder="Dashboard solution"
-                                />
-                            </Stack>
-                        </Stack>
-                    </Step>
-                    <Step label="Environment">
-                        <Stack gap={8}>
-                            <Stack gap={3} align="center">
-                                <Illustration
+                            ))}
+                            {!!inspection?.metadata.environments?.length && (
+                                <img
                                     src="/images/lock.png"
                                     alt=""
-                                    className="size-20 object-contain"
                                     width={1327}
                                     height={1186}
                                     decoding="async"
+                                    className="size-20 self-center object-contain invert dark:invert-0"
                                 />
-                                <Stack gap={0}>
-                                    <Heading level={2} className="text-center">
-                                        Configure your environment
-                                    </Heading>
-                                    <Text as="p" className="text-muted-foreground text-center">
-                                        Set the values your Solution needs to run
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                            <Stack key={inspection?.generation} gap={3}>
-                                {(inspection?.metadata.environments ?? []).map((environment) => (
-                                    <TextInput
-                                        key={environment.name}
-                                        label={environment.name}
-                                        name={`envs.${environment.name}`}
-                                        placeholder={environment.description ?? undefined}
-                                        required={environment.required}
-                                    />
-                                ))}
-                            </Stack>
-                        </Stack>
-                        <Button type="submit" variant="default">
-                            Create
-                        </Button>
-                    </Step>
-                </Wizard>
-            </Form>
-        </FramedDialog>
+                            )}
+                            {(inspection?.metadata.environments ?? []).map((environment) => (
+                                <Controller
+                                    key={environment.name}
+                                    name={`envs.${environment.name}`}
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={fieldState.invalid}>
+                                            <FieldLabel htmlFor={`solution-env-${environment.name}`}>
+                                                {environment.name}
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                id={`solution-env-${environment.name}`}
+                                                value={field.value ?? ''}
+                                                placeholder={environment.description ?? undefined}
+                                                aria-invalid={fieldState.invalid}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                            ))}
+                        </>
+                    )}
+                </fieldset>
+                <FieldError errors={[form.formState.errors.root]} />
+            </form>
+        </Dialog>
     );
 }

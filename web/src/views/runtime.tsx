@@ -1,20 +1,19 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import * as components from './index';
 import { CircleX } from 'lucide-react';
-import * as components from './components';
 import { createRoot } from 'react-dom/client';
+import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useConfirm } from '@/components/custom/confirmation';
+import { Spinner } from '@/components/shadcn/spinner';
 import { FileRequestContext } from '@/components/custom/preview';
-import { NativeLoading } from '@/components/custom/native-loading';
-import { FileViewerContext } from '@/components/custom/file-context';
+import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
-import { QueryClient, QueryClientProvider, QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
     FormRequestContext,
-    IconRequestContext,
     LinkNavigationContext,
     MenuNavigationContext,
     DialogActivityContext
@@ -27,19 +26,14 @@ import {
     type RequestCommand,
     type DownloadCommand,
     type PreviewCommand,
-    type IconCommand,
     downloadSchema,
     previewSchema,
     type ViewReply,
     type ViewData,
-    iconSchema,
-    iconDataSchema,
     appearanceMessageSchema,
     type AppearanceMessage,
     viewportMessageSchema,
-    type ViewportMessage,
-    viewAppearanceSchema,
-    type ViewAppearance
+    type ViewportMessage
 } from './protocol';
 import '../index.css';
 
@@ -80,7 +74,10 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
 /** Keeps loaded Views and compilation errors in the same content region. */
 function ViewLayout({ children }: { children: React.ReactNode }) {
     return (
-        <section className="view-runtime-content" aria-label="Solution View">
+        <section
+            className="min-h-full min-w-0 p-0 [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+            aria-label="Solution View"
+        >
             {children}
         </section>
     );
@@ -113,7 +110,7 @@ const initialization = z
         session: z.string(),
         source: z.string(),
         params: parametersSchema,
-        appearance: viewAppearanceSchema,
+        appearance: appearanceSchema,
         navigationBaseUrl: z.url({ protocol: /^https?$/ })
     })
     .strict();
@@ -137,6 +134,7 @@ function initialize(event: MessageEvent<unknown>): void {
     // Scope requests and cache state to this admitted sandbox's lifetime.
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const lifetime = new AbortController();
+    document.documentElement.setAttribute('data-view-runtime', '');
 
     const pending = new Map<
         number,
@@ -175,7 +173,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     /** Owns the deadline and channel transfer for each scoped operation. */
-    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand | IconCommand): Promise<ViewData> {
+    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand): Promise<ViewData> {
         const { id } = command;
 
         return new Promise<ViewData>((resolve, reject) => {
@@ -199,28 +197,19 @@ function initialize(event: MessageEvent<unknown>): void {
         });
     }
 
-    /** Requests validated icon geometry from the host. */
-    async function loadIcon(name: string) {
-        const command = iconSchema.parse({ type: 'icon', id: sequence++, name });
-        const data = await exchange(command);
-
-        // Validate icon geometry at the receiving boundary before giving it to Lucide's renderer.
-        return iconDataSchema.parse(data);
-    }
-
-    /** Keeps images in the sandbox and delegates document previews to the host. */
-    async function requestPreview(path: string, title?: string): Promise<Blob | null> {
-        if (title !== undefined) {
-            const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
-            const data = await exchange(command);
-
-            return z.instanceof(Blob).nullable().parse(data);
-        }
-
+    /** Loads inert file bytes inside the sandbox. */
+    async function loadFile(path: string): Promise<Blob> {
         // Binary previews must remain inert file data rather than arbitrary response objects.
         const data = await request(path, { binary: true });
 
         return z.instanceof(Blob).parse(data);
+    }
+
+    /** Opens a document preview owned by the host. */
+    async function requestPreview(path: string, title: string): Promise<void> {
+        const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
+        const data = await exchange(command);
+        z.null().parse(data);
     }
 
     /** Asks the host to save an attachment without opening a document inside the sandbox. */
@@ -230,52 +219,11 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     // Supply file previews and downloads without exposing the general request API to file components.
-    const fileRequests = { preview: requestPreview, download };
-
-    /** Tracks an inline slot while native document rendering remains host-owned. */
-    function mountFileViewer(element: HTMLElement, path: string, title: string): () => void {
-        const id = sequence++;
-        let animation: number;
-        let previous = '';
-
-        /** Transfer geometry only when layout or visibility changes. */
-        function measure() {
-            const rect = element.getBoundingClientRect();
-            const bounds = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-            const serialized = JSON.stringify(bounds);
-
-            if (serialized !== previous) {
-                previous = serialized;
-                port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds });
-            }
-
-            animation = requestAnimationFrame(measure);
-        }
-
-        measure();
-
-        return () => {
-            cancelAnimationFrame(animation);
-            port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds: null });
-        };
-    }
+    const fileRequests = { load: loadFile, preview: requestPreview, download };
 
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {
         port.postMessage({ type: 'navigate', path, newTab });
-    }
-
-    /** Returns Solution data and an awaitable invalidator scoped to the full request path. */
-    function useApi(path: string): readonly [ViewData, () => Promise<void>] {
-        // Use the full request path as cache identity, including pagination parameters.
-        const { data } = useSuspenseQuery({ queryKey: ['api', path], queryFn: () => request(path) });
-
-        const invalidate = React.useCallback(
-            () => client.invalidateQueries({ queryKey: ['api', path], exact: true }),
-            [path]
-        );
-
-        return [data, invalidate];
     }
 
     port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage | ViewportMessage>) => {
@@ -326,6 +274,7 @@ function initialize(event: MessageEvent<unknown>): void {
         modalDepth += open ? 1 : -1;
 
         if (fullscreen) fullscreenDepth += open ? 1 : -1;
+        document.documentElement.toggleAttribute('data-view-fullscreen', fullscreenDepth > 0);
 
         const command = { type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) };
 
@@ -349,6 +298,12 @@ function initialize(event: MessageEvent<unknown>): void {
             port.postMessage({ type: 'modal', depth: 0 });
             lifetime.abort();
             observer.disconnect();
+            document.documentElement.removeAttribute('data-view-runtime');
+            document.documentElement.removeAttribute('data-view-fullscreen');
+
+            for (const property of ['--view-viewport-top', '--view-viewport-bottom', '--view-viewport-height']) {
+                document.documentElement.style.removeProperty(property);
+            }
 
             for (const waiter of pending.values()) {
                 clearTimeout(waiter.timer);
@@ -356,6 +311,8 @@ function initialize(event: MessageEvent<unknown>): void {
             }
 
             pending.clear();
+            root.unmount();
+            client.clear();
             port.close();
         },
         { once: true }
@@ -375,17 +332,12 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const bindings = {
             // Keep JSX compilation separate from the public View API.
-            __jsx: React.createElement,
-            Fragment: React.Fragment,
-            useState: React.useState,
-            useEffect: React.useEffect,
-            useMemo: React.useMemo,
-            useRef: React.useRef,
+            __jsx: (type: React.ElementType, props: React.Attributes | null, ...children: React.ReactNode[]) =>
+                React.createElement(Object.is(type, globalThis.Map) ? components.Map : type, props, ...children),
             ...components,
+            Map: globalThis.Map,
             request,
-            navigate,
-            useApi,
-            useConfirm
+            navigate
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
@@ -413,48 +365,42 @@ function initialize(event: MessageEvent<unknown>): void {
             <QueryClientProvider client={client}>
                 <QueryErrorResetBoundary>
                     {({ reset }) => (
-                        <ViewLayout>
-                            <ErrorBoundary
-                                onReset={reset}
-                                fallbackRender={({ error, resetErrorBoundary }) => (
-                                    <ViewFailure
-                                        title="View could not be loaded"
-                                        message={
-                                            error instanceof Error
-                                                ? error.message.slice(0, 1024)
-                                                : 'An unexpected View error occurred.'
-                                        }
-                                        retry={resetErrorBoundary}
-                                    />
-                                )}
-                            >
-                                <React.Suspense
-                                    fallback={
-                                        <div className="view-runtime-loading">
-                                            <NativeLoading label="Loading View" />
-                                        </div>
+                        <ErrorBoundary
+                            onReset={reset}
+                            fallbackRender={({ error, resetErrorBoundary }) => (
+                                <ViewFailure
+                                    title="View could not be loaded"
+                                    message={
+                                        error instanceof Error
+                                            ? error.message.slice(0, 1024)
+                                            : 'An unexpected View error occurred.'
                                     }
-                                >
-                                    <IconRequestContext value={loadIcon}>
-                                        <LinkNavigationContext
-                                            value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}
-                                        >
-                                            <MenuNavigationProvider>
-                                                <FileRequestContext value={fileRequests}>
-                                                    <FileViewerContext value={mountFileViewer}>
-                                                        <DialogActivityContext value={modalActivity}>
-                                                            <FormRequestContext value={request}>
-                                                                <View params={params} />
-                                                            </FormRequestContext>
-                                                        </DialogActivityContext>
-                                                    </FileViewerContext>
-                                                </FileRequestContext>
-                                            </MenuNavigationProvider>
-                                        </LinkNavigationContext>
-                                    </IconRequestContext>
-                                </React.Suspense>
-                            </ErrorBoundary>
-                        </ViewLayout>
+                                    retry={resetErrorBoundary}
+                                />
+                            )}
+                        >
+                            <React.Suspense
+                                fallback={
+                                    <div className="grid min-h-dvh w-full place-items-center">
+                                        <Spinner aria-label="Loading View" className="motion-reduce:animate-none" />
+                                    </div>
+                                }
+                            >
+                                <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
+                                    <MenuNavigationProvider>
+                                        <FileRequestContext value={fileRequests}>
+                                            <DialogActivityContext value={modalActivity}>
+                                                <FormRequestContext value={request}>
+                                                    <ViewRequestContext value={request}>
+                                                        <View params={params} />
+                                                    </ViewRequestContext>
+                                                </FormRequestContext>
+                                            </DialogActivityContext>
+                                        </FileRequestContext>
+                                    </MenuNavigationProvider>
+                                </LinkNavigationContext>
+                            </React.Suspense>
+                        </ErrorBoundary>
                     )}
                 </QueryErrorResetBoundary>
             </QueryClientProvider>
@@ -462,21 +408,19 @@ function initialize(event: MessageEvent<unknown>): void {
     } catch (error) {
         // Compilation diagnostics belong to the authored source, not privileged host state.
         content = (
-            <ViewLayout>
-                <ViewFailure
-                    title="View compilation failed"
-                    message={
-                        error instanceof Error
-                            ? error.message.slice(0, 1024)
-                            : 'Export a default JSX component without package imports.'
-                    }
-                />
-            </ViewLayout>
+            <ViewFailure
+                title="View compilation failed"
+                message={
+                    error instanceof Error
+                        ? error.message.slice(0, 1024)
+                        : 'Export a default JSX component without package imports.'
+                }
+            />
         );
     }
 
     /** Updates document appearance without reconciling or remounting the authored View. */
-    function renderAppearance(appearance: ViewAppearance) {
+    function renderAppearance(appearance: Appearance) {
         document.documentElement.dataset.themeScope = 'stone';
         document.documentElement.dataset.accent = appearance.accent;
 
@@ -487,7 +431,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
     // Start from the handshake, then receive live preferences over the private port.
     renderAppearance(parsed.data.appearance);
-    root.render(content);
+    root.render(<ViewLayout>{content}</ViewLayout>);
 }
 
 // A fresh opaque-origin frame cannot read parent state, storage, or cookies.

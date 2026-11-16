@@ -1,12 +1,8 @@
 import { z } from 'zod';
 import { appearanceSchema } from '@/lib/appearance';
 
-export const viewAppearanceSchema = appearanceSchema;
-
-export type ViewAppearance = z.output<typeof viewAppearanceSchema>;
-
 export const appearanceMessageSchema = z
-    .object({ type: z.literal('appearance'), appearance: viewAppearanceSchema })
+    .object({ type: z.literal('appearance'), appearance: appearanceSchema })
     .strict();
 
 export type AppearanceMessage = z.output<typeof appearanceMessageSchema>;
@@ -28,6 +24,10 @@ export const REQUEST_TIMEOUT = 130_000;
 export const MAX_MODAL_DEPTH = 8;
 
 export const parametersSchema = z.record(z.string(), z.string());
+
+export const moduleRequestSchema = z
+    .object({ id: z.number().int().nonnegative(), path: z.string().min(1).max(256) })
+    .strict();
 
 export const requestSchema = z
     .object({
@@ -113,23 +113,6 @@ export const iconDataSchema = z.object({
 });
 
 export const commandSchema = z.discriminatedUnion('type', [
-    z
-        .object({
-            type: z.literal('file-viewer'),
-            id: z.number().int().nonnegative(),
-            path: z.string().min(1),
-            title: z.string().min(1).max(256),
-            bounds: z
-                .object({
-                    top: z.number().finite().min(-1_000_000).max(1_000_000),
-                    left: z.number().finite().min(-1_000_000).max(1_000_000),
-                    width: z.number().finite().nonnegative().max(1_000_000),
-                    height: z.number().finite().nonnegative().max(1_000_000)
-                })
-                .strict()
-                .nullable()
-        })
-        .strict(),
     requestSchema,
     // Only bounded dimensions cross the sandbox boundary; the host owns page scrolling.
     z.object({ type: z.literal('resize'), height: z.number().int().min(1).max(1_000_000) }).strict(),
@@ -147,8 +130,6 @@ export const commandSchema = z.discriminatedUnion('type', [
 ]);
 
 export type RequestCommand = z.output<typeof requestSchema>;
-
-export type FileViewerCommand = Extract<z.output<typeof commandSchema>, { type: 'file-viewer' }>;
 
 export type DownloadCommand = z.output<typeof downloadSchema>;
 

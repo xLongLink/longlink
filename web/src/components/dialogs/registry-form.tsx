@@ -1,62 +1,102 @@
+import { useId } from 'react';
 import { api } from '@/lib/api';
-import { FormDialog } from './form-dialog';
-import { Form } from '@/components/custom/form';
-import { TextInput } from '@/components/custom/text-input';
-import { Illustration } from '@/components/ui/illustration';
+import { Input } from '@/components/shadcn/input';
+import { useSubmit } from '@/lib/hooks/use-submit';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 export function RegistryForm({
     base,
     onSuccess,
-    onClose
+    onOpenChange,
+    ...dialogProps
 }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     base: string;
     onSuccess: () => Promise<void>;
-    onClose: () => void;
 }) {
-    async function save(data: FormData) {
-        const json = schemas.zRegistryCreateWritable.parse({ credential: data.get('credential') });
-        await api.post(`${base}/registries`, { json });
+    const formId = useId();
+    const form = useForm({ resolver: zodResolver(schemas.zRegistryCreateWritable), defaultValues: { credential: '' } });
+
+    async function save(data: { credential: string }) {
+        await api.post(`${base}/registries`, { json: data });
         await onSuccess();
     }
 
+    const submit = useSubmit(save, {
+        onError: () => form.setError('root', { message: 'Could not save the registry. Please try again.' })
+    });
+
     return (
-        <FormDialog gap={8} onClose={onClose}>
-            <Stack gap={3} align="center">
-                <Illustration src="/images/lock.png" alt="" className="size-20 object-contain" decoding="async" />
-                <Stack gap={0}>
-                    <Heading level={2} className="text-center">
-                        Connect a registry
-                    </Heading>
-                    <Text as="p" className="text-muted-foreground text-center">
-                        Allow LongLink to pull your private container images
-                    </Text>
-                </Stack>
-            </Stack>
-            <Form action={save}>
-                <Stack gap={3}>
-                    <Text as="p">GitHub Container Registry (ghcr.io)</Text>
-                    <Stack>
-                        <TextInput
-                            label="Personal access token (classic)"
-                            description="Requires the read:packages scope."
-                            type="password"
-                            placeholder="ghp_..."
-                            autoComplete="new-password"
-                            name="credential"
-                            required
-                        />
-                    </Stack>
-                    <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                        <Button label="Cancel" variant="ghost" type="button" onClick={onClose} />
-                        <Button label="Save" variant="default" type="submit" />
-                    </Stack>
-                </Stack>
-            </Form>
-        </FormDialog>
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Connect a registry"
+            footer={
+                <>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
+                        Save
+                    </Button>
+                </>
+            }
+        >
+            <form
+                id={formId}
+                className="flex flex-col gap-4"
+                onSubmit={(event) => {
+                    void form.handleSubmit(submit)(event);
+                }}
+                noValidate
+                aria-busy={form.formState.isSubmitting}
+            >
+                <img
+                    src="/images/lock.png"
+                    alt=""
+                    width={1327}
+                    height={1186}
+                    decoding="async"
+                    className="size-20 self-center object-contain invert dark:invert-0"
+                />
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                    <p>GitHub Container Registry (ghcr.io)</p>
+                    <Controller
+                        name="credential"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>
+                                <Input
+                                    {...field}
+                                    id="registry-credential"
+                                    type="password"
+                                    placeholder="ghp_..."
+                                    autoComplete="new-password"
+                                    aria-invalid={fieldState.invalid}
+                                    aria-describedby="registry-credential-description"
+                                />
+                                <FieldDescription id="registry-credential-description">
+                                    Requires the read:packages scope.
+                                </FieldDescription>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                </fieldset>
+                <FieldError errors={[form.formState.errors.root]} />
+            </form>
+        </Dialog>
     );
 }

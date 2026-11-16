@@ -2,7 +2,6 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import type { z } from 'zod';
-import * as icons from '@/lib/icons';
 import { it, expect, vi } from 'vitest';
 import { useApi } from '@/lib/hooks/use-api';
 import { Route, Routes } from 'react-router';
@@ -14,7 +13,6 @@ import Settings from '@/platform/routes/orgs/settings';
 import Organization from '@/platform/layouts/organization';
 import { renderPlatform, membership, user } from '../../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { IconRequestContext } from '@/components/custom/contexts';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import OrganizationAccess from '@/platform/layouts/organization-access';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -67,21 +65,17 @@ async function withOrganizationSettings(
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={(error) => errors.push(error)}>
                     <AuthenticatedUserContext value={user}>
-                        <IconRequestContext value={icons.load}>
-                            <>
-                                <ApiBoundary>
-                                    <AccountRole />
-                                </ApiBoundary>
-                                <Routes>
-                                    <Route path="/user/organizations" element={<h1>Organizations overview</h1>} />
-                                    <Route element={<OrganizationAccess />}>
-                                        <Route element={<Organization />}>
-                                            <Route path="/orgs/:organization/settings" element={<Settings />} />
-                                        </Route>
-                                    </Route>
-                                </Routes>
-                            </>
-                        </IconRequestContext>
+                        <ApiBoundary>
+                            <AccountRole />
+                        </ApiBoundary>
+                        <Routes>
+                            <Route path="/user/organizations" element={<h1>Organizations overview</h1>} />
+                            <Route element={<OrganizationAccess />}>
+                                <Route element={<Organization />}>
+                                    <Route path="/orgs/:organization/settings" element={<Settings />} />
+                                </Route>
+                            </Route>
+                        </Routes>
                     </AuthenticatedUserContext>
                 </ApiErrorContext>
             </QueryClientProvider>,
@@ -366,9 +360,9 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             // Act
             await chooseMemberAction(output, user.name, 'Remove member');
 
-            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
-                (button) => button.textContent === 'Remove member'
-            );
+            const confirm = Array.from(
+                document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
+            ).find((button) => button.textContent === 'Remove member');
 
             if (!confirm) throw new Error('Expected the self-removal confirmation');
 
@@ -381,7 +375,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             );
             expect(client.getQueryData(['api', base])).toBeUndefined();
             expect(output.querySelector('table')).toBeNull();
-            expect(document.querySelector('[role="dialog"]')).toBeNull();
+            expect(document.querySelector('[role="alertdialog"]')).toBeNull();
             expect(requests).toEqual([`DELETE ${base}/members/${user.id}`, 'GET /api/v1/me/organizations']);
         });
     } finally {
@@ -439,7 +433,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
 
                 const form = document.querySelector<HTMLFormElement>('[role="dialog"] form');
                 const email = form?.querySelector<HTMLInputElement>('input[name="email"]');
-                const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
 
                 if (!form || !email || !submit) throw new Error('Expected the invitation form');
 
@@ -450,9 +444,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
 
                 await vi.waitFor(() => expect(requests).toContain(`POST ${base}/invitations`));
 
-                const close = document.querySelector<HTMLButtonElement>(
-                    '[role="dialog"] button[aria-label="Close dialog"]'
-                );
+                const close = document.querySelector<HTMLButtonElement>('[role="dialog"] [data-slot="dialog-close"]');
 
                 if (!close) throw new Error('Expected the pending form to remain dismissible');
 

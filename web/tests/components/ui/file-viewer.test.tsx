@@ -2,8 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { FileViewer } from '@/components/custom/file-viewer';
 import { FileRequestContext } from '@/components/custom/preview';
+import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 it('displays an image immediately without custom preview or download actions', async () => {
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');
@@ -13,7 +13,10 @@ it('displays an image immediately without custom preview or download actions', a
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async () => new Blob(['image'], { type: 'image/png' }),
+                    load: async () => new Blob(['image'], { type: 'image/png' }),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => {
                         throw new Error('Viewing must not download');
                     }
@@ -61,7 +64,10 @@ it('ignores a pending response after replacing the file and releases the display
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' })),
+                    load: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' })),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => undefined
                 }}
             >
@@ -86,37 +92,35 @@ it('ignores a pending response after replacing the file and releases the display
     }
 });
 
-it('displays PDFs natively and retypes active text documents before embedding', async () => {
-    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:document');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+it('displays active text documents as inert text without creating nested frames', async () => {
+    const create = vi.spyOn(URL, 'createObjectURL');
 
     try {
-        for (const type of ['application/pdf', 'text/html']) {
+        for (const type of ['application/xml', 'text/html']) {
             const body = new Blob(['<script>active()</script>'], { type });
             await withMounted(
-                <FileRequestContext value={{ preview: async () => body, download: async () => undefined }}>
+                <FileRequestContext
+                    value={{
+                        load: async () => body,
+                        preview: async () => {
+                            throw new Error('Native viewers must not open a host preview');
+                        },
+                        download: async () => undefined
+                    }}
+                >
                     <FileViewer src="/api/report" title="Report" />
                 </FileRequestContext>,
                 async (output) => {
-                    const frame = output.querySelector('iframe');
-                    expect(frame?.getAttribute('src')).toBe('blob:document');
-                    expect(frame?.title).toBe('Report');
-                    const served = create.mock.lastCall?.[0];
-                    expect(served).toBeInstanceOf(Blob);
-
-                    if (!(served instanceof Blob)) throw new Error('Expected document bytes');
-                    expect(served.type).toBe(
-                        type === 'application/pdf' ? 'application/pdf' : 'text/plain;charset=utf-8'
+                    await vi.waitFor(() =>
+                        expect(output.querySelector('pre')?.textContent).toBe('<script>active()</script>')
                     );
-
-                    if (type === 'text/html') expect(frame?.getAttribute('sandbox')).toBe('');
-                    expect(output.querySelector('script, object, embed, button')).toBeNull();
+                    expect(output.querySelector('iframe, script, object, embed, button')).toBeNull();
+                    expect(create).not.toHaveBeenCalled();
                 }
             );
         }
     } finally {
         create.mockRestore();
-        revoke.mockRestore();
     }
 });
 
@@ -127,7 +131,10 @@ it('does not embed unknown binary files or interpret their content', async () =>
         await withMounted(
             <FileRequestContext
                 value={{
-                    preview: async () => new Blob(['<script>active()</script>'], { type: 'application/octet-stream' }),
+                    load: async () => new Blob(['<script>active()</script>'], { type: 'application/octet-stream' }),
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
                     download: async () => undefined
                 }}
             >

@@ -73,7 +73,7 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Retry').click());
-        await act(async () => vi.waitFor(() => button('Next')));
+        await act(async () => vi.waitFor(() => button('Update solution')));
 
         // Assert
         expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
@@ -83,10 +83,7 @@ describe('DeploymentReview', () => {
         expect(onSuccess).not.toHaveBeenCalled();
 
         // Act
-        await act(async () => button('Next').click());
-        await act(async () =>
-            vi.waitFor(() => expect(button('Update solution').getAttribute('aria-disabled')).toBeNull())
-        );
+        await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -105,21 +102,20 @@ describe('DeploymentReview', () => {
         // Arrange
         const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
-        await act(async () => button('Next').click());
 
         // Act
         // The image already changed, so only the missing required value blocks submission.
         expect(input('REQUIRED_SECRET').value).toBe('');
-        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        expect(button('Update solution').disabled).toBe(true);
         await act(async () => button('Update solution').click());
         expect(submissions).toEqual([]);
         await act(async () => user.type(input('NEW_SECRET'), '   '));
-        expect(button('Update solution').getAttribute('aria-disabled')).toBe('true');
+        expect(button('Update solution').disabled).toBe(true);
         await act(async () => button('Update solution').click());
         expect(submissions).toEqual([]);
         await act(async () => user.clear(input('NEW_SECRET')));
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
-        expect(button('Update solution').getAttribute('aria-disabled')).toBeNull();
+        expect(button('Update solution').disabled).toBe(false);
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => button('Update solution').click());
@@ -142,7 +138,6 @@ describe('DeploymentReview', () => {
         // Arrange
         const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
-        await act(async () => button('Next').click());
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
 
@@ -197,9 +192,10 @@ describe('DeploymentReview', () => {
                                 path="/orgs/:organization"
                                 element={
                                     <DeploymentReview
+                                        open
                                         item={{ id: solutionId, name: 'Sample' }}
                                         onSuccess={onSuccess}
-                                        onClose={() => {}}
+                                        onOpenChange={() => {}}
                                     />
                                 }
                             />

@@ -3,13 +3,12 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Separator } from '@/components/shadcn/separator';
+import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeButton as Button } from '@/components/custom/native-button';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -42,50 +41,60 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     wrap="wrap"
                     minHeight="calc(var(--spacing)*8)"
                 >
-                    <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Private registries
-                    </Heading>
+                    </h2>
                     {canMaintain && (
                         <Button
-                            label="Add registry"
                             size="sm"
                             onClick={() =>
                                 setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
                             }
-                        />
+                        >
+                            Add registry
+                        </Button>
                     )}
                 </Stack>
                 <Separator />
-                <DataTable
-                    data={connections}
-                    idKey="id"
-                    density="compact"
-                    hasHover
-                    columns={[
-                        { key: 'host', header: 'Registry', width: proportional(1) },
-                        { key: 'username', header: 'Username', width: proportional(1) },
-                        ...(canMaintain
-                            ? [
-                                  {
-                                      key: 'id',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      width: proportional(1),
-                                      renderCell: (row: Registry) => (
-                                          <Button
-                                              label="Delete"
-                                              size="sm"
-                                              variant="destructive"
-                                              onClick={() => setAction({ kind: 'delete', connection: row })}
-                                          />
-                                      )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                <Table wrap>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Registry</TableHead>
+                            <TableHead>Username</TableHead>
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {connections.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>{row.host}</TableCell>
+                                <TableCell>{row.username}</TableCell>
+                                {canMaintain && (
+                                    <TableCell align="end">
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => setAction({ kind: 'delete', connection: row })}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
+                        {connections.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canMaintain ? 3 : 2} align="center">
+                                    <Empty role="status" title="No data" />
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
-            {action?.kind === 'create' && <RegistryForm base={base} onSuccess={onSuccess} onClose={closeAction} />}
+            {action?.kind === 'create' && (
+                <RegistryForm open base={base} onSuccess={onSuccess} onOpenChange={closeAction} />
+            )}
             <DeletionDialog
                 confirmation={
                     action?.kind === 'delete'
@@ -105,3 +114,4 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
         </>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

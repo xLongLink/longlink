@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/custom/menu';
+import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/longlink/layout/menu';
 
 it('mounts only selected content and responds to both user selection and an external fragment change', async () => {
     const loaded: string[] = [];

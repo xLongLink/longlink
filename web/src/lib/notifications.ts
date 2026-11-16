@@ -1,9 +1,6 @@
 import { toast } from 'sonner';
 import type { ExternalToast } from 'sonner';
-import { createContext, createElement, useContext } from 'react';
-import { NativeNotificationMessage } from '@/components/native-notification-message';
-
-type Notification = { kind: 'error' | 'message'; message: string };
+import { createContext, useContext } from 'react';
 
 export const NotificationContext = createContext<((message: string) => void) | null>(null);
 
@@ -19,57 +16,30 @@ export function useNotification() {
 /** Limits the global Sonner store to notifications owned by one mounted API provider. */
 export function createNotifications(toasterId: string) {
     let active = true;
-    let connected = false;
     let generation = 0;
-    let pending: Notification[] = [];
     const notifications = new Set<string | number>();
 
     const dismiss = () => {
-        pending = [];
-
         for (const id of notifications) toast.dismiss(id);
         notifications.clear();
     };
 
-    const publish = ({ kind, message }: Notification) => {
+    const publish = (kind: 'error' | 'message', message: string) => {
+        if (!active) return;
+
         const options: ExternalToast = {
             toasterId,
             onDismiss: ({ id }) => notifications.delete(id),
             onAutoClose: ({ id }) => notifications.delete(id)
         };
 
-        const title = createElement(NativeNotificationMessage, {
-            message,
-            priority: kind === 'error' ? 'assertive' : 'polite'
-        });
-
-        const id = kind === 'error' ? toast.error(title, options) : toast(title, options);
+        const id = kind === 'error' ? toast.error(message, options) : toast(message, options);
         notifications.add(id);
     };
 
-    const enqueue = (kind: Notification['kind'], message: string) => {
-        if (!active) return;
-
-        const notification = { kind, message };
-
-        if (!connected) {
-            pending.push(notification);
-
-            return;
-        }
-
-        publish(notification);
-    };
-
     return {
-        notify: (message: string) => enqueue('error', message),
-        showMessage: (message: string) => enqueue('message', message),
-        connect: () => {
-            connected = true;
-
-            for (const message of pending) publish(message);
-            pending = [];
-        },
+        notify: (message: string) => publish('error', message),
+        showMessage: (message: string) => publish('message', message),
         dismiss,
         activate: () => {
             active = true;

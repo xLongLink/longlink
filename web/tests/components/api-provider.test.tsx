@@ -11,9 +11,9 @@ import { createRoot } from 'react-dom/client';
 import { ApiProvider } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import userEvent from '@testing-library/user-event';
-import { FramedDialog } from '@/components/custom/framed-dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { act, StrictMode, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { act, StrictMode, useEffect, useRef, useState } from 'react';
 
 const orderSchema = z.object({ name: z.string() });
 
@@ -45,7 +45,6 @@ it('keeps pending feedback and its dismissal when document appearance and direct
                     expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Update rejected')
                 );
                 const notification = document.querySelector('[data-sonner-toast]');
-                const toaster = document.querySelector('[data-sonner-toaster]');
 
                 for (const theme of ['dark', 'light', 'system']) {
                     await act(async () => {
@@ -53,14 +52,12 @@ it('keeps pending feedback and its dismissal when document appearance and direct
                         html.dir = theme === 'dark' ? 'rtl' : 'ltr';
                     });
                     await vi.waitFor(() => {
-                        expect(toaster?.getAttribute('data-sonner-theme')).toBe(theme === 'dark' ? 'dark' : 'light');
-                        expect(toaster?.getAttribute('dir')).toBe(theme === 'dark' ? 'rtl' : 'ltr');
                         expect(document.querySelector('[data-sonner-toast]')).toBe(notification);
                     });
                 }
 
                 await act(async () =>
-                    notification?.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]')?.click()
+                    notification?.querySelector<HTMLButtonElement>('[aria-label="Close toast"]')?.click()
                 );
                 await vi.waitFor(() => expect(document.querySelector('[data-sonner-toast]')).toBeNull());
             }
@@ -113,137 +110,110 @@ it('keeps initial direct-error feedback through the document StrictMode effect r
     await vi.waitFor(() => expect(toast.getToasts()).toHaveLength(0));
 });
 
-it.each(['native', 'base'] as const)(
-    'keeps API failures accessible while a real %s dialog opens and closes',
-    async (kind) => {
-        const transport = vi
-            .spyOn(globalThis, 'fetch')
-            .mockResolvedValue(Response.json({ detail: 'Membership change rejected' }, { status: 403 }));
+it('keeps API failures in Sonner’s live region while a real dialog opens and closes', async () => {
+    const transport = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(Response.json({ detail: 'Membership change rejected' }, { status: 403 }));
 
-        /** Opens the same modal primitives used by the account and settings workflows. */
-        function MembershipDialog() {
-            const reportError = useApiError();
-            const [open, setOpen] = useState(false);
-            const nativeDialog = useRef<HTMLDialogElement>(null);
+    /** Opens the same modal primitives used by the account and settings workflows. */
+    function MembershipDialog() {
+        const reportError = useApiError();
+        const [open, setOpen] = useState(false);
 
-            useEffect(() => {
-                if (kind !== 'native') return;
+        const content = (
+            <>
+                <button type="button" onClick={() => void api.post('/api/v1/membership').catch(reportError)}>
+                    Change membership
+                </button>
+                <button type="button" onClick={() => setOpen(false)}>
+                    Keep membership
+                </button>
+            </>
+        );
 
-                if (open) nativeDialog.current?.showModal();
-                else nativeDialog.current?.close();
-            }, [open]);
-
-            const content = (
-                <>
-                    <button type="button" onClick={() => void api.post('/api/v1/membership').catch(reportError)}>
-                        Change membership
-                    </button>
-                    <button type="button" onClick={() => setOpen(false)}>
-                        Keep membership
-                    </button>
-                </>
-            );
-
-            return (
-                <>
-                    <button type="button" onClick={() => setOpen(true)}>
-                        Open membership
-                    </button>
-                    {kind === 'native' ? (
-                        <dialog ref={nativeDialog} aria-label="Membership" onCancel={() => setOpen(false)}>
-                            {content}
-                        </dialog>
-                    ) : (
-                        <FramedDialog title="Membership" open={open} onOpenChange={setOpen}>
-                            {content}
-                        </FramedDialog>
-                    )}
-                </>
-            );
-        }
-
-        try {
-            await withMounted(
-                <ApiProvider>
-                    <MembershipDialog />
-                </ApiProvider>,
-                async (output) => {
-                    const events = userEvent.setup();
-                    const opener = output.querySelector('button');
-
-                    if (!opener) throw new Error('Missing modal opener');
-                    await act(async () => events.click(opener));
-
-                    const modal = document.querySelector(kind === 'native' ? 'dialog[open]' : '[role="dialog"]');
-
-                    if (!modal) throw new Error('Missing active membership dialog');
-
-                    const change = Array.from(modal.querySelectorAll('button')).find(
-                        (button) => button.textContent === 'Change membership'
-                    );
-
-                    if (!change) throw new Error('Missing membership action');
-                    await act(async () => events.click(change));
-                    await vi.waitFor(() =>
-                        expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain(
-                            'Membership change rejected'
-                        )
-                    );
-
-                    const notification = document.querySelector('[data-sonner-toast]');
-                    const host = document.querySelector('.native-notification-host');
-
-                    expect(host?.parentElement).toBe(modal);
-                    expect(modal.contains(notification)).toBe(true);
-                    expect(host?.closest('[aria-hidden="true"], [inert]')).toBeNull();
-                    expect(notification?.querySelector('[aria-live]')?.getAttribute('aria-live')).toBe('assertive');
-                    expect(notification?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('off');
-                    expect(notification?.closest('[aria-hidden="true"], [inert]')).toBeNull();
-
-                    const keep = Array.from(modal.querySelectorAll('button')).find(
-                        (button) => button.textContent === 'Keep membership'
-                    );
-
-                    if (!keep) throw new Error('Missing modal close action');
-                    await act(async () => events.click(keep));
-                    await vi.waitFor(() => {
-                        expect(host?.parentElement).toBe(document.body);
-                        expect(document.querySelector('[data-sonner-toast]')).toBe(notification);
-                    });
-                    await act(async () => events.click(opener));
-                    await vi.waitFor(() => {
-                        const activeModal = document.querySelector(
-                            kind === 'native' ? 'dialog[open]' : '[role="dialog"]'
-                        );
-
-                        expect(host?.parentElement).toBe(activeModal);
-                        expect(activeModal?.contains(notification)).toBe(true);
-                    });
-
-                    const dismiss = document.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]');
-
-                    if (!dismiss) throw new Error('Missing notification dismissal');
-                    await act(async () => dismiss.focus());
-                    expect(document.activeElement).toBe(dismiss);
-                    await act(async () => events.keyboard('{Enter}'));
-                    await vi.waitFor(() => expect(document.querySelector('[data-sonner-toast]')).toBeNull());
-                    expect(transport).toHaveBeenCalledTimes(1);
-
-                    if (kind === 'base') {
-                        await act(async () => events.keyboard('{Escape}'));
-                        await vi.waitFor(() => {
-                            expect(document.querySelector('[role="dialog"][data-open]')).toBeNull();
-                            expect(document.activeElement).toBe(opener);
-                            expect(host?.parentElement).toBe(document.body);
-                        });
-                    }
-                }
-            );
-        } finally {
-            transport.mockRestore();
-        }
+        return (
+            <>
+                <button type="button" onClick={() => setOpen(true)}>
+                    Open membership
+                </button>
+                <Dialog title="Membership" open={open} onOpenChange={setOpen}>
+                    {content}
+                </Dialog>
+            </>
+        );
     }
-);
+
+    try {
+        await withMounted(
+            <ApiProvider>
+                <MembershipDialog />
+            </ApiProvider>,
+            async (output) => {
+                const events = userEvent.setup();
+                const opener = output.querySelector('button');
+
+                if (!opener) throw new Error('Missing modal opener');
+                await act(async () => events.click(opener));
+
+                const modal = document.querySelector('[role="dialog"]');
+
+                if (!modal) throw new Error('Missing active membership dialog');
+
+                const change = Array.from(modal.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Change membership'
+                );
+
+                if (!change) throw new Error('Missing membership action');
+                await act(async () => events.click(change));
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain(
+                        'Membership change rejected'
+                    )
+                );
+
+                const notification = document.querySelector('[data-sonner-toast]');
+                expect(notification?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
+                expect(notification?.closest('[aria-hidden="true"], [inert]')).toBeNull();
+
+                const keep = Array.from(modal.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Keep membership'
+                );
+
+                if (!keep) throw new Error('Missing modal close action');
+                await act(async () => events.click(keep));
+                await vi.waitFor(() => {
+                    expect(document.querySelector('[role="dialog"][data-open]')).toBeNull();
+                    expect(document.querySelector('[data-sonner-toast]')).toBe(notification);
+                });
+                await act(async () => events.click(opener));
+                await vi.waitFor(() => {
+                    const activeModal = document.querySelector('[role="dialog"]');
+
+                    expect(activeModal).not.toBeNull();
+                    expect(document.querySelector('[data-sonner-toast]')).toBe(notification);
+                    expect(notification?.closest('[aria-hidden="true"], [inert]')).toBeNull();
+                });
+
+                await act(async () => events.keyboard('{Escape}'));
+                await vi.waitFor(() => {
+                    expect(document.querySelector('[role="dialog"][data-open]')).toBeNull();
+                    expect(document.activeElement).toBe(opener);
+                });
+
+                const dismiss = document.querySelector<HTMLButtonElement>('[aria-label="Close toast"]');
+
+                if (!dismiss) throw new Error('Missing notification dismissal');
+                await act(async () => dismiss.focus());
+                expect(document.activeElement).toBe(dismiss);
+                await act(async () => events.keyboard('{Enter}'));
+                await vi.waitFor(() => expect(document.querySelector('[data-sonner-toast]')).toBeNull());
+                expect(transport).toHaveBeenCalledTimes(1);
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
 
 it('reports one failed GET shared by observers, supports dismissal, and recovers through refetch', async () => {
     // Arrange
@@ -293,10 +263,10 @@ it('reports one failed GET shared by observers, supports dismissal, and recovers
         });
         expect(transport).toHaveBeenCalledTimes(1);
         expect(document.querySelector('[data-sonner-toast][data-type="error"] [data-icon] svg')).not.toBeNull();
-        expect(document.querySelector('[aria-live="assertive"]')?.textContent).toContain('Orders unavailable');
+        expect(document.querySelector('[aria-live="polite"]')?.textContent).toContain('Orders unavailable');
 
         // Act
-        document.querySelector<HTMLButtonElement>('[aria-label="Dismiss notification"]')?.click();
+        document.querySelector<HTMLButtonElement>('[aria-label="Close toast"]')?.click();
 
         // Assert
         await vi.waitFor(() => expect(document.querySelector('[data-sonner-toast]')).toBeNull());

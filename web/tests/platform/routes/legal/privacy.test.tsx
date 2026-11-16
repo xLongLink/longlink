@@ -1,8 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
+import { it, expect, vi, afterEach } from 'vitest';
 import Privacy from '@/platform/routes/legal/privacy';
+
+afterEach(() => vi.restoreAllMocks());
 
 it('moves outline navigation to the published section heading without adding a permanent tab stop', async () => {
     const originalUrl = window.location.href;
@@ -17,8 +19,9 @@ it('moves outline navigation to the published section heading without adding a p
 
                 if (!link || !heading) throw new Error('Missing privacy outline destination');
 
-                const scroll = vi.fn();
-                Object.defineProperty(heading, 'scrollIntoView', { configurable: true, value: scroll });
+                const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+                vi.spyOn(heading, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 500, 0, 0));
+                heading.style.scrollMarginTop = '24px';
 
                 const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
@@ -30,10 +33,12 @@ it('moves outline navigation to the published section heading without adding a p
                 expect(window.location.hash).toBe('#your-rights');
                 expect(document.activeElement).toBe(heading);
                 expect(scroll).toHaveBeenCalledOnce();
+                expect(scroll).toHaveBeenCalledWith({ top: 476, behavior: 'smooth' });
                 expect(link.getAttribute('aria-current')).toBe('location');
 
                 await act(async () => link.focus());
-                expect(heading.hasAttribute('tabindex')).toBe(false);
+                expect(document.activeElement).toBe(link);
+                expect(heading.tabIndex).toBe(-1);
             },
             '/privacy/'
         );

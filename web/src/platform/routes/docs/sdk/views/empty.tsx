@@ -1,10 +1,8 @@
 import ViewLayout from './view-layout';
-import { FolderCode } from 'lucide-react';
-import { Button } from '@/components/shadcn/button';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/shadcn/empty';
+import { Empty } from '@/components/longlink/display/empty';
+import { Button } from '@/components/longlink/action/button';
 
-/** Documents shadcn Empty in LongLink Views. */
+/** Documents Empty in LongLink Views. */
 export default function EmptyPage() {
     // Render this component's authored examples in the shared documentation layout.
     return (
@@ -12,33 +10,26 @@ export default function EmptyPage() {
             name="Empty"
             properties={[
                 {
-                    name: 'Empty.children',
-                    type: 'ReactNode',
-                    description: 'Compose EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, and EmptyMedia.'
+                    name: 'icon',
+                    type: 'IconName | URL string',
+                    description: 'Optional Lucide icon name or an HTTP(S) or root-relative image URL.'
                 },
-                { name: 'Empty.className', type: 'string', description: 'Native div props are forwarded unchanged.' }
+                { name: 'title', type: 'ReactNode', description: 'Empty-state title.' },
+                { name: 'description', type: 'ReactNode', description: 'Optional empty-state description.' },
+                { name: 'children', type: 'ReactNode', description: 'Optional actions below the description.' }
             ]}
             example={{
-                title: 'Native composition',
+                title: 'Project actions',
                 preview: <EmptyExample />,
                 code: `function Example() {
   return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon icon="folder-code" size="md" />
-        </EmptyMedia>
-        <EmptyTitle>No Projects Yet</EmptyTitle>
-        <EmptyDescription>
-          You haven't created any projects yet. Get started by creating your first project.
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Stack direction="horizontal" gap={2}>
-          <Button type="button">Create Project</Button>
-          <Button type="button" variant="outline">Import Project</Button>
-        </Stack>
-      </EmptyContent>
+    <Empty
+      icon="folder-code"
+      title="No Projects Yet"
+      description="You haven't created any projects yet. Get started by creating your first project."
+    >
+      <Button type="button">Create Project</Button>
+      <Button type="button" variant="outline">Import Project</Button>
     </Empty>
   );
 }`
@@ -49,26 +40,17 @@ export default function EmptyPage() {
 
 /** Renders the page's empty-state example for documentation and the catalog. */
 export function EmptyExample() {
-    // Show the shadcn project example with its media and action composition.
+    // Show the project empty state with its actions.
     return (
-        <Empty>
-            <EmptyHeader>
-                <EmptyMedia variant="icon">
-                    <FolderCode aria-hidden="true" />
-                </EmptyMedia>
-                <EmptyTitle>No Projects Yet</EmptyTitle>
-                <EmptyDescription>
-                    You haven't created any projects yet. Get started by creating your first project.
-                </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-                <Stack direction="horizontal" gap={2}>
-                    <Button type="button">Create Project</Button>
-                    <Button type="button" variant="outline">
-                        Import Project
-                    </Button>
-                </Stack>
-            </EmptyContent>
+        <Empty
+            icon="folder-code"
+            title="No Projects Yet"
+            description="You haven't created any projects yet. Get started by creating your first project."
+        >
+            <Button type="button">Create Project</Button>
+            <Button type="button" variant="outline">
+                Import Project
+            </Button>
         </Empty>
     );
 }

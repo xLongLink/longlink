@@ -4,24 +4,21 @@ import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { Separator } from '@/components/shadcn/separator';
-import { Illustration } from '@/components/ui/illustration';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import DeploymentReview from '@/components/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { Button as MenuTriggerButton } from '@/components/shadcn/button';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -81,7 +78,7 @@ export default function SolutionManagement({
 
     /** Refreshes Solutions before closing only the attempt that completed successfully. */
     async function onSuccess() {
-        // Keep refresh failures in Form and leave any replacement dialog untouched.
+        // Keep refresh failures in the submitting workflow and leave any replacement dialog untouched.
         await invalidateSolutions();
         closeSelected();
     }
@@ -106,241 +103,248 @@ export default function SolutionManagement({
                             wrap="wrap"
                             minHeight="calc(var(--spacing)*8)"
                         >
-                            <Heading
-                                level={2}
-                                className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Solutions
-                            </Heading>
-                            {canMaintain && <Button label="New Solution" size="sm" onClick={openCreate} />}
+                            </h2>
+                            {canMaintain && (
+                                <Button size="sm" onClick={openCreate}>
+                                    New Solution
+                                </Button>
+                            )}
                         </Stack>
                         <Separator />
                     </>
                 ) : solutions.length > 0 ? (
                     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
-                        <Heading level={1}>{categoryName}</Heading>
-                        {canMaintain && <Button label="New Solution" onClick={openCreate} />}
+                        <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
+                        {canMaintain && <Button onClick={openCreate}>New Solution</Button>}
                     </Stack>
                 ) : null}
                 {presentation === 'overview' && tags.length === 0 ? (
-                    <Text as="p" className="text-muted-foreground">
+                    <p className="text-muted-foreground">
                         No tabs configured. Add tabs in organization settings under General.
-                    </Text>
+                    </p>
                 ) : onboarding ? (
                     <Stack gap={6} align="center">
-                        <Illustration
+                        <img
                             src="/images/solution.png"
                             alt=""
-                            className="size-20 object-contain"
+                            className="size-20 object-contain invert dark:invert-0"
                             width={272}
                             height={279}
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <Heading level={1} className="text-center">
-                                Your Solutions
-                            </Heading>
-                            <Text as="p" className="text-muted-foreground text-center">
-                                Bring your business processes to life
-                            </Text>
+                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Solutions</h1>
+                            <p className="text-muted-foreground text-center">Bring your business processes to life</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Button
-                                label="Read the docs"
-                                variant="outline"
+                            <NativeNavigationLink
+                                className={buttonVariants({ variant: 'outline' })}
                                 href="/docs/"
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                endContent={<ExternalLink className="size-4" aria-hidden="true" />}
-                            />
+                            >
+                                Read the docs
+                                <ExternalLink className="size-4" aria-hidden="true" />
+                            </NativeNavigationLink>
                             {canMaintain && (
-                                <Button
-                                    label="Create solution"
-                                    variant="default"
-                                    icon={<Plus className="size-4" aria-hidden="true" />}
-                                    onClick={openCreate}
-                                />
+                                <Button onClick={openCreate}>
+                                    <Plus className="size-4" aria-hidden="true" />
+                                    Create solution
+                                </Button>
                             )}
                         </Stack>
                     </Stack>
                 ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
-                    <Text as="p" className="text-muted-foreground">
-                        No Solutions in this category.
-                    </Text>
+                    <p className="text-muted-foreground">No Solutions in this category.</p>
                 ) : (
-                    <DataTable
-                        data={visibleSolutions}
-                        idKey="id"
-                        hasHover
-                        density="compact"
-                        columns={[
-                            {
-                                key: 'name',
-                                header: 'Solution',
-                                width: proportional(1),
-                                renderCell: (row) => (
-                                    <Stack gap={presentation === 'overview' ? 0 : undefined}>
-                                        {presentation === 'overview' ? (
-                                            <Stack direction="horizontal" gap={1} align="center">
+                    <Table wrap>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Solution</TableHead>
+                                {presentation === 'settings' && <TableHead align="end">Version</TableHead>}
+                                {presentation === 'settings' && canMaintain && (
+                                    <TableHead align="end">Actions</TableHead>
+                                )}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {visibleSolutions.map((row) => (
+                                <TableRow key={row.id}>
+                                    <TableCell>
+                                        <Stack gap={presentation === 'overview' ? 0 : undefined}>
+                                            {presentation === 'overview' ? (
+                                                <Stack direction="horizontal" gap={1} align="center">
+                                                    <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
+                                                        {row.name}
+                                                    </Link>
+                                                    {row.status !== 'running' && (
+                                                        <span
+                                                            className={
+                                                                row.status === 'creating'
+                                                                    ? 'text-xs text-info-foreground'
+                                                                    : 'text-xs text-destructive-foreground'
+                                                            }
+                                                        >
+                                                            {row.status === 'creating' ? 'Creating' : 'Failed'}
+                                                        </span>
+                                                    )}
+                                                </Stack>
+                                            ) : (
                                                 <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
                                                     {row.name}
                                                 </Link>
-                                                {row.status !== 'running' && (
-                                                    <Text
-                                                        className={
-                                                            row.status === 'creating'
-                                                                ? 'text-xs text-info-foreground'
-                                                                : 'text-xs text-destructive-foreground'
+                                            )}
+                                            {row.description && (
+                                                <span className="text-xs text-muted-foreground">{row.description}</span>
+                                            )}
+                                        </Stack>
+                                    </TableCell>
+                                    {presentation === 'settings' && (
+                                        <TableCell align="end">{row.deployed_version || '—'}</TableCell>
+                                    )}
+                                    {presentation === 'settings' && canMaintain && (
+                                        <TableCell align="end">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger
+                                                    render={
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            aria-label={`Actions for ${row.name}`}
+                                                        >
+                                                            <Ellipsis aria-hidden="true" />
+                                                        </Button>
+                                                    }
+                                                />
+                                                <DropdownMenuContent align="end">
+                                                    {canAdminister && (
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setSelected({ kind: 'permissions', id: row.id })
+                                                            }
+                                                        >
+                                                            <Shield aria-hidden="true" />
+                                                            Permissions
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSelected({ kind: 'tags', solution: row })}
+                                                    >
+                                                        <Tags aria-hidden="true" />
+                                                        Tags
+                                                    </DropdownMenuItem>
+                                                    {row.desired_revision_id &&
+                                                        !row.deployment_pending &&
+                                                        row.status !== 'creating' && (
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    // Retain an active attempt so repeated activation cannot replace its draft.
+                                                                    setSelected((current) =>
+                                                                        current?.kind === 'update'
+                                                                            ? current
+                                                                            : {
+                                                                                  kind: 'update',
+                                                                                  item: { id: row.id, name: row.name }
+                                                                              }
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <RefreshCw aria-hidden="true" />
+                                                                Update
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSelected({ kind: 'logs', id: row.id })}
+                                                    >
+                                                        <Logs aria-hidden="true" />
+                                                        Logs
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSelected({ kind: 'mcp', id: row.id })}
+                                                    >
+                                                        <Plug aria-hidden="true" />
+                                                        MCP
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                kind: 'delete',
+                                                                item: { id: row.id, name: row.name }
+                                                            })
                                                         }
                                                     >
-                                                        {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                    </Text>
-                                                )}
-                                            </Stack>
-                                        ) : (
-                                            <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
-                                                {row.name}
-                                            </Link>
-                                        )}
-                                        {row.description && (
-                                            <Text className="text-xs text-muted-foreground">{row.description}</Text>
-                                        )}
-                                    </Stack>
-                                )
-                            },
-                            ...(presentation === 'settings'
-                                ? [
-                                      {
-                                          key: 'deployed_version',
-                                          header: 'Version',
-                                          align: 'end' as const,
-                                          width: proportional(0.25, { minWidth: 0 }),
-                                          renderCell: (row: Solution) => row.deployed_version || '—'
-                                      }
-                                  ]
-                                : []),
-                            ...(presentation === 'settings' && canMaintain
-                                ? [
-                                      {
-                                          key: 'id',
-                                          header: 'Actions',
-                                          align: 'end' as const,
-                                          width: proportional(0.25, { minWidth: 0 }),
-                                          renderCell: (row: Solution) => (
-                                              <DropdownMenu>
-                                                  <DropdownMenuTrigger
-                                                      render={
-                                                          <MenuTriggerButton
-                                                              type="button"
-                                                              variant="ghost"
-                                                              size="icon-sm"
-                                                              aria-label={`Actions for ${row.name}`}
-                                                          >
-                                                              <Ellipsis aria-hidden="true" />
-                                                          </MenuTriggerButton>
-                                                      }
-                                                  />
-                                                  <DropdownMenuContent align="end">
-                                                      {canAdminister && (
-                                                          <DropdownMenuItem
-                                                              onClick={() =>
-                                                                  setSelected({ kind: 'permissions', id: row.id })
-                                                              }
-                                                          >
-                                                              <Shield aria-hidden="true" />
-                                                              Permissions
-                                                          </DropdownMenuItem>
-                                                      )}
-                                                      <DropdownMenuItem
-                                                          onClick={() => setSelected({ kind: 'tags', solution: row })}
-                                                      >
-                                                          <Tags aria-hidden="true" />
-                                                          Tags
-                                                      </DropdownMenuItem>
-                                                      {row.desired_revision_id &&
-                                                          !row.deployment_pending &&
-                                                          row.status !== 'creating' && (
-                                                              <DropdownMenuItem
-                                                                  onClick={() => {
-                                                                      // Retain an active attempt so repeated activation cannot replace its draft.
-                                                                      setSelected((current) =>
-                                                                          current?.kind === 'update'
-                                                                              ? current
-                                                                              : {
-                                                                                    kind: 'update',
-                                                                                    item: { id: row.id, name: row.name }
-                                                                                }
-                                                                      );
-                                                                  }}
-                                                              >
-                                                                  <RefreshCw aria-hidden="true" />
-                                                                  Update
-                                                              </DropdownMenuItem>
-                                                          )}
-                                                      <DropdownMenuItem
-                                                          onClick={() => setSelected({ kind: 'logs', id: row.id })}
-                                                      >
-                                                          <Logs aria-hidden="true" />
-                                                          Logs
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuItem
-                                                          onClick={() => setSelected({ kind: 'mcp', id: row.id })}
-                                                      >
-                                                          <Plug aria-hidden="true" />
-                                                          MCP
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuItem
-                                                          onClick={() =>
-                                                              setSelected({
-                                                                  kind: 'delete',
-                                                                  item: { id: row.id, name: row.name }
-                                                              })
-                                                          }
-                                                      >
-                                                          <Trash aria-hidden="true" />
-                                                          Delete
-                                                      </DropdownMenuItem>
-                                                  </DropdownMenuContent>
-                                              </DropdownMenu>
-                                          )
-                                      }
-                                  ]
-                                : [])
-                        ]}
-                    />
+                                                        <Trash aria-hidden="true" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                            {visibleSolutions.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={
+                                            1 +
+                                            (presentation === 'settings' ? 1 : 0) +
+                                            (presentation === 'settings' && canMaintain ? 1 : 0)
+                                        }
+                                        align="center"
+                                    >
+                                        <Empty role="status" title="No data" />
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
             </Stack>
             {selected?.kind === 'create' && (
-                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
+                <CreateSolution
+                    open
+                    organizationId={organization.id}
+                    onSuccess={onSuccess}
+                    onOpenChange={closeSelected}
+                />
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
+                    open
                     solutionId={selected.id}
                     organizationId={organization.id}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
+                    open
                     key={selected.solution.id}
                     base={base}
                     tags={tags}
                     solution={selected.solution}
                     onSuccess={onSuccess}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
             {selected?.kind === 'update' && (
                 <DeploymentReview
+                    open
                     key={selected.item.id}
                     item={selected.item}
                     onSuccess={onSuccess}
-                    onClose={closeSelected}
+                    onOpenChange={closeSelected}
                 />
             )}
-            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onClose={closeSelected} />}
+            {selected?.kind === 'logs' && (
+                <SolutionLogsDialog open solutionId={selected.id} onOpenChange={closeSelected} />
+            )}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
-            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onClose={closeSelected} />}
+            {selected?.kind === 'mcp' && (
+                <SolutionMcpDialog open solutionId={selected.id} onOpenChange={closeSelected} />
+            )}
             <DeletionDialog
                 confirmation={
                     selected?.kind === 'delete'
@@ -360,3 +364,4 @@ export default function SolutionManagement({
         </>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

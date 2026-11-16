@@ -426,37 +426,6 @@ function useTimePickerContext(part: string) {
     return context;
 }
 
-export type TimePickerApi = {
-    /** The committed value in the value format, or `null`. */
-    value: string | null;
-    time: TimePickerTime | null;
-    open: boolean;
-    setOpen: (open: boolean) => void;
-    /** Commits a value as given, with no snapping and no draft. */
-    setValue: (value: string | null) => void;
-    /** Same as `TimePickerNow`. */
-    now: () => void;
-    /** Same as `TimePickerClear`. */
-    clear: () => void;
-    /** Commits a pending draft and closes the popover. */
-    confirm: () => void;
-};
-
-/** The picker's state and actions, inside a `TimePicker`. */
-export function useTimePicker(): TimePickerApi {
-    const context = useTimePickerContext('useTimePicker');
-    return {
-        value: context.time ? formatTimeValue(context.time, context.granularity) : null,
-        time: context.time,
-        open: context.open,
-        setOpen: context.setOpen,
-        setValue: (value) => context.commit(parseTimeValue(value)),
-        now: () => pickNow(context),
-        clear: () => context.select(null),
-        confirm: context.confirm
-    };
-}
-
 /* The only clock read, inside an action: reading it while rendering would
    differ between the server and the client. It floors to the steps, so 14:38
    on a 15 minute step is 14:30, then looks forward before back. */
@@ -1546,7 +1515,7 @@ export function TimePickerConfirm({ variant, size = 'sm', onClick, children, ...
     return (
         <Button
             type="button"
-            variant={variant ?? (context.requireConfirm ? 'default' : 'secondary')}
+            variant={variant ?? (context.requireConfirm ? 'primary' : 'secondary')}
             size={size}
             disabled={context.disabled}
             data-slot="time-picker-confirm"

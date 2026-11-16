@@ -1,8 +1,6 @@
 import { useRef, useTransition } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
-import { Text } from '@/components/custom/text';
 import { Button } from '@/components/shadcn/button';
-import { Heading } from '@/components/custom/heading';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -58,12 +56,17 @@ export function DeletionDialog({
             }}
         >
             <span
-                className="view-action-content flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit]"
+                className="flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit] transition-opacity duration-0 aria-hidden:opacity-0 aria-hidden:delay-200 motion-reduce:aria-hidden:delay-0"
                 aria-hidden={isDeleting || undefined}
             >
                 <span className="min-w-0 overflow-hidden text-ellipsis">Delete</span>
             </span>
-            {isDeleting && <LoaderCircle aria-hidden="true" className="view-action-spinner" />}
+            {isDeleting && (
+                <LoaderCircle
+                    aria-hidden="true"
+                    className="absolute inset-0 m-auto size-3.5 transition-opacity duration-0 delay-200 motion-safe:animate-spin motion-reduce:delay-0 starting:opacity-0"
+                />
+            )}
         </Button>
     );
 
@@ -86,7 +89,7 @@ export function DeletionDialog({
                         className="my-[calc(var(--spacing)*2-var(--text-3xl)*var(--text-3xl--line-height)/2)] min-w-0 flex-1"
                         render={<div />}
                     >
-                        <Heading level={2}>{confirmation.title}</Heading>
+                        <h2 className="font-semibold tracking-tight text-3xl">{confirmation.title}</h2>
                     </AlertDialogTitle>
                     <Button
                         className="-my-2 -me-2"
@@ -100,7 +103,7 @@ export function DeletionDialog({
                     </Button>
                 </header>
                 <AlertDialogDescription render={<div />}>
-                    <Text className="text-muted-foreground">{confirmation.description}</Text>
+                    <span className="text-muted-foreground">{confirmation.description}</span>
                 </AlertDialogDescription>
                 <AlertDialogFooter>
                     {cancelButton}

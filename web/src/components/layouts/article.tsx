@@ -1,21 +1,17 @@
 import { Page } from '@/components/ui/page';
 import { Separator } from '@/components/shadcn/separator';
-import { documentationPaths } from '@/platform/publications';
+import { Button } from '@/components/longlink/action/button';
+import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
-import { PathBreadcrumb, type BreadcrumbItem } from '@/components/ui/breadcrumbs';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 const articleRouteLabels = {
-    api: 'Platform',
     blog: 'Blog',
     billing: 'Billing',
-    docs: 'Documentation',
     'why-longlink': 'Why LongLink',
-    sdk: 'Solutions',
-    views: 'Views',
     assets: 'Brand assets',
     values: 'Values',
     comunication: 'Communication'
@@ -28,27 +24,13 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC'
 });
 
-type ArticleMetadata = {
+export type ArticleMetadata = {
     title: string;
     description: string;
     lastUpdated: string;
     editUrl: string;
     toc: readonly ArticleOutlineItem[];
 };
-
-/** Publishes authored documentation within one shared metadata and navigation shell. */
-export function DocumentationArticle({ article, children }: { article: ArticleMetadata; children: ReactNode }) {
-    // Keep documentation typography and reading order as wrapper-owned policy.
-    return (
-        <ArticleRenderer
-            article={article}
-            className="text-lg [--article-heading-spacing:calc(var(--spacing)*18)] [&_:is(h1,h2,h3,h4,h5,h6):not(dialog_*)]:tracking-wide"
-            paths={documentationPaths}
-        >
-            {children}
-        </ArticleRenderer>
-    );
-}
 
 /** Publishes public articles with Home-rooted navigation and optional collection reading order. */
 export function PublicArticle({
@@ -60,63 +42,54 @@ export function PublicArticle({
     children: ReactNode;
     paths?: readonly string[];
 }) {
-    // Keep public navigation Home-rooted without imposing typography or a reading collection.
+    // Keep public navigation Home-rooted within the article's reading columns.
     return (
-        <ArticleRenderer article={article} paths={paths} root={{ label: 'Home', href: '/' }}>
-            {children}
-        </ArticleRenderer>
+        <Page description={article.description} title={article.title}>
+            <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
+                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                        <PathBreadcrumb labels={articleRouteLabels} root={{ label: 'Home', href: '/' }} />
+                    </div>
+                    {article.toc.length ? (
+                        <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
+                    ) : null}
+                </div>
+            </header>
+            <ArticleBody
+                article={article}
+                paths={paths}
+                className="space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:calc(var(--spacing)*8)] [&_p]:opacity-90"
+            >
+                {children}
+            </ArticleBody>
+        </Page>
     );
 }
 
-/** Renders authored articles with the typography and navigation policy selected by their wrapper. */
-function ArticleRenderer({
+/** Keeps article columns, metadata, and outline placement shared across publications. */
+export function ArticleBody({
     article,
     children,
     className,
-    paths,
-    root
+    paths
 }: {
     article: ArticleMetadata;
     children: ReactNode;
-    className?: string;
+    className: string;
     paths?: readonly string[];
-    root?: BreadcrumbItem;
 }) {
-    // Keep public articles and documentation in the same flat reading columns.
     return (
-        <Page description={article.description} title={article.title}>
-            {root ? (
-                <header className="mx-auto box-border flex h-16 w-full max-w-[1064px] items-center px-6">
-                    <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
-                        <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                            <PathBreadcrumb labels={articleRouteLabels} root={root} />
-                        </div>
-                        {article.toc.length ? (
-                            <div aria-hidden="true" className="hidden w-56 flex-none min-[64rem]:flex" />
-                        ) : null}
-                    </div>
-                </header>
-            ) : null}
-            <div className="p-6">
-                <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
-                    <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
-                        <article
-                            className={`space-y-7 [&_:is(h2,h3,h4,h5,h6):not(dialog_*)]:[margin-block-start:var(--article-heading-spacing,calc(var(--spacing)*8))] [&_p]:opacity-90${className ? ` ${className}` : ''}`}
-                        >
-                            {children}
-                            <footer className="flex flex-col gap-3 pt-8 pb-30">
-                                <ArticleFooter
-                                    lastUpdated={article.lastUpdated}
-                                    editUrl={article.editUrl}
-                                    paths={paths}
-                                />
-                            </footer>
-                        </article>
-                    </div>
-                    {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
+        <div className="p-6">
+            <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
+                <div className="mx-auto flex min-w-0 max-w-[720px] flex-1 flex-col">
+                    <article className={className}>
+                        {children}
+                        <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
+                    </article>
                 </div>
+                {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
             </div>
-        </Page>
+        </div>
     );
 }
 
@@ -135,11 +108,9 @@ export function ArticleFooter({
     const navigate = useNavigate();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
     const currentPage = paths.indexOf(pagePath);
+    const isCollectionPage = currentPage >= 0;
     const previousPage = paths[currentPage - 1];
     const nextPage = paths[currentPage + 1];
-
-    const pageLinkClassName =
-        'box-border inline-flex h-[max(calc(var(--spacing)*8),1lh)] cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-muted px-3 py-2 [font-family:inherit] text-sm leading-(--text-sm--line-height) font-medium whitespace-nowrap text-foreground no-underline disabled:cursor-default disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not(:disabled):hover]:[@media(hover:hover)]:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--muted))]';
 
     // Keep unmodified arrow shortcuts available outside native text-entry controls.
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -170,7 +141,7 @@ export function ArticleFooter({
 
     // Scope the document listener to articles that belong to a reading collection.
     useEffect(() => {
-        if (currentPage < 0) {
+        if (!isCollectionPage) {
             return;
         }
 
@@ -178,46 +149,44 @@ export function ArticleFooter({
         document.addEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [currentPage]);
+    }, [isCollectionPage]);
 
     // Preserve boundary buttons, modification dates, and optional source links.
     return (
-        <>
-            {currentPage >= 0 ? (
+        <footer className="flex flex-col gap-3 pt-8 pb-30">
+            {isCollectionPage ? (
                 <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
                     {previousPage === undefined ? (
-                        <button
-                            type="button"
-                            className={pageLinkClassName}
-                            disabled
-                            aria-disabled="true"
+                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowLeft">
+                            <ArrowLeft aria-hidden size={16} />
+                            Previous
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            render={<RouterLink to={`${previousPage}/`} />}
+                            nativeButton={false}
                             aria-keyshortcuts="ArrowLeft"
                         >
                             <ArrowLeft aria-hidden size={16} />
                             Previous
-                        </button>
-                    ) : (
-                        <RouterLink className={pageLinkClassName} to={`${previousPage}/`} aria-keyshortcuts="ArrowLeft">
-                            <ArrowLeft aria-hidden size={16} />
-                            Previous
-                        </RouterLink>
+                        </Button>
                     )}
                     {nextPage === undefined ? (
-                        <button
-                            type="button"
-                            className={pageLinkClassName}
-                            disabled
-                            aria-disabled="true"
+                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowRight">
+                            Next
+                            <ArrowRight aria-hidden size={16} />
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            render={<RouterLink to={`${nextPage}/`} />}
+                            nativeButton={false}
                             aria-keyshortcuts="ArrowRight"
                         >
                             Next
                             <ArrowRight aria-hidden size={16} />
-                        </button>
-                    ) : (
-                        <RouterLink className={pageLinkClassName} to={`${nextPage}/`} aria-keyshortcuts="ArrowRight">
-                            Next
-                            <ArrowRight aria-hidden size={16} />
-                        </RouterLink>
+                        </Button>
                     )}
                 </nav>
             ) : null}
@@ -237,6 +206,6 @@ export function ArticleFooter({
                     </a>
                 ) : null}
             </div>
-        </>
+        </footer>
     );
 }

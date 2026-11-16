@@ -19,7 +19,12 @@ function isRoute(route: string): boolean {
         });
 }
 
-const runtimeSchema = z.object({ version: z.string().regex(/^[a-f0-9]{64}$/) });
+const runtimeSchema = z.object({
+    version: z.string().regex(/^[a-f0-9]{64}$/),
+    modules: z
+        .record(z.string().regex(/^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.js$/), z.string().regex(/^[a-f0-9]{64}$/))
+        .optional()
+});
 
 export type ViewRuntime = z.infer<typeof runtimeSchema>;
 

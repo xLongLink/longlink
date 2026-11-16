@@ -1,10 +1,8 @@
 import { Link } from 'react-router';
-import { Grid } from '@/components/custom/grid';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const cardClassName =
     'flex min-h-60 flex-col -me-px -mb-px rounded-none border border-border bg-transparent p-[calc(calc(var(--spacing)*6)-1px)] text-inherit no-underline hover:border-ring hover:bg-muted active:bg-accent focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2';
@@ -26,26 +24,26 @@ export default function DocsIndex() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={6}>
-                <Heading id="documentation" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="documentation">
                     Documentation
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Learn how to build, run, and manage solutions with LongLink. Start with the basics, create your
                     first Solution, or explore the platform in more detail.
-                </Text>
+                </p>
                 <Stack as="section" gap={3}>
-                    <Heading id="start-here" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="start-here">
                         Start here
-                    </Heading>
-                    <Grid columns={{ minWidth: 200, max: 3, repeat: 'fit' }} gap={0}>
+                    </h2>
+                    <Grid columns={3} gap={0}>
                         <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Lightbulb aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Explore LongLink</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Explore LongLink</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Learn the core concepts and discover what you can build.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>
@@ -53,10 +51,10 @@ export default function DocsIndex() {
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Code2 aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Build a Solution</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Build a Solution</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Create a Solution and see how the pieces fit together.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>
@@ -64,10 +62,10 @@ export default function DocsIndex() {
                             <Stack className="flex-1" gap={6} justify="between">
                                 <ServerCog aria-hidden="true" className="text-muted-foreground" size={24} />
                                 <Stack gap={3}>
-                                    <Text className="font-bold">Explore the Platform</Text>
-                                    <Text as="p" className="text-muted-foreground text-pretty">
+                                    <span className="font-bold">Explore the Platform</span>
+                                    <p className="text-muted-foreground text-pretty">
                                         Learn how LongLink runs and manages your Solutions.
-                                    </Text>
+                                    </p>
                                 </Stack>
                             </Stack>
                         </Link>

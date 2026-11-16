@@ -1,10 +1,8 @@
-import * as icons from '@/lib/icons';
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/ui/utils';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
-import { IconRequestContext } from '@/components/custom/contexts';
 import { AccountAppearanceProvider } from '@/components/appearance';
 import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
@@ -23,20 +21,16 @@ export default function PlatformRoot() {
     useDocumentAppearance(isHome ? 'dark' : undefined);
 
     // The public landing page has no account queries or personal appearance synchronization.
-    const content = (
-        <IconRequestContext value={icons.load}>
-            {isHome ? (
-                <Outlet />
-            ) : (
-                <ApiProvider>
-                    <AccountAppearanceProvider>
-                        <ApiBoundary>
-                            <Outlet />
-                        </ApiBoundary>
-                    </AccountAppearanceProvider>
-                </ApiProvider>
-            )}
-        </IconRequestContext>
+    const content = isHome ? (
+        <Outlet />
+    ) : (
+        <ApiProvider>
+            <AccountAppearanceProvider>
+                <ApiBoundary>
+                    <Outlet />
+                </ApiBoundary>
+            </AccountAppearanceProvider>
+        </ApiProvider>
     );
 
     return isHome ? (

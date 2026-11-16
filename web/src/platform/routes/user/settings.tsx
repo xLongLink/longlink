@@ -3,17 +3,16 @@ import { useState } from 'react';
 import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
 import { Link, useLocation } from 'react-router';
+import { Input } from '@/components/shadcn/input';
 import { Button } from '@/components/shadcn/button';
 import { UserRound, Building2 } from 'lucide-react';
 import { Separator } from '@/components/shadcn/separator';
+import { Avatar } from '@/components/longlink/display/avatar';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
 import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
-import { NativeTextInput } from '@/components/custom/native-text-input';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -53,12 +52,12 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     return (
         <div className="flex flex-col gap-8">
             <div className="flex items-center gap-3">
-                <GeneratedAvatar name={name} src={user.avatar} seed={user.id} />
+                <Avatar name={name} src={user.avatar} />
                 <div className="flex flex-col gap-0">
-                    <Heading level={4} accessibilityLevel={1}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
                         {name}
-                    </Heading>
-                    <Text className="text-xs text-muted-foreground">{user.email}</Text>
+                    </h4>
+                    <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
             </div>
             <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
@@ -95,22 +94,23 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                         <div className="flex flex-col gap-8">
                             <div className="flex flex-col gap-4">
                                 <div className="flex min-h-8 flex-col justify-end">
-                                    <Heading
-                                        level={2}
-                                        className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]"
-                                    >
+                                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                         Account
-                                    </Heading>
+                                    </h2>
                                 </div>
                                 <Separator />
-                                <NativeTextInput
-                                    label="Username"
-                                    value={name}
-                                    required
-                                    readOnly={userUpdate.isPending}
-                                    onChange={(event) => setName(event.target.value)}
-                                    onBlur={() => void saveAccount()}
-                                />
+                                <Field className="min-w-0">
+                                    <FieldLabel htmlFor="account-name">Username</FieldLabel>
+                                    <Input
+                                        id="account-name"
+                                        value={name}
+                                        required
+                                        aria-required
+                                        readOnly={userUpdate.isPending}
+                                        onChange={(event) => setName(event.target.value)}
+                                        onBlur={() => void saveAccount()}
+                                    />
+                                </Field>
                             </div>
                             <AppearanceSettings />
                         </div>

@@ -1,45 +1,43 @@
 import type { z } from 'zod';
-import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 export function OperationMetadata({
     metadata,
-    onClose
-}: {
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     metadata: z.output<typeof schemas.zOperationResponse>;
-    onClose: () => void;
 }) {
     return (
-        <FramedDialog title="Operation metadata" open onOpenChange={(open) => !open && onClose()}>
-            <Stack gap={2} padding={8}>
-                <Text>
+        <Dialog {...dialogProps} title="Operation metadata">
+            <Stack gap={2}>
+                <span>
                     <b>Operation</b> {metadata.kind}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Status</b> {metadata.status}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>ID</b> {metadata.id}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Target</b> {metadata.target_id}
-                </Text>
-                <Text>
+                </span>
+                <span>
                     <b>Created</b> {metadata.created_at}
-                </Text>
+                </span>
                 {metadata.finished_at && (
-                    <Text>
+                    <span>
                         <b>Finished</b> {metadata.finished_at}
-                    </Text>
+                    </span>
                 )}
                 {metadata.failed && (
-                    <Text>
+                    <span>
                         <b>Reason</b> {metadata.failed}
-                    </Text>
+                    </span>
                 )}
             </Stack>
-        </FramedDialog>
+        </Dialog>
     );
 }

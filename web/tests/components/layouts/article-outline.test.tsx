@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
+import { act, StrictMode } from 'react';
 import { withMounted } from '../../render';
 import { MemoryRouter } from 'react-router';
 import { hydrateRoot } from 'react-dom/client';
@@ -46,82 +46,124 @@ async function restoreHistory({ url, state }: HistorySnapshot) {
     await changed;
 }
 
-it('activates a browser fragment after hydrating fragment-free prerendered HTML', async () => {
-    const markup = renderToString(
-        <MemoryRouter initialEntries={['/blog/reading/']}>
-            <ArticleOutline items={article.toc} />
-        </MemoryRouter>
-    );
+it.each(['last', 'caf%C3%A9%20section', 'café section'])(
+    'activates browser fragment %s after hydrating fragment-free prerendered HTML',
+    async (fragment) => {
+        const items = [...article.toc, { id: 'café section', label: 'Encoded section', level: 2 }];
 
-    await withMounted(null, async (output) => {
-        const container = document.createElement('section');
-        container.innerHTML = markup;
-        output.append(container);
-
-        const root = hydrateRoot(
-            container,
-            <MemoryRouter initialEntries={['/blog/reading/#last']}>
-                <ArticleOutline items={article.toc} />
-            </MemoryRouter>
+        const content = (
+            <>
+                <ArticleOutline items={items} />
+                {items.map((item) => (
+                    <h2 key={item.id} id={item.id}>
+                        {item.label}
+                    </h2>
+                ))}
+            </>
         );
 
-        try {
-            await act(async () => {
-                await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-            });
-            await vi.waitFor(() =>
-                expect(container.querySelector('[aria-current="location"]')?.getAttribute('href')).toBe('#last')
+        const markup = renderToString(<MemoryRouter initialEntries={['/blog/reading/']}>{content}</MemoryRouter>);
+
+        await withMounted(null, async (output) => {
+            const container = document.createElement('section');
+            container.innerHTML = markup;
+            output.append(container);
+
+            const root = hydrateRoot(
+                container,
+                <MemoryRouter initialEntries={[`/blog/reading/#${fragment}`]}>{content}</MemoryRouter>
             );
-        } finally {
-            await act(async () => root.unmount());
-        }
-    });
-});
+
+            try {
+                await act(async () => {
+                    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+                });
+                await vi.waitFor(() =>
+                    expect(container.querySelector('[aria-current="location"]')?.getAttribute('href')).toBe(
+                        fragment === 'last' ? '#last' : '#caf%C3%A9%20section'
+                    )
+                );
+            } finally {
+                await act(async () => root.unmount());
+            }
+        });
+    }
+);
 
 it.each([false, true])('follows fragments and moves focus with reduced motion %s', async (reduced) => {
     // Replace only the DOM's unimplemented scrolling and media-query measurements.
-    const scroll = vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {});
+    const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     vi.spyOn(preference, 'matches', 'get').mockReturnValue(reduced);
     vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
     const originalUrl = window.location.href;
+    const originalState: unknown = window.history.state;
+    const routerState = { key: 'reading', idx: 2, usr: { source: 'articles' } };
 
     try {
+        window.history.replaceState(routerState, '', originalUrl);
+
         await withMounted(
-            <ReadingArticle />,
+            <StrictMode>
+                <ReadingArticle />
+            </StrictMode>,
             async (output) => {
+                const middle = output.querySelector<HTMLElement>('#middle');
+
+                if (!middle) throw new Error('Missing middle heading');
+                middle.style.scrollMarginTop = '20px';
+                vi.spyOn(middle, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 500, 0, 0));
+
                 const link = output.querySelector<HTMLAnchorElement>(
                     'nav[aria-label="On this page"] a[href="#middle"]'
                 );
 
                 expect(link).not.toBeNull();
+                const historyLength = window.history.length;
+
                 await act(async () => link?.click());
 
                 expect(window.location.hash).toBe('#middle');
+                expect(window.history.state).toEqual(routerState);
+                expect(window.history.length).toBe(historyLength + 1);
                 expect(link?.getAttribute('aria-current')).toBe('location');
                 expect(document.activeElement).toBe(output.querySelector('#middle'));
-                expect(scroll).toHaveBeenLastCalledWith({ behavior: reduced ? 'instant' : 'smooth', block: 'start' });
+                expect(output.querySelector('#middle')?.getAttribute('tabindex')).toBe('-1');
+                expect(scroll).toHaveBeenCalledTimes(1);
+                expect(scroll).toHaveBeenLastCalledWith({ behavior: reduced ? 'instant' : 'smooth', top: 480 });
 
-                // Space retains the incumbent Outline's activation behavior.
+                // Space remains native; an ordinary click still preserves authored focusability.
                 const first = output.querySelector<HTMLAnchorElement>(
                     'nav[aria-label="On this page"] a[href="#first"]'
                 );
 
-                await act(async () =>
-                    first?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }))
-                );
+                const heading = output.querySelector<HTMLElement>('#first');
+
+                heading?.setAttribute('tabindex', '0');
+
+                const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+
+                await act(async () => first?.dispatchEvent(space));
+
+                expect(space.defaultPrevented).toBe(false);
+                expect(window.location.hash).toBe('#middle');
+                expect(document.activeElement).toBe(middle);
+
+                await act(async () => first?.click());
+
                 expect(window.location.hash).toBe('#first');
                 expect(document.activeElement).toBe(output.querySelector('#first'));
+                expect(heading?.getAttribute('tabindex')).toBe('0');
             },
             '/blog/reading/#middle'
         );
     } finally {
-        await restoreHistory({ url: originalUrl, state: window.history.state });
+        await restoreHistory({ url: originalUrl, state: originalState });
     }
 });
 
 it('leaves modified fragment gestures to the browser without taking over scrolling', async () => {
-    const scroll = vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {});
+    const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     const originalUrl = window.location.href;
     const originalState: unknown = window.history.state;
 
@@ -182,13 +224,13 @@ it('tracks passed headings at their scroll margin and selects the final short se
     });
 });
 
-it.each(['scrollend', 'wheel', 'hashchange', 'popstate'])(
-    'holds the clicked heading through intermediate scroll positions and resumes tracking after %s',
+it.each(['hashchange', 'popstate'])(
+    'tracks intermediate sections without changing history and follows %s',
     async (release) => {
         // Keep browser geometry and scrolling outside the article's real navigation behavior.
         vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(2000);
         vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(600);
-        vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {});
+        vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
         let scrollY = 0;
         vi.spyOn(window, 'scrollY', 'get').mockImplementation(() => scrollY);
         const originalUrl = window.location.href;
@@ -230,17 +272,14 @@ it.each(['scrollend', 'wheel', 'hashchange', 'popstate'])(
                     await changed;
                 });
                 expect(current()).toBe('#last');
-                await scrollTo(500);
-                expect(current()).toBe('#last');
+                const historyLength = window.history.length;
 
-                if (release === 'scrollend') {
-                    await scrollTo(900);
-                    await act(async () => window.dispatchEvent(new Event('scrollend')));
-                    expect(current()).toBe('#last');
-                } else if (release === 'wheel') {
-                    await act(async () => window.dispatchEvent(new WheelEvent('wheel')));
-                    await vi.waitFor(() => expect(current()).toBe('#middle'));
-                } else if (release === 'hashchange') {
+                await scrollTo(500);
+                expect(current()).toBe('#middle');
+                expect(window.location.hash).toBe('#last');
+                expect(window.history.length).toBe(historyLength);
+
+                if (release === 'hashchange') {
                     await act(async () => {
                         const changed = new Promise<void>((resolve) =>
                             window.addEventListener('hashchange', () => resolve(), { once: true })

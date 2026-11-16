@@ -1,9 +1,8 @@
 import { Link } from 'react-router';
-import { Collapsible } from '@base-ui/react/collapsible';
-import { ChevronDown, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useId, type KeyboardEvent, type ReactNode } from 'react';
 
-type PublicationPage = { path: string; label: string; icon: LucideIcon; children?: readonly PublicationPage[] };
+type PublicationPage = { path: string; label: string; icon: LucideIcon };
 
 const rowClassName =
     'publication-navigation-row flex box-border w-full min-h-8 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2 py-0 font-[inherit] text-sm leading-(--text-sm--line-height) font-normal text-start text-foreground no-underline hover:bg-muted aria-[current]:bg-muted aria-[current]:font-medium focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-2 forced-colors:aria-[current]:bg-[Highlight] forced-colors:aria-[current]:text-[HighlightText] [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>svg]:flex-none [&>svg]:text-muted-foreground aria-[current]:[&>svg]:text-inherit';
@@ -65,7 +64,7 @@ export function PublicationSectionLinks({
     );
 }
 
-/** Shares the publication sidebar's density and disclosure behavior across legal and docs. */
+/** Shares the publication sidebar's density and keyboard navigation across legal and docs. */
 export function PublicationNavigation({ label, children }: { label: string; children: ReactNode }) {
     return (
         <nav aria-label={label} className="box-border w-full px-6 py-8 lg:w-[260px]" onKeyDown={moveNavigationFocus}>
@@ -91,7 +90,7 @@ export function PublicationNavigationSection({ title, children }: { title: strin
     );
 }
 
-/** Keeps nested disclosure state mounted while router links change the article. */
+/** Links to an article or fragment within a publication section. */
 export function PublicationNavigationItem({
     page,
     pagePath,
@@ -104,25 +103,6 @@ export function PublicationNavigationItem({
     trailingSlash?: boolean;
 }) {
     const selected = `${pagePath}${hash}` === page.path;
-
-    if (page.children?.length) {
-        return (
-            <Collapsible.Root defaultOpen={false}>
-                <Collapsible.Trigger
-                    className={`${rowClassName} group/publication`}
-                    aria-current={selected ? 'location' : undefined}
-                >
-                    <span>{page.label}</span>
-                    <ChevronDown aria-hidden size={20} className="group-data-panel-open/publication:rotate-180" />
-                </Collapsible.Trigger>
-                <Collapsible.Panel keepMounted className="[&[hidden]]:hidden [&_.publication-navigation-row]:ps-8">
-                    {page.children.map((child) => (
-                        <PublicationNavigationItem key={child.path} page={child} pagePath={pagePath} />
-                    ))}
-                </Collapsible.Panel>
-            </Collapsible.Root>
-        );
-    }
 
     const [pathname, fragment] = page.path.split('#');
     const to = `${pathname}${trailingSlash ? '/' : ''}${fragment ? `#${fragment}` : ''}`;

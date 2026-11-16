@@ -1,32 +1,28 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { Token } from '@/components/custom/token';
 import { Separator } from '@/components/shadcn/separator';
+import { Badge } from '@/components/longlink/display/badge';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
     return (
         <Stack gap={4}>
             <Stack justify="end" minHeight="calc(var(--spacing)*8)">
-                <Heading level={2} className="block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Invoices
-                </Heading>
+                </h2>
             </Stack>
             <Separator />
             {canManage ? (
-                <ApiBoundary fallback={<Text className="text-muted-foreground">Loading invoices…</Text>}>
+                <ApiBoundary fallback={<span className="text-muted-foreground">Loading invoices…</span>}>
                     <InvoiceTable base={base} />
                 </ApiBoundary>
             ) : (
-                <Text as="p" className="text-muted-foreground">
-                    An organization owner can view invoices.
-                </Text>
+                <p className="text-muted-foreground">An organization owner can view invoices.</p>
             )}
         </Stack>
     );
@@ -37,65 +33,64 @@ function InvoiceTable({ base }: { base: string }) {
     const [invoices] = useApi(`${base}/invoices`, schemas.zPaymentInvoice.array());
 
     return (
-        <DataTable
-            data={invoices}
-            idKey="id"
-            density="compact"
-            columns={[
-                {
-                    key: 'number',
-                    header: 'Invoice',
-                    width: proportional(2),
-                    renderCell: (invoice) =>
-                        invoice.hosted_invoice_url ? (
-                            <Link href={invoice.hosted_invoice_url} hasUnderline isExternalLink>
-                                {invoice.number ?? invoice.id}
-                            </Link>
-                        ) : (
-                            <Text>{invoice.number ?? invoice.id}</Text>
-                        )
-                },
-                {
-                    key: 'created_at',
-                    header: 'Date',
-                    width: proportional(1),
-                    renderCell: (invoice) =>
-                        new Date(invoice.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })
-                },
-                {
-                    key: 'total',
-                    header: 'Amount',
-                    align: 'end',
-                    width: proportional(1),
-                    renderCell: (invoice) => {
-                        const currency = new Intl.NumberFormat(undefined, {
-                            style: 'currency',
-                            currency: invoice.currency.toUpperCase()
-                        });
+        <Table wrap>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead align="end">Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Document</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {invoices.map((row) => {
+                    const currency = new Intl.NumberFormat(undefined, {
+                        style: 'currency',
+                        currency: row.currency.toUpperCase()
+                    });
 
-                        return currency.format(
-                            invoice.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
-                        );
-                    }
-                },
-                {
-                    key: 'status',
-                    header: 'Status',
-                    width: proportional(1),
-                    renderCell: (invoice) => <Token label={invoice.status?.replaceAll('_', ' ') ?? 'Unknown'} />
-                },
-                {
-                    key: 'has_pdf',
-                    header: 'Document',
-                    width: proportional(1),
-                    renderCell: (invoice) =>
-                        invoice.has_pdf ? (
-                            <Link href={`${base}/invoices/${invoice.id}/pdf`} hasUnderline isExternalLink>
-                                PDF
-                            </Link>
-                        ) : null
-                }
-            ]}
-        />
+                    return (
+                        <TableRow key={row.id}>
+                            <TableCell>
+                                {row.hosted_invoice_url ? (
+                                    <Link href={row.hosted_invoice_url} className="underline" isExternalLink>
+                                        {row.number ?? row.id}
+                                    </Link>
+                                ) : (
+                                    <span>{row.number ?? row.id}</span>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {new Date(row.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                            </TableCell>
+                            <TableCell align="end">
+                                {currency.format(
+                                    row.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                <Badge variant="secondary">{row.status?.replaceAll('_', ' ') ?? 'Unknown'}</Badge>
+                            </TableCell>
+                            <TableCell>
+                                {row.has_pdf ? (
+                                    <Link href={`${base}/invoices/${row.id}/pdf`} className="underline" isExternalLink>
+                                        PDF
+                                    </Link>
+                                ) : null}
+                            </TableCell>
+                        </TableRow>
+                    );
+                })}
+                {invoices.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={5} align="center">
+                            <Empty role="status" title="No data" />
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

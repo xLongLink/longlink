@@ -1,5 +1,4 @@
 import { documentationCategories } from '../lib/documentation';
-import viewCatalog from '../../../sdk/longlink/.static/jsx/components.json';
 import {
     AppWindow,
     Badge,
@@ -11,12 +10,11 @@ import {
     CircleGauge,
     ChartNoAxesCombined,
     BookOpen,
+    Box,
     Building2,
-    Calendar,
     CheckSquare,
     ChevronDown,
     CircleDot,
-    Clock,
     CreditCard,
     Database,
     FileCode2,
@@ -43,7 +41,6 @@ import {
     Rocket,
     Settings2,
     ShieldCheck,
-    SeparatorHorizontal,
     Table2,
     TextAlignStart,
     TextCursorInput,
@@ -91,25 +88,42 @@ export const componentDocumentation = [
     { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
     { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge },
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
-    { name: 'Maps', category: 'Others', icon: Map },
+    { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
+    { name: 'Map', category: 'Maps', icon: Map },
+    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
+    { name: 'MapControls', category: 'Maps', icon: Settings2 },
+    { name: 'StreetMap', category: 'Maps', icon: Map },
+    { name: 'MarkerMap', category: 'Maps', icon: Map },
+    { name: 'RouteMap', category: 'Maps', icon: Waypoints },
+    { name: 'ClusterMap', category: 'Maps', icon: Map },
+    { name: 'GeoJSONMap', category: 'Maps', icon: Globe },
+    { name: 'ArcMap', category: 'Maps', icon: Waypoints },
     { name: 'Avatar', category: 'Display', icon: Users },
-    { name: 'GeneratedAvatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
+    { name: 'Box', category: 'Layouts', icon: Box },
     { name: 'Button', category: 'Action', icon: MousePointer2 },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
-    { name: 'DateInput', category: 'Form', icon: Calendar },
+    { name: 'DataGrid', category: 'Display', icon: Grip },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
-    { name: 'Divider', category: 'Display', icon: SeparatorHorizontal },
-    { name: 'DropdownMenu', category: 'Action', icon: ListCollapse },
+    { name: 'Dropdown', category: 'Action', icon: ListCollapse },
+    { name: 'Pagination', category: 'Action', icon: ListCollapse },
     { name: 'Empty', category: 'Display', icon: Package },
-    { name: 'FileInput', category: 'Form', icon: FileCode2 },
+    { name: 'FileType', category: 'Display', icon: FileText },
     { name: 'FileViewer', category: 'Display', icon: FileText },
+    { name: 'Frame', category: 'Layouts', icon: PanelsTopLeft },
     { name: 'Functions', category: 'Runtime' },
     { name: 'Grid', category: 'Layouts', icon: Grip },
     { name: 'Heading', category: 'Display', icon: Heading },
     { name: 'Hooks', category: 'Runtime' },
+    { name: 'useApi', category: 'Hooks', icon: Database },
+    { name: 'useForm', category: 'Hooks', icon: FileText },
+    { name: 'useFormContext', category: 'Hooks', icon: FileText },
+    { name: 'useSubmit', category: 'Hooks', icon: Waypoints },
+    { name: 'useConfirm', category: 'Hooks', icon: ShieldCheck },
+    { name: 'useTable', category: 'Hooks', icon: Table2 },
+    { name: 'ReactHooks', category: 'Hooks', icon: FileCode2 },
     { name: 'Icon', category: 'Display', icon: Gem },
     { name: 'Image', category: 'Display', icon: Image },
     { name: 'Input', category: 'Form', icon: TextCursorInput },
@@ -121,36 +135,28 @@ export const componentDocumentation = [
     { name: 'Combobox', category: 'Form', icon: ListFilter },
     { name: 'Slider', category: 'Form', icon: Settings2 },
     { name: 'Stack', category: 'Layouts', icon: Layers },
-    { name: 'Stepper', category: 'Layouts', icon: Waypoints },
     { name: 'Switch', category: 'Form', icon: ToggleLeft },
     { name: 'Table', category: 'Display', icon: Table2 },
     { name: 'Tabs', category: 'Layouts', icon: PanelsTopLeft },
     { name: 'Text', category: 'Display', icon: Type },
     { name: 'Textarea', category: 'Form', icon: TextAlignStart },
-    { name: 'TimeInput', category: 'Form', icon: Clock },
     { name: 'Timestamp', category: 'Display', icon: CalendarClock }
-].map((component) => {
-    // Share component ownership and custom justifications with the packaged SDK documentation.
-    const provenance = viewCatalog.components.find((entry) => entry.name === component.name);
-
-    if (!provenance) throw new Error(`Missing component provenance: ${component.name}`);
-
-    return {
-        ...component,
-        source: provenance.source,
-        sourceLabel:
-            provenance.source === 'recharts'
-                ? 'shadcn/ui + Recharts'
-                : provenance.source === 'shadcn'
-                  ? 'shadcn/ui'
-                  : provenance.source === 'reui'
-                    ? 'ReUI'
-                    : 'Custom',
-        reference: 'reference' in provenance ? provenance.reference : undefined,
-        justification: 'justification' in provenance ? provenance.justification : undefined,
-        label: component.name === 'Button' ? 'Buttons' : component.name === 'Icon' ? 'Icons' : component.name,
-        slug:
-            component.name === 'RadialBarChart'
+].map((component) => ({
+    ...component,
+    label:
+        component.name === 'ReactHooks'
+            ? 'React hooks'
+            : component.name === 'Button'
+              ? 'Buttons'
+              : component.name === 'Icon'
+                ? 'Icons'
+                : component.name,
+    slug:
+        component.name === 'MapGeoJSON'
+            ? 'map-geojson'
+            : component.name === 'GeoJSONMap'
+              ? 'geojson-map'
+              : component.name === 'RadialBarChart'
                 ? 'radial-chart'
                 : component.name === 'Sankey'
                   ? 'sankey-chart'
@@ -162,8 +168,7 @@ export const componentDocumentation = [
                             .replace(/([a-z])([A-Z])/g, '$1-$2')
                             .replace(/\s+/g, '-')
                             .toLowerCase()
-    };
-});
+}));
 
 export const documentationIntroduction: DocumentationSection = {
     title: 'Introduction',
@@ -205,12 +210,13 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                 ],
                 pages: [
                     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
+                    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
                     { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
                     { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
                     { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
-                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map }
+                    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,

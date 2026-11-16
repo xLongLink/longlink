@@ -1,7 +1,5 @@
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description:
@@ -17,46 +15,46 @@ export default function WhyLongLink() {
     return (
         <PublicArticle article={article}>
             <Stack className="text-lg leading-relaxed" gap={5}>
-                <Heading id="why-longlink" level={1} className="text-balance">
+                <h1 id="why-longlink" className="font-semibold tracking-tight text-4xl text-balance">
                     Why LongLink
-                </Heading>
+                </h1>
 
                 <Stack className="[&_p]:opacity-90" gap={10}>
                     <Stack as="section" gap={4}>
-                        <Text as="p" className="text-pretty">
+                        <p className="text-pretty">
                             Today, the flow of data in companies is distributed across many systems. This creates
                             inefficiencies, and a single request might even take days to be resolved. Custom software
                             can close these gaps by organizing data, rules, and decisions.
-                        </Text>
-                        <Text as="p" className="text-pretty">
+                        </p>
+                        <p className="text-pretty">
                             Traditional software was made for many customers, allowing the cost to be divided among all
                             of them. Dedicated software has different economics. It exists for a specific need, so
                             unnecessary complexity translates directly into maintenance costs.
-                        </Text>
-                        <Text as="p" className="text-pretty">
+                        </p>
+                        <p className="text-pretty">
                             Every application needs a basic set of features to operate, such as user management,
                             permissions, storage, databases, logging, and deployment. But the true value sits at the
                             center, where domain knowledge is translated into logic.
-                        </Text>
-                        <Text as="p" className="text-pretty">
-                            We call this a <Text className="font-bold">Solution</Text>: the simplest practical
+                        </p>
+                        <p className="text-pretty">
+                            We call this a <span className="font-bold">Solution</span>: the simplest practical
                             representation of a business process expressed as code.
-                        </Text>
-                        <Text as="p" className="text-pretty">
+                        </p>
+                        <p className="text-pretty">
                             LongLink provides everything else needed to build, run, and manage those Solutions.
-                        </Text>
+                        </p>
                         <div className="relative min-w-0 overflow-hidden rounded-xl bg-transparent">
                             <img
                                 alt="Core application logic surrounded by services and deployment infrastructure"
                                 className="aspect-video w-full object-contain"
                                 src="/images/platform.png"
                             />
-                            <Text className="tracking-tight font-semibold text-nowrap block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl">
+                            <span className="tracking-tight font-semibold text-nowrap block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl">
                                 Services
-                            </Text>
-                            <Text className="tracking-tight font-semibold text-nowrap block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl">
+                            </span>
+                            <span className="tracking-tight font-semibold text-nowrap block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl">
                                 Deployment
-                            </Text>
+                            </span>
                         </div>
                     </Stack>
                 </Stack>

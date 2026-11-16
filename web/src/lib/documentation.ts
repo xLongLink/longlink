@@ -3,16 +3,37 @@ export const documentationLastUpdated = '2026-10-02';
 
 export const documentationCategories: string[] = [
     'Runtime',
+    'Hooks',
+    'Layouts',
     'Action',
     'Display',
     'Form',
     'Charts',
-    'Others',
-    'Layouts'
+    'Maps'
 ];
 
 // Describe the runtime bindings exposed to Views.
 export const viewHooks = [
+    {
+        name: 'useFormContext()',
+        description:
+            'Reads the nearest FormProvider form methods. Call it in a descendant component to share validation, values, and submission state without passing the form through props.'
+    },
+    {
+        name: 'useTable(options, selector?)',
+        description:
+            'Creates a TanStack table for DataGrid. Pass data, columns, and dataGridFeatures; the View runtime preserves column behavior while excluding authored header and cell styling.'
+    },
+    {
+        name: 'useForm(schema, options?)',
+        description:
+            'React Hook Form state with automatic Zod validation. Pass editing defaults and an action endpoint, then use form.submit for duplicate-protected multipart submission. Parsed scalars become text, files remain binary, arrays repeat field names, and null values are omitted; nested objects are rejected. Failures populate formState.errors.root and preserve the draft. Standard methods remain available for local or custom forms.'
+    },
+    {
+        name: 'useSubmit(path, options)',
+        description:
+            'Returns an awaitable, duplicate-protected scoped submission function accepting FormData for standalone actions. Use useForm(schema, { action }) for forms instead. Options: method (POST by default, PUT, PATCH, DELETE), onSuccess, and onError. Successful writes refresh cached View data before onSuccess; unhandled failures reject. Await the action in a Button handler to retain pending behavior.'
+    },
     {
         name: 'useConfirm()',
         description:

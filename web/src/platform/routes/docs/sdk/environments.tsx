@@ -1,8 +1,6 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -20,27 +18,27 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="environments" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="environments">
                     Environments
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Use{' '}
-                    <Link href="https://github.com/pydantic/pydantic-settings" hasUnderline isExternalLink>
+                    <Link href="https://github.com/pydantic/pydantic-settings" className="underline" isExternalLink>
                         Pydantic Settings
                     </Link>{' '}
                     to define project configuration as typed, validated Python. Extend Environments with the values your
                     solution needs; they are loaded from .env.sample, .env, or process environment variables.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         A clear schema helps both developers and AI understand what the application expects, while early
                         validation catches missing or invalid values before the application starts running.
-                    </Text>
+                    </p>
                 </Stack>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from pydantic import Field
 from longlink import Environments

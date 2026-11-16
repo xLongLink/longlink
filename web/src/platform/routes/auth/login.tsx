@@ -7,16 +7,15 @@ import { useEffect, useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
-import { Divider } from '@/components/custom/divider';
+import { GitHubIcon } from '@/components/svg/github';
+import { GoogleIcon } from '@/components/svg/google';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
-import { GoogleIcon } from '@/components/svg/google-icon';
 import { emailSchema, passwordSchema } from './validation';
-import { GitHubIcon } from '@/components/svg/git-hub-icon';
+import { FieldSeparator } from '@/components/shadcn/field';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -79,7 +78,7 @@ export default function Login() {
 
     return (
         <AuthLayout
-            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
             description={null}
         >
             <title>Sign In | LongLink</title>
@@ -108,12 +107,12 @@ export default function Login() {
                     >
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-col gap-1">
-                                <Text className="text-sm font-medium">Email</Text>
+                                <span className="text-sm font-medium">Email</span>
                                 <TextField control={form.control} name="email" labelHidden label="Email" type="email" />
                             </div>
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between">
-                                    <Text className="text-sm font-medium">Password</Text>
+                                    <span className="text-sm font-medium">Password</span>
                                     <Link
                                         to="/auth/forgot-password"
                                         className="text-sm leading-(--text-sm--line-height) font-normal text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
@@ -149,7 +148,7 @@ export default function Login() {
                                     </button>
                                 </div>
                             </div>
-                            <Button className="w-full max-w-full" type="submit" variant="default">
+                            <Button className="w-full max-w-full" type="submit" variant="primary">
                                 <LogIn aria-hidden="true" size={16} />
                                 Sign In
                             </Button>
@@ -157,7 +156,7 @@ export default function Login() {
                     </form>
                     {availableOAuthProviders.length > 0 ? (
                         <div className="flex flex-col gap-2">
-                            <Divider label="or" />
+                            <FieldSeparator>or</FieldSeparator>
                             <div className="flex flex-col gap-2">
                                 {availableOAuthProviders.map((provider) => (
                                     <Button
@@ -180,19 +179,15 @@ export default function Login() {
                     ) : null}
                 </div>
 
-                <Divider
-                    label={
-                        <>
-                            New to LongLink?{' '}
-                            <Link
-                                to={`/auth/register${registerSearch}`}
-                                className="font-medium text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
-                            >
-                                Create account
-                            </Link>
-                        </>
-                    }
-                />
+                <FieldSeparator>
+                    New to LongLink?{' '}
+                    <Link
+                        to={`/auth/register${registerSearch}`}
+                        className="font-medium text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
+                    >
+                        Create account
+                    </Link>
+                </FieldSeparator>
             </div>
         </AuthLayout>
     );

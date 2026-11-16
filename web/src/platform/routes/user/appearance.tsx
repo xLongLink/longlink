@@ -1,12 +1,10 @@
 import { Circle, Check } from 'lucide-react';
 import { accentColors } from '@/lib/appearance';
-import { Button } from '@/components/shadcn/button';
 import { useUpdateUser } from '@/lib/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
+import { Button } from '@/components/longlink/action/button';
 import { Card, CardContent } from '@/components/shadcn/card';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { InteractiveCard } from '@/components/custom/interactive-card';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
@@ -16,9 +14,9 @@ export default function AppearanceSettings() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3" role="group" aria-label="Theme">
-                <Heading level={4} accessibilityLevel={3}>
+                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                     Theme
-                </Heading>
+                </h4>
                 <div className="flex flex-wrap gap-3">
                     {(
                         [
@@ -39,7 +37,7 @@ export default function AppearanceSettings() {
                             }}
                         >
                             <CardContent className="flex flex-col gap-2">
-                                <Text>{label}</Text>
+                                <span>{label}</span>
                                 <img
                                     src={`/images/${image}`}
                                     alt=""
@@ -53,12 +51,12 @@ export default function AppearanceSettings() {
                 </div>
             </div>
             <div className="flex flex-col gap-3">
-                <Heading level={4} accessibilityLevel={3}>
+                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                     Appearance
-                </Heading>
+                </h4>
                 <Card size="sm">
                     <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
-                        <Text>Accent color</Text>
+                        <span>Accent color</span>
                         <div className="flex flex-wrap gap-2">
                             {accentColors.map((accent) => (
                                 <Button
@@ -90,9 +88,9 @@ export default function AppearanceSettings() {
                 </Card>
             </div>
             {userUpdate.isPending && (
-                <Text role="status" className="text-xs text-muted-foreground">
+                <span role="status" className="text-xs text-muted-foreground">
                     Saving appearance…
-                </Text>
+                </span>
             )}
         </div>
     );

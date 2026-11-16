@@ -57,29 +57,22 @@ it('ignores a mismatched session and releases an admitted port when its mount is
     }
 }, 30_000);
 
-it('loads gallery images concurrently without a request cap', async () => {
+it('loads gallery images concurrently with Solution-owned icons', async () => {
     // Arrange
-    vi.resetModules();
-    const previousSession = window.__VIEW_SESSION__;
-    const previousTheme = document.documentElement.getAttribute('data-theme');
-    const previousAccent = document.documentElement.getAttribute('data-accent');
-    window.__VIEW_SESSION__ = 'gallery-test-session';
-    const mount = document.createElement('div');
-    mount.id = 'view';
-    document.body.append(mount);
-    const channel = new MessageChannel();
-    const requests: { id: number; path: string }[] = [];
+    const runtime = await initializeRuntime(
+        'export default function View() { return <><Icon icon="search" size="sm" />{Array.from({ length: 12 }, (_, index) => <Image key={index} src={\'/api/photos/\' + index} alt={\'Photo \' + index} />)}</>; }'
+    );
 
-    // happy-dom clones Blobs into plain objects over MessagePort, so replies reach the runtime's handler directly.
-    const reply = (data: ViewReply) =>
-        channel.port1.onmessage?.call(channel.port1, new MessageEvent('message', { data }));
+    const requests: { id: number; path: string }[] = [];
+    const hostIcons: unknown[] = [];
 
     // Hold image responses until every request is in flight.
-    channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
         if (command.type === 'icon') {
-            reply({ id: command.id, ok: false, error: 'No icons in this test' });
+            hostIcons.push(command);
+            runtime.send({ id: command.id, ok: false, error: 'No icons in this test' });
 
             return;
         }
@@ -88,132 +81,119 @@ it('loads gallery images concurrently without a request cap', async () => {
         requests.push(command);
     };
 
-    // Act
     try {
-        await import('@/views/runtime');
-        window.dispatchEvent(
-            new MessageEvent('message', {
-                source: window,
-                ports: [channel.port1],
-                data: {
-                    session: 'gallery-test-session',
-                    source: "export default function View() { return <>{Array.from({ length: 12 }, (_, index) => <Image key={index} src={'/api/photos/' + index} alt={'Photo ' + index} />)}</>; }",
-                    params: {},
-                    navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' }
-                }
-            })
-        );
-
         // Assert
         await vi.waitFor(() => expect(requests).toHaveLength(12), { timeout: 10_000 });
         expect(new Set(requests.map((request) => request.path)).size).toBe(12);
 
         // Act
         for (const request of requests) {
-            reply({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
+            runtime.send({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
         }
 
         // Assert
-        await vi.waitFor(() => expect(mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
-        expect(mount.textContent).not.toContain('Photo unavailable');
+        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(12), { timeout: 10_000 });
+        await vi.waitFor(() => expect(runtime.mount.querySelector('svg.lucide-search circle')).not.toBeNull());
+        expect(hostIcons).toEqual([]);
+        expect(runtime.mount.textContent).not.toContain('Photo unavailable');
     } finally {
-        window.dispatchEvent(new Event('pagehide'));
-        channel.port1.close();
-        channel.port2.close();
-        mount.remove();
-        window.__VIEW_SESSION__ = previousSession;
-
-        for (const [name, value] of [
-            ['data-theme', previousTheme],
-            ['data-accent', previousAccent]
-        ] as const) {
-            if (value === null) document.documentElement.removeAttribute(name);
-            else document.documentElement.setAttribute(name, value);
-        }
+        runtime.close();
     }
 }, 30_000);
 
 it('rejects an unfinished authored request with View closed on pagehide before its deadline', async () => {
     // Arrange
-    vi.resetModules();
-    const previousSession = window.__VIEW_SESSION__;
-    const previousTheme = document.documentElement.getAttribute('data-theme');
-    const previousAccent = document.documentElement.getAttribute('data-accent');
-    window.__VIEW_SESSION__ = 'pagehide-test-session';
-    const mount = document.createElement('div');
-    mount.id = 'view';
-    document.body.append(mount);
-    const channel = new MessageChannel();
-    const close = vi.spyOn(channel.port1, 'close');
+    const started = performance.now();
+
+    const runtime = await initializeRuntime(`export default function View() {
+        useEffect(() => {
+            request('/api/pending').then(
+                () => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: 'Request completed' })),
+                error => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: error.message }))
+            );
+        }, []);
+        return <p role="status">Request pending</p>;
+    }`);
+
+    const close = vi.spyOn(runtime.channel.port1, 'close');
     const received = vi.fn();
-    channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+    const settled = vi.fn();
+    window.addEventListener('pending-request-settled', settled);
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
         const command = commandSchema.parse(event.data);
 
         if (command.type === 'request') received(command);
     };
 
     try {
-        await import('@/views/runtime');
-        const started = performance.now();
-        window.dispatchEvent(
-            new MessageEvent('message', {
-                source: window,
-                ports: [channel.port1],
-                data: {
-                    session: 'pagehide-test-session',
-                    source: `export default function View() {
-                        const [caughtError, setCaughtError] = useState(null);
-                        useEffect(() => {
-                            request('/api/pending').then(
-                                () => setCaughtError('Request completed'),
-                                error => setCaughtError(error.message)
-                            );
-                        }, []);
-                        return <p role="status">{caughtError ?? 'Request pending'}</p>;
-                    }`,
-                    params: {},
-                    navigationBaseUrl: 'https://platform.example/',
-                    appearance: { theme: 'system', accent: 'neutral' }
-                }
-            })
-        );
-
         // Act
         await vi.waitFor(() =>
             expect(received).toHaveBeenCalledExactlyOnceWith(
                 expect.objectContaining({ type: 'request', path: '/api/pending', method: 'GET' })
             )
         );
-        expect(mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
+        expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
+        expect(settled).not.toHaveBeenCalled();
         expect(close).not.toHaveBeenCalled();
         window.dispatchEvent(new Event('pagehide'));
 
         // Assert
         expect(close).toHaveBeenCalled();
-        await vi.waitFor(() => expect(mount.querySelector('[role="status"]')?.textContent).toBe('View closed'), {
-            timeout: 2_000
-        });
+        await vi.waitFor(
+            () => expect(settled).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ detail: 'View closed' })),
+            { timeout: 2_000 }
+        );
         expect(performance.now() - started).toBeLessThan(REQUEST_TIMEOUT);
     } finally {
-        window.dispatchEvent(new Event('pagehide'));
-        channel.port1.close();
-        channel.port2.close();
+        runtime.close();
         close.mockRestore();
-        mount.remove();
-        window.__VIEW_SESSION__ = previousSession;
-
-        for (const [name, value] of [
-            ['data-theme', previousTheme],
-            ['data-accent', previousAccent]
-        ] as const) {
-            if (value === null) document.documentElement.removeAttribute(name);
-            else document.documentElement.setAttribute(name, value);
-        }
-
-        vi.resetModules();
+        window.removeEventListener('pending-request-settled', settled);
     }
 }, 10_000);
+
+it('renders file bytes inside the View and releases them with authored effects on pagehide', async () => {
+    // Observe real unmount cleanup without keeping the authored tree alive.
+    const cleaned = vi.fn();
+    window.addEventListener('authored-cleanup', cleaned);
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:inline-file');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    const runtime = await initializeRuntime(`export default function View() {
+        useEffect(() => () => window.dispatchEvent(new Event('authored-cleanup')), []);
+        return <FileViewer src="/api/report" title="Report" />;
+    }`);
+
+    const close = vi.spyOn(runtime.channel.port1, 'close');
+    let request: { id: number } | undefined;
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+        if (command.type === 'request' && command.path === '/api/report') {
+            request = command;
+        }
+    };
+
+    try {
+        await vi.waitFor(() => expect(request).toBeDefined());
+        if (!request) throw new Error('Expected a scoped file request');
+        runtime.send({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
+        await vi.waitFor(() =>
+            expect(runtime.mount.querySelector('img')?.getAttribute('src')).toBe('blob:inline-file')
+        );
+        expect(cleaned).not.toHaveBeenCalled();
+        window.dispatchEvent(new Event('pagehide'));
+
+        // Closing the View must release displayed bytes before revoking its capabilities.
+        expect(cleaned).toHaveBeenCalledOnce();
+        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:inline-file');
+        expect(revoke.mock.invocationCallOrder[0]).toBeLessThan(close.mock.invocationCallOrder[0]);
+    } finally {
+        runtime.close();
+        close.mockRestore();
+        create.mockRestore();
+        revoke.mockRestore();
+        window.removeEventListener('authored-cleanup', cleaned);
+    }
+});
 
 /** Admits real authored source and restores the sandbox-owned document after each regression. */
 async function initializeRuntime(source: string) {
@@ -331,17 +311,13 @@ it('bounds request failures and retries the failed query instead of leaving its 
 
     try {
         await vi.waitFor(() => expect(requests).toHaveLength(1));
-        const progress = runtime.mount.querySelector('[role="progressbar"]');
+        const progress = runtime.mount.querySelector('[data-slot="spinner"]');
 
         if (!progress) throw new Error('Expected pending View progress');
-        const labelId = progress.getAttribute('aria-labelledby');
-
-        if (!labelId) throw new Error('Expected visible loading label association');
-        expect(document.getElementById(labelId)?.textContent).toBe('Loading View');
-        expect(progress.closest('[role="status"]')).toBeNull();
+        expect(progress.getAttribute('aria-label')).toBe('Loading View');
         runtime.send({ id: requests[0], ok: false, error: failure });
         await vi.waitFor(() => expect(runtime.mount.querySelector('h2')?.textContent).toBe('View could not be loaded'));
-        expect(runtime.mount.querySelector('[role="progressbar"]')).toBeNull();
+        expect(runtime.mount.querySelector('[data-slot="spinner"]')).toBeNull();
         expect(runtime.mount.querySelector('[role="region"], section')?.getAttribute('aria-label')).toBe(
             'Solution View'
         );
@@ -359,94 +335,143 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
-it('preserves native Collapsible composition and cancellable authored visibility changes', async () => {
-    // Adapter substitution must not discard native trigger composition or cancellation details.
+it('keeps a draft in a retained authored Tab while selecting another panel', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        const [locked, setLocked] = useState(true);
-        const [open, setOpen] = useState(false);
-        return <>
-            <Collapsible open={open} onOpenChange={(next, details) => {
-                if (locked) details.cancel();
-                else setOpen(next);
-            }}>
-                <CollapsibleTrigger render={<Button variant="outline" />}>Order details</CollapsibleTrigger>
-                <CollapsibleContent><p>PO-871</p></CollapsibleContent>
-            </Collapsible>
-            <button onClick={() => setLocked(false)}>Unlock</button>
-        </>;
+        return <Tabs aria-label="Order">
+            <Tab value="restricted" label="Restricted" disabled>Restricted details</Tab>
+            <Tab value="details" label="Details" keepMounted>
+                <input aria-label="Order draft" defaultValue="Draft" />
+            </Tab>
+            <Tab value="history" label="History">Order history</Tab>
+        </Tabs>;
     }`);
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="collapsible-trigger"]')).not.toBeNull());
-        const trigger = runtime.mount.querySelector('[data-slot="collapsible-trigger"]');
+        await vi.waitFor(() => expect(runtime.mount.querySelector('input')).not.toBeNull());
+        const input = runtime.mount.querySelector<HTMLInputElement>('input');
+        const tabs = runtime.mount.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+        const user = userEvent.setup();
 
-        if (!trigger) throw new Error('Expected composed Collapsible trigger');
+        if (!input || !tabs[0] || !tabs[1] || !tabs[2]) throw new Error('Expected order tabs');
+        expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+        await user.type(input, ' order');
+        await user.click(tabs[0]);
+        expect(runtime.mount.textContent).not.toContain('Restricted details');
 
-        const unlock = Array.from(runtime.mount.querySelectorAll('button')).find(
-            (button) => button.textContent === 'Unlock'
+        await user.click(tabs[2]);
+        await vi.waitFor(() => expect(tabs[2].getAttribute('aria-selected')).toBe('true'));
+        expect(runtime.mount.textContent).toContain('Order history');
+        await user.click(tabs[1]);
+        await vi.waitFor(() => expect(tabs[1].getAttribute('aria-selected')).toBe('true'));
+        expect(runtime.mount.querySelector('input')).toBe(input);
+        expect(input.value).toBe('Draft order');
+    } finally {
+        runtime.close();
+    }
+});
+
+it('preserves composed controls and form updates through authored JSX', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        const labels = new Map([['name', 'Draft']]);
+        const [name, setName] = useState(labels.get('name'));
+        const [saved, setSaved] = useState('');
+        return <Card>
+            <Input id="order-name" aria-label="Order name"
+                value={name} onChange={(event) => setName(event.target.value)} />
+            <Button variant="outline" size="sm" onClick={() => setSaved(name)}>
+                Save order
+            </Button>
+            <Dropdown>
+                <DropdownTrigger render={<Button variant="outline" />}>
+                    Actions
+                </DropdownTrigger>
+                <DropdownContent>
+                    <DropdownItem onClick={() => setSaved('Archived')}>Archive</DropdownItem>
+                </DropdownContent>
+            </Dropdown>
+            <output>{saved}</output>
+        </Card>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('#order-name')).not.toBeNull());
+        const input = runtime.mount.querySelector<HTMLInputElement>('#order-name');
+
+        const save = Array.from(runtime.mount.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Save order'
         );
 
-        if (!unlock) throw new Error('Expected authored unlock action');
+        const actions = runtime.mount.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
+
+        if (!input || !save || !actions) throw new Error('Expected editable order controls');
+
         const user = userEvent.setup();
-        await user.click(trigger);
-        expect(trigger.getAttribute('aria-expanded')).toBe('false');
-        expect(runtime.mount.textContent).not.toContain('PO-871');
-        await user.click(unlock);
-        await user.click(trigger);
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
-        expect(runtime.mount.querySelector('[data-slot="collapsible-content"]')?.textContent).toBe('PO-871');
-        await user.click(trigger);
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
-        await vi.waitFor(() => expect(runtime.mount.textContent).not.toContain('PO-871'));
+        await user.clear(input);
+        await user.type(input, 'Purchase order');
+        await user.click(save);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Purchase order'));
+        await user.click(actions);
+        await vi.waitFor(() => expect(document.querySelector('[role="menuitem"]')).not.toBeNull());
+        const archive = document.querySelector<HTMLElement>('[role="menuitem"]');
+
+        if (!archive) throw new Error('Expected archive action');
+        await user.click(archive);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Archived'));
     } finally {
         runtime.close();
     }
 });
 
-it('returns native Calendar ranges to authored state without selecting disabled dates', async () => {
-    // DateInput's string adapter cannot replace range selection and native Date callbacks.
+it('sorts authored grid results and reports row actions', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        const [range, setRange] = useState(undefined);
+        const [selected, setSelected] = useState('');
+        const columns = useMemo(() => [{
+            header: 'Orders',
+            columns: [{
+                accessorKey: 'name',
+                header: ({ column }) => <DataGridColumnHeader column={column} title="Order" />
+            }]
+        }], []);
+        const table = useTable({
+            features: dataGridFeatures,
+            data: [{ name: 'Zebra' }, { name: 'Alpha' }],
+            columns
+        });
         return <>
-            <Calendar mode="range" defaultMonth={new Date(2026, 0, 1)}
-                selected={range} onSelect={setRange} disabled={new Date(2026, 0, 12)} />
-            <output>{range?.from?.getDate() ?? '-'}:{range?.to?.getDate() ?? '-'}</output>
+            <DataGrid table={table} recordCount={2}
+                onRowClick={(row) => setSelected(row.name)}>
+                <DataGridContainer>
+                    <DataGridTable />
+                </DataGridContainer>
+            </DataGrid>
+            <output>{selected}</output>
         </>;
     }`);
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="calendar"]')).not.toBeNull());
-        const start = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 10th"]');
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody tr')?.textContent).toBe('Zebra'));
+        const sort = runtime.mount.querySelector<HTMLButtonElement>('thead button');
 
-        if (!start) throw new Error('Expected January 10 range start');
+        if (!sort) throw new Error('Expected order sorting control');
         const user = userEvent.setup();
-        await user.click(start);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10'));
-        const disabled = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 12th"]');
+        await user.click(sort);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody tr')?.textContent).toBe('Alpha'));
+        const first = runtime.mount.querySelector<HTMLElement>('tbody tr');
 
-        if (!disabled) throw new Error('Expected disabled January 12');
-        expect(disabled.disabled).toBe(true);
-        await user.click(disabled);
-        expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10');
-        const end = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 14th"]');
-
-        if (!end) throw new Error('Expected January 14 range end');
-        await user.click(end);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:14'));
-        expect(runtime.mount.querySelector('button[data-range-middle="true"]')).not.toBeNull();
+        if (!first) throw new Error('Expected sorted order');
+        await user.click(first);
+        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Alpha'));
     } finally {
         runtime.close();
     }
 });
 
-it('exposes native Progress composition inside the isolated View runtime', async () => {
+it('updates labeled Progress values inside the isolated View runtime', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [value, setValue] = useState(25);
         return <>
-            <Progress value={value} max={50}>
-                <ProgressLabel>Storage</ProgressLabel>
-                <ProgressValue />
-            </Progress>
+            <Progress value={value} max={50} label="Storage" showValue />
+            <Progress value={value} max={50} label={<span>Usage</span>} valueText={<strong>{value + ' / 50'}</strong>} />
             <button type="button" onClick={() => setValue(40)}>Update</button>
         </>;
     }`);
@@ -455,6 +480,9 @@ it('exposes native Progress composition inside the isolated View runtime', async
         await vi.waitFor(() => expect(runtime.mount.querySelector('[role="progressbar"]')).not.toBeNull());
         const progress = runtime.mount.querySelector('[role="progressbar"]');
         expect(progress?.getAttribute('aria-valuenow')).toBe('25');
+        expect(runtime.mount.querySelector('#' + progress?.getAttribute('aria-labelledby'))?.textContent).toBe(
+            'Storage'
+        );
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('50%');
         const button = runtime.mount.querySelector('button');
 
@@ -462,6 +490,8 @@ it('exposes native Progress composition inside the isolated View runtime', async
         await userEvent.setup().click(button);
         await vi.waitFor(() => expect(progress?.getAttribute('aria-valuenow')).toBe('40'));
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('80%');
+        expect(runtime.mount.querySelectorAll('[data-slot="progress-value"]')[1]?.textContent).toBe('40 / 50');
+        expect(runtime.mount.querySelector('[data-slot="progress-value"] strong')?.textContent).toBe('40 / 50');
         runtime.send({ type: 'appearance', appearance: { theme: 'dark', accent: 'blue' } });
         expect(document.documentElement.dataset.theme).toBe('dark');
         expect(runtime.mount.querySelector('[role="progressbar"]')).toBe(progress);
@@ -475,22 +505,18 @@ it('uses composed menu actions to transition authored table results to empty and
         const [present, setPresent] = useState(true);
         const [open, setOpen] = useState(false);
         return <>
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-                <DropdownMenuTrigger>Order actions</DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setPresent(false)}>Remove order</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <Dropdown open={open} onOpenChange={setOpen}>
+                <DropdownTrigger>Order actions</DropdownTrigger>
+                <DropdownContent>
+                    <DropdownItem onClick={() => setPresent(false)}>Remove order</DropdownItem>
+                </DropdownContent>
+            </Dropdown>
             {present ? <Table aria-label="Orders">
                 <TableCaption>Open orders</TableCaption>
                 <TableHeader><TableRow><TableHead scope="col">Reference</TableHead></TableRow></TableHeader>
                 <TableBody><TableRow><TableCell>PO-871</TableCell></TableRow></TableBody>
-            </Table> : <Empty aria-label="Order results">
-                <EmptyHeader>
-                    <EmptyTitle>No orders</EmptyTitle>
-                    <EmptyDescription>The order was removed.</EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent><button type="button" onClick={() => setPresent(true)}>Restore order</button></EmptyContent>
+            </Table> : <Empty aria-label="Order results" title="No orders" description="The order was removed.">
+                <button type="button" onClick={() => setPresent(true)}>Restore order</button>
             </Empty>}
         </>;
     }`);
@@ -522,24 +548,14 @@ it('uses composed menu actions to transition authored table results to empty and
     }
 });
 
-it('submits native Select and Combobox compositions exported to authored JSX as selected form values', async () => {
+it('submits options-based Select and Combobox controls exported to authored JSX as selected form values', async () => {
     // Missing public exports or accidental adapter semantics must not break authored native form controls.
     const runtime = await initializeRuntime(`export default function View() {
         return <form>
-            <Select name="status" defaultValue="open">
-                <SelectTrigger aria-label="Status"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-            </Select>
-            <Combobox name="assignee" items={['Ada', 'Grace']} defaultValue="Ada">
-                <ComboboxInput aria-label="Assignee" />
-                <ComboboxContent>
-                    <ComboboxEmpty>No people</ComboboxEmpty>
-                    <ComboboxList>{person => <ComboboxItem key={person} value={person}>{person}</ComboboxItem>}</ComboboxList>
-                </ComboboxContent>
-            </Combobox>
+            <Select name="status" aria-label="Status" defaultValue="open"
+                options={[{ value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' }]} />
+            <Combobox name="assignee" aria-label="Assignee" defaultValue="Ada"
+                options={[{ value: 'Ada', label: 'Ada' }, { value: 'Grace', label: 'Grace' }]} />
         </form>;
     }`);
 
@@ -585,24 +601,20 @@ it('submits native Select and Combobox compositions exported to authored JSX as 
     }
 });
 
-it('edits and resets composed native text fields through the authored View boundary', async () => {
+it('edits and resets labeled text fields through the authored View boundary', async () => {
     // Native exports must preserve DOM events rather than substituting adapter string callbacks.
     const runtime = await initializeRuntime(`export default function View() {
         const [draft, setDraft] = useState('Initial');
-        return <form onReset={() => setDraft('Initial')}>
-            <Field>
-                <FieldLabel htmlFor="draft">Draft</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput id="draft" name="draft" value={draft}
-                        onChange={event => setDraft(event.currentTarget.value)} />
-                    <InputGroupAddon><InputGroupText>Text</InputGroupText></InputGroupAddon>
-                </InputGroup>
-            </Field>
+        return <Box width={draft === 'Initial' ? 320 : 480} background="outline" onResetCapture={() => setDraft('Initial')}>
+        <form>
+            <Input id="draft" name="draft" label="Draft" value={draft}
+                onChange={event => setDraft(event.currentTarget.value)} />
             <Textarea name="notes" aria-label="Notes" defaultValue="Original notes" />
             <Input name="excluded" defaultValue="Private" disabled />
             <output>{draft}</output>
             <button type="reset">Reset</button>
-        </form>;
+        </form>
+        </Box>;
     }`);
 
     try {
@@ -619,6 +631,8 @@ it('edits and resets composed native text fields through the authored View bound
         await user.clear(notes);
         await user.type(notes, 'New notes');
         expect(runtime.mount.querySelector('output')?.textContent).toBe('Edited');
+        expect(runtime.mount.querySelector<HTMLElement>('[data-slot="box"]')?.style.width).toBe('480px');
+        expect(runtime.mount.querySelector('#draft')).toBe(input);
         expect(new FormData(form).get('draft')).toBe('Edited');
         expect(new FormData(form).get('notes')).toBe('New notes');
         expect(new FormData(form).has('excluded')).toBe(false);
@@ -626,18 +640,16 @@ it('edits and resets composed native text fields through the authored View bound
         await vi.waitFor(() => expect(input.value).toBe('Initial'));
         expect(notes.value).toBe('Original notes');
         expect(runtime.mount.querySelector('output')?.textContent).toBe('Initial');
+        expect(runtime.mount.querySelector<HTMLElement>('[data-slot="box"]')?.style.width).toBe('320px');
     } finally {
         runtime.close();
     }
 });
 
-it('toggles and resets checkbox form data through the FieldLabel exposed to authored Views', async () => {
+it('toggles and resets checkbox form data through its owned label in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <form>
-            <FieldLabel>
-                <Checkbox name="approved" defaultChecked />
-                Approved
-            </FieldLabel>
+            <Checkbox name="approved" label="Approved" defaultChecked />
             <button type="reset">Reset</button>
         </form>;
     }`);
@@ -662,45 +674,11 @@ it('toggles and resets checkbox form data through the FieldLabel exposed to auth
     }
 });
 
-it('edits and resets native ReUI time picker values through the authored View boundary', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        return <form>
-            <FieldLabel htmlFor="native-time">Appointment</FieldLabel>
-            <TimePicker id="native-time" name="appointment" defaultValue="09:30" hourCycle={24}>
-                <TimePickerInput />
-                <TimePickerContent />
-            </TimePicker>
-            <button type="reset">Reset</button>
-        </form>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('#native-time')).not.toBeNull());
-        const form = runtime.mount.querySelector('form');
-        const input = runtime.mount.querySelector<HTMLInputElement>('#native-time');
-        const reset = runtime.mount.querySelector<HTMLButtonElement>('button[type="reset"]');
-
-        if (!form || !input || !reset) throw new Error('Expected the authored appointment form');
-
-        const user = userEvent.setup();
-
-        await user.clear(input);
-        await user.type(input, '10:15');
-        await user.tab();
-        expect(new FormData(form).getAll('appointment')).toEqual(['10:15']);
-        await user.click(reset);
-        await vi.waitFor(() => expect(new FormData(form).getAll('appointment')).toEqual(['09:30']));
-        expect(input.value).toBe('09:30');
-    } finally {
-        runtime.close();
-    }
-});
-
 it('keeps navigation and attachment downloads on distinct scoped capabilities in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <>
             <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
-            <AttachmentLink href="/api/report" download="report.pdf">Download report</AttachmentLink>
+            <Link href="/api/report" download="report.pdf">Download report</Link>
         </>;
     }`);
 
@@ -719,10 +697,10 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     };
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('a')).toHaveLength(2));
+        await vi.waitFor(() => expect(runtime.mount.querySelector('button')?.textContent).toBe('Download report'));
         const orders = runtime.mount.querySelector<HTMLAnchorElement>('a[aria-label="Orders"]');
 
-        const report = Array.from(runtime.mount.querySelectorAll('a')).find(
+        const report = Array.from(runtime.mount.querySelectorAll('button')).find(
             (anchor) => anchor.textContent === 'Download report'
         );
 
@@ -742,14 +720,14 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     }
 });
 
-it('controls the LongLink FramedDialog with public Buttons inside an authored View', async () => {
+it('controls an owned Dialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <FramedDialog title="Order details" open={open} onOpenChange={setOpen}>
+            <Dialog title="Order details" open={open} onOpenChange={setOpen}>
                 <p>Review the order</p>
-            </FramedDialog>
+            </Dialog>
         </>;
     }`);
 
@@ -767,7 +745,7 @@ it('controls the LongLink FramedDialog with public Buttons inside an authored Vi
         expect(document.getElementById(titleId ?? '')?.textContent).toBe('Order details');
         expect(dialog?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
 
-        const close = dialog?.querySelector<HTMLButtonElement>('[aria-label="Close dialog"]');
+        const close = dialog?.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
 
         if (!close) throw new Error('Expected dialog close button');
         await user.click(close);
@@ -776,6 +754,55 @@ it('controls the LongLink FramedDialog with public Buttons inside an authored Vi
     } finally {
         runtime.close();
     }
+});
+
+it('updates scrolled viewport geometry through the admitted port and releases nested fullscreen state', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <div style={{height: 6000}}>
+            <Dialog title="Order details" defaultOpen>
+                <Dialog title="Attachment" fullscreen trigger={<Button>Preview</Button>} />
+            </Dialog>
+        </div>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+
+        if (!dialog) throw new Error('Missing standard dialog');
+        const root = document.documentElement;
+        expect(root.hasAttribute('data-view-runtime')).toBe(true);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1200, bottom: 4200, height: 600 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1200px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('600px');
+
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+        const trigger = dialog.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
+
+        if (!trigger) throw new Error('Missing fullscreen trigger');
+        const user = userEvent.setup();
+        await user.click(trigger);
+        await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2));
+        expect(root.hasAttribute('data-view-fullscreen')).toBe(true);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 0, bottom: 0, height: 900 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('0px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('900px');
+        await user.keyboard('{Escape}');
+        await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1));
+        expect(root.hasAttribute('data-view-fullscreen')).toBe(false);
+        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
+        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
+        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+        expect(document.activeElement).toBe(trigger);
+    } finally {
+        runtime.close();
+    }
+
+    expect(document.documentElement.hasAttribute('data-view-runtime')).toBe(false);
+    expect(document.documentElement.hasAttribute('data-view-fullscreen')).toBe(false);
+    expect(document.documentElement.style.getPropertyValue('--view-viewport-top')).toBe('');
 });
 
 it('keeps evaluation diagnostics bounded and inert in the same Solution View region', async () => {

@@ -1,8 +1,6 @@
-import { DocumentationArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const article = {
@@ -22,29 +20,29 @@ export default function DocsArticleRoute() {
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Heading id="database" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="database">
                     Database
-                </Heading>
-                <Text as="p">
+                </h1>
+                <p>
                     Define your data with standard{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink>
+                    <Link href="https://sqlmodel.tiangolo.com/" className="underline" isExternalLink>
                         SQLModel
                     </Link>{' '}
                     models. The database session and connection are already available through{' '}
                     <InlineCode>ctx.database</InlineCode>, so you can work directly with your data without additional
                     setup.
-                </Text>
+                </p>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
-                    <Text className="font-semibold">Why?</Text>
-                    <Text as="p">
+                    <span className="font-semibold">Why?</span>
+                    <p>
                         The interface stays the same in every environment: an in-memory SQLite database for isolated
                         tests, a local dev.db file during development, and a solution-scoped schema in the
                         organization&apos;s database when deployed on the LongLink platform.
-                    </Text>
+                    </p>
                 </Stack>
-                <Heading id="example" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="example">
                     Example
-                </Heading>
+                </h2>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4
 from sqlmodel import Field, SQLModel
@@ -63,28 +61,28 @@ async def create_project(ctx: Context) -> None:
                 >
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Heading id="users-management" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="users-management">
                     Users management
-                </Heading>
-                <Text as="p">
+                </h2>
+                <p>
                     Each Solution owns a <InlineCode>users</InlineCode> table with each known user&apos;s ID, name,
                     email, avatar, and profile update timestamp. Authenticated requests refresh the requesting
                     user&apos;s profile before your route runs. Profiles remain at their last-seen values until the user
                     returns; this table is not an organization membership directory. Use <InlineCode>Audit</InlineCode>{' '}
                     for automatic attribution or
                     <InlineCode>UserRelationship()</InlineCode> to add a named user relationship.
-                </Text>
-                <Text as="p">
+                </p>
+                <p>
                     <InlineCode>Audit</InlineCode> adds creation, update, and deletion timestamps; matching Platform
                     user IDs; and relationships to local users. Use it only for tables that need this history.
-                </Text>
-                <Text as="p">
+                </p>
+                <p>
                     <InlineCode>UserRelationship()</InlineCode> gives <InlineCode>owner</InlineCode> its own required
                     foreign key to the local user table. Use <InlineCode>Model</InlineCode> instead of{' '}
                     <InlineCode>Audit</InlineCode> if you do not need audit history. Annotate a relationship as{' '}
                     <InlineCode>User | None</InlineCode> for an optional role, such as an invoice approver; its
                     generated foreign key defaults to null.
-                </Text>
+                </p>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4
 from sqlmodel import Field
@@ -114,10 +112,10 @@ async def create_project(ctx: Context, owner: User) -> Project:
                 >
                     <CodeBlockCopyButton />
                 </CodeBlock>
-                <Heading id="migrations" level={2}>
+                <h2 className="font-semibold tracking-tight text-3xl" id="migrations">
                     Migrations
-                </Heading>
-                <Text as="p">After you add or change database models, run migrations to keep the schema aligned:</Text>
+                </h2>
+                <p>After you add or change database models, run migrations to keep the schema aligned:</p>
                 <CodeBlock code="uv run longlink migrate" language="bash">
                     <CodeBlockCopyButton />
                 </CodeBlock>

@@ -1,9 +1,8 @@
 import ViewLayout from './view-layout';
 import { useLocation, useNavigate } from 'react-router';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/custom/menu';
+import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/longlink/layout/menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {
@@ -12,57 +11,17 @@ export default function MenuPage() {
         <ViewLayout
             name="Menu"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description: 'MenuSection elements defining navigation and content.'
-                },
-                { name: 'gap', type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10' },
-                {
-                    name: 'MenuSection.children',
-                    type: 'ReactNode',
-                    description: 'MenuItem elements or nested MenuSubSection groups.'
-                },
-                {
-                    name: 'MenuSection.isHeaderHidden',
-                    type: 'boolean',
-                    description: 'Hides the section heading; visible by default.'
-                },
-                {
-                    name: 'MenuSection.title',
-                    type: 'string',
-                    description: 'Section heading displayed in the navigation.'
-                },
-                {
-                    name: 'MenuItem.children',
-                    type: 'ReactNode',
-                    description: 'Content mounted beside the navigation while this item is selected.'
-                },
-                {
-                    name: 'MenuItem.icon',
-                    type: 'IconName',
-                    description: 'Optional Lucide icon name displayed beside the label.'
-                },
-                {
-                    name: 'MenuItem.label',
-                    type: 'string',
-                    description: "Navigation label; its lowercase, hyphenated form identifies the item's URL fragment."
-                },
-                {
-                    name: 'MenuSubSection.children',
-                    type: 'ReactNode',
-                    description: 'MenuItem elements nested inside this collapsible group.'
-                },
-                {
-                    name: 'MenuSubSection.icon',
-                    type: 'IconName',
-                    description: 'Optional Lucide icon name displayed beside the group label.'
-                },
-                {
-                    name: 'MenuSubSection.label',
-                    type: 'string',
-                    description: 'Label displayed on the collapsible navigation group.'
-                }
+                { name: 'children', type: 'ReactNode' },
+                { name: 'gap', type: 'number' },
+                { name: 'MenuSection.children', type: 'ReactNode' },
+                { name: 'MenuSection.isHeaderHidden', type: 'boolean' },
+                { name: 'MenuSection.title', type: 'string' },
+                { name: 'MenuItem.children', type: 'ReactNode' },
+                { name: 'MenuItem.icon', type: 'IconName' },
+                { name: 'MenuItem.label', type: 'string' },
+                { name: 'MenuSubSection.children', type: 'ReactNode' },
+                { name: 'MenuSubSection.icon', type: 'IconName' },
+                { name: 'MenuSubSection.label', type: 'string' }
             ]}
             example={{
                 title: 'Menu',
@@ -120,22 +79,22 @@ function MenuExample() {
                 <Menu>
                     <MenuSection title="Settings">
                         <MenuItem label="Profile" icon="user-round">
-                            <Text>Profile settings</Text>
+                            <span>Profile settings</span>
                         </MenuItem>
                         <MenuSubSection label="Workflow" icon="wrench">
                             <MenuItem label="Automation" icon="refresh-cw">
-                                <Text>Automation settings</Text>
+                                <span>Automation settings</span>
                             </MenuItem>
                             <MenuItem label="Schedule" icon="calendar">
-                                <Text>Schedule settings</Text>
+                                <span>Schedule settings</span>
                             </MenuItem>
                         </MenuSubSection>
                         <MenuSubSection label="Workspace" icon="building-complex">
                             <MenuItem label="Members" icon="users">
-                                <Text>Workspace members</Text>
+                                <span>Workspace members</span>
                             </MenuItem>
                             <MenuItem label="Data" icon="database">
-                                <Text>Workspace data</Text>
+                                <span>Workspace data</span>
                             </MenuItem>
                         </MenuSubSection>
                     </MenuSection>

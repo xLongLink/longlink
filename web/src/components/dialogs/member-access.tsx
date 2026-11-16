@@ -1,40 +1,97 @@
-import { FramedDialog } from '@/components/custom/framed-dialog';
-import { NativeText as Text } from '@/components/custom/native-text';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeButton as Button } from '@/components/custom/native-button';
+import { useApiError } from '@/lib/errors';
+import { useRef, useTransition } from 'react';
+import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from '@/components/shadcn/alert-dialog';
 
 export function MemberAccess({
     name,
     action,
-    onClose,
-    onConfirm
-}: {
+    onOpenChange,
+    onConfirm,
+    ...dialogProps
+}: { open: boolean; onOpenChange: (open: boolean) => void } & {
     name: string;
     action: { kind: 'role'; role: string } | { kind: 'remove' };
-    onClose: () => void;
     onConfirm: () => Promise<void>;
 }) {
+    const reportError = useApiError();
+    const inFlight = useRef(false);
+    const [pending, startConfirmation] = useTransition();
+
+    const footer = (
+        <>
+            <Button
+                type="button"
+                variant="outline"
+                disabled={pending && action.kind === 'remove'}
+                onClick={() => onOpenChange(false)}
+            >
+                Cancel
+            </Button>
+            <Button
+                type="button"
+                variant={action.kind === 'remove' ? 'destructive' : 'primary'}
+                disabled={pending}
+                aria-busy={pending || undefined}
+                onClick={() => {
+                    // Guard immediate repeated clicks before pending state renders.
+                    if (inFlight.current) return;
+                    inFlight.current = true;
+                    startConfirmation(async () => {
+                        try {
+                            await onConfirm();
+                        } catch (cause) {
+                            reportError(cause);
+                        } finally {
+                            inFlight.current = false;
+                        }
+                    });
+                }}
+            >
+                {action.kind === 'remove' ? 'Remove member' : 'Confirm'}
+            </Button>
+            <span role="status" className="sr-only">
+                {pending ? 'Loading' : ''}
+            </span>
+        </>
+    );
+
+    if (action.kind === 'remove') {
+        return (
+            <AlertDialog
+                {...dialogProps}
+                onOpenChange={(open) => {
+                    if (!pending && !inFlight.current) onOpenChange(open);
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remove member</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Remove {name} from this organization? Access is revoked immediately.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>{footer}</AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        );
+    }
+
     return (
-        <FramedDialog
-            open
-            title={action.kind === 'remove' ? 'Remove member' : 'Change role'}
-            onOpenChange={(open) => !open && onClose()}
-        >
-            <Stack gap={3}>
-                <Text className="text-muted-foreground">
-                    {action.kind === 'remove'
-                        ? `Remove ${name} from this organization? Access is revoked immediately.`
-                        : `Change ${name} to ${action.role}?`}
-                </Text>
-                <Stack direction="horizontal" gap={2} justify="end">
-                    <Button label="Cancel" variant="ghost" onClick={onClose} />
-                    <Button
-                        label={action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                        variant={action.kind === 'remove' ? 'destructive' : 'default'}
-                        clickAction={onConfirm}
-                    />
-                </Stack>
-            </Stack>
-        </FramedDialog>
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Change role"
+            description={`Change ${name} to ${action.role}?`}
+            footer={footer}
+        />
     );
 }

@@ -6,13 +6,11 @@ import { ProfileMenu } from '@/components/ui/profile';
 import * as permissions from '@/platform/permissions';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
+import { Empty } from '@/components/longlink/display/empty';
 import { SolutionPage } from '@/components/ui/solution-page';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/shadcn/empty';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -62,14 +60,7 @@ export default function OrganizationSolution() {
     if (deploymentNotice) {
         const notice = (
             <div role="alert">
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyTitle>
-                            <h1>{deploymentNotice.title}</h1>
-                        </EmptyTitle>
-                        <EmptyDescription>{deploymentNotice.description}</EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
+                <Empty title={<h1>{deploymentNotice.title}</h1>} description={deploymentNotice.description} />
             </div>
         );
 
@@ -82,7 +73,7 @@ export default function OrganizationSolution() {
                     <Stack gap={6} maxWidth={1200} width="100%">
                         {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
-                                fallback={<Text className="text-muted-foreground">Loading pod logs…</Text>}
+                                fallback={<span className="text-muted-foreground">Loading pod logs…</span>}
                                 fallbackRender={() => notice}
                             >
                                 <DeploymentLogs key={solutionAccess.id} solutionId={solutionAccess.id} />
@@ -114,7 +105,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
 
     return (
         <Stack gap={2}>
-            <Heading level={1}>Solution deployment has failed</Heading>
+            <h1 className="font-semibold tracking-tight text-4xl">Solution deployment has failed</h1>
             {logs.length ? (
                 <CodeBlock code={logs.join('\n')} showLineNumbers>
                     <CodeBlockCopyButton />
@@ -123,7 +114,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
                     </div>
                 </CodeBlock>
             ) : (
-                <Text className="text-muted-foreground">No pod logs are available for this deployment.</Text>
+                <span className="text-muted-foreground">No pod logs are available for this deployment.</span>
             )}
         </Stack>
     );

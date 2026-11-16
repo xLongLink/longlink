@@ -82,15 +82,14 @@ describe('SolutionPage', () => {
 
         stubFetch(() => pending);
         const output = await renderPage('/home');
-        const progress = output.querySelector('[role="progressbar"]');
-        const labelId = progress?.getAttribute('aria-labelledby');
+        const progress = output.querySelector('[data-slot="spinner"]');
 
         expect(progress).not.toBeNull();
-        expect(output.querySelector(`[id="${labelId}"]`)?.textContent).toBe('Loading');
+        expect(progress?.getAttribute('aria-label')).toBe('Loading');
         expect(output.querySelector('iframe')).toBeNull();
         await act(async () => finish(Response.json({ detail: 'Unavailable' }, { status: 503 })));
         await vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe('Unable to load this solution'));
-        expect(output.querySelector('[role="progressbar"]')).toBeNull();
+        expect(output.querySelector('[data-slot="spinner"]')).toBeNull();
         expect(output.querySelector('iframe')).toBeNull();
     });
 

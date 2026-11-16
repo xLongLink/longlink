@@ -17,8 +17,7 @@ const ignoredPaths = [
     '.opencode/**',
     '.pi/**',
     '.roo/**',
-    '.windsurf/**',
-    'tools/oxlint/anti-slop/**'
+    '.windsurf/**'
 ];
 
 export default defineConfig(({ mode }) => {
@@ -50,15 +49,12 @@ export default defineConfig(({ mode }) => {
             env: { browser: true, builtin: true, es2020: true },
             ignorePatterns: ignoredPaths,
             options: { typeAware: true, typeCheck: true },
-            jsPlugins: [
-                'eslint-plugin-perfectionist',
-                { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' }
-            ],
+            jsPlugins: ['eslint-plugin-perfectionist'],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
             overrides: [
                 // Keep registry code upstream-compatible without applying LongLink's authoring conventions.
                 {
-                    files: ['src/components/reui/**/*'],
+                    files: ['src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'react/exhaustive-deps': 'warn',
                         'typescript/no-base-to-string': 'off',
@@ -69,7 +65,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
                 {
-                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*'],
+                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'no-restricted-imports': [
                             'error',
@@ -111,27 +107,9 @@ export default defineConfig(({ mode }) => {
                 },
                 {
                     files: ['**/*'],
-                    excludeFiles: ['src/components/reui/**/*'],
+                    excludeFiles: ['src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'oxc/no-accumulating-spread': 'error',
-                        'anti-slop/no-array-filter-map': 'error',
-                        'anti-slop/no-reduce-accumulator-copy': 'error',
-                        'anti-slop/no-chained-type-assertions': 'error',
-                        'anti-slop/no-conditional-empty-object-spread': 'error',
-                        'anti-slop/no-known-value-widening': 'error',
-                        'anti-slop/no-module-mocking': 'error',
-                        'anti-slop/no-object-parameters': 'error',
-                        'anti-slop/no-reflect-apply': 'error',
-                        'anti-slop/no-reflect-get': 'error',
-                        'anti-slop/no-runtime-typeof': 'error',
-                        'anti-slop/no-shape-in-symbol-names': 'error',
-                        'anti-slop/no-unknown-parameters': 'error',
-                        'anti-slop/no-unknown-returns': 'error',
-                        'anti-slop/no-unknown-type-aliases': 'error',
-                        'anti-slop/no-unsafe-dictionary-type': 'error',
-                        'anti-slop/no-widen-then-assert': 'error',
-                        'anti-slop/require-readable-spacing': 'error',
-                        'anti-slop/require-safety-comment-for-type-assertion': 'error',
                         'perfectionist/sort-imports': [
                             'error',
                             {

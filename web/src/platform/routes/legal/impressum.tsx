@@ -1,9 +1,7 @@
 import { legalPaths } from '@/platform/publications';
 import { PublicArticle } from '@/components/layouts/article';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
 
 const article = {
     description: 'Read the LongLink legal notice and company information.',
@@ -23,29 +21,29 @@ export default function Impressum() {
     return (
         <PublicArticle article={article} paths={legalPaths}>
             <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:tracking-wide" gap={5}>
-                <Heading id="impressum" level={1}>
+                <h1 className="font-semibold tracking-tight text-4xl" id="impressum">
                     Impressum
-                </Heading>
+                </h1>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="company" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="company">
                         Company
-                    </Heading>
-                    <Text as="p">LongLink SAGL</Text>
-                    <Text as="p">Company registration number (UID): CHE-150.642.313</Text>
-                    <Text as="p">Legal form: Limited liability company (Sagl)</Text>
+                    </h2>
+                    <p>LongLink SAGL</p>
+                    <p>Company registration number (UID): CHE-150.642.313</p>
+                    <p>Legal form: Limited liability company (Sagl)</p>
                 </Stack>
 
                 <Stack as="section" gap={3}>
-                    <Heading id="contact" level={2}>
+                    <h2 className="font-semibold tracking-tight text-3xl" id="contact">
                         Contact
-                    </Heading>
-                    <Text as="p">
+                    </h2>
+                    <p>
                         Email:{' '}
-                        <Link href="mailto:info@longlink.dev" hasUnderline>
+                        <Link href="mailto:info@longlink.dev" className="underline">
                             info@longlink.dev
                         </Link>
-                    </Text>
+                    </p>
                 </Stack>
             </Stack>
         </PublicArticle>

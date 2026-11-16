@@ -1,16 +1,16 @@
+import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
-import { Circle, ExternalLink } from 'lucide-react';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
-import { DocumentationArticle } from '@/components/layouts/article';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
+import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 type ViewProperty = { name: string; type: string; description?: string };
 
@@ -46,7 +46,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     data-code={showCode || undefined}
                 >
                     <Stack
-                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0'}
+                        className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0!'}
                         align="center"
                         aria-label={`${example.title} preview`}
                     >
@@ -89,6 +89,14 @@ export default function ViewLayout({
     if (!component) throw new Error(`Missing View documentation: ${name}`);
     const runtime = component.category === 'Runtime';
 
+    // Read published defaults without duplicating component configuration in each documentation page.
+    const defaults = new Map(
+        (viewCatalog.components.find((entry) => entry.name === name)?.properties ?? []).map((property) => [
+            property.name,
+            'default' in property ? property.default : undefined
+        ])
+    );
+
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
 
@@ -123,30 +131,14 @@ export default function ViewLayout({
     return (
         <DocumentationArticle article={article}>
             <Stack gap={5}>
-                <Stack gap={0}>
-                    <Heading id="introduction" level={1}>
-                        {component.label}
-                    </Heading>
-                    {!runtime && (
-                        <Text as="p" className="text-xs text-muted-foreground">
-                            {component.reference ? (
-                                <a
-                                    href={component.reference}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 underline underline-offset-4"
-                                >
-                                    {component.sourceLabel}
-                                    <ExternalLink className="size-3" aria-hidden="true" />
-                                    <span className="sr-only"> (opens in a new tab)</span>
-                                </a>
-                            ) : (
-                                `${component.sourceLabel}: ${component.justification}`
-                            )}
-                        </Text>
-                    )}
-                </Stack>
-                <CodeBlock code={`longlink docs component ${name}`} language="bash" wrap>
+                <h1 className="font-semibold tracking-tight text-4xl" id="introduction">
+                    {component.label}
+                </h1>
+                <CodeBlock
+                    code={`longlink docs component ${component.category === 'Hooks' ? 'Hooks' : name}`}
+                    language="bash"
+                    wrap
+                >
                     <CodeBlockCopyButton />
                 </CodeBlock>
                 {runtime ? (
@@ -157,40 +149,54 @@ export default function ViewLayout({
                             <TabsTrigger value="example">Example</TabsTrigger>
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="example">
+                        <TabsContent value="example" className="flex min-w-0 flex-col gap-5">
                             {example ? (
                                 <ExampleWindow key={name} example={example} />
+                            ) : children ? (
+                                children
                             ) : (
-                                <Text as="p">No standalone example is available for this component.</Text>
+                                <p>No standalone example is available for this component.</p>
                             )}
                         </TabsContent>
-                        <TabsContent
-                            value="properties"
-                            className="flex flex-col gap-5 [&_td]:border-border/40 [&_td]:py-1 [&_th]:border-border/40"
-                        >
-                            {[...groups].map(([name, properties]) => (
-                                <DataTable
-                                    key={name}
-                                    data={properties}
-                                    density="compact"
-                                    hasHover={false}
-                                    isStriped={false}
-                                    columns={[
-                                        {
-                                            key: 'name',
-                                            header: `${name} - Properties`,
-                                            width: proportional(1),
-                                            renderCell: (property) => (
-                                                <Stack gap={0}>
-                                                    <Text>{property.name}</Text>
-                                                    <Text className="text-xs text-muted-foreground">
-                                                        {property.description}
-                                                    </Text>
-                                                </Stack>
-                                            )
-                                        }
-                                    ]}
-                                />
+                        <TabsContent value="properties" className="flex flex-col gap-5">
+                            {[...groups].map(([group, properties]) => (
+                                <div key={group} className="flex flex-col gap-3">
+                                    {groups.size > 1 && <h3 className="text-sm font-medium">{group}</h3>}
+                                    <Table aria-label={`${group} properties`} wrap>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead scope="col">Prop</TableHead>
+                                                <TableHead scope="col">Type</TableHead>
+                                                <TableHead scope="col">Default</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {properties.map((row) => {
+                                                const defaultValue = defaults.get(
+                                                    group === name ? row.name : `${group}.${row.name}`
+                                                );
+
+                                                return (
+                                                    <TableRow key={row.name}>
+                                                        <TableCell>
+                                                            <InlineCode>{row.name}</InlineCode>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <InlineCode>{row.type}</InlineCode>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {defaultValue === undefined ? (
+                                                                '-'
+                                                            ) : (
+                                                                <InlineCode>{JSON.stringify(defaultValue)}</InlineCode>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             ))}
                         </TabsContent>
                     </Tabs>

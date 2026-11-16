@@ -4,16 +4,13 @@ import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
 import { TagForm } from '@/components/dialogs/tag-form';
+import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { Button as MenuTriggerButton } from '@/components/shadcn/button';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,93 +45,102 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         <>
             <Stack gap={3}>
                 <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <Heading level={4} accessibilityLevel={3}>
+                    <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                         Tabs
-                    </Heading>
-                    {canMaintain && <Button label="New tab" size="sm" onClick={() => setAction({ kind: 'create' })} />}
+                    </h4>
+                    {canMaintain && (
+                        <Button size="sm" onClick={() => setAction({ kind: 'create' })}>
+                            New tab
+                        </Button>
+                    )}
                 </Stack>
-                <DataTable
-                    data={tags}
-                    idKey="id"
-                    density="compact"
-                    columns={[
-                        {
-                            key: 'name',
-                            header: 'Tab',
-                            width: proportional(1),
-                            renderCell: (tab) => {
-                                const Icon = tabs.icons[tab.icon].component;
+                <Table wrap>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Tab</TableHead>
+                            {canMaintain && <TableHead align="end">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {tags.map((row) => {
+                            const Icon = tabs.icons[row.icon].component;
 
-                                return (
-                                    <Stack direction="horizontal" gap={2} align="center">
-                                        <Icon className="size-4" aria-hidden="true" />
-                                        <Text>{tab.name}</Text>
-                                    </Stack>
-                                );
-                            }
-                        },
-                        ...(canMaintain
-                            ? [
-                                  {
-                                      key: 'id',
-                                      header: 'Actions',
-                                      align: 'end' as const,
-                                      renderCell: (tag: Tag) => (
-                                          <DropdownMenu>
-                                              <DropdownMenuTrigger
-                                                  render={
-                                                      <MenuTriggerButton
-                                                          type="button"
-                                                          variant="ghost"
-                                                          size="icon-sm"
-                                                          aria-label={`Actions for ${tag.name}`}
-                                                          disabled={move.isPending}
-                                                      >
-                                                          <Ellipsis aria-hidden="true" />
-                                                      </MenuTriggerButton>
-                                                  }
-                                              />
-                                              <DropdownMenuContent align="end">
-                                                  <DropdownMenuItem onClick={() => setAction({ kind: 'edit', tag })}>
-                                                      <Pencil aria-hidden="true" />
-                                                      Edit
-                                                  </DropdownMenuItem>
-                                                  <DropdownMenuItem
-                                                      disabled={tags[0]?.id === tag.id}
-                                                      onClick={() => move.mutate({ tag, direction: 'up' })}
-                                                  >
-                                                      <ArrowUp aria-hidden="true" />
-                                                      Move Up
-                                                  </DropdownMenuItem>
-                                                  <DropdownMenuItem
-                                                      disabled={tags[tags.length - 1]?.id === tag.id}
-                                                      onClick={() => move.mutate({ tag, direction: 'down' })}
-                                                  >
-                                                      <ArrowDown aria-hidden="true" />
-                                                      Move Down
-                                                  </DropdownMenuItem>
-                                                  <DropdownMenuItem
-                                                      variant="destructive"
-                                                      onClick={() => setAction({ kind: 'delete', tag })}
-                                                  >
-                                                      <Trash aria-hidden="true" />
-                                                      Delete
-                                                  </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                          </DropdownMenu>
-                                      )
-                                  }
-                              ]
-                            : [])
-                    ]}
-                />
+                            return (
+                                <TableRow key={row.id}>
+                                    <TableCell>
+                                        <Stack direction="horizontal" gap={2} align="center">
+                                            <Icon className="size-4" aria-hidden="true" />
+                                            <span>{row.name}</span>
+                                        </Stack>
+                                    </TableCell>
+                                    {canMaintain && (
+                                        <TableCell align="end">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger
+                                                    render={
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            aria-label={`Actions for ${row.name}`}
+                                                            disabled={move.isPending}
+                                                        >
+                                                            <Ellipsis aria-hidden="true" />
+                                                        </Button>
+                                                    }
+                                                />
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem
+                                                        onClick={() => setAction({ kind: 'edit', tag: row })}
+                                                    >
+                                                        <Pencil aria-hidden="true" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={tags[0]?.id === row.id}
+                                                        onClick={() => move.mutate({ tag: row, direction: 'up' })}
+                                                    >
+                                                        <ArrowUp aria-hidden="true" />
+                                                        Move Up
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        disabled={tags[tags.length - 1]?.id === row.id}
+                                                        onClick={() => move.mutate({ tag: row, direction: 'down' })}
+                                                    >
+                                                        <ArrowDown aria-hidden="true" />
+                                                        Move Down
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        variant="destructive"
+                                                        onClick={() => setAction({ kind: 'delete', tag: row })}
+                                                    >
+                                                        <Trash aria-hidden="true" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            );
+                        })}
+                        {tags.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={canMaintain ? 2 : 1} align="center">
+                                    <Empty role="status" title="No data" />
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </Stack>
             {action && action.kind !== 'delete' && (
                 <TagForm
+                    open
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
                     tag={action.kind === 'create' ? null : action.tag}
-                    onCancel={() => setAction(null)}
+                    onOpenChange={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
                         await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
@@ -168,3 +174,4 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         </>
     );
 }
+import { Empty } from '@/components/longlink/display/empty';

@@ -1,8 +1,6 @@
 import ViewLayout from './view-layout';
-import { NativeText as Text } from '@/components/custom/native-text';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DataTable, proportional } from '@/components/custom/data-table';
-import { NativeHeading as Heading } from '@/components/custom/native-heading';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [
@@ -23,27 +21,28 @@ export default function FunctionsPage() {
     // Render the runtime-specific functions table.
     return (
         <ViewLayout name="Functions" toc={[{ id: 'functions', label: 'Functions', level: 2 }]}>
-            <Heading id="functions" level={2}>
+            <h2 className="font-semibold tracking-tight text-3xl" id="functions">
                 Functions
-            </Heading>
-            <DataTable
-                data={functions}
-                idKey="name"
-                density="compact"
-                columns={[
-                    {
-                        key: 'name',
-                        header: 'Function',
-                        width: proportional(1),
-                        renderCell: (functionEntry) => (
-                            <Stack gap={0}>
-                                <Text>{functionEntry.name}</Text>
-                                <Text className="text-xs text-muted-foreground">{functionEntry.description}</Text>
-                            </Stack>
-                        )
-                    }
-                ]}
-            />
+            </h2>
+            <Table wrap>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Function</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {functions.map((row) => (
+                        <TableRow key={row.name}>
+                            <TableCell>
+                                <Stack gap={0}>
+                                    <span>{row.name}</span>
+                                    <span className="text-xs text-muted-foreground">{row.description}</span>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </ViewLayout>
     );
 }

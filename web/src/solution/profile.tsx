@@ -1,10 +1,10 @@
 import { SidebarContext } from '@/lib/sidebar';
 import { Separator } from '@/components/shadcn/separator';
+import { Avatar } from '@/components/longlink/display/avatar';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
-import { GeneratedAvatar } from '@/components/custom/generated-avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
 
@@ -33,7 +33,7 @@ export function DevelopmentProfile() {
                 }
                 aria-label={user.name}
             >
-                <GeneratedAvatar name={user.name} seed={user.id} size="sm" />
+                <Avatar name={user.name} size="sm" />
                 {sidebar === 'expanded' && (
                     <>
                         <span className="flex min-w-0 flex-1 flex-col">
@@ -68,7 +68,7 @@ export function DevelopmentProfile() {
                                 window.location.reload();
                             }}
                         >
-                            <GeneratedAvatar name={candidate.user.name} seed={candidate.user.id} size="sm" />
+                            <Avatar name={candidate.user.name} size="sm" />
                             <span className="flex min-w-0 flex-1 flex-col">
                                 <span className="truncate text-sm leading-4">{candidate.user.name}</span>
                                 <span className="truncate text-xs leading-4 text-muted-foreground">

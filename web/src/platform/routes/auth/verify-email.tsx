@@ -11,11 +11,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeText as Text } from '@/components/custom/native-text';
+import { NativeNavigationLink } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeButton as Button } from '@/components/custom/native-button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -68,7 +68,10 @@ export default function VerifyEmail() {
         // Validate the email claim only while verification is still active.
         if (signal.aborted) return;
 
-        return { status: 'verified', data: zEmailPayload.parse(value) };
+        const data = zEmailPayload.parse(value);
+        sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
+
+        return { status: 'verified', data };
     }
 
     const { verification, startVerification } = useVerification(token, verify);
@@ -93,7 +96,6 @@ export default function VerifyEmail() {
         // Refresh the persistent identity observer after replacing the previous session.
         await clearSessionQueries(queryClient);
         await refetch();
-        sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
         void navigate('/user/organizations', { replace: true });
     }
 
@@ -109,7 +111,9 @@ export default function VerifyEmail() {
             <AuthLayout title="Verify your email" description="Request a new registration link to continue.">
                 {pageMetadata}
                 <Stack gap={3}>
-                    <Button href={recoveryRegisterHref} label="Request a new registration link" />
+                    <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                        Request a new registration link
+                    </NativeNavigationLink>
                 </Stack>
             </AuthLayout>
         );
@@ -120,7 +124,9 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Verify your email" description="Verifying your email...">
                 {pageMetadata}
-                <Button isLoading label="Verifying your email..." variant="default" />
+                <Button disabled aria-busy="true">
+                    Verifying your email...
+                </Button>
             </AuthLayout>
         );
     }
@@ -130,7 +136,9 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}
-                <Button href={recoveryRegisterHref} label="Request a new registration link" />
+                <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                    Request a new registration link
+                </NativeNavigationLink>
             </AuthLayout>
         );
     }
@@ -138,7 +146,7 @@ export default function VerifyEmail() {
     return (
         <AuthLayout
             description={null}
-            title={<Text className="text-2xl block text-nowrap text-center">Welcome to LongLink</Text>}
+            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
         >
             {pageMetadata}
             <Stack gap={3}>
@@ -146,7 +154,7 @@ export default function VerifyEmail() {
                 <form noValidate action={() => form.handleSubmit(handleComplete)()}>
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-col gap-1">
-                            <Text className="text-sm font-medium">Name</Text>
+                            <span className="text-sm font-medium">Name</span>
                             <TextField
                                 control={form.control}
                                 name="name"
@@ -157,7 +165,7 @@ export default function VerifyEmail() {
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <Text className="text-sm font-medium">Password</Text>
+                            <span className="text-sm font-medium">Password</span>
                             <TextField
                                 control={form.control}
                                 name="password"
@@ -168,21 +176,23 @@ export default function VerifyEmail() {
                                 type="password"
                             />
                         </div>
-                        <Button className="w-full" label="Create account" type="submit" variant="default" />
+                        <Button className="w-full" type="submit">
+                            Create account
+                        </Button>
                     </div>
                 </form>
                 <Separator />
-                <Text as="p" className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground">
                     By continuing, you agree to our <br />
-                    <Link href="/terms/" hasUnderline>
+                    <Link href="/terms/" className="underline">
                         Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy/" hasUnderline>
+                    <Link href="/privacy/" className="underline">
                         Privacy Policy
                     </Link>
                     .
-                </Text>
+                </p>
             </Stack>
         </AuthLayout>
     );

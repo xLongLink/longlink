@@ -12,5 +12,5 @@
         "lib": "@/lib",
         "hooks": "@/lib/hooks"
     },
-    "registries": { "@reui": "https://reui.io/r/{style}/{name}.json" }
+    "registries": { "@reui": "https://reui.io/r/{style}/{name}.json", "@mapcn": "https://www.mapcn.dev/r/{name}.json" }
 }

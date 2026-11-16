@@ -8,12 +8,13 @@ import ts from 'typescript';
 
 test('published component provenance matches the implementation exposed to Views', async () => {
     const root = fileURLToPath(new URL('../', import.meta.url));
-    const entry = path.join(root, 'src/views/components.ts');
+    const entry = path.join(root, 'src/components/longlink/index.ts');
+    const viewEntry = path.join(root, 'src/views/index.ts');
     const config = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
     const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
-    const program = ts.createProgram([entry], parsed.options);
+    const program = ts.createProgram([entry, viewEntry], parsed.options);
     const checker = program.getTypeChecker();
-    const source = program.getSourceFile(entry);
+    const source = program.getSourceFile(viewEntry);
     const exports = new Map(
         checker.getExportsOfModule(checker.getSymbolAtLocation(source)).map((symbol) => [symbol.name, symbol])
     );
@@ -21,17 +22,57 @@ test('published component provenance matches the implementation exposed to Views
         await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
     );
 
+    // Keep runtime providers outside the authored component registry.
+    for (const statement of source.statements) {
+        assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
+        const target = statement.moduleSpecifier.text;
+        assert.match(target, /^(?:@\/components\/longlink|react|zod|@hookform\/resolvers\/zod|\.\/hooks\/[^/]+)$/);
+        if (target.startsWith('./hooks/') && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+            for (const specifier of statement.exportClause.elements) {
+                if (!statement.isTypeOnly && !specifier.isTypeOnly) {
+                    assert.match(specifier.name.text, /^use[A-Z]/);
+                }
+            }
+        }
+    }
+
+    // Runtime and SDK declarations share the same public component entry point.
+    const frontend = ts.createSourceFile(
+        'frontend.ts',
+        await readFile(path.join(root, 'scripts/frontend.ts'), 'utf8'),
+        ts.ScriptTarget.Latest,
+        true
+    );
+    for (const statement of frontend.statements.filter(ts.isExportDeclaration)) {
+        assert.match(statement.moduleSpecifier?.text ?? '', /^(?:zod|\.\.\/src\/(?:components\/longlink|views\/hooks\/[^/]+))$/);
+    }
+
     // Resolve actual TypeScript aliases so a custom wrapper cannot masquerade as a native component.
     for (const component of catalog.components.filter((component) => component.category !== 'Runtime')) {
         const symbol = exports.get(component.name);
         assert.ok(symbol, `${component.name} is documented but not exposed to Views.`);
-        const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        let implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        const declaration = implementation.declarations?.[0];
+        if (
+            declaration &&
+            ts.isVariableDeclaration(declaration) &&
+            declaration.getSourceFile().fileName.includes('/components/longlink/')
+        ) {
+            const initializer = declaration.initializer;
+            assert.ok(
+                initializer && (ts.isPropertyAccessExpression(initializer) || ts.isIdentifier(initializer)),
+                `${component.name} must retain its implementation.`
+            );
+            const original = checker.getSymbolAtLocation(initializer);
+            assert.ok(original);
+            implementation = original.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(original) : original;
+        }
         const filename = implementation.declarations?.[0]?.getSourceFile().fileName;
         assert.ok(
-            component.source === 'recharts'
-                ? filename?.includes('/node_modules/recharts/')
+                component.source === 'recharts' || component.source === 'react-hook-form'
+                    ? filename?.includes(`/node_modules/${component.source}/`)
                 : component.source === 'custom'
-                  ? filename?.includes('/components/custom/') || filename?.includes('/components/dialogs/')
+                  ? filename?.includes('/components/custom/') || filename?.includes('/components/longlink/') || filename?.includes('/components/dialogs/')
                 : filename?.includes(`/components/${component.source}/`),
             `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
         );
