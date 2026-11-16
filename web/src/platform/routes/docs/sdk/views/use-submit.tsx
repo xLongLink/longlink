@@ -18,7 +18,9 @@ export default function UseSubmitPage() {
             <CodeBlock
                 language="jsx"
                 code={`export default function RenameItem({ params }) {
-  const form = useForm({ defaultValues: { name: '' } });
+  const form = useForm(z.object({ name: z.string().trim().min(1, 'Enter a name') }), {
+    defaultValues: { name: '' },
+  });
   const submit = useSubmit(\`/api/items/\${params.item}\`, {
     method: 'PATCH',
     onSuccess: () => form.reset(),
@@ -34,7 +36,7 @@ export default function UseSubmitPage() {
       <Controller
         name="name"
         control={form.control}
-        render={({ field }) => <Input {...field} aria-label="Item name" />}
+        render={({ field, fieldState }) => <Input {...field} label="Item name" error={fieldState.error?.message} />}
       />
       {form.formState.errors.root && (
         <Text role="alert">{form.formState.errors.root.message}</Text>

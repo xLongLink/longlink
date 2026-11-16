@@ -20,7 +20,7 @@ export default function UseFormContextPage() {
 }
 
 export default function ItemEditor() {
-  const form = useForm({ defaultValues: { name: '' } });
+  const form = useForm(z.object({ name: z.string() }), { defaultValues: { name: '' } });
 
   return (
     <FormProvider {...form}>

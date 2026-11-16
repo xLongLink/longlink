@@ -6,15 +6,14 @@ export function InputExample() {
     return <Input name="name" label="Name" description="The order name." defaultValue="New order" required />;
 }
 
-/** Documents native input behavior and optional schema validation. */
+/** Documents native input behavior and schema-backed forms. */
 export default function InputPage() {
     return (
         <FormDocumentation
             name="Input"
             preview={<InputExample />}
             code={`function Example() {
-  const form = useForm({
-    resolver: zodResolver(z.object({ name: z.string().trim().min(1, "Enter an order name.") })),
+  const form = useForm(z.object({ name: z.string().trim().min(1, "Enter an order name.") }), {
     defaultValues: { name: "New order" },
   });
   const submit = useSubmit("/api/orders", {

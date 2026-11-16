@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { z } from 'zod';
 import { act } from 'react';
-import { it, expect } from 'vitest';
 import { withMounted } from '../render';
+import { it, expect, vi } from 'vitest';
+import { Controller } from 'react-hook-form';
 import { ReportedError } from '@/lib/reported';
+import { useForm } from '@/views/hooks/use-form';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import userEvent from '@testing-library/user-event';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { Input } from '@/components/longlink/form/input';
 
 it('rejects invalid values, guards duplicate writes, and preserves the draft after a reported failure for retry', async () => {
@@ -19,7 +19,7 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
     const user = userEvent.setup();
 
     function Example() {
-        const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: '' } });
+        const form = useForm(schema, { defaultValues: { email: '' } });
 
         const submit = useSubmit(
             async (values: z.output<typeof schema>) => {
@@ -105,5 +105,69 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
         });
         expect(submissions).toEqual([{ email: 'mara@example.com' }, { email: 'mara@example.com' }]);
         expect(form.getAttribute('data-success')).toBe('true');
+    });
+});
+
+it('validates asynchronously on blur, submits parsed output, and resets to explicit editing defaults', async () => {
+    const schema = z.object({
+        quantity: z
+            .string()
+            .trim()
+            .min(1)
+            .transform(Number)
+            .pipe(z.number().int().positive())
+            .refine(async (quantity) => quantity <= 12, 'Only 12 are available.')
+    });
+    const saved: z.output<typeof schema>[] = [];
+
+    function Example() {
+        const form = useForm(schema, { defaultValues: { quantity: '2' }, mode: 'onBlur' });
+
+        return (
+            <form
+                noValidate
+                onSubmit={(event) => {
+                    void form.handleSubmit((values) => {
+                        saved.push(values);
+                    })(event);
+                }}
+            >
+                <Input
+                    {...form.register('quantity')}
+                    label="Quantity"
+                    error={form.formState.errors.quantity?.message}
+                />
+                <button type="submit">Save</button>
+                <button type="button" onClick={() => form.reset()}>
+                    Reset
+                </button>
+            </form>
+        );
+    }
+
+    await withMounted(<Example />, async (output) => {
+        const input = output.querySelector('input');
+        const save = output.querySelector('button[type="submit"]');
+        const reset = output.querySelector('button[type="button"]');
+
+        if (!input || !save || !reset) throw new Error('Expected quantity controls');
+        const user = userEvent.setup();
+        await act(async () => user.clear(input));
+        await act(async () => user.type(input, '13'));
+        await act(async () => user.tab());
+        await vi.waitFor(() =>
+            expect(output.querySelector('[role="alert"]')?.textContent).toBe('Only 12 are available.')
+        );
+        await act(async () => user.click(save));
+        expect(saved).toEqual([]);
+        expect(input.value).toBe('13');
+        await act(async () => user.clear(input));
+        await act(async () => user.type(input, ' 7 '));
+        await act(async () => user.click(save));
+        expect(saved).toEqual([{ quantity: 7 }]);
+        expect(input.value).toBe(' 7 ');
+        await act(async () => user.click(reset));
+        expect(output.querySelector('input')?.value).toBe('2');
+        expect(output.querySelector('[role="alert"]')).toBeNull();
     });
 });

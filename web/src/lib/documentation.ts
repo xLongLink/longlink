@@ -25,9 +25,9 @@ export const viewHooks = [
             'Creates a TanStack table for DataGrid. Pass data, columns, and dataGridFeatures; the View runtime preserves column behavior while excluding authored header and cell styling.'
     },
     {
-        name: 'useForm(options)',
+        name: 'useForm(schema, options?)',
         description:
-            'React Hook Form state, validation, reset, and submission. Use Controller with shadcn fields and zodResolver(schema) for Zod validation. FormProvider and useFormContext share a form with Wizard.'
+            'React Hook Form state, reset, and submission with automatic Zod validation. Pass the schema first and editing defaults through options.defaultValues. Schema input types govern fields and schema output types govern handleSubmit. FormProvider and useFormContext share a form with Wizard.'
     },
     {
         name: 'useSubmit(path, options)',

@@ -1050,7 +1050,7 @@
             "category": "Form",
             "introduction": "Shares React Hook Form methods with nested controls and Wizard.",
             "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
-            "guidance": "Use useForm with zodResolver(schema), Controller, and shadcn Field components. Render a form with onSubmit={form.handleSubmit(save)}. Spread form methods onto FormProvider when descendants need useFormContext. useSubmit owns only the scoped request. Validate and authorize mutations on the server.",
+            "guidance": "Call useForm(schema, { defaultValues }) for automatic Zod validation. Editing defaults stay explicit and do not need to satisfy the schema before submission. Use Controller for controlled controls, and pass label and error directly to each control. Render a form with onSubmit={form.handleSubmit(save)}. Spread form methods onto FormProvider when descendants need useFormContext. useSubmit owns only the scoped request. Validate and authorize mutations on the server.",
             "properties": [
                 {
                     "name": "...form",
@@ -1167,8 +1167,8 @@
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
                 {
-                    "name": "useForm(options)",
-                    "description": "Standard React Hook Form state, validation, errors, reset, and submitting state. Use zodResolver(schema) with Zod, Controller with shadcn Field components, and FormProvider/useFormContext for nested forms and Wizard."
+                    "name": "useForm(schema, options?)",
+                    "description": "React Hook Form state with automatic Zod validation. Pass the schema first and editing defaults through options.defaultValues. Fields use schema input types; handleSubmit receives parsed output, including transformations. FormProvider/useFormContext support nested forms and Wizard."
                 },
                 {
                     "name": "useSubmit(path, options)",

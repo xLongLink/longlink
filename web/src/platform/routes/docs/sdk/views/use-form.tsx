@@ -1,27 +1,30 @@
 import ViewLayout from './view-layout';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
-/** Documents React Hook Form state in Views. */
+/** Documents schema-owned validation with caller-owned editing defaults. */
 export default function UseFormPage() {
     return (
         <ViewLayout
             name="useForm"
             properties={[
-                { name: 'options', type: 'UseFormProps<TFieldValues>' },
-                { name: 'control', type: 'Control<TFieldValues>' },
-                { name: 'formState', type: 'FormState<TFieldValues>' },
-                { name: 'handleSubmit', type: 'UseFormHandleSubmit<TFieldValues>' },
-                { name: 'reset', type: 'UseFormReset<TFieldValues>' },
-                { name: 'setError', type: 'UseFormSetError<TFieldValues>' },
-                { name: 'setValue', type: 'UseFormSetValue<TFieldValues>' },
-                { name: 'getValues', type: 'UseFormGetValues<TFieldValues>' },
-                { name: 'watch', type: 'UseFormWatch<TFieldValues>' }
+                { name: 'schema', type: 'ZodType<Output, Input>' },
+                { name: 'options', type: 'Omit<UseFormProps<Input, Context, Output>, "resolver">' },
+                { name: 'control', type: 'Control<Input, Context, Output>' },
+                { name: 'formState', type: 'FormState<Input>' },
+                { name: 'handleSubmit', type: 'UseFormHandleSubmit<Input, Output>' },
+                { name: 'reset', type: 'UseFormReset<Input>' },
+                { name: 'setError', type: 'UseFormSetError<Input>' },
+                { name: 'setValue', type: 'UseFormSetValue<Input>' },
+                { name: 'getValues', type: 'UseFormGetValues<Input>' },
+                { name: 'watch', type: 'UseFormWatch<Input>' }
             ]}
         >
             <CodeBlock
                 language="jsx"
                 code={`export default function ItemForm() {
-  const form = useForm({ defaultValues: { name: '' } });
+  const form = useForm(z.object({ name: z.string().trim().min(1, 'Enter a name') }), {
+    defaultValues: { name: '' },
+  });
   const submit = useSubmit('/api/items', {
     onError: (error) => form.setError('root', { message: error.message })
   });
@@ -35,12 +38,8 @@ export default function UseFormPage() {
       <Controller
         name="name"
         control={form.control}
-        rules={{ required: 'Enter a name' }}
         render={({ field, fieldState }) => (
-          <Stack gap={2}>
-            <Input {...field} aria-label="Item name" aria-invalid={fieldState.invalid} />
-            {fieldState.error && <Text role="alert">{fieldState.error.message}</Text>}
-          </Stack>
+          <Input {...field} label="Item name" error={fieldState.error?.message} />
         )}
       />
       {form.formState.errors.root && (

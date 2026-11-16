@@ -1,7 +1,6 @@
 export * from '@/components/longlink';
 export { Fragment } from 'react';
 export { z } from 'zod';
-export { zodResolver } from '@hookform/resolvers/zod';
 export { useState, useEffect, useMemo, useRef } from './hooks/react';
 export { useApi } from './hooks/use-api';
 export { useConfirm } from './hooks/use-confirm';

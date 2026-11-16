@@ -331,13 +331,25 @@ const formSchema = z.object({ name: z.string().trim().min(1) });
 const schemaValue = { name: 'Order' };
 // @ts-expect-error Zod's namespace types must retain schema inference in standalone SDK declarations.
 schemaValue.name = 42;
-const orderForm = useForm({ resolver: zodResolver(formSchema), defaultValues: { name: '' } });
+const orderForm = useForm(formSchema, { defaultValues: { name: '' } });
 // @ts-expect-error Controller names must match the form's values.
 const unknownField = <Controller name="missing" control={orderForm.control} render={() => <div />} />;
-const convertedForm = useForm({
-    resolver: zodResolver(z.object({ quantity: z.string().transform(Number) })),
+const convertedForm = useForm(z.object({ quantity: z.string().transform(Number) }), {
     defaultValues: { quantity: '3' }
 });
+convertedForm.setValue('quantity', '4');
+// @ts-expect-error Editing values retain the schema's input type.
+convertedForm.setValue('quantity', 4);
+// @ts-expect-error Defaults describe editing inputs, not parsed outputs.
+const invalidDefaults = useForm(z.object({ quantity: z.string().transform(Number) }), { defaultValues: { quantity: 3 } });
+// @ts-expect-error Validation is owned by the schema, not a caller-provided resolver.
+const customResolver = useForm(formSchema, { resolver: undefined });
+// @ts-expect-error The schema is required as the first argument.
+const missingSchema = useForm({ defaultValues: { name: '' } });
+// @ts-expect-error Resolver composition is no longer part of the public View API.
+const legacyResolver = zodResolver(formSchema);
+const formWithDefaults = useForm(z.object({ enabled: z.boolean().default(false) }));
+formWithDefaults.handleSubmit((values) => values.enabled.valueOf());
 convertedForm.handleSubmit((values) => {
     values.quantity.toFixed();
     // @ts-expect-error A resolver transformation must change the submitted value's type.

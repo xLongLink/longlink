@@ -11,9 +11,9 @@ const taskSchema = z.object({
         .refine((file) => file === null || file.size <= 10485760, 'Choose a file smaller than 10 MB.')
 });
 
-/** Validates task values with the standard shadcn React Hook Form pattern. */
+/** Validates task values with the form schema. */
 function TaskForm({ onSuccess, onCancel }) {
-    const form = useForm({ resolver: zodResolver(taskSchema), defaultValues: { title: '', attachment: null } });
+    const form = useForm(taskSchema, { defaultValues: { title: '', attachment: null } });
     const submit = useSubmit('/api/tasks', {
         onSuccess,
         onError: () => form.setError('root', { message: 'Could not create the task. Please try again.' })
