@@ -3,9 +3,9 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
+import { DialogClose } from '@/components/shadcn/dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { DialogActivityContext } from '@/components/custom/contexts';
-import { Dialog as NativeDialog } from '@/components/custom/native-dialog';
-import { DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/shadcn/dialog';
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
 it.each([false, true])('closes a dialog without submitting its form (fullscreen host: %s)', async (fullscreen) => {
@@ -17,14 +17,11 @@ it.each([false, true])('closes a dialog without submitting its form (fullscreen 
     // Keep visibility caller-owned while exercising the modal close control.
     await withMounted(
         <DialogActivityContext value={activity}>
-            <NativeDialog fullscreen={fullscreen} open onOpenChange={close}>
-                <DialogContent>
-                    <DialogTitle>Edit order</DialogTitle>
-                    <form onSubmit={submit}>
-                        <input aria-label="Order name" />
-                    </form>
-                </DialogContent>
-            </NativeDialog>
+            <Dialog title="Edit order" fullscreen={fullscreen} open onOpenChange={close}>
+                <form onSubmit={submit}>
+                    <input aria-label="Order name" />
+                </form>
+            </Dialog>
         </DialogActivityContext>,
         async () => {
             const button = document.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
@@ -55,12 +52,9 @@ it('conditionally unmounts an open dialog without changing caller-owned state', 
                     Hide
                 </button>
                 {!hidden && (
-                    <NativeDialog open onOpenChange={change}>
-                        <DialogContent>
-                            <DialogTitle>Edit order</DialogTitle>
-                            Draft
-                        </DialogContent>
-                    </NativeDialog>
+                    <Dialog title="Edit order" open onOpenChange={change}>
+                        Draft
+                    </Dialog>
                 )}
             </>
         );
@@ -96,12 +90,16 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
                 <button type="button" onClick={() => setOpen(true)}>
                     Edit
                 </button>
-                <NativeDialog disablePointerDismissal open={open} onOpenChange={setOpen}>
-                    <DialogContent>
-                        <DialogTitle>Edit order</DialogTitle>
-                        <input aria-label="Order name" />
-                    </DialogContent>
-                </NativeDialog>
+                <Dialog
+                    title="Edit order"
+                    open={open}
+                    onOpenChange={(nextOpen, details) => {
+                        if (details.reason === 'outside-press') details.cancel();
+                        else setOpen(nextOpen);
+                    }}
+                >
+                    <input aria-label="Order name" />
+                </Dialog>
             </DialogActivityContext>
         );
     }
@@ -155,11 +153,7 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
 
     await withMounted(
         <DialogActivityContext value={activity}>
-            <NativeDialog fullscreen open onOpenChange={() => {}}>
-                <DialogContent>
-                    <DialogTitle>Preview</DialogTitle>
-                </DialogContent>
-            </NativeDialog>
+            <Dialog title="Preview" fullscreen open onOpenChange={() => {}} />
         </DialogActivityContext>,
         async () => {
             expect(activity).toHaveBeenCalledExactlyOnceWith(true, true);
@@ -171,24 +165,22 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
     ]);
 });
 
-it('keeps native dialog host coordination active after canceled dismissal and releases it on close', async () => {
+it('keeps dialog host coordination active after canceled dismissal and releases it on close', async () => {
     const activity = vi.fn();
     const user = userEvent.setup();
 
     // Keep Escape canceled while allowing an explicit close action.
     await withMounted(
         <DialogActivityContext value={activity}>
-            <NativeDialog
+            <Dialog
+                title="Order details"
+                trigger={<button type="button">Open</button>}
                 onOpenChange={(_open, details) => {
                     if (details.reason === 'escape-key') details.cancel();
                 }}
             >
-                <DialogTrigger>Open</DialogTrigger>
-                <DialogContent showCloseButton={false}>
-                    <DialogTitle>Order details</DialogTitle>
-                    <DialogClose>Done</DialogClose>
-                </DialogContent>
-            </NativeDialog>
+                <DialogClose>Done</DialogClose>
+            </Dialog>
         </DialogActivityContext>,
         async (output) => {
             const trigger = output.querySelector('button');
@@ -226,19 +218,16 @@ it('keeps a portaled menu operable inside the modal and dismisses the innermost 
         const [open, setOpen] = useState(true);
 
         return (
-            <NativeDialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
-                    <DialogTitle>Actions</DialogTitle>
-                    <Dropdown>
-                        <DropdownTrigger {...overrides}>More</DropdownTrigger>
-                        <DropdownContent {...overrides}>
-                            <DropdownItem {...overrides} onClick={action}>
-                                Archive
-                            </DropdownItem>
-                        </DropdownContent>
-                    </Dropdown>
-                </DialogContent>
-            </NativeDialog>
+            <Dialog title="Actions" open={open} onOpenChange={setOpen}>
+                <Dropdown>
+                    <DropdownTrigger {...overrides}>More</DropdownTrigger>
+                    <DropdownContent {...overrides}>
+                        <DropdownItem {...overrides} onClick={action}>
+                            Archive
+                        </DropdownItem>
+                    </DropdownContent>
+                </Dropdown>
+            </Dialog>
         );
     }
 
@@ -272,17 +261,9 @@ it('releases only the dismissed nested dialog host capability and restores focus
 
     await withMounted(
         <DialogActivityContext value={activity}>
-            <NativeDialog defaultOpen>
-                <DialogContent>
-                    <DialogTitle>Order</DialogTitle>
-                    <NativeDialog fullscreen>
-                        <DialogTrigger>Preview attachment</DialogTrigger>
-                        <DialogContent>
-                            <DialogTitle>Attachment</DialogTitle>
-                        </DialogContent>
-                    </NativeDialog>
-                </DialogContent>
-            </NativeDialog>
+            <Dialog title="Order" defaultOpen>
+                <Dialog title="Attachment" fullscreen trigger={<button type="button">Preview attachment</button>} />
+            </Dialog>
         </DialogActivityContext>,
         async () => {
             const trigger = document.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
