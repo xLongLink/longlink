@@ -470,42 +470,6 @@ it('sorts authored grid results and reports row actions', async () => {
     }
 });
 
-it('returns native Calendar ranges to authored state without selecting disabled dates', async () => {
-    // Preserve range selection and native Date callbacks.
-    const runtime = await initializeRuntime(`export default function View() {
-        const [range, setRange] = useState(undefined);
-        return <>
-            <Calendar mode="range" defaultMonth={new Date(2026, 0, 1)}
-                selected={range} onSelect={setRange} disabled={new Date(2026, 0, 12)} />
-            <output>{range?.from?.getDate() ?? '-'}:{range?.to?.getDate() ?? '-'}</output>
-        </>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('[data-slot="calendar"]')).not.toBeNull());
-        const start = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 10th"]');
-
-        if (!start) throw new Error('Expected January 10 range start');
-        const user = userEvent.setup();
-        await user.click(start);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10'));
-        const disabled = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 12th"]');
-
-        if (!disabled) throw new Error('Expected disabled January 12');
-        expect(disabled.disabled).toBe(true);
-        await user.click(disabled);
-        expect(runtime.mount.querySelector('output')?.textContent).toBe('10:10');
-        const end = runtime.mount.querySelector<HTMLButtonElement>('button[aria-label*="January 14th"]');
-
-        if (!end) throw new Error('Expected January 14 range end');
-        await user.click(end);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:14'));
-        expect(runtime.mount.querySelector('button[data-range-middle="true"]')).not.toBeNull();
-    } finally {
-        runtime.close();
-    }
-});
-
 it('updates labeled Progress values inside the isolated View runtime', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [value, setValue] = useState(25);

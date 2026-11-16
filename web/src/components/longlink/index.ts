@@ -22,7 +22,6 @@ import * as fileType from './display/file-type';
 import * as timestamp from './display/timestamp';
 import * as maps from '@/components/custom/maps';
 import * as fileViewer from './display/file-viewer';
-import * as calendar from '@/components/shadcn/calendar';
 import * as group from '@/components/shadcn/button-group';
 import * as separator from '@/components/shadcn/separator';
 import type { TableFeatures } from '@tanstack/react-table';
@@ -71,7 +70,6 @@ export const DropdownSubTrigger: PublicComponent<typeof dropdown.DropdownSubTrig
 export const DropdownSubContent: PublicComponent<typeof dropdown.DropdownSubContent> = dropdown.DropdownSubContent;
 export const Separator: PublicComponent<typeof separator.Separator> = separator.Separator;
 export { Dialog } from './layout/dialog';
-export const Calendar: PublicComponent<typeof calendar.Calendar> = calendar.Calendar;
 export const Table: PublicComponent<typeof table.Table> = table.Table;
 export const TableHeader: PublicComponent<typeof table.TableHeader> = table.TableHeader;
 export const TableBody: PublicComponent<typeof table.TableBody> = table.TableBody;

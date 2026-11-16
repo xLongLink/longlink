@@ -802,42 +802,6 @@
             "justification": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter."
         },
         {
-            "name": "Calendar",
-            "category": "Form",
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/base/calendar",
-            "introduction": "Native calendar with single, multiple, and date-range selection.",
-            "properties": [
-                {
-                    "name": "mode",
-                    "type": "\"single\" | \"multiple\" | \"range\"",
-                    "description": "Enables the corresponding selection mode."
-                },
-                {
-                    "name": "selected",
-                    "type": "Date | Date[] | DateRange",
-                    "description": "Controlled selection matching the mode."
-                },
-                {
-                    "name": "onSelect",
-                    "type": "(selected, triggerDate, modifiers, event) => void",
-                    "description": "Receives native Date selections matching the mode."
-                },
-                { "name": "defaultMonth", "type": "Date", "description": "Initial displayed month." },
-                {
-                    "name": "disabled",
-                    "type": "Matcher | Matcher[]",
-                    "description": "Dates unavailable for selection."
-                },
-                {
-                    "name": "min / max",
-                    "type": "number",
-                    "description": "Selection bounds for multiple dates or range nights."
-                },
-                { "name": "numberOfMonths", "type": "number", "description": "Number of displayed months." }
-            ]
-        },
-        {
             "name": "Dialog",
             "category": "Layouts",
             "source": "custom",

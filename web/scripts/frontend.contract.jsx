@@ -100,8 +100,6 @@ const nativeComposition = (
         onClick={(event) => event.currentTarget.focus()}
         onPointerDown={(event) => event.currentTarget.focus()}
     >
-            <Calendar mode="range" onSelect={(range) => range?.from?.getDate()} />
-            <Calendar mode="multiple" onSelect={(dates) => dates?.map((date) => date.getDate())} />
             <Currency value={1234.5} currency="USD" locale="en-US" aria-label="Total" onClick={(event) => event.currentTarget.focus()} />
             <Timestamp value="2026-10-02T12:00:00Z" format="relative" aria-label="Updated" onClick={(event) => event.currentTarget.focus()} />
             <Text
@@ -418,12 +416,6 @@ const _selectMultiple = <Select multiple options={[]} value="one" />;
 const _comboboxChildren = <Combobox options={[]}><input /></Combobox>;
 // @ts-expect-error Checkbox rendering is internal.
 const _checkboxRender = <Checkbox render={<button />} />;
-// @ts-expect-error Calendar slots retain their installed styling.
-const _calendarClasses = <Calendar classNames={{ root: 'custom-calendar' }} />;
-// @ts-expect-error Calendar style maps are excluded too.
-const _calendarStyles = <Calendar styles={{ root: { color: 'red' } }} />;
-// @ts-expect-error Calendar implementation replacement is not a View styling API.
-const _calendarComponents = <Calendar components={{}} />;
 // @ts-expect-error Nested-component class overrides are not exposed.
 const _fileTypeClasses = <FileType type="pdf" labelClassName="text-red-500" />;
 // @ts-expect-error The medium FileType size is named md.

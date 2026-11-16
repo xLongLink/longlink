@@ -7383,532 +7383,6 @@ function FileViewer({ src, title }: {
     src: string;
     title: string;
 }): React$1.JSX.Element;
-interface Locale {
-    code: string;
-    formatDistance: FormatDistanceFn;
-    formatRelative: FormatRelativeFn;
-    localize: Localize;
-    formatLong: FormatLong;
-    match: Match;
-    options?: LocaleOptions;
-}
-interface LocaleOptions extends WeekOptions, FirstWeekContainsDateOptions {
-}
-type FormatDistanceFn = (token: FormatDistanceToken, count: number, options?: FormatDistanceFnOptions) => string;
-interface FormatDistanceFnOptions {
-    addSuffix?: boolean;
-    comparison?: -1 | 0 | 1;
-}
-type FormatDistanceToken = "lessThanXSeconds" | "xSeconds" | "halfAMinute" | "lessThanXMinutes" | "xMinutes" | "aboutXHours" | "xHours" | "xDays" | "aboutXWeeks" | "xWeeks" | "aboutXMonths" | "xMonths" | "aboutXYears" | "xYears" | "overXYears" | "almostXYears";
-type FormatRelativeFn = <DateType extends Date>(token: FormatRelativeToken, date: DateType, baseDate: DateType, options?: FormatRelativeFnOptions) => string;
-interface FormatRelativeFnOptions extends WeekOptions, LocalizedOptions<"options" | "formatRelative"> {
-}
-type FormatRelativeToken = "lastWeek" | "yesterday" | "today" | "tomorrow" | "nextWeek" | "other";
-interface FormatPart {
-    isToken: boolean;
-    value: string;
-}
-interface Localize {
-    ordinalNumber: LocalizeFn<number>;
-    era: LocalizeFn<Era>;
-    quarter: LocalizeFn<Quarter>;
-    month: LocalizeFn<Month>;
-    day: LocalizeFn<Day>;
-    dayPeriod: LocalizeFn<LocaleDayPeriod>;
-    preprocessor?: <DateType extends Date>(date: DateType, parts: FormatPart[]) => FormatPart[];
-}
-type LocalizeFn<Value extends LocaleUnitValue | number> = (value: Value, options?: LocalizeFnOptions) => string;
-interface LocalizeFnOptions {
-    width?: LocaleWidth;
-    context?: "formatting" | "standalone";
-    unit?: LocaleUnit;
-}
-interface Match {
-    ordinalNumber: MatchFn<number, {
-        unit: LocaleUnit;
-    }>;
-    era: MatchFn<Era>;
-    quarter: MatchFn<Quarter>;
-    month: MatchFn<Month>;
-    day: MatchFn<Day>;
-    dayPeriod: MatchFn<LocaleDayPeriod>;
-}
-type MatchFn<Result, ExtraOptions = Record<string, unknown>> = (str: string, options?: MatchFnOptions<Result> & ExtraOptions) => MatchFnResult<Result> | null;
-interface MatchFnOptions<Result> {
-    width?: LocaleWidth;
-    valueCallback?: MatchValueCallback<string, Result>;
-}
-type MatchValueCallback<Arg, Result> = (value: Arg) => Result;
-interface MatchFnResult<Result> {
-    value: Result;
-    rest: string;
-}
-interface FormatLong {
-    date: FormatLongFn;
-    time: FormatLongFn;
-    dateTime: FormatLongFn;
-}
-type FormatLongFn = (options: FormatLongFnOptions) => string;
-interface FormatLongFnOptions {
-    width?: FormatLongWidth;
-}
-type FormatLongWidth = "full" | "long" | "medium" | "short" | "any";
-type LocaleUnitValue = Era | Quarter | Month | Day | LocaleDayPeriod;
-type LocaleWidth = "narrow" | "short" | "abbreviated" | "wide" | "any";
-type LocaleDayPeriod = "am" | "pm" | "midnight" | "noon" | "morning" | "afternoon" | "evening" | "night";
-type LocaleUnit = "second" | "minute" | "hour" | "day" | "dayOfYear" | "date" | "week" | "month" | "quarter" | "year";
-type DateArg<DateType extends Date> = DateType | number | string;
-interface Interval<StartType extends DateArg<Date> = DateArg<Date>, EndType extends DateArg<Date> = DateArg<Date>> {
-    start: StartType;
-    end: EndType;
-}
-type Era = 0 | 1;
-type Quarter = 1 | 2 | 3 | 4;
-type Day = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-type Month = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
-type FirstWeekContainsDate = 1 | 4;
-interface WeekOptions {
-    weekStartsOn?: Day;
-}
-interface FirstWeekContainsDateOptions {
-    firstWeekContainsDate?: FirstWeekContainsDate;
-}
-interface LocalizedOptions<LocaleFields extends keyof Locale> {
-    locale?: Pick<Locale, LocaleFields>;
-}
-interface AdditionalTokensOptions {
-    useAdditionalWeekYearTokens?: boolean;
-    useAdditionalDayOfYearTokens?: boolean;
-}
-interface ContextOptions<DateType extends Date> {
-    in?: ContextFn<DateType> | undefined;
-}
-type ContextFn<DateType extends Date> = (value: DateArg<Date> & {}) => DateType;
-interface EndOfWeekOptions<DateType extends Date = Date> extends WeekOptions, LocalizedOptions<"options">, ContextOptions<DateType> {
-}
-interface FormatOptions extends LocalizedOptions<"options" | "localize" | "formatLong">, WeekOptions, FirstWeekContainsDateOptions, AdditionalTokensOptions, ContextOptions<Date> {
-}
-interface GetMonthOptions extends ContextOptions<Date> {
-}
-interface GetWeekOptions extends LocalizedOptions<"options">, WeekOptions, FirstWeekContainsDateOptions, ContextOptions<Date> {
-}
-interface GetYearOptions extends ContextOptions<Date> {
-}
-interface StartOfWeekOptions<DateType extends Date = Date> extends LocalizedOptions<"options">, WeekOptions, ContextOptions<DateType> {
-}
-function CaptionLabel(props: React$1.HTMLAttributes<HTMLSpanElement>): React$1.JSX.Element;
-function Chevron(props: {
-    className?: string;
-    style?: React$1.CSSProperties;
-    size?: number;
-    disabled?: boolean;
-    orientation?: "up" | "down" | "left" | "right";
-}): React$1.JSX.Element;
-type DayPickerProps = PropsBase & (PropsSingle | PropsSingleRequired | PropsMulti | PropsMultiRequired | PropsRange | PropsRangeRequired | {
-    mode?: undefined;
-    required?: undefined;
-});
-interface PropsBase {
-    mode?: Mode | undefined;
-    required?: boolean | undefined;
-    className?: string;
-    classNames?: Partial<ClassNames>;
-    modifiersClassNames?: ModifiersClassNames;
-    style?: React$1.CSSProperties;
-    styles?: Partial<Styles>;
-    modifiersStyles?: ModifiersStyles;
-    id?: string;
-    defaultMonth?: Date;
-    month?: Date;
-    numberOfMonths?: number;
-    startMonth?: Date | undefined;
-    endMonth?: Date;
-    pagedNavigation?: boolean;
-    reverseMonths?: boolean;
-    hideNavigation?: boolean;
-    disableNavigation?: boolean;
-    captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years";
-    reverseYears?: boolean;
-    navLayout?: "around" | "after" | undefined;
-    fixedWeeks?: boolean;
-    hideWeekdays?: boolean;
-    showOutsideDays?: boolean;
-    showWeekNumber?: boolean;
-    animate?: boolean;
-    broadcastCalendar?: boolean;
-    ISOWeek?: boolean;
-    timeZone?: string | undefined;
-    noonSafe?: boolean | undefined;
-    components?: Partial<CustomComponents>;
-    footer?: React$1.ReactNode | string;
-    autoFocus?: boolean;
-    disabled?: Matcher | Matcher[] | undefined;
-    hidden?: Matcher | Matcher[] | undefined;
-    today?: Date;
-    modifiers?: Record<string, Matcher | Matcher[] | undefined> | undefined;
-    labels?: Partial<Labels>;
-    formatters?: Partial<Formatters>;
-    dir?: HTMLDivElement["dir"];
-    "aria-label"?: string;
-    "aria-labelledby"?: string;
-    role?: "application" | "dialog" | undefined;
-    nonce?: HTMLDivElement["nonce"];
-    title?: HTMLDivElement["title"];
-    lang?: HTMLDivElement["lang"];
-    locale?: Partial<DayPickerLocale> | undefined;
-    numerals?: Numerals | undefined;
-    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined;
-    firstWeekContainsDate?: 1 | 4;
-    useAdditionalWeekYearTokens?: boolean | undefined;
-    useAdditionalDayOfYearTokens?: boolean | undefined;
-    onMonthChange?: MonthChangeEventHandler;
-    onNextClick?: MonthChangeEventHandler;
-    onPrevClick?: MonthChangeEventHandler;
-    onDayClick?: DayEventHandler<React$1.MouseEvent>;
-    onDayFocus?: DayEventHandler<React$1.FocusEvent>;
-    onDayBlur?: DayEventHandler<React$1.FocusEvent>;
-    onDayKeyDown?: DayEventHandler<React$1.KeyboardEvent>;
-    onDayMouseEnter?: DayEventHandler<React$1.MouseEvent>;
-    onDayMouseLeave?: DayEventHandler<React$1.MouseEvent>;
-    dateLib?: Partial<typeof DateLib.prototype> | undefined;
-}
-type OnSelectHandler<T> = (selected: T, triggerDate: Date, modifiers: Modifiers, e: React$1.MouseEvent | React$1.KeyboardEvent) => void;
-interface PropsSingleRequired {
-    mode: "single";
-    required: true;
-    selected: Date | undefined;
-    onSelect?: OnSelectHandler<Date>;
-}
-interface PropsSingle {
-    mode: "single";
-    required?: false | undefined;
-    selected?: Date | undefined;
-    onSelect?: OnSelectHandler<Date | undefined>;
-}
-interface PropsMultiRequired {
-    mode: "multiple";
-    required: true;
-    selected: Date[] | undefined;
-    onSelect?: OnSelectHandler<Date[]>;
-    min?: number;
-    max?: number;
-}
-interface PropsMulti {
-    mode: "multiple";
-    required?: false | undefined;
-    selected?: Date[] | undefined;
-    onSelect?: OnSelectHandler<Date[] | undefined>;
-    min?: number;
-    max?: number;
-}
-interface PropsRangeRequired {
-    mode: "range";
-    required: true;
-    disabled?: Matcher | Matcher[] | undefined;
-    excludeDisabled?: boolean | undefined;
-    resetOnSelect?: boolean | undefined;
-    selected: DateRange | undefined;
-    onSelect?: OnSelectHandler<DateRange>;
-    min?: number;
-    max?: number;
-}
-interface PropsRange {
-    mode: "range";
-    required?: false | undefined;
-    disabled?: Matcher | Matcher[] | undefined;
-    excludeDisabled?: boolean | undefined;
-    resetOnSelect?: boolean | undefined;
-    selected?: DateRange | undefined;
-    onSelect?: OnSelectHandler<DateRange | undefined>;
-    min?: number;
-    max?: number;
-}
-function Day$1(props: {
-    day: CalendarDay;
-    modifiers: Modifiers;
-} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function DayButton(props: {
-    day: CalendarDay;
-    modifiers: Modifiers;
-} & React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
-type DropdownOption = {
-    value: number;
-    label: string;
-    disabled: boolean;
-};
-function Dropdown$1(props: {
-    options?: DropdownOption[] | undefined;
-} & Omit<React$1.SelectHTMLAttributes<HTMLSelectElement>, "children">): React$1.JSX.Element;
-type DropdownProps = Parameters<typeof Dropdown$1>[0];
-function DropdownNav(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function Footer(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-class CalendarWeek {
-    constructor(weekNumber: number, days: CalendarDay[]);
-    weekNumber: number;
-    days: CalendarDay[];
-}
-class CalendarMonth {
-    constructor(month: Date, weeks: CalendarWeek[]);
-    date: Date;
-    weeks: CalendarWeek[];
-}
-function Month$1(props: {
-    calendarMonth: CalendarMonth;
-    displayIndex: number;
-} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function MonthCaption(props: {
-    calendarMonth: CalendarMonth;
-    displayIndex: number;
-} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function MonthGrid(props: React$1.TableHTMLAttributes<HTMLTableElement>): React$1.JSX.Element;
-function Months(props: React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function MonthsDropdown(props: DropdownProps): React$1.JSX.Element;
-function Nav(props: {
-    onPreviousClick?: React$1.MouseEventHandler<HTMLButtonElement>;
-    onNextClick?: React$1.MouseEventHandler<HTMLButtonElement>;
-    previousMonth?: Date | undefined;
-    nextMonth?: Date | undefined;
-} & React$1.HTMLAttributes<HTMLElement>): React$1.JSX.Element;
-function NextMonthButton(props: React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
-function Option$1(props: React$1.OptionHTMLAttributes<HTMLOptionElement>): React$1.JSX.Element;
-function PreviousMonthButton(props: React$1.ButtonHTMLAttributes<HTMLButtonElement>): React$1.JSX.Element;
-function Root(props: {
-    rootRef?: React$1.Ref<HTMLDivElement>;
-} & React$1.HTMLAttributes<HTMLDivElement>): React$1.JSX.Element;
-function Select(props: React$1.SelectHTMLAttributes<HTMLSelectElement>): React$1.JSX.Element;
-function Week(props: {
-    week: CalendarWeek;
-} & React$1.HTMLAttributes<HTMLTableRowElement>): React$1.JSX.Element;
-function Weekday(props: React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
-function Weekdays(props: React$1.HTMLAttributes<HTMLTableRowElement>): React$1.JSX.Element;
-function WeekNumber(props: {
-    week: CalendarWeek;
-} & React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
-function WeekNumberHeader(props: React$1.ThHTMLAttributes<HTMLTableCellElement>): React$1.JSX.Element;
-function Weeks(props: React$1.HTMLAttributes<HTMLTableSectionElement>): React$1.JSX.Element;
-function YearsDropdown(props: DropdownProps): React$1.JSX.Element;
-function formatCaption(month: Date, options?: DateLibOptions, dateLib?: DateLib): string;
-function formatDay(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
-function formatMonthDropdown(month: Date, dateLib?: DateLib): string;
-function formatWeekdayName(weekday: Date, options?: DateLibOptions, dateLib?: DateLib): string;
-function formatWeekNumber(weekNumber: number, dateLib?: DateLib): string;
-function formatWeekNumberHeader(): string;
-function formatYearDropdown(year: Date, dateLib?: DateLib): string;
-function labelDayButton(date: Date, modifiers: Modifiers, options?: DateLibOptions, dateLib?: DateLib): string;
-function labelGrid(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
-function labelGridcell(date: Date, modifiers?: Modifiers, options?: DateLibOptions, dateLib?: DateLib): string;
-function labelMonthDropdown(_options?: DateLibOptions): string;
-function labelNav(): string;
-function labelNext(_month: Date | undefined, _options?: DateLibOptions): string;
-function labelPrevious(_month: Date | undefined): string;
-function labelWeekday(date: Date, options?: DateLibOptions, dateLib?: DateLib): string;
-function labelWeekNumber(weekNumber: number, _options?: DateLibOptions): string;
-function labelWeekNumberHeader(_options?: DateLibOptions): string;
-function labelYearDropdown(_options?: DateLibOptions): string;
-enum UI {
-    Root = "root",
-    Chevron = "chevron",
-    Day = "day",
-    DayButton = "day_button",
-    CaptionLabel = "caption_label",
-    Dropdowns = "dropdowns",
-    Dropdown = "dropdown",
-    DropdownRoot = "dropdown_root",
-    Footer = "footer",
-    MonthGrid = "month_grid",
-    MonthCaption = "month_caption",
-    MonthsDropdown = "months_dropdown",
-    Month = "month",
-    Months = "months",
-    Nav = "nav",
-    NextMonthButton = "button_next",
-    PreviousMonthButton = "button_previous",
-    Week = "week",
-    Weeks = "weeks",
-    Weekday = "weekday",
-    Weekdays = "weekdays",
-    WeekNumber = "week_number",
-    WeekNumberHeader = "week_number_header",
-    YearsDropdown = "years_dropdown"
-}
-enum DayFlag {
-    disabled = "disabled",
-    hidden = "hidden",
-    outside = "outside",
-    focused = "focused",
-    today = "today"
-}
-enum SelectionState {
-    range_end = "range_end",
-    range_middle = "range_middle",
-    range_start = "range_start",
-    selected = "selected"
-}
-enum Animation$1 {
-    weeks_before_enter = "weeks_before_enter",
-    weeks_before_exit = "weeks_before_exit",
-    weeks_after_enter = "weeks_after_enter",
-    weeks_after_exit = "weeks_after_exit",
-    caption_after_enter = "caption_after_enter",
-    caption_after_exit = "caption_after_exit",
-    caption_before_enter = "caption_before_enter",
-    caption_before_exit = "caption_before_exit"
-}
-type Mode = "single" | "multiple" | "range";
-type CustomComponents = {
-    Chevron: typeof Chevron;
-    CaptionLabel: typeof CaptionLabel;
-    Day: typeof Day$1;
-    DayButton: typeof DayButton;
-    Dropdown: typeof Dropdown$1;
-    DropdownNav: typeof DropdownNav;
-    Footer: typeof Footer;
-    Month: typeof Month$1;
-    MonthCaption: typeof MonthCaption;
-    MonthGrid: typeof MonthGrid;
-    Months: typeof Months;
-    Nav: typeof Nav;
-    Option: typeof Option$1;
-    PreviousMonthButton: typeof PreviousMonthButton;
-    NextMonthButton: typeof NextMonthButton;
-    Root: typeof Root;
-    Select: typeof Select;
-    Weeks: typeof Weeks;
-    Week: typeof Week;
-    Weekday: typeof Weekday;
-    Weekdays: typeof Weekdays;
-    WeekNumber: typeof WeekNumber;
-    WeekNumberHeader: typeof WeekNumberHeader;
-    MonthsDropdown: typeof MonthsDropdown;
-    YearsDropdown: typeof YearsDropdown;
-};
-type Formatters = {
-    formatCaption: typeof formatCaption;
-    formatDay: typeof formatDay;
-    formatMonthDropdown: typeof formatMonthDropdown;
-    formatWeekNumber: typeof formatWeekNumber;
-    formatWeekNumberHeader: typeof formatWeekNumberHeader;
-    formatWeekdayName: typeof formatWeekdayName;
-    formatYearDropdown: typeof formatYearDropdown;
-};
-type Labels = {
-    labelNav: typeof labelNav;
-    labelGrid: typeof labelGrid;
-    labelGridcell: typeof labelGridcell;
-    labelMonthDropdown: typeof labelMonthDropdown;
-    labelYearDropdown: typeof labelYearDropdown;
-    labelNext: typeof labelNext;
-    labelPrevious: typeof labelPrevious;
-    labelDayButton: typeof labelDayButton;
-    labelWeekday: typeof labelWeekday;
-    labelWeekNumber: typeof labelWeekNumber;
-    labelWeekNumberHeader: typeof labelWeekNumberHeader;
-};
-type Matcher = boolean | ((date: Date) => boolean) | Date | Date[] | DateRange | DateBefore | DateAfter | DateInterval | DayOfWeek;
-type DateAfter = {
-    after: Date;
-};
-type DateBefore = {
-    before: Date;
-};
-type DateInterval = {
-    before: Date;
-    after: Date;
-};
-type DateRange = {
-    from: Date | undefined;
-    to?: Date | undefined;
-};
-type DayOfWeek = {
-    dayOfWeek: number | number[];
-};
-type DayEventHandler<EventType> = (date: Date, modifiers: Modifiers, e: EventType) => void;
-type MonthChangeEventHandler = (month: Date) => void;
-type ClassNames = {
-    [key in UI | SelectionState | DayFlag | Animation$1]: string;
-};
-type Styles = {
-    [key in UI | SelectionState | DayFlag]: React$1.CSSProperties | undefined;
-};
-type Modifiers = Record<string, boolean>;
-type ModifiersStyles = Record<string, React$1.CSSProperties>;
-type ModifiersClassNames = Record<string, string>;
-type Numerals = "latn" | "arab" | "arabext" | "deva" | "geez" | "beng" | "guru" | "gujr" | "orya" | "tamldec" | "telu" | "knda" | "mlym" | "thai" | "mymr" | "khmr" | "laoo" | "tibt";
-type DayPickerLocaleLabels = {
-    [K in keyof Labels]?: string | Labels[K];
-};
-interface DayPickerLocale extends Locale {
-    labels?: DayPickerLocaleLabels;
-}
-type MonthYearOrder = "month-first" | "year-first";
-interface DateLibOptions extends FormatOptions, StartOfWeekOptions, EndOfWeekOptions {
-    Date?: typeof Date;
-    locale?: DayPickerLocale;
-    timeZone?: string;
-    numerals?: Numerals;
-}
-class DateLib {
-    readonly options: DateLibOptions;
-    readonly overrides?: Partial<typeof DateLib.prototype>;
-    constructor(options?: DateLibOptions, overrides?: Partial<typeof DateLib.prototype>);
-    private getDigitMap;
-    private replaceDigits;
-    formatNumber(value: number | string): string;
-    getMonthYearOrder(): MonthYearOrder;
-    formatMonthYear(date: Date): string;
-    private static readonly yearFirstLocales;
-    today: () => Date;
-    newDate: (year: number, monthIndex: number, date: number) => Date;
-    addDays: (date: Date, amount: number) => Date;
-    addMonths: (date: Date, amount: number) => Date;
-    addWeeks: (date: Date, amount: number) => Date;
-    addYears: (date: Date, amount: number) => Date;
-    differenceInCalendarDays: (dateLeft: Date, dateRight: Date) => number;
-    differenceInCalendarMonths: (dateLeft: Date, dateRight: Date) => number;
-    eachMonthOfInterval: (interval: Interval) => Date[];
-    eachYearOfInterval: (interval: Interval) => Date[];
-    endOfBroadcastWeek: (date: Date) => Date;
-    endOfISOWeek: (date: Date) => Date;
-    endOfMonth: (date: Date) => Date;
-    endOfWeek: (date: Date, options?: EndOfWeekOptions<Date>) => Date;
-    endOfYear: (date: Date) => Date;
-    format: (date: Date, formatStr: string, _options?: FormatOptions) => string;
-    getISOWeek: (date: Date) => number;
-    getMonth: (date: Date, _options?: GetMonthOptions) => number;
-    getYear: (date: Date, _options?: GetYearOptions) => number;
-    getWeek: (date: Date, _options?: GetWeekOptions) => number;
-    isAfter: (date: Date, dateToCompare: Date) => boolean;
-    isBefore: (date: Date, dateToCompare: Date) => boolean;
-    isDate: (value: unknown) => value is Date;
-    isSameDay: (dateLeft: Date, dateRight: Date) => boolean;
-    isSameMonth: (dateLeft: Date, dateRight: Date) => boolean;
-    isSameYear: (dateLeft: Date, dateRight: Date) => boolean;
-    max: (dates: Date[]) => Date;
-    min: (dates: Date[]) => Date;
-    setMonth: (date: Date, month: number) => Date;
-    setYear: (date: Date, year: number) => Date;
-    startOfBroadcastWeek: (date: Date, _dateLib: DateLib) => Date;
-    startOfDay: (date: Date) => Date;
-    startOfISOWeek: (date: Date) => Date;
-    startOfMonth: (date: Date) => Date;
-    startOfWeek: (date: Date, _options?: StartOfWeekOptions) => Date;
-    startOfYear: (date: Date) => Date;
-}
-class CalendarDay {
-    constructor(date: Date, displayMonth: Date, dateLib?: DateLib);
-    readonly dateLib: DateLib;
-    readonly outside: boolean;
-    readonly displayMonth: Date;
-    readonly date: Date;
-    readonly isoDate: string;
-    readonly displayMonthId: string;
-    readonly dateMonthId: string;
-    isEqualTo(day: CalendarDay): boolean;
-}
-function DayPicker(initialProps: DayPickerProps): React$1.JSX.Element;
-function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, ...props }: React$1.ComponentProps<typeof DayPicker> & {
-    buttonVariant?: React$1.ComponentProps<typeof Button$1>["variant"];
-}): React$1.JSX.Element;
 function Separator$1({ className, orientation, ...props }: Separator.Props): React$1.JSX.Element;
 const buttonGroupVariants: (props?: ({
     orientation?: "horizontal" | "vertical" | null | undefined;
@@ -11629,7 +11103,7 @@ type NestedValue<TValue extends object = object> = {
 type DefaultValues<TFieldValues> = TFieldValues extends AsyncDefaultValues<TFieldValues> ? DeepPartial<Awaited<TFieldValues>> : DeepPartial<TFieldValues>;
 type InternalNameSet = Set<InternalFieldName>;
 type ValidationMode = typeof VALIDATION_MODE;
-type Mode$1 = keyof ValidationMode;
+type Mode = keyof ValidationMode;
 type CriteriaMode = "firstError" | "all";
 type SubmitHandler<T, TResult = unknown> = (data: T, event?: React$1.BaseSyntheticEvent) => TResult;
 type SubmitErrorHandler<TFieldValues extends FieldValues> = (errors: FieldErrors<TFieldValues>, event?: React$1.BaseSyntheticEvent) => unknown | Promise<unknown>;
@@ -11655,9 +11129,9 @@ type ChangeHandler = (event: {
 }) => Promise<void | boolean>;
 type AsyncDefaultValues<TFieldValues> = (payload?: unknown) => Promise<TFieldValues>;
 type UseFormProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = Partial<{
-    mode: Mode$1;
+    mode: Mode;
     disabled: boolean;
-    reValidateMode: Exclude<Mode$1, "onTouched" | "all">;
+    reValidateMode: Exclude<Mode, "onTouched" | "all">;
     defaultValues: DefaultValues<TFieldValues> | AsyncDefaultValues<TFieldValues>;
     values: TFieldValues;
     errors: FieldErrors<TFieldValues>;
@@ -12141,7 +11615,7 @@ export function Slider<Value extends number | readonly number[] = number>({ labe
 function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
-function Select$1<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, size, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<SelectRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef"> & Pick<React$1.ComponentProps<typeof SelectTrigger$1>, "ref" | "onBlur" | "onFocus" | "size"> & {
+export function Select<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, size, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<SelectRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef"> & Pick<React$1.ComponentProps<typeof SelectTrigger$1>, "ref" | "onBlur" | "onFocus" | "size"> & {
     options: readonly FormOption[];
     placeholder?: string;
 }): React$1.JSX.Element;
@@ -12282,7 +11756,7 @@ const Button$3: PublicComponent<typeof Button$2>;
 const ButtonGroup$1: PublicComponent<typeof ButtonGroup>;
 const ButtonGroupText$1: PublicComponent<typeof ButtonGroupText>;
 const ButtonGroupSeparator$1: PublicComponent<typeof ButtonGroupSeparator>;
-const Dropdown$2: PublicComponent<typeof Dropdown>;
+const Dropdown$1: PublicComponent<typeof Dropdown>;
 const DropdownPortal$1: PublicComponent<typeof DropdownPortal>;
 const DropdownTrigger$1: PublicComponent<typeof DropdownTrigger>;
 const DropdownContent$1: PublicComponent<typeof DropdownContent>;
@@ -12298,7 +11772,6 @@ const DropdownSub$1: PublicComponent<typeof DropdownSub>;
 const DropdownSubTrigger$1: PublicComponent<typeof DropdownSubTrigger>;
 const DropdownSubContent$1: PublicComponent<typeof DropdownSubContent>;
 const Separator$2: PublicComponent<typeof Separator$1>;
-const Calendar$1: PublicComponent<typeof Calendar>;
 const Table$2: PublicComponent<typeof Table>;
 const TableHeader$1: PublicComponent<typeof TableHeader>;
 const TableBody$1: PublicComponent<typeof TableBody>;
@@ -16223,7 +15696,7 @@ namespace iso {
 namespace z {
     export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, withParser, xid$1 as xid, xor };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Calendar$1 as Calendar, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, DataPagination$1 as DataPagination, Dialog$2 as Dialog, Dropdown$2 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, Maps$1 as Maps, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Select$1 as Select, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, dataGridFeatures$1 as dataGridFeatures, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, DataPagination$1 as DataPagination, Dialog$2 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, Maps$1 as Maps, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, dataGridFeatures$1 as dataGridFeatures, z, };
 }
 
 declare const AreaChart: typeof NativeFrontend.AreaChart;
@@ -16236,7 +15709,6 @@ declare const Button: typeof NativeFrontend.Button;
 declare const ButtonGroup: typeof NativeFrontend.ButtonGroup;
 declare const ButtonGroupSeparator: typeof NativeFrontend.ButtonGroupSeparator;
 declare const ButtonGroupText: typeof NativeFrontend.ButtonGroupText;
-declare const Calendar: typeof NativeFrontend.Calendar;
 declare const Card: typeof NativeFrontend.Card;
 import CellContext = NativeFrontend.CellContext;
 import ChartConfig = NativeFrontend.ChartConfig;
