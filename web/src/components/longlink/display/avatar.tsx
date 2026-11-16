@@ -31,12 +31,13 @@ export function Avatar({ className, src, name, size = 'md', children, shape = 'c
     // Select fallback artwork from the shape.
     const style = shape === 'rounded' ? wavesStyle : glyphsStyle;
 
-    // Reuse fixed-seed artwork until its style changes.
+    // Keep generated artwork stable for each name and style.
+    const seed = name?.trim() || 'avatar';
     const fallbackSrc = useMemo(() => {
-        const avatar = new dicebear.Avatar(style, { seed: 'avatar' });
+        const avatar = new dicebear.Avatar(style, { seed });
 
         return avatar.toDataUri();
-    }, [style]);
+    }, [style, seed]);
 
     // Failed sources do not prevent a new URL or artwork style from loading.
     const [erroredSrc, setErroredSrc] = useState<string>();

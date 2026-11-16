@@ -32,7 +32,7 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
         );
     }
 
-    const generated = renderStatic(<Avatar name="Renamed" shape="rounded" />)
+    const generated = renderStatic(<Avatar name="Acme" shape="rounded" />)
         .querySelector('img')
         ?.getAttribute('src');
 
@@ -48,6 +48,36 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
         expect(document.activeElement).toBe(root);
         await act(async () => output.querySelector('img')?.dispatchEvent(new Event('load')));
         expect(output.querySelector('img')?.hasAttribute('data-error')).toBe(false);
+    });
+});
+
+it('uses the name for stable artwork and updates it when the name changes', async () => {
+    function Owner() {
+        const [name, setName] = useState('ACME Studio');
+
+        return (
+            <>
+                <Avatar name={name} shape="rounded" />
+                <Avatar name=" ACME Studio " shape="rounded" />
+                <Avatar name="ACME Ink" shape="rounded" />
+                <button onClick={() => setName('ACME Ink')}>Rename</button>
+            </>
+        );
+    }
+
+    await withMounted(<Owner />, async (output) => {
+        const images = output.querySelectorAll('img');
+        const studio = images[0]?.getAttribute('src');
+        const ink = images[2]?.getAttribute('src');
+
+        expect(studio).toMatch(/^data:image\/svg\+xml/);
+        expect(ink).toMatch(/^data:image\/svg\+xml/);
+        expect(studio).toBe(images[1]?.getAttribute('src'));
+        expect(studio).not.toBe(ink);
+
+        await act(async () => output.querySelector('button')?.click());
+
+        expect(output.querySelector('img')?.getAttribute('src')).toBe(ink);
     });
 });
 
