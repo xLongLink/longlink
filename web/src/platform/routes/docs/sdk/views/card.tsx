@@ -20,7 +20,9 @@ export default function CardPage() {
         <ViewLayout
             name="Card"
             properties={[
-                { name: 'header', type: '{ title: ReactNode; description?: ReactNode; action?: ReactNode }' },
+                { name: 'title', type: 'ReactNode' },
+                { name: 'description', type: 'ReactNode' },
+                { name: 'action', type: 'ReactNode' },
                 { name: 'children', type: 'ReactNode' },
                 { name: 'footer', type: 'ReactNode' },
                 { name: 'size', type: '"default" | "sm"' },
@@ -52,15 +54,13 @@ export default function CardPage() {
   return (
     <Box width="100%" maxWidth={560}>
       <Card
-        header={{
-          title: 'API requests',
-          description: 'Monthly request volume',
-          action: (
+        title="API requests"
+        description="Monthly request volume"
+        action={
             <Button size="sm" variant="outline" onClick={() => setMonths(months === 6 ? 3 : 6)}>
               Show {months === 6 ? 3 : 6} months
             </Button>
-          )
-        }}
+        }
         footer={
           <>
             <span>{total.toLocaleString('en-US')} requests</span>
@@ -95,15 +95,13 @@ export function CardExample() {
     return (
         <Box width="100%" maxWidth={560}>
             <Card
-                header={{
-                    title: 'API requests',
-                    description: 'Monthly request volume',
-                    action: (
-                        <Button size="sm" variant="outline" onClick={() => setMonths(months === 6 ? 3 : 6)}>
-                            Show {months === 6 ? 3 : 6} months
-                        </Button>
-                    )
-                }}
+                title="API requests"
+                description="Monthly request volume"
+                action={
+                    <Button size="sm" variant="outline" onClick={() => setMonths(months === 6 ? 3 : 6)}>
+                        Show {months === 6 ? 3 : 6} months
+                    </Button>
+                }
                 footer={
                     <>
                         <span>{total.toLocaleString('en-US')} requests</span>

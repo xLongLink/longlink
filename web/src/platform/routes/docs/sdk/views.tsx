@@ -1,5 +1,6 @@
 import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
+import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
 import { TableExample } from './views/table';
 import { SelectExample } from './views/select';
@@ -123,6 +124,7 @@ const previews = new Map(
                 </CardContent>
             </Card>
         ),
+        Frame: <FrameExample />,
         Grid: (
             <Grid columns={2} gap={2}>
                 <Badge variant="outline" size="xl">

@@ -4,21 +4,33 @@ import { InteractiveCard } from '@/components/custom/interactive-card';
 
 /** Owns card sections and accessible surface interactions without styling overrides. */
 export function Card({
-    header,
+    title,
+    description,
+    action,
     footer,
     children,
     ...props
-}: Omit<ComponentProps<typeof InteractiveCard>, 'className' | 'style'> & {
-    header?: { title: ReactNode; description?: ReactNode; action?: ReactNode };
+}: Omit<ComponentProps<typeof InteractiveCard>, 'className' | 'style' | 'title'> & {
+    title?: ReactNode;
+    description?: ReactNode;
+    action?: ReactNode;
     footer?: ReactNode;
 }) {
     return (
         <InteractiveCard {...props} className={undefined} style={undefined}>
-            {header != null && (
+            {(title != null || description != null || action != null) && (
                 <card.CardHeader className="gap-x-3 gap-y-0 border-b">
-                    <card.CardTitle>{header.title}</card.CardTitle>
-                    {header.description != null && <card.CardDescription>{header.description}</card.CardDescription>}
-                    {header.action != null && <card.CardAction>{header.action}</card.CardAction>}
+                    {title != null && <card.CardTitle>{title}</card.CardTitle>}
+                    {description != null && <card.CardDescription>{description}</card.CardDescription>}
+                    {action != null && (
+                        <card.CardAction
+                            className={
+                                title == null && description == null ? 'col-span-2 col-start-1 w-full' : undefined
+                            }
+                        >
+                            {action}
+                        </card.CardAction>
+                    )}
                 </card.CardHeader>
             )}
             <card.CardContent>{children}</card.CardContent>

@@ -46,6 +46,12 @@ const menuComposition = (
 const _menuClasses = <Menu className="hidden" />;
 // @ts-expect-error Tabs styling is owned by the component.
 const _tabsClasses = <Tabs className="hidden" />;
+// @ts-expect-error Frame styling is owned by the component.
+const _frameClasses = <Frame className="hidden" />;
+// @ts-expect-error Frame owns its sections.
+const _frameHeader = <Frame header={{ title: 'Files' }} />;
+// @ts-expect-error Card uses flat header props.
+const _cardHeader = <Card header={{ title: 'Files' }} />;
 // @ts-expect-error Tab styling is owned by the component.
 const _tabStyle = <Tab value="one" label="One" style={{ display: 'none' }} />;
 // @ts-expect-error Tabs owns its focus behavior.
@@ -66,10 +72,8 @@ const legacyIcon = <Icon icon="close" size="sm" />;
 const prefixedIcon = <Icon icon="lucide:search" size="sm" />;
 const nativeGrid = (
     <DataGrid table={table} recordCount={records.length}>
-        <Frame>
-            <FrameHeader><FrameTitle>Shipments</FrameTitle></FrameHeader>
-            <FramePanel><DataGridScrollArea><DataGridTable /></DataGridScrollArea></FramePanel>
-            <FrameFooter><DataGridPagination /></FrameFooter>
+        <Frame title={<span>Shipments</span>} description="Recent shipments" action={<Button>Export</Button>} padding="none" footer={<DataGridPagination />}>
+            <DataGridScrollArea><DataGridTable /></DataGridScrollArea>
         </Frame>
     </DataGrid>
 );
@@ -89,7 +93,9 @@ const filters = <Filters fields={[]} query={query} onQueryChange={(next) => flat
 const nativeComposition = (
     <Card
         id="settings"
-        header={{ title: label, description: 'Settings', action: <Button>More</Button> }}
+        title={<span>{label}</span>}
+        description="Settings"
+        action={<Button>More</Button>}
         footer={<Button onClick={() => {}}>Save</Button>}
         label="Open settings"
         onClick={(event) => event.currentTarget.focus()}

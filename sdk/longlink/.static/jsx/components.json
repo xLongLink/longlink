@@ -188,11 +188,23 @@
         {
             "name": "Frame",
             "category": "Layouts",
-            "source": "reui",
+            "source": "custom",
+            "justification": "Composes ReUI Frame sections behind flat title, description, action, and footer props with owned panel spacing.",
             "reference": "https://reui.io/docs/components/base/frame",
-            "introduction": "Native ReUI structured surface.",
-            "guidance": "Compose FrameHeader, FrameTitle, FramePanel, and FrameFooter using native variants and spacing.",
-            "properties": []
+            "introduction": "A structured surface with an optional header and footer around one content panel.",
+            "guidance": "Pass title, description, and a right-aligned action directly. The header is omitted when all three are absent; action alone creates a full-width header. Pass footer as JSX and panel content as children. Use padding=\"none\" for edge-to-edge tables.",
+            "properties": [
+                { "name": "title", "type": "ReactNode" },
+                { "name": "description", "type": "ReactNode" },
+                { "name": "action", "type": "ReactNode" },
+                { "name": "children", "type": "ReactNode" },
+                { "name": "footer", "type": "ReactNode" },
+                { "name": "padding", "type": "\"default\" | \"none\"", "default": "default" },
+                { "name": "variant", "type": "\"default\" | \"inverse\" | \"ghost\"", "default": "default" },
+                { "name": "spacing", "type": "\"xs\" | \"sm\" | \"default\" | \"lg\"", "default": "default" },
+                { "name": "stacked", "type": "boolean", "default": false },
+                { "name": "dense", "type": "boolean", "default": false }
+            ]
         },
         {
             "name": "IconTile",
@@ -754,9 +766,11 @@
             "name": "Card",
             "category": "Layouts",
             "introduction": "A standalone card with optional header and footer content and accessible surface interactions.",
-            "guidance": "Pass header as an object with title, optional description, and an optional right-aligned action. Pass footer as JSX and body content as children. Supply label with onClick, href, or onChange for interactive cards. Selection takes priority over onClick and href; nested controls remain independent. Use Box for sizing.",
+            "guidance": "Pass title, description, and a right-aligned action directly. The header is omitted when all three are absent; action alone creates a full-width header. Pass footer as JSX and body content as children. Supply label with onClick, href, or onChange for interactive cards. Selection takes priority over onClick and href; nested controls remain independent. Use Box for sizing.",
             "properties": [
-                { "name": "header", "type": "{ title: ReactNode; description?: ReactNode; action?: ReactNode }" },
+                { "name": "title", "type": "ReactNode" },
+                { "name": "description", "type": "ReactNode" },
+                { "name": "action", "type": "ReactNode" },
                 { "name": "children", "type": "ReactNode" },
                 { "name": "footer", "type": "ReactNode" },
                 { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" },

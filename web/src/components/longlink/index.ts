@@ -6,6 +6,7 @@ import * as menu from './layout/menu';
 import * as tabs from './layout/tabs';
 import * as icon from './display/icon';
 import * as text from './display/text';
+import * as frame from './layout/frame';
 import * as stack from './layout/stack';
 import * as badge from './display/badge';
 import * as empty from './display/empty';
@@ -19,7 +20,6 @@ import * as progress from './display/progress';
 import * as fileType from './display/file-type';
 import * as timestamp from './display/timestamp';
 import * as maps from '@/components/custom/maps';
-import * as frame from '@/components/reui/frame';
 import * as image from '@/components/custom/image';
 import * as token from '@/components/custom/token';
 import * as tile from '@/components/reui/icon-tile';
@@ -135,10 +135,6 @@ export const Currency: PublicComponent<typeof currency.Currency> = currency.Curr
 export const FileViewer: PublicComponent<typeof fileViewer.FileViewer> = fileViewer.FileViewer;
 export const Maps: PublicComponent<typeof maps.Maps> = maps.Maps;
 export const Frame: PublicComponent<typeof frame.Frame> = frame.Frame;
-export const FrameHeader: PublicComponent<typeof frame.FrameHeader> = frame.FrameHeader;
-export const FrameTitle: PublicComponent<typeof frame.FrameTitle> = frame.FrameTitle;
-export const FramePanel: PublicComponent<typeof frame.FramePanel> = frame.FramePanel;
-export const FrameFooter: PublicComponent<typeof frame.FrameFooter> = frame.FrameFooter;
 
 export { Controller, FormProvider } from 'react-hook-form';
 export { Input } from './form/input';

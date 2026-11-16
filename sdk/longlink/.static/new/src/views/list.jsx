@@ -64,8 +64,13 @@ export default function List() {
                     </Empty>
                 }
             >
-                <Frame variant="ghost" stacked dense spacing="sm" className="min-w-0">
-                    <FrameHeader>
+                <Frame
+                    variant="ghost"
+                    stacked
+                    dense
+                    spacing="sm"
+                    padding="none"
+                    action={
                         <Box width={384} maxWidth="100%">
                             <Input
                                 aria-label="Search files"
@@ -77,15 +82,12 @@ export default function List() {
                                 }}
                             />
                         </Box>
-                    </FrameHeader>
-                    <FramePanel className="p-0">
-                        <DataGridScrollArea orientation="horizontal">
-                            <DataGridTable />
-                        </DataGridScrollArea>
-                    </FramePanel>
-                    <FrameFooter>
-                        <DataGridPagination sizes={[5, 10, 25]} />
-                    </FrameFooter>
+                    }
+                    footer={<DataGridPagination sizes={[5, 10, 25]} />}
+                >
+                    <DataGridScrollArea orientation="horizontal">
+                        <DataGridTable />
+                    </DataGridScrollArea>
                 </Frame>
             </DataGrid>
         </Stack>
