@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
             overrides: [
                 // Keep registry code upstream-compatible without applying LongLink's authoring conventions.
                 {
-                    files: ['src/components/reui/**/*'],
+                    files: ['src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'react/exhaustive-deps': 'warn',
                         'typescript/no-base-to-string': 'off',
@@ -65,7 +65,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
                 {
-                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*'],
+                    files: ['src/components/shadcn/**/*', 'src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'no-restricted-imports': [
                             'error',
@@ -107,7 +107,7 @@ export default defineConfig(({ mode }) => {
                 },
                 {
                     files: ['**/*'],
-                    excludeFiles: ['src/components/reui/**/*'],
+                    excludeFiles: ['src/components/reui/**/*', 'src/components/mapcn/**/*'],
                     rules: {
                         'oxc/no-accumulating-spread': 'error',
                         'perfectionist/sort-imports': [

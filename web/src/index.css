@@ -348,4 +348,22 @@
     html {
         scrollbar-gutter: stable;
     }
+    .maplibregl-popup-content {
+        @apply bg-transparent! shadow-none! p-0! rounded-none!;
+    }
+    .maplibregl-popup-tip {
+        @apply hidden!;
+    }
+    .maplibregl-ctrl-attrib {
+        @apply bg-background! text-muted-foreground! border-border! rounded-md! border! shadow-sm!;
+    }
+    .maplibregl-ctrl-attrib a {
+        @apply text-muted-foreground!;
+    }
+    .maplibregl-ctrl-attrib a:hover {
+        @apply text-foreground!;
+    }
+    .maplibregl-ctrl-attrib-button {
+        @apply bg-transparent! dark:invert;
+    }
 }
