@@ -5,12 +5,11 @@ import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -27,21 +26,14 @@ export function SolutionPermissionsDialog({
     organizationId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Solution permissions</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[80dvh] overflow-auto">
-                    <ApiBoundary key={solutionId}>
-                        <SolutionPermissions
-                            solutionId={solutionId}
-                            organizationId={organizationId}
-                            onClose={() => onOpenChange(false)}
-                        />
-                    </ApiBoundary>
-                </div>
-            </DialogContent>
+        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution permissions">
+            <ApiBoundary key={solutionId}>
+                <SolutionPermissions
+                    solutionId={solutionId}
+                    organizationId={organizationId}
+                    onClose={() => onOpenChange(false)}
+                />
+            </ApiBoundary>
         </Dialog>
     );
 }
@@ -70,7 +62,7 @@ export default function SolutionPermissions({
     });
 
     return (
-        <Stack gap={4} padding={6}>
+        <Stack gap={4}>
             {settings.roles.length === 0 ? (
                 <span>Rebuild and deploy the Solution to load its roles.</span>
             ) : (

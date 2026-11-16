@@ -113,7 +113,7 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
                     }
 
                     const form = dialog.querySelector('form');
-                    const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+                    const submit = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
 
                     if (!form || !submit) throw new Error('Expected the tag form');
 

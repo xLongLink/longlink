@@ -4,10 +4,9 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 export function SolutionLogsDialog({
@@ -20,17 +19,10 @@ export function SolutionLogsDialog({
     solutionId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Solution logs</DialogTitle>
-                </DialogHeader>
-                <Stack className="max-h-[80dvh] overflow-auto">
-                    <ApiBoundary key={solutionId}>
-                        <SolutionLogs solutionId={solutionId} onClose={() => onOpenChange(false)} />
-                    </ApiBoundary>
-                </Stack>
-            </DialogContent>
+        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution logs">
+            <ApiBoundary key={solutionId}>
+                <SolutionLogs solutionId={solutionId} onClose={() => onOpenChange(false)} />
+            </ApiBoundary>
         </Dialog>
     );
 }

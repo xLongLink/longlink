@@ -1,9 +1,8 @@
 import type { z } from 'zod';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 export function ComputeMetadata({
     metadata,
@@ -14,31 +13,29 @@ export function ComputeMetadata({
     onDelete: () => void;
 }) {
     return (
-        <Dialog {...dialogProps}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Compute metadata</DialogTitle>
-                </DialogHeader>
-                <Stack gap={2} className="max-h-[80dvh] overflow-auto">
-                    <span>
-                        <b>Gateway</b> {metadata.gateway_url}
-                    </span>
-                    <span>
-                        <b>Database storage class</b> {metadata.database_storage_class}
-                    </span>
-                    <span>
-                        <b>ID</b> {metadata.id}
-                    </span>
-                    <span>
-                        <b>Storage endpoint</b> {metadata.storage_endpoint}
-                    </span>
-                    <Stack direction="horizontal" justify="end">
-                        <Button variant="destructive" onClick={onDelete}>
-                            Delete
-                        </Button>
-                    </Stack>
-                </Stack>
-            </DialogContent>
+        <Dialog
+            {...dialogProps}
+            title="Compute metadata"
+            footer={
+                <Button type="button" variant="destructive" onClick={onDelete}>
+                    Delete
+                </Button>
+            }
+        >
+            <Stack gap={2}>
+                <span>
+                    <b>Gateway</b> {metadata.gateway_url}
+                </span>
+                <span>
+                    <b>Database storage class</b> {metadata.database_storage_class}
+                </span>
+                <span>
+                    <b>ID</b> {metadata.id}
+                </span>
+                <span>
+                    <b>Storage endpoint</b> {metadata.storage_endpoint}
+                </span>
+            </Stack>
         </Dialog>
     );
 }

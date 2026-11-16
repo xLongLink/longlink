@@ -1,9 +1,15 @@
 import { useApiError } from '@/lib/errors';
 import { useRef, useTransition } from 'react';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from '@/components/shadcn/alert-dialog';
 
 export function InvitationResponse({
     invitation,
@@ -18,51 +24,72 @@ export function InvitationResponse({
     const inFlight = useRef(false);
     const [pending, startConfirmation] = useTransition();
 
+    const footer = (
+        <>
+            <Button
+                type="button"
+                variant="outline"
+                disabled={pending && invitation.type === 'decline'}
+                onClick={() => onOpenChange(false)}
+            >
+                Cancel
+            </Button>
+            <Button
+                type="button"
+                variant={invitation.type === 'accept' ? 'primary' : 'destructive'}
+                disabled={pending}
+                aria-busy={pending || undefined}
+                onClick={() => {
+                    // Guard immediate repeated clicks before pending state renders.
+                    if (inFlight.current) return;
+                    inFlight.current = true;
+                    startConfirmation(async () => {
+                        try {
+                            await onConfirm();
+                        } catch (cause) {
+                            reportError(cause);
+                        } finally {
+                            inFlight.current = false;
+                        }
+                    });
+                }}
+            >
+                {invitation.type === 'accept' ? 'Accept' : 'Decline'}
+            </Button>
+            <span role="status" className="sr-only">
+                {pending ? 'Loading' : ''}
+            </span>
+        </>
+    );
+
+    if (invitation.type === 'decline') {
+        return (
+            <AlertDialog
+                {...dialogProps}
+                onOpenChange={(open) => {
+                    if (!pending && !inFlight.current) onOpenChange(open);
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Decline invitation</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Decline the invitation to {invitation.name}? You will need a new invitation to join.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>{footer}</AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        );
+    }
+
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>
-                        {invitation.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
-                    </DialogTitle>
-                </DialogHeader>
-                <Stack gap={3}>
-                    <span className="text-muted-foreground">
-                        {invitation.type === 'accept'
-                            ? `Accept the invitation to join ${invitation.name}?`
-                            : `Decline the invitation to ${invitation.name}? You will need a new invitation to join.`}
-                    </span>
-                    <Stack direction="horizontal" gap={2} justify="end">
-                        <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant={invitation.type === 'accept' ? 'primary' : 'destructive'}
-                            disabled={pending}
-                            aria-busy={pending || undefined}
-                            onClick={() => {
-                                // Guard immediate repeated clicks before pending state renders.
-                                if (inFlight.current) return;
-                                inFlight.current = true;
-                                startConfirmation(async () => {
-                                    try {
-                                        await onConfirm();
-                                    } catch (cause) {
-                                        reportError(cause);
-                                    } finally {
-                                        inFlight.current = false;
-                                    }
-                                });
-                            }}
-                        >
-                            {invitation.type === 'accept' ? 'Accept' : 'Decline'}
-                        </Button>
-                        <span role="status" className="sr-only">
-                            {pending ? 'Loading' : ''}
-                        </span>
-                    </Stack>
-                </Stack>
-            </DialogContent>
-        </Dialog>
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Accept invitation"
+            description={`Accept the invitation to join ${invitation.name}?`}
+            footer={footer}
+        />
     );
 }

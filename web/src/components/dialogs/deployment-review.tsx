@@ -1,17 +1,15 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Checkbox } from '@/components/shadcn/checkbox';
-import { Step, Wizard } from '@/components/custom/wizard';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type DeploymentReviewProps = { open: boolean; onOpenChange: (open: boolean) => void } & {
@@ -27,12 +25,12 @@ function imageDigest(image: string) {
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
 export default function DeploymentReview({ item, onSuccess, onOpenChange, ...dialogProps }: DeploymentReviewProps) {
+    const formId = useId();
     // Scope inspection and drafts to one freshly opened review attempt.
     const [attemptId] = useState(() => crypto.randomUUID());
 
     const form = useForm<{ envs: Record<string, { value?: string; removed?: boolean }> }>({
-        defaultValues: { envs: {} },
-        shouldFocusError: false
+        defaultValues: { envs: {} }
     });
 
     const envs = useWatch({ control: form.control, name: 'envs' });
@@ -89,218 +87,162 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange, ...dia
         onError: () => form.setError('root', { message: 'Could not update the Solution. Please try again.' })
     });
 
-    // Share wizard navigation while retaining revision fencing and configured-secret semantics.
+    // Keep version review and environment edits in the same revision-fenced form.
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Update {item.name}</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[80dvh] overflow-auto">
-                    {!candidate ? (
-                        <div className="min-h-0 min-w-0">
-                            <div className="min-h-0 min-w-0">
-                                <Stack gap={4} align="center" justify="center" minHeight="100%">
-                                    <p role="status">
-                                        {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
-                                    </p>
-                                    <Stack direction="horizontal" gap={2}>
-                                        <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                                            Cancel
-                                        </Button>
-                                        {!isPending && <Button onClick={() => void refetch()}>Retry</Button>}
-                                    </Stack>
-                                </Stack>
-                            </div>
-                        </div>
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title={`Update ${item.name}`}
+            footer={
+                <>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    {candidate ? (
+                        <Button
+                            type="submit"
+                            form={formId}
+                            disabled={form.formState.isSubmitting || missingRequired || !hasChanges}
+                        >
+                            Update solution
+                        </Button>
                     ) : (
-                        <FormProvider {...form}>
-                            <form
-                                onSubmit={(event) => {
-                                    void form.handleSubmit(submit)(event);
-                                }}
-                                noValidate
-                                aria-busy={form.formState.isSubmitting}
-                            >
-                                <Wizard
-                                    showProgress={false}
-                                    backVariant="ghost"
-                                    finalAction={
-                                        <Button type="submit" disabled={missingRequired || !hasChanges}>
-                                            Update solution
-                                        </Button>
-                                    }
-                                >
-                                    <Step label="Image">
-                                        <Stack gap={4}>
-                                            <Stack gap={3} align="center">
-                                                <RefreshCw
-                                                    className="size-20 text-muted-foreground"
-                                                    aria-hidden="true"
-                                                />
-                                                <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                                    Update {item.name}
-                                                </h2>
-                                            </Stack>
-                                            <Stack direction="horizontal" gap={4} align="center">
-                                                <div className="min-h-0 min-w-0 grow">
-                                                    <Stack padding={3} className="rounded-lg bg-muted">
-                                                        <span className="font-mono text-sm text-muted-foreground block text-center break-all">
-                                                            {candidate.current_version ||
-                                                                imageDigest(candidate.current_image)}
-                                                        </span>
-                                                    </Stack>
-                                                </div>
-                                                <ArrowRight
-                                                    className="size-5 shrink-0 text-muted-foreground"
-                                                    aria-hidden="true"
-                                                />
-                                                <div className="min-h-0 min-w-0 grow">
-                                                    <Stack padding={3} className="rounded-lg bg-muted">
-                                                        <span className="font-mono text-sm block text-center break-all">
-                                                            {candidate.metadata.version ||
-                                                                imageDigest(candidate.metadata.image)}
-                                                        </span>
-                                                    </Stack>
-                                                </div>
-                                            </Stack>
-                                        </Stack>
-                                    </Step>
-                                    <Step
-                                        label="Environment"
-                                        fields={(candidate.metadata.environments ?? []).map(
-                                            ({ name }) => `envs.${name}.value`
-                                        )}
-                                    >
-                                        <Stack gap={4}>
-                                            <Stack gap={3} align="center">
-                                                <RefreshCw
-                                                    className="size-20 text-muted-foreground"
-                                                    aria-hidden="true"
-                                                />
-                                                <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                                    Configure your environment
-                                                </h2>
-                                            </Stack>
-                                            {!candidate.metadata.environments?.length && (
-                                                <span className="text-muted-foreground">
-                                                    This solution does not require environment variables.
-                                                </span>
-                                            )}
-                                            {(candidate.metadata.environments ?? []).map((environment) => {
-                                                // Resolve the configured secret and its local draft without exposing its value.
-                                                const configured = candidate.configured_envs.includes(environment.name);
-
-                                                const draft = envs[environment.name];
-                                                const isRemoved = draft?.removed === true;
-
-                                                // Configured secrets remain hidden; blank untouched inputs preserve them.
-                                                return (
-                                                    <Stack key={environment.name} gap={2}>
-                                                        <Controller
-                                                            name={`envs.${environment.name}.value`}
-                                                            control={form.control}
-                                                            rules={{
-                                                                validate: (value) =>
-                                                                    !environment.required ||
-                                                                    configured ||
-                                                                    !!value?.trim() ||
-                                                                    'Please complete this field.'
-                                                            }}
-                                                            render={({ field, fieldState }) => (
-                                                                <Field
-                                                                    className="min-w-0"
-                                                                    data-disabled={isRemoved || undefined}
-                                                                    data-invalid={fieldState.invalid}
-                                                                >
-                                                                    <FieldLabel htmlFor={field.name}>
-                                                                        {environment.name}
-                                                                    </FieldLabel>
-                                                                    {environment.description && (
-                                                                        <FieldDescription
-                                                                            id={`${field.name}-description`}
-                                                                        >
-                                                                            {environment.description}
-                                                                        </FieldDescription>
-                                                                    )}
-                                                                    <Input
-                                                                        {...field}
-                                                                        id={field.name}
-                                                                        type="password"
-                                                                        value={field.value ?? ''}
-                                                                        disabled={isRemoved}
-                                                                        required={
-                                                                            environment.required &&
-                                                                            (!configured || isRemoved)
-                                                                        }
-                                                                        aria-required={
-                                                                            (environment.required &&
-                                                                                (!configured || isRemoved)) ||
-                                                                            undefined
-                                                                        }
-                                                                        aria-invalid={fieldState.invalid}
-                                                                        aria-describedby={
-                                                                            [
-                                                                                environment.description &&
-                                                                                    `${field.name}-description`,
-                                                                                fieldState.error?.message &&
-                                                                                    `${field.name}-error`
-                                                                            ]
-                                                                                .filter(Boolean)
-                                                                                .join(' ') || undefined
-                                                                        }
-                                                                        placeholder={
-                                                                            isRemoved
-                                                                                ? 'Will be removed'
-                                                                                : configured
-                                                                                  ? 'Configured: preserve existing value'
-                                                                                  : environment.description ||
-                                                                                    'Enter value'
-                                                                        }
-                                                                    />
-                                                                    {fieldState.error?.message && (
-                                                                        <FieldError id={`${field.name}-error`}>
-                                                                            {fieldState.error.message}
-                                                                        </FieldError>
-                                                                    )}
-                                                                </Field>
-                                                            )}
-                                                        />
-                                                        {configured && !environment.required && (
-                                                            <Controller
-                                                                name={`envs.${environment.name}.removed`}
-                                                                control={form.control}
-                                                                render={({ field }) => (
-                                                                    <Field orientation="horizontal">
-                                                                        <Checkbox
-                                                                            id={`remove-${environment.name}`}
-                                                                            name={field.name}
-                                                                            inputRef={field.ref}
-                                                                            checked={field.value ?? false}
-                                                                            onCheckedChange={field.onChange}
-                                                                            onBlur={field.onBlur}
-                                                                        />
-                                                                        <FieldLabel
-                                                                            htmlFor={`remove-${environment.name}`}
-                                                                        >
-                                                                            Remove {environment.name}
-                                                                        </FieldLabel>
-                                                                    </Field>
-                                                                )}
-                                                            />
-                                                        )}
-                                                    </Stack>
-                                                );
-                                            })}
-                                        </Stack>
-                                    </Step>
-                                </Wizard>
-                                <FieldError errors={[form.formState.errors.root]} />
-                            </form>
-                        </FormProvider>
+                        !isPending && (
+                            <Button type="button" onClick={() => void refetch()}>
+                                Retry
+                            </Button>
+                        )
                     )}
-                </div>
-            </DialogContent>
+                </>
+            }
+        >
+            {!candidate ? (
+                <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
+            ) : (
+                <form
+                    id={formId}
+                    className="flex min-h-0 flex-col gap-4"
+                    onSubmit={(event) => {
+                        void form.handleSubmit(submit)(event);
+                    }}
+                    noValidate
+                    aria-busy={form.formState.isSubmitting}
+                >
+                    <RefreshCw className="size-20 self-center text-muted-foreground" aria-hidden="true" />
+                    <div className="flex min-w-0 items-center gap-3">
+                        <span className="min-w-0 flex-1 break-all font-mono text-sm text-muted-foreground">
+                            {candidate.current_version || imageDigest(candidate.current_image)}
+                        </span>
+                        <ArrowRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 break-all font-mono text-sm">
+                            {candidate.metadata.version || imageDigest(candidate.metadata.image)}
+                        </span>
+                    </div>
+                    <fieldset
+                        disabled={form.formState.isSubmitting}
+                        className="flex min-w-0 flex-col gap-4 border-0 p-0"
+                    >
+                        {(candidate.metadata.environments ?? []).map((environment) => {
+                            // Resolve the configured secret and its local draft without exposing its value.
+                            const configured = candidate.configured_envs.includes(environment.name);
+
+                            const draft = envs[environment.name];
+                            const isRemoved = draft?.removed === true;
+
+                            // Configured secrets remain hidden; blank untouched inputs preserve them.
+                            return (
+                                <Stack key={environment.name} gap={2}>
+                                    <Controller
+                                        name={`envs.${environment.name}.value`}
+                                        control={form.control}
+                                        rules={{
+                                            validate: (value) =>
+                                                !environment.required ||
+                                                configured ||
+                                                !!value?.trim() ||
+                                                'Please complete this field.'
+                                        }}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                className="min-w-0"
+                                                data-disabled={isRemoved || undefined}
+                                                data-invalid={fieldState.invalid}
+                                            >
+                                                <FieldLabel htmlFor={field.name}>{environment.name}</FieldLabel>
+                                                {environment.description && (
+                                                    <FieldDescription id={`${field.name}-description`}>
+                                                        {environment.description}
+                                                    </FieldDescription>
+                                                )}
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    type="password"
+                                                    value={field.value ?? ''}
+                                                    disabled={isRemoved}
+                                                    required={environment.required && (!configured || isRemoved)}
+                                                    aria-required={
+                                                        (environment.required && (!configured || isRemoved)) ||
+                                                        undefined
+                                                    }
+                                                    aria-invalid={fieldState.invalid}
+                                                    aria-describedby={
+                                                        [
+                                                            environment.description && `${field.name}-description`,
+                                                            fieldState.error?.message && `${field.name}-error`
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' ') || undefined
+                                                    }
+                                                    placeholder={
+                                                        isRemoved
+                                                            ? 'Will be removed'
+                                                            : configured
+                                                              ? 'Configured: preserve existing value'
+                                                              : environment.description || 'Enter value'
+                                                    }
+                                                />
+                                                {fieldState.error?.message && (
+                                                    <FieldError id={`${field.name}-error`}>
+                                                        {fieldState.error.message}
+                                                    </FieldError>
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                    {configured && !environment.required && (
+                                        <Controller
+                                            name={`envs.${environment.name}.removed`}
+                                            control={form.control}
+                                            render={({ field }) => (
+                                                <Field orientation="horizontal">
+                                                    <Checkbox
+                                                        id={`remove-${environment.name}`}
+                                                        name={field.name}
+                                                        inputRef={field.ref}
+                                                        checked={field.value ?? false}
+                                                        onCheckedChange={field.onChange}
+                                                        onBlur={field.onBlur}
+                                                    />
+                                                    <FieldLabel htmlFor={`remove-${environment.name}`}>
+                                                        Remove {environment.name}
+                                                    </FieldLabel>
+                                                </Field>
+                                            )}
+                                        />
+                                    )}
+                                </Stack>
+                            );
+                        })}
+                    </fieldset>
+                    <FieldError errors={[form.formState.errors.root]} />
+                </form>
+            )}
         </Dialog>
     );
 }

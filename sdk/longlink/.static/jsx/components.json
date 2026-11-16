@@ -984,7 +984,7 @@
         {
             "name": "FormProvider",
             "category": "Form",
-            "introduction": "Shares React Hook Form methods with nested controls and Wizard.",
+            "introduction": "Shares React Hook Form methods with nested controls.",
             "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
             "guidance": "Call useForm(schema, { defaultValues, action }) and use form.submit for automatic validation and scoped multipart submission. Editing defaults stay explicit and do not need to satisfy the schema before submission. Parsed scalar values become text; files remain binary; arrays repeat field names; null and undefined are omitted, not treated as clearing a value. Nested objects and nonfinite numbers are rejected before transport. Submission failures populate formState.errors.root and preserve the draft. Standard methods remain available for local or custom forms. Spread methods onto FormProvider only when descendants need useFormContext. Validate and authorize mutations on the server.",
             "properties": [
@@ -1612,66 +1612,6 @@
             ],
             "source": "custom",
             "justification": "Provides a flex layout composition with independently scrollable children; no Stack primitive exists in shadcn/ui or ReUI."
-        },
-        {
-            "name": "Wizard",
-            "category": "Layouts",
-            "introduction": "Custom LongLink wizard with persistent Step panels, React Hook Form validation, and guarded asynchronous actions. Wrap the form in FormProvider and declare Step.fields. Next validates those field paths; a submit Button in the last Step invokes the form's handleSubmit. Set shouldFocusError: false so Wizard can reveal invalid hidden steps before focusing them.",
-            "properties": [
-                {
-                    "name": "height",
-                    "type": "number | string",
-                    "description": "Bounds a wizard, pinning progress above its scrollable panels."
-                },
-                {
-                    "name": "next",
-                    "type": "(step: number) => { label: string; action: () => void | boolean | Promise<void | boolean> } | undefined",
-                    "description": "Runs intermediate work after validation. Returning false prevents advancement."
-                },
-                {
-                    "name": "onCancel",
-                    "type": "() => void",
-                    "description": "Adds a Cancel action to wizard navigation."
-                },
-                {
-                    "name": "backVariant",
-                    "type": "\"outline\" | \"ghost\"",
-                    "description": "Wizard Back button appearance.",
-                    "default": "outline"
-                },
-                { "name": "children", "type": "ReactNode", "description": "Step elements to render in the stepper." },
-                {
-                    "name": "activeStep",
-                    "type": "number",
-                    "description": "Zero-based active index. Wizard mode manages selection internally when omitted.",
-                    "default": 0
-                },
-                {
-                    "name": "orientation",
-                    "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Layout direction of the stepper.",
-                    "default": "horizontal"
-                },
-                {
-                    "name": "onStepClick",
-                    "type": "(index: number) => void",
-                    "description": "Receives wizard selection changes."
-                },
-                { "name": "Step.label", "type": "string", "description": "Visible label identifying the step." },
-                {
-                    "name": "Step.fields",
-                    "type": "string[]",
-                    "description": "React Hook Form field paths to validate before leaving the step. Include shared fields in every step that requires them."
-                },
-                {
-                    "name": "Step.description",
-                    "type": "string",
-                    "description": "Supporting text displayed below the step label."
-                },
-                { "name": "Step.children", "type": "ReactNode", "description": "Persistent Wizard panel content." }
-            ],
-            "source": "custom",
-            "justification": "Keeps drafts mounted and coordinates explicit RHF step validation, invalid-step focus recovery, and guarded asynchronous advancement."
         },
         {
             "name": "Switch",

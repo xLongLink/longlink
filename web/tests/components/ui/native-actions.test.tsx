@@ -75,9 +75,9 @@ it.each(['member', 'invitation'] as const)(
                 )}
             </ApiErrorContext>,
             async () => {
-                const button = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
-                    (control) => control.textContent === (kind === 'member' ? 'Remove member' : 'Accept')
-                );
+                const button = Array.from(
+                    document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button, [role="alertdialog"] button')
+                ).find((control) => control.textContent === (kind === 'member' ? 'Remove member' : 'Accept'));
 
                 if (!button) throw new Error('Expected confirmation');
 
@@ -89,6 +89,19 @@ it.each(['member', 'invitation'] as const)(
                 expect(close).not.toHaveBeenCalled();
                 expect(button.getAttribute('aria-busy')).toBe('true');
                 expect(button.disabled).toBe(true);
+
+                if (kind === 'member') {
+                    const cancel = Array.from(
+                        document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
+                    ).find((control) => control.textContent === 'Cancel');
+                    if (!cancel) throw new Error('Expected destructive confirmation cancellation');
+                    await act(async () => {
+                        cancel.click();
+                        await userEvent.setup().keyboard('{Escape}');
+                    });
+                    expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+                    expect(close).not.toHaveBeenCalled();
+                }
 
                 await act(async () => reject(new Error('Transport failure')));
                 expect(notify).toHaveBeenCalledWith(expect.stringContaining('Please try again.'));

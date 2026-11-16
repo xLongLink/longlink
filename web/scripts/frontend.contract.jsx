@@ -243,9 +243,6 @@ const nativeComposition = (
                 </TableBody>
             </Table>
             <Empty aria-label="Search results" title="No matching orders" description="Change the search filters." />
-            <Wizard>
-                <Step label="Details">Draft</Step>
-            </Wizard>
             <Badge onAnimationStart={(event) => event.currentTarget.focus()}>
                 Ready
             </Badge>

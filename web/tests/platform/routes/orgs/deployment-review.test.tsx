@@ -73,7 +73,7 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Retry').click());
-        await act(async () => vi.waitFor(() => button('Next')));
+        await act(async () => vi.waitFor(() => button('Update solution')));
 
         // Assert
         expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
@@ -83,7 +83,6 @@ describe('DeploymentReview', () => {
         expect(onSuccess).not.toHaveBeenCalled();
 
         // Act
-        await act(async () => button('Next').click());
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         await act(async () => button('Update solution').click());
 
@@ -103,7 +102,6 @@ describe('DeploymentReview', () => {
         // Arrange
         const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
-        await act(async () => button('Next').click());
 
         // Act
         // The image already changed, so only the missing required value blocks submission.
@@ -140,7 +138,6 @@ describe('DeploymentReview', () => {
         // Arrange
         const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
-        await act(async () => button('Next').click());
         await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
 

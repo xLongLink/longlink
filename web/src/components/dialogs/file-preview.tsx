@@ -1,6 +1,5 @@
-import { Dialog } from '@/components/custom/native-dialog';
 import { NativeFile } from '@/components/custom/native-file';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
 
 /** Displays host-fetched PDF and media bytes with their native viewer layout. */
 export function FilePreview({
@@ -14,15 +13,10 @@ export function FilePreview({
     title: string;
 }) {
     return (
-        <Dialog fullscreen {...dialogProps}>
-            <DialogContent className="flex h-[95dvh] w-[95dvw] max-w-[95dvw] flex-col sm:max-w-[95dvw]">
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                </DialogHeader>
-                <div className="min-h-0 flex-1 overflow-auto">
-                    <NativeFile body={body} title={title} />
-                </div>
-            </DialogContent>
+        <Dialog fullscreen {...dialogProps} title={title}>
+            <div className="h-full min-h-0">
+                <NativeFile body={body} title={title} />
+            </div>
         </Dialog>
     );
 }

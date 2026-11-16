@@ -1,18 +1,15 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useEffect, useState } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { useEffect, useId, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
-import { Step, Wizard } from '@/components/custom/wizard';
-import { Dialog } from '@/components/custom/native-dialog';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 const registrationSchema = schemas.zComputeRegistryCreate.extend({
     name: z.string().trim().pipe(schemas.zComputeRegistryCreate.shape.name),
@@ -23,16 +20,17 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
 
 export function ComputeRegistration({
     onSuccess,
+    onOpenChange,
     ...dialogProps
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => Promise<void>;
 }) {
+    const formId = useId();
     const form = useForm({
         resolver: zodResolver(registrationSchema),
-        defaultValues: { name: '', gateway_url: '', storage_endpoint: '', kubeconfig: '' },
-        shouldFocusError: false
+        defaultValues: { name: '', gateway_url: '', storage_endpoint: '', kubeconfig: '' }
     });
 
     const kubeconfig = useWatch({ control: form.control, name: 'kubeconfig' });
@@ -88,130 +86,120 @@ export function ComputeRegistration({
     });
 
     return (
-        <Dialog {...dialogProps}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Register Compute</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[80dvh] overflow-auto">
-                    <FormProvider {...form}>
-                        <form
-                            onSubmit={(event) => {
-                                void form.handleSubmit(submit)(event);
+        <Dialog
+            {...dialogProps}
+            onOpenChange={onOpenChange}
+            title="Register Compute"
+            footer={
+                <>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form={formId}
+                        disabled={form.formState.isSubmitting || fileRead.kind === 'reading' || !kubeconfig.trim()}
+                    >
+                        Register
+                    </Button>
+                </>
+            }
+        >
+            <form
+                id={formId}
+                className="flex min-h-0 flex-col gap-4"
+                onSubmit={(event) => {
+                    void form.handleSubmit(submit)(event);
+                }}
+                noValidate
+                aria-busy={form.formState.isSubmitting}
+            >
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-h-0 flex-col gap-4 border-0 p-0">
+                    {(
+                        [
+                            ['name', 'Name'],
+                            ['gateway_url', 'Gateway URL'],
+                            ['storage_endpoint', 'Storage endpoint']
+                        ] as const
+                    ).map(([name, label]) => (
+                        <Controller
+                            key={name}
+                            name={name}
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor={`compute-${name}`}>{label}</FieldLabel>
+                                    <Input {...field} id={`compute-${name}`} aria-invalid={fieldState.invalid} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
+                    ))}
+                    <Field data-invalid={fileRead.kind === 'error'}>
+                        <FieldLabel htmlFor="compute-kubeconfig-file">Kubeconfig file</FieldLabel>
+                        <Input
+                            id="compute-kubeconfig-file"
+                            type="file"
+                            accept=".yaml,.yml"
+                            aria-invalid={fileRead.kind === 'error'}
+                            aria-describedby={fileRead.kind === 'error' ? 'compute-file-error' : undefined}
+                            onChange={(event) => {
+                                // Replacing a file invalidates both the previous read and its YAML.
+                                const selected = event.target.files?.[0] ?? null;
+                                form.setValue('kubeconfig', '');
+
+                                if (selected && !/\.ya?ml$/i.test(selected.name)) {
+                                    setFile(null);
+                                    setFileRead({
+                                        kind: 'error',
+                                        message: `"${selected.name}" is not an accepted file type`
+                                    });
+
+                                    return;
+                                }
+
+                                setFile(selected);
+                                setFileRead({ kind: selected ? 'reading' : 'idle' });
                             }}
-                            noValidate
-                            aria-busy={form.formState.isSubmitting}
-                        >
-                            <Wizard showProgress={false} backVariant="ghost">
-                                <Step label="Metadata" fields={['name', 'gateway_url', 'storage_endpoint']}>
-                                    <Stack gap={8}>
-                                        <Stack gap={3}>
-                                            {(
-                                                [
-                                                    ['name', 'Name'],
-                                                    ['gateway_url', 'Gateway URL'],
-                                                    ['storage_endpoint', 'Storage endpoint']
-                                                ] as const
-                                            ).map(([name, label]) => (
-                                                <Controller
-                                                    key={name}
-                                                    name={name}
-                                                    control={form.control}
-                                                    render={({ field, fieldState }) => (
-                                                        <Field data-invalid={fieldState.invalid}>
-                                                            <FieldLabel htmlFor={`compute-${name}`}>{label}</FieldLabel>
-                                                            <Input
-                                                                {...field}
-                                                                id={`compute-${name}`}
-                                                                aria-invalid={fieldState.invalid}
-                                                            />
-                                                            <FieldError errors={[fieldState.error]} />
-                                                        </Field>
-                                                    )}
-                                                />
-                                            ))}
-                                        </Stack>
-                                    </Stack>
-                                </Step>
-                                <Step label="Kubeconfig" fields={['kubeconfig']}>
-                                    <Stack gap={8}>
-                                        <h2 className="font-semibold tracking-tight text-3xl text-center">
-                                            Connect your cluster
-                                        </h2>
-                                        <Stack gap={3}>
-                                            <Field data-invalid={fileRead.kind === 'error'}>
-                                                <FieldLabel htmlFor="compute-kubeconfig-file">
-                                                    Kubeconfig file
-                                                </FieldLabel>
-                                                <Input
-                                                    id="compute-kubeconfig-file"
-                                                    type="file"
-                                                    accept=".yaml,.yml"
-                                                    aria-invalid={fileRead.kind === 'error'}
-                                                    aria-describedby={
-                                                        fileRead.kind === 'error' ? 'compute-file-error' : undefined
-                                                    }
-                                                    onChange={(event) => {
-                                                        // Replacing a file invalidates both the previous read and its YAML.
-                                                        const selected = event.target.files?.[0] ?? null;
-                                                        form.setValue('kubeconfig', '');
-
-                                                        if (selected && !/\.ya?ml$/i.test(selected.name)) {
-                                                            setFile(null);
-                                                            setFileRead({
-                                                                kind: 'error',
-                                                                message: `"${selected.name}" is not an accepted file type`
-                                                            });
-
-                                                            return;
-                                                        }
-
-                                                        setFile(selected);
-                                                        setFileRead({ kind: selected ? 'reading' : 'idle' });
-                                                    }}
-                                                />
-                                                {fileRead.kind === 'error' && (
-                                                    <FieldError id="compute-file-error">{fileRead.message}</FieldError>
-                                                )}
-                                            </Field>
-                                            <Controller
-                                                name="kubeconfig"
-                                                control={form.control}
-                                                render={({ field, fieldState }) => (
-                                                    <Field data-invalid={fieldState.invalid}>
-                                                        <FieldLabel htmlFor="compute-kubeconfig">Kubeconfig</FieldLabel>
-                                                        <Textarea
-                                                            {...field}
-                                                            id="compute-kubeconfig"
-                                                            rows={8}
-                                                            placeholder="Paste the Compute kubeconfig"
-                                                            required
-                                                            disabled={fileRead.kind === 'reading'}
-                                                            aria-busy={fileRead.kind === 'reading' || undefined}
-                                                            spellCheck={false}
-                                                            aria-invalid={fieldState.invalid}
-                                                        />
-                                                        {fileRead.kind === 'reading' && (
-                                                            <span role="status" className="sr-only">
-                                                                Loading
-                                                            </span>
-                                                        )}
-                                                        <FieldError errors={[fieldState.error]} />
-                                                    </Field>
-                                                )}
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                    <Button type="submit" disabled={fileRead.kind === 'reading' || !kubeconfig.trim()}>
-                                        Register
-                                    </Button>
-                                </Step>
-                            </Wizard>
-                            <FieldError errors={[form.formState.errors.root]} />
-                        </form>
-                    </FormProvider>
-                </div>
-            </DialogContent>
+                        />
+                        {fileRead.kind === 'error' && (
+                            <FieldError id="compute-file-error">{fileRead.message}</FieldError>
+                        )}
+                    </Field>
+                    <Controller
+                        name="kubeconfig"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="compute-kubeconfig">Kubeconfig</FieldLabel>
+                                <Textarea
+                                    {...field}
+                                    id="compute-kubeconfig"
+                                    rows={8}
+                                    placeholder="Paste the Compute kubeconfig"
+                                    required
+                                    disabled={fileRead.kind === 'reading'}
+                                    aria-busy={fileRead.kind === 'reading' || undefined}
+                                    spellCheck={false}
+                                    aria-invalid={fieldState.invalid}
+                                />
+                                {fileRead.kind === 'reading' && (
+                                    <span role="status" className="sr-only">
+                                        Loading
+                                    </span>
+                                )}
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                </fieldset>
+                <FieldError errors={[form.formState.errors.root]} />
+            </form>
         </Dialog>
     );
 }

@@ -360,9 +360,9 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             // Act
             await chooseMemberAction(output, user.name, 'Remove member');
 
-            const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
-                (button) => button.textContent === 'Remove member'
-            );
+            const confirm = Array.from(
+                document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
+            ).find((button) => button.textContent === 'Remove member');
 
             if (!confirm) throw new Error('Expected the self-removal confirmation');
 
@@ -375,7 +375,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
             );
             expect(client.getQueryData(['api', base])).toBeUndefined();
             expect(output.querySelector('table')).toBeNull();
-            expect(document.querySelector('[role="dialog"]')).toBeNull();
+            expect(document.querySelector('[role="alertdialog"]')).toBeNull();
             expect(requests).toEqual([`DELETE ${base}/members/${user.id}`, 'GET /api/v1/me/organizations']);
         });
     } finally {
@@ -433,7 +433,7 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
 
                 const form = document.querySelector<HTMLFormElement>('[role="dialog"] form');
                 const email = form?.querySelector<HTMLInputElement>('input[name="email"]');
-                const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+                const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
 
                 if (!form || !email || !submit) throw new Error('Expected the invitation form');
 

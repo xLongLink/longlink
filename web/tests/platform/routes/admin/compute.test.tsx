@@ -55,7 +55,7 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 if (!register) throw new Error('Expected the registration action');
                 await act(async () => user.click(register));
 
-                // Populate otherwise-valid metadata so navigation reaches the real kubeconfig editor.
+                // Populate otherwise-valid metadata before exercising file-read recovery.
                 for (const [name, value] of [
                     ['name', 'Fixture Compute'],
                     ['gateway_url', 'https://gateway.example.com'],
@@ -66,11 +66,6 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                     if (!input) throw new Error(`Expected the ${name} field`);
                     await act(async () => user.type(input, value));
                 }
-
-                const next = [...document.querySelectorAll('button')].find((button) => button.textContent === 'Next');
-
-                if (!next) throw new Error('Expected the kubeconfig step action');
-                await act(async () => user.click(next));
 
                 const textarea = document.querySelector('textarea');
                 const upload = document.querySelector<HTMLInputElement>('input[type="file"]');

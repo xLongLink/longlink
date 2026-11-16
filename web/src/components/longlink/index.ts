@@ -22,7 +22,6 @@ import * as fileType from './display/file-type';
 import * as timestamp from './display/timestamp';
 import * as maps from '@/components/custom/maps';
 import * as fileViewer from './display/file-viewer';
-import * as wizard from '@/components/custom/wizard';
 import * as calendar from '@/components/shadcn/calendar';
 import * as group from '@/components/shadcn/button-group';
 import * as separator from '@/components/shadcn/separator';
@@ -91,8 +90,6 @@ export const PaginationEllipsis: PublicComponent<typeof pagination.PaginationEll
 export const DataPagination: PublicComponent<typeof dataPagination.DataPagination> = dataPagination.DataPagination;
 export const Timestamp: PublicComponent<typeof timestamp.Timestamp> = timestamp.Timestamp;
 export const Progress: PublicComponent<typeof progress.Progress> = progress.Progress;
-export const Wizard: PublicComponent<typeof wizard.Wizard> = wizard.Wizard;
-export const Step: PublicComponent<typeof wizard.Step> = wizard.Step;
 export const Tabs: PublicComponent<typeof tabs.Tabs> = tabs.Tabs;
 export const Tab: PublicComponent<typeof tabs.Tab> = tabs.Tab;
 export const Empty: PublicComponent<typeof empty.Empty> = empty.Empty;
