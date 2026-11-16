@@ -9,7 +9,7 @@ export const documentationCategories: string[] = [
     'Display',
     'Form',
     'Charts',
-    'Others'
+    'Maps'
 ];
 
 // Describe the runtime bindings exposed to Views.

@@ -89,7 +89,15 @@ export const componentDocumentation = [
     { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge },
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
-    { name: 'Maps', category: 'Others', icon: Map },
+    { name: 'Map', category: 'Maps', icon: Map },
+    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
+    { name: 'MapControls', category: 'Maps', icon: Settings2 },
+    { name: 'StreetMap', category: 'Maps', icon: Map },
+    { name: 'MarkerMap', category: 'Maps', icon: Map },
+    { name: 'RouteMap', category: 'Maps', icon: Waypoints },
+    { name: 'ClusterMap', category: 'Maps', icon: Map },
+    { name: 'GeoJSONMap', category: 'Maps', icon: Globe },
+    { name: 'ArcMap', category: 'Maps', icon: Waypoints },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
     { name: 'Box', category: 'Layouts', icon: Box },
@@ -143,18 +151,22 @@ export const componentDocumentation = [
                 ? 'Icons'
                 : component.name,
     slug:
-        component.name === 'RadialBarChart'
-            ? 'radial-chart'
-            : component.name === 'Sankey'
-              ? 'sankey-chart'
-              : component.name === 'Button'
-                ? 'buttons'
-                : component.name === 'Icon'
-                  ? 'icons'
-                  : component.name
-                        .replace(/([a-z])([A-Z])/g, '$1-$2')
-                        .replace(/\s+/g, '-')
-                        .toLowerCase()
+        component.name === 'MapGeoJSON'
+            ? 'map-geojson'
+            : component.name === 'GeoJSONMap'
+              ? 'geojson-map'
+              : component.name === 'RadialBarChart'
+                ? 'radial-chart'
+                : component.name === 'Sankey'
+                  ? 'sankey-chart'
+                  : component.name === 'Button'
+                    ? 'buttons'
+                    : component.name === 'Icon'
+                      ? 'icons'
+                      : component.name
+                            .replace(/([a-z])([A-Z])/g, '$1-$2')
+                            .replace(/\s+/g, '-')
+                            .toLowerCase()
 }));
 
 export const documentationIntroduction: DocumentationSection = {
@@ -203,7 +215,7 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                     { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
                     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
                     { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
-                    { label: 'Others', category: 'Others', anchor: '#others', icon: Map }
+                    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
                 ].map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,

@@ -453,7 +453,11 @@ export function JsxView({
 
             const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
             const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
-            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'${runtime.modules ? ' blob:' : ''}; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
+            // Chunked runtimes bundle map workers; only CARTO map assets may use the network.
+            const mapSources = runtime.modules
+                ? 'https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com'
+                : '';
+            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'${runtime.modules ? ' blob:' : ''}; style-src 'unsafe-inline'; img-src data: blob:${mapSources ? ` ${mapSources}` : ''}; font-src data:; connect-src ${mapSources ? `data: ${mapSources}` : "'none'"}; frame-src 'none'; worker-src ${runtime.modules ? 'data:' : "'none'"}; object-src 'none'; base-uri 'none'; form-action 'none'`;
 
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.

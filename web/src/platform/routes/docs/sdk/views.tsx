@@ -1,4 +1,3 @@
-import { MapsExample } from './views/maps';
 import { TextExample } from './views/text';
 import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
@@ -6,6 +5,7 @@ import { TableExample } from './views/table';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
+import { MapExample } from './views/map-example';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
 import { ComboboxExample } from './views/combobox';
@@ -27,11 +27,12 @@ import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { Tabs, Tab } from '@/components/longlink/layout/tabs';
+import { documentationCategories } from '@/lib/documentation';
+import { SwitzerlandExample } from './views/switzerland-example';
 import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
-import { viewHooks, documentationCategories } from '@/lib/documentation';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
@@ -69,11 +70,15 @@ const previews = new Map(
         RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
         Sankey: <ChartExample name="Sankey" height={160} isCompact />,
         ChartLegend: <ChartLegendExample isCompact />,
-        Maps: (
-            <div className="flex aspect-square w-full items-center justify-center overflow-hidden [&_svg]:h-full! [&_svg]:w-[200%] [&_svg]:max-w-none [&_svg]:shrink-0">
-                <MapsExample />
-            </div>
-        ),
+        Map: <SwitzerlandExample height={160} isCompact />,
+        MapGeoJSON: <SwitzerlandExample height={160} isCompact />,
+        MapControls: <SwitzerlandExample height={220} />,
+        StreetMap: <MapExample name="StreetMap" height={160} isCompact />,
+        MarkerMap: <MapExample name="MarkerMap" height={160} isCompact />,
+        RouteMap: <MapExample name="RouteMap" height={160} isCompact />,
+        ClusterMap: <MapExample name="ClusterMap" height={160} isCompact />,
+        GeoJSONMap: <MapExample name="GeoJSONMap" height={160} isCompact />,
+        ArcMap: <MapExample name="ArcMap" height={160} isCompact />,
         Avatar: (
             <AvatarGroup className="items-center">
                 <Avatar name="Ada Lovelace" shape="circle" size="sm" />
@@ -269,8 +274,7 @@ export default function Item({ params }) {
                                         name: 'request(path, options)',
                                         description:
                                             'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
-                                    },
-                                    ...viewHooks
+                                    }
                                 ].map((row) => (
                                     <TableRow key={row.name}>
                                         <TableCell>
@@ -304,14 +308,14 @@ export default function Item({ params }) {
                                                 aria-hidden="true"
                                                 inert
                                                 size="sm"
-                                                className={`aspect-square w-full max-w-full ${component.name === 'Maps' ? 'py-0' : ''}`}
+                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0' : ''}`}
                                             >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
                                                 <div
                                                     className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
                                                 >
                                                     <Stack
-                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.name === 'Maps' ? '' : 'scale-90'}`}
+                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
                                                         width="100%"
                                                         maxWidth="100%"
                                                         align={

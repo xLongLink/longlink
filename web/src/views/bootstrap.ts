@@ -42,7 +42,7 @@ window.esmsInitOptions = {
     }
 };
 
-/** Receives authenticated Solution assets without giving the sandbox network access. */
+/** Receives authenticated Solution modules without fetching executable code from external origins. */
 function startModules(event: MessageEvent<unknown>): void {
     if (event.source !== window.parent || event.ports.length !== 2) return;
     const data = event.data;

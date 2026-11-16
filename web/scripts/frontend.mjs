@@ -50,6 +50,17 @@ const [bundle] = generateDtsBundle(
                     'victory-vendor',
                     '@types/d3-shape',
                     '@types/d3-path',
+                    '@types/geojson',
+                    'maplibre-gl',
+                    '@maplibre/maplibre-gl-style-spec',
+                    '@mapbox/point-geometry',
+                    '@mapbox/tiny-sdf',
+                    '@mapbox/vector-tile',
+                    '@maplibre/geojson-vt',
+                    '@maplibre/vt-pbf',
+                    '@maplibre/mlt',
+                    'gl-matrix',
+                    'kdbush',
                     'react-day-picker',
                     'date-fns',
                 ],
@@ -165,9 +176,9 @@ const namespace = statements
     )
     .join('\n');
 const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
-// Image and Text keep callable declarations above to avoid block-scoped collisions with lib.dom.
+// Image and Text retain callable declarations; Map uses JSX metadata without shadowing the collection constructor.
 const aliases = names
-    .filter((name) => name !== 'Image' && name !== 'Text')
+    .filter((name) => name !== 'Image' && name !== 'Text' && name !== 'Map')
     .map((name) =>
         namespaceExports.has(name) || typeExports.has(name)
             ? `import ${name} = NativeFrontend.${name};`

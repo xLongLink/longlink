@@ -16,5 +16,6 @@ app.include_view(
     "models.jsx", label="Models", icon="chart-no-axes-combined", width="wide"
 )
 app.include_view("list.jsx", label="List", icon="list")
+app.include_view("maps.jsx", label="Maps", icon="map", width="wide")
 app.include_view("tasks.jsx", label="Tasks", icon="list-todo")
 app.include_view("settings.jsx", label="Settings", icon="settings")

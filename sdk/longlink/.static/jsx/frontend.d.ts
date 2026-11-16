@@ -40,11 +40,13 @@ type ViewMouseEvent = Omit<MouseEvent, 'currentTarget'> & { currentTarget: HTMLE
 declare namespace React {
     namespace JSX {
         type Element = NativeFrontend.FrontendElement;
-        type ElementType = NativeFrontend.FrontendElementType | typeof Text;
-        // Text shares its global name with the DOM constructor.
+        type ElementType = NativeFrontend.FrontendElementType | typeof Text | typeof Map;
+        // These components share names with standard browser globals.
         type LibraryManagedAttributes<Component, Props> = Component extends typeof Text
             ? Parameters<typeof NativeFrontend.Text>[0]
-            : Props;
+            : Component extends typeof Map
+              ? Parameters<typeof NativeFrontend.Map>[0]
+              : Props;
 
         interface ElementChildrenAttribute {
             children: unknown;
@@ -7353,32 +7355,26682 @@ type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "classNam
     icon?: React$1.ReactNode;
 };
 function FileType({ type, variant, size, label, glyph, icon, ...props }: FileTypeProps): React$1.JSX.Element;
+function Point(x: number, y: number): void;
+class Point {
+    constructor(x: number, y: number);
+    x: number;
+    y: number;
+    clone(): Point;
+    add(p: Point): Point;
+    sub(p: Point): Point;
+    multByPoint(p: Point): Point;
+    divByPoint(p: Point): Point;
+    mult(k: number): Point;
+    div(k: number): Point;
+    rotate(a: number): Point;
+    rotateAround(a: number, p: Point): Point;
+    matMult(m: [
+        number,
+        number,
+        number,
+        number
+    ]): Point;
+    unit(): Point;
+    perp(): Point;
+    round(): Point;
+    mag(): number;
+    equals(other: Point): boolean;
+    dist(p: Point): number;
+    distSqr(p: Point): number;
+    angle(): number;
+    angleTo(b: Point): number;
+    angleWith(b: Point): number;
+    angleWithSep(x: number, y: number): number;
+    _matMult(m: [
+        number,
+        number,
+        number,
+        number
+    ]): this;
+    _add(p: Point): this;
+    _sub(p: Point): this;
+    _mult(k: number): this;
+    _div(k: number): this;
+    _multByPoint(p: Point): this;
+    _divByPoint(p: Point): this;
+    _unit(): this;
+    _perp(): this;
+    _rotate(angle: number): this;
+    _rotateAround(angle: number, p: Point): this;
+    _round(): this;
+}
+namespace Point {
+    function convert(p: Point | [
+        number,
+        number
+    ] | {
+        x: number;
+        y: number;
+    }): Point;
+}
+interface IndexedCollection extends Iterable<number> {
+    readonly length: number;
+    [index: number]: number;
+}
+type mat2 = [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type mat4 = [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type quat = [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type vec3 = [
+    number,
+    number,
+    number
+] | IndexedCollection;
+type vec4 = [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyMat2 = readonly [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyMat3 = readonly [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyMat4 = readonly [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyQuat = readonly [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyQuat2 = readonly [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyVec2 = readonly [
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyVec3 = readonly [
+    number,
+    number,
+    number
+] | IndexedCollection;
+type ReadonlyVec4 = readonly [
+    number,
+    number,
+    number,
+    number
+] | IndexedCollection;
+namespace mat2 {
+    export function create(): mat2;
+    export function clone(a: ReadonlyMat2): mat2;
+    export function copy(out: mat2, a: ReadonlyMat2): mat2;
+    export function identity(out: mat2): mat2;
+    export function fromValues(m00: number, m01: number, m10: number, m11: number): mat2;
+    export function set(out: mat2, m00: number, m01: number, m10: number, m11: number): mat2;
+    export function transpose(out: mat2, a: ReadonlyMat2): mat2;
+    export function invert(out: mat2, a: ReadonlyMat2): mat2 | null;
+    export function adjoint(out: mat2, a: ReadonlyMat2): mat2;
+    export function determinant(a: ReadonlyMat2): number;
+    export function multiply(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2): mat2;
+    export function rotate(out: mat2, a: ReadonlyMat2, rad: number): mat2;
+    export function scale(out: mat2, a: ReadonlyMat2, v: ReadonlyVec2): mat2;
+    export function fromRotation(out: mat2, rad: number): mat2;
+    export function fromScaling(out: mat2, v: ReadonlyVec2): mat2;
+    export function str(a: ReadonlyMat2): string;
+    export function frob(a: ReadonlyMat2): number;
+    export function LDU(L: ReadonlyMat2, D: ReadonlyMat2, U: ReadonlyMat2, a: ReadonlyMat2): ReadonlyMat2[];
+    export function add(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2): mat2;
+    export function subtract(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2): mat2;
+    export function exactEquals(a: ReadonlyMat2, b: ReadonlyMat2): boolean;
+    export function equals(a: ReadonlyMat2, b: ReadonlyMat2): boolean;
+    export function multiplyScalar(out: mat2, a: ReadonlyMat2, b: number): mat2;
+    export function multiplyScalarAndAdd(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2, scale: number): mat2;
+    export function mul(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2): mat2;
+    export function sub(out: mat2, a: ReadonlyMat2, b: ReadonlyMat2): mat2;
+}
+namespace mat4 {
+    export function create(): mat4;
+    export function clone(a: ReadonlyMat4): mat4;
+    export function copy(out: mat4, a: ReadonlyMat4): mat4;
+    export function fromValues(m00: number, m01: number, m02: number, m03: number, m10: number, m11: number, m12: number, m13: number, m20: number, m21: number, m22: number, m23: number, m30: number, m31: number, m32: number, m33: number): mat4;
+    export function set(out: mat4, m00: number, m01: number, m02: number, m03: number, m10: number, m11: number, m12: number, m13: number, m20: number, m21: number, m22: number, m23: number, m30: number, m31: number, m32: number, m33: number): mat4;
+    export function identity(out: mat4): mat4;
+    export function transpose(out: mat4, a: ReadonlyMat4): mat4;
+    export function invert(out: mat4, a: ReadonlyMat4): mat4 | null;
+    export function adjoint(out: mat4, a: ReadonlyMat4): mat4;
+    export function determinant(a: ReadonlyMat4): number;
+    export function multiply(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4): mat4;
+    export function translate(out: mat4, a: ReadonlyMat4, v: ReadonlyVec3): mat4;
+    export function scale(out: mat4, a: ReadonlyMat4, v: ReadonlyVec3): mat4;
+    export function rotate(out: mat4, a: ReadonlyMat4, rad: number, axis: ReadonlyVec3): mat4;
+    export function rotateX(out: mat4, a: ReadonlyMat4, rad: number): mat4;
+    export function rotateY(out: mat4, a: ReadonlyMat4, rad: number): mat4;
+    export function rotateZ(out: mat4, a: ReadonlyMat4, rad: number): mat4;
+    export function fromTranslation(out: mat4, v: ReadonlyVec3): mat4;
+    export function fromScaling(out: mat4, v: ReadonlyVec3): mat4;
+    export function fromRotation(out: mat4, rad: number, axis: ReadonlyVec3): mat4;
+    export function fromXRotation(out: mat4, rad: number): mat4;
+    export function fromYRotation(out: mat4, rad: number): mat4;
+    export function fromZRotation(out: mat4, rad: number): mat4;
+    export function fromRotationTranslation(out: mat4, q: quat, v: ReadonlyVec3): mat4;
+    export function fromQuat2(out: mat4, a: ReadonlyQuat2): mat4;
+    export function getTranslation(out: vec3, mat: ReadonlyMat4): vec3;
+    export function getScaling(out: vec3, mat: ReadonlyMat4): vec3;
+    export function getRotation(out: quat, mat: ReadonlyMat4): quat;
+    export function decompose(out_r: quat, out_t: vec3, out_s: vec3, mat: ReadonlyMat4): quat;
+    export function fromRotationTranslationScale(out: mat4, q: quat, v: ReadonlyVec3, s: ReadonlyVec3): mat4;
+    export function fromRotationTranslationScaleOrigin(out: mat4, q: quat, v: ReadonlyVec3, s: ReadonlyVec3, o: ReadonlyVec3): mat4;
+    export function fromQuat(out: mat4, q: ReadonlyQuat): mat4;
+    export function frustum(out: mat4, left: number, right: number, bottom: number, top: number, near: number, far: number): mat4;
+    export function perspectiveNO(out: mat4, fovy: number, aspect: number, near: number, far: number): mat4;
+    export function perspectiveZO(out: mat4, fovy: number, aspect: number, near: number, far: number): mat4;
+    export function perspectiveFromFieldOfView(out: mat4, fov: any, near: number, far: number): mat4;
+    export function orthoNO(out: mat4, left: number, right: number, bottom: number, top: number, near: number, far: number): mat4;
+    export function orthoZO(out: mat4, left: number, right: number, bottom: number, top: number, near: number, far: number): mat4;
+    export function lookAt(out: mat4, eye: ReadonlyVec3, center: ReadonlyVec3, up: ReadonlyVec3): mat4;
+    export function targetTo(out: mat4, eye: ReadonlyVec3, target: ReadonlyVec3, up: ReadonlyVec3): mat4;
+    export function str(a: ReadonlyMat4): string;
+    export function frob(a: ReadonlyMat4): number;
+    export function add(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4): mat4;
+    export function subtract(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4): mat4;
+    export function multiplyScalar(out: mat4, a: ReadonlyMat4, b: number): mat4;
+    export function multiplyScalarAndAdd(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4, scale: number): mat4;
+    export function exactEquals(a: ReadonlyMat4, b: ReadonlyMat4): boolean;
+    export function equals(a: ReadonlyMat4, b: ReadonlyMat4): boolean;
+    export function perspective(out: mat4, fovy: number, aspect: number, near: number, far: number): mat4;
+    export function ortho(out: mat4, left: number, right: number, bottom: number, top: number, near: number, far: number): mat4;
+    export function mul(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4): mat4;
+    export function sub(out: mat4, a: ReadonlyMat4, b: ReadonlyMat4): mat4;
+}
+namespace vec3 {
+    export function create(): vec3;
+    export function clone(a: ReadonlyVec3): vec3;
+    export function length(a: ReadonlyVec3): number;
+    export function fromValues(x: number, y: number, z: number): vec3;
+    export function copy(out: vec3, a: ReadonlyVec3): vec3;
+    export function set(out: vec3, x: number, y: number, z: number): vec3;
+    export function add(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function subtract(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function multiply(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function divide(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function ceil(out: vec3, a: ReadonlyVec3): vec3;
+    export function floor(out: vec3, a: ReadonlyVec3): vec3;
+    export function min(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function max(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function round(out: vec3, a: ReadonlyVec3): vec3;
+    export function scale(out: vec3, a: ReadonlyVec3, b: number): vec3;
+    export function scaleAndAdd(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, scale: number): vec3;
+    export function distance(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function squaredDistance(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function squaredLength(a: ReadonlyVec3): number;
+    export function negate(out: vec3, a: ReadonlyVec3): vec3;
+    export function inverse(out: vec3, a: ReadonlyVec3): vec3;
+    export function normalize(out: vec3, a: ReadonlyVec3): vec3;
+    export function dot(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function cross(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function lerp(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, t: number): vec3;
+    export function slerp(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, t: number): vec3;
+    export function hermite(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, c: ReadonlyVec3, d: ReadonlyVec3, t: number): vec3;
+    export function bezier(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, c: ReadonlyVec3, d: ReadonlyVec3, t: number): vec3;
+    export function random(out: vec3, scale?: number): vec3;
+    export function transformMat4(out: vec3, a: ReadonlyVec3, m: ReadonlyMat4): vec3;
+    export function transformMat3(out: vec3, a: ReadonlyVec3, m: ReadonlyMat3): vec3;
+    export function transformQuat(out: vec3, a: ReadonlyVec3, q: ReadonlyQuat): vec3;
+    export function rotateX(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, rad: number): vec3;
+    export function rotateY(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, rad: number): vec3;
+    export function rotateZ(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3, rad: number): vec3;
+    export function angle(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function zero(out: vec3): vec3;
+    export function str(a: ReadonlyVec3): string;
+    export function exactEquals(a: ReadonlyVec3, b: ReadonlyVec3): boolean;
+    export function equals(a: ReadonlyVec3, b: ReadonlyVec3): boolean;
+    export function sub(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function mul(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function div(out: vec3, a: ReadonlyVec3, b: ReadonlyVec3): vec3;
+    export function dist(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function sqrDist(a: ReadonlyVec3, b: ReadonlyVec3): number;
+    export function len(a: ReadonlyVec3): number;
+    export function sqrLen(a: ReadonlyVec3): number;
+    export function forEach(a: any, stride: any, offset: any, count: any, fn: any, arg: any): any;
+}
+namespace vec4 {
+    export function create(): vec4;
+    export function clone(a: ReadonlyVec4): vec4;
+    export function fromValues(x: number, y: number, z: number, w: number): vec4;
+    export function copy(out: vec4, a: ReadonlyVec4): vec4;
+    export function set(out: vec4, x: number, y: number, z: number, w: number): vec4;
+    export function add(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function subtract(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function multiply(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function divide(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function ceil(out: vec4, a: ReadonlyVec4): vec4;
+    export function floor(out: vec4, a: ReadonlyVec4): vec4;
+    export function min(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function max(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function round(out: vec4, a: ReadonlyVec4): vec4;
+    export function scale(out: vec4, a: ReadonlyVec4, b: number): vec4;
+    export function scaleAndAdd(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4, scale: number): vec4;
+    export function distance(a: ReadonlyVec4, b: ReadonlyVec4): number;
+    export function squaredDistance(a: ReadonlyVec4, b: ReadonlyVec4): number;
+    export function length(a: ReadonlyVec4): number;
+    export function squaredLength(a: ReadonlyVec4): number;
+    export function negate(out: vec4, a: ReadonlyVec4): vec4;
+    export function inverse(out: vec4, a: ReadonlyVec4): vec4;
+    export function normalize(out: vec4, a: ReadonlyVec4): vec4;
+    export function dot(a: ReadonlyVec4, b: ReadonlyVec4): number;
+    export function cross(out: ReadonlyVec4, u: ReadonlyVec4, v: ReadonlyVec4, w: ReadonlyVec4): vec4;
+    export function lerp(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4, t: number): vec4;
+    export function random(out: vec4, scale?: number): vec4;
+    export function transformMat4(out: vec4, a: ReadonlyVec4, m: ReadonlyMat4): vec4;
+    export function transformQuat(out: vec4, a: ReadonlyVec4, q: ReadonlyQuat): vec4;
+    export function zero(out: vec4): vec4;
+    export function str(a: ReadonlyVec4): string;
+    export function exactEquals(a: ReadonlyVec4, b: ReadonlyVec4): boolean;
+    export function equals(a: ReadonlyVec4, b: ReadonlyVec4): boolean;
+    export function sub(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function mul(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function div(out: vec4, a: ReadonlyVec4, b: ReadonlyVec4): vec4;
+    export function dist(a: ReadonlyVec4, b: ReadonlyVec4): number;
+    export function sqrDist(a: ReadonlyVec4, b: ReadonlyVec4): number;
+    export function len(a: ReadonlyVec4): number;
+    export function sqrLen(a: ReadonlyVec4): number;
+    export function forEach(a: any, stride: any, offset: any, count: any, fn: any, arg: any): any;
+}
+namespace quat {
+    export function create(): quat;
+    export function identity(out: quat): quat;
+    export function setAxisAngle(out: quat, axis: ReadonlyVec3, rad: number): quat;
+    export function getAxisAngle(out_axis: vec3, q: ReadonlyQuat): number;
+    export function getAngle(a: ReadonlyQuat, b: ReadonlyQuat): number;
+    export function multiply(out: quat, a: ReadonlyQuat, b: ReadonlyQuat): quat;
+    export function rotateX(out: quat, a: ReadonlyQuat, rad: number): quat;
+    export function rotateY(out: quat, a: ReadonlyQuat, rad: number): quat;
+    export function rotateZ(out: quat, a: ReadonlyQuat, rad: number): quat;
+    export function calculateW(out: quat, a: ReadonlyQuat): quat;
+    export function exp(out: quat, a: ReadonlyQuat): quat;
+    export function ln(out: quat, a: ReadonlyQuat): quat;
+    export function pow(out: quat, a: ReadonlyQuat, b: number): quat;
+    export function slerp(out: quat, a: ReadonlyQuat, b: ReadonlyQuat, t: number): quat;
+    export function random(out: quat): quat;
+    export function invert(out: quat, a: ReadonlyQuat): quat;
+    export function conjugate(out: quat, a: ReadonlyQuat): quat;
+    export function fromMat3(out: quat, m: ReadonlyMat3): quat;
+    export function fromEuler(out: quat, x: number, y: number, z: number, order?: "xyz" | "xzy" | "yxz" | "yzx" | "zxy" | "zyx"): quat;
+    export function str(a: ReadonlyQuat): string;
+    export function equals(a: ReadonlyQuat, b: ReadonlyQuat): boolean;
+    export const clone: typeof vec4.clone;
+    export const fromValues: typeof vec4.fromValues;
+    export const copy: typeof vec4.copy;
+    export const set: typeof vec4.set;
+    export const add: typeof vec4.add;
+    export function mul(out: quat, a: ReadonlyQuat, b: ReadonlyQuat): quat;
+    export const scale: typeof vec4.scale;
+    export const dot: typeof vec4.dot;
+    export const lerp: typeof vec4.lerp;
+    export const length: typeof vec4.length;
+    export const len: typeof vec4.length;
+    export const squaredLength: typeof vec4.squaredLength;
+    export const sqrLen: typeof vec4.squaredLength;
+    export const normalize: typeof vec4.normalize;
+    export const exactEquals: typeof vec4.exactEquals;
+    export function rotationTo(out: any, a: any, b: any): any;
+    export function sqlerp(out: any, a: any, b: any, c: any, d: any, t: any): any;
+    export function setAxes(out: any, view: any, right: any, up: any): vec4;
+}
+type GeoJSONVTCoordinatesType = "lngLat" | "unitSquare";
+type GeoJSONVTOptions = {
+    maxZoom?: number;
+    indexMaxZoom?: number;
+    indexMaxPoints?: number;
+    tolerance?: number;
+    extent?: number;
+    buffer?: number;
+    lineMetrics?: boolean;
+    promoteId?: string | null;
+    generateId?: boolean;
+    updateable?: boolean;
+    debug?: number;
+    coordinates?: GeoJSONVTCoordinatesType;
+    wrap?: boolean;
+    cluster?: boolean;
+    clusterOptions?: Omit<SuperclusterOptions, "coordinates" | "wrap">;
+};
+type SuperclusterOptions = {
+    minZoom?: number;
+    maxZoom?: number;
+    minPoints?: number;
+    radius?: number;
+    extent?: number;
+    nodeSize?: number;
+    log?: boolean;
+    generateId?: boolean;
+    reduce?: ((accumulated: Record<string, unknown>, props: Record<string, unknown>) => void) | null;
+    map?: (props: GeoJsonProperties) => Record<string, unknown>;
+    coordinates?: GeoJSONVTCoordinatesType;
+    wrap?: boolean;
+};
+class KDBush {
+    static from(data: ArrayBufferLike): KDBush;
+    constructor(numItems: number, nodeSize?: number, ArrayType?: TypedArrayConstructor, ArrayBufferType?: ArrayBufferConstructor | SharedArrayBufferConstructor, data?: ArrayBufferLike);
+    numItems: number;
+    nodeSize: number;
+    ArrayType: TypedArrayConstructor;
+    IndexArrayType: Uint16ArrayConstructor | Uint32ArrayConstructor;
+    data: ArrayBufferLike;
+    ids: Uint16Array<ArrayBuffer> | Uint32Array<ArrayBuffer>;
+    coords: Int8Array<ArrayBuffer> | Uint8Array<ArrayBuffer> | Uint8ClampedArray<ArrayBuffer> | Int16Array<ArrayBuffer> | Uint16Array<ArrayBuffer> | Int32Array<ArrayBuffer> | Uint32Array<ArrayBuffer> | Float32Array<ArrayBuffer> | Float64Array<ArrayBuffer>;
+    _pos: number;
+    _finished: boolean;
+    add(x: number, y: number): number;
+    finish(): this;
+    range(minX: number, minY: number, maxX: number, maxY: number): number[];
+    within(qx: number, qy: number, r: number): number[];
+    withinInto(qx: number, qy: number, r: number, out: number[] | TypedArray): number;
+}
+type TypedArrayConstructor = Int8ArrayConstructor | Uint8ArrayConstructor | Uint8ClampedArrayConstructor | Int16ArrayConstructor | Uint16ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor | Float64ArrayConstructor;
+type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
+const _exports: {
+    $version: number;
+    $root: {
+        version: {
+            required: boolean;
+            type: string;
+            values: number[];
+            doc: string;
+            example: number;
+        };
+        name: {
+            type: string;
+            doc: string;
+            example: string;
+        };
+        metadata: {
+            type: string;
+            doc: string;
+            example: {
+                "styleeditor:slimmode": boolean;
+                "styleeditor:comment": string;
+                "styleeditor:version": string;
+                "example:object": {
+                    String: string;
+                    Number: number;
+                    Boolean: boolean;
+                };
+            };
+        };
+        center: {
+            type: string;
+            value: string;
+            length: number;
+            doc: string;
+            example: number[];
+        };
+        centerAltitude: {
+            type: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        zoom: {
+            type: string;
+            doc: string;
+            example: number;
+        };
+        bearing: {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            example: number;
+        };
+        pitch: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "0-60 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "0-85 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "0-180 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        roll: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        state: {
+            type: string;
+            default: {};
+            doc: string;
+            example: {
+                chargerType: {
+                    default: string[];
+                };
+                minPreferredChargingSpeed: {
+                    default: number;
+                };
+            };
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        light: {
+            type: string;
+            doc: string;
+            example: {
+                anchor: string;
+                color: string;
+                intensity: number;
+            };
+        };
+        sky: {
+            type: string;
+            doc: string;
+            example: {
+                "sky-color": string;
+                "sky-horizon-blend": number;
+                "horizon-color": string;
+                "horizon-fog-blend": number;
+                "fog-color": string;
+                "fog-ground-blend": number;
+                "atmosphere-blend": (string | number | string[])[];
+            };
+        };
+        projection: {
+            type: string;
+            doc: string;
+            example: {
+                type: (string | number | string[])[];
+            };
+        };
+        terrain: {
+            type: string;
+            doc: string;
+            example: {
+                source: string;
+                exaggeration: number;
+            };
+        };
+        sources: {
+            required: boolean;
+            type: string;
+            doc: string;
+            example: {
+                "maplibre-demotiles": {
+                    type: string;
+                    url: string;
+                };
+                "maplibre-tilejson": {
+                    type: string;
+                    url: string;
+                };
+                "maplibre-streets": {
+                    type: string;
+                    tiles: string[];
+                    maxzoom: number;
+                };
+                "wms-imagery": {
+                    type: string;
+                    tiles: string[];
+                    tileSize: number;
+                };
+            };
+        };
+        sprite: {
+            type: string;
+            doc: string;
+            example: string;
+        };
+        glyphs: {
+            type: string;
+            doc: string;
+            example: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "omit to use local fonts": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "font-faces": {
+            type: string;
+            doc: string;
+            example: {
+                "Noto Sans Regular": {
+                    url: string;
+                    "unicode-range": string[];
+                }[];
+                Unifont: string;
+            };
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        transition: {
+            type: string;
+            doc: string;
+            example: {
+                duration: number;
+                delay: number;
+            };
+        };
+        layers: {
+            required: boolean;
+            type: string;
+            value: string;
+            doc: string;
+            example: {
+                id: string;
+                source: string;
+                "source-layer": string;
+                type: string;
+                paint: {
+                    "line-color": string;
+                };
+            }[];
+        };
+    };
+    sources: {
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source: string[];
+    source_vector: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                vector: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        scheme: {
+            type: string;
+            values: {
+                xyz: {
+                    doc: string;
+                };
+                tms: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+        };
+        sparse: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        promoteId: {
+            type: string;
+            doc: string;
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        encoding: {
+            type: string;
+            values: {
+                mvt: {
+                    doc: string;
+                };
+                mlt: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                mvt: {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+                mlt: {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_raster: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                raster: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        tileSize: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+        };
+        scheme: {
+            type: string;
+            values: {
+                xyz: {
+                    doc: string;
+                };
+                tms: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_raster_dem: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                "raster-dem": {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        tileSize: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        encoding: {
+            type: string;
+            values: {
+                terrarium: {
+                    doc: string;
+                };
+                mapbox: {
+                    doc: string;
+                };
+                custom: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "mapbox, terrarium": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                custom: {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        redFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        blueFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        greenFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        baseShift: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_geojson: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                geojson: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        data: {
+            required: boolean;
+            type: string;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        buffer: {
+            type: string;
+            default: number;
+            maximum: number;
+            minimum: number;
+            doc: string;
+        };
+        filter: {
+            type: string;
+            doc: string;
+        };
+        tolerance: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        cluster: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        clusterRadius: {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+        };
+        clusterMaxZoom: {
+            type: string;
+            doc: string;
+        };
+        clusterMinPoints: {
+            type: string;
+            doc: string;
+        };
+        clusterProperties: {
+            type: string;
+            doc: string;
+        };
+        lineMetrics: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        generateId: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        promoteId: {
+            type: string;
+            doc: string;
+        };
+    };
+    source_video: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                video: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        urls: {
+            required: boolean;
+            type: string;
+            value: string;
+            doc: string;
+        };
+        coordinates: {
+            required: boolean;
+            doc: string;
+            type: string;
+            length: number;
+            value: {
+                type: string;
+                length: number;
+                value: string;
+                doc: string;
+            };
+        };
+    };
+    source_image: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                image: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        coordinates: {
+            required: boolean;
+            doc: string;
+            type: string;
+            length: number;
+            value: {
+                type: string;
+                length: number;
+                value: string;
+                doc: string;
+            };
+        };
+    };
+    layer: {
+        id: {
+            type: string;
+            doc: string;
+            required: boolean;
+        };
+        type: {
+            type: string;
+            values: {
+                fill: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                line: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                symbol: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                circle: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                heatmap: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                "fill-extrusion": {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                raster: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                hillshade: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                        "additional methods": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                "color-relief": {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                background: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+            };
+            doc: string;
+            required: boolean;
+        };
+        metadata: {
+            type: string;
+            doc: string;
+            example: {
+                "source:comment": string;
+            };
+        };
+        source: {
+            type: string;
+            doc: string;
+        };
+        "source-layer": {
+            type: string;
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            minimum: number;
+            maximum: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            minimum: number;
+            maximum: number;
+            doc: string;
+        };
+        filter: {
+            type: string;
+            doc: string;
+        };
+        layout: {
+            type: string;
+            doc: string;
+        };
+        paint: {
+            type: string;
+            doc: string;
+        };
+    };
+    layout: string[];
+    layout_background: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_fill: {
+        "fill-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_circle: {
+        "circle-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_heatmap: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "layout_fill-extrusion": {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-rounded-corner-distance": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+        };
+    };
+    layout_line: {
+        "line-cap": {
+            type: string;
+            values: {
+                butt: {
+                    doc: string;
+                };
+                round: {
+                    doc: string;
+                };
+                square: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-join": {
+            type: string;
+            values: {
+                bevel: {
+                    doc: string;
+                };
+                round: {
+                    doc: string;
+                };
+                miter: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-miter-limit": {
+            type: string;
+            default: number;
+            doc: string;
+            requires: {
+                "line-join": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-round-limit": {
+            type: string;
+            default: number;
+            doc: string;
+            requires: {
+                "line-join": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_symbol: {
+        "symbol-placement": {
+            type: string;
+            values: {
+                point: {
+                    doc: string;
+                };
+                line: {
+                    doc: string;
+                };
+                "line-center": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`line-center` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-spacing": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: {
+                "symbol-placement": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-avoid-edges": {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-z-order": {
+            type: string;
+            values: {
+                auto: {
+                    doc: string;
+                };
+                "viewport-y": {
+                    doc: string;
+                };
+                source: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-allow-overlap": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-overlap": {
+            type: string;
+            values: {
+                never: {
+                    doc: string;
+                };
+                always: {
+                    doc: string;
+                };
+                cooperative: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-ignore-placement": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-optional": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-rotation-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-size": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-text-fit": {
+            type: string;
+            values: {
+                none: {
+                    doc: string;
+                };
+                width: {
+                    doc: string;
+                };
+                height: {
+                    doc: string;
+                };
+                both: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "stretchable icons": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-text-fit-padding": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            units: string;
+            doc: string;
+            requires: (string | {
+                "icon-text-fit": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-image": {
+            type: string;
+            doc: string;
+            tokens: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-padding": {
+            type: string;
+            default: number[];
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-keep-upright": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "icon-rotation-alignment": string;
+                "symbol-placement"?: undefined;
+            } | {
+                "symbol-placement": string[];
+                "icon-rotation-alignment"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-offset": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-anchor": {
+            type: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-rotation-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                "viewport-glyph": {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`viewport-glyph` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-field": {
+            type: string;
+            default: string;
+            tokens: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-font": {
+            type: string;
+            value: string;
+            default: string[];
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "local fonts": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-size": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-max-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-line-height": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-letter-spacing": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-justify": {
+            type: string;
+            values: {
+                auto: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                center: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                auto: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-radial-offset": {
+            type: string;
+            units: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            requires: string[];
+            "property-type": string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+        };
+        "text-variable-anchor": {
+            type: string;
+            value: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            example: string[];
+            "property-type": string;
+        };
+        "text-variable-anchor-offset": {
+            type: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            example: (string | number[])[];
+            "property-type": string;
+        };
+        "text-anchor": {
+            type: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-max-angle": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-writing-mode": {
+            type: string;
+            value: string;
+            values: {
+                horizontal: {
+                    doc: string;
+                };
+                vertical: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-padding": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-keep-upright": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "text-rotation-alignment": string;
+                "symbol-placement"?: undefined;
+            } | {
+                "symbol-placement": string[];
+                "text-rotation-alignment"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-transform": {
+            type: string;
+            values: {
+                none: {
+                    doc: string;
+                };
+                uppercase: {
+                    doc: string;
+                };
+                lowercase: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-offset": {
+            type: string;
+            doc: string;
+            value: string;
+            units: string;
+            length: number;
+            default: number[];
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-allow-overlap": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-overlap": {
+            type: string;
+            values: {
+                never: {
+                    doc: string;
+                };
+                always: {
+                    doc: string;
+                };
+                cooperative: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-ignore-placement": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-optional": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-height-offset": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: {
+                "symbol-placement": string[];
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-height-anchor": {
+            type: string;
+            values: {
+                ground: {
+                    doc: string;
+                };
+                absolute: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_raster: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_hillshade: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "layout_color-relief": {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    filter: {
+        type: string;
+        doc: string;
+        expression: {
+            interpolated: boolean;
+            parameters: string[];
+        };
+        "property-type": string;
+    };
+    filter_operator: {
+        type: string;
+        values: {
+            "==": {
+                doc: string;
+            };
+            "!=": {
+                doc: string;
+            };
+            ">": {
+                doc: string;
+            };
+            ">=": {
+                doc: string;
+            };
+            "<": {
+                doc: string;
+            };
+            "<=": {
+                doc: string;
+            };
+            in: {
+                doc: string;
+            };
+            "!in": {
+                doc: string;
+            };
+            all: {
+                doc: string;
+            };
+            any: {
+                doc: string;
+            };
+            none: {
+                doc: string;
+            };
+            has: {
+                doc: string;
+            };
+            "!has": {
+                doc: string;
+            };
+        };
+        doc: string;
+    };
+    geometry_type: {
+        type: string;
+        values: {
+            Point: {
+                doc: string;
+            };
+            LineString: {
+                doc: string;
+            };
+            Polygon: {
+                doc: string;
+            };
+        };
+        doc: string;
+    };
+    function: {
+        expression: {
+            type: string;
+            doc: string;
+        };
+        stops: {
+            type: string;
+            doc: string;
+            value: string;
+        };
+        base: {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+        };
+        property: {
+            type: string;
+            doc: string;
+            default: string;
+        };
+        type: {
+            type: string;
+            values: {
+                identity: {
+                    doc: string;
+                };
+                exponential: {
+                    doc: string;
+                };
+                interval: {
+                    doc: string;
+                };
+                categorical: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+        };
+        colorSpace: {
+            type: string;
+            values: {
+                rgb: {
+                    doc: string;
+                };
+                lab: {
+                    doc: string;
+                };
+                hcl: {
+                    doc: string;
+                };
+                oklch: {
+                    doc: string;
+                };
+                oklab: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+        };
+        default: {
+            type: string;
+            required: boolean;
+            doc: string;
+        };
+    };
+    function_stop: {
+        type: string;
+        minimum: number;
+        maximum: number;
+        value: string[];
+        length: number;
+        doc: string;
+    };
+    expression: {
+        type: string;
+        value: string;
+        minimum: number;
+        doc: string;
+    };
+    expression_name: {
+        doc: string;
+        type: string;
+        values: {
+            let: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            var: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            literal: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            semiliteral: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[][])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            array: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | (string | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            at: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | (string | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            in: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "index-of": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            slice: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            case: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | (string | boolean | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            match: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            coalesce: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | (string | string[])[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            step: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            interpolate: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "interpolate-hcl": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "interpolate-lab": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "interpolate-oklch": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "interpolate-oklab": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ln2: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            pi: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            e: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            typeof: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            string: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            number: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            boolean: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | boolean | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            object: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            collator: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: {
+                            "case-sensitive": {
+                                type: string;
+                                default: boolean;
+                                example: boolean;
+                                doc: string;
+                            };
+                            "diacritic-sensitive": {
+                                type: string;
+                                default: boolean;
+                                example: boolean;
+                                doc: string;
+                            };
+                            locale: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                        };
+                    }[];
+                };
+                example: (string | {
+                    "case-sensitive": boolean;
+                    "diacritic-sensitive": boolean;
+                    locale: string;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            format: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string[];
+                    } | {
+                        name: string;
+                        type: {
+                            "text-font": {
+                                type: string;
+                                doc: string;
+                                example: string;
+                            };
+                            "text-color": {
+                                type: string;
+                                doc: string;
+                                example: string;
+                            };
+                            "font-scale": {
+                                type: string;
+                                doc: string;
+                                example: number;
+                            };
+                            "vertical-align": {
+                                type: string;
+                                doc: string;
+                                default: string;
+                                example: string;
+                                values: {
+                                    bottom: {
+                                        doc: string;
+                                    };
+                                    center: {
+                                        doc: string;
+                                    };
+                                    top: {
+                                        doc: string;
+                                    };
+                                };
+                            };
+                        };
+                    })[];
+                };
+                example: (string | (string | string[])[] | {
+                    "font-scale": number;
+                    "vertical-align"?: undefined;
+                } | {
+                    "font-scale"?: undefined;
+                    "vertical-align"?: undefined;
+                } | {
+                    "font-scale": number;
+                    "vertical-align": string;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "text-font": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "font-scale": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "text-color": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "vertical-align": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    image: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            image: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "global-state": {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "number-format": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: {
+                            locale: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            currency: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            unit: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            "min-fraction-digits": {
+                                type: string;
+                                example: number;
+                                doc: string;
+                            };
+                            "max-fraction-digits": {
+                                type: string;
+                                example: number;
+                                doc: string;
+                            };
+                        };
+                        doc: string;
+                    })[];
+                };
+                example: (string | string[] | {
+                    "min-fraction-digits": number;
+                    "max-fraction-digits": number;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "`unit` property": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-string": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-number": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-boolean": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-rgba": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-color": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            rgb: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            rgba: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            get: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            has: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            length: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string[];
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            properties: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "feature-state": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "geometry-type": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            id: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            zoom: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "heatmap-density": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            elevation: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "[`fill-extrusion-color`](layers/#fill-extrusion-color)": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "line-progress": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            accumulated: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "+": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "*": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "-": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "/": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "%": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "^": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            sqrt: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            log10: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ln: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            log2: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            sin: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            cos: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            tan: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            asin: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            acos: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            atan: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            min: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            max: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            round: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            abs: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ceil: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            floor: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            distance: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | {
+                    type: string;
+                    coordinates: number[];
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "==": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "!=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | boolean)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ">": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "<": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ">=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "<=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            all: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            any: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "!": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            within: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | {
+                    type: string;
+                    coordinates: number[][][];
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "is-supported-script": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            upcase: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            downcase: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            concat: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "resolved-locale": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | {
+                    "case-sensitive": boolean;
+                    "diacritic-sensitive": boolean;
+                    locale: string;
+                })[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            split: {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            join: {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | string[])[])[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+        };
+    };
+    light: {
+        anchor: {
+            type: string;
+            default: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            doc: string;
+            example: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        position: {
+            type: string;
+            default: number[];
+            length: number;
+            value: string;
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            doc: string;
+            example: number[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        color: {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        intensity: {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+    };
+    sky: {
+        "sky-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "horizon-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "fog-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "fog-ground-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "horizon-fog-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "sky-horizon-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "atmosphere-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+    };
+    terrain: {
+        source: {
+            type: string;
+            doc: string;
+            required: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        exaggeration: {
+            type: string;
+            minimum: number;
+            doc: string;
+            default: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+    };
+    projection: {
+        type: {
+            type: string;
+            doc: string;
+            default: string;
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+        };
+    };
+    paint: string[];
+    paint_fill: {
+        "fill-antialias": {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-layer-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "fill-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "SDF fill pattern colorization": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-outline-color": {
+            type: string;
+            doc: string;
+            transition: boolean;
+            requires: ({
+                "!": string;
+                "fill-antialias"?: undefined;
+            } | {
+                "fill-antialias": boolean;
+                "!"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "paint_fill-extrusion": {
+        "fill-extrusion-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`elevation`](expressions/#elevation) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-height": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "negative values": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-base": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "negative values": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-vertical-gradient": {
+            type: string;
+            default: boolean;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_line: {
+        "line-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-layer-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "line-color": {
+            type: string;
+            doc: string;
+            default: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-gap-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+            transition: boolean;
+            units: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-offset": {
+            type: string;
+            default: number;
+            doc: string;
+            transition: boolean;
+            units: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-dasharray": {
+            type: string;
+            value: string;
+            doc: string;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-gradient": {
+            type: string;
+            doc: string;
+            transition: boolean;
+            requires: ({
+                "!": string;
+                source?: undefined;
+                has?: undefined;
+            } | {
+                source: string;
+                has: {
+                    lineMetrics: boolean;
+                };
+                "!"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_circle: {
+        "circle-radius": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-blur": {
+            type: string;
+            default: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-pitch-scale": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_heatmap: {
+        "heatmap-radius": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-weight": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-intensity": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-color": {
+            type: string;
+            default: (string | number | string[])[];
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_symbol: {
+        "icon-opacity": {
+            doc: string;
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-color": {
+            type: string;
+            doc: string;
+            default: string;
+            transition: boolean;
+            overridable: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_raster: {
+        "raster-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "raster-hue-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-brightness-min": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-brightness-max": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-saturation": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-contrast": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-resampling": {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-fade-duration": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_hillshade: {
+        "hillshade-illumination-direction": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-illumination-altitude": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-illumination-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-exaggeration": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-shadow-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-highlight-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-accent-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-method": {
+            type: string;
+            values: {
+                standard: {
+                    doc: string;
+                };
+                basic: {
+                    doc: string;
+                };
+                combined: {
+                    doc: string;
+                };
+                igor: {
+                    doc: string;
+                };
+                multidirectional: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "paint_color-relief": {
+        "color-relief-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "color-relief-color": {
+            type: string;
+            doc: string;
+            example: (string | number | string[])[];
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_background: {
+        "background-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "background-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "background-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    transition: {
+        duration: {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+        };
+        delay: {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+        };
+    };
+    "property-type": {
+        "data-driven": {
+            type: string;
+            doc: string;
+        };
+        "cross-faded": {
+            type: string;
+            doc: string;
+        };
+        "cross-faded-data-driven": {
+            type: string;
+            doc: string;
+        };
+        "color-ramp": {
+            type: string;
+            doc: string;
+        };
+        "data-constant": {
+            type: string;
+            doc: string;
+        };
+        constant: {
+            type: string;
+            doc: string;
+        };
+    };
+    promoteId: {
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    interpolation: {
+        type: string;
+        value: string;
+        minimum: number;
+        doc: string;
+    };
+    interpolation_name: {
+        doc: string;
+        type: string;
+        values: {
+            linear: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                    parameters: any[];
+                };
+                example: string[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            exponential: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "cubic-bezier": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+        };
+    };
+};
+type StyleSpecificationReference = typeof _exports;
+const latest: StyleSpecificationReference;
+type ColorSpecification = string;
+type ProjectionDefinitionT = [
+    string,
+    string,
+    number
+];
+type ProjectionDefinitionSpecification = string | ProjectionDefinitionT | PropertyValueSpecification<ProjectionDefinitionT>;
+type PaddingSpecification = number | number[];
+type NumberArraySpecification = number | number[];
+type ColorArraySpecification = string | string[];
+type VariableAnchorOffsetCollectionSpecification = Array<string | [
+    number,
+    number
+]>;
+type SpriteSpecification = string | {
+    id: string;
+    url: string;
+}[];
+type FormattedSpecification = string;
+type ResolvedImageSpecification = string;
+type PromoteIdSpecification = {
+    [_: string]: string;
+} | string;
+type ExpressionInputType = string | number | boolean;
+type VariableExpressionSpecification = [
+    "var",
+    string
+];
+type CollatorExpressionSpecification = [
+    "collator",
+    {
+        "case-sensitive"?: boolean | ExpressionSpecification;
+        "diacritic-sensitive"?: boolean | ExpressionSpecification;
+        locale?: string | ExpressionSpecification;
+    }
+];
+type InterpolationSpecification = [
+    "linear"
+] | [
+    "exponential",
+    number
+] | [
+    "cubic-bezier",
+    number,
+    number,
+    number,
+    number
+];
+type ExpressionSpecification = [
+    "array",
+    ExpressionSpecification
+] | [
+    "array",
+    "string" | "number" | "boolean",
+    ExpressionSpecification
+] | [
+    "array",
+    "string" | "number" | "boolean",
+    number,
+    ExpressionSpecification
+] | [
+    "boolean",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | CollatorExpressionSpecification | [
+    "format",
+    ...(string | [
+        "image",
+        ExpressionSpecification
+    ] | ExpressionSpecification | {
+        "font-scale"?: number | ExpressionSpecification;
+        "text-font"?: ExpressionSpecification;
+        "text-color"?: ColorSpecification | ExpressionSpecification;
+        "vertical-align"?: "bottom" | "center" | "top";
+    })[]
+] | [
+    "image",
+    string | ExpressionSpecification
+] | [
+    "literal",
+    unknown
+] | [
+    "semiliteral",
+    unknown
+] | [
+    "number",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | [
+    "number-format",
+    number | ExpressionSpecification,
+    {
+        "locale"?: string | ExpressionSpecification;
+        "currency"?: string | ExpressionSpecification;
+        "min-fraction-digits"?: number | ExpressionSpecification;
+        "max-fraction-digits"?: number | ExpressionSpecification;
+    }
+] | [
+    "number-format",
+    number | ExpressionSpecification,
+    {
+        "locale"?: string | ExpressionSpecification;
+        "unit"?: string | ExpressionSpecification;
+        "min-fraction-digits"?: number | ExpressionSpecification;
+        "max-fraction-digits"?: number | ExpressionSpecification;
+    }
+] | [
+    "object",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | [
+    "string",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | [
+    "to-boolean",
+    unknown | ExpressionSpecification
+] | [
+    "to-color",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | [
+    "to-number",
+    unknown | ExpressionSpecification,
+    ...(unknown | ExpressionSpecification)[]
+] | [
+    "to-string",
+    unknown | ExpressionSpecification
+] | [
+    "typeof",
+    unknown | ExpressionSpecification
+] | [
+    "accumulated"
+] | [
+    "feature-state",
+    string | ExpressionSpecification
+] | [
+    "geometry-type"
+] | [
+    "id"
+] | [
+    "line-progress"
+] | [
+    "properties"
+] | [
+    "at",
+    number | ExpressionSpecification,
+    ExpressionSpecification
+] | [
+    "get",
+    string | ExpressionSpecification,
+    ExpressionSpecification?
+] | [
+    "global-state",
+    string
+] | [
+    "has",
+    string | ExpressionSpecification,
+    ExpressionSpecification?
+] | [
+    "in",
+    null | ExpressionInputType | ExpressionSpecification,
+    string | ExpressionSpecification
+] | [
+    "index-of",
+    null | ExpressionInputType | ExpressionSpecification,
+    string | ExpressionSpecification,
+    (number | ExpressionSpecification)?
+] | [
+    "length",
+    string | ExpressionSpecification
+] | [
+    "slice",
+    string | ExpressionSpecification,
+    number | ExpressionSpecification,
+    (number | ExpressionSpecification)?
+] | [
+    "!",
+    boolean | ExpressionSpecification
+] | [
+    "!=",
+    null | ExpressionInputType | ExpressionSpecification,
+    null | ExpressionInputType | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    "<",
+    string | number | ExpressionSpecification,
+    string | number | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    "<=",
+    string | number | ExpressionSpecification,
+    string | number | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    "==",
+    null | ExpressionInputType | ExpressionSpecification,
+    null | ExpressionInputType | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    ">",
+    string | number | ExpressionSpecification,
+    string | number | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    ">=",
+    string | number | ExpressionSpecification,
+    string | number | ExpressionSpecification,
+    (CollatorExpressionSpecification | VariableExpressionSpecification)?
+] | [
+    "all",
+    ...(boolean | ExpressionSpecification)[]
+] | [
+    "any",
+    ...(boolean | ExpressionSpecification)[]
+] | [
+    "case",
+    boolean | ExpressionSpecification,
+    null | ExpressionInputType | ExpressionSpecification,
+    ...(boolean | null | ExpressionInputType | ExpressionSpecification)[],
+    null | ExpressionInputType | ExpressionSpecification
+] | [
+    "coalesce",
+    ...(ExpressionInputType | ExpressionSpecification)[]
+] | [
+    "match",
+    string | number | ExpressionSpecification,
+    string | number | string[] | number[],
+    null | ExpressionInputType | ExpressionSpecification,
+    ...(string | number | string[] | number[] | null | ExpressionInputType | ExpressionSpecification)[],
+    null | ExpressionInputType | ExpressionSpecification
+] | [
+    "within",
+    GeoJSON$1
+] | [
+    "interpolate",
+    InterpolationSpecification,
+    number | ExpressionSpecification,
+    ...(number | ColorSpecification | ExpressionSpecification | ProjectionDefinitionSpecification)[]
+] | [
+    "interpolate-hcl",
+    InterpolationSpecification,
+    number | ExpressionSpecification,
+    ...(number | ColorSpecification | ExpressionSpecification)[]
+] | [
+    "interpolate-lab",
+    InterpolationSpecification,
+    number | ExpressionSpecification,
+    ...(number | ColorSpecification | ExpressionSpecification)[]
+] | [
+    "interpolate-oklch",
+    InterpolationSpecification,
+    number | ExpressionSpecification,
+    ...(number | ColorSpecification | ExpressionSpecification)[]
+] | [
+    "interpolate-oklab",
+    InterpolationSpecification,
+    number | ExpressionSpecification,
+    ...(number | ColorSpecification | ExpressionSpecification)[]
+] | [
+    "step",
+    number | ExpressionSpecification,
+    ExpressionInputType | ExpressionSpecification,
+    ...(number | ExpressionInputType | ExpressionSpecification)[]
+] | [
+    "let",
+    string,
+    ExpressionInputType | ExpressionSpecification,
+    ...(string | ExpressionInputType | ExpressionSpecification)[]
+] | VariableExpressionSpecification | [
+    "concat",
+    ...(ExpressionInputType | ExpressionSpecification)[]
+] | [
+    "downcase",
+    string | ExpressionSpecification
+] | [
+    "is-supported-script",
+    string | ExpressionSpecification
+] | [
+    "join",
+    string[] | ExpressionSpecification,
+    string | ExpressionSpecification
+] | [
+    "resolved-locale",
+    CollatorExpressionSpecification
+] | [
+    "split",
+    string | ExpressionSpecification,
+    string | ExpressionSpecification
+] | [
+    "upcase",
+    string | ExpressionSpecification
+] | [
+    "rgb",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification,
+    number | ExpressionSpecification
+] | [
+    "rgba",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification,
+    number | ExpressionSpecification,
+    number | ExpressionSpecification
+] | [
+    "to-rgba",
+    ColorSpecification | ExpressionSpecification
+] | [
+    "-",
+    number | ExpressionSpecification,
+    (number | ExpressionSpecification)?
+] | [
+    "*",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification,
+    ...(number | ExpressionSpecification)[]
+] | [
+    "/",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification
+] | [
+    "%",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification
+] | [
+    "^",
+    number | ExpressionSpecification,
+    number | ExpressionSpecification
+] | [
+    "+",
+    ...(number | ExpressionSpecification)[]
+] | [
+    "abs",
+    number | ExpressionSpecification
+] | [
+    "acos",
+    number | ExpressionSpecification
+] | [
+    "asin",
+    number | ExpressionSpecification
+] | [
+    "atan",
+    number | ExpressionSpecification
+] | [
+    "ceil",
+    number | ExpressionSpecification
+] | [
+    "cos",
+    number | ExpressionSpecification
+] | [
+    "distance",
+    GeoJSON$1
+] | [
+    "e"
+] | [
+    "floor",
+    number | ExpressionSpecification
+] | [
+    "ln",
+    number | ExpressionSpecification
+] | [
+    "ln2"
+] | [
+    "log10",
+    number | ExpressionSpecification
+] | [
+    "log2",
+    number | ExpressionSpecification
+] | [
+    "max",
+    number | ExpressionSpecification,
+    ...(number | ExpressionSpecification)[]
+] | [
+    "min",
+    number | ExpressionSpecification,
+    ...(number | ExpressionSpecification)[]
+] | [
+    "pi"
+] | [
+    "round",
+    number | ExpressionSpecification
+] | [
+    "sin",
+    number | ExpressionSpecification
+] | [
+    "sqrt",
+    number | ExpressionSpecification
+] | [
+    "tan",
+    number | ExpressionSpecification
+] | [
+    "zoom"
+] | [
+    "heatmap-density"
+] | [
+    "elevation"
+] | [
+    "global-state",
+    string
+];
+type ExpressionFilterSpecification = boolean | ExpressionSpecification;
+type LegacyFilterSpecification = [
+    "has",
+    string
+] | [
+    "!has",
+    string
+] | [
+    "==",
+    string,
+    string | number | boolean
+] | [
+    "!=",
+    string,
+    string | number | boolean
+] | [
+    ">",
+    string,
+    string | number | boolean
+] | [
+    ">=",
+    string,
+    string | number | boolean
+] | [
+    "<",
+    string,
+    string | number | boolean
+] | [
+    "<=",
+    string,
+    string | number | boolean
+] | [
+    "in",
+    string,
+    ...(string | number | boolean)[]
+] | [
+    "!in",
+    string,
+    ...(string | number | boolean)[]
+] | [
+    "all",
+    ...LegacyFilterSpecification[]
+] | [
+    "any",
+    ...LegacyFilterSpecification[]
+] | [
+    "none",
+    ...LegacyFilterSpecification[]
+];
+type FilterSpecification = ExpressionFilterSpecification | LegacyFilterSpecification;
+type VisibilitySpecification = "visible" | "none" | ExpressionSpecification;
+type TransitionSpecification = {
+    duration?: number;
+    delay?: number;
+};
+type CameraFunctionSpecification<T> = {
+    type: "exponential";
+    stops: Array<[
+        number,
+        T
+    ]>;
+} | {
+    type: "interval";
+    stops: Array<[
+        number,
+        T
+    ]>;
+};
+type SourceFunctionSpecification<T> = {
+    type: "exponential";
+    stops: Array<[
+        number,
+        T
+    ]>;
+    property: string;
+    default?: T;
+} | {
+    type: "interval";
+    stops: Array<[
+        number,
+        T
+    ]>;
+    property: string;
+    default?: T;
+} | {
+    type: "categorical";
+    stops: Array<[
+        string | number | boolean,
+        T
+    ]>;
+    property: string;
+    default?: T;
+} | {
+    type: "identity";
+    property: string;
+    default?: T;
+};
+type CompositeFunctionSpecification<T> = {
+    type: "exponential";
+    stops: Array<[
+        {
+            zoom: number;
+            value: number;
+        },
+        T
+    ]>;
+    property: string;
+    default?: T;
+} | {
+    type: "interval";
+    stops: Array<[
+        {
+            zoom: number;
+            value: number;
+        },
+        T
+    ]>;
+    property: string;
+    default?: T;
+} | {
+    type: "categorical";
+    stops: Array<[
+        {
+            zoom: number;
+            value: string | number | boolean;
+        },
+        T
+    ]>;
+    property: string;
+    default?: T;
+};
+type PropertyValueSpecification<T> = T | CameraFunctionSpecification<T> | ExpressionSpecification;
+type DataDrivenPropertyValueSpecification<T> = T | CameraFunctionSpecification<T> | SourceFunctionSpecification<T> | CompositeFunctionSpecification<T> | ExpressionSpecification;
+type SchemaSpecification = {
+    default?: unknown;
+};
+type StateSpecification = Record<string, SchemaSpecification>;
+type MLFontFace = {
+    url: string;
+    "unicode-range"?: string[];
+};
+type FontFacesSpecification = Record<string, string | Array<MLFontFace>>;
+type StyleSpecification = {
+    "version": 8;
+    "name"?: string;
+    "metadata"?: unknown;
+    "center"?: [
+        number,
+        number
+    ];
+    "centerAltitude"?: number;
+    "zoom"?: number;
+    "bearing"?: number;
+    "pitch"?: number;
+    "roll"?: number;
+    "state"?: StateSpecification;
+    "light"?: LightSpecification;
+    "sky"?: SkySpecification;
+    "projection"?: ProjectionSpecification;
+    "terrain"?: TerrainSpecification;
+    "sources": {
+        [_: string]: SourceSpecification;
+    };
+    "sprite"?: SpriteSpecification;
+    "glyphs"?: string;
+    "font-faces"?: FontFacesSpecification;
+    "transition"?: TransitionSpecification;
+    "layers": Array<LayerSpecification>;
+};
+type LightSpecification = {
+    "anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "position"?: PropertyValueSpecification<[
+        number,
+        number,
+        number
+    ]>;
+    "position-transition"?: TransitionSpecification;
+    "color"?: PropertyValueSpecification<ColorSpecification>;
+    "color-transition"?: TransitionSpecification;
+    "intensity"?: PropertyValueSpecification<number>;
+    "intensity-transition"?: TransitionSpecification;
+};
+type SkySpecification = {
+    "sky-color"?: PropertyValueSpecification<ColorSpecification>;
+    "sky-color-transition"?: TransitionSpecification;
+    "horizon-color"?: PropertyValueSpecification<ColorSpecification>;
+    "horizon-color-transition"?: TransitionSpecification;
+    "fog-color"?: PropertyValueSpecification<ColorSpecification>;
+    "fog-color-transition"?: TransitionSpecification;
+    "fog-ground-blend"?: PropertyValueSpecification<number>;
+    "fog-ground-blend-transition"?: TransitionSpecification;
+    "horizon-fog-blend"?: PropertyValueSpecification<number>;
+    "horizon-fog-blend-transition"?: TransitionSpecification;
+    "sky-horizon-blend"?: PropertyValueSpecification<number>;
+    "sky-horizon-blend-transition"?: TransitionSpecification;
+    "atmosphere-blend"?: PropertyValueSpecification<number>;
+    "atmosphere-blend-transition"?: TransitionSpecification;
+};
+type ProjectionSpecification = {
+    "type"?: PropertyValueSpecification<ProjectionDefinitionSpecification>;
+};
+type TerrainSpecification = {
+    "source": string;
+    "exaggeration"?: number;
+};
+type VectorSourceSpecification = {
+    "type": "vector";
+    "url"?: string;
+    "tiles"?: Array<string>;
+    "bounds"?: [
+        number,
+        number,
+        number,
+        number
+    ];
+    "scheme"?: "xyz" | "tms";
+    "sparse"?: boolean;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "attribution"?: string;
+    "promoteId"?: PromoteIdSpecification;
+    "volatile"?: boolean;
+    "encoding"?: "mvt" | "mlt";
+};
+type RasterSourceSpecification = {
+    "type": "raster";
+    "url"?: string;
+    "tiles"?: Array<string>;
+    "bounds"?: [
+        number,
+        number,
+        number,
+        number
+    ];
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "tileSize"?: number;
+    "scheme"?: "xyz" | "tms";
+    "attribution"?: string;
+    "volatile"?: boolean;
+};
+type RasterDEMSourceSpecification = {
+    "type": "raster-dem";
+    "url"?: string;
+    "tiles"?: Array<string>;
+    "bounds"?: [
+        number,
+        number,
+        number,
+        number
+    ];
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "tileSize"?: number;
+    "attribution"?: string;
+    "encoding"?: "terrarium" | "mapbox" | "custom";
+    "redFactor"?: number;
+    "blueFactor"?: number;
+    "greenFactor"?: number;
+    "baseShift"?: number;
+    "volatile"?: boolean;
+};
+type GeoJSONSourceSpecification = {
+    "type": "geojson";
+    "data": GeoJSON$1 | string;
+    "maxzoom"?: number;
+    "attribution"?: string;
+    "buffer"?: number;
+    "filter"?: FilterSpecification;
+    "tolerance"?: number;
+    "cluster"?: boolean;
+    "clusterRadius"?: number;
+    "clusterMaxZoom"?: number;
+    "clusterMinPoints"?: number;
+    "clusterProperties"?: unknown;
+    "lineMetrics"?: boolean;
+    "generateId"?: boolean;
+    "promoteId"?: PromoteIdSpecification;
+};
+type VideoSourceSpecification = {
+    "type": "video";
+    "urls": Array<string>;
+    "coordinates": [
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ]
+    ];
+};
+type ImageSourceSpecification = {
+    "type": "image";
+    "url"?: string;
+    "coordinates": [
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ]
+    ];
+};
+type SourceSpecification = VectorSourceSpecification | RasterSourceSpecification | RasterDEMSourceSpecification | GeoJSONSourceSpecification | VideoSourceSpecification | ImageSourceSpecification;
+type FillLayerSpecification = {
+    "id": string;
+    "type": "fill";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "fill-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "fill-antialias"?: PropertyValueSpecification<boolean>;
+        "fill-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "fill-opacity-transition"?: TransitionSpecification;
+        "fill-layer-opacity"?: PropertyValueSpecification<number>;
+        "fill-layer-opacity-transition"?: TransitionSpecification;
+        "fill-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+        "fill-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "fill-color-transition"?: TransitionSpecification;
+        "fill-outline-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "fill-outline-color-transition"?: TransitionSpecification;
+        "fill-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "fill-translate-transition"?: TransitionSpecification;
+        "fill-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "fill-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+        "fill-pattern-transition"?: TransitionSpecification;
+    };
+};
+type LineLayerSpecification = {
+    "id": string;
+    "type": "line";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "line-cap"?: DataDrivenPropertyValueSpecification<"butt" | "round" | "square">;
+        "line-join"?: DataDrivenPropertyValueSpecification<"bevel" | "round" | "miter">;
+        "line-miter-limit"?: DataDrivenPropertyValueSpecification<number>;
+        "line-round-limit"?: DataDrivenPropertyValueSpecification<number>;
+        "line-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "line-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "line-opacity-transition"?: TransitionSpecification;
+        "line-layer-opacity"?: PropertyValueSpecification<number>;
+        "line-layer-opacity-transition"?: TransitionSpecification;
+        "line-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+        "line-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "line-color-transition"?: TransitionSpecification;
+        "line-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "line-translate-transition"?: TransitionSpecification;
+        "line-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "line-width"?: DataDrivenPropertyValueSpecification<number>;
+        "line-width-transition"?: TransitionSpecification;
+        "line-gap-width"?: DataDrivenPropertyValueSpecification<number>;
+        "line-gap-width-transition"?: TransitionSpecification;
+        "line-offset"?: DataDrivenPropertyValueSpecification<number>;
+        "line-offset-transition"?: TransitionSpecification;
+        "line-blur"?: DataDrivenPropertyValueSpecification<number>;
+        "line-blur-transition"?: TransitionSpecification;
+        "line-dasharray"?: DataDrivenPropertyValueSpecification<Array<number>>;
+        "line-dasharray-transition"?: TransitionSpecification;
+        "line-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+        "line-pattern-transition"?: TransitionSpecification;
+        "line-gradient"?: ExpressionSpecification;
+    };
+};
+type SymbolLayerSpecification = {
+    "id": string;
+    "type": "symbol";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "symbol-placement"?: PropertyValueSpecification<"point" | "line" | "line-center">;
+        "symbol-spacing"?: PropertyValueSpecification<number>;
+        "symbol-avoid-edges"?: PropertyValueSpecification<boolean>;
+        "symbol-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+        "symbol-z-order"?: PropertyValueSpecification<"auto" | "viewport-y" | "source">;
+        "icon-allow-overlap"?: PropertyValueSpecification<boolean>;
+        "icon-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">;
+        "icon-ignore-placement"?: PropertyValueSpecification<boolean>;
+        "icon-optional"?: PropertyValueSpecification<boolean>;
+        "icon-rotation-alignment"?: DataDrivenPropertyValueSpecification<"map" | "viewport" | "auto">;
+        "icon-size"?: DataDrivenPropertyValueSpecification<number>;
+        "icon-text-fit"?: PropertyValueSpecification<"none" | "width" | "height" | "both">;
+        "icon-text-fit-padding"?: PropertyValueSpecification<[
+            number,
+            number,
+            number,
+            number
+        ]>;
+        "icon-image"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+        "icon-rotate"?: DataDrivenPropertyValueSpecification<number>;
+        "icon-padding"?: DataDrivenPropertyValueSpecification<PaddingSpecification>;
+        "icon-keep-upright"?: PropertyValueSpecification<boolean>;
+        "icon-offset"?: DataDrivenPropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "icon-anchor"?: DataDrivenPropertyValueSpecification<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+        "icon-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">;
+        "text-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">;
+        "text-rotation-alignment"?: PropertyValueSpecification<"map" | "viewport" | "viewport-glyph" | "auto">;
+        "text-field"?: DataDrivenPropertyValueSpecification<FormattedSpecification>;
+        "text-font"?: DataDrivenPropertyValueSpecification<Array<string>>;
+        "text-size"?: DataDrivenPropertyValueSpecification<number>;
+        "text-max-width"?: DataDrivenPropertyValueSpecification<number>;
+        "text-line-height"?: PropertyValueSpecification<number>;
+        "text-letter-spacing"?: DataDrivenPropertyValueSpecification<number>;
+        "text-justify"?: DataDrivenPropertyValueSpecification<"auto" | "left" | "center" | "right">;
+        "text-radial-offset"?: DataDrivenPropertyValueSpecification<number>;
+        "text-variable-anchor"?: PropertyValueSpecification<Array<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">>;
+        "text-variable-anchor-offset"?: DataDrivenPropertyValueSpecification<VariableAnchorOffsetCollectionSpecification>;
+        "text-anchor"?: DataDrivenPropertyValueSpecification<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+        "text-max-angle"?: PropertyValueSpecification<number>;
+        "text-writing-mode"?: PropertyValueSpecification<Array<"horizontal" | "vertical">>;
+        "text-rotate"?: DataDrivenPropertyValueSpecification<number>;
+        "text-padding"?: PropertyValueSpecification<number>;
+        "text-keep-upright"?: PropertyValueSpecification<boolean>;
+        "text-transform"?: DataDrivenPropertyValueSpecification<"none" | "uppercase" | "lowercase">;
+        "text-offset"?: DataDrivenPropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "text-allow-overlap"?: PropertyValueSpecification<boolean>;
+        "text-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">;
+        "text-ignore-placement"?: PropertyValueSpecification<boolean>;
+        "text-optional"?: PropertyValueSpecification<boolean>;
+        "symbol-height-offset"?: DataDrivenPropertyValueSpecification<number>;
+        "symbol-height-anchor"?: PropertyValueSpecification<"ground" | "absolute">;
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "icon-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "icon-opacity-transition"?: TransitionSpecification;
+        "icon-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "icon-color-transition"?: TransitionSpecification;
+        "icon-halo-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "icon-halo-color-transition"?: TransitionSpecification;
+        "icon-halo-width"?: DataDrivenPropertyValueSpecification<number>;
+        "icon-halo-width-transition"?: TransitionSpecification;
+        "icon-halo-blur"?: DataDrivenPropertyValueSpecification<number>;
+        "icon-halo-blur-transition"?: TransitionSpecification;
+        "icon-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "icon-translate-transition"?: TransitionSpecification;
+        "icon-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "text-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "text-opacity-transition"?: TransitionSpecification;
+        "text-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "text-color-transition"?: TransitionSpecification;
+        "text-halo-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "text-halo-color-transition"?: TransitionSpecification;
+        "text-halo-width"?: DataDrivenPropertyValueSpecification<number>;
+        "text-halo-width-transition"?: TransitionSpecification;
+        "text-halo-blur"?: DataDrivenPropertyValueSpecification<number>;
+        "text-halo-blur-transition"?: TransitionSpecification;
+        "text-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "text-translate-transition"?: TransitionSpecification;
+        "text-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    };
+};
+type CircleLayerSpecification = {
+    "id": string;
+    "type": "circle";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "circle-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "circle-radius"?: DataDrivenPropertyValueSpecification<number>;
+        "circle-radius-transition"?: TransitionSpecification;
+        "circle-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "circle-color-transition"?: TransitionSpecification;
+        "circle-blur"?: DataDrivenPropertyValueSpecification<number>;
+        "circle-blur-transition"?: TransitionSpecification;
+        "circle-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "circle-opacity-transition"?: TransitionSpecification;
+        "circle-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "circle-translate-transition"?: TransitionSpecification;
+        "circle-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "circle-pitch-scale"?: PropertyValueSpecification<"map" | "viewport">;
+        "circle-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport">;
+        "circle-stroke-width"?: DataDrivenPropertyValueSpecification<number>;
+        "circle-stroke-width-transition"?: TransitionSpecification;
+        "circle-stroke-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "circle-stroke-color-transition"?: TransitionSpecification;
+        "circle-stroke-opacity"?: DataDrivenPropertyValueSpecification<number>;
+        "circle-stroke-opacity-transition"?: TransitionSpecification;
+    };
+};
+type HeatmapLayerSpecification = {
+    "id": string;
+    "type": "heatmap";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "heatmap-radius"?: DataDrivenPropertyValueSpecification<number>;
+        "heatmap-radius-transition"?: TransitionSpecification;
+        "heatmap-weight"?: DataDrivenPropertyValueSpecification<number>;
+        "heatmap-intensity"?: PropertyValueSpecification<number>;
+        "heatmap-intensity-transition"?: TransitionSpecification;
+        "heatmap-color"?: ExpressionSpecification;
+        "heatmap-opacity"?: PropertyValueSpecification<number>;
+        "heatmap-opacity-transition"?: TransitionSpecification;
+    };
+};
+type FillExtrusionLayerSpecification = {
+    "id": string;
+    "type": "fill-extrusion";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+        "fill-extrusion-rounded-corner-distance"?: number;
+    };
+    "paint"?: {
+        "fill-extrusion-opacity"?: PropertyValueSpecification<number>;
+        "fill-extrusion-opacity-transition"?: TransitionSpecification;
+        "fill-extrusion-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+        "fill-extrusion-color-transition"?: TransitionSpecification;
+        "fill-extrusion-translate"?: PropertyValueSpecification<[
+            number,
+            number
+        ]>;
+        "fill-extrusion-translate-transition"?: TransitionSpecification;
+        "fill-extrusion-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "fill-extrusion-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+        "fill-extrusion-pattern-transition"?: TransitionSpecification;
+        "fill-extrusion-height"?: DataDrivenPropertyValueSpecification<number>;
+        "fill-extrusion-height-transition"?: TransitionSpecification;
+        "fill-extrusion-base"?: DataDrivenPropertyValueSpecification<number>;
+        "fill-extrusion-base-transition"?: TransitionSpecification;
+        "fill-extrusion-vertical-gradient"?: PropertyValueSpecification<boolean>;
+    };
+};
+type RasterLayerSpecification = {
+    "id": string;
+    "type": "raster";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "raster-opacity"?: PropertyValueSpecification<number>;
+        "raster-opacity-transition"?: TransitionSpecification;
+        "raster-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+        "raster-hue-rotate"?: PropertyValueSpecification<number>;
+        "raster-hue-rotate-transition"?: TransitionSpecification;
+        "raster-brightness-min"?: PropertyValueSpecification<number>;
+        "raster-brightness-min-transition"?: TransitionSpecification;
+        "raster-brightness-max"?: PropertyValueSpecification<number>;
+        "raster-brightness-max-transition"?: TransitionSpecification;
+        "raster-saturation"?: PropertyValueSpecification<number>;
+        "raster-saturation-transition"?: TransitionSpecification;
+        "raster-contrast"?: PropertyValueSpecification<number>;
+        "raster-contrast-transition"?: TransitionSpecification;
+        "resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+        "raster-resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+        "raster-fade-duration"?: PropertyValueSpecification<number>;
+    };
+};
+type HillshadeLayerSpecification = {
+    "id": string;
+    "type": "hillshade";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "hillshade-illumination-direction"?: PropertyValueSpecification<NumberArraySpecification>;
+        "hillshade-illumination-altitude"?: PropertyValueSpecification<NumberArraySpecification>;
+        "hillshade-illumination-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+        "hillshade-exaggeration"?: PropertyValueSpecification<number>;
+        "hillshade-exaggeration-transition"?: TransitionSpecification;
+        "hillshade-shadow-color"?: PropertyValueSpecification<ColorArraySpecification>;
+        "hillshade-shadow-color-transition"?: TransitionSpecification;
+        "hillshade-highlight-color"?: PropertyValueSpecification<ColorArraySpecification>;
+        "hillshade-highlight-color-transition"?: TransitionSpecification;
+        "hillshade-accent-color"?: PropertyValueSpecification<ColorSpecification>;
+        "hillshade-accent-color-transition"?: TransitionSpecification;
+        "hillshade-method"?: PropertyValueSpecification<"standard" | "basic" | "combined" | "igor" | "multidirectional">;
+        "resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+    };
+};
+type ColorReliefLayerSpecification = {
+    "id": string;
+    "type": "color-relief";
+    "metadata"?: unknown;
+    "source": string;
+    "source-layer"?: string;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "filter"?: FilterSpecification;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "color-relief-opacity"?: PropertyValueSpecification<number>;
+        "color-relief-opacity-transition"?: TransitionSpecification;
+        "color-relief-color"?: ExpressionSpecification;
+        "resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+    };
+};
+type BackgroundLayerSpecification = {
+    "id": string;
+    "type": "background";
+    "metadata"?: unknown;
+    "minzoom"?: number;
+    "maxzoom"?: number;
+    "layout"?: {
+        "visibility"?: VisibilitySpecification;
+    };
+    "paint"?: {
+        "background-color"?: PropertyValueSpecification<ColorSpecification>;
+        "background-color-transition"?: TransitionSpecification;
+        "background-pattern"?: PropertyValueSpecification<ResolvedImageSpecification>;
+        "background-pattern-transition"?: TransitionSpecification;
+        "background-opacity"?: PropertyValueSpecification<number>;
+        "background-opacity-transition"?: TransitionSpecification;
+    };
+};
+type LayerSpecification = FillLayerSpecification | LineLayerSpecification | SymbolLayerSpecification | CircleLayerSpecification | HeatmapLayerSpecification | FillExtrusionLayerSpecification | RasterLayerSpecification | HillshadeLayerSpecification | ColorReliefLayerSpecification | BackgroundLayerSpecification;
+type AllPaintProperties = {
+    "fill-antialias"?: PropertyValueSpecification<boolean>;
+    "fill-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "fill-opacity-transition"?: TransitionSpecification;
+    "fill-layer-opacity"?: PropertyValueSpecification<number>;
+    "fill-layer-opacity-transition"?: TransitionSpecification;
+    "fill-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "fill-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "fill-color-transition"?: TransitionSpecification;
+    "fill-outline-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "fill-outline-color-transition"?: TransitionSpecification;
+    "fill-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "fill-translate-transition"?: TransitionSpecification;
+    "fill-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "fill-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+    "fill-pattern-transition"?: TransitionSpecification;
+    "line-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "line-opacity-transition"?: TransitionSpecification;
+    "line-layer-opacity"?: PropertyValueSpecification<number>;
+    "line-layer-opacity-transition"?: TransitionSpecification;
+    "line-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "line-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "line-color-transition"?: TransitionSpecification;
+    "line-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "line-translate-transition"?: TransitionSpecification;
+    "line-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "line-width"?: DataDrivenPropertyValueSpecification<number>;
+    "line-width-transition"?: TransitionSpecification;
+    "line-gap-width"?: DataDrivenPropertyValueSpecification<number>;
+    "line-gap-width-transition"?: TransitionSpecification;
+    "line-offset"?: DataDrivenPropertyValueSpecification<number>;
+    "line-offset-transition"?: TransitionSpecification;
+    "line-blur"?: DataDrivenPropertyValueSpecification<number>;
+    "line-blur-transition"?: TransitionSpecification;
+    "line-dasharray"?: DataDrivenPropertyValueSpecification<Array<number>>;
+    "line-dasharray-transition"?: TransitionSpecification;
+    "line-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+    "line-pattern-transition"?: TransitionSpecification;
+    "line-gradient"?: ExpressionSpecification;
+    "icon-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "icon-opacity-transition"?: TransitionSpecification;
+    "icon-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "icon-color-transition"?: TransitionSpecification;
+    "icon-halo-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "icon-halo-color-transition"?: TransitionSpecification;
+    "icon-halo-width"?: DataDrivenPropertyValueSpecification<number>;
+    "icon-halo-width-transition"?: TransitionSpecification;
+    "icon-halo-blur"?: DataDrivenPropertyValueSpecification<number>;
+    "icon-halo-blur-transition"?: TransitionSpecification;
+    "icon-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "icon-translate-transition"?: TransitionSpecification;
+    "icon-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "text-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "text-opacity-transition"?: TransitionSpecification;
+    "text-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "text-color-transition"?: TransitionSpecification;
+    "text-halo-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "text-halo-color-transition"?: TransitionSpecification;
+    "text-halo-width"?: DataDrivenPropertyValueSpecification<number>;
+    "text-halo-width-transition"?: TransitionSpecification;
+    "text-halo-blur"?: DataDrivenPropertyValueSpecification<number>;
+    "text-halo-blur-transition"?: TransitionSpecification;
+    "text-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "text-translate-transition"?: TransitionSpecification;
+    "text-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "circle-radius"?: DataDrivenPropertyValueSpecification<number>;
+    "circle-radius-transition"?: TransitionSpecification;
+    "circle-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "circle-color-transition"?: TransitionSpecification;
+    "circle-blur"?: DataDrivenPropertyValueSpecification<number>;
+    "circle-blur-transition"?: TransitionSpecification;
+    "circle-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "circle-opacity-transition"?: TransitionSpecification;
+    "circle-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "circle-translate-transition"?: TransitionSpecification;
+    "circle-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "circle-pitch-scale"?: PropertyValueSpecification<"map" | "viewport">;
+    "circle-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport">;
+    "circle-stroke-width"?: DataDrivenPropertyValueSpecification<number>;
+    "circle-stroke-width-transition"?: TransitionSpecification;
+    "circle-stroke-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "circle-stroke-color-transition"?: TransitionSpecification;
+    "circle-stroke-opacity"?: DataDrivenPropertyValueSpecification<number>;
+    "circle-stroke-opacity-transition"?: TransitionSpecification;
+    "heatmap-radius"?: DataDrivenPropertyValueSpecification<number>;
+    "heatmap-radius-transition"?: TransitionSpecification;
+    "heatmap-weight"?: DataDrivenPropertyValueSpecification<number>;
+    "heatmap-intensity"?: PropertyValueSpecification<number>;
+    "heatmap-intensity-transition"?: TransitionSpecification;
+    "heatmap-color"?: ExpressionSpecification;
+    "heatmap-opacity"?: PropertyValueSpecification<number>;
+    "heatmap-opacity-transition"?: TransitionSpecification;
+    "fill-extrusion-opacity"?: PropertyValueSpecification<number>;
+    "fill-extrusion-opacity-transition"?: TransitionSpecification;
+    "fill-extrusion-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>;
+    "fill-extrusion-color-transition"?: TransitionSpecification;
+    "fill-extrusion-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "fill-extrusion-translate-transition"?: TransitionSpecification;
+    "fill-extrusion-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "fill-extrusion-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+    "fill-extrusion-pattern-transition"?: TransitionSpecification;
+    "fill-extrusion-height"?: DataDrivenPropertyValueSpecification<number>;
+    "fill-extrusion-height-transition"?: TransitionSpecification;
+    "fill-extrusion-base"?: DataDrivenPropertyValueSpecification<number>;
+    "fill-extrusion-base-transition"?: TransitionSpecification;
+    "fill-extrusion-vertical-gradient"?: PropertyValueSpecification<boolean>;
+    "raster-opacity"?: PropertyValueSpecification<number>;
+    "raster-opacity-transition"?: TransitionSpecification;
+    "raster-layer-blend"?: "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "raster-hue-rotate"?: PropertyValueSpecification<number>;
+    "raster-hue-rotate-transition"?: TransitionSpecification;
+    "raster-brightness-min"?: PropertyValueSpecification<number>;
+    "raster-brightness-min-transition"?: TransitionSpecification;
+    "raster-brightness-max"?: PropertyValueSpecification<number>;
+    "raster-brightness-max-transition"?: TransitionSpecification;
+    "raster-saturation"?: PropertyValueSpecification<number>;
+    "raster-saturation-transition"?: TransitionSpecification;
+    "raster-contrast"?: PropertyValueSpecification<number>;
+    "raster-contrast-transition"?: TransitionSpecification;
+    "resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+    "raster-resampling"?: PropertyValueSpecification<"linear" | "nearest">;
+    "raster-fade-duration"?: PropertyValueSpecification<number>;
+    "hillshade-illumination-direction"?: PropertyValueSpecification<NumberArraySpecification>;
+    "hillshade-illumination-altitude"?: PropertyValueSpecification<NumberArraySpecification>;
+    "hillshade-illumination-anchor"?: PropertyValueSpecification<"map" | "viewport">;
+    "hillshade-exaggeration"?: PropertyValueSpecification<number>;
+    "hillshade-exaggeration-transition"?: TransitionSpecification;
+    "hillshade-shadow-color"?: PropertyValueSpecification<ColorArraySpecification>;
+    "hillshade-shadow-color-transition"?: TransitionSpecification;
+    "hillshade-highlight-color"?: PropertyValueSpecification<ColorArraySpecification>;
+    "hillshade-highlight-color-transition"?: TransitionSpecification;
+    "hillshade-accent-color"?: PropertyValueSpecification<ColorSpecification>;
+    "hillshade-accent-color-transition"?: TransitionSpecification;
+    "hillshade-method"?: PropertyValueSpecification<"standard" | "basic" | "combined" | "igor" | "multidirectional">;
+    "color-relief-opacity"?: PropertyValueSpecification<number>;
+    "color-relief-opacity-transition"?: TransitionSpecification;
+    "color-relief-color"?: ExpressionSpecification;
+    "background-color"?: PropertyValueSpecification<ColorSpecification>;
+    "background-color-transition"?: TransitionSpecification;
+    "background-pattern"?: PropertyValueSpecification<ResolvedImageSpecification>;
+    "background-pattern-transition"?: TransitionSpecification;
+    "background-opacity"?: PropertyValueSpecification<number>;
+    "background-opacity-transition"?: TransitionSpecification;
+};
+type AllLayoutProperties = {
+    "fill-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+    "visibility"?: VisibilitySpecification;
+    "line-cap"?: DataDrivenPropertyValueSpecification<"butt" | "round" | "square">;
+    "line-join"?: DataDrivenPropertyValueSpecification<"bevel" | "round" | "miter">;
+    "line-miter-limit"?: DataDrivenPropertyValueSpecification<number>;
+    "line-round-limit"?: DataDrivenPropertyValueSpecification<number>;
+    "line-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+    "symbol-placement"?: PropertyValueSpecification<"point" | "line" | "line-center">;
+    "symbol-spacing"?: PropertyValueSpecification<number>;
+    "symbol-avoid-edges"?: PropertyValueSpecification<boolean>;
+    "symbol-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+    "symbol-z-order"?: PropertyValueSpecification<"auto" | "viewport-y" | "source">;
+    "icon-allow-overlap"?: PropertyValueSpecification<boolean>;
+    "icon-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">;
+    "icon-ignore-placement"?: PropertyValueSpecification<boolean>;
+    "icon-optional"?: PropertyValueSpecification<boolean>;
+    "icon-rotation-alignment"?: DataDrivenPropertyValueSpecification<"map" | "viewport" | "auto">;
+    "icon-size"?: DataDrivenPropertyValueSpecification<number>;
+    "icon-text-fit"?: PropertyValueSpecification<"none" | "width" | "height" | "both">;
+    "icon-text-fit-padding"?: PropertyValueSpecification<[
+        number,
+        number,
+        number,
+        number
+    ]>;
+    "icon-image"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>;
+    "icon-rotate"?: DataDrivenPropertyValueSpecification<number>;
+    "icon-padding"?: DataDrivenPropertyValueSpecification<PaddingSpecification>;
+    "icon-keep-upright"?: PropertyValueSpecification<boolean>;
+    "icon-offset"?: DataDrivenPropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "icon-anchor"?: DataDrivenPropertyValueSpecification<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "icon-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">;
+    "text-pitch-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">;
+    "text-rotation-alignment"?: PropertyValueSpecification<"map" | "viewport" | "viewport-glyph" | "auto">;
+    "text-field"?: DataDrivenPropertyValueSpecification<FormattedSpecification>;
+    "text-font"?: DataDrivenPropertyValueSpecification<Array<string>>;
+    "text-size"?: DataDrivenPropertyValueSpecification<number>;
+    "text-max-width"?: DataDrivenPropertyValueSpecification<number>;
+    "text-line-height"?: PropertyValueSpecification<number>;
+    "text-letter-spacing"?: DataDrivenPropertyValueSpecification<number>;
+    "text-justify"?: DataDrivenPropertyValueSpecification<"auto" | "left" | "center" | "right">;
+    "text-radial-offset"?: DataDrivenPropertyValueSpecification<number>;
+    "text-variable-anchor"?: PropertyValueSpecification<Array<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">>;
+    "text-variable-anchor-offset"?: DataDrivenPropertyValueSpecification<VariableAnchorOffsetCollectionSpecification>;
+    "text-anchor"?: DataDrivenPropertyValueSpecification<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "text-max-angle"?: PropertyValueSpecification<number>;
+    "text-writing-mode"?: PropertyValueSpecification<Array<"horizontal" | "vertical">>;
+    "text-rotate"?: DataDrivenPropertyValueSpecification<number>;
+    "text-padding"?: PropertyValueSpecification<number>;
+    "text-keep-upright"?: PropertyValueSpecification<boolean>;
+    "text-transform"?: DataDrivenPropertyValueSpecification<"none" | "uppercase" | "lowercase">;
+    "text-offset"?: DataDrivenPropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "text-allow-overlap"?: PropertyValueSpecification<boolean>;
+    "text-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">;
+    "text-ignore-placement"?: PropertyValueSpecification<boolean>;
+    "text-optional"?: PropertyValueSpecification<boolean>;
+    "symbol-height-offset"?: DataDrivenPropertyValueSpecification<number>;
+    "symbol-height-anchor"?: PropertyValueSpecification<"ground" | "absolute">;
+    "circle-sort-key"?: DataDrivenPropertyValueSpecification<number>;
+    "fill-extrusion-rounded-corner-distance"?: number;
+};
+type LayerWithRef = LayerSpecification & {
+    ref?: string;
+};
+function derefLayers(layers: LayerWithRef[]): LayerSpecification[];
+type DiffOperationsMap = {
+    setStyle: [
+        StyleSpecification
+    ];
+    addLayer: [
+        LayerSpecification,
+        string | undefined
+    ];
+    removeLayer: [
+        string
+    ];
+    setPaintProperty: [
+        string,
+        keyof AllPaintProperties,
+        AllPaintProperties[keyof AllPaintProperties]
+    ];
+    setLayoutProperty: [
+        string,
+        keyof AllLayoutProperties,
+        AllLayoutProperties[keyof AllLayoutProperties]
+    ];
+    setFilter: [
+        string,
+        FilterSpecification
+    ];
+    addSource: [
+        string,
+        SourceSpecification
+    ];
+    removeSource: [
+        string
+    ];
+    setGeoJSONSourceData: [
+        string,
+        GeoJSONSourceSpecification["data"]
+    ];
+    setLayerZoomRange: [
+        string,
+        number,
+        number
+    ];
+    setLayerProperty: [
+        string,
+        string,
+        unknown
+    ];
+    setCenter: [
+        number[]
+    ];
+    setCenterAltitude: [
+        number
+    ];
+    setZoom: [
+        number
+    ];
+    setBearing: [
+        number
+    ];
+    setPitch: [
+        number
+    ];
+    setRoll: [
+        number
+    ];
+    setSprite: [
+        SpriteSpecification
+    ];
+    setGlyphs: [
+        string
+    ];
+    setFontFaces: [
+        FontFacesSpecification
+    ];
+    setTransition: [
+        TransitionSpecification
+    ];
+    setLight: [
+        LightSpecification
+    ];
+    setTerrain: [
+        TerrainSpecification
+    ];
+    setSky: [
+        SkySpecification
+    ];
+    setProjection: [
+        ProjectionSpecification
+    ];
+    setGlobalState: [
+        StateSpecification
+    ];
+};
+type DiffOperations = keyof DiffOperationsMap;
+type DiffCommand<T extends DiffOperations = DiffOperations> = T extends DiffOperations ? {
+    command: T;
+    args: DiffOperationsMap[T];
+} : never;
+function diff(before: StyleSpecification, after: StyleSpecification): DiffCommand<DiffOperations>[];
+type ValidationSeverity = "error" | "warning";
+class ValidationError {
+    message: string;
+    identifier: string;
+    line: number;
+    severity: ValidationSeverity;
+    constructor(key: string, value: any & {
+        __line__: number;
+    }, message: string, identifier?: string | null, severity?: ValidationSeverity);
+}
+class ParsingError {
+    message: string;
+    error: Error;
+    line: number;
+    constructor(error: Error);
+}
+class ExpressionParsingError extends Error {
+    readonly key: string;
+    message: string;
+    constructor(key: string, message: string);
+}
+type RGBColor = [
+    r: number,
+    g: number,
+    b: number,
+    alpha: number
+];
+type HCLColor = [
+    h: number,
+    c: number,
+    l: number,
+    alpha: number
+];
+type LABColor = [
+    l: number,
+    a: number,
+    b: number,
+    alpha: number
+];
+type OKLCHColor = [
+    l: number,
+    c: number,
+    h: number,
+    alpha: number
+];
+type OKLABColor = [
+    l: number,
+    a: number,
+    b: number,
+    alpha: number
+];
+type DisplayP3Color = [
+    r: number,
+    g: number,
+    b: number,
+    alpha: number
+];
+type InterpolationColorSpace = "rgb" | "hcl" | "lab" | "oklch" | "oklab";
+class Color {
+    readonly r: number;
+    readonly g: number;
+    readonly b: number;
+    readonly a: number;
+    constructor(r: number, g: number, b: number, alpha?: number, premultiplied?: boolean);
+    static black: Color;
+    static white: Color;
+    static transparent: Color;
+    static red: Color;
+    static parse(input: Color | string | undefined | null): Color | undefined;
+    get rgb(): RGBColor;
+    get hcl(): HCLColor;
+    get lab(): LABColor;
+    get oklch(): OKLCHColor;
+    get oklab(): OKLABColor;
+    get displayP3(): DisplayP3Color;
+    private get unclippedRgb();
+    private overwriteGetter;
+    toString(): string;
+    static interpolate(from: Color, to: Color, t: number, spaceKey?: InterpolationColorSpace): Color;
+}
+type ResolvedImageOptions = {
+    name: string;
+    available: boolean;
+};
+class ResolvedImage {
+    name: string;
+    available: boolean;
+    constructor(options: ResolvedImageOptions);
+    toString(): string;
+    static fromString(name: string): ResolvedImage | null;
+}
+const VERTICAL_ALIGN_OPTIONS: readonly [
+    "bottom",
+    "center",
+    "top"
+];
+type VerticalAlign = (typeof VERTICAL_ALIGN_OPTIONS)[number];
+class FormattedSection {
+    text: string;
+    image: ResolvedImage | null;
+    scale: number | null;
+    fontStack: string | null;
+    textColor: Color | null;
+    verticalAlign: VerticalAlign | null;
+    constructor(text: string, image: ResolvedImage | null, scale: number | null, fontStack: string | null, textColor: Color | null, verticalAlign: VerticalAlign | null);
+}
+class Formatted {
+    sections: Array<FormattedSection>;
+    constructor(sections: Array<FormattedSection>);
+    static fromString(unformatted: string): Formatted;
+    isEmpty(): boolean;
+    static factory(text: Formatted | string): Formatted;
+    toString(): string;
+}
+interface Point2D {
+    x: number;
+    y: number;
+}
+interface ICanonicalTileID {
+    z: number;
+    x: number;
+    y: number;
+    key: string;
+    equals(id: ICanonicalTileID): boolean;
+    url(urls: Array<string>, pixelRatio: number, scheme: string | null): string;
+    isChildOf(parent: ICanonicalTileID): boolean;
+    getTilePoint(coord: IMercatorCoordinate): Point2D;
+    toString(): string;
+}
+interface IMercatorCoordinate {
+    x: number;
+    y: number;
+    z: number;
+    toLngLat(): ILngLat;
+    toAltitude(): number;
+    meterInMercatorCoordinateUnits(): number;
+}
+interface ILngLat {
+    lng: number;
+    lat: number;
+    wrap(): ILngLat;
+    toArray(): [
+        number,
+        number
+    ];
+    distanceTo(lngLat: ILngLat): number;
+    toString(): string;
+}
+type ILngLatLike = ILngLat | {
+    lng: number;
+    lat: number;
+} | {
+    lon: number;
+    lat: number;
+} | [
+    number,
+    number
+];
+class EvaluationContext {
+    globals: GlobalProperties;
+    feature: Feature;
+    featureState: FeatureState;
+    formattedSection: FormattedSection;
+    availableImages: Array<string>;
+    canonical: ICanonicalTileID;
+    _parseColorCache: Map<string, Color>;
+    constructor();
+    id(): any;
+    geometryType(): string;
+    geometry(): Point2D[][];
+    canonicalID(): ICanonicalTileID;
+    properties(): {
+        [_: string]: any;
+    };
+    parseColor(input: string): Color;
+}
+type NullTypeT = {
+    kind: "null";
+};
+type NumberTypeT = {
+    kind: "number";
+};
+type StringTypeT = {
+    kind: "string";
+};
+type BooleanTypeT = {
+    kind: "boolean";
+};
+type ColorTypeT = {
+    kind: "color";
+};
+type ProjectionDefinitionTypeT = {
+    kind: "projectionDefinition";
+};
+type ObjectTypeT = {
+    kind: "object";
+};
+type ValueTypeT = {
+    kind: "value";
+};
+type ErrorTypeT = {
+    kind: "error";
+};
+type CollatorTypeT = {
+    kind: "collator";
+};
+type FormattedTypeT = {
+    kind: "formatted";
+};
+type PaddingTypeT = {
+    kind: "padding";
+};
+type NumberArrayTypeT = {
+    kind: "numberArray";
+};
+type ColorArrayTypeT = {
+    kind: "colorArray";
+};
+type ResolvedImageTypeT = {
+    kind: "resolvedImage";
+};
+type VariableAnchorOffsetCollectionTypeT = {
+    kind: "variableAnchorOffsetCollection";
+};
+type EvaluationKind = "constant" | "source" | "camera" | "composite";
+type Type = NullTypeT | NumberTypeT | StringTypeT | BooleanTypeT | ColorTypeT | ProjectionDefinitionTypeT | ObjectTypeT | ValueTypeT | ArrayType | ErrorTypeT | CollatorTypeT | FormattedTypeT | PaddingTypeT | NumberArrayTypeT | ColorArrayTypeT | ResolvedImageTypeT | VariableAnchorOffsetCollectionTypeT;
+interface ArrayType<T extends Type = Type> {
+    kind: "array";
+    itemType: T;
+    N: number;
+}
+const NullType: NullTypeT;
+const ColorType: ColorTypeT;
+const ProjectionDefinitionType: ProjectionDefinitionTypeT;
+const FormattedType: FormattedTypeT;
+function typeToString(type: Type): string;
+class Collator {
+    locale: string | null;
+    sensitivity: "base" | "accent" | "case" | "variant";
+    collator: Intl.Collator;
+    constructor(caseSensitive: boolean, diacriticSensitive: boolean, locale: string | null);
+    compare(lhs: string, rhs: string): number;
+    resolvedLocale(): string;
+}
+class Padding$1 {
+    values: [
+        number,
+        number,
+        number,
+        number
+    ];
+    constructor(values: [
+        number,
+        number,
+        number,
+        number
+    ]);
+    static parse(input?: number | number[] | Padding$1 | null): Padding$1 | undefined;
+    toString(): string;
+    static interpolate(from: Padding$1, to: Padding$1, t: number): Padding$1;
+}
+class NumberArray {
+    values: number[];
+    constructor(values: number[]);
+    static parse(input?: number | number[] | NumberArray | null): NumberArray | undefined;
+    toString(): string;
+    static interpolate(from: NumberArray, to: NumberArray, t: number): NumberArray;
+}
+class ColorArray {
+    values: Color[];
+    constructor(values: Color[]);
+    static parse(input?: string | string[] | ColorArray | null): ColorArray | undefined;
+    toString(): string;
+    static interpolate(from: ColorArray, to: ColorArray, t: number, spaceKey?: InterpolationColorSpace): ColorArray;
+}
+class VariableAnchorOffsetCollection {
+    values: VariableAnchorOffsetCollectionSpecification;
+    constructor(values: VariableAnchorOffsetCollectionSpecification);
+    static parse(input?: VariableAnchorOffsetCollectionSpecification | VariableAnchorOffsetCollection): VariableAnchorOffsetCollection | undefined;
+    toString(): string;
+    static interpolate(from: VariableAnchorOffsetCollection, to: VariableAnchorOffsetCollection, t: number, key: string): VariableAnchorOffsetCollection;
+}
+class ProjectionDefinition {
+    readonly from: string;
+    readonly to: string;
+    readonly transition: number;
+    constructor(from: string, to: string, transition: number);
+    toString(): string;
+    static interpolate(from: string, to: string, t: number): ProjectionDefinition;
+    static parse(input?: any): ProjectionDefinition;
+}
+type Value = null | string | boolean | number | Color | ProjectionDefinition | Collator | Formatted | Padding$1 | NumberArray | ColorArray | ResolvedImage | VariableAnchorOffsetCollection | ReadonlyArray<Value> | {
+    readonly [x: string]: Value;
+};
+function typeOf(value: Value): Type;
+class Scope {
+    parent: Scope;
+    bindings: {
+        [_: string]: Expression;
+    };
+    constructor(parent?: Scope, bindings?: Array<[
+        string,
+        Expression
+    ]>);
+    concat(bindings: Array<[
+        string,
+        Expression
+    ]>): Scope;
+    get(name: string): Expression;
+    has(name: string): boolean;
+}
+class ParsingContext {
+    registry: ExpressionRegistry;
+    path: Array<number>;
+    readonly key: string;
+    scope: Scope;
+    errors: Array<ExpressionParsingError>;
+    expectedType: Type;
+    private _isConstant;
+    constructor(registry: ExpressionRegistry, isConstantFunc: (expression: Expression) => boolean, path?: Array<number>, expectedType?: Type | null, scope?: Scope, errors?: Array<ExpressionParsingError>);
+    parse(expr: unknown, index?: number, expectedType?: Type | null, bindings?: Array<[
+        string,
+        Expression
+    ]>, options?: {
+        typeAnnotation?: "assert" | "coerce" | "omit";
+    }): Expression;
+    _parse(expr: unknown, options: {
+        typeAnnotation?: "assert" | "coerce" | "omit";
+    }): Expression;
+    concat(index: number, expectedType?: Type | null, bindings?: Array<[
+        string,
+        Expression
+    ]>): ParsingContext;
+    error(error: string, ...keys: Array<number>): void;
+    checkSubtype(expected: Type, t: Type): string;
+}
+interface Expression {
+    readonly type: Type;
+    evaluate(ctx: EvaluationContext): any;
+    eachChild(fn: (a: Expression) => void): void;
+    outputDefined(): boolean;
+}
+type ExpressionParser = (args: ReadonlyArray<unknown>, context: ParsingContext) => Expression;
+type ExpressionRegistration = {
+    new (...args: any): Expression;
+} & {
+    readonly parse: ExpressionParser;
+};
+type ExpressionRegistry = {
+    [_: string]: ExpressionRegistration;
+};
+type Result<T, E> = {
+    result: "success";
+    value: T;
+} | {
+    result: "error";
+    value: E;
+};
+function interpolateNumber(from: number, to: number, t: number): number;
+function interpolateArray<T extends number[]>(from: T, to: T, t: number): T;
+type Stops = Array<[
+    number,
+    Expression
+]>;
+type InterpolationType = {
+    name: "linear";
+} | {
+    name: "exponential";
+    base: number;
+} | {
+    name: "cubic-bezier";
+    controlPoints: [
+        number,
+        number,
+        number,
+        number
+    ];
+};
+type InterpolatedValueType = NumberTypeT | ColorTypeT | ProjectionDefinitionTypeT | PaddingTypeT | NumberArrayTypeT | ColorArrayTypeT | VariableAnchorOffsetCollectionTypeT | ArrayType<NumberTypeT>;
+class Interpolate implements Expression {
+    type: InterpolatedValueType;
+    operator: "interpolate" | "interpolate-hcl" | "interpolate-lab" | "interpolate-oklch" | "interpolate-oklab";
+    interpolation: InterpolationType;
+    input: Expression;
+    readonly key: string;
+    labels: Array<number>;
+    outputs: Array<Expression>;
+    constructor(type: InterpolatedValueType, operator: "interpolate" | "interpolate-hcl" | "interpolate-lab" | "interpolate-oklch" | "interpolate-oklab", interpolation: InterpolationType, input: Expression, stops: Stops, key: string);
+    static interpolationFactor(interpolation: InterpolationType, input: number, lower: number, upper: number): number;
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression;
+    evaluate(ctx: EvaluationContext): any;
+    eachChild(fn: (_: Expression) => void): void;
+    outputDefined(): boolean;
+}
+const interpolateFactory: {
+    color: typeof Color.interpolate;
+    number: typeof interpolateNumber;
+    padding: typeof Padding$1.interpolate;
+    numberArray: typeof NumberArray.interpolate;
+    colorArray: typeof ColorArray.interpolate;
+    variableAnchorOffsetCollection: typeof VariableAnchorOffsetCollection.interpolate;
+    array: typeof interpolateArray;
+};
+type StyleFunction = {
+    kind: "source" | "camera" | "composite";
+    interpolationType?: InterpolationType | null;
+    interpolationFactor?: (input: number, lower: number, upper: number) => number;
+    zoomStops?: Array<number>;
+    evaluate: (globals: GlobalProperties, feature?: Partial<Feature>) => any;
+};
+function isFunction(value: any): boolean;
+function createFunction(parameters: any, propertySpec: any): StyleFunction;
+type Feature = {
+    readonly type: 0 | 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon";
+    readonly id?: any;
+    readonly properties: {
+        [_: string]: any;
+    };
+    readonly patterns?: {
+        [_: string]: {
+            min: string;
+            mid: string;
+            max: string;
+        };
+    };
+    readonly dashes?: {
+        [_: string]: {
+            min: string;
+            mid: string;
+            max: string;
+        };
+    };
+    readonly geometry?: Array<Array<Point2D>>;
+};
+type FeatureState = {
+    [_: string]: any;
+};
+type GlobalProperties = Readonly<{
+    zoom: number;
+    heatmapDensity?: number;
+    elevation?: number;
+    lineProgress?: number;
+    isSupportedScript?: (_: string) => boolean;
+    accumulated?: Value;
+    globalState?: Record<string, any>;
+}>;
+class StyleExpression {
+    expression: Expression;
+    _evaluator: EvaluationContext;
+    _defaultValue: Value;
+    _warningHistory: {
+        [key: string]: boolean;
+    };
+    _enumValues: {
+        [_: string]: any;
+    };
+    readonly _globalState: Record<string, any>;
+    readonly _rootKey: string;
+    constructor(expression: Expression, rootKey: string, propertySpec?: StylePropertySpecification | null, globalState?: Record<string, any>);
+    evaluateWithoutErrorHandling(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+    evaluate(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+}
+function isExpression(expression: unknown): boolean;
+function createExpression(expression: unknown, rootKey: string, propertySpec?: StylePropertySpecification | null, globalState?: Record<string, any>): Result<StyleExpression, Array<ExpressionParsingError>>;
+class ZoomConstantExpression<Kind extends EvaluationKind> {
+    kind: Kind;
+    isStateDependent: boolean;
+    globalStateRefs: Set<string>;
+    _styleExpression: StyleExpression;
+    readonly _globalState: Record<string, any>;
+    constructor(kind: Kind, expression: StyleExpression, globalState?: Record<string, any>);
+    evaluateWithoutErrorHandling(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+    evaluate(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+}
+class ZoomDependentExpression<Kind extends EvaluationKind> {
+    kind: Kind;
+    zoomStops: Array<number>;
+    isStateDependent: boolean;
+    globalStateRefs: Set<string>;
+    _styleExpression: StyleExpression;
+    interpolationType: InterpolationType;
+    readonly _globalState: Record<string, any>;
+    constructor(kind: Kind, expression: StyleExpression, zoomStops: Array<number>, interpolationType?: InterpolationType, globalState?: Record<string, any>);
+    evaluateWithoutErrorHandling(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+    evaluate(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
+    interpolationFactor(input: number, lower: number, upper: number): number;
+}
+function isZoomExpression(expression: any): expression is ZoomConstantExpression<"source"> | ZoomDependentExpression<"source">;
+type ConstantExpression = {
+    kind: "constant";
+    globalStateRefs: Set<string>;
+    readonly _globalState: Record<string, any>;
+    readonly evaluate: (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>) => any;
+};
+type SourceExpression = {
+    kind: "source";
+    isStateDependent: boolean;
+    globalStateRefs: Set<string>;
+    readonly _globalState: Record<string, any>;
+    readonly evaluate: (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection) => any;
+};
+type CameraExpression = {
+    kind: "camera";
+    globalStateRefs: Set<string>;
+    readonly _globalState: Record<string, any>;
+    readonly evaluate: (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>) => any;
+    readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
+    zoomStops: Array<number>;
+    interpolationType: InterpolationType;
+};
+type CompositeExpression = {
+    kind: "composite";
+    isStateDependent: boolean;
+    globalStateRefs: Set<string>;
+    readonly _globalState: Record<string, any>;
+    readonly evaluate: (globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: ICanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection) => any;
+    readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
+    zoomStops: Array<number>;
+    interpolationType: InterpolationType;
+};
+type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
+function createPropertyExpression(expressionInput: unknown, rootKey: string, propertySpec: StylePropertySpecification, globalState?: Record<string, any>): Result<StylePropertyExpression, Array<ExpressionParsingError>>;
+class StylePropertyFunction<T> {
+    _parameters: PropertyValueSpecification<T>;
+    _specification: StylePropertySpecification;
+    readonly _rootKey: string;
+    readonly _defaultValue: Value;
+    _warningHistory: {
+        [key: string]: boolean;
+    };
+    _innerEvaluate: (globals: GlobalProperties, feature?: Feature) => any;
+    kind: StyleFunction["kind"];
+    interpolationFactor: (input: number, lower: number, upper: number) => number;
+    zoomStops: Array<number>;
+    interpolationType: InterpolationType | null;
+    isStateDependent: boolean;
+    globalStateRefs: Set<string>;
+    readonly _globalState: Record<string, any>;
+    constructor(parameters: PropertyValueSpecification<T>, rootKey: string, specification: StylePropertySpecification);
+    evaluate(globals: GlobalProperties, feature?: Feature): any;
+    static deserialize<T>(serialized: {
+        _parameters: PropertyValueSpecification<T>;
+        _specification: StylePropertySpecification;
+        _rootKey: string;
+    }): StylePropertyFunction<T>;
+    static serialize<T>(input: StylePropertyFunction<T>): {
+        _parameters: PropertyValueSpecification<T>;
+        _specification: StylePropertySpecification;
+        _rootKey: string;
+    };
+}
+function normalizePropertyExpression<T>(value: PropertyValueSpecification<T>, rootKey: string, specification: StylePropertySpecification, globalState?: Record<string, any>): StylePropertyExpression;
+type FilterExpression = (globalProperties: GlobalProperties, feature: Feature, canonical?: ICanonicalTileID) => boolean;
+type FeatureFilter = {
+    filter: FilterExpression;
+    needGeometry: boolean;
+    getGlobalStateRefs: () => Set<string>;
+};
+function isExpressionFilter(filter: any): filter is ExpressionFilterSpecification;
+function featureFilter(filter: FilterSpecification | void, rootKey: string, globalState?: Record<string, any>): FeatureFilter;
+type ExpectedTypes = {
+    [_: string]: ExpressionInputType;
+};
+function convertFilter(filter: FilterSpecification, expectedTypes?: ExpectedTypes): ExpressionFilterSpecification;
+function convertFunction(parameters: any, propertySpec: StylePropertySpecification): any;
+function eachSource(style: StyleSpecification, callback: (_: SourceSpecification) => void): void;
+function eachLayer(style: StyleSpecification, callback: (_: LayerSpecification) => void): void;
+type PropertyCallback = (a: {
+    path: [
+        string,
+        "paint" | "layout",
+        string
+    ];
+    key: string;
+    value: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>;
+    reference: StylePropertySpecification | null;
+    set: (a: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>) => void;
+}) => void;
+function eachProperty(style: StyleSpecification, options: {
+    paint?: boolean;
+    layout?: boolean;
+}, callback: PropertyCallback): void;
+function supportsPropertyExpression(spec: StylePropertySpecification): boolean;
+const expressions: ExpressionRegistry;
+function groupByLayout(layers: LayerSpecification[], cachedKeys?: Record<string, string>): LayerSpecification[][];
+function emptyStyle(): StyleSpecification;
+function validateStyleMin(style: StyleSpecification, styleSpec?: {
+    $version: number;
+    $root: {
+        version: {
+            required: boolean;
+            type: string;
+            values: number[];
+            doc: string;
+            example: number;
+        };
+        name: {
+            type: string;
+            doc: string;
+            example: string;
+        };
+        metadata: {
+            type: string;
+            doc: string;
+            example: {
+                "styleeditor:slimmode": boolean;
+                "styleeditor:comment": string;
+                "styleeditor:version": string;
+                "example:object": {
+                    String: string;
+                    Number: number;
+                    Boolean: boolean;
+                };
+            };
+        };
+        center: {
+            type: string;
+            value: string;
+            length: number;
+            doc: string;
+            example: number[];
+        };
+        centerAltitude: {
+            type: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        zoom: {
+            type: string;
+            doc: string;
+            example: number;
+        };
+        bearing: {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            example: number;
+        };
+        pitch: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "0-60 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "0-85 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "0-180 degrees": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        roll: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            example: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        state: {
+            type: string;
+            default: {};
+            doc: string;
+            example: {
+                chargerType: {
+                    default: string[];
+                };
+                minPreferredChargingSpeed: {
+                    default: number;
+                };
+            };
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        light: {
+            type: string;
+            doc: string;
+            example: {
+                anchor: string;
+                color: string;
+                intensity: number;
+            };
+        };
+        sky: {
+            type: string;
+            doc: string;
+            example: {
+                "sky-color": string;
+                "sky-horizon-blend": number;
+                "horizon-color": string;
+                "horizon-fog-blend": number;
+                "fog-color": string;
+                "fog-ground-blend": number;
+                "atmosphere-blend": (string | number | string[])[];
+            };
+        };
+        projection: {
+            type: string;
+            doc: string;
+            example: {
+                type: (string | number | string[])[];
+            };
+        };
+        terrain: {
+            type: string;
+            doc: string;
+            example: {
+                source: string;
+                exaggeration: number;
+            };
+        };
+        sources: {
+            required: boolean;
+            type: string;
+            doc: string;
+            example: {
+                "maplibre-demotiles": {
+                    type: string;
+                    url: string;
+                };
+                "maplibre-tilejson": {
+                    type: string;
+                    url: string;
+                };
+                "maplibre-streets": {
+                    type: string;
+                    tiles: string[];
+                    maxzoom: number;
+                };
+                "wms-imagery": {
+                    type: string;
+                    tiles: string[];
+                    tileSize: number;
+                };
+            };
+        };
+        sprite: {
+            type: string;
+            doc: string;
+            example: string;
+        };
+        glyphs: {
+            type: string;
+            doc: string;
+            example: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "omit to use local fonts": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "font-faces": {
+            type: string;
+            doc: string;
+            example: {
+                "Noto Sans Regular": {
+                    url: string;
+                    "unicode-range": string[];
+                }[];
+                Unifont: string;
+            };
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        transition: {
+            type: string;
+            doc: string;
+            example: {
+                duration: number;
+                delay: number;
+            };
+        };
+        layers: {
+            required: boolean;
+            type: string;
+            value: string;
+            doc: string;
+            example: {
+                id: string;
+                source: string;
+                "source-layer": string;
+                type: string;
+                paint: {
+                    "line-color": string;
+                };
+            }[];
+        };
+    };
+    sources: {
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source: string[];
+    source_vector: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                vector: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        scheme: {
+            type: string;
+            values: {
+                xyz: {
+                    doc: string;
+                };
+                tms: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+        };
+        sparse: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        promoteId: {
+            type: string;
+            doc: string;
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        encoding: {
+            type: string;
+            values: {
+                mvt: {
+                    doc: string;
+                };
+                mlt: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                mvt: {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+                mlt: {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_raster: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                raster: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        tileSize: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+        };
+        scheme: {
+            type: string;
+            values: {
+                xyz: {
+                    doc: string;
+                };
+                tms: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_raster_dem: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                "raster-dem": {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        tiles: {
+            type: string;
+            value: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`{bbox}` token": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        bounds: {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        tileSize: {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        encoding: {
+            type: string;
+            values: {
+                terrarium: {
+                    doc: string;
+                };
+                mapbox: {
+                    doc: string;
+                };
+                custom: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "mapbox, terrarium": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                custom: {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        redFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        blueFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        greenFactor: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        baseShift: {
+            type: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        volatile: {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    android: string;
+                    ios: string;
+                    js: string;
+                };
+            };
+        };
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    source_geojson: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                geojson: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        data: {
+            required: boolean;
+            type: string;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        attribution: {
+            type: string;
+            doc: string;
+        };
+        buffer: {
+            type: string;
+            default: number;
+            maximum: number;
+            minimum: number;
+            doc: string;
+        };
+        filter: {
+            type: string;
+            doc: string;
+        };
+        tolerance: {
+            type: string;
+            default: number;
+            doc: string;
+        };
+        cluster: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        clusterRadius: {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+        };
+        clusterMaxZoom: {
+            type: string;
+            doc: string;
+        };
+        clusterMinPoints: {
+            type: string;
+            doc: string;
+        };
+        clusterProperties: {
+            type: string;
+            doc: string;
+        };
+        lineMetrics: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        generateId: {
+            type: string;
+            default: boolean;
+            doc: string;
+        };
+        promoteId: {
+            type: string;
+            doc: string;
+        };
+    };
+    source_video: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                video: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        urls: {
+            required: boolean;
+            type: string;
+            value: string;
+            doc: string;
+        };
+        coordinates: {
+            required: boolean;
+            doc: string;
+            type: string;
+            length: number;
+            value: {
+                type: string;
+                length: number;
+                value: string;
+                doc: string;
+            };
+        };
+    };
+    source_image: {
+        type: {
+            required: boolean;
+            type: string;
+            values: {
+                image: {
+                    doc: string;
+                };
+            };
+            doc: string;
+        };
+        url: {
+            type: string;
+            doc: string;
+        };
+        coordinates: {
+            required: boolean;
+            doc: string;
+            type: string;
+            length: number;
+            value: {
+                type: string;
+                length: number;
+                value: string;
+                doc: string;
+            };
+        };
+    };
+    layer: {
+        id: {
+            type: string;
+            doc: string;
+            required: boolean;
+        };
+        type: {
+            type: string;
+            values: {
+                fill: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                line: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                symbol: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                circle: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                heatmap: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                "fill-extrusion": {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                raster: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                hillshade: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                        "additional methods": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                "color-relief": {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+                background: {
+                    doc: string;
+                    "sdk-support": {
+                        "basic functionality": {
+                            js: string;
+                            android: string;
+                            ios: string;
+                        };
+                    };
+                };
+            };
+            doc: string;
+            required: boolean;
+        };
+        metadata: {
+            type: string;
+            doc: string;
+            example: {
+                "source:comment": string;
+            };
+        };
+        source: {
+            type: string;
+            doc: string;
+        };
+        "source-layer": {
+            type: string;
+            doc: string;
+        };
+        minzoom: {
+            type: string;
+            minimum: number;
+            maximum: number;
+            doc: string;
+        };
+        maxzoom: {
+            type: string;
+            minimum: number;
+            maximum: number;
+            doc: string;
+        };
+        filter: {
+            type: string;
+            doc: string;
+        };
+        layout: {
+            type: string;
+            doc: string;
+        };
+        paint: {
+            type: string;
+            doc: string;
+        };
+    };
+    layout: string[];
+    layout_background: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_fill: {
+        "fill-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_circle: {
+        "circle-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_heatmap: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "layout_fill-extrusion": {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-rounded-corner-distance": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+        };
+    };
+    layout_line: {
+        "line-cap": {
+            type: string;
+            values: {
+                butt: {
+                    doc: string;
+                };
+                round: {
+                    doc: string;
+                };
+                square: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-join": {
+            type: string;
+            values: {
+                bevel: {
+                    doc: string;
+                };
+                round: {
+                    doc: string;
+                };
+                miter: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-miter-limit": {
+            type: string;
+            default: number;
+            doc: string;
+            requires: {
+                "line-join": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-round-limit": {
+            type: string;
+            default: number;
+            doc: string;
+            requires: {
+                "line-join": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_symbol: {
+        "symbol-placement": {
+            type: string;
+            values: {
+                point: {
+                    doc: string;
+                };
+                line: {
+                    doc: string;
+                };
+                "line-center": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`line-center` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-spacing": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: {
+                "symbol-placement": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-avoid-edges": {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-sort-key": {
+            type: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-z-order": {
+            type: string;
+            values: {
+                auto: {
+                    doc: string;
+                };
+                "viewport-y": {
+                    doc: string;
+                };
+                source: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-allow-overlap": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-overlap": {
+            type: string;
+            values: {
+                never: {
+                    doc: string;
+                };
+                always: {
+                    doc: string;
+                };
+                cooperative: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-ignore-placement": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-optional": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-rotation-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-size": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-text-fit": {
+            type: string;
+            values: {
+                none: {
+                    doc: string;
+                };
+                width: {
+                    doc: string;
+                };
+                height: {
+                    doc: string;
+                };
+                both: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "stretchable icons": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-text-fit-padding": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            units: string;
+            doc: string;
+            requires: (string | {
+                "icon-text-fit": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-image": {
+            type: string;
+            doc: string;
+            tokens: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-padding": {
+            type: string;
+            default: number[];
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-keep-upright": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "icon-rotation-alignment": string;
+                "symbol-placement"?: undefined;
+            } | {
+                "symbol-placement": string[];
+                "icon-rotation-alignment"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-offset": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-anchor": {
+            type: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-rotation-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+                "viewport-glyph": {
+                    doc: string;
+                };
+                auto: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`auto` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "`viewport-glyph` value": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-field": {
+            type: string;
+            default: string;
+            tokens: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-font": {
+            type: string;
+            value: string;
+            default: string[];
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "local fonts": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-size": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-max-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-line-height": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-letter-spacing": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-justify": {
+            type: string;
+            values: {
+                auto: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                center: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                auto: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-radial-offset": {
+            type: string;
+            units: string;
+            default: number;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            requires: string[];
+            "property-type": string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+        };
+        "text-variable-anchor": {
+            type: string;
+            value: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            example: string[];
+            "property-type": string;
+        };
+        "text-variable-anchor-offset": {
+            type: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            example: (string | number[])[];
+            "property-type": string;
+        };
+        "text-anchor": {
+            type: string;
+            values: {
+                center: {
+                    doc: string;
+                };
+                left: {
+                    doc: string;
+                };
+                right: {
+                    doc: string;
+                };
+                top: {
+                    doc: string;
+                };
+                bottom: {
+                    doc: string;
+                };
+                "top-left": {
+                    doc: string;
+                };
+                "top-right": {
+                    doc: string;
+                };
+                "bottom-left": {
+                    doc: string;
+                };
+                "bottom-right": {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-max-angle": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-writing-mode": {
+            type: string;
+            value: string;
+            values: {
+                horizontal: {
+                    doc: string;
+                };
+                vertical: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: (string | {
+                "symbol-placement": string[];
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-padding": {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-keep-upright": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "text-rotation-alignment": string;
+                "symbol-placement"?: undefined;
+            } | {
+                "symbol-placement": string[];
+                "text-rotation-alignment"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-transform": {
+            type: string;
+            values: {
+                none: {
+                    doc: string;
+                };
+                uppercase: {
+                    doc: string;
+                };
+                lowercase: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-offset": {
+            type: string;
+            doc: string;
+            value: string;
+            units: string;
+            length: number;
+            default: number[];
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-allow-overlap": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: (string | {
+                "!": string;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-overlap": {
+            type: string;
+            values: {
+                never: {
+                    doc: string;
+                };
+                always: {
+                    doc: string;
+                };
+                cooperative: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-ignore-placement": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-optional": {
+            type: string;
+            default: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-height-offset": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            requires: {
+                "symbol-placement": string[];
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "symbol-height-anchor": {
+            type: string;
+            values: {
+                ground: {
+                    doc: string;
+                };
+                absolute: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_raster: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    layout_hillshade: {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "layout_color-relief": {
+        visibility: {
+            type: string;
+            values: {
+                visible: {
+                    doc: string;
+                };
+                none: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    filter: {
+        type: string;
+        doc: string;
+        expression: {
+            interpolated: boolean;
+            parameters: string[];
+        };
+        "property-type": string;
+    };
+    filter_operator: {
+        type: string;
+        values: {
+            "==": {
+                doc: string;
+            };
+            "!=": {
+                doc: string;
+            };
+            ">": {
+                doc: string;
+            };
+            ">=": {
+                doc: string;
+            };
+            "<": {
+                doc: string;
+            };
+            "<=": {
+                doc: string;
+            };
+            in: {
+                doc: string;
+            };
+            "!in": {
+                doc: string;
+            };
+            all: {
+                doc: string;
+            };
+            any: {
+                doc: string;
+            };
+            none: {
+                doc: string;
+            };
+            has: {
+                doc: string;
+            };
+            "!has": {
+                doc: string;
+            };
+        };
+        doc: string;
+    };
+    geometry_type: {
+        type: string;
+        values: {
+            Point: {
+                doc: string;
+            };
+            LineString: {
+                doc: string;
+            };
+            Polygon: {
+                doc: string;
+            };
+        };
+        doc: string;
+    };
+    function: {
+        expression: {
+            type: string;
+            doc: string;
+        };
+        stops: {
+            type: string;
+            doc: string;
+            value: string;
+        };
+        base: {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+        };
+        property: {
+            type: string;
+            doc: string;
+            default: string;
+        };
+        type: {
+            type: string;
+            values: {
+                identity: {
+                    doc: string;
+                };
+                exponential: {
+                    doc: string;
+                };
+                interval: {
+                    doc: string;
+                };
+                categorical: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+        };
+        colorSpace: {
+            type: string;
+            values: {
+                rgb: {
+                    doc: string;
+                };
+                lab: {
+                    doc: string;
+                };
+                hcl: {
+                    doc: string;
+                };
+                oklch: {
+                    doc: string;
+                };
+                oklab: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+        };
+        default: {
+            type: string;
+            required: boolean;
+            doc: string;
+        };
+    };
+    function_stop: {
+        type: string;
+        minimum: number;
+        maximum: number;
+        value: string[];
+        length: number;
+        doc: string;
+    };
+    expression: {
+        type: string;
+        value: string;
+        minimum: number;
+        doc: string;
+    };
+    expression_name: {
+        doc: string;
+        type: string;
+        values: {
+            let: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            var: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            literal: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            semiliteral: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[][])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            array: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | (string | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            at: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | (string | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            in: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "index-of": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            slice: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            case: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | (string | boolean | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            match: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            coalesce: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | (string | string[])[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            step: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            interpolate: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "interpolate-hcl": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "interpolate-lab": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "interpolate-oklch": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "interpolate-oklab": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string[];
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string[];
+                        doc?: undefined;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ln2: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            pi: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            e: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            typeof: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            string: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            number: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            boolean: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | boolean | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            object: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            collator: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: {
+                            "case-sensitive": {
+                                type: string;
+                                default: boolean;
+                                example: boolean;
+                                doc: string;
+                            };
+                            "diacritic-sensitive": {
+                                type: string;
+                                default: boolean;
+                                example: boolean;
+                                doc: string;
+                            };
+                            locale: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                        };
+                    }[];
+                };
+                example: (string | {
+                    "case-sensitive": boolean;
+                    "diacritic-sensitive": boolean;
+                    locale: string;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            format: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string[];
+                    } | {
+                        name: string;
+                        type: {
+                            "text-font": {
+                                type: string;
+                                doc: string;
+                                example: string;
+                            };
+                            "text-color": {
+                                type: string;
+                                doc: string;
+                                example: string;
+                            };
+                            "font-scale": {
+                                type: string;
+                                doc: string;
+                                example: number;
+                            };
+                            "vertical-align": {
+                                type: string;
+                                doc: string;
+                                default: string;
+                                example: string;
+                                values: {
+                                    bottom: {
+                                        doc: string;
+                                    };
+                                    center: {
+                                        doc: string;
+                                    };
+                                    top: {
+                                        doc: string;
+                                    };
+                                };
+                            };
+                        };
+                    })[];
+                };
+                example: (string | (string | string[])[] | {
+                    "font-scale": number;
+                    "vertical-align"?: undefined;
+                } | {
+                    "font-scale"?: undefined;
+                    "vertical-align"?: undefined;
+                } | {
+                    "font-scale": number;
+                    "vertical-align": string;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "text-font": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "font-scale": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "text-color": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "vertical-align": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    image: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            image: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "global-state": {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "number-format": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc: string;
+                    } | {
+                        name: string;
+                        type: {
+                            locale: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            currency: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            unit: {
+                                type: string;
+                                example: string;
+                                doc: string;
+                            };
+                            "min-fraction-digits": {
+                                type: string;
+                                example: number;
+                                doc: string;
+                            };
+                            "max-fraction-digits": {
+                                type: string;
+                                example: number;
+                                doc: string;
+                            };
+                        };
+                        doc: string;
+                    })[];
+                };
+                example: (string | string[] | {
+                    "min-fraction-digits": number;
+                    "max-fraction-digits": number;
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "`unit` property": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-string": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-number": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-boolean": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-rgba": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "to-color": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            rgb: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            rgba: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            get: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            has: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            length: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string[];
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            properties: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "feature-state": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "geometry-type": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            id: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            zoom: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "heatmap-density": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            elevation: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "[`fill-extrusion-color`](layers/#fill-extrusion-color)": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "line-progress": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            accumulated: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                };
+            };
+            "+": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "*": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "-": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "/": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "%": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "^": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            sqrt: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            log10: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ln: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            log2: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            sin: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            cos: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            tan: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            asin: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            acos: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            atan: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            min: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            max: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            round: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            abs: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ceil: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            floor: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | number)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            distance: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | {
+                    type: string;
+                    coordinates: number[];
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "==": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "!=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | boolean)[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ">": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "<": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            ">=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "<=": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: ({
+                        name: string;
+                        type: string;
+                        doc?: undefined;
+                    } | {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    })[];
+                };
+                example: (string | number | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    collator: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            all: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            any: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | number | string[])[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "!": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            within: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | {
+                    type: string;
+                    coordinates: number[][][];
+                })[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "is-supported-script": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: string[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            upcase: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            downcase: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            concat: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "resolved-locale": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | {
+                    "case-sensitive": boolean;
+                    "diacritic-sensitive": boolean;
+                    locale: string;
+                })[])[];
+                group: string;
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            split: {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | string[])[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            join: {
+                doc: string;
+                group: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                    }[];
+                };
+                example: (string | (string | string[])[])[];
+                "sdk-support": {
+                    "basic functionality": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+        };
+    };
+    light: {
+        anchor: {
+            type: string;
+            default: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            doc: string;
+            example: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        position: {
+            type: string;
+            default: number[];
+            length: number;
+            value: string;
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            doc: string;
+            example: number[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        color: {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        intensity: {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+    };
+    sky: {
+        "sky-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "horizon-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "fog-color": {
+            type: string;
+            "property-type": string;
+            default: string;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "fog-ground-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "horizon-fog-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "sky-horizon-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+        "atmosphere-blend": {
+            type: string;
+            "property-type": string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+        };
+    };
+    terrain: {
+        source: {
+            type: string;
+            doc: string;
+            required: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+        exaggeration: {
+            type: string;
+            minimum: number;
+            doc: string;
+            default: number;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+            };
+        };
+    };
+    projection: {
+        type: {
+            type: string;
+            doc: string;
+            default: string;
+            "property-type": string;
+            transition: boolean;
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+        };
+    };
+    paint: string[];
+    paint_fill: {
+        "fill-antialias": {
+            type: string;
+            default: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-layer-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "fill-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "SDF fill pattern colorization": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-outline-color": {
+            type: string;
+            doc: string;
+            transition: boolean;
+            requires: ({
+                "!": string;
+                "fill-antialias"?: undefined;
+            } | {
+                "fill-antialias": boolean;
+                "!"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "paint_fill-extrusion": {
+        "fill-extrusion-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`elevation`](expressions/#elevation) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-height": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "negative values": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-base": {
+            type: string;
+            default: number;
+            units: string;
+            doc: string;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "negative values": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "fill-extrusion-vertical-gradient": {
+            type: string;
+            default: boolean;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_line: {
+        "line-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-layer-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "line-color": {
+            type: string;
+            doc: string;
+            default: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-gap-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            doc: string;
+            transition: boolean;
+            units: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-offset": {
+            type: string;
+            default: number;
+            doc: string;
+            transition: boolean;
+            units: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-dasharray": {
+            type: string;
+            value: string;
+            doc: string;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    ios: string;
+                    android: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "line-gradient": {
+            type: string;
+            doc: string;
+            transition: boolean;
+            requires: ({
+                "!": string;
+                source?: undefined;
+                has?: undefined;
+            } | {
+                source: string;
+                has: {
+                    lineMetrics: boolean;
+                };
+                "!"?: undefined;
+            })[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_circle: {
+        "circle-radius": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-blur": {
+            type: string;
+            default: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-pitch-scale": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-pitch-alignment": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "circle-stroke-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_heatmap: {
+        "heatmap-radius": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-weight": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-intensity": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-color": {
+            type: string;
+            default: (string | number | string[])[];
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "heatmap-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_symbol: {
+        "icon-opacity": {
+            doc: string;
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-halo-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "icon-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-color": {
+            type: string;
+            doc: string;
+            default: string;
+            transition: boolean;
+            overridable: boolean;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-color": {
+            type: string;
+            default: string;
+            transition: boolean;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-width": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-halo-blur": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-translate": {
+            type: string;
+            value: string;
+            length: number;
+            default: number[];
+            transition: boolean;
+            units: string;
+            doc: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "text-translate-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            doc: string;
+            default: string;
+            requires: string[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_raster: {
+        "raster-opacity": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-layer-blend": {
+            type: string;
+            values: {
+                normal: {
+                    doc: string;
+                };
+                multiply: {
+                    doc: string;
+                };
+                color: {
+                    doc: string;
+                };
+                luminosity: {
+                    doc: string;
+                };
+                "plus-lighter": {
+                    doc: string;
+                };
+                screen: {
+                    doc: string;
+                };
+                overlay: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            "property-type": string;
+            transition: boolean;
+        };
+        "raster-hue-rotate": {
+            type: string;
+            default: number;
+            period: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-brightness-min": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-brightness-max": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-saturation": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-contrast": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-resampling": {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "raster-fade-duration": {
+            type: string;
+            default: number;
+            minimum: number;
+            transition: boolean;
+            units: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_hillshade: {
+        "hillshade-illumination-direction": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-illumination-altitude": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-illumination-anchor": {
+            type: string;
+            values: {
+                map: {
+                    doc: string;
+                };
+                viewport: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-exaggeration": {
+            type: string;
+            doc: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-shadow-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-highlight-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                multidirectional: {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-accent-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "hillshade-method": {
+            type: string;
+            values: {
+                standard: {
+                    doc: string;
+                };
+                basic: {
+                    doc: string;
+                };
+                combined: {
+                    doc: string;
+                };
+                igor: {
+                    doc: string;
+                };
+                multidirectional: {
+                    doc: string;
+                };
+            };
+            default: string;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    "paint_color-relief": {
+        "color-relief-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "color-relief-color": {
+            type: string;
+            doc: string;
+            example: (string | number | string[])[];
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        resampling: {
+            type: string;
+            doc: string;
+            values: {
+                linear: {
+                    doc: string;
+                };
+                nearest: {
+                    doc: string;
+                };
+            };
+            default: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    paint_background: {
+        "background-color": {
+            type: string;
+            default: string;
+            doc: string;
+            transition: boolean;
+            requires: {
+                "!": string;
+            }[];
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "background-pattern": {
+            type: string;
+            transition: boolean;
+            doc: string;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "data-driven styling": {};
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+        "background-opacity": {
+            type: string;
+            default: number;
+            minimum: number;
+            maximum: number;
+            doc: string;
+            transition: boolean;
+            "sdk-support": {
+                "basic functionality": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+                "[`global-state`](expressions/#global-state) expression": {
+                    js: string;
+                    android: string;
+                    ios: string;
+                };
+            };
+            expression: {
+                interpolated: boolean;
+                parameters: string[];
+            };
+            "property-type": string;
+        };
+    };
+    transition: {
+        duration: {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+        };
+        delay: {
+            type: string;
+            default: number;
+            minimum: number;
+            units: string;
+            doc: string;
+        };
+    };
+    "property-type": {
+        "data-driven": {
+            type: string;
+            doc: string;
+        };
+        "cross-faded": {
+            type: string;
+            doc: string;
+        };
+        "cross-faded-data-driven": {
+            type: string;
+            doc: string;
+        };
+        "color-ramp": {
+            type: string;
+            doc: string;
+        };
+        "data-constant": {
+            type: string;
+            doc: string;
+        };
+        constant: {
+            type: string;
+            doc: string;
+        };
+    };
+    promoteId: {
+        "*": {
+            type: string;
+            doc: string;
+        };
+    };
+    interpolation: {
+        type: string;
+        value: string;
+        minimum: number;
+        doc: string;
+    };
+    interpolation_name: {
+        doc: string;
+        type: string;
+        values: {
+            linear: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: any[];
+                        "output-type": string;
+                    }[];
+                    parameters: any[];
+                };
+                example: string[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            exponential: {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+            "cubic-bezier": {
+                doc: string;
+                syntax: {
+                    overloads: {
+                        parameters: string[];
+                        "output-type": string;
+                    }[];
+                    parameters: {
+                        name: string;
+                        type: string;
+                        doc: string;
+                    }[];
+                };
+                example: (string | number)[];
+                "sdk-support": {
+                    interpolate: {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-hcl": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-lab": {
+                        js: string;
+                        ios: string;
+                        android: string;
+                    };
+                    "interpolate-oklch": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                    "interpolate-oklab": {
+                        js: string;
+                        android: string;
+                        ios: string;
+                    };
+                };
+            };
+        };
+    };
+}): Array<ValidationError>;
+namespace validateStyleMin {
+    var source: (...args: any[]) => any[];
+    var sprite: (...args: any[]) => any[];
+    var glyphs: (...args: any[]) => any[];
+    var fontFaces: (...args: any[]) => any[];
+    var light: (...args: any[]) => any[];
+    var sky: (...args: any[]) => any[];
+    var terrain: (...args: any[]) => any[];
+    var state: (...args: any[]) => any[];
+    var layer: (...args: any[]) => any[];
+    var filter: (...args: any[]) => any[];
+    var paintProperty: (...args: any[]) => any[];
+    var layoutProperty: (...args: any[]) => any[];
+}
+class Step implements Expression {
+    type: Type;
+    input: Expression;
+    readonly key: string;
+    labels: Array<number>;
+    outputs: Array<Expression>;
+    constructor(type: Type, input: Expression, stops: Stops, key: string);
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression;
+    evaluate(ctx: EvaluationContext): any;
+    eachChild(fn: (_: Expression) => void): void;
+    outputDefined(): boolean;
+}
+type FormattedSectionExpression = {
+    content: Expression;
+    scale: Expression | null;
+    font: Expression | null;
+    textColor: Expression | null;
+    verticalAlign: Expression | null;
+};
+class FormatExpression implements Expression {
+    type: Type;
+    sections: Array<FormattedSectionExpression>;
+    constructor(sections: Array<FormattedSectionExpression>);
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression;
+    evaluate(ctx: EvaluationContext): Formatted;
+    eachChild(fn: (_: Expression) => void): void;
+    outputDefined(): boolean;
+}
+class Literal implements Expression {
+    type: Type;
+    value: Value;
+    constructor(type: Type, value: Value);
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression;
+    evaluate(): Value;
+    eachChild(): void;
+    outputDefined(): boolean;
+}
+type Varargs = {
+    type: Type;
+};
+type Signature = Array<Type> | Varargs;
+type Evaluate = (b: EvaluationContext, a: Array<Expression>, key: string) => Value;
+type Definition = [
+    Type,
+    Signature,
+    Evaluate
+] | {
+    type: Type;
+    overloads: Array<[
+        Signature,
+        Evaluate
+    ]>;
+};
+class CompoundExpression implements Expression {
+    name: string;
+    type: Type;
+    _evaluate: Evaluate;
+    args: Array<Expression>;
+    readonly key: string;
+    static definitions: {
+        [_: string]: Definition;
+    };
+    constructor(name: string, type: Type, evaluate: Evaluate, args: Array<Expression>, key: string);
+    evaluate(ctx: EvaluationContext): Value;
+    eachChild(fn: (_: Expression) => void): void;
+    outputDefined(): boolean;
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression;
+    static register(registry: ExpressionRegistry, definitions: {
+        [_: string]: Definition;
+    }): void;
+}
+function format(style: any, space?: number): string;
+function validate(options: {
+    key: any;
+    value: any;
+    valueSpec: any;
+    styleSpec: any;
+    validateSpec?: any;
+    style: any;
+    objectElementValidators?: any;
+}): ValidationError[];
+function migrate(style: StyleSpecification): StyleSpecification;
+type RingWithArea<T extends Point2D> = T[] & {
+    area?: number;
+};
+function classifyRings<T extends Point2D>(rings: RingWithArea<T>[], maxRings?: number): RingWithArea<T>[][];
+interface VisibilityExpression {
+    evaluate: () => "visible" | "none";
+    setValue: (visibility: VisibilitySpecification) => void;
+    getGlobalStateRefs: () => Set<string>;
+}
+function createVisibility(visibility: VisibilitySpecification, rootKey: string, globalState: Record<string, any>): VisibilityExpression;
+type ExpressionType = "data-driven" | "cross-faded" | "cross-faded-data-driven" | "color-ramp" | "data-constant" | "constant";
+type ExpressionParameters = Array<"zoom" | "feature" | "feature-state" | "heatmap-density" | "elevation" | "line-progress" | "global-state">;
+type ExpressionSpecificationDefinition = {
+    interpolated: boolean;
+    parameters: ExpressionParameters;
+};
+type StylePropertySpecification = {
+    type: "number";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: number;
+} | {
+    type: "string";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: string;
+    tokens?: boolean;
+} | {
+    type: "boolean";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: boolean;
+} | {
+    type: "enum";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    values: {
+        [_: string]: {};
+    };
+    transition: boolean;
+    default?: string;
+} | {
+    type: "color";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: ColorSpecification;
+    overridable: boolean;
+} | {
+    type: "array";
+    value: "number";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    length?: number;
+    transition: boolean;
+    default?: Array<number>;
+} | {
+    type: "array";
+    value: "string";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    length?: number;
+    transition: boolean;
+    default?: Array<string>;
+} | {
+    type: "padding";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: PaddingSpecification;
+} | {
+    type: "numberArray";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: NumberArraySpecification;
+} | {
+    type: "colorArray";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: ColorArraySpecification;
+} | {
+    type: "variableAnchorOffsetCollection";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: VariableAnchorOffsetCollectionSpecification;
+} | {
+    type: "projectionDefinition";
+    "property-type": ExpressionType;
+    expression?: ExpressionSpecificationDefinition;
+    transition: boolean;
+    default?: ProjectionDefinitionSpecification;
+};
+const expression: {
+    StyleExpression: typeof StyleExpression;
+    StylePropertyFunction: typeof StylePropertyFunction;
+    ZoomConstantExpression: typeof ZoomConstantExpression;
+    ZoomDependentExpression: typeof ZoomDependentExpression;
+    createExpression: typeof createExpression;
+    createPropertyExpression: typeof createPropertyExpression;
+    isExpression: typeof isExpression;
+    isExpressionFilter: typeof isExpressionFilter;
+    isZoomExpression: typeof isZoomExpression;
+    normalizePropertyExpression: typeof normalizePropertyExpression;
+};
+const styleFunction: {
+    convertFunction: typeof convertFunction;
+    createFunction: typeof createFunction;
+    isFunction: typeof isFunction;
+};
+const visit: {
+    eachLayer: typeof eachLayer;
+    eachProperty: typeof eachProperty;
+    eachSource: typeof eachSource;
+};
+interface VectorTileFeatureLike {
+    type: 0 | 1 | 2 | 3;
+    properties: Record<string, number | string | boolean>;
+    id: number | undefined;
+    extent: number;
+    loadGeometry(): Point[][];
+}
+interface VectorTileLayerLike {
+    version: number;
+    name: string;
+    extent: number;
+    length: number;
+    feature(i: number): VectorTileFeatureLike;
+}
+type TinySDFOptions = {
+    fontSize?: number;
+    buffer?: number;
+    radius?: number;
+    cutoff?: number;
+    fontFamily?: string;
+    fontWeight?: string;
+    fontStyle?: string;
+    lang?: string;
+};
+class TinySDF {
+    constructor(options: TinySDFOptions);
+    draw(char: string): {
+        data: Uint8ClampedArray;
+        width: number;
+        height: number;
+        glyphWidth: number;
+        glyphHeight: number;
+        glyphTop: number;
+        glyphLeft: number;
+        glyphAdvance: number;
+    };
+}
+type ExpiryData = {
+    cacheControl?: string | null;
+    expires?: Date | string | null;
+    etag?: string;
+};
+type RequestParameters = {
+    url: string;
+    headers?: any;
+    method?: "GET" | "POST" | "PUT";
+    body?: string;
+    type?: "string" | "json" | "arrayBuffer" | "image";
+    credentials?: "same-origin" | "include";
+    collectResourceTiming?: boolean;
+    cache?: RequestCache;
+    referrerPolicy?: ReferrerPolicy;
+};
+type GetResourceResponse<T> = ExpiryData & {
+    data: T;
+};
+class AJAXError extends Error {
+    status: number;
+    statusText: string;
+    url: string;
+    body: Blob;
+    constructor(status: number, statusText: string, url: string, body: Blob);
+}
+type AddProtocolResponseData = ArrayBuffer | ImageBitmap | HTMLImageElement | string | object;
+type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<AddProtocolResponseData>>;
+type Config = {
+    MAX_PARALLEL_IMAGE_REQUESTS: number;
+    MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: number;
+    MAX_TILE_CACHE_ZOOM_LEVELS: number;
+    REGISTERED_PROTOCOLS: {
+        [x: string]: AddProtocolAction;
+    };
+    WORKER_URL: string;
+};
+const config: Config;
+type Listener$1<E extends Event$1 = Event$1> = (event: E) => any;
+type EventTypeMap = Record<string, Event$1>;
+type EventNames<EventType extends EventTypeMap> = Extract<keyof EventType, string>;
+type EventedParentData = Record<string, unknown>;
+type Listeners<EventType extends EventTypeMap> = {
+    [K in keyof EventType]?: Array<Listener$1<EventType[K]>>;
+};
+class Event$1<TType extends string = string> {
+    readonly type: TType;
+    target?: unknown;
+    constructor(type: TType, data?: object);
+}
+type ErrorLike = {
+    message: string;
+};
+class ErrorEvent$1 extends Event$1<"error"> {
+    error: ErrorLike;
+    constructor(error: ErrorLike, data?: object);
+}
+type ErrorEventType = {
+    error: ErrorEvent$1;
+};
+abstract class Evented<EventType extends EventTypeMap = EventTypeMap> {
+    _listeners?: Listeners<EventType>;
+    _oneTimeListeners?: Listeners<EventType>;
+    _eventedParent?: Evented;
+    _eventedParentData?: EventedParentData | (() => EventedParentData);
+    on<T extends EventNames<EventType>>(type: T, listener: (event: EventType[T]) => void): Subscription;
+    off<T extends EventNames<EventType>>(type: T, listener: (event: EventType[T]) => void): this;
+    once<T extends EventNames<EventType>>(type: T): Promise<EventType[T]>;
+    once<T extends EventNames<EventType>>(type: T, listener: (event: EventType[T]) => void): this;
+    fire(event: EventType[EventNames<EventType>]): this;
+    fire(type: EventNames<EventType>, properties?: object): this;
+    listens(type: EventNames<EventType>): boolean;
+    setEventedParent(parent?: Evented | null, data?: EventedParentData | (() => EventedParentData)): this;
+}
+type SerializedObject<S extends Serialized = any> = {
+    [_: string]: S;
+};
+type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Serialized[] | SerializedObject;
+class ThrottledInvoker {
+    _channel: MessageChannel | undefined;
+    _triggered: boolean;
+    _methodToThrottle: Function;
+    constructor(methodToThrottle: Function);
+    trigger(): void;
+    _invoke(): void;
+    remove(): void;
+}
+const viewTypes: {
+    Int8: Int8ArrayConstructor;
+    Uint8: Uint8ArrayConstructor;
+    Int16: Int16ArrayConstructor;
+    Uint16: Uint16ArrayConstructor;
+    Int32: Int32ArrayConstructor;
+    Uint32: Uint32ArrayConstructor;
+    Float32: Float32ArrayConstructor;
+};
+type ViewType = keyof typeof viewTypes;
+class Struct {
+    _pos1: number;
+    _pos2: number;
+    _pos4: number;
+    _pos8: number;
+    readonly _structArray: StructArray;
+    size: number;
+    constructor(structArray: StructArray, index: number);
+}
+type StructArrayMember = {
+    name: string;
+    type: ViewType;
+    components: number;
+    offset: number;
+};
+type SerializedStructArray = {
+    length: number;
+    arrayBuffer: ArrayBuffer;
+};
+abstract class StructArray {
+    capacity: number;
+    length: number;
+    isTransferred: boolean;
+    arrayBuffer: ArrayBuffer;
+    uint8: Uint8Array;
+    members: StructArrayMember[];
+    bytesPerElement: number;
+    abstract emplaceBack(...v: number[]): number;
+    abstract emplace(i: number, ...v: number[]): number;
+    constructor();
+    static serialize(array: StructArray, transferables?: Transferable[]): SerializedStructArray;
+    static deserialize<T extends StructArray>(this: {
+        prototype: T;
+    } & (new () => T), input: SerializedStructArray): T;
+    _trim(): void;
+    clear(): void;
+    resize(n: number): void;
+    reserve(n: number): void;
+    _refreshViews(): void;
+    freeBufferAfterUpload(): void;
+}
+class StructArrayLayout2i4 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number): number;
+    emplace(i: number, v0: number, v1: number): number;
+}
+class StructArrayLayout3i6 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number): number;
+}
+class StructArrayLayout2i4i12 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number): number;
+}
+class StructArrayLayout2i4ub2b10 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    int8: Int8Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number): number;
+}
+class StructArrayLayout2f8 extends StructArray {
+    uint8: Uint8Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number): number;
+    emplace(i: number, v0: number, v1: number): number;
+}
+class StructArrayLayout4i4ui4i1f28 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    uint16: Uint16Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number): number;
+}
+class StructArrayLayout3f12 extends StructArray {
+    uint8: Uint8Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number): number;
+}
+class StructArrayLayout1ul4 extends StructArray {
+    uint8: Uint8Array;
+    uint32: Uint32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number): number;
+    emplace(i: number, v0: number): number;
+}
+class StructArrayLayout6i1ul2ui20 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    uint32: Uint32Array;
+    uint16: Uint16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number): number;
+}
+class StructArrayLayout2ub2f2i16 extends StructArray {
+    uint8: Uint8Array;
+    float32: Float32Array;
+    int16: Int16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number): number;
+}
+class StructArrayLayout3ui6 extends StructArray {
+    uint8: Uint8Array;
+    uint16: Uint16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number): number;
+}
+class StructArrayLayout2i2ui3ul3ui2f3ub1ul1i1f52 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    uint16: Uint16Array;
+    uint32: Uint32Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number): number;
+}
+class StructArrayLayout8i15ui1ul2f2ui1f68 extends StructArray {
+    uint8: Uint8Array;
+    int16: Int16Array;
+    uint16: Uint16Array;
+    uint32: Uint32Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number, v28: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number, v28: number): number;
+}
+class StructArrayLayout1f4 extends StructArray {
+    uint8: Uint8Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number): number;
+    emplace(i: number, v0: number): number;
+}
+class StructArrayLayout1ui2f12 extends StructArray {
+    uint8: Uint8Array;
+    uint16: Uint16Array;
+    float32: Float32Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number): number;
+}
+class StructArrayLayout1ul2ui8 extends StructArray {
+    uint8: Uint8Array;
+    uint32: Uint32Array;
+    uint16: Uint16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number, v2: number): number;
+    emplace(i: number, v0: number, v1: number, v2: number): number;
+}
+class StructArrayLayout2ui4 extends StructArray {
+    uint8: Uint8Array;
+    uint16: Uint16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number, v1: number): number;
+    emplace(i: number, v0: number, v1: number): number;
+}
+class StructArrayLayout1ui2 extends StructArray {
+    uint8: Uint8Array;
+    uint16: Uint16Array;
+    _refreshViews(): void;
+    emplaceBack(v0: number): number;
+    emplace(i: number, v0: number): number;
+}
+class CollisionBoxStruct extends Struct {
+    _structArray: CollisionBoxArray;
+    get anchorPointX(): number;
+    get anchorPointY(): number;
+    get x1(): number;
+    get y1(): number;
+    get x2(): number;
+    get y2(): number;
+    get featureIndex(): number;
+    get sourceLayerIndex(): number;
+    get bucketIndex(): number;
+    get anchorPoint(): Point;
+}
+class CollisionBoxArray extends StructArrayLayout6i1ul2ui20 {
+    get(index: number): CollisionBoxStruct;
+}
+class PlacedSymbolStruct extends Struct {
+    _structArray: PlacedSymbolArray;
+    get anchorX(): number;
+    get anchorY(): number;
+    get glyphStartIndex(): number;
+    get numGlyphs(): number;
+    get vertexStartIndex(): number;
+    get lineStartIndex(): number;
+    get lineLength(): number;
+    get segment(): number;
+    get lowerSize(): number;
+    get upperSize(): number;
+    get lineOffsetX(): number;
+    get lineOffsetY(): number;
+    get writingMode(): number;
+    get placedOrientation(): number;
+    set placedOrientation(x: number);
+    get hidden(): number;
+    set hidden(x: number);
+    get crossTileID(): number;
+    set crossTileID(x: number);
+    get associatedIconIndex(): number;
+    get heightOffset(): number;
+}
+type PlacedSymbol = PlacedSymbolStruct;
+class PlacedSymbolArray extends StructArrayLayout2i2ui3ul3ui2f3ub1ul1i1f52 {
+    get(index: number): PlacedSymbolStruct;
+}
+class SymbolInstanceStruct extends Struct {
+    _structArray: SymbolInstanceArray;
+    get anchorX(): number;
+    get anchorY(): number;
+    get rightJustifiedTextSymbolIndex(): number;
+    get centerJustifiedTextSymbolIndex(): number;
+    get leftJustifiedTextSymbolIndex(): number;
+    get verticalPlacedTextSymbolIndex(): number;
+    get placedIconSymbolIndex(): number;
+    get verticalPlacedIconSymbolIndex(): number;
+    get key(): number;
+    get textBoxStartIndex(): number;
+    get textBoxEndIndex(): number;
+    get verticalTextBoxStartIndex(): number;
+    get verticalTextBoxEndIndex(): number;
+    get iconBoxStartIndex(): number;
+    get iconBoxEndIndex(): number;
+    get verticalIconBoxStartIndex(): number;
+    get verticalIconBoxEndIndex(): number;
+    get featureIndex(): number;
+    get numHorizontalGlyphVertices(): number;
+    get numVerticalGlyphVertices(): number;
+    get numIconVertices(): number;
+    get numVerticalIconVertices(): number;
+    get useRuntimeCollisionCircles(): number;
+    get crossTileID(): number;
+    set crossTileID(x: number);
+    get textBoxScale(): number;
+    get collisionCircleDiameter(): number;
+    get textAnchorOffsetStartIndex(): number;
+    get textAnchorOffsetEndIndex(): number;
+    get heightOffset(): number;
+}
+type SymbolInstance = SymbolInstanceStruct;
+class SymbolInstanceArray extends StructArrayLayout8i15ui1ul2f2ui1f68 {
+    get(index: number): SymbolInstanceStruct;
+}
+class GlyphOffsetArray extends StructArrayLayout1f4 {
+    getoffsetX(index: number): number;
+}
+class SymbolLineVertexArray extends StructArrayLayout3i6 {
+    getx(index: number): number;
+    gety(index: number): number;
+    gettileUnitDistanceFromAnchor(index: number): number;
+}
+class TextAnchorOffsetStruct extends Struct {
+    _structArray: TextAnchorOffsetArray;
+    get textAnchor(): number;
+    get textOffset0(): number;
+    get textOffset1(): number;
+}
+type TextAnchorOffset = TextAnchorOffsetStruct;
+class TextAnchorOffsetArray extends StructArrayLayout1ui2f12 {
+    get(index: number): TextAnchorOffsetStruct;
+}
+class FeatureIndexStruct extends Struct {
+    _structArray: FeatureIndexArray;
+    get featureIndex(): number;
+    get sourceLayerIndex(): number;
+    get bucketIndex(): number;
+}
+class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
+    get(index: number): FeatureIndexStruct;
+}
+class PosArray extends StructArrayLayout2i4 {
+}
+class Pos3dArray extends StructArrayLayout3i6 {
+}
+class CircleLayoutArray extends StructArrayLayout2i4 {
+}
+class FillLayoutArray extends StructArrayLayout2i4 {
+}
+class FillExtrusionLayoutArray extends StructArrayLayout2i4i12 {
+}
+class LineLayoutArray extends StructArrayLayout2i4ub2b10 {
+}
+class LineExtLayoutArray extends StructArrayLayout2f8 {
+}
+class SymbolLayoutArray extends StructArrayLayout4i4ui4i1f28 {
+}
+class SymbolDynamicLayoutArray extends StructArrayLayout3f12 {
+}
+class SymbolOpacityArray extends StructArrayLayout1ul4 {
+}
+class CollisionVertexArray extends StructArrayLayout2ub2f2i16 {
+}
+class TriangleIndexArray extends StructArrayLayout3ui6 {
+}
+class LineIndexArray extends StructArrayLayout2ui4 {
+}
+class LineStripIndexArray extends StructArrayLayout1ui2 {
+}
+type LngLatLike = LngLat | {
+    lng: number;
+    lat: number;
+} | {
+    lon: number;
+    lat: number;
+} | [
+    number,
+    number
+];
+class LngLat {
+    lng: number;
+    lat: number;
+    constructor(lng: number, lat: number);
+    wrap(): LngLat;
+    toArray(): [
+        number,
+        number
+    ];
+    toString(): string;
+    distanceTo(lngLat: LngLat): number;
+    static convert(input: LngLatLike): LngLat;
+}
+type LngLatBoundsLike = LngLatBounds | [
+    LngLatLike,
+    LngLatLike
+] | [
+    number,
+    number,
+    number,
+    number
+];
+class LngLatBounds {
+    _ne: LngLat;
+    _sw: LngLat;
+    constructor(sw?: LngLatLike | [
+        number,
+        number,
+        number,
+        number
+    ] | [
+        LngLatLike,
+        LngLatLike
+    ], ne?: LngLatLike);
+    setNorthEast(ne: LngLatLike): this;
+    setSouthWest(sw: LngLatLike): this;
+    extend(obj: LngLatLike | LngLatBoundsLike): this;
+    getCenter(): LngLat;
+    getSouthWest(): LngLat;
+    getNorthEast(): LngLat;
+    getNorthWest(): LngLat;
+    getSouthEast(): LngLat;
+    getWest(): number;
+    getSouth(): number;
+    getEast(): number;
+    getNorth(): number;
+    toArray(): [
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ]
+    ];
+    toString(): string;
+    isEmpty(): boolean;
+    contains(lnglat: LngLatLike): boolean;
+    intersects(other: LngLatBoundsLike): boolean;
+    static convert(input: LngLatBoundsLike | null): LngLatBounds;
+    static fromLngLat(center: LngLat, radius?: number): LngLatBounds;
+    adjustAntiMeridian(): LngLatBounds;
+}
+class EdgeInsets {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    constructor(top?: number, bottom?: number, left?: number, right?: number);
+    interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): this;
+    getCenter(width: number, height: number): Point;
+    equals(other: PaddingOptions): boolean;
+    clone(): EdgeInsets;
+    toJSON(): Complete<PaddingOptions>;
+}
+type PaddingOptions = RequireAtLeastOne<{
+    top: number;
+    bottom: number;
+    right: number;
+    left: number;
+}>;
+class IndexBuffer {
+    context: Context$1;
+    buffer: WebGLBuffer;
+    dynamicDraw: boolean;
+    constructor(context: Context$1, array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean);
+    bind(): void;
+    updateData(array: StructArray): void;
+    destroy(): void;
+}
+type PreparedShader = {
+    fragmentSource: string;
+    vertexSource: string;
+    staticAttributes: string[];
+    staticUniforms: string[];
+};
+type $ObjMap<T extends {}, F extends (v: any) => any> = {
+    [K in keyof T]: F extends ((v: T[K]) => infer R) ? R : never;
+};
+type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
+type UniformLocations = {
+    [_: string]: WebGLUniformLocation;
+};
+abstract class Uniform<T> {
+    gl: WebGL2RenderingContext;
+    location: WebGLUniformLocation;
+    current: T;
+    constructor(context: Context$1, location: WebGLUniformLocation);
+    abstract set(v: T): void;
+}
+class Uniform1i extends Uniform<number> {
+    constructor(context: Context$1, location: WebGLUniformLocation);
+    set(v: number): void;
+}
+type UniformBindings = {
+    [_: string]: Uniform<any>;
+};
+class ZoomHistory {
+    lastZoom: number;
+    lastFloorZoom: number;
+    lastIntegerZoom: number;
+    lastIntegerZoomTime: number;
+    first: boolean;
+    constructor();
+    update(z: number, now: number): boolean;
+}
+type CrossfadeParameters = {
+    fromScale: number;
+    toScale: number;
+    t: number;
+};
+class EvaluationParameters implements GlobalProperties {
+    zoom: number;
+    now: number;
+    fadeDuration: number;
+    zoomHistory: ZoomHistory;
+    transition: TransitionSpecification;
+    constructor(zoom: number, options?: any);
+    crossFadingFactor(): number;
+    getCrossfadeParameters(): CrossfadeParameters;
+}
+type TimePoint = number;
+type CrossFaded<T> = {
+    to: T;
+    from: T;
+};
+interface Property$1<T, R> {
+    specification: StylePropertySpecification;
+    name: string;
+    possiblyEvaluate(value: PropertyValue$1<T, R>, parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): R;
+    interpolate(a: R, b: R, t: number): R;
+}
+class PropertyValue$1<T, R> {
+    property: Property$1<T, R>;
+    value: PropertyValueSpecification<T> | void;
+    expression: StylePropertyExpression;
+    constructor(property: Property$1<T, R>, value: PropertyValueSpecification<T> | void, rootKey: string, globalState: Record<string, any>);
+    isDataDriven(): boolean;
+    getGlobalStateRefs(): Set<string>;
+    readsGlobalState(refs: string[]): boolean;
+    possiblyEvaluate(parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): R;
+}
+type TransitionParameters = {
+    now: TimePoint;
+    transition: TransitionSpecification;
+};
+class TransitionablePropertyValue<T, R> {
+    property: Property$1<T, R>;
+    value: PropertyValue$1<T, R>;
+    transition: TransitionSpecification | void;
+    constructor(property: Property$1<T, R>, rootKey: string, globalState: Record<string, any>);
+    transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R>;
+    untransitioned(): TransitioningPropertyValue<T, R>;
+}
+class Transitionable<Props> {
+    _properties: Properties$1<Props>;
+    _values: {
+        [K in keyof Props]: TransitionablePropertyValue<any, unknown>;
+    };
+    private _globalState;
+    private _rootKey;
+    constructor(properties: Properties$1<Props>, rootKey: string, globalState: Record<string, any>);
+    private _propertyRootKey;
+    hasProperty(name: string): boolean;
+    getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void;
+    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void): void;
+    setValues(values: {
+        [name: string]: unknown;
+    }): void;
+    getTransition<S extends keyof Props>(name: S): TransitionSpecification | void;
+    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void): void;
+    retainPriorGlobalState(refs: string[], priorGlobalState: Record<string, any>, transitioning: Transitioning<Props>): void;
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, transitioning: Transitioning<Props>, parameters: TransitionParameters): Transitioning<Props>;
+    serialize(): any;
+    transitioned(parameters: TransitionParameters, prior: Transitioning<Props>): Transitioning<Props>;
+    untransitioned(): Transitioning<Props>;
+}
+class TransitioningPropertyValue<T, R> {
+    property: Property$1<T, R>;
+    value: PropertyValue$1<T, R>;
+    prior: TransitioningPropertyValue<T, R>;
+    begin: TimePoint;
+    end: TimePoint;
+    constructor(property: Property$1<T, R>, value: PropertyValue$1<T, R>, prior: TransitioningPropertyValue<T, R>, transition: TransitionSpecification, now: TimePoint);
+    possiblyEvaluate(parameters: EvaluationParameters, canonical: CanonicalTileID, availableImages: string[]): R;
+}
+class Transitioning<Props> {
+    _properties: Properties$1<Props>;
+    _values: {
+        [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>;
+    };
+    constructor(properties: Properties$1<Props>);
+    possiblyEvaluate(parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): PossiblyEvaluated<Props, any>;
+    hasTransition(): boolean;
+}
+class Layout<Props> {
+    _properties: Properties$1<Props>;
+    _values: {
+        [K in keyof Props]: PropertyValue$1<any, PossiblyEvaluatedPropertyValue<any>>;
+    };
+    private _globalState;
+    private _rootKey;
+    constructor(properties: Properties$1<Props>, rootKey: string, globalState: Record<string, any>);
+    private _propertyRootKey;
+    hasValue<S extends keyof Props>(name: S): boolean;
+    hasProperty(name: string): boolean;
+    getValue<S extends keyof Props>(name: S): any;
+    setValue<S extends keyof Props>(name: S, value: any): void;
+    serialize(): any;
+    possiblyEvaluate(parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): PossiblyEvaluated<Props, any>;
+}
+type PossiblyEvaluatedValue<T> = {
+    kind: "constant";
+    value: T;
+} | SourceExpression | CompositeExpression;
+class PossiblyEvaluatedPropertyValue<T> {
+    property: DataDrivenProperty<T>;
+    value: PossiblyEvaluatedValue<T>;
+    parameters: EvaluationParameters;
+    constructor(property: DataDrivenProperty<T>, value: PossiblyEvaluatedValue<T>, parameters: EvaluationParameters);
+    isConstant(): boolean;
+    constantOr(value: T): T;
+    evaluate(feature: Feature, featureState: FeatureState, canonical?: CanonicalTileID, availableImages?: string[]): T;
+}
+class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
+    _properties: Properties$1<Props>;
+    _values: PossibleEvaluatedProps;
+    constructor(properties: Properties$1<Props>);
+    get<S extends keyof PossibleEvaluatedProps>(name: S): PossibleEvaluatedProps[S];
+}
+class DataConstantProperty<T> implements Property$1<T, T> {
+    specification: StylePropertySpecification;
+    name: string;
+    constructor(specification: StylePropertySpecification, name: string);
+    possiblyEvaluate(value: PropertyValue$1<T, T>, parameters: EvaluationParameters): T;
+    interpolate(a: T, b: T, t: number): T;
+}
+class DataDrivenProperty<T> implements Property$1<T, PossiblyEvaluatedPropertyValue<T>> {
+    specification: StylePropertySpecification;
+    name: string;
+    overrides: any;
+    constructor(specification: StylePropertySpecification, name: string, overrides?: any);
+    possiblyEvaluate(value: PropertyValue$1<T, PossiblyEvaluatedPropertyValue<T>>, parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): PossiblyEvaluatedPropertyValue<T>;
+    interpolate(a: PossiblyEvaluatedPropertyValue<T>, b: PossiblyEvaluatedPropertyValue<T>, t: number): PossiblyEvaluatedPropertyValue<T>;
+    evaluate(value: PossiblyEvaluatedValue<T>, parameters: EvaluationParameters, feature: Feature, featureState: FeatureState, canonical?: CanonicalTileID, availableImages?: string[]): T;
+}
+class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T>> {
+    possiblyEvaluate(value: PropertyValue$1<CrossFaded<T>, PossiblyEvaluatedPropertyValue<CrossFaded<T>>>, parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): PossiblyEvaluatedPropertyValue<CrossFaded<T>>;
+    evaluate(value: PossiblyEvaluatedValue<CrossFaded<T>>, globals: EvaluationParameters, feature: Feature, featureState: FeatureState, canonical?: CanonicalTileID, availableImages?: string[]): CrossFaded<T>;
+    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T>;
+    interpolate(a: PossiblyEvaluatedPropertyValue<CrossFaded<T>>): PossiblyEvaluatedPropertyValue<CrossFaded<T>>;
+}
+class CrossFadedProperty<T> implements Property$1<T, CrossFaded<T>> {
+    specification: StylePropertySpecification;
+    name: string;
+    constructor(specification: StylePropertySpecification, name: string);
+    possiblyEvaluate(value: PropertyValue$1<T, CrossFaded<T>>, parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): CrossFaded<T>;
+    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T>;
+    interpolate(a?: CrossFaded<T> | null): CrossFaded<T>;
+}
+class ColorRampProperty implements Property$1<Color, boolean> {
+    specification: StylePropertySpecification;
+    name: string;
+    constructor(specification: StylePropertySpecification, name: string);
+    possiblyEvaluate(value: PropertyValue$1<Color, boolean>, parameters: EvaluationParameters, canonical?: CanonicalTileID, availableImages?: string[]): boolean;
+    interpolate(): boolean;
+}
+class Properties$1<Props> {
+    properties: Props;
+    defaultPropertyValues: {
+        [K in keyof Props]: PropertyValue$1<unknown, any>;
+    };
+    defaultTransitionablePropertyValues: {
+        [K in keyof Props]: TransitionablePropertyValue<unknown, unknown>;
+    };
+    defaultTransitioningPropertyValues: {
+        [K in keyof Props]: TransitioningPropertyValue<unknown, unknown>;
+    };
+    defaultPossiblyEvaluatedValues: {
+        [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>;
+    };
+    overridableProperties: string[];
+    constructor(properties: Props);
+}
+type SkyProps = {
+    "sky-color": DataConstantProperty<Color>;
+    "horizon-color": DataConstantProperty<Color>;
+    "fog-color": DataConstantProperty<Color>;
+    "fog-ground-blend": DataConstantProperty<number>;
+    "horizon-fog-blend": DataConstantProperty<number>;
+    "sky-horizon-blend": DataConstantProperty<number>;
+    "atmosphere-blend": DataConstantProperty<number>;
+};
+type SkyPropsPossiblyEvaluated = {
+    "sky-color": Color;
+    "horizon-color": Color;
+    "fog-color": Color;
+    "fog-ground-blend": number;
+    "horizon-fog-blend": number;
+    "sky-horizon-blend": number;
+    "atmosphere-blend": number;
+};
+type TerrainPreludeUniformsType = {
+    "u_depth": Uniform1i;
+    "u_terrain": Uniform1i;
+};
+type SerializedFeaturePositionMap = {
+    ids: Float64Array;
+    positions: Uint32Array;
+};
+type FeaturePosition = {
+    index: number;
+    start: number;
+    end: number;
+};
+class FeaturePositionMap {
+    ids: number[];
+    positions: number[];
+    indexed: boolean;
+    constructor();
+    add(id: unknown, index: number, start: number, end: number): void;
+    getPositions(id: unknown): FeaturePosition[];
+    static serialize(map: FeaturePositionMap, transferables: ArrayBuffer[]): SerializedFeaturePositionMap;
+    static deserialize(obj: SerializedFeaturePositionMap): FeaturePositionMap;
+}
+type DistributiveKeys<T> = T extends T ? keyof T : never;
+type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unknown ? Omit<T, K> : never;
+type MapGeoJSONFeature = GeoJSONFeature & {
+    layer: DistributiveOmit<LayerSpecification, "source"> & {
+        source: string;
+    };
+    source: string;
+    sourceLayer?: string;
+    state: {
+        [key: string]: any;
+    };
+};
+class GeoJSONFeature {
+    private static readonly worldCoordinateHelpers;
+    type: "Feature";
+    _geometry: Geometry;
+    properties: {
+        [name: string]: any;
+    };
+    id: number | string | undefined;
+    _x: number;
+    _y: number;
+    _z: number;
+    _vectorTileFeature: VectorTileFeatureLike;
+    constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined, worldCoordinateHelper: WorldCoordinateHelper);
+    private projectPoint;
+    private projectLine;
+    get geometry(): Geometry;
+    set geometry(g: Geometry);
+    toJSON(): Feature$1;
+}
+type UpdateQueueHandlers<T, R> = {
+    send: (update: T) => Promise<R>;
+    onResult: (update: T, result: R, replaced: boolean) => void;
+    onError: (update: T, error: unknown) => void;
+};
+class UpdateQueue<T, R> {
+    private readonly _handlers;
+    private _waiting;
+    private _sending;
+    private _replacedWhileSending;
+    private _flushing;
+    constructor(handlers: UpdateQueueHandlers<T, R>);
+    isIdle(): boolean;
+    top(): T | undefined;
+    some(predicate: (update: T) => boolean): boolean;
+    enqueue(update: T): void;
+    replace(update: T): void;
+    clear(): void;
+    flush(): Promise<void>;
+    private _next;
+    private _send;
+}
+const enum IntersectionResult {
+    None = 0,
+    Partial = 1,
+    Full = 2
+}
+interface IBoundingVolume {
+    intersectsFrustum(frustum: Frustum): IntersectionResult;
+    intersectsPlane(plane: vec4): IntersectionResult;
+}
+class Aabb implements IBoundingVolume {
+    min: vec3;
+    max: vec3;
+    center: vec3;
+    constructor(min_: vec3, max_: vec3);
+    quadrant(index: number): Aabb;
+    distanceX(point: number[]): number;
+    distanceY(point: number[]): number;
+    intersectsFrustum(frustum: Frustum): IntersectionResult;
+    intersectsPlane(plane: vec4): IntersectionResult;
+}
+class Frustum {
+    points: vec4[];
+    planes: vec4[];
+    aabb: Aabb;
+    constructor(points: vec4[], planes: vec4[], aabb: Aabb);
+    static fromInvProjectionMatrix(invProj: mat4, worldSize?: number, zoom?: number, horizonPlane?: vec4, flippedNearFar?: boolean): Frustum;
+}
+type CoveringTilesOptions = {
+    minzoom?: number;
+    maxzoom?: number;
+    roundZoom?: boolean;
+    tileSize: number;
+};
+type CoveringTilesOptionsInternal = CoveringTilesOptions & {
+    reparseOverscaled?: boolean;
+    terrain?: Terrain;
+    calculateTileZoom?: CalculateTileZoomFunction;
+    maxContentElevation?: number;
+};
+type CalculateTileZoomFunction = (requestedCenterZoom: number, distanceToTile2D: number, distanceToTileZ: number, distanceToCenter3D: number, cameraVerticalFOV: number) => number;
+type WorkerPoolEventType = {
+    create: Event$1;
+    terminate: Event$1;
+    restart: Event$1;
+};
+class WorkerPool extends Evented<WorkerPoolEventType> {
+    static workerCount: number;
+    active: {
+        [_ in number | string]: boolean;
+    };
+    private workersPromise;
+    constructor();
+    acquire(mapId: number | string): Promise<ActorTarget[]>;
+    start(): Promise<ActorTarget[]>;
+    restart(): Promise<void>;
+    release(mapId: number | string): Promise<void>;
+    private terminate;
+    isStarted(): boolean;
+    isPreloaded(): boolean;
+    numActive(): number;
+}
+class Dispatcher extends Evented<ErrorEventType> {
+    workerPool: WorkerPool;
+    actors: Actor[];
+    private actorsPromise;
+    currentActor: number;
+    id: string | number;
+    private removed;
+    private workerErrorSubscriptions;
+    constructor(workerPool: WorkerPool, mapId: string | number);
+    private initActors;
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
+    getActor(): Promise<Actor>;
+    waitForInitComplete(): Promise<void>;
+    getReadyActor(): Actor;
+    remove(mapRemoved?: boolean): void;
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void>;
+    unregisterMessageHandler<T extends MessageType>(type: T): Promise<void>;
+}
+type SerializedGrid = {
+    buffer: ArrayBuffer;
+};
+class TransferableGridIndex {
+    cells: number[][];
+    arrayBuffer: ArrayBuffer;
+    d: number;
+    keys: number[];
+    bboxes: number[];
+    n: number;
+    extent: number;
+    padding: number;
+    scale: any;
+    uid: number;
+    min: number;
+    max: number;
+    constructor(extent: number | ArrayBuffer, n?: number, padding?: number);
+    insert(key: number, x1: number, y1: number, x2: number, y2: number): void;
+    _insertReadonly(): void;
+    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number): void;
+    query(x1: number, y1: number, x2: number, y2: number, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): number[];
+    _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: number[], seenUids: Record<number, boolean>, intersectionTest: (x1: number, y1: number, x2: number, y2: number) => boolean): void;
+    _forEachCell(x1: number, y1: number, x2: number, y2: number, fn: Function, arg1: unknown, arg2: unknown, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): void;
+    _convertFromCellCoord(x: number): number;
+    _convertToCellCoord(x: number): number;
+    toArrayBuffer(): ArrayBuffer;
+    static serialize(grid: TransferableGridIndex, transferables?: Transferable[]): SerializedGrid;
+    static deserialize(serialized: SerializedGrid): TransferableGridIndex;
+}
+class DictionaryCoder {
+    _stringToNumber: {
+        [_: string]: number;
+    };
+    _numberToString: string[];
+    constructor(strings: string[]);
+    encode(string: string): number;
+    decode(n: number): string;
+}
+class InViewTiles {
+    private _tiles;
+    handleWrapJump(wrapDelta: number): void;
+    setFeatureState(featuresChanged: LayerFeatureStates, style: Style, revision: number): void;
+    getAllTiles(): Tile[];
+    getAllIds(sorted?: boolean): string[];
+    getTileById(key: string): Tile | undefined;
+    setTile(key: string, tile: Tile): void;
+    deleteTileById(key: string): void;
+    getLoadedTile(tileID: OverscaledTileID): Tile | null;
+    isIdRenderable(id: string, symbolLayer?: boolean): boolean;
+    getRenderableIds(bearingInRadians?: number, symbolLayer?: boolean): string[];
+}
+type FeatureStateEntry = {
+    id: string;
+    state: FeatureState;
+};
+type FeatureStates = FeatureStateEntry[];
+type LayerFeatureStates = Record<string, FeatureStates>;
+type FeatureStatesMap = Record<string, FeatureState>;
+type LayerFeatureStatesMap = Record<string, FeatureStatesMap>;
+class SourceFeatureState {
+    state: LayerFeatureStatesMap;
+    stateChanges: LayerFeatureStatesMap;
+    deletedStates: {};
+    revision: number;
+    constructor();
+    updateState(sourceLayer: string, featureId: number | string, newState: any): void;
+    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string): void;
+    getState(sourceLayer: string, featureId: number | string): FeatureState;
+    initializeTileState(tile: Tile, style: Style): void;
+    coalesceChanges(inViewTiles: InViewTiles, style: Style): void;
+}
+type Size = {
+    width: number;
+    height: number;
+};
+type Point2D$1 = {
+    x: number;
+    y: number;
+};
+class AlphaImage {
+    width: number;
+    height: number;
+    data: Uint8Array;
+    constructor(size: Size, data?: Uint8Array | Uint8ClampedArray);
+    resize(size: Size): void;
+    clone(): AlphaImage;
+    static copy(srcImg: AlphaImage, dstImg: AlphaImage, srcPt: Point2D$1, dstPt: Point2D$1, size: Size): void;
+}
+class RGBAImage {
+    width: number;
+    height: number;
+    data: Uint8Array;
+    constructor(size: Size, data?: Uint8Array | Uint8ClampedArray);
+    resize(size: Size): void;
+    replace(data: Uint8Array | Uint8ClampedArray, copy?: boolean): void;
+    clone(): RGBAImage;
+    static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point2D$1, dstPt: Point2D$1, size: Size): void;
+    setPixel(row: number, col: number, value: Color): void;
+}
+type GlyphMetrics = {
+    width: number;
+    height: number;
+    left: number;
+    top: number;
+    advance: number;
+    isDoubleResolution?: boolean;
+};
+type StyleGlyph = {
+    id: number;
+    bitmap: AlphaImage;
+    metrics: GlyphMetrics;
+};
+type GlyphRequests = Record<string, Record<string, string[]>>;
+type GlyphMap = Record<string, Record<string, Record<string, StyleGlyph | null>>>;
+type Rect$1 = {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+};
+type GlyphPosition = {
+    rect: Rect$1;
+    metrics: GlyphMetrics;
+};
+type GlyphPositions = Record<string, Record<string, Record<string, GlyphPosition>>>;
+type SpriteOnDemandStyleImage = {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+};
+type StyleImageData = {
+    data: RGBAImage;
+    version?: number;
+    hasRenderCallback?: boolean;
+    isWebGLImage?: boolean;
+    userImage?: StyleImageInterface;
+    spriteData?: SpriteOnDemandStyleImage;
+};
+const enum TextFit {
+    stretchOrShrink = "stretchOrShrink",
+    stretchOnly = "stretchOnly",
+    proportional = "proportional"
+}
+type StyleImageMetadata = {
+    pixelRatio: number;
+    sdf: boolean;
+    stretchX?: Array<[
+        number,
+        number
+    ]>;
+    stretchY?: Array<[
+        number,
+        number
+    ]>;
+    content?: [
+        number,
+        number,
+        number,
+        number
+    ];
+    textFitWidth?: TextFit;
+    textFitHeight?: TextFit;
+};
+type StyleImage = StyleImageData & StyleImageMetadata;
+type StyleImageWebGLTarget = {
+    gl: WebGL2RenderingContext;
+    texture: WebGLTexture;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+};
+type StyleImageWebGLData = {
+    renderWithWebGL: (target: StyleImageWebGLTarget) => void;
+};
+interface StyleImageInterface {
+    width: number;
+    height: number;
+    data: Uint8Array | Uint8ClampedArray | StyleImageWebGLData;
+    render?: () => boolean;
+    onAdd?: (map: Map$1, id: string) => void;
+    onRemove?: () => void;
+}
+type MissingImageRequestHandler = (id: string) => void | Promise<void>;
+type ImageManagerEventType = {
+    error: ErrorEvent$1;
+    styleimagemissing: MapStyleImageMissingEvent;
+};
+class ImageManager extends Evented<ImageManagerEventType> {
+    images: Record<string, StyleImage>;
+    updateVersion: number;
+    loaded: boolean;
+    requestors: Array<{
+        ids: string[];
+        promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
+    }>;
+    missingImageResolver: MissingImageRequestHandler | null;
+    private _renderCallbacksDispatchedThisFrame;
+    private _spriteImagesIds;
+    private _imagesIds;
+    constructor();
+    destroy(): void;
+    isLoaded(): boolean;
+    setLoaded(loaded: boolean): void;
+    getImage(id: string): StyleImage;
+    addImage(id: string, image: StyleImage): void;
+    _validate(id: string, image: StyleImage): boolean;
+    _validateStretch(stretch: Array<[
+        number,
+        number
+    ]>, size: number): boolean;
+    _validateContent(content: [
+        number,
+        number,
+        number,
+        number
+    ], image: StyleImage): boolean;
+    updateImage(id: string, image: StyleImage, validate?: boolean): void;
+    removeImage(id: string): void;
+    listImages(): string[];
+    private _getSpriteImageId;
+    setSpriteImages(spriteId: string, images: Record<string, StyleImage>): {
+        loaded: string[];
+        removed: string[];
+    };
+    removeSpriteImages(spriteId: string): string[];
+    removeAllSpriteImages(): string[];
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void;
+    getImages(ids: string[]): Promise<GetImagesResponse>;
+    _getImagesForIds(ids: string[]): Promise<GetImagesResponse>;
+    beginFrame(): void;
+    dispatchRenderCallbacks(ids: string[]): void;
+    cloneImages(): Record<string, StyleImage>;
+}
+class ImagePosition {
+    paddedRect: Rect$1;
+    pixelRatio: number;
+    version: number;
+    needsFirstWebGLRender: boolean;
+    stretchY: Array<[
+        number,
+        number
+    ]>;
+    stretchX: Array<[
+        number,
+        number
+    ]>;
+    content: [
+        number,
+        number,
+        number,
+        number
+    ];
+    textFitWidth: TextFit;
+    textFitHeight: TextFit;
+    constructor(paddedRect: Rect$1, { pixelRatio, version, isWebGLImage, stretchX, stretchY, content, textFitWidth, textFitHeight }: StyleImage);
+    get tl(): [
+        number,
+        number
+    ];
+    get br(): [
+        number,
+        number
+    ];
+    get tlbr(): number[];
+    get displaySize(): [
+        number,
+        number
+    ];
+}
+class ImageAtlas {
+    image: RGBAImage;
+    iconPositions: Record<string, ImagePosition>;
+    patternPositions: Record<string, ImagePosition>;
+    haveRenderCallbacks: string[];
+    uploaded: boolean;
+    patchedUpdateVersion: number;
+    constructor(icons: GetImagesResponse, patterns: GetImagesResponse);
+    addImages(images: {
+        [_: string]: StyleImage;
+    }, positions: {
+        [_: string]: ImagePosition;
+    }, bins: Rect$1[]): void;
+    patchUpdatedImages(imageManager: ImageManager, texture: Texture): void;
+    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void;
+}
+type CircleGranularity = 1 | 3 | 5 | 7;
+class SubdivisionGranularityExpression {
+    private readonly _baseZoomGranularity;
+    private readonly _minGranularity;
+    constructor(baseZoomGranularity: number, minGranularity: number);
+    getGranularityForZoomLevel(zoomLevel: number): number;
+}
+class SubdivisionGranularitySetting {
+    readonly fill: SubdivisionGranularityExpression;
+    readonly line: SubdivisionGranularityExpression;
+    readonly tile: SubdivisionGranularityExpression;
+    readonly stencil: SubdivisionGranularityExpression;
+    readonly circle: CircleGranularity;
+    constructor(options: {
+        fill: SubdivisionGranularityExpression;
+        line: SubdivisionGranularityExpression;
+        tile: SubdivisionGranularityExpression;
+        stencil: SubdivisionGranularityExpression;
+        circle: CircleGranularity;
+    });
+    static readonly noSubdivision: SubdivisionGranularitySetting;
+}
+type DashRange = {
+    left: number;
+    right: number;
+    isDash: boolean;
+    zeroLength: boolean;
+};
+type DashEntry = {
+    y: number;
+    height: number;
+    width: number;
+};
+class LineAtlas {
+    width: number;
+    height: number;
+    nextRow: number;
+    bytes: number;
+    data: Uint8Array;
+    dashEntry: {
+        [_: string]: DashEntry;
+    };
+    dirty: boolean;
+    texture: WebGLTexture;
+    constructor(width: number, height: number);
+    getDash(dasharray: number[], round: boolean): DashEntry;
+    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number): DashRange[];
+    addRoundDash(ranges: DashRange[], stretch: number, n: number): void;
+    addRegularDash(ranges: DashRange[]): void;
+    addDash(dasharray: number[], round: boolean): DashEntry;
+    bind(context: Context$1): void;
+}
+type BucketParameters<Layer extends TypedStyleLayer> = {
+    index: number;
+    layers: Layer[];
+    zoom: number;
+    pixelRatio: number;
+    overscaling: number;
+    collisionBoxArray: CollisionBoxArray;
+    sourceLayerIndex: number;
+    sourceID: string;
+};
+type PopulateParameters = {
+    featureIndex: FeatureIndex;
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
+    glyphDependencies: Record<string, Record<string, Record<string, boolean>>>;
+    dashDependencies: Record<string, {
+        round: boolean;
+        dasharray: number[];
+    }>;
+    availableImages: string[];
+    subdivisionGranularity: SubdivisionGranularitySetting;
+};
+type BucketDependencyParameters = {
+    options: PopulateParameters;
+    canonical: CanonicalTileID;
+    glyphMap: GlyphMap;
+    glyphPositions: GlyphPositions;
+    iconMap: GetImagesResponse;
+    iconPositions: Record<string, ImagePosition>;
+    patternMap: GetImagesResponse;
+    patternPositions: Record<string, ImagePosition>;
+    dashPositions: Record<string, DashEntry>;
+    showCollisionBoxes: boolean;
+};
+type IndexedFeature = {
+    feature: VectorTileFeatureLike;
+    id: number | string;
+    index: number;
+    sourceLayerIndex: number;
+};
+type BucketFeature = {
+    index: number;
+    sourceLayerIndex: number;
+    geometry: Point[][];
+    properties: any;
+    type: 0 | 1 | 2 | 3;
+    id?: any;
+    readonly patterns: {
+        [_: string]: {
+            "min": string;
+            "mid": string;
+            "max": string;
+        };
+    };
+    readonly dashes?: NonNullable<Feature["dashes"]>;
+    sortKey?: number;
+};
+interface Bucket {
+    layerIds: string[];
+    hasDependencies: boolean;
+    readonly layers: any[];
+    readonly stateDependentLayers: any[];
+    readonly stateDependentLayerIds: string[];
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures(parameters: BucketDependencyParameters): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }, dashPositions: Record<string, DashEntry>): void;
+    isEmpty(): boolean;
+    upload(context: Context$1): void;
+    uploadPending(): boolean;
+    destroy(): void;
+}
+type DEMEncoding = "mapbox" | "terrarium" | "custom";
+class DEMData {
+    private static readonly byteViewCache;
+    uid: string | number;
+    data: Uint32Array;
+    stride: number;
+    dim: number;
+    min: number;
+    max: number;
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
+    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor?: number, greenFactor?: number, blueFactor?: number, baseShift?: number);
+    get(x: number, y: number): number;
+    sampleBilinear(x: number, y: number): number;
+    getUnpackVector(): number[];
+    _idx(x: number, y: number): number;
+    unpack(r: number, g: number, b: number): number;
+    pack(v: number): {
+        r: number;
+        g: number;
+        b: number;
+    };
+    getPixels(): RGBAImage;
+    backfillBorder(borderTile: DEMData, dx: number, dy: number): void;
+    private _getByteView;
+    private _unpackAtIndex;
+}
+type LayerConfigs = {
+    [_: string]: LayerSpecification;
+};
+class StyleLayerIndex {
+    familiesBySource: {
+        [source: string]: {
+            [sourceLayer: string]: StyleLayer[][];
+        };
+    };
+    keyCache: {
+        [source: string]: string;
+    };
+    _layerConfigs: LayerConfigs;
+    _layers: {
+        [_: string]: StyleLayer;
+    };
+    constructor(layerConfigs?: LayerSpecification[] | null, globalState?: Record<string, any>);
+    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>): void;
+    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>): void;
+}
+type TileEncoding = "mlt" | "mvt";
+type TileParameters = {
+    type: string;
+    source: string;
+    uid: string | number;
+};
+type WorkerTileParameters = TileParameters & {
+    tileID: OverscaledTileID;
+    request?: RequestParameters;
+    zoom: number;
+    maxZoom?: number;
+    tileSize: number;
+    promoteId: PromoteIdSpecification;
+    pixelRatio: number;
+    showCollisionBoxes: boolean;
+    collectResourceTiming?: boolean;
+    returnDependencies?: boolean;
+    subdivisionGranularity: SubdivisionGranularitySetting;
+    encoding?: TileEncoding;
+    overzoomParameters?: OverzoomParameters;
+    etag?: string;
+};
+type OverzoomParameters = {
+    maxZoomTileID: CanonicalTileID;
+    overzoomRequest: RequestParameters;
+};
+type WorkerDEMTileParameters = TileParameters & {
+    rawImageData: RGBAImage | ImageBitmap | ImageData;
+    encoding: DEMEncoding;
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
+};
+type WorkerTileWithData = ExpiryData & {
+    buckets: Bucket[];
+    imageAtlas: ImageAtlas;
+    dashPositions: Record<string, DashEntry>;
+    glyphAtlasImage: AlphaImage;
+    featureIndex: FeatureIndex;
+    collisionBoxArray: CollisionBoxArray;
+    rawTileData?: ArrayBuffer;
+    encoding?: TileEncoding;
+    resourceTiming?: PerformanceResourceTiming[];
+    glyphMap?: GlyphMap | null;
+    iconMap?: {
+        [_: string]: StyleImage;
+    } | null;
+    glyphPositions?: GlyphPositions | null;
+    etagUnmodified?: false;
+};
+type WorkerTileWithoutData = ExpiryData & {
+    etagUnmodified: true;
+    resourceTiming?: PerformanceResourceTiming[];
+};
+type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
+interface WorkerSourceConstructor {
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]): WorkerSource;
+}
+interface WorkerSource {
+    availableImages: string[];
+    loadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
+    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
+    abortTile(params: TileParameters): Promise<void>;
+    removeTile(params: TileParameters): Promise<void>;
+    removeSource?: (params: RemoveSourceParams) => Promise<void>;
+}
+type QueryParameters = {
+    scale: number;
+    transform: IReadonlyTransform;
+    tileSize: number;
+    queryGeometry: Point[];
+    cameraQueryGeometry: Point[];
+    queryPadding: number;
+    getElevation: GetElevation | undefined;
+    params: {
+        filter?: FilterSpecification;
+        layers?: Set<string> | null;
+        availableImages?: string[];
+        globalState?: Record<string, any>;
+    };
+};
+type QueryResults = {
+    [_: string]: QueryResultsItem[];
+};
+type QueryResultsItem = {
+    featureIndex: number;
+    feature: GeoJSONFeature;
+    intersectionZ?: boolean | number;
+};
+class FeatureIndex {
+    tileID: OverscaledTileID;
+    x: number;
+    y: number;
+    z: number;
+    grid: TransferableGridIndex;
+    grid3D: TransferableGridIndex;
+    featureIndexArray: FeatureIndexArray;
+    promoteId?: PromoteIdSpecification;
+    encoding: TileEncoding;
+    rawTileData: ArrayBuffer;
+    bucketLayerIDs: string[][];
+    vtLayers: {
+        [_: string]: VectorTileLayerLike;
+    };
+    sourceLayerCoder: DictionaryCoder;
+    constructor(tileID: OverscaledTileID, promoteId?: PromoteIdSpecification | null);
+    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean): void;
+    loadVTLayers(): {
+        [_: string]: VectorTileLayerLike;
+    };
+    query(args: QueryParameters, styleLayers: {
+        [_: string]: StyleLayer;
+    }, serializedLayers: {
+        [_: string]: any;
+    }, sourceFeatureState: SourceFeatureState): QueryResults;
+    loadMatchingFeature(result: QueryResults, bucketIndex: number, sourceLayerIndex: number, featureIndex: number, filter: FeatureFilter, filterLayerIDs: Set<string> | undefined, availableImages: string[], styleLayers: {
+        [_: string]: StyleLayer;
+    }, serializedLayers: {
+        [_: string]: any;
+    }, worldCoordinateHelper: WorldCoordinateHelper, sourceFeatureState?: SourceFeatureState, intersectionTest?: (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: any, id: string | number | void) => boolean | number): void;
+    lookupSymbolFeatures(symbolFeatureIndexes: number[], serializedLayers: {
+        [_: string]: StyleLayer;
+    }, bucketIndex: number, sourceLayerIndex: number, filterParams: {
+        filterSpec: FilterSpecification;
+        globalState: Record<string, any>;
+        worldCoordinateHelper: WorldCoordinateHelper;
+    }, filterLayerIDs: Set<string> | null, availableImages: string[], styleLayers: {
+        [_: string]: StyleLayer;
+    }): QueryResults;
+    hasLayer(id: string): boolean;
+    getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number;
+}
+type BlendFuncConstant = WebGLRenderingContextBase["ZERO"] | WebGLRenderingContextBase["ONE"] | WebGLRenderingContextBase["SRC_COLOR"] | WebGLRenderingContextBase["ONE_MINUS_SRC_COLOR"] | WebGLRenderingContextBase["DST_COLOR"] | WebGLRenderingContextBase["ONE_MINUS_DST_COLOR"] | WebGLRenderingContextBase["SRC_ALPHA"] | WebGLRenderingContextBase["ONE_MINUS_SRC_ALPHA"] | WebGLRenderingContextBase["DST_ALPHA"] | WebGLRenderingContextBase["ONE_MINUS_DST_ALPHA"] | WebGLRenderingContextBase["CONSTANT_COLOR"] | WebGLRenderingContextBase["ONE_MINUS_CONSTANT_COLOR"] | WebGLRenderingContextBase["CONSTANT_ALPHA"] | WebGLRenderingContextBase["ONE_MINUS_CONSTANT_ALPHA"] | WebGLRenderingContextBase["BLEND_COLOR"];
+type BlendFuncType = [
+    BlendFuncConstant,
+    BlendFuncConstant
+];
+type BlendEquationType = WebGLRenderingContextBase["FUNC_ADD"] | WebGLRenderingContextBase["FUNC_SUBTRACT"] | WebGLRenderingContextBase["FUNC_REVERSE_SUBTRACT"];
+type ColorMaskType = [
+    boolean,
+    boolean,
+    boolean,
+    boolean
+];
+type CompareFuncType = WebGLRenderingContextBase["NEVER"] | WebGLRenderingContextBase["LESS"] | WebGLRenderingContextBase["EQUAL"] | WebGLRenderingContextBase["LEQUAL"] | WebGLRenderingContextBase["GREATER"] | WebGLRenderingContextBase["NOTEQUAL"] | WebGLRenderingContextBase["GEQUAL"] | WebGLRenderingContextBase["ALWAYS"];
+type DepthMaskType = boolean;
+type DepthRangeType = [
+    number,
+    number
+];
+type DepthFuncType = CompareFuncType;
+type StencilFuncType = {
+    func: CompareFuncType;
+    ref: number;
+    mask: number;
+};
+type StencilOpConstant = WebGLRenderingContextBase["KEEP"] | WebGLRenderingContextBase["ZERO"] | WebGLRenderingContextBase["REPLACE"] | WebGLRenderingContextBase["INCR"] | WebGLRenderingContextBase["INCR_WRAP"] | WebGLRenderingContextBase["DECR"] | WebGLRenderingContextBase["DECR_WRAP"] | WebGLRenderingContextBase["INVERT"];
+type StencilOpType = [
+    StencilOpConstant,
+    StencilOpConstant,
+    StencilOpConstant
+];
+type TextureUnitType = number;
+type ViewportType = [
+    number,
+    number,
+    number,
+    number
+];
+type StencilTestGL = {
+    func: WebGLRenderingContextBase["NEVER"];
+    mask: 0;
+} | {
+    func: WebGLRenderingContextBase["LESS"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["EQUAL"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["LEQUAL"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["GREATER"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["NOTEQUAL"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["GEQUAL"];
+    mask: number;
+} | {
+    func: WebGLRenderingContextBase["ALWAYS"];
+    mask: 0;
+};
+type CullFaceModeType = WebGLRenderingContextBase["FRONT"] | WebGLRenderingContextBase["BACK"] | WebGLRenderingContextBase["FRONT_AND_BACK"];
+type FrontFaceType = WebGLRenderingContextBase["CW"] | WebGLRenderingContextBase["CCW"];
+interface IValue<T> {
+    current: T;
+    default: T;
+    dirty: boolean;
+    get(): T;
+    setDefault(): void;
+    set(value: T): void;
+}
+class BaseValue<T> implements IValue<T> {
+    gl: WebGL2RenderingContext;
+    current: T;
+    default: T;
+    dirty: boolean;
+    constructor(context: Context$1);
+    get(): T;
+    set(value: T): void;
+    getDefault(): T;
+    setDefault(): void;
+}
+class ClearColor extends BaseValue<Color> {
+    getDefault(): Color;
+    set(v: Color): void;
+}
+class ClearDepth extends BaseValue<number> {
+    getDefault(): number;
+    set(v: number): void;
+}
+class ClearStencil extends BaseValue<number> {
+    getDefault(): number;
+    set(v: number): void;
+}
+class ColorMask extends BaseValue<ColorMaskType> {
+    getDefault(): ColorMaskType;
+    set(v: ColorMaskType): void;
+}
+class DepthMask extends BaseValue<DepthMaskType> {
+    getDefault(): DepthMaskType;
+    set(v: DepthMaskType): void;
+}
+class StencilMask extends BaseValue<number> {
+    getDefault(): number;
+    set(v: number): void;
+}
+class StencilFunc extends BaseValue<StencilFuncType> {
+    getDefault(): StencilFuncType;
+    set(v: StencilFuncType): void;
+}
+class StencilOp extends BaseValue<StencilOpType> {
+    getDefault(): StencilOpType;
+    set(v: StencilOpType): void;
+}
+class StencilTest extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class DepthRange extends BaseValue<DepthRangeType> {
+    getDefault(): DepthRangeType;
+    set(v: DepthRangeType): void;
+}
+class DepthTest extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class DepthFunc extends BaseValue<DepthFuncType> {
+    getDefault(): DepthFuncType;
+    set(v: DepthFuncType): void;
+}
+class Blend extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class BlendFunc extends BaseValue<BlendFuncType> {
+    getDefault(): BlendFuncType;
+    set(v: BlendFuncType): void;
+}
+class BlendColor extends BaseValue<Color> {
+    getDefault(): Color;
+    set(v: Color): void;
+}
+class BlendEquation extends BaseValue<BlendEquationType> {
+    getDefault(): BlendEquationType;
+    set(v: BlendEquationType): void;
+}
+class CullFace extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class CullFaceSide extends BaseValue<CullFaceModeType> {
+    getDefault(): CullFaceModeType;
+    set(v: CullFaceModeType): void;
+}
+class FrontFace extends BaseValue<FrontFaceType> {
+    getDefault(): FrontFaceType;
+    set(v: FrontFaceType): void;
+}
+class ProgramValue extends BaseValue<WebGLProgram> {
+    getDefault(): WebGLProgram;
+    set(v?: WebGLProgram | null): void;
+}
+class ActiveTextureUnit extends BaseValue<TextureUnitType> {
+    getDefault(): TextureUnitType;
+    set(v: TextureUnitType): void;
+}
+class Viewport extends BaseValue<ViewportType> {
+    getDefault(): ViewportType;
+    set(v: ViewportType): void;
+}
+class BindFramebuffer extends BaseValue<WebGLFramebuffer> {
+    getDefault(): WebGLFramebuffer;
+    set(v?: WebGLFramebuffer | null): void;
+}
+class BindRenderbuffer extends BaseValue<WebGLRenderbuffer> {
+    getDefault(): WebGLRenderbuffer;
+    set(v?: WebGLRenderbuffer | null): void;
+}
+class BindTexture extends BaseValue<WebGLTexture> {
+    getDefault(): WebGLTexture;
+    set(v?: WebGLTexture | null): void;
+}
+class BindVertexBuffer extends BaseValue<WebGLBuffer> {
+    getDefault(): WebGLBuffer;
+    set(v?: WebGLBuffer | null): void;
+}
+class BindElementBuffer extends BaseValue<WebGLBuffer> {
+    getDefault(): WebGLBuffer;
+    set(v?: WebGLBuffer | null): void;
+}
+class BindVertexArray extends BaseValue<WebGLVertexArrayObject | null> {
+    getDefault(): WebGLVertexArrayObject | null;
+    set(v: WebGLVertexArrayObject | null): void;
+}
+class PixelStoreUnpack extends BaseValue<number> {
+    getDefault(): number;
+    set(v: number): void;
+}
+class PixelStoreUnpackPremultiplyAlpha extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class PixelStoreUnpackFlipY extends BaseValue<boolean> {
+    getDefault(): boolean;
+    set(v: boolean): void;
+}
+class FramebufferAttachment<T> extends BaseValue<T> {
+    parent: WebGLFramebuffer;
+    context: Context$1;
+    constructor(context: Context$1, parent: WebGLFramebuffer);
+    getDefault(): T;
+}
+class ColorAttachment extends FramebufferAttachment<WebGLTexture> {
+    setDirty(): void;
+    set(v?: WebGLTexture | null): void;
+}
+class DepthAttachment extends FramebufferAttachment<WebGLRenderbuffer> {
+    set(v?: WebGLRenderbuffer | null): void;
+}
+class Framebuffer {
+    context: Context$1;
+    width: number;
+    height: number;
+    framebuffer: WebGLFramebuffer;
+    colorAttachment: ColorAttachment;
+    depthAttachment: DepthAttachment;
+    constructor(context: Context$1, width: number, height: number, hasDepth: boolean, hasStencil: boolean);
+    destroy(): void;
+}
+class TileCache {
+    max: number;
+    data: {
+        [key: string]: Array<{
+            value: Tile;
+            timeout: ReturnType<typeof setTimeout>;
+        }>;
+    };
+    order: string[];
+    onRemove: (element: Tile) => void;
+    constructor(max: number, onRemove: (element: Tile) => void);
+    reset(): this;
+    add(tileID: OverscaledTileID, data: Tile, expiryTimeout: number | void): this;
+    has(tileID: OverscaledTileID): boolean;
+    getAndRemove(tileID: OverscaledTileID): Tile;
+    _getAndRemoveByKey(key: string): Tile;
+    getByKey(key: string): Tile;
+    get(tileID: OverscaledTileID): Tile;
+    remove(tileID: OverscaledTileID, value?: {
+        value: Tile;
+        timeout: ReturnType<typeof setTimeout>;
+    }): this;
+    setMaxSize(max: number): this;
+    filter(filterFn: (tile: Tile) => boolean): void;
+}
+type RasterPaintProps = {
+    "raster-opacity": DataConstantProperty<number>;
+    "raster-layer-blend": DataConstantProperty<"normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay">;
+    "raster-hue-rotate": DataConstantProperty<number>;
+    "raster-brightness-min": DataConstantProperty<number>;
+    "raster-brightness-max": DataConstantProperty<number>;
+    "raster-saturation": DataConstantProperty<number>;
+    "raster-contrast": DataConstantProperty<number>;
+    "resampling": DataConstantProperty<"linear" | "nearest">;
+    "raster-resampling": DataConstantProperty<"linear" | "nearest">;
+    "raster-fade-duration": DataConstantProperty<number>;
+};
+type RasterPaintPropsPossiblyEvaluated = {
+    "raster-opacity": number;
+    "raster-layer-blend": "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "raster-hue-rotate": number;
+    "raster-brightness-min": number;
+    "raster-brightness-max": number;
+    "raster-saturation": number;
+    "raster-contrast": number;
+    "resampling": "linear" | "nearest";
+    "raster-resampling": "linear" | "nearest";
+    "raster-fade-duration": number;
+};
+class RasterStyleLayer extends StyleLayer {
+    _transitionablePaint: Transitionable<RasterPaintProps>;
+    _transitioningPaint: Transitioning<RasterPaintProps>;
+    paint: PossiblyEvaluated<RasterPaintProps, RasterPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+}
+type RasterImageWarp = [
+    number,
+    number,
+    number
+];
+class VertexArrayObject {
+    context: Context$1;
+    boundProgram: Program<any>;
+    boundLayoutVertexBuffer: VertexBuffer;
+    boundPaintVertexBuffers: VertexBuffer[];
+    boundIndexBuffer: IndexBuffer;
+    boundVertexOffset: number;
+    boundDynamicVertexBuffer: VertexBuffer;
+    boundDynamicVertexBuffer2: VertexBuffer;
+    boundDynamicVertexBuffer3: VertexBuffer;
+    vao: any;
+    constructor();
+    bind(context: Context$1, program: Program<any>, layoutVertexBuffer: VertexBuffer, paintVertexBuffers: VertexBuffer[], indexBuffer?: IndexBuffer | null, vertexOffset?: number | null, dynamicVertexBuffer?: VertexBuffer | null, dynamicVertexBuffer2?: VertexBuffer | null, dynamicVertexBuffer3?: VertexBuffer | null): void;
+    freshBind(program: Program<any>, layoutVertexBuffer: VertexBuffer, paintVertexBuffers: VertexBuffer[], indexBuffer?: IndexBuffer | null, vertexOffset?: number | null, dynamicVertexBuffer?: VertexBuffer | null, dynamicVertexBuffer2?: VertexBuffer | null, dynamicVertexBuffer3?: VertexBuffer | null): void;
+    destroy(): void;
+}
+type Segment = {
+    sortKey?: number;
+    vertexOffset: number;
+    primitiveOffset: number;
+    vertexLength: number;
+    primitiveLength: number;
+    vaos: {
+        [_: string]: VertexArrayObject;
+    };
+};
+class SegmentVector {
+    static MAX_VERTEX_ARRAY_LENGTH: number;
+    segments: Segment[];
+    private _forceNewSegmentOnNextPrepare;
+    constructor(segments?: Segment[]);
+    prepareSegment(numVertices: number, layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+    createNewSegment(layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+    getOrCreateLatestSegment(layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+    forceNewSegmentOnNextPrepare(): void;
+    get(): Segment[];
+    destroy(): void;
+    static simpleSegment(vertexOffset: number, primitiveOffset: number, vertexLength: number, primitiveLength: number): SegmentVector;
+}
+class Mesh {
+    vertexBuffer: VertexBuffer;
+    indexBuffer: IndexBuffer;
+    segments: SegmentVector;
+    constructor(vertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector);
+    destroy(): void;
+}
+type Coordinates = [
+    [
+        number,
+        number
+    ],
+    [
+        number,
+        number
+    ],
+    [
+        number,
+        number
+    ],
+    [
+        number,
+        number
+    ]
+];
+type ImageSourceWarp = "auto" | "perspective" | "flat";
+type ImageSourceImage = HTMLImageElement | HTMLCanvasElement | ImageBitmap | ImageData;
+type UpdateImageOptions = {
+    coordinates?: Coordinates;
+} & ({
+    url: string;
+} | {
+    image: ImageSourceImage;
+});
+type CanonicalTileRange = {
+    minTileY: number;
+    maxTileY: number;
+    minTileXWrapped: number;
+    maxTileXWrapped: number;
+    minWrap: number;
+    maxWrap: number;
+};
+class ImageSource extends Evented<SourceEventType> implements Source {
+    type: string;
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    tileSize: number;
+    url: string;
+    terrainTileRanges: {
+        [zoom: string]: CanonicalTileRange;
+    };
+    coordinates: Coordinates;
+    tiles: {
+        [_: string]: Tile;
+    };
+    options: any;
+    dispatcher: Dispatcher;
+    map: Map$1;
+    texture: Texture | null;
+    image: ImageSourceImage;
+    tileID: CanonicalTileID;
+    tileCoords: Point[];
+    imageWarp: RasterImageWarp;
+    flippedWindingOrder: boolean;
+    _loaded: boolean;
+    _abortController: AbortController;
+    private _warp;
+    private _imageDirty;
+    private _subdividedQuad;
+    private _subdividedMesh;
+    constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
+    load(newCoordinates?: Coordinates): Promise<void>;
+    loaded(): boolean;
+    updateImage(options: UpdateImageOptions): this;
+    private _setImage;
+    getMesh(context: Context$1, projectionSubdividesTiles: boolean): Mesh | null;
+    private _disposeTexture;
+    _finishLoading(): void;
+    onAdd(map: Map$1): void;
+    onRemove(): void;
+    setWarp(warp: ImageSourceWarp): this;
+    getWarp(): ImageSourceWarp;
+    setCoordinates(coordinates: Coordinates): this;
+    prepare(): void;
+    loadTile(tile: Tile): Promise<void>;
+    serialize(): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification;
+    hasTransition(): boolean;
+    private _getOverlappingTileRanges;
+}
+type CanvasSourceSpecification = {
+    type: "canvas";
+    coordinates: [
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ],
+        [
+            number,
+            number
+        ]
+    ];
+    animate?: boolean;
+    canvas?: string | HTMLCanvasElement;
+};
+class CanvasSource extends ImageSource {
+    options: CanvasSourceSpecification;
+    animate: boolean;
+    canvas: HTMLCanvasElement;
+    width: number;
+    height: number;
+    play: () => void;
+    pause: () => void;
+    _playing: boolean;
+    constructor(id: string, options: CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
+    load(): Promise<void>;
+    getCanvas(): HTMLCanvasElement;
+    onAdd(map: Map$1): void;
+    onRemove(): void;
+    prepare(): void;
+    serialize(): CanvasSourceSpecification;
+    hasTransition(): boolean;
+    _hasInvalidDimensions(): boolean;
+}
+class TileBounds {
+    bounds: LngLatBounds;
+    minzoom: number;
+    maxzoom: number;
+    private _worldBox;
+    constructor(bounds: [
+        number,
+        number,
+        number,
+        number
+    ], minzoom: number | null | undefined, maxzoom: number | null | undefined, worldCoordinateHelper: WorldCoordinateHelper);
+    validateBounds(bounds: [
+        number,
+        number,
+        number,
+        number
+    ]): LngLatBoundsLike;
+    contains(tileID: CanonicalTileID): boolean;
+}
+type VectorTileSourceOptions = VectorSourceSpecification & {
+    collectResourceTiming?: boolean;
+    tileSize?: number;
+    sparse?: boolean;
+};
+type LoadTileResult = {
+    unmodified?: boolean;
+};
+class VectorTileSource extends Evented<SourceEventType> implements Source {
+    type: "vector";
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    url: string;
+    scheme: string;
+    encoding: TileEncoding;
+    tileSize: number;
+    sparse: boolean;
+    promoteId: PromoteIdSpecification;
+    _options: VectorSourceSpecification;
+    _collectResourceTiming: boolean;
+    dispatcher: Dispatcher;
+    map: Map$1;
+    bounds: [
+        number,
+        number,
+        number,
+        number
+    ];
+    tiles: string[];
+    tileBounds: TileBounds;
+    reparseOverscaled: boolean;
+    isTileClipped: boolean;
+    _tileJSONRequest: AbortController;
+    _loaded: boolean;
+    constructor(id: string, options: VectorTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented);
+    load(sourceDataChanged?: boolean): Promise<void>;
+    loaded(): boolean;
+    hasTile(tileID: OverscaledTileID): boolean;
+    onAdd(map: Map$1): void;
+    setSourceProperty(callback: Function): void;
+    setTiles(tiles: string[]): this;
+    setUrl(url: string): this;
+    onRemove(): void;
+    serialize(): VectorSourceSpecification;
+    loadTile(tile: Tile): Promise<LoadTileResult | void>;
+    private _loadFromNearestAncestor;
+    private _getOverzoomParameters;
+    private _getTileRequest;
+    private _setAcceptHeader;
+    private _afterTileLoadWorkerResponse;
+    private _reloadIfRequestedWhileLoading;
+    abortTile(tile: Tile): Promise<void>;
+    unloadTile(tile: Tile): Promise<void>;
+    hasTransition(): boolean;
+}
+type TileResult = {
+    tile: Tile;
+    tileID: OverscaledTileID;
+    queryGeometry: Point[];
+    cameraQueryGeometry: Point[];
+    scale: number;
+};
+class TileManager extends Evented<SourceEventType> {
+    id: string;
+    dispatcher: Dispatcher;
+    map: Map$1;
+    style: Style;
+    _source: Source;
+    _sourceLoaded: boolean;
+    _maxContentElevationSeen: number;
+    _sourceErrored: boolean;
+    _inViewTiles: InViewTiles;
+    _prevLng: number;
+    _outOfViewCache: TileCache;
+    _timers: Record<string, ReturnType<typeof setTimeout>>;
+    _maxTileCacheSize: number;
+    _maxTileCacheZoomLevels: number;
+    _paused: boolean;
+    _shouldReloadOnResume: boolean;
+    transform: IReadonlyTransform;
+    terrain: Terrain;
+    used: boolean;
+    usedForTerrain: boolean;
+    tileSize: number;
+    _state: SourceFeatureState;
+    _didEmitContent: boolean;
+    _updated: boolean;
+    _rasterFadeDuration: number;
+    _maxFadingAncestorLevels: number;
+    static maxUnderzooming: number;
+    static maxOverzooming: number;
+    constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher);
+    onAdd(map: Map$1): void;
+    onRemove(map: Map$1): void;
+    loaded(): boolean;
+    getSource(): Source;
+    getState(): SourceFeatureState;
+    pause(): void;
+    resume(): void;
+    _loadTile(tile: Tile, id: string, state: TileState, hadData: boolean): Promise<void>;
+    _unloadTile(tile: Tile): void;
+    _abortTile(tile: Tile): void;
+    serialize(): any;
+    prepare(context: Context$1): void;
+    getIds(): string[];
+    getRenderableIds(symbolLayer?: boolean): string[];
+    hasRenderableParent(tileID: OverscaledTileID): boolean;
+    reload(sourceDataChanged?: boolean, shouldReloadTileOptions?: any): void;
+    _reloadTile(id: string, state: TileState): Promise<void>;
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void;
+    getTile(tileID: OverscaledTileID): Tile;
+    getTileByID(id: string): Tile | undefined;
+    _retainLoadedChildren(retainTileMap: Record<string, OverscaledTileID>, idealTilesWithoutData: Set<OverscaledTileID>): Set<OverscaledTileID>;
+    _getLoadedDescendents(targetTileIDs: Set<OverscaledTileID>): Record<string, Tile[]>;
+    _areDescendentsComplete(generationIDs: OverscaledTileID[], generationZ: number, ancestorZ: number): boolean;
+    getLoadedTile(tileID: OverscaledTileID): Tile | null;
+    updateCacheSize(transform: IReadonlyTransform): void;
+    handleWrapJump(lng: number): void;
+    _updateMaxContentElevation(): number;
+    update(transform: IReadonlyTransform, terrain?: Terrain): void;
+    _cleanUpRasterTiles(retain: Record<string, OverscaledTileID>): void;
+    _cleanUpVectorTiles(retain: Record<string, OverscaledTileID>): void;
+    _addTerrainIdealTiles(idealTileIDs: OverscaledTileID[]): OverscaledTileID[];
+    releaseSymbolFadeTiles(): void;
+    _updateRetainedTiles(idealTileIDs: OverscaledTileID[], zoom: number): Record<string, OverscaledTileID>;
+    _addTile(tileID: OverscaledTileID): Tile;
+    _setTileReloadTimer(id: string, tile: Tile): void;
+    _clearTileReloadTimer(id: string): void;
+    _resetTileReloadTimers(): void;
+    refreshTiles(tileIds: ICanonicalTileID[]): void;
+    _removeTile(id: string): void;
+    private _dataHandler;
+    resetMaxContentElevation(): void;
+    clearTiles(): void;
+    tilesIn(pointQueryGeometry: Point[], maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[];
+    private transformBbox;
+    getVisibleCoordinates(symbolLayer?: boolean): OverscaledTileID[];
+    hasTransition(): boolean;
+    setRasterFadeDuration(fadeDuration: number): void;
+    setFeatureState(sourceLayer: string, featureId: number | string, state: any): void;
+    removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string): void;
+    getFeatureState(sourceLayer: string, featureId: number | string): FeatureState;
+    setDependencies(tileKey: string, namespace: string, dependencies: string[]): void;
+    reloadTilesForDependencies(namespaces: string[], keys: string[]): void;
+    areTilesLoaded(): boolean;
+}
+type SymbolLayoutProps = {
+    "symbol-placement": DataConstantProperty<"point" | "line" | "line-center">;
+    "symbol-spacing": DataConstantProperty<number>;
+    "symbol-avoid-edges": DataConstantProperty<boolean>;
+    "symbol-sort-key": DataDrivenProperty<number>;
+    "symbol-z-order": DataConstantProperty<"auto" | "viewport-y" | "source">;
+    "icon-allow-overlap": DataConstantProperty<boolean>;
+    "icon-overlap": DataConstantProperty<"never" | "always" | "cooperative">;
+    "icon-ignore-placement": DataConstantProperty<boolean>;
+    "icon-optional": DataConstantProperty<boolean>;
+    "icon-rotation-alignment": DataDrivenProperty<"map" | "viewport" | "auto">;
+    "icon-size": DataDrivenProperty<number>;
+    "icon-text-fit": DataConstantProperty<"none" | "width" | "height" | "both">;
+    "icon-text-fit-padding": DataConstantProperty<[
+        number,
+        number,
+        number,
+        number
+    ]>;
+    "icon-image": DataDrivenProperty<ResolvedImage>;
+    "icon-rotate": DataDrivenProperty<number>;
+    "icon-padding": DataDrivenProperty<Padding$1>;
+    "icon-keep-upright": DataConstantProperty<boolean>;
+    "icon-offset": DataDrivenProperty<[
+        number,
+        number
+    ]>;
+    "icon-anchor": DataDrivenProperty<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "icon-pitch-alignment": DataConstantProperty<"map" | "viewport" | "auto">;
+    "text-pitch-alignment": DataConstantProperty<"map" | "viewport" | "auto">;
+    "text-rotation-alignment": DataConstantProperty<"map" | "viewport" | "viewport-glyph" | "auto">;
+    "text-field": DataDrivenProperty<Formatted>;
+    "text-font": DataDrivenProperty<string[]>;
+    "text-size": DataDrivenProperty<number>;
+    "text-max-width": DataDrivenProperty<number>;
+    "text-line-height": DataConstantProperty<number>;
+    "text-letter-spacing": DataDrivenProperty<number>;
+    "text-justify": DataDrivenProperty<"auto" | "left" | "center" | "right">;
+    "text-radial-offset": DataDrivenProperty<number>;
+    "text-variable-anchor": DataConstantProperty<Array<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">>;
+    "text-variable-anchor-offset": DataDrivenProperty<VariableAnchorOffsetCollection>;
+    "text-anchor": DataDrivenProperty<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "text-max-angle": DataConstantProperty<number>;
+    "text-writing-mode": DataConstantProperty<Array<"horizontal" | "vertical">>;
+    "text-rotate": DataDrivenProperty<number>;
+    "text-padding": DataConstantProperty<number>;
+    "text-keep-upright": DataConstantProperty<boolean>;
+    "text-transform": DataDrivenProperty<"none" | "uppercase" | "lowercase">;
+    "text-offset": DataDrivenProperty<[
+        number,
+        number
+    ]>;
+    "text-allow-overlap": DataConstantProperty<boolean>;
+    "text-overlap": DataConstantProperty<"never" | "always" | "cooperative">;
+    "text-ignore-placement": DataConstantProperty<boolean>;
+    "text-optional": DataConstantProperty<boolean>;
+    "symbol-height-offset": DataDrivenProperty<number>;
+    "symbol-height-anchor": DataConstantProperty<"ground" | "absolute">;
+};
+type SymbolLayoutPropsPossiblyEvaluated = {
+    "symbol-placement": "point" | "line" | "line-center";
+    "symbol-spacing": number;
+    "symbol-avoid-edges": boolean;
+    "symbol-sort-key": PossiblyEvaluatedPropertyValue<number>;
+    "symbol-z-order": "auto" | "viewport-y" | "source";
+    "icon-allow-overlap": boolean;
+    "icon-overlap": "never" | "always" | "cooperative";
+    "icon-ignore-placement": boolean;
+    "icon-optional": boolean;
+    "icon-rotation-alignment": PossiblyEvaluatedPropertyValue<"map" | "viewport" | "auto">;
+    "icon-size": PossiblyEvaluatedPropertyValue<number>;
+    "icon-text-fit": "none" | "width" | "height" | "both";
+    "icon-text-fit-padding": [
+        number,
+        number,
+        number,
+        number
+    ];
+    "icon-image": PossiblyEvaluatedPropertyValue<ResolvedImage>;
+    "icon-rotate": PossiblyEvaluatedPropertyValue<number>;
+    "icon-padding": PossiblyEvaluatedPropertyValue<Padding$1>;
+    "icon-keep-upright": boolean;
+    "icon-offset": PossiblyEvaluatedPropertyValue<[
+        number,
+        number
+    ]>;
+    "icon-anchor": PossiblyEvaluatedPropertyValue<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "icon-pitch-alignment": "map" | "viewport" | "auto";
+    "text-pitch-alignment": "map" | "viewport" | "auto";
+    "text-rotation-alignment": "map" | "viewport" | "viewport-glyph" | "auto";
+    "text-field": PossiblyEvaluatedPropertyValue<Formatted>;
+    "text-font": PossiblyEvaluatedPropertyValue<string[]>;
+    "text-size": PossiblyEvaluatedPropertyValue<number>;
+    "text-max-width": PossiblyEvaluatedPropertyValue<number>;
+    "text-line-height": number;
+    "text-letter-spacing": PossiblyEvaluatedPropertyValue<number>;
+    "text-justify": PossiblyEvaluatedPropertyValue<"auto" | "left" | "center" | "right">;
+    "text-radial-offset": PossiblyEvaluatedPropertyValue<number>;
+    "text-variable-anchor": Array<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "text-variable-anchor-offset": PossiblyEvaluatedPropertyValue<VariableAnchorOffsetCollection>;
+    "text-anchor": PossiblyEvaluatedPropertyValue<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    "text-max-angle": number;
+    "text-writing-mode": Array<"horizontal" | "vertical">;
+    "text-rotate": PossiblyEvaluatedPropertyValue<number>;
+    "text-padding": number;
+    "text-keep-upright": boolean;
+    "text-transform": PossiblyEvaluatedPropertyValue<"none" | "uppercase" | "lowercase">;
+    "text-offset": PossiblyEvaluatedPropertyValue<[
+        number,
+        number
+    ]>;
+    "text-allow-overlap": boolean;
+    "text-overlap": "never" | "always" | "cooperative";
+    "text-ignore-placement": boolean;
+    "text-optional": boolean;
+    "symbol-height-offset": PossiblyEvaluatedPropertyValue<number>;
+    "symbol-height-anchor": "ground" | "absolute";
+};
+type SymbolPaintProps = {
+    "icon-opacity": DataDrivenProperty<number>;
+    "icon-color": DataDrivenProperty<Color>;
+    "icon-halo-color": DataDrivenProperty<Color>;
+    "icon-halo-width": DataDrivenProperty<number>;
+    "icon-halo-blur": DataDrivenProperty<number>;
+    "icon-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "icon-translate-anchor": DataConstantProperty<"map" | "viewport">;
+    "text-opacity": DataDrivenProperty<number>;
+    "text-color": DataDrivenProperty<Color>;
+    "text-halo-color": DataDrivenProperty<Color>;
+    "text-halo-width": DataDrivenProperty<number>;
+    "text-halo-blur": DataDrivenProperty<number>;
+    "text-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "text-translate-anchor": DataConstantProperty<"map" | "viewport">;
+};
+type SymbolPaintPropsPossiblyEvaluated = {
+    "icon-opacity": PossiblyEvaluatedPropertyValue<number>;
+    "icon-color": PossiblyEvaluatedPropertyValue<Color>;
+    "icon-halo-color": PossiblyEvaluatedPropertyValue<Color>;
+    "icon-halo-width": PossiblyEvaluatedPropertyValue<number>;
+    "icon-halo-blur": PossiblyEvaluatedPropertyValue<number>;
+    "icon-translate": [
+        number,
+        number
+    ];
+    "icon-translate-anchor": "map" | "viewport";
+    "text-opacity": PossiblyEvaluatedPropertyValue<number>;
+    "text-color": PossiblyEvaluatedPropertyValue<Color>;
+    "text-halo-color": PossiblyEvaluatedPropertyValue<Color>;
+    "text-halo-width": PossiblyEvaluatedPropertyValue<number>;
+    "text-halo-blur": PossiblyEvaluatedPropertyValue<number>;
+    "text-translate": [
+        number,
+        number
+    ];
+    "text-translate-anchor": "map" | "viewport";
+};
+type OverlapMode = "never" | "always" | "cooperative";
+type QueryResult<T> = {
+    key: T;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+};
+type GridKey = {
+    overlapMode?: OverlapMode;
+};
+class GridIndex<T extends GridKey> {
+    circleKeys: T[];
+    boxKeys: T[];
+    boxCells: number[][];
+    circleCells: number[][];
+    bboxes: number[];
+    circles: number[];
+    xCellCount: number;
+    yCellCount: number;
+    width: number;
+    height: number;
+    xScale: number;
+    yScale: number;
+    boxUid: number;
+    circleUid: number;
+    constructor(width: number, height: number, cellSize: number);
+    keysLength(): number;
+    insert(key: T, x1: number, y1: number, x2: number, y2: number): void;
+    insertCircle(key: T, x: number, y: number, radius: number): void;
+    private _insertBoxCell;
+    private _insertCircleCell;
+    private _query;
+    query(x1: number, y1: number, x2: number, y2: number): Array<QueryResult<T>>;
+    hitTest(x1: number, y1: number, x2: number, y2: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
+    hitTestCircle(x: number, y: number, radius: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
+    private _queryCell;
+    private _queryCellCircle;
+    private _forEachCell;
+    private _convertToXCellCoord;
+    private _convertToYCellCoord;
+    private _circlesCollide;
+    private _circleAndRectCollide;
+}
+class DepthMode {
+    func: DepthFuncType;
+    mask: DepthMaskType;
+    range: DepthRangeType;
+    static ReadOnly: boolean;
+    static ReadWrite: boolean;
+    constructor(depthFunc: DepthFuncType, depthMask: DepthMaskType, depthRange: DepthRangeType);
+    static disabled: Readonly<DepthMode>;
+}
+class ColorMode {
+    blendFunction: BlendFuncType;
+    blendColor: Color;
+    mask: ColorMaskType;
+    constructor(blendFunction: BlendFuncType, blendColor: Color, mask: ColorMaskType);
+    static Replace: BlendFuncType;
+    static disabled: Readonly<ColorMode>;
+    static unblended: Readonly<ColorMode>;
+    static alphaBlended: Readonly<ColorMode>;
+    static plusLighter: Readonly<ColorMode>;
+    static screen: Readonly<ColorMode>;
+}
+class StencilMode {
+    test: StencilTestGL;
+    ref: number;
+    mask: number;
+    fail: StencilOpConstant;
+    depthFail: StencilOpConstant;
+    pass: StencilOpConstant;
+    constructor(test: StencilTestGL, ref: number, mask: number, fail: StencilOpConstant, depthFail: StencilOpConstant, pass: StencilOpConstant);
+    static disabled: Readonly<StencilMode>;
+}
+type ProjectionMatrix = Mat4f32 | Mat4f64;
+type RendererProjectionData = ProjectionData<Mat4f32> & {
+    uniformBufferKey?: string;
+};
+type CustomLayerProjectionData = ProjectionData<ProjectionMatrix, ProjectionMatrix>;
+type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extends mat4 = MainMatrix> = {
+    mainMatrix: MainMatrix;
+    tileMercatorCoords: [
+        number,
+        number,
+        number,
+        number
+    ];
+    clippingPlane: [
+        number,
+        number,
+        number,
+        number
+    ];
+    projectionTransition: number;
+    fallbackMatrix: FallbackMatrix;
+    clipAntimeridian: boolean;
+};
+type ProjectionDataParams = {
+    overscaledTileID: OverscaledTileID | null;
+    aligned?: boolean;
+    applyTerrainMatrix?: boolean;
+    applyGlobeMatrix?: boolean;
+};
+type LightProps = {
+    "anchor": DataConstantProperty<"map" | "viewport">;
+    "position": DataConstantProperty<[
+        number,
+        number,
+        number
+    ]>;
+    "color": DataConstantProperty<Color>;
+    "intensity": DataConstantProperty<number>;
+};
+type LightPropsPossiblyEvaluated = {
+    "anchor": "map" | "viewport";
+    "position": [
+        number,
+        number,
+        number
+    ];
+    "color": Color;
+    "intensity": number;
+};
+type TileMeshUsage = "stencil" | "raster";
+interface Projection {
+    get name(): ProjectionSpecification["type"];
+    get worldCoordinateHelper(): WorldCoordinateHelper;
+    get useSubdivision(): boolean;
+    get shaderVariantName(): string;
+    get shaderDefine(): string;
+    get shaderPreludeCode(): PreparedShader;
+    get vertexShaderPreludeCode(): string;
+    get subdivisionGranularity(): SubdivisionGranularitySetting;
+    get transitionState(): number;
+    destroy(): void;
+    getMeshFromTileID(context: Context$1, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+    recalculate(params: EvaluationParameters): void;
+    hasTransition(): boolean;
+}
+enum WritingMode {
+    none = 0,
+    horizontal = 1,
+    vertical = 2,
+    horizontalOnly = 3
+}
+class Anchor extends Point {
+    angle: any;
+    segment?: number;
+    constructor(x: number, y: number, angle: number, segment?: number);
+    clone(): Anchor;
+}
+class SymbolStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<SymbolLayoutProps>;
+    layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<SymbolPaintProps>;
+    _transitioningPaint: Transitioning<SymbolPaintProps>;
+    paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void;
+    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]): any;
+    createBucket(parameters: BucketParameters<any>): SymbolBucket;
+    queryRadius(): number;
+    queryIntersectsFeature(): boolean;
+    _setPaintOverrides(): void;
+    _handleOverridablePaintPropertyUpdate<T, R>(name: string, oldValue: PropertyValue$1<T, R>, newValue: PropertyValue$1<T, R>): boolean;
+    static hasPaintOverride(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, propertyName: string): boolean;
+}
+type SymbolQuad = {
+    tl: Point;
+    tr: Point;
+    bl: Point;
+    br: Point;
+    tex: {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    };
+    pixelOffsetTL: Point;
+    pixelOffsetBR: Point;
+    writingMode: any | void;
+    glyphOffset: [
+        number,
+        number
+    ];
+    sectionIndex: number;
+    isSDF: boolean;
+    minFontScaleX: number;
+    minFontScaleY: number;
+};
+type SizeData = {
+    kind: "constant";
+    layoutSize: number;
+} | {
+    kind: "source";
+} | {
+    kind: "camera";
+    zoomStops: number[];
+    sizes: number[];
+    layoutSize: number;
+    interpolationType: InterpolationType;
+} | {
+    kind: "composite";
+    minZoom: number;
+    maxZoom: number;
+    interpolationType: InterpolationType;
+};
+type SingleCollisionBox = {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    anchorPointX: number;
+    anchorPointY: number;
+};
+type CollisionArrays = {
+    textBox?: SingleCollisionBox;
+    verticalTextBox?: SingleCollisionBox;
+    iconBox?: SingleCollisionBox;
+    verticalIconBox?: SingleCollisionBox;
+    textFeatureIndex?: number;
+    verticalTextFeatureIndex?: number;
+    iconFeatureIndex?: number;
+    verticalIconFeatureIndex?: number;
+};
+type SymbolFeature = {
+    sortKey: number | void;
+    text: Formatted | void;
+    icon: ResolvedImage;
+    index: number;
+    sourceLayerIndex: number;
+    geometry: Point[][];
+    properties: any;
+    type: "Unknown" | "Point" | "LineString" | "Polygon";
+    id?: any;
+};
+type SortKeyRange = {
+    sortKey: number;
+    symbolInstanceStart: number;
+    symbolInstanceEnd: number;
+};
+class SymbolBuffers {
+    layoutVertexArray: SymbolLayoutArray;
+    layoutVertexBuffer: VertexBuffer;
+    indexArray: TriangleIndexArray;
+    indexBuffer: IndexBuffer;
+    programConfigurations: ProgramConfigurationSet<SymbolStyleLayer>;
+    segments: SegmentVector;
+    dynamicLayoutVertexArray: SymbolDynamicLayoutArray;
+    dynamicLayoutVertexBuffer: VertexBuffer;
+    opacityVertexArray: SymbolOpacityArray;
+    opacityVertexBuffer: VertexBuffer;
+    hasVisibleVertices: boolean;
+    collisionVertexArray: CollisionVertexArray;
+    collisionVertexBuffer: VertexBuffer;
+    placedSymbolArray: PlacedSymbolArray;
+    constructor(programConfigurations: ProgramConfigurationSet<SymbolStyleLayer>);
+    isEmpty(): boolean;
+    upload(context: Context$1, dynamicIndexBuffer: boolean, upload?: boolean, update?: boolean): void;
+    destroy(): void;
+}
+class CollisionBuffers {
+    layoutVertexArray: StructArray;
+    layoutAttributes: StructArrayMember[];
+    layoutVertexBuffer: VertexBuffer;
+    indexArray: TriangleIndexArray | LineIndexArray;
+    indexBuffer: IndexBuffer;
+    segments: SegmentVector;
+    collisionVertexArray: CollisionVertexArray;
+    collisionVertexBuffer: VertexBuffer;
+    constructor(LayoutArray: {
+        new (...args: any): StructArray;
+    }, layoutAttributes: StructArrayMember[], IndexArray: {
+        new (...args: any): TriangleIndexArray | LineIndexArray;
+    });
+    upload(context: Context$1): void;
+    destroy(): void;
+}
+class SymbolBucket implements Bucket {
+    collisionBoxArray: CollisionBoxArray;
+    zoom: number;
+    overscaling: number;
+    layers: SymbolStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: SymbolStyleLayer[];
+    stateDependentLayerIds: string[];
+    index: number;
+    sdfIcons: boolean;
+    iconsInText: boolean;
+    iconsNeedLinear: boolean;
+    bucketInstanceId: number;
+    justReloaded: boolean;
+    hasDependencies: boolean;
+    textSizeData: SizeData;
+    iconSizeData: SizeData;
+    glyphOffsetArray: GlyphOffsetArray;
+    maxGlyphs: number;
+    lineVertexArray: SymbolLineVertexArray;
+    features: SymbolFeature[];
+    symbolInstances: SymbolInstanceArray;
+    textAnchorOffsets: TextAnchorOffsetArray;
+    collisionArrays: CollisionArrays[];
+    sortKeyRanges: SortKeyRange[];
+    pixelRatio: number;
+    tilePixelRatio: number;
+    compareText: {
+        [_: string]: Point[];
+    };
+    fadeStartTime: number;
+    sortFeaturesByKey: boolean;
+    sortFeaturesByY: boolean;
+    canOverlap: boolean;
+    sortedAngle: number;
+    featureSortOrder: number[];
+    maxHeightOffset: number;
+    collisionCircleArray: number[];
+    text: SymbolBuffers;
+    icon: SymbolBuffers;
+    textCollisionBox: CollisionBuffers;
+    iconCollisionBox: CollisionBuffers;
+    uploaded: boolean;
+    sourceLayerIndex: number;
+    sourceID: string;
+    symbolInstanceIndexes: number[];
+    writingModes: WritingMode[];
+    allowVerticalPlacement: boolean;
+    hasRTLText: boolean;
+    constructor(options: BucketParameters<SymbolStyleLayer>);
+    createArrays(): void;
+    private calculateGlyphDependencies;
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }): void;
+    addFeatures({ options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes }: BucketDependencyParameters): void;
+    isEmpty(): boolean;
+    uploadPending(): boolean;
+    upload(context: Context$1): void;
+    destroyDebugData(): void;
+    destroy(): void;
+    addToLineVertexArray(anchor: Anchor, line: Point[]): {
+        lineStartIndex: number;
+        lineLength: number;
+    };
+    addSymbols(arrays: SymbolBuffers, quads: SymbolQuad[], sizeVertex: any, lineOffset: [
+        number,
+        number
+    ], alongLine: boolean, feature: SymbolFeature, writingMode: WritingMode, labelAnchor: Anchor, lineStartIndex: number, lineLength: number, associatedIconIndex: number, canonical: CanonicalTileID, elevation: number): void;
+    _addCollisionDebugVertex(layoutVertexArray: StructArray, collisionVertexArray: StructArray, point: Point, anchorX: number, anchorY: number, extrude: Point): number;
+    addCollisionDebugVertices(x1: number, y1: number, x2: number, y2: number, arrays: CollisionBuffers, boxAnchorPoint: Point, symbolInstance: SymbolInstance): void;
+    addDebugCollisionBoxes(startIndex: number, endIndex: number, symbolInstance: SymbolInstance, isText: boolean): void;
+    generateCollisionDebugBuffers(): void;
+    _deserializeCollisionBoxesForSymbol(collisionBoxArray: CollisionBoxArray, textStartIndex: number, textEndIndex: number, verticalTextStartIndex: number, verticalTextEndIndex: number, iconStartIndex: number, iconEndIndex: number, verticalIconStartIndex: number, verticalIconEndIndex: number): CollisionArrays;
+    deserializeCollisionBoxes(collisionBoxArray: CollisionBoxArray): void;
+    hasTextData(): boolean;
+    hasIconData(): boolean;
+    hasDebugData(): CollisionBuffers;
+    hasTextCollisionBoxData(): boolean;
+    hasIconCollisionBoxData(): boolean;
+    addIndicesForPlacedSymbol(iconOrText: SymbolBuffers, placedSymbolIndex: number): void;
+    getSortedSymbolIndexes(angle: number): number[];
+    addToSortKeyRanges(symbolInstanceIndex: number, sortKey: number): void;
+    sortFeatures(angle: number): void;
+}
+enum TextAnchorEnum {
+    "center" = 1,
+    "left" = 2,
+    "right" = 3,
+    "top" = 4,
+    "bottom" = 5,
+    "top-left" = 6,
+    "top-right" = 7,
+    "bottom-left" = 8,
+    "bottom-right" = 9
+}
+type TextAnchor = keyof typeof TextAnchorEnum;
+class OpacityState {
+    opacity: number;
+    placed: boolean;
+    constructor(prevState: OpacityState, increment: number, placed: boolean, skipFade?: boolean | null);
+    isHidden(): boolean;
+}
+class JointOpacityState {
+    text: OpacityState;
+    icon: OpacityState;
+    constructor(prevState: JointOpacityState, increment: number, placedText: boolean, placedIcon: boolean, skipFade?: boolean | null);
+    isHidden(): boolean;
+}
+class JointPlacement {
+    text: boolean;
+    icon: boolean;
+    skipFade: boolean;
+    constructor(text: boolean, icon: boolean, skipFade: boolean);
+}
+class RetainedQueryData {
+    bucketInstanceId: number;
+    featureIndex: FeatureIndex;
+    sourceLayerIndex: number;
+    bucketIndex: number;
+    tileID: OverscaledTileID;
+    featureSortOrder: number[];
+    constructor(bucketInstanceId: number, featureIndex: FeatureIndex, sourceLayerIndex: number, bucketIndex: number, tileID: OverscaledTileID);
+}
+type CollisionGroup = {
+    ID: number;
+    predicate?: (key: FeatureKey) => boolean;
+};
+class CollisionGroups {
+    collisionGroups: {
+        [groupName: string]: CollisionGroup;
+    };
+    maxGroupID: number;
+    crossSourceCollisions: boolean;
+    constructor(crossSourceCollisions: boolean);
+    get(sourceID: string): CollisionGroup;
+}
+type VariableOffset = {
+    textOffset: [
+        number,
+        number
+    ];
+    width: number;
+    height: number;
+    anchor: TextAnchor;
+    textBoxScale: number;
+    prevAnchor?: TextAnchor;
+};
+type TileLayerParameters = {
+    bucket: SymbolBucket;
+    layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+    translationText: [
+        number,
+        number
+    ];
+    translationIcon: [
+        number,
+        number
+    ];
+    unwrappedTileID: UnwrappedTileID;
+    pitchedLabelPlaneMatrix: mat4;
+    scale: number;
+    textPixelRatio: number;
+    holdingForFade: boolean;
+    collisionBoxArray: CollisionBoxArray;
+    partiallyEvaluatedTextSize: {
+        uSize: number;
+        uSizeT: number;
+    };
+    collisionGroup: CollisionGroup;
+};
+type BucketPart = {
+    sortKey?: number | void;
+    symbolInstanceStart: number;
+    symbolInstanceEnd: number;
+    parameters: TileLayerParameters;
+};
+type CrossTileID = string | number;
+type OpacityInputs = {
+    crossTileIDs: number[];
+    duplicates: boolean[];
+};
+class Placement$1 {
+    transform: IReadonlyTransform;
+    terrain: Terrain;
+    collisionIndex: CollisionIndex;
+    placements: {
+        [_ in CrossTileID]: JointPlacement;
+    };
+    opacities: {
+        [_ in CrossTileID]: JointOpacityState;
+    };
+    variableOffsets: {
+        [_ in CrossTileID]: VariableOffset;
+    };
+    placedOrientations: {
+        [_ in CrossTileID]: number;
+    };
+    commitTime: number;
+    prevZoomAdjustment: number;
+    lastPlacementChangeTime: number;
+    stale: boolean;
+    fadeDuration: number;
+    retainedQueryData: {
+        [_: number]: RetainedQueryData;
+    };
+    collisionGroups: CollisionGroups;
+    prevPlacement: Placement$1;
+    zoomAtLastRecencyCheck: number;
+    collisionCircleArrays: {
+        [k in any]: number[];
+    };
+    collisionBoxArrays: Map<number, Map<number, {
+        text: number[];
+        icon: number[];
+    }>>;
+    lastOpacityInputs: WeakMap<SymbolBucket, OpacityInputs>;
+    constructor(transform: IReadonlyTransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement$1);
+    private _getTerrainElevationFunc;
+    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void;
+    attemptAnchorPlacement(textAnchorOffset: TextAnchorOffset, textBox: SingleCollisionBox, width: number, height: number, textBoxScale: number, rotateWithMap: boolean, pitchWithMap: boolean, textPixelRatio: number, tileID: OverscaledTileID, unwrappedTileID: UnwrappedTileID, collisionGroup: CollisionGroup, textOverlapMode: OverlapMode, symbolInstance: SymbolInstance, bucket: SymbolBucket, orientation: number, translationText: [
+        number,
+        number
+    ], translationIcon: [
+        number,
+        number
+    ], iconBox?: SingleCollisionBox | null, getElevation?: GetElevation, simpleProjectionMatrix?: mat4, heightOffset?: number, heightAnchorGround?: boolean): {
+        shift: Point;
+        placedGlyphBoxes: PlacedBox;
+    };
+    placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
+        [k in string | number]: boolean;
+    }, showCollisionBoxes: boolean): void;
+    storeCollisionData(bucketInstanceId: number, symbolIndex: number, collisionArrays: CollisionArrays, placedGlyphBoxes: PlacedBox, placedIconBoxes: PlacedBox, placedGlyphCircles: PlacedCircles): void;
+    markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number): void;
+    markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance): void;
+    commit(now: number): void;
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]): void;
+    _markDuplicates(bucket: SymbolBucket, seenCrossTileIDs: {
+        [k in string | number]: boolean;
+    }): {
+        duplicates: boolean[];
+        changed: boolean;
+    };
+    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, duplicates: boolean[], collisionBoxArray?: CollisionBoxArray | null): void;
+    symbolFadeChange(now: number): number;
+    zoomAdjustment(zoom: number): number;
+    hasTransitions(now: number): boolean;
+    stillRecent(now: number, zoom: number): boolean;
+    setStale(): void;
+}
+type RenderPass = "offscreen" | "opaque" | "translucent";
+type ProjectionShaderVariant = {
+    readonly name: string;
+    readonly define: string;
+    readonly prelude: PreparedShader;
+};
+type FrameRenderData = {
+    readonly showOverdrawInspector: boolean;
+    readonly showTileBoundaries: boolean;
+    readonly showPadding: boolean;
+    readonly rotating: boolean;
+    readonly zooming: boolean;
+    readonly moving: boolean;
+    readonly fadeDuration: number;
+    readonly symbolFadeChange: number;
+    readonly variableOffsets: Readonly<Record<CrossTileID, VariableOffset>>;
+    readonly anisotropicFilterPitch: number;
+    readonly projectionTransition: number;
+    readonly isRenderingGlobe: boolean;
+    readonly projectionShaderVariant: ProjectionShaderVariant | undefined;
+    readonly useSubdivision: boolean;
+    readonly pixelRatio: number;
+    readonly light: Readonly<LightPropsPossiblyEvaluated> | undefined;
+    readonly sky: Readonly<SkyPropsPossiblyEvaluated> | undefined;
+};
+type FrameRenderContextOptions = {
+    transform: IReadonlyTransform;
+    terrain: Terrain | null;
+    data: FrameRenderData;
+    context: Context$1;
+    programCache: ProgramCache;
+    currentPass: RenderPass;
+    projection: Projection | undefined;
+};
+class FrameRenderContext {
+    currentPass: RenderPass;
+    currentLayer: number;
+    opaquePassCutoff: number;
+    depthRangeFor3D: DepthRangeType;
+    isRenderingToTexture: boolean;
+    layerCompositeSampled: boolean;
+    readonly transform: IReadonlyTransform;
+    readonly terrain: Terrain | null;
+    readonly data: FrameRenderData;
+    readonly context: Context$1;
+    readonly programCache: ProgramCache;
+    private readonly projection;
+    private currentStencilSource;
+    private nextStencilID;
+    private tileClippingMaskIDs;
+    constructor(options: FrameRenderContextOptions);
+    getProjectionDataForTile(tileID: OverscaledTileID, options?: {
+        aligned?: boolean;
+        applyTerrainMatrix?: boolean;
+    }): RendererProjectionData;
+    getTerrainDataForTile(tileID: OverscaledTileID): TerrainData | null;
+    getMeshFromTileID(tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection?: boolean, defines?: string[]): Program<any>;
+    colorModeForRenderPass(): Readonly<ColorMode>;
+    getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode>;
+    getDepthModeFor3D(): Readonly<DepthMode>;
+    setDepthRangeFor3D(layerCount: number): void;
+    opaquePassEnabledForLayer(): boolean;
+    clearStencil(): void;
+    invalidateTileClippingMasks(): void;
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[]): void;
+    private renderTileMasks;
+    stencilModeFor3D(): StencilMode;
+    stencilModeForClipping(tileID: OverscaledTileID): StencilMode;
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: OverscaledTileID[]): [
+        Record<number, Readonly<StencilMode>>,
+        OverscaledTileID[]
+    ];
+    stencilConfigForOverlapTwoPass(tileIDs: OverscaledTileID[]): [
+        Record<number, Readonly<StencilMode>>,
+        Record<number, Readonly<StencilMode>>,
+        OverscaledTileID[]
+    ];
+}
+type ProgramVariant = {
+    name: string;
+    programConfiguration?: ProgramConfiguration | null;
+    projectionShaderVariant: ProjectionShaderVariant;
+    showOverdrawInspector: boolean;
+    useTerrain: boolean;
+    defines: string[];
+};
+class ProgramCache {
+    private readonly context;
+    private programs;
+    constructor(context: Context$1);
+    getProgram(variant: ProgramVariant): Program<UniformBindings>;
+    destroy(): void;
+}
+function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+function drawCircles(tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implements Bucket {
+    index: number;
+    zoom: number;
+    overscaling: number;
+    layerIds: string[];
+    layers: Layer[];
+    stateDependentLayers: Layer[];
+    stateDependentLayerIds: string[];
+    layoutVertexArray: CircleLayoutArray;
+    layoutVertexBuffer: VertexBuffer;
+    indexArray: TriangleIndexArray;
+    indexBuffer: IndexBuffer;
+    hasDependencies: boolean;
+    programConfigurations: ProgramConfigurationSet<Layer>;
+    segments: SegmentVector;
+    uploaded: boolean;
+    constructor(options: BucketParameters<Layer>);
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }): void;
+    addFeatures(_parameters: BucketDependencyParameters): void;
+    isEmpty(): boolean;
+    uploadPending(): boolean;
+    upload(context: Context$1): void;
+    destroy(): void;
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity?: CircleGranularity): void;
+}
+class HeatmapBucket extends CircleBucket<HeatmapStyleLayer> {
+    layers: HeatmapStyleLayer[];
+}
+type HeatmapPaintProps = {
+    "heatmap-radius": DataDrivenProperty<number>;
+    "heatmap-weight": DataDrivenProperty<number>;
+    "heatmap-intensity": DataConstantProperty<number>;
+    "heatmap-color": ColorRampProperty;
+    "heatmap-opacity": DataConstantProperty<number>;
+};
+type HeatmapPaintPropsPossiblyEvaluated = {
+    "heatmap-radius": PossiblyEvaluatedPropertyValue<number>;
+    "heatmap-weight": PossiblyEvaluatedPropertyValue<number>;
+    "heatmap-intensity": number;
+    "heatmap-color": ColorRampProperty;
+    "heatmap-opacity": number;
+};
+class HeatmapStyleLayer extends StyleLayer {
+    heatmapFbos: Map<string, Framebuffer>;
+    colorRamp: RGBAImage;
+    colorRampTexture: Texture;
+    _transitionablePaint: Transitionable<HeatmapPaintProps>;
+    _transitioningPaint: Transitioning<HeatmapPaintProps>;
+    paint: PossiblyEvaluated<HeatmapPaintProps, HeatmapPaintPropsPossiblyEvaluated>;
+    createBucket(options: any): HeatmapBucket;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    _handleSpecialPaintPropertyUpdate(name: string): void;
+    _updateColorRamp(): void;
+    resize(): void;
+    queryRadius(bucket: Bucket): number;
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID, getElevation }: QueryIntersectsFeatureParams): boolean;
+    hasOffscreenPass(): boolean;
+}
+function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+type LineClips = {
+    start: number;
+    end: number;
+};
+type GradientTexture = {
+    texture?: Texture;
+    gradient?: RGBAImage;
+    version?: number;
+};
+class LineBucket implements Bucket {
+    distance: number;
+    totalDistance: number;
+    maxLineLength: number;
+    scaledDistance: number;
+    lineClips?: LineClips;
+    e1: number;
+    e2: number;
+    index: number;
+    zoom: number;
+    overscaling: number;
+    layers: LineStyleLayer[];
+    layerIds: string[];
+    gradients: {
+        [x: string]: GradientTexture;
+    };
+    stateDependentLayers: any[];
+    stateDependentLayerIds: string[];
+    patternFeatures: BucketFeature[];
+    lineClipsArray: LineClips[];
+    layoutVertexArray: LineLayoutArray;
+    layoutVertexBuffer: VertexBuffer;
+    layoutVertexArray2: LineExtLayoutArray;
+    layoutVertexBuffer2: VertexBuffer;
+    indexArray: TriangleIndexArray;
+    indexBuffer: IndexBuffer;
+    hasDependencies: boolean;
+    programConfigurations: ProgramConfigurationSet<LineStyleLayer>;
+    segments: SegmentVector;
+    uploaded: boolean;
+    constructor(options: BucketParameters<LineStyleLayer>);
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }, dashPositions: {
+        [_: string]: DashEntry;
+    }): void;
+    addFeatures({ options, canonical, patternPositions, dashPositions }: BucketDependencyParameters): void;
+    isEmpty(): boolean;
+    uploadPending(): boolean;
+    upload(context: Context$1): void;
+    destroy(): void;
+    lineFeatureClips(feature: BucketFeature): LineClips | undefined;
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
+        [_: string]: ImagePosition;
+    }, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting): void;
+    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting): void;
+    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round?: boolean, offsetNormal?: Point, offsetFallback?: number): void;
+    addHalfVertex({ x, y }: Point, extrudeX: number, extrudeY: number, offsetX: number, offsetY: number, round: boolean, up: boolean, segment: Segment): void;
+    updateScaledDistance(): void;
+    updateDistance(prev: Point, next: Point): void;
+    private hasLineDasharray;
+    private addLineDashDependencies;
+}
+type LineLayoutProps = {
+    "line-cap": DataDrivenProperty<"butt" | "round" | "square">;
+    "line-join": DataDrivenProperty<"bevel" | "round" | "miter">;
+    "line-miter-limit": DataDrivenProperty<number>;
+    "line-round-limit": DataDrivenProperty<number>;
+    "line-sort-key": DataDrivenProperty<number>;
+};
+type LineLayoutPropsPossiblyEvaluated = {
+    "line-cap": PossiblyEvaluatedPropertyValue<"butt" | "round" | "square">;
+    "line-join": PossiblyEvaluatedPropertyValue<"bevel" | "round" | "miter">;
+    "line-miter-limit": PossiblyEvaluatedPropertyValue<number>;
+    "line-round-limit": PossiblyEvaluatedPropertyValue<number>;
+    "line-sort-key": PossiblyEvaluatedPropertyValue<number>;
+};
+type LinePaintProps = {
+    "line-opacity": DataDrivenProperty<number>;
+    "line-layer-opacity": DataConstantProperty<number>;
+    "line-layer-blend": DataConstantProperty<"normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay">;
+    "line-color": DataDrivenProperty<Color>;
+    "line-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "line-translate-anchor": DataConstantProperty<"map" | "viewport">;
+    "line-width": DataDrivenProperty<number>;
+    "line-gap-width": DataDrivenProperty<number>;
+    "line-offset": DataDrivenProperty<number>;
+    "line-blur": DataDrivenProperty<number>;
+    "line-dasharray": CrossFadedDataDrivenProperty<number[]>;
+    "line-pattern": CrossFadedDataDrivenProperty<ResolvedImage>;
+    "line-gradient": ColorRampProperty;
+};
+type LinePaintPropsPossiblyEvaluated = {
+    "line-opacity": PossiblyEvaluatedPropertyValue<number>;
+    "line-layer-opacity": number;
+    "line-layer-blend": "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "line-color": PossiblyEvaluatedPropertyValue<Color>;
+    "line-translate": [
+        number,
+        number
+    ];
+    "line-translate-anchor": "map" | "viewport";
+    "line-width": PossiblyEvaluatedPropertyValue<number>;
+    "line-gap-width": PossiblyEvaluatedPropertyValue<number>;
+    "line-offset": PossiblyEvaluatedPropertyValue<number>;
+    "line-blur": PossiblyEvaluatedPropertyValue<number>;
+    "line-dasharray": PossiblyEvaluatedPropertyValue<CrossFaded<number[]>>;
+    "line-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>;
+    "line-gradient": ColorRampProperty;
+};
+class LineStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<LineLayoutProps>;
+    layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;
+    gradientVersion: number;
+    stepInterpolant: boolean;
+    _transitionablePaint: Transitionable<LinePaintProps>;
+    _transitioningPaint: Transitioning<LinePaintProps>;
+    paint: PossiblyEvaluated<LinePaintProps, LinePaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    _handleSpecialPaintPropertyUpdate(name: string): void;
+    gradientExpression(): StylePropertyExpression;
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void;
+    createBucket(parameters: BucketParameters<any>): LineBucket;
+    queryRadius(bucket: Bucket): number;
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits }: QueryIntersectsFeatureParams): boolean;
+    isTileClipped(): boolean;
+}
+function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+class FillBucket implements Bucket {
+    index: number;
+    zoom: number;
+    overscaling: number;
+    layers: FillStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: FillStyleLayer[];
+    stateDependentLayerIds: string[];
+    patternFeatures: BucketFeature[];
+    layoutVertexArray: FillLayoutArray;
+    layoutVertexBuffer: VertexBuffer;
+    indexArray: TriangleIndexArray;
+    indexBuffer: IndexBuffer;
+    indexArray2: LineIndexArray;
+    indexBuffer2: IndexBuffer;
+    hasDependencies: boolean;
+    sdfPatterns: Record<string, boolean>;
+    programConfigurations: ProgramConfigurationSet<FillStyleLayer>;
+    segments: SegmentVector;
+    segments2: SegmentVector;
+    uploaded: boolean;
+    constructor(options: BucketParameters<FillStyleLayer>);
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }): void;
+    addFeatures({ options, canonical, patternPositions, patternMap }: BucketDependencyParameters): void;
+    private detectSdfPatterns;
+    private recordSdfPattern;
+    isEmpty(): boolean;
+    uploadPending(): boolean;
+    upload(context: Context$1): void;
+    destroy(): void;
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
+        [_: string]: ImagePosition;
+    }, subdivisionGranularity: SubdivisionGranularitySetting): void;
+}
+type FillLayoutProps = {
+    "fill-sort-key": DataDrivenProperty<number>;
+};
+type FillLayoutPropsPossiblyEvaluated = {
+    "fill-sort-key": PossiblyEvaluatedPropertyValue<number>;
+};
+type FillPaintProps = {
+    "fill-antialias": DataConstantProperty<boolean>;
+    "fill-opacity": DataDrivenProperty<number>;
+    "fill-layer-opacity": DataConstantProperty<number>;
+    "fill-layer-blend": DataConstantProperty<"normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay">;
+    "fill-color": DataDrivenProperty<Color>;
+    "fill-outline-color": DataDrivenProperty<Color>;
+    "fill-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "fill-translate-anchor": DataConstantProperty<"map" | "viewport">;
+    "fill-pattern": CrossFadedDataDrivenProperty<ResolvedImage>;
+};
+type FillPaintPropsPossiblyEvaluated = {
+    "fill-antialias": boolean;
+    "fill-opacity": PossiblyEvaluatedPropertyValue<number>;
+    "fill-layer-opacity": number;
+    "fill-layer-blend": "normal" | "multiply" | "color" | "luminosity" | "plus-lighter" | "screen" | "overlay";
+    "fill-color": PossiblyEvaluatedPropertyValue<Color>;
+    "fill-outline-color": PossiblyEvaluatedPropertyValue<Color>;
+    "fill-translate": [
+        number,
+        number
+    ];
+    "fill-translate-anchor": "map" | "viewport";
+    "fill-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>;
+};
+class FillStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<FillLayoutProps>;
+    layout: PossiblyEvaluated<FillLayoutProps, FillLayoutPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<FillPaintProps>;
+    _transitioningPaint: Transitioning<FillPaintProps>;
+    paint: PossiblyEvaluated<FillPaintProps, FillPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void;
+    createBucket(parameters: BucketParameters<any>): FillBucket;
+    queryRadius(): number;
+    queryIntersectsFeature({ queryGeometry, geometry, transform, pixelsToTileUnits }: QueryIntersectsFeatureParams): boolean;
+    isTileClipped(): boolean;
+}
+function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+class FillExtrusionBucket implements Bucket {
+    index: number;
+    zoom: number;
+    overscaling: number;
+    layers: FillExtrusionStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: FillExtrusionStyleLayer[];
+    stateDependentLayerIds: string[];
+    layoutVertexArray: FillExtrusionLayoutArray;
+    layoutVertexBuffer: VertexBuffer;
+    centroidVertexArray: PosArray;
+    centroidVertexBuffer: VertexBuffer;
+    indexArray: TriangleIndexArray;
+    indexBuffer: IndexBuffer;
+    hasDependencies: boolean;
+    programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
+    segments: SegmentVector;
+    uploaded: boolean;
+    features: BucketFeature[];
+    constructor(options: BucketParameters<FillExtrusionStyleLayer>);
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures({ options, canonical, patternPositions }: BucketDependencyParameters): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
+        [_: string]: ImagePosition;
+    }): void;
+    isEmpty(): boolean;
+    uploadPending(): boolean;
+    upload(context: Context$1): void;
+    destroy(): void;
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
+        [_: string]: ImagePosition;
+    }, subdivisionGranularity: SubdivisionGranularitySetting): void;
+    private processPolygon;
+    private _generateSideFaces;
+}
+type FillExtrusionLayoutProps = {
+    "fill-extrusion-rounded-corner-distance": DataConstantProperty<number>;
+};
+type FillExtrusionLayoutPropsPossiblyEvaluated = {
+    "fill-extrusion-rounded-corner-distance": number;
+};
+type FillExtrusionPaintProps = {
+    "fill-extrusion-opacity": DataConstantProperty<number>;
+    "fill-extrusion-color": DataDrivenProperty<Color>;
+    "fill-extrusion-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "fill-extrusion-translate-anchor": DataConstantProperty<"map" | "viewport">;
+    "fill-extrusion-pattern": CrossFadedDataDrivenProperty<ResolvedImage>;
+    "fill-extrusion-height": DataDrivenProperty<number>;
+    "fill-extrusion-base": DataDrivenProperty<number>;
+    "fill-extrusion-vertical-gradient": DataConstantProperty<boolean>;
+};
+type FillExtrusionPaintPropsPossiblyEvaluated = {
+    "fill-extrusion-opacity": number;
+    "fill-extrusion-color": PossiblyEvaluatedPropertyValue<Color>;
+    "fill-extrusion-translate": [
+        number,
+        number
+    ];
+    "fill-extrusion-translate-anchor": "map" | "viewport";
+    "fill-extrusion-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>;
+    "fill-extrusion-height": PossiblyEvaluatedPropertyValue<number>;
+    "fill-extrusion-base": PossiblyEvaluatedPropertyValue<number>;
+    "fill-extrusion-vertical-gradient": boolean;
+};
+class FillExtrusionStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<FillExtrusionLayoutProps>;
+    layout: PossiblyEvaluated<FillExtrusionLayoutProps, FillExtrusionLayoutPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
+    _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
+    paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>): FillExtrusionBucket;
+    queryRadius(): number;
+    is3D(): boolean;
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID }: QueryIntersectsFeatureParams): boolean | number;
+}
+function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+type HillshadePaintProps = {
+    "hillshade-illumination-direction": DataConstantProperty<NumberArray>;
+    "hillshade-illumination-altitude": DataConstantProperty<NumberArray>;
+    "hillshade-illumination-anchor": DataConstantProperty<"map" | "viewport">;
+    "hillshade-exaggeration": DataConstantProperty<number>;
+    "hillshade-shadow-color": DataConstantProperty<ColorArray>;
+    "hillshade-highlight-color": DataConstantProperty<ColorArray>;
+    "hillshade-accent-color": DataConstantProperty<Color>;
+    "hillshade-method": DataConstantProperty<"standard" | "basic" | "combined" | "igor" | "multidirectional">;
+    "resampling": DataConstantProperty<"linear" | "nearest">;
+};
+type HillshadePaintPropsPossiblyEvaluated = {
+    "hillshade-illumination-direction": NumberArray;
+    "hillshade-illumination-altitude": NumberArray;
+    "hillshade-illumination-anchor": "map" | "viewport";
+    "hillshade-exaggeration": number;
+    "hillshade-shadow-color": ColorArray;
+    "hillshade-highlight-color": ColorArray;
+    "hillshade-accent-color": Color;
+    "hillshade-method": "standard" | "basic" | "combined" | "igor" | "multidirectional";
+    "resampling": "linear" | "nearest";
+};
+class HillshadeStyleLayer extends StyleLayer {
+    _transitionablePaint: Transitionable<HillshadePaintProps>;
+    _transitioningPaint: Transitioning<HillshadePaintProps>;
+    paint: PossiblyEvaluated<HillshadePaintProps, HillshadePaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    getIlluminationProperties(): {
+        directionRadians: number[];
+        altitudeRadians: number[];
+        shadowColor: Color[];
+        highlightColor: Color[];
+    };
+    hasOffscreenPass(): boolean;
+}
+function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+type ColorReliefPaintProps = {
+    "color-relief-opacity": DataConstantProperty<number>;
+    "color-relief-color": ColorRampProperty;
+    "resampling": DataConstantProperty<"linear" | "nearest">;
+};
+type ColorReliefPaintPropsPossiblyEvaluated = {
+    "color-relief-opacity": number;
+    "color-relief-color": ColorRampProperty;
+    "resampling": "linear" | "nearest";
+};
+type ColorRamp = {
+    elevationStops: number[];
+    colorStops: Color[];
+};
+type ColorRampTextures = {
+    elevationTexture: Texture;
+    colorTexture: Texture;
+};
+class ColorReliefStyleLayer extends StyleLayer {
+    colorRampExpression: StylePropertyExpression;
+    colorRampTextures: ColorRampTextures;
+    _transitionablePaint: Transitionable<ColorReliefPaintProps>;
+    _transitioningPaint: Transitioning<ColorReliefPaintProps>;
+    paint: PossiblyEvaluated<ColorReliefPaintProps, ColorReliefPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    _createColorRamp(maxLength: number): ColorRamp;
+    _colorRampChanged(): boolean;
+    getColorRampTextures(context: Context$1, maxLength: number, unpackVector: number[]): ColorRampTextures;
+    hasOffscreenPass(): boolean;
+}
+function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+type BackgroundPaintProps = {
+    "background-color": DataConstantProperty<Color>;
+    "background-pattern": CrossFadedProperty<ResolvedImage>;
+    "background-opacity": DataConstantProperty<number>;
+};
+type BackgroundPaintPropsPossiblyEvaluated = {
+    "background-color": Color;
+    "background-pattern": CrossFaded<ResolvedImage>;
+    "background-opacity": number;
+};
+class BackgroundStyleLayer extends StyleLayer {
+    _transitionablePaint: Transitionable<BackgroundPaintProps>;
+    _transitioningPaint: Transitioning<BackgroundPaintProps>;
+    paint: PossiblyEvaluated<BackgroundPaintProps, BackgroundPaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+}
+function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+function drawDebugPadding(frameRenderContext: FrameRenderContext): void;
+function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+type UnwrappedTileIDLiteral = {
+    wrap?: number;
+    canonical: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+type CustomLayerProjectionDataParams = {
+    tileID: UnwrappedTileIDLiteral | null;
+    aligned?: boolean;
+    applyTerrainMatrix?: boolean;
+    applyGlobeMatrix?: boolean;
+};
+type CustomRenderMethodInput = {
+    farZ: number;
+    nearZ: number;
+    fov: number;
+    modelViewProjectionMatrix: mat4;
+    projectionMatrix: mat4;
+    shaderData: {
+        variantName: string;
+        vertexShaderPrelude: string;
+        define: string;
+    };
+    defaultProjectionData: CustomLayerProjectionData;
+    getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
+    renderTerrainHeightMap?: (target: TerrainHeightMapTarget) => void;
+};
+type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+type CustomTerrainRenderInput = {
+    tileID: UnwrappedTileIDLiteral;
+    width: number;
+    height: number;
+};
+interface CustomLayerInterface {
+    id: string;
+    type: "custom";
+    renderingMode?: "2d" | "3d";
+    render: CustomRenderMethod;
+    prerender?: CustomRenderMethod;
+    renderToTerrainTile?: (gl: WebGL2RenderingContext, options: CustomTerrainRenderInput) => void;
+    terrainTileRevision?: number;
+    onAdd?(map: Map$1, gl: WebGL2RenderingContext): void;
+    onRemove?(map: Map$1, gl: WebGL2RenderingContext): void;
+}
+class CustomStyleLayer extends StyleLayer {
+    implementation: CustomLayerInterface;
+    constructor(implementation: CustomLayerInterface, globalState: Record<string, any>);
+    is3D(): boolean;
+    hasOffscreenPass(): boolean;
+    recalculate(): void;
+    updateTransitions(): void;
+    hasTransition(): boolean;
+    serialize(): LayerSpecification;
+    onAdd: (map: Map$1) => void;
+    onRemove: (map: Map$1) => void;
+}
+function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+function drawDepth(painter: Painter, terrain: Terrain, frameRenderContext: FrameRenderContext): void;
+function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): void;
+function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContext): void;
+type DrawFunctions = {
+    symbol: typeof drawSymbols;
+    circle: typeof drawCircles;
+    heatmap: typeof drawHeatmap;
+    line: typeof drawLine;
+    fill: typeof drawFill;
+    fillExtrusion: typeof drawFillExtrusion;
+    hillshade: typeof drawHillshade;
+    colorRelief: typeof drawColorRelief;
+    raster: typeof drawRaster;
+    background: typeof drawBackground;
+    sky: typeof drawSky;
+    atmosphere: typeof drawAtmosphere;
+    custom: typeof drawCustom;
+    debug: typeof drawDebug;
+    debugPadding: typeof drawDebugPadding;
+    terrainDepth: typeof drawDepth;
+};
+class PatternAtlas {
+    private _imageManager;
+    private _entries;
+    private _image;
+    private _texture;
+    private _dirty;
+    constructor(imageManager: ImageManager);
+    destroy(): void;
+    getPixelSize(): {
+        width: number;
+        height: number;
+    };
+    getPattern(id: string): ImagePosition;
+    isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean;
+    bind(context: Context$1): void;
+    private _update;
+}
+interface IRenderToTexture {
+    needsFollowUpFrame: boolean;
+    prepareForRender(style: Style, zoom: number, isMoving: boolean): void;
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean;
+    getTexture(tile: Tile): any;
+}
+type RTTObject = {
+    texture: Texture;
+    size: number;
+};
+class Painter {
+    drawFunctions: DrawFunctions;
+    context: Context$1;
+    renderToTexture: IRenderToTexture;
+    _tileTextures: {
+        [_: number]: Texture[];
+    };
+    _rttObjectRecyclePool: RTTObject[];
+    _rttSharedFbo: {
+        fbo: Framebuffer;
+        depthRenderbuffer: WebGLRenderbuffer;
+        size: number;
+    } | null;
+    layerCompositeFbo: Framebuffer | null;
+    layerCompositeBackdrop: {
+        texture: WebGLTexture;
+        width: number;
+        height: number;
+    } | null;
+    width: number;
+    height: number;
+    tileExtentBuffer: VertexBuffer;
+    tileExtentSegments: SegmentVector;
+    tileExtentMesh: Mesh;
+    skyMesh: Mesh;
+    debugBuffer: VertexBuffer;
+    debugSegments: SegmentVector;
+    rasterBoundsBuffer: VertexBuffer;
+    rasterBoundsSegments: SegmentVector;
+    viewportBuffer: VertexBuffer;
+    viewportSegments: SegmentVector;
+    quadTriangleIndexBuffer: IndexBuffer;
+    tileBorderIndexBuffer: IndexBuffer;
+    lineAtlas: LineAtlas;
+    patternAtlas: PatternAtlas;
+    programCache: ProgramCache;
+    debugOverlayTexture: Texture;
+    debugOverlayCanvas: HTMLCanvasElement;
+    terrainFacilitator: {
+        depthDirty: boolean;
+        matrix: mat4;
+        renderTime: number;
+    };
+    constructor(gl: WebGL2RenderingContext);
+    resize(width: number, height: number, pixelRatio: number): void;
+    setup(): void;
+    _renderTilesDepthBuffer(frameRenderContext: FrameRenderContext): void;
+    render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void;
+    markTerrainDepthDirty(): void;
+    maybeDrawDepth(frameRenderContext: FrameRenderContext): void;
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void;
+    static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
+    saveTileTexture(texture: Texture): void;
+    getTileTexture(size: number): Texture;
+    acquireRTT(size: number): RTTObject;
+    bindRTT(obj: RTTObject): void;
+    releaseRTT(obj: RTTObject): void;
+    clearRTTPool(): void;
+    destroyRTTResources(): void;
+    setBaseState(): void;
+    initDebugOverlayCanvas(): void;
+    destroy(): void;
+    overLimit(): boolean;
+}
+type PointProjection = {
+    point: Point;
+    signedDistanceFromCamera: number;
+    isOccluded: boolean;
+};
+type IndexToPointCache = {
+    [lineIndex: number]: Point;
+};
+type ProjectionCache = {
+    projections: IndexToPointCache;
+    offsets: IndexToPointCache;
+    cachedAnchorPoint: Point | undefined;
+    anyProjectionOccluded: boolean;
+};
+type SymbolProjectionContext = {
+    projectionCache: ProjectionCache;
+    lineVertexArray: SymbolLineVertexArray;
+    pitchedLabelPlaneMatrix: mat4;
+    getElevation: GetElevation | undefined;
+    heightOffset?: number;
+    heightAnchorGround?: boolean;
+    tileAnchorPoint: Point;
+    pitchWithMap: boolean;
+    transform: IReadonlyTransform;
+    unwrappedTileID: UnwrappedTileID;
+    width: number;
+    height: number;
+    translation: [
+        number,
+        number
+    ];
+};
+type PlacedCircles = {
+    circles: number[];
+    offscreen: boolean;
+    collisionDetected: boolean;
+};
+type PlacedBox = {
+    box: number[];
+    placeable: boolean;
+    offscreen: boolean;
+    occluded: boolean;
+};
+type FeatureKey = {
+    bucketInstanceId: number;
+    featureIndex: number;
+    collisionGroupID: number;
+    overlapMode: OverlapMode;
+};
+class CollisionIndex {
+    grid: GridIndex<FeatureKey>;
+    ignoredGrid: GridIndex<FeatureKey>;
+    transform: IReadonlyTransform;
+    pitchFactor: number;
+    screenRightBoundary: number;
+    screenBottomBoundary: number;
+    gridRightBoundary: number;
+    gridBottomBoundary: number;
+    perspectiveRatioCutoff: number;
+    constructor(transform: IReadonlyTransform, grid?: GridIndex<FeatureKey>, ignoredGrid?: GridIndex<FeatureKey>);
+    placeCollisionBox(collisionBox: SingleCollisionBox, overlapMode: OverlapMode, textPixelRatio: number, tileID: OverscaledTileID, unwrappedTileID: UnwrappedTileID, pitchWithMap: boolean, rotateWithMap: boolean, translation: [
+        number,
+        number
+    ], collisionGroupPredicate?: (key: FeatureKey) => boolean, getElevation?: GetElevation, shift?: Point, simpleProjectionMatrix?: mat4, heightOffset?: number, heightAnchorGround?: boolean): PlacedBox;
+    placeCollisionCircles(overlapMode: OverlapMode, symbol: PlacedSymbol, lineVertexArray: SymbolLineVertexArray, glyphOffsetArray: GlyphOffsetArray, fontSize: number, unwrappedTileID: UnwrappedTileID, pitchedLabelPlaneMatrix: mat4, showCollisionCircles: boolean, pitchWithMap: boolean, collisionGroupPredicate: (key: FeatureKey) => boolean, circlePixelDiameter: number, textPixelPadding: number, translation: [
+        number,
+        number
+    ], getElevation: GetElevation | undefined): PlacedCircles;
+    projectPathToScreenSpace(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[];
+    queryRenderedSymbols(viewportQueryGeometry: Point[]): Record<number, number[]>;
+    insertCollisionBox(collisionBox: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
+    insertCollisionCircles(collisionCircles: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
+    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number, simpleProjectionMatrix?: mat4): {
+        x: number;
+        y: number;
+        perspectiveRatio: number;
+        isOccluded: boolean;
+        signedDistanceFromCamera: number;
+    };
+    getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): number;
+    isOffscreen(x1: number, y1: number, x2: number, y2: number): boolean;
+    isInsideGrid(x1: number, y1: number, x2: number, y2: number): boolean;
+    getViewportMatrix(): mat4;
+    private _projectCollisionBox;
+}
+type QueryRenderedFeaturesOptions = {
+    layers?: string[] | Set<string>;
+    filter?: FilterSpecification;
+    availableImages?: string[];
+    validate?: boolean;
+};
+type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, "layers"> & {
+    layers: Set<string> | null;
+    globalState?: Record<string, any>;
+};
+type QuerySourceFeatureOptions = {
+    sourceLayer?: string;
+    filter?: FilterSpecification;
+    validate?: boolean;
+};
+type QuerySourceFeatureOptionsStrict = QuerySourceFeatureOptions & {
+    globalState?: Record<string, any>;
+    worldCoordinateHelper: WorldCoordinateHelper;
+};
+type QueryRenderedFeaturesResults = {
+    [key: string]: QueryRenderedFeaturesResultsItem[];
+};
+type QueryRenderedFeaturesResultsItem = QueryResultsItem & {
+    feature: MapGeoJSONFeature;
+};
+const RTT_DIFFERENCES: readonly [
+    "none",
+    "zoom",
+    "sourceTiles",
+    "visibleLayers",
+    "revision"
+];
+type RTTDifference = typeof RTT_DIFFERENCES[number];
+class RTTFingerprint {
+    private readonly _tileKeys;
+    private readonly _revision;
+    private readonly _zoom;
+    private readonly _visibleLayerIds;
+    constructor(coords: OverscaledTileID[], revision: number, zoom: number, visibleLayerIds: string);
+    difference(other: RTTFingerprint | undefined): RTTDifference;
+}
+type TileState = "loading" | "loaded" | "reloading" | "unloaded" | "errored" | "expired";
+type CrossFadeArgs = {
+    fadingRole: FadingRoles;
+    fadingDirection: FadingDirections;
+    fadingParentID?: OverscaledTileID;
+    fadeEndTime: number;
+};
+enum FadingRoles {
+    Base = 0,
+    Parent = 1
+}
+enum FadingDirections {
+    Departing = 0,
+    Incoming = 1
+}
+class Tile {
+    tileID: OverscaledTileID;
+    uid: number;
+    uses: number;
+    tileSize: number;
+    buckets: {
+        [_: string]: Bucket;
+    };
+    latestFeatureIndex: FeatureIndex | null;
+    latestRawTileData: ArrayBuffer;
+    latestEncoding: TileEncoding;
+    imageAtlas: ImageAtlas;
+    imageAtlasTexture: Texture;
+    dashPositions: {
+        [_: string]: DashEntry;
+    };
+    glyphAtlasImage: AlphaImage;
+    glyphAtlasTexture: Texture;
+    etag?: string;
+    expirationTime: any;
+    expiredRequestCount: number;
+    state: TileState;
+    fadingRole: FadingRoles;
+    fadingDirection: FadingDirections;
+    fadingParentID: OverscaledTileID;
+    selfFading: boolean;
+    timeAdded: number;
+    fadeEndTime: number;
+    fadeOpacity: number;
+    collisionBoxArray: CollisionBoxArray;
+    redoWhenDone: boolean;
+    showCollisionBoxes: boolean;
+    placementSource: any;
+    actor: Actor;
+    vtLayers: {
+        [_: string]: VectorTileLayerLike;
+    };
+    neighboringTiles: Record<string, {
+        backfilled: boolean;
+    }>;
+    dem: DEMData;
+    demMatrix: mat4;
+    aborted: boolean;
+    needsHillshadePrepare: boolean;
+    needsTerrainPrepare: boolean;
+    needsColorReliefPrepare: boolean;
+    abortController: AbortController;
+    texture: any;
+    fbo: Framebuffer;
+    demTexture: Texture;
+    refreshedUponExpiration: boolean;
+    reloadPromise: {
+        resolve: () => void;
+        reject: () => void;
+    };
+    resourceTiming: PerformanceResourceTiming[];
+    queryPadding: number;
+    symbolFadeHoldUntil: number;
+    hasSymbolBuckets: boolean;
+    hasRTLText: boolean;
+    dependencies: any;
+    rttObjects: Array<RTTObject | undefined>;
+    rttFingerprint: Record<string, RTTFingerprint>;
+    featureStateRevision: number;
+    constructor(tileID: OverscaledTileID, size: number);
+    isRenderable(symbolLayer: boolean): boolean;
+    setCrossFadeLogic({ fadingRole, fadingDirection, fadingParentID, fadeEndTime }: CrossFadeArgs): void;
+    setSelfFadeLogic(fadeEndTime: number): void;
+    resetFadeLogic(): void;
+    wasRequested(): boolean;
+    clearTextures(painter: Painter): void;
+    getRTT(stack: number): RTTObject | undefined;
+    acquireRTT(painter: Painter, stack: number, size: number): RTTObject;
+    releaseRTT(painter: Painter): void;
+    releaseRTTStack(painter: Painter, stack: number): void;
+    loadVectorData(data: WorkerTileResult, style: Style, justReloaded?: boolean | null): void;
+    unloadVectorData(): void;
+    getBucket(layer: StyleLayer): Bucket;
+    upload(context: Context$1): void;
+    prepare(imageManager: ImageManager): void;
+    queryRenderedFeatures(layers: {
+        [_: string]: StyleLayer;
+    }, serializedLayers: {
+        [_: string]: any;
+    }, sourceFeatureState: SourceFeatureState, queryGeometry: Point[], cameraQueryGeometry: Point[], scale: number, params: Pick<QueryRenderedFeaturesOptionsStrict, "filter" | "layers" | "availableImages"> | undefined, transform: IReadonlyTransform, maxPitchScaleFactor: number, getElevation: GetElevation | undefined): QueryResults;
+    querySourceFeatures(result: GeoJSONFeature[], params: QuerySourceFeatureOptionsStrict): void;
+    hasData(): boolean;
+    patternsLoaded(): boolean;
+    setExpiryData(data: ExpiryData): void;
+    getExpiryTimeout(): number;
+    setFeatureState(states: LayerFeatureStates, style: Style, revision: number): void;
+    holdingForSymbolFade(): boolean;
+    symbolFadeFinished(): boolean;
+    clearSymbolFadeHold(): void;
+    setSymbolHoldDuration(duration: number): void;
+    setDependencies(namespace: string, dependencies: string[]): void;
+    hasDependency(namespaces: string[], keys: string[]): boolean;
+}
+interface Source {
+    readonly type: string;
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    tileSize: number;
+    attribution?: string;
+    roundZoom?: boolean;
+    isTileClipped?: boolean;
+    tileID?: CanonicalTileID;
+    reparseOverscaled?: boolean;
+    vectorLayerIds?: string[];
+    hasTransition(): boolean;
+    loaded(): boolean;
+    fire(event: Event$1): unknown;
+    onAdd?(map: Map$1): void;
+    onRemove?(map: Map$1): void;
+    loadTile(tile: Tile): Promise<LoadTileResult | void>;
+    hasTile?(tileID: OverscaledTileID): boolean;
+    abortTile?(tile: Tile): Promise<void>;
+    unloadTile?(tile: Tile): Promise<void>;
+    serialize(): any;
+    prepare?(): void;
+    calculateTileZoom?: CalculateTileZoomFunction;
+    shouldReloadTile?(tile: Tile, options: GeoJSONSourceShouldReloadTileOptions): boolean;
+}
+type SourceClass = {
+    new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
+};
+const addSourceType: (name: string, SourceType: SourceClass) => Promise<void>;
+type GeoJSONFeatureId = number | string;
+type GeoJSONSourceDiff = {
+    removeAll?: boolean;
+    remove?: GeoJSONFeatureId[];
+    add?: Feature$1[];
+    update?: GeoJSONFeatureDiff[];
+};
+type GeoJSONFeatureDiff = {
+    id: GeoJSONFeatureId;
+    newGeometry?: Geometry;
+    removeAllProperties?: boolean;
+    removeProperties?: string[];
+    addOrUpdateProperties?: Array<{
+        key: string;
+        value: any;
+    }>;
+};
+type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
+    workerOptions?: GeoJSONWorkerOptions;
+    collectResourceTiming?: boolean;
+    data: GeoJSON$1 | string;
+};
+type GeoJSONSourceInternalOptions = {
+    data?: GeoJSON$1 | string | undefined;
+    cluster?: boolean;
+    clusterMaxZoom?: number;
+    clusterRadius?: number;
+    clusterMinPoints?: number;
+    generateId?: boolean;
+};
+type GeoJSONSourceShouldReloadTileOptions = {
+    affectedBounds: LngLatBounds[];
+};
+type SetClusterOptions = {
+    cluster?: boolean;
+    clusterMaxZoom?: number;
+    clusterRadius?: number;
+};
+type GetClusterOptions = {
+    cluster: boolean;
+    clusterMaxZoom: number;
+    clusterRadius: number;
+};
+type GeoJSONWorkerChange = {
+    diff?: GeoJSONSourceDiff;
+    updateCluster?: true;
+};
+type GeoJSONWorkerUpdate = {
+    data: GeoJSON$1 | string;
+} | GeoJSONWorkerChange;
+class GeoJSONSource extends Evented<SourceEventType> implements Source {
+    type: "geojson";
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    tileSize: number;
+    attribution: string;
+    promoteId: PromoteIdSpecification;
+    isTileClipped: boolean;
+    reparseOverscaled: boolean;
+    _data: ExactlyOne<{
+        url: string;
+        geojson: GeoJSON$1;
+        updateable: globalThis.Map<GeoJSONFeatureId, Feature$1>;
+    }>;
+    _options: GeoJSONSourceInternalOptions;
+    workerOptions: GeoJSONWorkerOptions;
+    map: Map$1;
+    actorPromise: Promise<Actor>;
+    _workerUpdates: UpdateQueue<GeoJSONWorkerUpdate, GeoJSONWorkerSourceLoadDataResult>;
+    _collectResourceTiming: boolean;
+    _removed: boolean;
+    constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented);
+    private get _promoteIdKey();
+    private _pixelsToTileUnits;
+    private _tileUnitsToPixels;
+    private _getClusterMaxZoom;
+    load(): Promise<void>;
+    onAdd(map: Map$1): void;
+    setData(data: GeoJSON$1 | string): Promise<void>;
+    updateData(diff: GeoJSONSourceDiff): Promise<void>;
+    getData(): Promise<GeoJSON$1>;
+    getBounds(): Promise<LngLatBounds>;
+    setClusterOptions(options: SetClusterOptions): Promise<void>;
+    private _getWaitingWorkerChange;
+    getClusterOptions(): GetClusterOptions;
+    getClusterExpansionZoom(clusterId: number): Promise<number>;
+    getClusterChildren(clusterId: number): Promise<Feature$1[]>;
+    getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<Feature$1[]>;
+    private _getLoadGeoJSONParameters;
+    private _getCRSParameters;
+    private _sendWorkerUpdate;
+    private _onWorkerUpdateResult;
+    private _onWorkerUpdateError;
+    private _applyResourceTiming;
+    private _applyDiffToSource;
+    private _getShouldReloadTileOptions;
+    shouldReloadTile(tile: Tile, { affectedBounds }: GeoJSONSourceShouldReloadTileOptions): boolean;
+    loaded(): boolean;
+    loadTile(tile: Tile): Promise<void>;
+    abortTile(tile: Tile): Promise<void>;
+    unloadTile(tile: Tile): Promise<void>;
+    onRemove(): void;
+    serialize(): GeoJSONSourceSpecification;
+    hasTransition(): boolean;
+}
+type MapLayerMouseEvent = MapMouseEvent & {
+    features?: MapGeoJSONFeature[];
+};
+type MapLayerTouchEvent = MapTouchEvent & {
+    features?: MapGeoJSONFeature[];
+};
+type MapSourceDataType = "content" | "metadata" | "visibility" | "idle";
+type MapLayerEventType = {
+    click: MapLayerMouseEvent;
+    dblclick: MapLayerMouseEvent;
+    mousedown: MapLayerMouseEvent;
+    mouseup: MapLayerMouseEvent;
+    mousemove: MapLayerMouseEvent;
+    mouseenter: MapLayerMouseEvent;
+    mouseleave: MapLayerMouseEvent;
+    mouseover: MapLayerMouseEvent;
+    mouseout: MapLayerMouseEvent;
+    contextmenu: MapLayerMouseEvent;
+    touchstart: MapLayerTouchEvent;
+    touchend: MapLayerTouchEvent;
+    touchcancel: MapLayerTouchEvent;
+};
+type MapEventType = {
+    error: ErrorEvent$1;
+    load: MapLibreEvent;
+    idle: MapLibreEvent;
+    remove: MapLibreEvent;
+    render: MapLibreEvent;
+    resize: MapLibreEvent;
+    webglcontextlost: MapContextEvent;
+    webglcontextrestored: MapContextEvent;
+    dataloading: MapSourceDataEvent | MapStyleDataEvent;
+    data: MapSourceDataEvent | MapStyleDataEvent;
+    sourcedataloading: MapSourceDataEvent;
+    styledataloading: MapStyleDataEvent;
+    sourcedata: MapSourceDataEvent;
+    styledata: MapStyleDataEvent;
+    "style.load": MapStyleLoadEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
+    dataabort: MapSourceDataEvent;
+    sourcedataabort: MapSourceDataEvent;
+    boxzoomcancel: MapBoxZoomEvent;
+    boxzoomstart: MapBoxZoomEvent;
+    boxzoomend: MapBoxZoomEvent;
+    touchcancel: MapTouchEvent;
+    touchmove: MapTouchEvent;
+    touchend: MapTouchEvent;
+    touchstart: MapTouchEvent;
+    click: MapMouseEvent;
+    contextmenu: MapMouseEvent;
+    dblclick: MapMouseEvent;
+    mousemove: MapMouseEvent;
+    mouseup: MapMouseEvent;
+    mousedown: MapMouseEvent;
+    mouseout: MapMouseEvent;
+    mouseover: MapMouseEvent;
+    movestart: MapMovementEvent;
+    move: MapMovementEvent;
+    moveend: MapMovementEvent;
+    zoomstart: MapMovementEvent;
+    zoom: MapMovementEvent;
+    zoomend: MapMovementEvent;
+    rotatestart: MapMovementEvent;
+    rotate: MapMovementEvent;
+    rotateend: MapMovementEvent;
+    dragstart: MapMovementEvent;
+    drag: MapMovementEvent;
+    dragend: MapMovementEvent;
+    pitchstart: MapMovementEvent;
+    pitch: MapMovementEvent;
+    pitchend: MapMovementEvent;
+    rollstart: MapMovementEvent;
+    roll: MapMovementEvent;
+    rollend: MapMovementEvent;
+    wheel: MapWheelEvent;
+    terrain: MapTerrainEvent;
+    cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
+        gestureType: "wheel_zoom" | "touch_pan";
+    };
+    projectiontransition: MapProjectionEvent;
+};
+type SourceEventType = {
+    data: MapSourceDataEvent;
+    dataloading: MapSourceDataEvent;
+    dataabort: MapSourceDataEvent;
+    error: ErrorEvent$1;
+};
+class MapLibreEvent<TOrig = unknown> extends Event$1 {
+    type: keyof MapEventType | keyof MapLayerEventType;
+    target: Map$1;
+    originalEvent: TOrig;
+}
+class MapMovementEvent extends MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined> {
+    type: "movestart" | "move" | "moveend" | "zoomstart" | "zoom" | "zoomend" | "rotatestart" | "rotate" | "rotateend" | "dragstart" | "drag" | "dragend" | "pitchstart" | "pitch" | "pitchend" | "rollstart" | "roll" | "rollend";
+}
+class MapStyleLoadEvent extends MapLibreEvent {
+    type: "style.load";
+    constructor(data?: any);
+}
+class MapStyleDataEvent extends MapLibreEvent {
+    type: "data" | "dataloading" | "styledata" | "styledataloading";
+    dataType: "style";
+    constructor(type: MapStyleDataEvent["type"], data?: Omit<Partial<MapStyleDataEvent>, "type" | "dataType" | "target">);
+}
+class MapSourceDataEvent extends MapLibreEvent {
+    type: "data" | "dataloading" | "dataabort" | "sourcedata" | "sourcedataloading" | "sourcedataabort";
+    dataType: "source";
+    isSourceLoaded: boolean;
+    source: SourceSpecification;
+    sourceId: string;
+    sourceDataType: MapSourceDataType;
+    sourceDataChanged?: boolean;
+    tile: any;
+    coord: OverscaledTileID;
+    resourceTiming?: PerformanceResourceTiming[];
+    shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions;
+    constructor(type: MapSourceDataEvent["type"], data?: Omit<Partial<MapSourceDataEvent>, "type" | "dataType" | "target">);
+}
+class MapMouseEvent extends MapLibreEvent<MouseEvent> {
+    type: "mousedown" | "mouseup" | "click" | "dblclick" | "mousemove" | "mouseover" | "mouseenter" | "mouseleave" | "mouseout" | "contextmenu";
+    target: Map$1;
+    originalEvent: MouseEvent;
+    point: Point;
+    lngLat: LngLat;
+    preventDefault(): void;
+    get defaultPrevented(): boolean;
+    _defaultPrevented: boolean;
+    constructor(type: string, map: Map$1, originalEvent: MouseEvent, data?: any);
+}
+class MapTouchEvent extends MapLibreEvent<TouchEvent> {
+    type: "touchstart" | "touchmove" | "touchend" | "touchcancel";
+    target: Map$1;
+    originalEvent: TouchEvent;
+    lngLat: LngLat;
+    point: Point;
+    points: Point[];
+    lngLats: LngLat[];
+    preventDefault(): void;
+    get defaultPrevented(): boolean;
+    _defaultPrevented: boolean;
+    constructor(type: string, map: Map$1, originalEvent: TouchEvent);
+}
+class MapWheelEvent extends MapLibreEvent<WheelEvent> {
+    type: "wheel";
+    target: Map$1;
+    originalEvent: WheelEvent;
+    preventDefault(): void;
+    get defaultPrevented(): boolean;
+    _defaultPrevented: boolean;
+    constructor(map: Map$1, originalEvent: WheelEvent);
+}
+class MapBoxZoomEvent extends MapLibreEvent<MouseEvent> {
+    type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel";
+    target: Map$1;
+    originalEvent: MouseEvent;
+}
+class MapTerrainEvent extends MapLibreEvent {
+    type: "terrain";
+    constructor(data?: any);
+}
+class MapProjectionEvent extends MapLibreEvent {
+    type: "projectiontransition";
+    newProjection: ProjectionSpecification["type"];
+    constructor(data?: any);
+}
+class MapContextEvent extends MapLibreEvent<WebGLContextEvent> {
+    type: "webglcontextlost" | "webglcontextrestored";
+    originalEvent: WebGLContextEvent;
+}
+class MapStyleImageMissingEvent extends MapLibreEvent {
+    type: "styleimagemissing";
+    id: string;
+    constructor(data?: any);
+}
+const enum ResourceType {
+    Glyphs = "Glyphs",
+    Image = "Image",
+    Source = "Source",
+    SpriteImage = "SpriteImage",
+    SpriteJSON = "SpriteJSON",
+    Style = "Style",
+    Tile = "Tile",
+    Unknown = "Unknown"
+}
+type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | Promise<RequestParameters> | undefined;
+class RequestManager {
+    _transformRequestFn: RequestTransformFunction | null;
+    constructor(transformRequestFn?: RequestTransformFunction | null);
+    transformRequest(url: string, type: ResourceType): RequestParameters | Promise<RequestParameters>;
+    setTransformRequest(transformRequest: RequestTransformFunction | null): void;
+}
+type UnicodeRange = {
+    start: number;
+    end: number;
+};
+type FontFeature = "normal" | "vert";
+type DeclaredFontFace = {
+    url: string;
+    ranges: UnicodeRange[];
+    family: string;
+    loads: Partial<Record<FontFeature, Promise<string | null>>>;
+    data?: Promise<ArrayBuffer>;
+};
+class FontFaceManager {
+    requestManager: RequestManager;
+    _faces: Record<string, DeclaredFontFace[]>;
+    _registered: Set<FontFace>;
+    constructor(requestManager: RequestManager);
+    setFontFaces(fontFaces?: FontFacesSpecification | null): void;
+    hasFontFaces(): boolean;
+    getFontFamily(fontStack: string, codePoint: number, feature: FontFeature): Promise<string | null>;
+    _declareFontFace(fontName: string, declaration: string | MLFontFace): DeclaredFontFace | null;
+    _loadFontFace(face: DeclaredFontFace, feature: FontFeature, data?: Promise<ArrayBuffer>): Promise<string | null>;
+    _downloadFontFile(url: string): Promise<ArrayBuffer>;
+    _unregister(fontFace: FontFace): void;
+    _unregisterAll(): void;
+    destroy(): void;
+}
+type Entry = {
+    glyphs: Record<string, Record<string, StyleGlyph | null>>;
+    requests: Record<number, Promise<Record<number, StyleGlyph | null>>>;
+    tinySDF?: Promise<Rasterizer>;
+    ideographTinySDF?: Promise<Rasterizer>;
+    fontFaceTinySDFs?: Record<string, Promise<Rasterizer>>;
+    clusterTinySDFs?: Record<string, Promise<Rasterizer>>;
+};
+type GlyphResult = {
+    stack: string;
+    id: string;
+    variant: string;
+    glyph: StyleGlyph | null;
+};
+type Rasterizer = TinySDF & {
+    buffer: number;
+};
+type CreateRasterizer = (options: TinySDFOptions, padding: number) => Rasterizer;
+class GlyphManager {
+    requestManager: RequestManager;
+    localIdeographFontFamily: string | false;
+    entries: Record<string, Entry>;
+    url: string;
+    lang?: string;
+    fontFaceManager: FontFaceManager;
+    createRasterizer: CreateRasterizer;
+    rasterizedGlyphs: WeakMap<Rasterizer, Record<string, StyleGlyph>>;
+    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false, lang?: string, createRasterizer?: CreateRasterizer);
+    setURL(url?: string | null): void;
+    setFontFaces(fontFaces?: FontFacesSpecification | null): void;
+    getGlyphs(glyphs: GlyphRequests): Promise<GlyphMap>;
+    _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult>;
+    _drawAlternateGlyph(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<StyleGlyph | null>;
+    _downloadAndCacheRangePromise(stack: string, id: string): Promise<{
+        stack: string;
+        id: string;
+        glyph: StyleGlyph;
+    }>;
+    _loadGlyphRange(fontstack: string, range: number): Promise<Record<number, StyleGlyph | null>>;
+    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error): void;
+    _charUsesLocalIdeographFontFamily(id: number): boolean;
+    _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph>;
+    _getRasterizedGlyph(tinySDF: Rasterizer, id: string): StyleGlyph;
+    _createGlyph(id: string, char: ReturnType<TinySDF["draw"]>): StyleGlyph;
+    _getFontFaceTinySDF(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<Rasterizer | null>;
+    _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer>;
+    _createTinySDF(stack: String | false, sniffFontStyles?: boolean, emsWide?: number): Promise<Rasterizer>;
+    _fontStyle(fontFamily: string): string;
+    _fontWeight(fontFamily: string): string;
+    destroy(): void;
+}
+class Light extends Evented {
+    _transitionable: Transitionable<LightProps>;
+    _transitioning: Transitioning<LightProps>;
+    properties: PossiblyEvaluated<LightProps, LightPropsPossiblyEvaluated>;
+    constructor(lightOptions: LightSpecification, globalState: Record<string, any>);
+    getLight(): LightSpecification;
+    getEvaluated(): LightPropsPossiblyEvaluated;
+    setLight(light: LightSpecification, options?: StyleSetterOptions): void;
+    updateTransitions(parameters: TransitionParameters): void;
+    hasTransition(): boolean;
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, parameters: TransitionParameters): void;
+    recalculate(parameters: EvaluationParameters): void;
+    _validate(validate: Validator, value: unknown, options?: StyleSetterOptions): boolean;
+}
+class Sky extends Evented {
+    properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
+    _transitionable: Transitionable<SkyProps>;
+    _transitioning: Transitioning<SkyProps>;
+    constructor(sky: SkySpecification | undefined, globalState: Record<string, any>);
+    setSky(sky?: SkySpecification, options?: StyleSetterOptions): boolean;
+    getSky(): SkySpecification;
+    updateTransitions(parameters: TransitionParameters): void;
+    hasTransition(): boolean;
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, parameters: TransitionParameters): void;
+    recalculate(parameters: EvaluationParameters): void;
+    _validate(validate: Validator, value: unknown, options?: StyleSetterOptions): boolean;
+    getEvaluated(): SkyPropsPossiblyEvaluated;
+}
+class LayerPlacement {
+    _sortAcrossTiles: boolean;
+    _currentTileIndex: number;
+    _currentPartIndex: number;
+    _seenCrossTileIDs: {
+        [k in string | number]: boolean;
+    };
+    _bucketParts: BucketPart[];
+    constructor(styleLayer: SymbolStyleLayer);
+    continuePlacement(tiles: Tile[], placement: Placement$1, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean): boolean;
+}
+class PauseablePlacement {
+    placement: Placement$1;
+    _done: boolean;
+    _currentPlacementIndex: number;
+    _forceFullPlacement: boolean;
+    _showCollisionBoxes: boolean;
+    _inProgressLayer: LayerPlacement;
+    constructor(transform: IReadonlyTransform, terrain: Terrain, order: string[], forceFullPlacement: boolean, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement$1);
+    isDone(): boolean;
+    continuePlacement(order: string[], layers: {
+        [_: string]: StyleLayer;
+    }, layerTiles: {
+        [_: string]: Tile[];
+    }): void;
+    commit(now: number): Placement$1;
+}
+type SymbolsByKeyEntry = {
+    index?: KDBush;
+    positions?: Array<{
+        x: number;
+        y: number;
+    }>;
+    crossTileIDs: number[];
+};
+class TileLayerIndex {
+    tileID: OverscaledTileID;
+    bucketInstanceId: number;
+    _symbolsByKey: Record<number, SymbolsByKeyEntry>;
+    constructor(tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, bucketInstanceId: number);
+    getScaledCoordinates(symbolInstance: SymbolInstance, childTileID: OverscaledTileID): {
+        x: number;
+        y: number;
+    };
+    findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
+        [crossTileID: number]: boolean;
+    }): void;
+    private findMatchesForIndexedEntry;
+    private findMatchesForNonIndexedEntry;
+    getCrossTileIDsLists(): number[][];
+}
+class CrossTileIDs {
+    maxCrossTileID: number;
+    constructor();
+    generate(): number;
+}
+class CrossTileSymbolLayerIndex {
+    indexes: {
+        [zoom in string | number]: {
+            [tileId in string | number]: TileLayerIndex;
+        };
+    };
+    usedCrossTileIDs: {
+        [zoom in string | number]: {
+            [crossTileID: number]: boolean;
+        };
+    };
+    lng: number;
+    constructor();
+    handleWrapJump(lng: number): void;
+    addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs): boolean;
+    removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex): void;
+    removeStaleBuckets(currentIDs: {
+        [k in string | number]: boolean;
+    }): boolean;
+}
+class CrossTileSymbolIndex {
+    layerIndexes: {
+        [layerId: string]: CrossTileSymbolLayerIndex;
+    };
+    crossTileIDs: CrossTileIDs;
+    maxBucketInstanceId: number;
+    bucketsInCurrentPlacement: {
+        [_: number]: boolean;
+    };
+    constructor();
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): boolean;
+    pruneUnusedLayers(usedLayers: string[]): void;
+}
+type FeatureIdentifier = {
+    id?: string | number | undefined;
+    source: string;
+    sourceLayer?: string | undefined;
+};
+type StyleOptions = {
+    validate?: boolean;
+    localIdeographFontFamily?: string | false;
+    globalState?: Record<string, any>;
+};
+type StyleSetterOptions = {
+    validate?: boolean;
+    globalState?: Record<string, any>;
+};
+type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
+type StyleSwapOptions = {
+    diff?: boolean;
+    transformStyle?: TransformStyleFunction;
+};
+type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, "source"> & {
+    source: SourceSpecification;
+}) | CustomLayerInterface;
+class Style extends Evented<MapEventType> {
+    map: Map$1;
+    stylesheet: StyleSpecification;
+    dispatcher: Dispatcher;
+    imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
+    glyphManager: GlyphManager;
+    lineAtlas: LineAtlas;
+    light: Light;
+    projection: Projection | undefined;
+    sky: Sky;
+    _frameRequest: AbortController;
+    _loadStyleRequest: AbortController;
+    _spriteRequest: AbortController;
+    _layers: {
+        [_: string]: StyleLayer;
+    };
+    _serializedLayers: {
+        [_: string]: LayerSpecification;
+    };
+    _order: string[];
+    tileManagers: {
+        [_: string]: TileManager;
+    };
+    zoomHistory: ZoomHistory;
+    _loaded: boolean;
+    _changed: boolean;
+    _updatedSources: {
+        [_: string]: "clear" | "reload";
+    };
+    _updatedLayers: {
+        [_: string]: true;
+    };
+    _removedLayers: {
+        [_: string]: StyleLayer;
+    };
+    _changedImages: {
+        [_: string]: true;
+    };
+    _imagesListDirty: boolean;
+    _glyphsDidChange: boolean;
+    _updatedPaintProps: {
+        [layer: string]: true;
+    };
+    _layerOrderChanged: boolean;
+    _symbolPlacementTriggered: boolean;
+    _placedProjectionTransition: number;
+    _initialGlobalState: Record<string, any>;
+    _globalState: Record<string, any>;
+    crossTileSymbolIndex: CrossTileSymbolIndex;
+    pauseablePlacement: PauseablePlacement;
+    placement: Placement$1;
+    z: number;
+    constructor(map: Map$1, options?: StyleOptions);
+    private _setInitialValues;
+    _rtlPluginLoaded: () => void;
+    setGlobalStateProperty(name: string, value: any): this;
+    getGlobalState(): Record<string, any>;
+    setGlobalState(newStylesheetState: StateSpecification): void;
+    _setGlobalStateValues(values: Record<string, any>): void;
+    _applyGlobalStateChanges(globalStateRefs: string[], priorGlobalState: Record<string, any>): void;
+    loadURL(url: string, options?: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): Promise<void>;
+    loadJSON(json: StyleSpecification, options?: StyleSetterOptions & StyleSwapOptions, previousStyle?: StyleSpecification): void;
+    loadEmpty(): void;
+    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void;
+    private _createLayers;
+    _loadSprite(sprite: SpriteSpecification, isUpdate?: boolean, completion?: (err: Error) => void): Promise<void>;
+    _unloadSprite(): void;
+    _validateLayer(layer: StyleLayer): void;
+    loaded(): boolean;
+    private _serializeByIds;
+    private _serializedAllLayers;
+    hasTransitions(): boolean;
+    _checkLoaded(): void;
+    update(parameters: EvaluationParameters): void;
+    _updateTilesForChangedImages(): void;
+    _updateTilesForChangedGlyphs(): void;
+    _updateWorkerLayers(updatedIds: string[], removedIds: string[]): void;
+    resize(): void;
+    _resetUpdates(): void;
+    setState(nextState: StyleSpecification, options?: StyleSwapOptions & StyleSetterOptions): boolean;
+    _getOperationsToPerform(diff: DiffCommand[]): {
+        operations: Array<() => void>;
+        unimplemented: string[];
+    };
+    addImage(id: string, image: StyleImage): void;
+    updateImage(id: string, image: StyleImage): void;
+    getImage(id: string): StyleImage;
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void;
+    removeImage(id: string): void;
+    _markImagesChanged(ids: string[]): void;
+    _afterImageUpdated(id: string): void;
+    listImages(): string[];
+    addSource(id: string, source: SourceSpecification | CanvasSourceSpecification, options?: StyleSetterOptions): void;
+    removeSource(id: string): this;
+    setGeoJSONSourceData(id: string, data: GeoJSON$1 | string): void;
+    getSource(id: string): Source | undefined;
+    addLayer(layerObject: AddLayerObject, before?: string, options?: StyleSetterOptions): this;
+    moveLayer(id: string, before?: string): void;
+    removeLayer(id: string): void;
+    getLayer(id: string): StyleLayer | undefined;
+    getLayersOrder(): string[];
+    hasLayer(id: string): boolean;
+    setLayerZoomRange(layerId: string, minzoom?: number | null, maxzoom?: number | null): void;
+    setFilter(layerId: string, filter?: FilterSpecification | null, options?: StyleSetterOptions): void;
+    getFilter(layer: string): FilterSpecification | void;
+    setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options?: StyleSetterOptions): void;
+    getLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K): AllLayoutProperties[K] | undefined;
+    setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options?: StyleSetterOptions): void;
+    _updatePaintProperty<K extends keyof AllPaintProperties>(layer: StyleLayer, name: K, value: AllPaintProperties[K], options?: StyleSetterOptions): void;
+    getPaintProperty<K extends keyof AllPaintProperties>(layer: string, name: K): AllPaintProperties[K];
+    setFeatureState(target: FeatureIdentifier, state: any): void;
+    removeFeatureState(target: FeatureIdentifier, key?: string): void;
+    getFeatureState(target: FeatureIdentifier): FeatureState;
+    getTransition(): {
+        duration: number;
+        delay: number;
+    } & TransitionSpecification;
+    serialize(): StyleSpecification | undefined;
+    _updateLayer(layer: StyleLayer): void;
+    _flattenAndSortRenderedFeatures(sourceResults: QueryRenderedFeaturesResults[]): MapGeoJSONFeature[];
+    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[];
+    querySourceFeatures(sourceID: string, params?: QuerySourceFeatureOptions): GeoJSONFeature[];
+    getLight(): LightSpecification;
+    setLight(lightOptions: LightSpecification, options?: StyleSetterOptions): void;
+    getProjection(): ProjectionSpecification;
+    setProjection(projection?: ProjectionSpecification): void;
+    getSky(): SkySpecification;
+    setSky(skyOptions?: SkySpecification, options?: StyleSetterOptions): void;
+    _setProjectionInternal(name: ProjectionSpecification["type"]): void;
+    private _applyProjection;
+    _validate(validate: Validator, key: string, value: any, props: any, options?: StyleSetterOptions): boolean;
+    _remove(mapRemoved?: boolean): void;
+    _clearSource(id: string): void;
+    _reloadSource(id: string): void;
+    _updateSources(transform: IReadonlyTransform): void;
+    _generateCollisionBoxes(): void;
+    triggerSymbolPlacement(): void;
+    _placementInputsChanged(transform: IReadonlyTransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean;
+    _updatePlacement(transform: IReadonlyTransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement?: boolean): boolean;
+    _releaseSymbolFadeTiles(): void;
+    getImages(mapId: string | number, params: GetImagesParameters): Promise<GetImagesResponse>;
+    getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GlyphMap>;
+    getGlyphsUrl(): string | null;
+    setGlyphs(glyphsUrl: string | null | undefined, options?: StyleSetterOptions): void;
+    getFontFaces(): FontFacesSpecification | null;
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void;
+    getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse>;
+    addSprite(id: string, url: string, options?: StyleSetterOptions, completion?: (err: Error) => void): void;
+    removeSprite(id: string): void;
+    getSprite(): Array<{
+        id: string;
+        url: string;
+    }>;
+    setSprite(sprite: SpriteSpecification, options?: StyleSetterOptions, completion?: (err: Error) => void): void;
+    destroy(): void;
+}
+type Validator = (options: any) => readonly ValidationError[];
+type PaintPropertyEntry = {
+    [K in keyof AllPaintProperties]: {
+        name: K;
+        value: AllPaintProperties[K];
+    };
+}[keyof AllPaintProperties];
+type QueryIntersectsFeatureParams = {
+    queryGeometry: Point[];
+    feature: VectorTileFeatureLike;
+    featureState: FeatureState;
+    geometry: Point[][];
+    zoom: number;
+    transform: IReadonlyTransform;
+    pixelsToTileUnits: number;
+    unwrappedTileID: UnwrappedTileID;
+    getElevation: GetElevation | undefined;
+};
+abstract class StyleLayer extends Evented<ErrorEventType> {
+    id: string;
+    metadata: unknown;
+    type: LayerSpecification["type"] | CustomLayerInterface["type"];
+    source: string;
+    sourceLayer: string;
+    minzoom: number;
+    maxzoom: number;
+    filter: FilterSpecification | void;
+    visibility: VisibilitySpecification;
+    private _evaluatedVisibility;
+    _crossfadeParameters: CrossfadeParameters;
+    _unevaluatedLayout: Layout<any>;
+    readonly layout: unknown;
+    _transitionablePaint: Transitionable<any>;
+    _transitioningPaint: Transitioning<any>;
+    readonly paint: unknown;
+    _featureFilter: FeatureFilter;
+    _visibilityExpression: VisibilityExpression;
+    readonly onAdd: ((map: Map$1) => void);
+    readonly onRemove: ((map: Map$1) => void);
+    queryRadius?(bucket: Bucket): number;
+    queryIntersectsFeature?(params: QueryIntersectsFeatureParams): boolean | number;
+    createBucket?(parameters: BucketParameters<any>): Bucket;
+    private _globalState;
+    constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
+        layout?: Properties$1<any>;
+        paint?: Properties$1<any>;
+    }>, globalState: Record<string, any>);
+    setFilter(filter: FilterSpecification | void): void;
+    getCrossfadeParameters(): CrossfadeParameters;
+    getLayoutProperty<K extends keyof AllLayoutProperties>(name: K): AllLayoutProperties[K];
+    getLayoutAffectingGlobalStateRefs(): Set<string>;
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, PaintPropertyEntry[]>;
+    getVisibilityAffectingGlobalStateRefs(): Set<string>;
+    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options?: StyleSetterOptions): void;
+    getPaintProperty<K extends keyof AllPaintProperties>(name: K): AllPaintProperties[K];
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options?: StyleSetterOptions): boolean;
+    _handleSpecialPaintPropertyUpdate(_: string): void;
+    _handleOverridablePaintPropertyUpdate<T, R>(name: string, oldValue: PropertyValue$1<T, R>, newValue: PropertyValue$1<T, R>): boolean;
+    isHidden(zoom?: number, roundMinZoom?: boolean): boolean;
+    updateTransitions(parameters: TransitionParameters): void;
+    retainPriorGlobalState(refs: string[], priorGlobalState: Record<string, any>): void;
+    hasTransition(): boolean;
+    recalculateVisibility(): void;
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void;
+    serialize(): LayerSpecification;
+    _validate(validate: Validator, key: string, name: string, value: unknown, options?: StyleSetterOptions): boolean;
+    is3D(): boolean;
+    isTileClipped(): boolean;
+    hasOffscreenPass(): boolean;
+    resize(): void;
+    isStateDependent(): boolean;
+}
+type CircleLayoutProps = {
+    "circle-sort-key": DataDrivenProperty<number>;
+};
+type CircleLayoutPropsPossiblyEvaluated = {
+    "circle-sort-key": PossiblyEvaluatedPropertyValue<number>;
+};
+type CirclePaintProps = {
+    "circle-radius": DataDrivenProperty<number>;
+    "circle-color": DataDrivenProperty<Color>;
+    "circle-blur": DataDrivenProperty<number>;
+    "circle-opacity": DataDrivenProperty<number>;
+    "circle-translate": DataConstantProperty<[
+        number,
+        number
+    ]>;
+    "circle-translate-anchor": DataConstantProperty<"map" | "viewport">;
+    "circle-pitch-scale": DataConstantProperty<"map" | "viewport">;
+    "circle-pitch-alignment": DataConstantProperty<"map" | "viewport">;
+    "circle-stroke-width": DataDrivenProperty<number>;
+    "circle-stroke-color": DataDrivenProperty<Color>;
+    "circle-stroke-opacity": DataDrivenProperty<number>;
+};
+type CirclePaintPropsPossiblyEvaluated = {
+    "circle-radius": PossiblyEvaluatedPropertyValue<number>;
+    "circle-color": PossiblyEvaluatedPropertyValue<Color>;
+    "circle-blur": PossiblyEvaluatedPropertyValue<number>;
+    "circle-opacity": PossiblyEvaluatedPropertyValue<number>;
+    "circle-translate": [
+        number,
+        number
+    ];
+    "circle-translate-anchor": "map" | "viewport";
+    "circle-pitch-scale": "map" | "viewport";
+    "circle-pitch-alignment": "map" | "viewport";
+    "circle-stroke-width": PossiblyEvaluatedPropertyValue<number>;
+    "circle-stroke-color": PossiblyEvaluatedPropertyValue<Color>;
+    "circle-stroke-opacity": PossiblyEvaluatedPropertyValue<number>;
+};
+class CircleStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<CircleLayoutProps>;
+    layout: PossiblyEvaluated<CircleLayoutProps, CircleLayoutPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<CirclePaintProps>;
+    _transitioningPaint: Transitioning<CirclePaintProps>;
+    paint: PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+    constructor(layer: LayerSpecification, globalState: Record<string, any>);
+    createBucket(parameters: BucketParameters<any>): CircleBucket<any>;
+    queryRadius(bucket: Bucket): number;
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID, getElevation }: QueryIntersectsFeatureParams): boolean;
+}
+type TypedStyleLayer = CircleStyleLayer | FillStyleLayer | FillExtrusionStyleLayer | HeatmapStyleLayer | HillshadeStyleLayer | ColorReliefStyleLayer | LineStyleLayer | SymbolStyleLayer;
+type BinderUniform = {
+    name: string;
+    property: string;
+    binding: Uniform<any>;
+};
+type PaintOptions = {
+    imagePositions: {
+        [_: string]: ImagePosition;
+    };
+    dashPositions?: {
+        [_: string]: DashEntry;
+    };
+    canonical?: CanonicalTileID;
+    formattedSection?: FormattedSection;
+    globalState?: Record<string, any>;
+};
+interface AttributeBinder {
+    populatePaintArray(length: number, feature: Feature, options: PaintOptions): void;
+    updatePaintArray(start: number, length: number, feature: Feature, featureState: FeatureState, options: PaintOptions): void;
+    upload(a: Context$1): void;
+    destroy(): void;
+}
+interface UniformBinder {
+    uniformNames: string[];
+    setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<any>, uniformName: string): void;
+    getBinding(context: Context$1, location: WebGLUniformLocation, name: string): Partial<Uniform<any>>;
+}
+class ProgramConfiguration {
+    binders: {
+        [_: string]: AttributeBinder | UniformBinder;
+    };
+    cacheKey: string;
+    _buffers: VertexBuffer[];
+    constructor(layer: TypedStyleLayer, zoom: number, filterProperties: (_: string) => boolean);
+    getMaxValue(property: string): number;
+    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions): void;
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition): void;
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry): void;
+    updatePaintArrays(featureStates: FeatureStates, featureMap: FeaturePositionMap, vtLayer: VectorTileLayerLike, layer: TypedStyleLayer, options: PaintOptions): boolean;
+    defines(): string[];
+    getBinderAttributes(): string[];
+    getBinderUniforms(): string[];
+    getPaintVertexBuffers(): VertexBuffer[];
+    getUniforms(context: Context$1, locations: UniformLocations): BinderUniform[];
+    setUniforms(context: Context$1, binderUniforms: BinderUniform[], properties: any, globals: GlobalProperties): void;
+    updatePaintBuffers(crossfade?: CrossfadeParameters): void;
+    upload(context: Context$1): void;
+    destroy(): void;
+}
+class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
+    programConfigurations: {
+        [_: string]: ProgramConfiguration;
+    };
+    needsUpload: boolean;
+    _featureMap: FeaturePositionMap;
+    _bufferOffset: number;
+    constructor(layers: readonly Layer[], zoom: number, filterProperties?: (_: string) => boolean);
+    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions): void;
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions): void;
+    get(layerId: string): ProgramConfiguration;
+    upload(context: Context$1): void;
+    destroy(): void;
+}
+class CullFaceMode {
+    enable: boolean;
+    mode: CullFaceModeType;
+    frontFace: FrontFaceType;
+    constructor(enable: boolean, mode: CullFaceModeType, frontFace: FrontFaceType);
+    static disabled: Readonly<CullFaceMode>;
+    static backCCW: Readonly<CullFaceMode>;
+    static frontCCW: Readonly<CullFaceMode>;
+}
+type DrawMode = WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["TRIANGLES"] | WebGL2RenderingContext["LINE_STRIP"];
+type ProgramAttribute = {
+    location: number;
+    isInteger: boolean;
+};
+class Program<Us extends UniformBindings> {
+    program: WebGLProgram;
+    attributes: {
+        [_: string]: ProgramAttribute;
+    };
+    numAttributes: number;
+    fixedUniforms: Us;
+    terrainUniforms: TerrainPreludeUniformsType;
+    binderUniforms: BinderUniform[];
+    failedToCreate: boolean;
+    constructor(context: Context$1, source: PreparedShader, configuration: ProgramConfiguration, fixedUniforms: (b: Context$1, a: UniformLocations) => Us, showOverdrawInspector: boolean, useTerrain: boolean, projectionPrelude: PreparedShader, projectionDefine: string, extraDefines?: string[]);
+    draw(context: Context$1, drawMode: DrawMode, depthMode: Readonly<DepthMode>, stencilMode: Readonly<StencilMode>, colorMode: Readonly<ColorMode>, cullFaceMode: Readonly<CullFaceMode>, uniformValues: UniformValues<Us>, terrain: TerrainData, projectionData: ProjectionData, layerID: string, layoutVertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector, currentProperties?: any, zoom?: number | null, configuration?: ProgramConfiguration | null, dynamicLayoutBuffer?: VertexBuffer | null, dynamicLayoutBuffer2?: VertexBuffer | null, dynamicLayoutBuffer3?: VertexBuffer | null): void;
+}
+class VertexBuffer {
+    length: number;
+    attributes: readonly StructArrayMember[];
+    itemSize: number;
+    dynamicDraw: boolean;
+    context: Context$1;
+    buffer: WebGLBuffer;
+    constructor(context: Context$1, array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean);
+    bind(): void;
+    updateData(array: StructArray): void;
+    enableAttributes(gl: WebGL2RenderingContext, program: Program<any>): void;
+    setVertexAttribPointers(gl: WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null): void;
+    destroy(): void;
+}
+type Std140Layout = {
+    offsets: Record<string, number>;
+    contentWords: number;
+    sizeWords: number;
+};
+class UniformBuffer {
+    context: Context$1;
+    buffer: WebGLBuffer;
+    binding: number;
+    contentWords: number;
+    uploaded: Float32Array;
+    pending: Float32Array;
+    uploadedWords: Uint32Array;
+    pendingWords: Uint32Array;
+    hasData: boolean;
+    constructor(context: Context$1, binding: number, layout: Std140Layout);
+    upload(): void;
+    bind(): void;
+    destroy(): void;
+}
+type ClearArgs = {
+    color?: Color;
+    depth?: number;
+    stencil?: number;
+};
+class Context$1 {
+    gl: WebGL2RenderingContext;
+    currentNumAttributes: number;
+    maxTextureSize: number;
+    clearColor: ClearColor;
+    clearDepth: ClearDepth;
+    clearStencil: ClearStencil;
+    colorMask: ColorMask;
+    depthMask: DepthMask;
+    stencilMask: StencilMask;
+    stencilFunc: StencilFunc;
+    stencilOp: StencilOp;
+    stencilTest: StencilTest;
+    depthRange: DepthRange;
+    depthTest: DepthTest;
+    depthFunc: DepthFunc;
+    blend: Blend;
+    blendFunc: BlendFunc;
+    blendColor: BlendColor;
+    blendEquation: BlendEquation;
+    cullFace: CullFace;
+    cullFaceSide: CullFaceSide;
+    frontFace: FrontFace;
+    program: ProgramValue;
+    activeTexture: ActiveTextureUnit;
+    viewport: Viewport;
+    bindFramebuffer: BindFramebuffer;
+    bindRenderbuffer: BindRenderbuffer;
+    bindTexture: BindTexture;
+    bindVertexBuffer: BindVertexBuffer;
+    bindElementBuffer: BindElementBuffer;
+    bindVertexArray: BindVertexArray;
+    pixelStoreUnpack: PixelStoreUnpack;
+    pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
+    pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    boundUniformBuffers: WebGLBuffer[];
+    projectionUniformBuffer: UniformBuffer;
+    keyedProjectionUniformBuffers: Map<string, UniformBuffer>;
+    freeProjectionUniformBuffers: UniformBuffer[];
+    terrainUniformBuffer: UniformBuffer;
+    frameUniformBuffer: UniformBuffer;
+    extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
+    extTextureFilterAnisotropicMax?: GLfloat;
+    constructor(gl: WebGL2RenderingContext);
+    destroy(): void;
+    setDefault(): void;
+    setDirty(): void;
+    setCustomLayerDefaults(): void;
+    createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer;
+    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean): VertexBuffer;
+    createRenderbuffer(storageFormat: number, width: number, height: number): WebGLRenderbuffer;
+    createFramebuffer(width: number, height: number, hasDepth: boolean, hasStencil: boolean): Framebuffer;
+    clear({ color, depth, stencil }: ClearArgs): void;
+    setCullFace(cullFaceMode: Readonly<CullFaceMode>): void;
+    setDepthMode(depthMode: Readonly<DepthMode>): void;
+    setStencilMode(stencilMode: Readonly<StencilMode>): void;
+    setColorMode(colorMode: Readonly<ColorMode>): void;
+    createVertexArray(): WebGLVertexArrayObject | undefined;
+    deleteVertexArray(x: WebGLVertexArrayObject | undefined): void;
+    unbindVAO(): void;
+}
+type TextureFormat = WebGLRenderingContextBase["RGBA"] | WebGLRenderingContextBase["ALPHA"];
+type TextureFilter = WebGLRenderingContextBase["LINEAR"] | WebGLRenderingContextBase["LINEAR_MIPMAP_NEAREST"] | WebGLRenderingContextBase["LINEAR_MIPMAP_LINEAR"] | WebGLRenderingContextBase["NEAREST"];
+type TextureWrap = WebGLRenderingContextBase["REPEAT"] | WebGLRenderingContextBase["CLAMP_TO_EDGE"] | WebGLRenderingContextBase["MIRRORED_REPEAT"];
+type EmptyImage = {
+    width: number;
+    height: number;
+    data: null;
+};
+type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
+type TextureImage = TexImageSource | DataTextureImage;
+class Texture {
+    context: Context$1;
+    size: [
+        number,
+        number
+    ];
+    texture: WebGLTexture;
+    format: TextureFormat;
+    magFilter: TextureFilter;
+    minFilter: TextureFilter;
+    wrap: TextureWrap;
+    useMipmap: boolean;
+    private _ownedHandle;
+    constructor(context: Context$1, image: TextureImage, format: TextureFormat, options?: {
+        premultiply?: boolean;
+        useMipmap?: boolean;
+    } | null);
+    update(image: TextureImage, options?: {
+        premultiply?: boolean;
+        useMipmap?: boolean;
+    } | null, position?: {
+        x: number;
+        y: number;
+    }): void;
+    private _uploadDomImage;
+    private _uploadRawData;
+    private _updateDomImage;
+    private _updateRawData;
+    bind(magFilter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null): void;
+    generateMipmap(): void;
+    destroy(): void;
+}
+class TerrainTileManager extends Evented {
+    tileManager: TileManager;
+    _tiles: {
+        [_: string]: Tile;
+    };
+    _renderableTilesKeys: string[];
+    _sourceTileCache: {
+        [_: string]: {
+            zoom: number;
+            key: string;
+        };
+    };
+    minzoom: number;
+    maxzoom: number;
+    tileSize: number;
+    deltaZoom: number;
+    _lastTilesetChange: number;
+    constructor(tileManager: TileManager);
+    destruct(): void;
+    getSource(): Source;
+    update(transform: IReadonlyTransform, terrain: Terrain): boolean;
+    releaseRTT(tileID: OverscaledTileID): void;
+    releaseAllRTT(): void;
+    getRenderableTiles(): Tile[];
+    getTileByID(id: string): Tile;
+    getTerrainCoords(tileID: OverscaledTileID, terrainTileRanges?: {
+        [zoom: string]: CanonicalTileRange;
+    }): Record<string, OverscaledTileID>;
+    _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID>;
+    _getTerrainCoordsForTileRanges(tileID: OverscaledTileID, terrainTileRanges: {
+        [zoom: string]: CanonicalTileRange;
+    }): Record<string, OverscaledTileID>;
+    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined;
+    isStillWaitingForDEM(tileID: OverscaledTileID): boolean;
+    private _getSourceZoom;
+    findTileInCaches(key: string): Tile | undefined;
+    anyTilesAfterTime(time?: number): boolean;
+    private _isWithinTileRanges;
+}
+type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
+type TerrainCoverageIndex = {
+    zooms: number[];
+    samplerPerTile: Map<string, TerrainElevationSampler | null>;
+    minElevation: number;
+    maxElevation: number;
+};
+class TerrainCoverage {
+    private readonly tileManager;
+    private readonly exaggeration;
+    private readonly getWorldCoordinateHelper;
+    private _samplerCache;
+    private _index;
+    private _ownDemIndex;
+    constructor(tileManager: TerrainTileManager, exaggeration: number, getWorldCoordinateHelper?: () => WorldCoordinateHelper);
+    reset(): void;
+    getIndex(ownDemOnly?: boolean): TerrainCoverageIndex | null;
+    sample(lnglat: LngLat, ownDemOnly?: boolean): number | undefined;
+    getSampler(tileID: OverscaledTileID): TerrainElevationSampler | null;
+    private _createElevationSampler;
+    private _build;
+}
+type TerrainHeightMapTarget = {
+    texture: WebGLTexture;
+    width: number;
+    height: number;
+    bounds: [
+        number,
+        number,
+        number,
+        number
+    ];
+};
+type TerrainData = {
+    "u_depth": number;
+    "u_terrain": number;
+    "u_terrain_dim": number;
+    "u_terrain_matrix": mat4;
+    "u_terrain_unpack": number[];
+    "u_terrain_exaggeration": number;
+    texture: WebGLTexture;
+    depthTexture: WebGLTexture;
+    tile: Tile;
+};
+type DEMState = "loaded" | "loading" | "none";
+class Terrain {
+    painter: Painter;
+    tileManager: TerrainTileManager;
+    options: TerrainSpecification;
+    meshSize: number;
+    exaggeration: number;
+    qualityFactor: number;
+    _fbo: Framebuffer;
+    _heightMapFbo: Framebuffer;
+    _fboDepthTexture: Texture;
+    _emptyDepthTexture: Texture;
+    _meshCache: {
+        [key: string]: Mesh;
+    };
+    _emptyDemUnpack: number[];
+    _emptyDemTexture: Texture;
+    _emptyDemMatrix: mat4;
+    _demMatrixCache: Map<string, mat4>;
+    coverage: TerrainCoverage;
+    _terrainSkirtLength: "none" | "auto";
+    private readonly _getWorldCoordinateHelper;
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength?: "none" | "auto", getWorldCoordinateHelper?: () => WorldCoordinateHelper);
+    destroy(): void;
+    getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent?: number): number;
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number;
+    getElevationForLngLat(lnglat: LngLat, tileZoom: number): number;
+    getDrawnElevationForLngLat(lnglat: LngLat, ownDemOnly?: boolean): number | undefined;
+    getElevationAndDEMStateForLngLat(lnglat: LngLat, tileZoom: number): {
+        elevation: number;
+        demState: DEMState;
+    };
+    private _getFallbackZoom;
+    getElevation(tileID: OverscaledTileID, x: number, y: number, extent?: number): number;
+    resetElevationCache(): void;
+    getCoverageIndex(): TerrainCoverageIndex | null;
+    _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4;
+    getTerrainData(tileID: OverscaledTileID): TerrainData;
+    getFramebuffer(): Framebuffer;
+    getHeightMapFramebuffer(texture: WebGLTexture): Framebuffer;
+    getTerrainMesh(tileId: OverscaledTileID, globeEnabled: boolean): Mesh;
+    getSkirtLength(zoom: number): number;
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number;
+    getMinMaxElevation(tileID: OverscaledTileID): {
+        minElevation: number | null;
+        maxElevation: number | null;
+    };
+    private get _worldCoordinateHelper();
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): {
+        tileID: OverscaledTileID;
+        worldX: number;
+        worldY: number;
+    };
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean): void;
+}
+interface CoveringTilesDetailsProvider {
+    getCenter: (transform: IReadonlyTransform) => LngLat;
+    distanceToTile2d: (pointX: number, pointY: number, tileID: {
+        x: number;
+        y: number;
+        z: number;
+    }, boundingVolume: IBoundingVolume) => number;
+    getWrap: (centerCoord: MercatorCoordinate, tileID: {
+        x: number;
+        y: number;
+        z: number;
+    }, parentWrap: number) => number;
+    getTileBoundingVolume: (tileID: {
+        x: number;
+        y: number;
+        z: number;
+    }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) => IBoundingVolume;
+    allowVariableZoom: (transform: IReadonlyTransform, options: CoveringTilesOptionsInternal) => boolean;
+    allowWorldCopies: () => boolean;
+    prepareNextFrame(): void;
+}
+type TileMatrixSet = {
+    origin: [
+        number,
+        number
+    ];
+    extentAtZoom0: number;
+};
+interface WorldCoordinateHelper {
+    name: string;
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate;
+    lngLatFromWorld(x: number, y: number): LngLat;
+    hasLngLat(x: number, y: number): boolean;
+    metersPerWorldUnit(x: number, y: number): number;
+    worldZFromAltitude(altitude: number, lngLat: LngLat): number;
+    wraps: boolean;
+    tileMatrixSet: TileMatrixSet;
+}
+type GetElevation = (x: number, y: number) => number;
+type TransformConstrainFunction = (lngLat: LngLat, zoom: number) => {
+    center: LngLat;
+    zoom: number;
+};
+type NearFarZ = {
+    readonly nearZ: number;
+    readonly farZ: number;
+};
+interface ITransformGetters {
+    get tileSize(): number;
+    get tileZoom(): number;
+    get scale(): number;
+    get worldSize(): number;
+    get width(): number;
+    get height(): number;
+    get lngRange(): [
+        number,
+        number
+    ];
+    get latRange(): [
+        number,
+        number
+    ];
+    get minZoom(): number;
+    get maxZoom(): number;
+    get zoom(): number;
+    get center(): LngLat;
+    get minPitch(): number;
+    get maxPitch(): number;
+    get roll(): number;
+    get rollInRadians(): number;
+    get pitch(): number;
+    get pitchInRadians(): number;
+    get bearing(): number;
+    get bearingInRadians(): number;
+    get fov(): number;
+    get fovInRadians(): number;
+    get elevation(): number;
+    get minElevationForCurrentTile(): number;
+    get padding(): PaddingOptions;
+    get unmodified(): boolean;
+    get renderWorldCopies(): boolean;
+    get worldCoordinateHelper(): WorldCoordinateHelper;
+    get cameraToCenterDistance(): number;
+    get nearFarZOverride(): NearFarZ | null;
+    get autoCalculateNearFarZ(): boolean;
+    get constrainOverride(): TransformConstrainFunction;
+}
+interface ITransformMutators extends IProjectionTransformMutators {
+    apply(that: IReadonlyTransform, constrain: boolean): void;
+    setMinZoom(zoom: number): void;
+    setMaxZoom(zoom: number): void;
+    setMinPitch(pitch: number): void;
+    setMaxPitch(pitch: number): void;
+    setRenderWorldCopies(renderWorldCopies: boolean): void;
+    setBearing(bearing: number): void;
+    setPitch(pitch: number): void;
+    setRoll(roll: number): void;
+    setFov(fov: number): void;
+    setZoom(zoom: number): void;
+    setCenter(center: LngLat): void;
+    setElevation(elevation: number): void;
+    setMinElevationForCurrentTile(elevation: number): void;
+    setPadding(padding: PaddingOptions): void;
+    overrideNearFarZ(nearZ: number, farZ: number): void;
+    clearNearFarZOverride(): void;
+    resize(width: number, height: number, constrainTransform: boolean): void;
+    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void;
+    recalculateZoomAndCenter(terrain?: Terrain): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void;
+    setMaxBounds(bounds?: LngLatBounds | null): void;
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void;
+}
+interface IProjectionTransformMutators {
+    setTransitionState(value: number): void;
+}
+type CameraOptionsFromTo = {
+    center: LngLat;
+    elevation: number;
+    zoom: number;
+    pitch: number;
+    bearing: number;
+};
+interface IReadonlyTransform extends ITransformGetters, IReadonlyProjectionTransform {
+    clone(): ITransform;
+    get nearZ(): number;
+    get farZ(): number;
+    get cameraToCenterDistance(): number;
+    get pixelsToClipSpaceMatrix(): mat4;
+    get clipSpaceToPixelsMatrix(): mat4;
+    get pixelsToGLUnits(): [
+        number,
+        number
+    ];
+    get size(): Point;
+    get rotationMatrix(): mat2;
+    get centerPoint(): Point;
+    get pixelsPerMeter(): number;
+    isPaddingEqual(padding: PaddingOptions): boolean;
+    getMaxBounds(): LngLatBounds | null;
+    applyConstrain: TransformConstrainFunction;
+    getCameraPoint(): Point;
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {
+        center: LngLat;
+        elevation: number;
+        zoom: number;
+    };
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
+}
+interface IReadonlyProjectionTransform {
+    get modelViewProjectionMatrix(): mat4;
+    get projectionMatrix(): mat4;
+    get inverseProjectionMatrix(): mat4;
+    get cameraPosition(): vec3;
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[];
+    getCameraFrustum(): Frustum;
+    getClippingPlane(): vec4 | null;
+    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
+    screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
+    getBounds(): LngLatBounds;
+    isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
+    defaultConstrain: TransformConstrainFunction;
+    maxPitchScaleFactor(): number;
+    getCameraAltitude(): number;
+    getCameraLngLat(): LngLat;
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
+    getRayDirectionFromPixel(p: Point): vec3;
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData;
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean;
+    getPixelScale(): number;
+    getCircleRadiusCorrection(): number;
+    getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number;
+    transformLightDirection(dir: vec3): vec3;
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): CustomLayerProjectionData;
+    getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+}
+interface ITransform extends IReadonlyTransform, ITransformMutators {
+}
+class MercatorCoordinate implements IMercatorCoordinate {
+    x: number;
+    y: number;
+    z: number;
+    constructor(x: number, y: number, z?: number);
+    static fromLngLat(lngLatLike: LngLatLike, altitude?: number): MercatorCoordinate;
+    toLngLat(): LngLat;
+    toAltitude(): number;
+    meterInMercatorCoordinateUnits(): number;
+}
+class CanonicalTileID implements ICanonicalTileID {
+    z: number;
+    x: number;
+    y: number;
+    key: string;
+    constructor(z: number, x: number, y: number);
+    equals(id: ICanonicalTileID): boolean;
+    url(urls: string[], pixelRatio: number, scheme?: string | null, tileMatrixSet?: TileMatrixSet): string;
+    isChildOf(parent: ICanonicalTileID): boolean;
+    getTilePoint(coord: IMercatorCoordinate): Point;
+    toString(): string;
+}
+class UnwrappedTileID {
+    wrap: number;
+    canonical: CanonicalTileID;
+    key: string;
+    constructor(wrap: number, canonical: CanonicalTileID);
+}
+class OverscaledTileID {
+    overscaledZ: number;
+    wrap: number;
+    canonical: CanonicalTileID;
+    key: string;
+    terrainRttPosMatrix32f: Mat4f32 | null;
+    constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number);
+    clone(): OverscaledTileID;
+    equals(id: OverscaledTileID): boolean;
+    scaledTo(targetZ: number): OverscaledTileID;
+    isOverscaled(): boolean;
+    calculateScaledKey(targetZ: number, withWrap: boolean): string;
+    isChildOf(parent: OverscaledTileID): boolean;
+    children(sourceMaxZoom: number): OverscaledTileID[];
+    isLessThan(rhs: OverscaledTileID): boolean;
+    wrapped(): OverscaledTileID;
+    unwrapTo(wrap: number): OverscaledTileID;
+    overscaleFactor(): number;
+    toUnwrapped(): UnwrappedTileID;
+    toString(): string;
+    getTilePoint(coord: MercatorCoordinate): Point;
+    normalizeCoordinates(x: number, y: number, extent?: number): {
+        tileID: OverscaledTileID;
+        x: number;
+        y: number;
+    } | null;
+}
+type CRS = {
+    name: string;
+    projection: {
+        forward(position: number[]): number[];
+        inverse(position: number[]): number[] | null;
+    };
+    tileMatrixSet: TileMatrixSet;
+    definition?: string;
+};
+type GeoJSONWorkerOptions = {
+    source?: string;
+    geojsonVtOptions?: GeoJSONVTOptions;
+    clusterProperties?: Record<string, [
+        unknown,
+        unknown
+    ]>;
+    filter?: FilterSpecification;
+    collectResourceTiming?: boolean;
+};
+type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
+    type: "geojson";
+    source: string;
+    request?: RequestParameters;
+    data?: GeoJSON$1;
+    dataDiff?: GeoJSONSourceDiff;
+    updateCluster?: boolean;
+    crs?: Pick<CRS, "name" | "definition" | "tileMatrixSet">;
+};
+type RTLPluginStatus = "unavailable" | "deferred" | "requested" | "loading" | "loaded" | "error";
+type PluginState = {
+    pluginStatus: RTLPluginStatus;
+    pluginURL: string;
+};
+type ClusterIDAndSource = {
+    type: "geojson";
+    clusterId: number;
+    source: string;
+};
+type GetClusterLeavesParams = ClusterIDAndSource & {
+    limit: number;
+    offset: number;
+};
+type GeoJSONWorkerSourceLoadDataResult = {
+    resourceTiming?: {
+        [_: string]: PerformanceResourceTiming[];
+    };
+    abandoned?: boolean;
+    data?: GeoJSON$1;
+};
+type RemoveSourceParams = {
+    source: string;
+    type: string;
+};
+type UpdateLayersParameters = {
+    layers: LayerSpecification[];
+    removedIds: string[];
+};
+type GetImagesParameters = {
+    icons: string[];
+    source: string;
+    tileID: OverscaledTileID;
+    type: string;
+};
+type GetGlyphsParameters = {
+    type: string;
+    stacks: GlyphRequests;
+    source: string;
+    tileID: OverscaledTileID;
+};
+type GetImagesResponse = {
+    [_: string]: StyleImage;
+};
+type GetDashesParameters = {
+    dashes: {
+        [key: string]: {
+            dasharray: number[];
+            round: boolean;
+        };
+    };
+};
+type GetDashesResponse = {
+    [dashId: string]: DashEntry;
+};
+const enum MessageType {
+    loadDEMTile = "LDT",
+    getClusterExpansionZoom = "GCEZ",
+    getClusterChildren = "GCC",
+    getClusterLeaves = "GCL",
+    loadData = "LD",
+    loadTile = "LT",
+    reloadTile = "RT",
+    getGlyphs = "GG",
+    getDashes = "GDA",
+    getImages = "GI",
+    setImages = "SI",
+    updateGlobalState = "UGS",
+    setLayers = "SL",
+    updateLayers = "UL",
+    syncRTLPluginState = "SRPS",
+    setReferrer = "SR",
+    removeSource = "RS",
+    removeMap = "RM",
+    importScript = "IS",
+    removeTile = "RMT",
+    abortTile = "AT",
+    removeDEMTile = "RDT",
+    getResource = "GR",
+    ping = "PI"
+}
+type RequestResponseMessageMap = {
+    [MessageType.loadDEMTile]: [
+        WorkerDEMTileParameters,
+        DEMData
+    ];
+    [MessageType.getClusterExpansionZoom]: [
+        ClusterIDAndSource,
+        number
+    ];
+    [MessageType.getClusterChildren]: [
+        ClusterIDAndSource,
+        Feature$1[]
+    ];
+    [MessageType.getClusterLeaves]: [
+        GetClusterLeavesParams,
+        Feature$1[]
+    ];
+    [MessageType.loadData]: [
+        LoadGeoJSONParameters,
+        GeoJSONWorkerSourceLoadDataResult
+    ];
+    [MessageType.loadTile]: [
+        WorkerTileParameters,
+        WorkerTileResult
+    ];
+    [MessageType.reloadTile]: [
+        WorkerTileParameters,
+        WorkerTileResult
+    ];
+    [MessageType.getGlyphs]: [
+        GetGlyphsParameters,
+        GlyphMap
+    ];
+    [MessageType.getImages]: [
+        GetImagesParameters,
+        GetImagesResponse
+    ];
+    [MessageType.setImages]: [
+        string[],
+        void
+    ];
+    [MessageType.updateGlobalState]: [
+        Record<string, any>,
+        void
+    ];
+    [MessageType.setLayers]: [
+        LayerSpecification[],
+        void
+    ];
+    [MessageType.updateLayers]: [
+        UpdateLayersParameters,
+        void
+    ];
+    [MessageType.syncRTLPluginState]: [
+        PluginState,
+        PluginState
+    ];
+    [MessageType.setReferrer]: [
+        string,
+        void
+    ];
+    [MessageType.removeSource]: [
+        RemoveSourceParams,
+        void
+    ];
+    [MessageType.removeMap]: [
+        undefined,
+        void
+    ];
+    [MessageType.importScript]: [
+        string,
+        void
+    ];
+    [MessageType.removeTile]: [
+        TileParameters,
+        void
+    ];
+    [MessageType.abortTile]: [
+        TileParameters,
+        void
+    ];
+    [MessageType.removeDEMTile]: [
+        TileParameters,
+        void
+    ];
+    [MessageType.getResource]: [
+        RequestParameters,
+        GetResourceResponse<any>
+    ];
+    [MessageType.getDashes]: [
+        GetDashesParameters,
+        GetDashesResponse
+    ];
+    [MessageType.ping]: [
+        undefined,
+        void
+    ];
+};
+type ActorMessage<T extends MessageType> = {
+    type: T;
+    data: RequestResponseMessageMap[T][0];
+    targetMapId?: string | number | null;
+    mustQueue?: boolean;
+    sourceMapId?: string | number | null;
+};
+interface ActorTarget {
+    addEventListener: typeof window.addEventListener;
+    removeEventListener: typeof window.removeEventListener;
+    postMessage: typeof window.postMessage;
+    terminate?: () => void;
+}
+type MessageData = {
+    id: string;
+    type: MessageType | "<cancel>" | "<response>";
+    origin: string;
+    data?: Serialized;
+    targetMapId?: string | number | null;
+    mustQueue?: boolean;
+    error?: Serialized | null;
+    sourceMapId: string | number | null;
+};
+type ResolveReject = {
+    resolve: (value?: RequestResponseMessageMap[MessageType][1]) => void;
+    reject: (reason?: Error) => void;
+};
+interface IActor {
+    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
+}
+type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>;
+class Actor implements IActor {
+    target: ActorTarget;
+    mapId: string | number | null;
+    resolveRejects: {
+        [x: string]: ResolveReject;
+    };
+    name: string;
+    tasks: {
+        [x: string]: MessageData;
+    };
+    taskQueue: string[];
+    abortControllers: {
+        [x: number | string]: AbortController;
+    };
+    invoker: ThrottledInvoker;
+    globalScope: ActorTarget;
+    messageHandlers: {
+        [K in MessageType]?: MessageHandler<K>;
+    };
+    subscription: Subscription;
+    constructor(target: ActorTarget, mapId?: string | number);
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void;
+    unregisterMessageHandler<T extends MessageType>(type: T): void;
+    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
+    receive(message: {
+        data: MessageData;
+    }): void;
+    process(): void;
+    processTask(id: string, task: MessageData): Promise<void>;
+    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]): void;
+    remove(): void;
+}
+class RasterDEMTileWorkerSource {
+    actor: Actor;
+    loaded: {
+        [_: string]: DEMData;
+    };
+    constructor();
+    loadTile(params: WorkerDEMTileParameters): Promise<DEMData | null>;
+    removeTile(params: TileParameters): void;
+}
+class Worker$1 {
+    self: WorkerGlobalScopeInterface & ActorTarget;
+    actor: Actor;
+    layerIndexes: {
+        [_: string]: StyleLayerIndex;
+    };
+    availableImages: {
+        [_: string]: string[];
+    };
+    externalWorkerSourceTypes: {
+        [_: string]: WorkerSourceConstructor;
+    };
+    workerSources: {
+        [_: string]: {
+            [_: string]: {
+                [_: string]: WorkerSource;
+            };
+        };
+    };
+    demWorkerSources: {
+        [_: string]: {
+            [_: string]: RasterDEMTileWorkerSource;
+        };
+    };
+    referrer: string;
+    globalStates: Map<string, Record<string, any>>;
+    importedScripts: Map<string, Promise<void>>;
+    constructor(self: WorkerGlobalScopeInterface & ActorTarget);
+    private _importScript;
+    private _getGlobalState;
+    private _setImages;
+    private _syncRTLPluginState;
+    private _getAvailableImages;
+    private _getLayerIndex;
+    private _getWorkerSource;
+    private _getDEMWorkerSource;
+}
+type ProjectionHandler = (definition: string) => CRS["projection"];
+interface WorkerGlobalScopeInterface {
+    registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
+    registerRTLTextPlugin: (_: any) => void;
+    addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
+    removeProtocol: (customProtocol: string) => void;
+    makeRequest: (request: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
+    setProjectionHandler: (handler: ProjectionHandler | null) => void;
+    worker: Worker$1;
+}
+type Mat4f32 = mat4 & Float32Array;
+type Mat4f64 = mat4 & Float64Array;
+interface Subscription {
+    unsubscribe(): void;
+}
+type Complete<T> = {
+    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
+};
+type RequireAtLeastOne<T> = {
+    [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>;
+}[keyof T];
+type ExactlyOne<T, Keys extends keyof T = keyof T> = {
+    [K in Keys]: Required<Pick<T, K>> & {
+        [P in Exclude<Keys, K>]?: never;
+    };
+}[Keys];
+class Hash {
+    _map: Map$1;
+    _hashName: string;
+    constructor(hashName?: string | null);
+    addTo(map: Map$1): this;
+    remove(): this;
+    getHashString(mapFeedback?: boolean): string;
+    _getHashParams: () => URLSearchParams;
+    _getCurrentHash: () => string[];
+    _onHashChange: () => boolean;
+    _updateHashUnthrottled: () => void;
+    _removeHash: () => void;
+    _updateHash: () => ReturnType<typeof setTimeout>;
+    _isValidHash(hash: string[]): boolean;
+}
+type ElevationHolder = "gesture" | "animation";
+class ElevationHold {
+    readonly holder: ElevationHolder;
+    private _dem;
+    lift: {
+        heldElevation: number;
+        height: number;
+    } | null;
+    keepsTerrainBelowMaxZoomForCenter: boolean;
+    private _terrainChanged;
+    constructor(holder: ElevationHolder, startedWithoutDem: boolean, terrainBelowMaxZoomForCenter: boolean);
+    get tookDem(): boolean;
+    noteTerrainChange(): void;
+    take(tr: ITransform, terrain: Terrain): boolean;
+}
+type MapControlsDeltas = {
+    panDelta: Point;
+    zoomDelta: number;
+    bearingDelta: number;
+    pitchDelta: number;
+    rollDelta: number;
+    around: Point;
+    aroundElevation?: number;
+};
+type CameraForBoxAndBearingHandlerResult = {
+    center: LngLat;
+    zoom: number;
+    bearing: number;
+};
+type EaseToHandlerOptions = {
+    bearing: number;
+    pitch: number;
+    roll: number;
+    padding: PaddingOptions;
+    offsetAsPoint: Point;
+    around?: LngLat;
+    aroundPoint?: Point;
+    center?: LngLatLike;
+    zoom?: number;
+    offset?: PointLike;
+};
+type EaseToHandlerResult = {
+    easeFunc: (k: number) => void;
+    elevationCenter: LngLat;
+    isZooming: boolean;
+};
+type FlyToHandlerOptions = {
+    bearing: number;
+    pitch: number;
+    roll: number;
+    padding: PaddingOptions;
+    offsetAsPoint: Point;
+    center?: LngLatLike;
+    locationAtOffset: LngLat;
+    zoom?: number;
+    minZoom?: number;
+};
+type FlyToHandlerResult = {
+    easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
+    scaleOfZoom: number;
+    scaleOfMinZoom: number;
+    targetCenter: LngLat;
+    pixelPathLength: number;
+};
+interface ICameraHelper {
+    get useGlobeControls(): boolean;
+    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+        easingCenter: LngLat;
+        easingOffset: Point;
+    };
+    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    handleJumpToCenterZoom(tr: ITransform, options: {
+        zoom?: number;
+        center?: LngLatLike;
+    }): void;
+    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
+    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
+}
+type TaskID = number;
+type Task = {
+    callback: (timeStamp: number) => void;
+    id: TaskID;
+    cancelled: boolean;
+};
+class TaskQueue {
+    _queue: Task[];
+    _id: TaskID;
+    _cleared: boolean;
+    _currentlyRunning: Task[] | false;
+    constructor();
+    add(callback: (timeStamp: number) => void): TaskID;
+    remove(id: TaskID): void;
+    run(timeStamp?: number): void;
+    clear(): void;
+}
+type RenderLoop = {
+    requestRenderFrame: (callback: (timeStamp: number) => void) => TaskID;
+    cancelRenderFrame: (id: TaskID) => void;
+};
+type PointLike = Point | [
+    number,
+    number
+];
+type RotationPivot = {
+    point: Point;
+    location: LngLat;
+    elevation?: number;
+    distance: number;
+};
+type CameraOptions = CenterZoomBearing & {
+    pitch?: number;
+    roll?: number;
+    elevation?: number;
+};
+type CenterZoomBearing = {
+    center?: LngLatLike;
+    zoom?: number;
+    bearing?: number;
+};
+type JumpToOptions = CameraOptions & {
+    padding?: PaddingOptions;
+};
+type AnchoredCameraOptions = {
+    anchorLocation: LngLatLike;
+    anchorScreenPoint: PointLike;
+    zoom?: number;
+};
+type CameraForBoundsOptions = CameraOptions & {
+    padding?: number | PaddingOptions;
+    absolutePadding?: boolean;
+    offset?: PointLike;
+    maxZoom?: number;
+};
+type FlyToOptions = AnimationOptions & CameraOptions & {
+    curve?: number;
+    minZoom?: number;
+    speed?: number;
+    screenSpeed?: number;
+    maxDuration?: number;
+    padding?: number | PaddingOptions;
+};
+type EaseToOptions = AnimationOptions & CameraOptions & {
+    delayEndEvents?: number;
+    padding?: number | PaddingOptions;
+    around?: LngLatLike;
+    easeId?: string;
+    noMoveStart?: boolean;
+};
+type FitBoundsOptions = FlyToOptions & {
+    linear?: boolean;
+    absolutePadding?: boolean;
+    offset?: PointLike;
+    maxZoom?: number;
+};
+type AnimationOptions = {
+    duration?: number;
+    easing?: (_: number) => number;
+    offset?: PointLike;
+    animate?: boolean;
+    essential?: boolean;
+    freezeElevation?: boolean;
+};
+type CameraUpdateTransformFunction = (next: {
+    center: LngLat;
+    zoom: number;
+    roll: number;
+    pitch: number;
+    bearing: number;
+    elevation: number;
+}) => {
+    center?: LngLat;
+    zoom?: number;
+    roll?: number;
+    pitch?: number;
+    bearing?: number;
+    elevation?: number;
+};
+type CameraInitOptions = {
+    minZoom: number;
+    maxZoom: number;
+    minPitch: number;
+    maxPitch: number;
+    bearingSnap: number;
+    zoomSnap: number;
+    renderWorldCopies: boolean;
+    centerClampedToGround: boolean;
+    terrain: Terrain;
+    transformConstrain: TransformConstrainFunction;
+    renderLoop: RenderLoop;
+    transformCameraUpdate: CameraUpdateTransformFunction | null;
+};
+class Camera extends Evented<MapEventType> {
+    private _transform;
+    get transform(): IReadonlyTransform;
+    terrain: Terrain;
+    cameraHelper: ICameraHelper;
+    private readonly _scheduler;
+    _bearingSnap: number;
+    _zoomSnap: number;
+    elevationFreeze: boolean;
+    _elevationHold: ElevationHold | null;
+    _requestedCameraState?: ITransform;
+    transformCameraUpdate: CameraUpdateTransformFunction | null;
+    _centerClampedToGround: boolean;
+    constructor(options: CameraInitOptions);
+    setTerrain(terrain: Terrain): void;
+    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void;
+    resize(width: number, height: number, constrainTransform: boolean): void;
+    prepareNextFrame(transition: number): void;
+    getCenter(): LngLat;
+    unproject(point: PointLike): LngLat;
+    setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this;
+    getCenterElevation(): number;
+    setCenterElevation(elevation: number, eventData?: any): this;
+    getCenterClampedToGround(): boolean;
+    setCenterClampedToGround(centerClampedToGround: boolean): void;
+    panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this;
+    panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this;
+    getZoom(): number;
+    setZoom(zoom: number, eventData?: any): this;
+    zoomTo(zoom: number, options?: EaseToOptions | null, eventData?: any): this;
+    zoomIn(options?: AnimationOptions, eventData?: any): this;
+    zoomOut(options?: AnimationOptions, eventData?: any): this;
+    getVerticalFieldOfView(): number;
+    setVerticalFieldOfView(fov: number, eventData?: any): this;
+    getBearing(): number;
+    setZoomSnap(snap: number): this;
+    getZoomSnap(): number;
+    setBearing(bearing: number, eventData?: any): this;
+    getPadding(): PaddingOptions;
+    setPadding(padding: PaddingOptions, eventData?: any): this;
+    rotateTo(bearing: number, options?: EaseToOptions, eventData?: any): this;
+    resetNorth(options?: AnimationOptions, eventData?: any): this;
+    resetNorthPitch(options?: AnimationOptions, eventData?: any): this;
+    snapToNorth(options?: AnimationOptions, eventData?: any): this;
+    getPitch(): number;
+    setPitch(pitch: number, eventData?: any): this;
+    getRoll(): number;
+    setRoll(roll: number, eventData?: any): this;
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined;
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): JumpToOptions | undefined;
+    fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this;
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this;
+    _fitInternal(calculatedOptions?: JumpToOptions, options?: FitBoundsOptions, eventData?: any): this;
+    jumpTo(options: JumpToOptions, eventData?: any): this;
+    calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions;
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions;
+    easeTo(options: EaseToOptions, eventData?: any): this;
+    private _createElevationEase;
+    private _startElevationEasing;
+    holdElevation(tr: ITransform, holder: ElevationHolder): void;
+    releaseElevation(): boolean;
+    putCenterBackOnTerrain(tr: ITransform, terrain: Terrain, tookDem: boolean): void;
+    _takeLandedElevation(tr: ITransform): boolean;
+    applyTerrainChange(): void;
+    clampCenterToGround(terrain: Terrain | null): void;
+    getTransformForUpdate(): ITransform;
+    _keepCameraAboveTerrain(tr: ITransform): ITransform;
+    _raiseCameraByPitchAndZoom(tr: ITransform): ITransform;
+    _terrainHeightAboveCamera(tr: ITransform): number;
+    _terrainHeightAboveMaxZoomForCenter(tr: ITransform): number | undefined;
+    moveCenterOntoTerrain(tr: ITransform, zoomDelta: number): void;
+    captureRotationPivot(tr: IReadonlyTransform, point: Point): RotationPivot;
+    orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): boolean;
+    _turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): ITransform | null;
+    applyUpdatedTransform(tr: ITransform): void;
+    applyTransformChange(change: (tr: ITransform) => void): void;
+    private _finishAnimationElevation;
+    flyTo(options: FlyToOptions, eventData?: any): this;
+    stop(): this;
+    _normalizeBearing(bearing: number, currentBearing: number): number;
+    isMoving(): boolean;
+    isZooming(): boolean;
+    isRotating(): boolean;
+    isPitching(): boolean;
+    isRolling(): boolean;
+}
+type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+interface IControl {
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(map: Map$1): void;
+    readonly getDefaultPosition?: () => ControlPosition;
+}
+type AttributionControlOptions = {
+    compact?: boolean;
+    customAttribution?: string | string[];
+};
+class AttributionControl implements IControl {
+    options: AttributionControlOptions;
+    _map: Map$1;
+    _compact: boolean | undefined;
+    _container: HTMLElement;
+    _innerContainer: HTMLElement;
+    _compactButton: HTMLElement;
+    _editLink: HTMLAnchorElement;
+    _attribHTML: string;
+    styleId: string;
+    styleOwner: string;
+    constructor(options?: AttributionControlOptions);
+    getDefaultPosition(): ControlPosition;
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _setElementTitle(element: HTMLElement, title: "ToggleAttribution" | "MapFeedback"): void;
+    _toggleAttribution: () => void;
+    _updateData: (e: MapSourceDataEvent | MapStyleDataEvent | MapTerrainEvent) => void;
+    _updateAttributions(): void;
+    _updateCompact: () => void;
+    _updateCompactMinimize: () => void;
+}
+const defaultLocale: {
+    "AttributionControl.ToggleAttribution": string;
+    "AttributionControl.MapFeedback": string;
+    "FullscreenControl.Enter": string;
+    "FullscreenControl.Exit": string;
+    "GeolocateControl.FindMyLocation": string;
+    "GeolocateControl.LocationNotAvailable": string;
+    "LogoControl.Title": string;
+    "Map.Title": string;
+    "Marker.Title": string;
+    "NavigationControl.ResetBearing": string;
+    "NavigationControl.ZoomIn": string;
+    "NavigationControl.ZoomOut": string;
+    "Popup.Close": string;
+    "ScaleControl.Feet": string;
+    "ScaleControl.Meters": string;
+    "ScaleControl.Kilometers": string;
+    "ScaleControl.Miles": string;
+    "ScaleControl.NauticalMiles": string;
+    "GlobeControl.Enable": string;
+    "GlobeControl.Disable": string;
+    "TerrainControl.Enable": string;
+    "TerrainControl.Disable": string;
+    "CooperativeGesturesHandler.WindowsHelpText": string;
+    "CooperativeGesturesHandler.MacHelpText": string;
+    "CooperativeGesturesHandler.MobileHelpText": string;
+};
+class TransformProvider {
+    _camera: Camera;
+    constructor(camera: Camera);
+    get transform(): IReadonlyTransform;
+    get center(): {
+        lng: number;
+        lat: number;
+    };
+    get zoom(): number;
+    get pitch(): number;
+    get bearing(): number;
+    unproject(point: PointLike): LngLat;
+    get zoomSnap(): number;
+    cameraForScreenBox(p0: PointLike, p1: PointLike, bearing: number): JumpToOptions | undefined;
+}
+type DragMovementResult = {
+    bearingDelta?: number;
+    pitchDelta?: number;
+    rollDelta?: number;
+    around?: Point;
+    panDelta?: Point;
+};
+interface DragPanResult extends DragMovementResult {
+    around: Point;
+    panDelta: Point;
+}
+interface DragRotateResult extends DragMovementResult {
+    bearingDelta: number;
+}
+interface DragPitchResult extends DragMovementResult {
+    pitchDelta: number;
+}
+interface DragRollResult extends DragMovementResult {
+    rollDelta: number;
+}
+interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
+    dragStart: (e: E, point: Point) => void;
+    dragMove: (e: E, point: Point) => T | void;
+    dragEnd: (e: E) => void;
+}
+interface MousePanHandler extends DragMoveHandler<DragPanResult, MouseEvent> {
+}
+interface MouseRotateHandler extends DragMoveHandler<DragRotateResult, MouseEvent> {
+}
+interface MousePitchHandler extends DragMoveHandler<DragPitchResult, MouseEvent> {
+}
+interface MouseRollHandler extends DragMoveHandler<DragRollResult, MouseEvent> {
+}
+class TouchPanHandler implements Handler {
+    _enabled: boolean;
+    _active: boolean;
+    _touches: {
+        [k in string | number]: Point;
+    };
+    _clickTolerance: number;
+    _sum: Point;
+    _cooperativeGestures: CooperativeGesturesHandler;
+    constructor(options: {
+        clickTolerance: number;
+    }, cooperativeGestures: CooperativeGesturesHandler);
+    reset(): void;
+    _shouldBePrevented(touchesCount: number): boolean;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): {
+        around: Point;
+        panDelta: Point;
+    } | void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {
+        around: Point;
+        panDelta: Point;
+    } | void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchcancel(): void;
+    _calculateTransform(e: TouchEvent, points: Point[], mapTouches: Touch[]): {
+        around: Point;
+        panDelta: Point;
+    } | void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+type DragPanOptions = {
+    linearity?: number;
+    easing?: (t: number) => number;
+    deceleration?: number;
+    maxSpeed?: number;
+};
+class DragPanHandler {
+    _el: HTMLElement;
+    _mousePan: MousePanHandler;
+    _touchPan: TouchPanHandler;
+    _inertiaOptions: DragPanOptions | boolean;
+    constructor(el: HTMLElement, mousePan: MousePanHandler, touchPan: TouchPanHandler);
+    enable(options?: DragPanOptions | boolean): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+interface Handler {
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+    reset(): void;
+    readonly touchstart?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmove?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmoveWindow?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchend?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchcancel?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mouseupWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
+    readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
+    readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
+    readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
+    readonly renderFrame?: () => HandlerResult | void;
+    isZooming?(): boolean;
+    onTimeout?(token: unknown): HandlerResult | void;
+}
+type HandlerResult = {
+    panDelta?: Point;
+    zoomDelta?: number;
+    bearingDelta?: number;
+    pitchDelta?: number;
+    rollDelta?: number;
+    around?: Point | null;
+    pinchAround?: Point | null;
+    easeTo?: EaseToOptions;
+    timeout?: {
+        delay: number;
+        token: unknown;
+    };
+    originalEvent?: Event$1;
+    needsRenderFrame?: boolean;
+    noInertia?: boolean;
+};
+type GestureOptions = boolean;
+class CooperativeGesturesHandler extends Evented<MapEventType> implements Handler {
+    _options: GestureOptions;
+    _canvasContainer: HTMLElement;
+    _locale: Record<string, string>;
+    _container: HTMLElement;
+    _bypassKey: "metaKey" | "ctrlKey";
+    _enabled: boolean;
+    constructor(canvasContainer: HTMLElement, locale: Record<string, string>, options: GestureOptions);
+    isActive(): boolean;
+    reset(): void;
+    _setupUI(): void;
+    _destroyUI(): void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isBypassed(event: MouseEvent | WheelEvent | PointerEvent): boolean;
+    notifyGestureBlocked(gestureType: "wheel_zoom" | "touch_pan", originalEvent: Event$1): void;
+}
+type AroundCenterOptions = {
+    around: "center";
+};
+abstract class TwoFingersTouchHandler implements Handler {
+    _enabled?: boolean;
+    _active?: boolean;
+    _firstTwoTouches?: [
+        number,
+        number
+    ];
+    _vector?: Point;
+    _startVector?: Point;
+    _aroundCenter?: boolean;
+    constructor();
+    reset(): void;
+    abstract _start(points: [
+        Point,
+        Point
+    ]): void;
+    abstract _move(points: [
+        Point,
+        Point
+    ], pinchAround: Point | null, e: TouchEvent): HandlerResult | void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchcancel(): void;
+    enable(options?: AroundCenterOptions | boolean | null): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
+    _distance?: number;
+    _startDistance?: number;
+    _zoomRate: number;
+    _zoomThreshold: number;
+    constructor();
+    setZoomRate(zoomRate?: number): void;
+    setZoomThreshold(zoomThreshold?: number): void;
+    reset(): void;
+    _start(points: [
+        Point,
+        Point
+    ]): void;
+    _move(points: [
+        Point,
+        Point
+    ], pinchAround: Point | null): HandlerResult | void;
+}
+class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
+    _minDiameter?: number;
+    reset(): void;
+    _start(points: [
+        Point,
+        Point
+    ]): void;
+    _move(points: [
+        Point,
+        Point
+    ], pinchAround: Point | null, _e: TouchEvent): HandlerResult | void;
+    _isBelowThreshold(vector: Point): boolean;
+}
+class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
+    _valid?: boolean;
+    _firstMove?: number;
+    _lastPoints?: [
+        Point,
+        Point
+    ];
+    _cooperativeGestures: CooperativeGesturesHandler;
+    _currentTouchCount: number;
+    constructor(cooperativeGestures: CooperativeGesturesHandler);
+    reset(): void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    _start(points: [
+        Point,
+        Point
+    ]): void;
+    _move(points: [
+        Point,
+        Point
+    ], center: Point | null, e: TouchEvent): HandlerResult | void;
+    gestureBeginsVertically(vectorA: Point, vectorB: Point, timeStamp: number): boolean | undefined;
+}
+type ScrollZoomWait = {
+    reason: "singleWheel";
+    event: WheelEvent;
+} | {
+    reason: "finish";
+};
+class ScrollZoomHandler implements Handler {
+    private _canvas;
+    private _cooperativeGestures;
+    private _tr;
+    private _enabled;
+    private _active;
+    private _zooming;
+    private _aroundCenter;
+    private _aroundPoint;
+    private _type;
+    private _lastValue;
+    private _singleWheelWait;
+    private _finishWait;
+    private _lastWheelEvent;
+    private _lastWheelEventTime;
+    private _lastExpectedZoom;
+    private _startZoom;
+    private _targetZoom;
+    private _delta;
+    private _easing;
+    private _prevEase;
+    private _needsRerender;
+    private _defaultZoomRate;
+    private _wheelZoomRate;
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: TransformProvider);
+    setZoomRate(zoomRate: number): void;
+    setWheelZoomRate(wheelZoomRate: number): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+    isZooming(): boolean;
+    enable(options?: AroundCenterOptions | boolean): void;
+    disable(): void;
+    private _shouldBePrevented;
+    wheel(e: WheelEvent): HandlerResult | void;
+    onTimeout(wait: ScrollZoomWait): HandlerResult | void;
+    private _start;
+    renderFrame(): HandlerResult | void;
+    private _smoothOutEasing;
+    reset(): void;
+}
+type BoxZoomEndHandler = (map: Map$1, startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
+type BoxZoomHandlerOptions = {
+    boxZoomEnd?: BoxZoomEndHandler;
+};
+class BoxZoomHandler extends Evented<MapEventType> implements Handler {
+    _tr: TransformProvider;
+    _el: HTMLElement;
+    _container: HTMLElement;
+    _enabled: boolean;
+    _active: boolean;
+    _startPos: Point;
+    _lastPos: Point;
+    _box: HTMLElement;
+    _clickTolerance: number;
+    _boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
+    constructor(canvasContainer: HTMLElement, container: HTMLElement, options: {
+        clickTolerance: number;
+    }, transformProvider: TransformProvider, boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void);
+    isEnabled(): boolean;
+    isActive(): boolean;
+    enable(): void;
+    disable(): void;
+    mousedown(e: MouseEvent, point: Point): void;
+    mousemoveWindow(e: MouseEvent, point: Point): void;
+    mouseupWindow(e: MouseEvent, point: Point): HandlerResult | void;
+    keydown(e: KeyboardEvent): void;
+    reset(): void;
+    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): this;
+}
+type DragRotateHandlerOptions = {
+    pitchWithRotate: boolean;
+    rollEnabled: boolean;
+    aroundCenter?: boolean;
+};
+type DragRotateOptions = {
+    around?: "center";
+    movement?: "circular" | "linear";
+} | {
+    around: "pointer";
+};
+class DragRotateHandler {
+    _mouseRotate: MouseRotateHandler;
+    _mousePitch: MousePitchHandler;
+    _mouseRoll: MouseRollHandler;
+    _pitchWithRotate: boolean;
+    _rollEnabled: boolean;
+    _defaultMovement: "circular" | "linear";
+    around: "center" | "pointer";
+    movement: "circular" | "linear";
+    constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler, mouseRoll: MouseRollHandler);
+    enable(options?: DragRotateOptions | boolean): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class KeyboardHandler implements Handler {
+    _tr: TransformProvider;
+    _enabled: boolean;
+    _active: boolean;
+    _panStep: number;
+    _bearingStep: number;
+    _pitchStep: number;
+    _rotationDisabled: boolean;
+    constructor(transformProvider: TransformProvider);
+    reset(): void;
+    keydown(e: KeyboardEvent): HandlerResult | void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+    disableRotation(): void;
+    enableRotation(): void;
+}
+class ClickZoomHandler implements Handler {
+    _tr: TransformProvider;
+    _enabled: boolean;
+    _active: boolean;
+    constructor(transformProvider: TransformProvider);
+    reset(): void;
+    dblclick(e: MouseEvent, point: Point): HandlerResult | void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class SingleTapRecognizer {
+    numTouches: number;
+    centroid: Point;
+    startTime: number;
+    aborted: boolean;
+    touches: {
+        [k in number | string]: Point;
+    };
+    constructor(options: {
+        numTouches: number;
+    });
+    reset(): void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): Point | void;
+}
+class TapRecognizer {
+    singleTap: SingleTapRecognizer;
+    numTaps: number;
+    lastTime: number;
+    lastTap: Point;
+    count: number;
+    constructor(options: {
+        numTaps: number;
+        numTouches: number;
+    });
+    reset(): void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): Point | void;
+}
+class TapZoomHandler implements Handler {
+    _tr: TransformProvider;
+    _enabled: boolean;
+    _active: boolean;
+    _zoomIn: TapRecognizer;
+    _zoomOut: TapRecognizer;
+    constructor(transformProvider: TransformProvider);
+    reset(): void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void;
+    touchcancel(): void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class DoubleClickZoomHandler {
+    _clickZoom: ClickZoomHandler;
+    _tapZoom: TapZoomHandler;
+    constructor(clickZoom: ClickZoomHandler, TapZoom: TapZoomHandler);
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class TapDragZoomHandler implements Handler {
+    _enabled: boolean;
+    _active: boolean;
+    _swipePoint: Point;
+    _swipeTouch: number;
+    _tapTime: number;
+    _tapPoint: Point;
+    _tap: TapRecognizer;
+    _zoomRate: number;
+    constructor();
+    setZoomRate(zoomRate?: number): void;
+    reset(): void;
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {
+        zoomDelta: number;
+    } | void;
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void;
+    touchcancel(): void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+}
+class TwoFingersTouchZoomRotateHandler {
+    _el: HTMLElement;
+    _touchZoom: TwoFingersTouchZoomHandler;
+    _touchRotate: TwoFingersTouchRotateHandler;
+    _tapDragZoom: TapDragZoomHandler;
+    _rotationDisabled: boolean;
+    _enabled: boolean;
+    constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingersTouchRotateHandler, tapDragZoom: TapDragZoomHandler);
+    enable(options?: AroundCenterOptions | boolean | null): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+    setZoomRate(zoomRate?: number): void;
+    setZoomThreshold(zoomThreshold?: number): void;
+    disableRotation(): void;
+    enableRotation(): void;
+}
+type ContextType = "webgl2";
+type WebGLContextAttributesWithType = WebGLContextAttributes & {
+    contextType?: ContextType;
+};
+type MapOptions = {
+    hash?: boolean | string;
+    interactive?: boolean;
+    container: HTMLElement | string;
+    bearingSnap?: number;
+    zoomSnap?: number;
+    attributionControl?: false | AttributionControlOptions;
+    maplibreLogo?: boolean;
+    logoPosition?: ControlPosition;
+    canvasContextAttributes?: WebGLContextAttributesWithType;
+    refreshExpiredTiles?: boolean;
+    maxBounds?: LngLatBoundsLike;
+    scrollZoom?: boolean | AroundCenterOptions;
+    minZoom?: number | null;
+    maxZoom?: number | null;
+    minPitch?: number | null;
+    maxPitch?: number | null;
+    anisotropicFilterPitch?: number | null;
+    boxZoom?: boolean | BoxZoomHandlerOptions;
+    dragRotate?: boolean | DragRotateOptions;
+    dragPan?: boolean | DragPanOptions;
+    keyboard?: boolean;
+    doubleClickZoom?: boolean;
+    touchZoomRotate?: boolean | AroundCenterOptions;
+    touchPitch?: boolean | AroundCenterOptions;
+    cooperativeGestures?: GestureOptions;
+    trackResize?: boolean;
+    center?: LngLatLike;
+    elevation?: number;
+    zoom?: number;
+    bearing?: number;
+    pitch?: number;
+    roll?: number;
+    renderWorldCopies?: boolean;
+    maxTileCacheSize?: number | null;
+    maxTileCacheZoomLevels?: number;
+    transformRequest?: RequestTransformFunction | null;
+    transformCameraUpdate?: CameraUpdateTransformFunction | null;
+    transformConstrain?: TransformConstrainFunction | null;
+    locale?: Record<string, string>;
+    fadeDuration?: number;
+    crossSourceCollisions?: boolean;
+    collectResourceTiming?: boolean;
+    clickTolerance?: number;
+    bounds?: LngLatBoundsLike;
+    fitBoundsOptions?: FitBoundsOptions;
+    localIdeographFontFamily?: string | false;
+    style?: StyleSpecification | string;
+    pitchWithRotate?: boolean;
+    rollEnabled?: boolean;
+    rotateSpeed?: number;
+    pitchSpeed?: number;
+    reduceMotion?: boolean | undefined;
+    pixelRatio?: number;
+    validateStyle?: boolean;
+    globalState?: Record<string, any>;
+    transformStyle?: TransformStyleFunction;
+    maxCanvasSize?: [
+        number,
+        number
+    ];
+    cancelPendingTileRequestsWhileZooming?: boolean;
+    centerClampedToGround?: boolean;
+    terrainSkirtLength?: "none" | "auto";
+    zoomLevelsToOverscale?: number;
+    aroundCenter?: boolean;
+};
+type StyleImageSource = HTMLImageElement | ImageBitmap | ImageData | {
+    width: number;
+    height: number;
+    data: Uint8Array | Uint8ClampedArray;
+} | StyleImageInterface;
+type MissingStyleImageResolver = (id: string) => void | Promise<void>;
+type DelegatedListener = {
+    layers: string[];
+    listener: Listener$1;
+    delegates: {
+        [E in keyof MapEventType]?: Delegate<MapEventType[E]>;
+    };
+};
+type Delegate<E extends Event$1 = Event$1> = (e: E) => void;
+type StyleSnapshot = {
+    style: StyleSpecification | null;
+    images: {
+        [_: string]: StyleImage;
+    };
+};
+class Map$1 extends Evented<MapEventType> {
+    terrain: Terrain;
+    style: Style;
+    painter: Painter;
+    _camera: Camera;
+    private _handlerManager;
+    private _eventFactory;
+    _container: HTMLElement;
+    _canvasContainer: HTMLElement;
+    _controlContainer: HTMLElement;
+    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
+    _interactive: boolean;
+    _showTileBoundaries: boolean;
+    _showCollisionBoxes: boolean;
+    _showPadding: boolean;
+    _showOverdrawInspector: boolean;
+    _repaint: boolean;
+    _vertices: boolean;
+    _canvas: HTMLCanvasElement;
+    _maxTileCacheSize: number | null;
+    _maxTileCacheZoomLevels: number;
+    _frameRequest: AbortController;
+    _styleDirty: boolean;
+    _sourcesDirty: boolean;
+    _placementDirty: boolean;
+    _anisotropicFilterPitch: number;
+    _loaded: boolean;
+    _idleTriggered: boolean;
+    _fullyLoaded: boolean;
+    _trackResize: boolean;
+    _resizeObserver: ResizeObserver;
+    _canvasContextAttributes: WebGLContextAttributesWithType;
+    _refreshExpiredTiles: boolean;
+    _hash: Hash;
+    _delegatedListeners: Record<keyof MapEventType, DelegatedListener[]>;
+    _fadeDuration: number;
+    _crossSourceCollisions: boolean;
+    _crossFadingFactor: number;
+    _collectResourceTiming: boolean;
+    _renderTaskQueue: TaskQueue;
+    _controls: IControl[];
+    _mapId: number;
+    _localIdeographFontFamily: string | false;
+    _validateStyle: boolean;
+    _initialGlobalState: Record<string, any>;
+    _transformStyle: TransformStyleFunction | undefined;
+    _styleUrl: string | null;
+    _requestManager: RequestManager;
+    _locale: Record<string, string>;
+    _removed: boolean;
+    _diffStyleRequest: AbortController;
+    _clickTolerance: number;
+    _overridePixelRatio: number | null | undefined;
+    _maxCanvasSize: [
+        number,
+        number
+    ];
+    _clampedPixelRatio: number;
+    _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _missingStyleImageResolver: MissingStyleImageResolver | null;
+    _zoomLevelsToOverscale: number | undefined;
+    _terrainSkirtLength: "none" | "auto";
+    get _ownerWindow(): typeof window;
+    _imageQueueHandle: number;
+    _lostContextSnapshot: StyleSnapshot;
+    scrollZoom: ScrollZoomHandler;
+    boxZoom: BoxZoomHandler;
+    dragRotate: DragRotateHandler;
+    dragPan: DragPanHandler;
+    keyboard: KeyboardHandler;
+    doubleClickZoom: DoubleClickZoomHandler;
+    touchZoomRotate: TwoFingersTouchZoomRotateHandler;
+    touchPitch: TwoFingersTouchPitchHandler;
+    cooperativeGestures: CooperativeGesturesHandler;
+    cancelPendingTileRequestsWhileZooming: boolean;
+    constructor(options: MapOptions);
+    _getMapId(): number;
+    setGlobalStateProperty(propertyName: string, value: any): this;
+    getGlobalState(): Record<string, any>;
+    addControl(control: IControl, position?: ControlPosition): this;
+    removeControl(control: IControl): this;
+    hasControl(control: IControl): boolean;
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[];
+    setTransformCameraUpdate(value: CameraUpdateTransformFunction | null): void;
+    getCenter(): LngLat;
+    setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this;
+    getCenterElevation(): number;
+    setCenterElevation(elevation: number, eventData?: any): this;
+    setCenterClampedToGround(centerClampedToGround: boolean): void;
+    panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this;
+    panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this;
+    getZoom(): number;
+    setZoom(zoom: number, eventData?: any): this;
+    zoomTo(zoom: number, options?: EaseToOptions | null, eventData?: any): this;
+    zoomIn(options?: AnimationOptions, eventData?: any): this;
+    zoomOut(options?: AnimationOptions, eventData?: any): this;
+    getVerticalFieldOfView(): number;
+    setVerticalFieldOfView(fov: number, eventData?: any): this;
+    getBearing(): number;
+    setBearing(bearing: number, eventData?: any): this;
+    getZoomSnap(): number;
+    setZoomSnap(snap: number): this;
+    getPadding(): PaddingOptions;
+    setPadding(padding: PaddingOptions, eventData?: any): this;
+    rotateTo(bearing: number, options?: EaseToOptions, eventData?: any): this;
+    resetNorth(options?: AnimationOptions, eventData?: any): this;
+    resetNorthPitch(options?: AnimationOptions, eventData?: any): this;
+    snapToNorth(options?: AnimationOptions, eventData?: any): this;
+    getPitch(): number;
+    setPitch(pitch: number, eventData?: any): this;
+    getRoll(): number;
+    setRoll(roll: number, eventData?: any): this;
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined;
+    fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this;
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this;
+    jumpTo(options: JumpToOptions, eventData?: any): this;
+    calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions;
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions;
+    easeTo(options: EaseToOptions, eventData?: any): this;
+    flyTo(options: FlyToOptions, eventData?: any): this;
+    stop(): this;
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null;
+    getCenterClampedToGround(): boolean;
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions;
+    resize(eventData?: any, constrainTransform?: boolean): this;
+    _resizeInternal(constrainTransform?: boolean): void;
+    _resizeTransform(constrainTransform?: boolean): void;
+    _getClampedPixelRatio(width: number, height: number): number;
+    getPixelRatio(): number;
+    setPixelRatio(pixelRatio: number): void;
+    getBounds(): LngLatBounds;
+    getMaxBounds(): LngLatBounds | null;
+    setMaxBounds(bounds?: LngLatBoundsLike | null): this;
+    setMinZoom(minZoom?: number | null): this;
+    getMinZoom(constrained?: boolean): number;
+    setMaxZoom(maxZoom?: number | null): this;
+    getMaxZoom(): number;
+    setMinPitch(minPitch?: number | null): this;
+    getMinPitch(): number;
+    setMaxPitch(maxPitch?: number | null): this;
+    getMaxPitch(): number;
+    getAnisotropicFilterPitch(): number;
+    setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): this;
+    getRenderWorldCopies(): boolean;
+    setRenderWorldCopies(renderWorldCopies?: boolean | null): this;
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): this;
+    project(lnglat: LngLatLike): Point;
+    unproject(point: PointLike): LngLat;
+    isMoving(): boolean;
+    isZooming(): boolean;
+    isRotating(): boolean;
+    _createDelegates(type: keyof MapEventType | string, layerIds: string[], listener: Listener$1): DelegatedListener["delegates"];
+    _addDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void;
+    _removeDelegatedListener(type: string, layerIds: string[], listener: Listener$1): void;
+    on<T extends keyof MapLayerEventType>(type: T, layer: string, listener: (ev: MapLayerEventType[T] & Object) => void): Subscription;
+    on<T extends keyof MapLayerEventType>(type: T, layerIds: string[], listener: (ev: MapLayerEventType[T] & Object) => void): Subscription;
+    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): Subscription;
+    on(type: keyof MapEventType, listener: Listener$1): Subscription;
+    once<T extends keyof MapLayerEventType>(type: T, layer: string, listener: (ev: MapLayerEventType[T] & Object) => void): this;
+    once<T extends keyof MapLayerEventType>(type: T, layer: string): Promise<MapLayerEventType[T] & Object>;
+    once<T extends keyof MapLayerEventType>(type: T, layerIds: string[], listener: (ev: MapLayerEventType[T] & Object) => void): this;
+    once<T extends keyof MapLayerEventType>(type: T, layerIds: string[]): Promise<MapLayerEventType[T] & Object>;
+    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    once<T extends keyof MapEventType>(type: T): Promise<MapEventType[T] & Object>;
+    once(type: keyof MapEventType, listener?: Listener$1): this | Promise<any>;
+    off<T extends keyof MapLayerEventType>(type: T, layer: string, listener: (ev: MapLayerEventType[T] & Object) => void): this;
+    off<T extends keyof MapLayerEventType>(type: T, layers: string[], listener: (ev: MapLayerEventType[T] & Object) => void): this;
+    off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    off(type: keyof MapEventType, listener: Listener$1): this;
+    queryRenderedFeatures(geometryOrOptions?: PointLike | [
+        PointLike,
+        PointLike
+    ] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[];
+    querySourceFeatures(sourceId: string, parameters?: QuerySourceFeatureOptions | null): GeoJSONFeature[];
+    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this;
+    setTransformRequest(transformRequest: RequestTransformFunction | null): this;
+    _getUIString(key: keyof typeof defaultLocale): string;
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this;
+    _lazyInitEmptyStyle(): void;
+    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions): Promise<void>;
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions): void;
+    getStyle(): StyleSpecification;
+    getStyleUrl(): string | null;
+    _takeStyleSnapshot(): StyleSnapshot;
+    isStyleLoaded(): boolean | void;
+    addSource(id: string, source: SourceSpecification | CanvasSourceSpecification): this;
+    isSourceLoaded(id: string): boolean;
+    setTerrain(options: TerrainSpecification | null, styleOptions?: StyleSetterOptions): this;
+    private _handleTerrainDataEvent;
+    getTerrain(): TerrainSpecification | null;
+    areTilesLoaded(): boolean;
+    removeSource(id: string): this;
+    getSource<TSource extends Source>(id: string): TSource | undefined;
+    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string): this;
+    refreshTiles(sourceId: string, tileIds?: Array<{
+        x: number;
+        y: number;
+        z: number;
+    }>): void;
+    addImage(id: string, image: StyleImageSource, options?: Partial<StyleImageMetadata>): this;
+    setMissingStyleImageResolver(resolver: MissingStyleImageResolver | null): this;
+    _createStyleImage(image: StyleImageSource, options?: Partial<StyleImageMetadata>): StyleImage | null;
+    updateImage(id: string, image: StyleImageSource): this;
+    getImage(id: string): StyleImage;
+    hasImage(id: string): boolean;
+    removeImage(id: string): void;
+    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>>;
+    listImages(): string[];
+    addLayer(layer: AddLayerObject, beforeId?: string): this;
+    moveLayer(id: string, beforeId?: string): this;
+    removeLayer(id: string): this;
+    getLayer(id: string): StyleLayer | undefined;
+    getLayersOrder(): string[];
+    setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): this;
+    setFilter(layerId: string, filter?: FilterSpecification | null, options?: StyleSetterOptions): this;
+    getFilter(layerId: string): FilterSpecification | void;
+    setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options?: StyleSetterOptions): this;
+    getPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K): AllPaintProperties[K];
+    setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options?: StyleSetterOptions): this;
+    getLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K): AllLayoutProperties[K] | undefined;
+    setGlyphs(glyphsUrl: string | null | undefined, options?: StyleSetterOptions): this;
+    getGlyphs(): string | null;
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): this;
+    getFontFaces(): FontFacesSpecification | null;
+    addSprite(id: string, url: string, options?: StyleSetterOptions): this;
+    removeSprite(id: string): this;
+    getSprite(): Array<{
+        id: string;
+        url: string;
+    }>;
+    setSprite(spriteUrl: string | null, options?: StyleSetterOptions): this;
+    setLight(light: LightSpecification, options?: StyleSetterOptions): this;
+    getLight(): LightSpecification;
+    setSky(sky: SkySpecification, options?: StyleSetterOptions): this;
+    getSky(): SkySpecification;
+    setFeatureState(feature: FeatureIdentifier, state: any): this;
+    removeFeatureState(target: FeatureIdentifier, key?: string): this;
+    getFeatureState(feature: FeatureIdentifier): any;
+    getContainer(): HTMLElement;
+    getCanvasContainer(): HTMLElement;
+    getCanvas(): HTMLCanvasElement;
+    _containerDimensions(): number[];
+    _shouldHandleInitialResize(): boolean;
+    private _setupResizeObserver;
+    private _resolveContainer;
+    _setupContainer(): void;
+    _cleanupContainer(): void;
+    _resizeCanvas(width: number, height: number, pixelRatio: number): void;
+    _setupPainter(): void;
+    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void;
+    _contextLost: (event: WebGLContextEvent) => void;
+    _contextRestored: (event: WebGLContextEvent) => void;
+    private _handleWorkersRestarted;
+    private _warnAboutUnrestorableLayers;
+    private _restoreStyleSnapshot;
+    _onMapScroll: (event: UIEvent) => boolean;
+    loaded(): boolean;
+    _update(updateStyle?: boolean): this;
+    _requestRenderFrame(callback: (timeStamp: number) => void): TaskID;
+    _cancelRenderFrame(id: TaskID): void;
+    _render(paintStartTimeStamp: number): this;
+    redraw(): this;
+    remove(): void;
+    triggerRepaint(): void;
+    _onStyleError: (event: ErrorEvent$1 & {
+        tile?: unknown;
+    }) => void;
+    _onWindowOnline: () => void;
+    get showTileBoundaries(): boolean;
+    set showTileBoundaries(value: boolean);
+    get showPadding(): boolean;
+    set showPadding(value: boolean);
+    get showCollisionBoxes(): boolean;
+    set showCollisionBoxes(value: boolean);
+    get showOverdrawInspector(): boolean;
+    set showOverdrawInspector(value: boolean);
+    get repaint(): boolean;
+    set repaint(value: boolean);
+    get vertices(): boolean;
+    set vertices(value: boolean);
+    get version(): string;
+    getCameraTargetElevation(): number;
+    getProjection(): ProjectionSpecification;
+    setProjection(projection: ProjectionSpecification): this;
+}
+type NavigationControlOptions = {
+    showCompass?: boolean;
+    showZoom?: boolean;
+    visualizePitch?: boolean;
+    visualizeRoll?: boolean;
+};
+class NavigationControl implements IControl {
+    _map: Map$1;
+    options: NavigationControlOptions;
+    _container: HTMLElement;
+    _zoomInButton: HTMLButtonElement;
+    _zoomOutButton: HTMLButtonElement;
+    _compass: HTMLButtonElement;
+    _compassIcon: HTMLElement;
+    _handler: MouseRotateWrapper;
+    constructor(options?: NavigationControlOptions);
+    _updateZoomButtons: () => void;
+    _rotateCompassArrow: () => void;
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _createButton(className: string, fn: (e?: MouseEvent) => unknown): HTMLButtonElement;
+    _setButtonTitle: (button: HTMLButtonElement, title: "ZoomIn" | "ZoomOut" | "ResetBearing") => void;
+}
+class MouseRotateWrapper {
+    map: Map$1;
+    _clickTolerance: number;
+    element: HTMLElement;
+    _rotatePitchHandler: DragMoveHandler<DragRotateResult, MouseEvent | TouchEvent>;
+    _startPos: Point;
+    _lastPos: Point;
+    constructor(map: Map$1, element: HTMLElement, pitch?: boolean);
+    startMove(e: MouseEvent | TouchEvent, point: Point): void;
+    move(e: MouseEvent | TouchEvent, point: Point): void;
+    off(): void;
+    offTemp(): void;
+    mousedown: (e: MouseEvent) => void;
+    mousemove: (e: MouseEvent) => void;
+    mouseup: (e: MouseEvent) => void;
+    touchstart: (e: TouchEvent) => void;
+    touchmove: (e: TouchEvent) => void;
+    touchend: (e: TouchEvent) => void;
+    reset: () => void;
+}
+type PositionAnchor = "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type Offset = number | PointLike | {
+    [_ in PositionAnchor]: PointLike;
+};
+type PopupOptions = {
+    closeButton?: boolean;
+    closeOnClick?: boolean;
+    closeOnMove?: boolean;
+    focusAfterOpen?: boolean;
+    anchor?: PositionAnchor;
+    offset?: Offset;
+    className?: string;
+    maxWidth?: string;
+    subpixelPositioning?: boolean;
+    locationOccludedOpacity?: number | string;
+    padding?: PaddingOptions;
+};
+class PopupEvent extends Event$1 {
+    type: keyof PopupEventType;
+    target: Popup;
+}
+type PopupEventType = {
+    open: PopupEvent;
+    close: PopupEvent;
+};
+class Popup extends Evented<PopupEventType> {
+    _map: Map$1;
+    options: PopupOptions;
+    _content: HTMLElement;
+    _container: HTMLElement;
+    _closeButton: HTMLButtonElement;
+    _tip: HTMLElement;
+    _lngLat: LngLat;
+    _trackPointer: boolean;
+    _pos: Point;
+    _flatPos: Point;
+    constructor(options?: PopupOptions);
+    addTo(map: Map$1): this;
+    _updateOpacity: () => void;
+    isOpen(): boolean;
+    remove: () => this;
+    getLngLat(): LngLat;
+    setLngLat(lnglat: LngLatLike): this;
+    trackPointer(): this;
+    getElement(): HTMLElement;
+    setText(text: string): this;
+    setHTML(html: string): this;
+    getMaxWidth(): string;
+    setMaxWidth(maxWidth: string): this;
+    setDOMContent(htmlNode: Node): this;
+    addClassName(className: string): this;
+    removeClassName(className: string): this;
+    setOffset(offset?: Offset): this;
+    toggleClassName(className: string): boolean | undefined;
+    setSubpixelPositioning(value: boolean): void;
+    setPadding(padding?: PaddingOptions): void;
+    _createCloseButton(): void;
+    _update: (event?: MapLibreEvent | MapMouseEvent) => void;
+    _focusFirstElement(): void;
+    _onClose: () => void;
+}
+type Alignment$1 = "map" | "viewport" | "auto";
+type MarkerOptions = {
+    element?: HTMLElement;
+    className?: string;
+    offset?: PointLike;
+    anchor?: PositionAnchor;
+    color?: string;
+    scale?: number;
+    draggable?: boolean;
+    clickTolerance?: number;
+    rotation?: number;
+    rotationAlignment?: Alignment$1;
+    pitchAlignment?: Alignment$1;
+    opacity?: string | number;
+    opacityWhenCovered?: string | number;
+    subpixelPositioning?: boolean;
+};
+class MarkerDragEvent extends Event$1 {
+    type: "dragstart" | "drag" | "dragend";
+    target: Marker;
+}
+class MarkerClickEvent extends Event$1 {
+    type: "click";
+    target: Marker;
+    originalEvent: MouseEvent;
+}
+type MarkerEventType = {
+    dragstart: MarkerDragEvent;
+    drag: MarkerDragEvent;
+    dragend: MarkerDragEvent;
+    click: MarkerClickEvent;
+};
+class Marker extends Evented<MarkerEventType> {
+    _map: Map$1;
+    _anchor: PositionAnchor;
+    _offset: Point;
+    _element: HTMLElement;
+    _popup: Popup;
+    _lngLat: LngLat;
+    _pos: Point;
+    _flatPos: Point;
+    _color: string;
+    _scale: number;
+    _defaultMarker: boolean;
+    _draggable: boolean;
+    _clickTolerance: number;
+    _isDragging: boolean;
+    _state: "inactive" | "pending" | "active";
+    _positionDelta: Point;
+    _pointerdownPos: Point;
+    _rotation: number;
+    _pitchAlignment: Alignment$1;
+    _rotationAlignment: Alignment$1;
+    _opacity: string;
+    _opacityWhenCovered: string;
+    _subpixelPositioning: boolean;
+    _roleManaged: boolean;
+    _tabIndexManaged: boolean;
+    _keyboardDragActive: boolean;
+    constructor(options?: MarkerOptions);
+    addTo(map: Map$1): this;
+    remove(): this;
+    getLngLat(): LngLat;
+    setLngLat(lnglat: LngLatLike): this;
+    getElement(): HTMLElement;
+    setPopup(popup?: Popup | null): this;
+    setSubpixelPositioning(value: boolean): this;
+    _onClick: (e: MouseEvent) => void;
+    _onKeyPress: (e: KeyboardEvent) => void;
+    _onKeyDown: (e: KeyboardEvent) => void;
+    _onKeyUp: (e: KeyboardEvent) => void;
+    _onBlur: () => void;
+    _endKeyboardDrag(): void;
+    _onMapClick: (e: MapMouseEvent) => void;
+    getPopup(): Popup;
+    togglePopup(): this;
+    _updateOpacity(): void;
+    _isInViewport(): boolean;
+    _updateCoveredUnthrottled: () => void;
+    _updateCovered: () => ReturnType<typeof setTimeout>;
+    _isCovered(terrain: Terrain): boolean;
+    _update: (e?: {
+        type: "move" | "moveend" | "terrain" | "projectiontransition" | "idle";
+    }) => void;
+    getOffset(): Point;
+    setOffset(offset: PointLike): this;
+    addClassName(className: string): void;
+    removeClassName(className: string): void;
+    toggleClassName(className: string): boolean;
+    _onMove: (e: MapMouseEvent | MapTouchEvent) => void;
+    _onUp: () => void;
+    _addDragHandler: (e: MapMouseEvent | MapTouchEvent) => void;
+    setDraggable(shouldBeDraggable?: boolean): this;
+    isDraggable(): boolean;
+    _updateTabIndex(): void;
+    _updateAccessibilityRole(): void;
+    setRotation(rotation?: number): this;
+    getRotation(): number;
+    setRotationAlignment(alignment?: Alignment$1): this;
+    getRotationAlignment(): Alignment$1;
+    setPitchAlignment(alignment?: Alignment$1): this;
+    getPitchAlignment(): Alignment$1;
+    setOpacity(opacity?: string | number, opacityWhenCovered?: string | number): this;
+}
+type GeolocateControlOptions = {
+    positionOptions?: PositionOptions;
+    fitBoundsOptions?: FitBoundsOptions;
+    trackUserLocation?: boolean;
+    showAccuracyCircle?: boolean;
+    showUserLocation?: boolean;
+    zoomToUserAccuracy?: boolean;
+};
+class GeolocateEvent extends Event$1 {
+    type: "trackuserlocationstart" | "trackuserlocationend" | "userlocationfocus" | "userlocationlostfocus";
+    target: GeolocateControl;
+}
+class GeolocatePositionEvent extends Event$1 {
+    type: "geolocate" | "outofmaxbounds";
+    target: GeolocateControl;
+    coords: GeolocationCoordinates;
+    timestamp: number;
+}
+class GeolocateErrorEvent extends Event$1 {
+    type: "error";
+    target: GeolocateControl;
+    code: number;
+    message: string;
+}
+type GeolocateControlEventType = {
+    geolocate: GeolocatePositionEvent;
+    error: GeolocateErrorEvent;
+    outofmaxbounds: GeolocatePositionEvent;
+    trackuserlocationstart: GeolocateEvent;
+    trackuserlocationend: GeolocateEvent;
+    userlocationfocus: GeolocateEvent;
+    userlocationlostfocus: GeolocateEvent;
+};
+class GeolocateControl extends Evented<GeolocateControlEventType> implements IControl {
+    _map: Map$1;
+    options: GeolocateControlOptions;
+    _container: HTMLElement;
+    _dotElement: HTMLElement;
+    _circleElement: HTMLElement;
+    _geolocateButton: HTMLButtonElement;
+    _geolocationWatchID: number;
+    _timeoutId: ReturnType<typeof setTimeout>;
+    _watchState: "OFF" | "ACTIVE_LOCK" | "WAITING_ACTIVE" | "ACTIVE_ERROR" | "BACKGROUND" | "BACKGROUND_ERROR";
+    _lastKnownPosition: any;
+    _userLocationDotMarker: Marker;
+    _accuracyCircleMarker: Marker;
+    _accuracy: number;
+    _setup: boolean;
+    constructor(options: GeolocateControlOptions);
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _isOutOfMapMaxBounds(position: GeolocationPosition): boolean;
+    _setErrorState(): void;
+    _onSuccess: (position: GeolocationPosition) => void;
+    _updateCamera: (position: GeolocationPosition) => void;
+    _updateMarker: (position?: GeolocationPosition | null) => void;
+    _updateCircleRadiusIfNeeded(): void;
+    _onUpdate: () => void;
+    _onError: (error: GeolocationPositionError) => void;
+    _finish: () => void;
+    _onMoveStart: (event: any) => void;
+    _setupUI: () => void;
+    _finishSetupUI: (supported: boolean) => void;
+    trigger(): boolean;
+    _clearWatch(): void;
+}
+type LogoControlOptions = {
+    compact?: boolean;
+};
+class LogoControl implements IControl {
+    options: LogoControlOptions;
+    _map: Map$1;
+    _compact: boolean;
+    _container: HTMLElement;
+    constructor(options?: LogoControlOptions);
+    getDefaultPosition(): ControlPosition;
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _updateCompact: () => void;
+}
+type Unit = "imperial" | "metric" | "nautical";
+type ScaleControlOptions = {
+    maxWidth?: number;
+    unit?: Unit;
+};
+class ScaleControl implements IControl {
+    _map: Map$1;
+    _container: HTMLElement;
+    options: ScaleControlOptions;
+    constructor(options?: ScaleControlOptions);
+    getDefaultPosition(): ControlPosition;
+    _onMove: () => void;
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    setUnit: (unit: Unit) => void;
+}
+type FullscreenControlOptions = {
+    container?: HTMLElement;
+    pseudo?: boolean;
+};
+class FullscreenEvent extends Event$1 {
+    type: "fullscreenstart" | "fullscreenend";
+    target: FullscreenControl;
+}
+type FullscreenControlEventType = {
+    fullscreenstart: FullscreenEvent;
+    fullscreenend: FullscreenEvent;
+};
+class FullscreenControl extends Evented<FullscreenControlEventType> implements IControl {
+    _map: Map$1;
+    _controlContainer: HTMLElement;
+    _fullscreen: boolean;
+    _fullscreenchange: string;
+    _fullscreenButton: HTMLButtonElement;
+    _container: HTMLElement;
+    _prevCooperativeGesturesEnabled: boolean;
+    _pseudo: boolean;
+    constructor(options?: FullscreenControlOptions);
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _setupUI(): void;
+    _updateTitle(): void;
+    _getTitle(): string;
+    _isFullscreen(): boolean;
+    _onFullscreenChange: () => void;
+    _handleFullscreenChange(): void;
+    _onClickFullscreen: () => void;
+    _exitFullscreen(): void;
+    _requestFullscreen(): void;
+    _togglePseudoFullScreen(): void;
+}
+class TerrainControl implements IControl {
+    options: TerrainSpecification;
+    _map: Map$1;
+    _container: HTMLElement;
+    _terrainButton: HTMLButtonElement;
+    constructor(options: TerrainSpecification);
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _toggleTerrain: () => void;
+    _updateTerrainIcon: () => void;
+}
+class GlobeControl implements IControl {
+    _map: Map$1;
+    _container: HTMLElement;
+    _globeButton: HTMLButtonElement;
+    onAdd(map: Map$1): HTMLElement;
+    onRemove(): void;
+    _toggleProjection: () => void;
+    _updateGlobeIcon: () => void;
+}
+function now(): number;
+function setNow(timestamp: number): void;
+function restoreNow(): void;
+function isTimeFrozen(): boolean;
+function prewarm(): void;
+function clearPrewarmedResources(): void;
+class RasterTileSource extends Evented<SourceEventType> implements Source {
+    type: "raster" | "raster-dem";
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    url: string;
+    scheme: string;
+    tileSize: number;
+    bounds: [
+        number,
+        number,
+        number,
+        number
+    ];
+    tileBounds: TileBounds;
+    roundZoom: boolean;
+    dispatcher: Dispatcher;
+    map: Map$1;
+    tiles: string[];
+    _loaded: boolean;
+    _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _premultiplyAlpha: boolean;
+    _tileJSONRequest: AbortController;
+    constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
+    load(sourceDataChanged?: boolean): Promise<void>;
+    loaded(): boolean;
+    onAdd(map: Map$1): void;
+    onRemove(): void;
+    setSourceProperty(callback: Function): void;
+    setTiles(tiles: string[]): this;
+    setUrl(url: string): this;
+    serialize(): RasterSourceSpecification | RasterDEMSourceSpecification;
+    setPremultiplyAlpha(premultiplyAlpha: boolean): this;
+    hasTile(tileID: OverscaledTileID): boolean;
+    loadTile(tile: Tile): Promise<void>;
+    abortTile(tile: Tile): Promise<void>;
+    unloadTile(tile: Tile): Promise<void>;
+    hasTransition(): boolean;
+}
+class RasterDEMTileSource extends RasterTileSource implements Source {
+    encoding: DEMEncoding;
+    redFactor?: number;
+    greenFactor?: number;
+    blueFactor?: number;
+    baseShift?: number;
+    constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
+    override loadTile(tile: Tile): Promise<void>;
+    readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData>;
+    _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {
+        backfilled: boolean;
+    }>;
+    unloadTile(tile: Tile): Promise<void>;
+}
+class VideoSource extends ImageSource {
+    options: VideoSourceSpecification;
+    urls: string[];
+    video: HTMLVideoElement;
+    roundZoom: boolean;
+    private _onPlayingHandler;
+    constructor(id: string, options: VideoSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
+    load(): Promise<void>;
+    pause(): void;
+    play(): void;
+    seek(seconds: number): void;
+    getVideo(): HTMLVideoElement;
+    onAdd(map: Map$1): void;
+    onRemove(): void;
+    prepare(): this;
+    serialize(): VideoSourceSpecification;
+    hasTransition(): boolean;
+}
+function addProtocol(customProtocol: string, loadFn: AddProtocolAction): void;
+function removeProtocol(customProtocol: string): void;
+function addProjection(crs: CRS): void;
+function removeProjection(name: string): void;
+type GlobalDispatcherEventType = {
+    workerscreate: Event$1;
+    error: ErrorEvent$1;
+};
+type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
+class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
+    private importedScriptUrls;
+    private messageHandlers;
+    private actorsPromise;
+    private workersAbortController;
+    private workerPool;
+    private watchingWorkers;
+    private ensureWorkersPromise;
+    constructor(workerPool: WorkerPool);
+    private buildActorsInBackground;
+    private handleWorkersTerminated;
+    private getActors;
+    private buildActors;
+    private getBuiltActors;
+    private importScriptInto;
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
+    broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void>;
+    registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
+    unregisterMessageHandler(type: MessageType | string): Promise<void>;
+    importScript(workerUrl: string): Promise<void>;
+    watchWorkers(): void;
+    ensureWorkers(): Promise<void>;
+    private ensureWorkersInternal;
+    ping(timeoutMs?: number): Promise<boolean>;
+    private answersPing;
+}
+function getGlobalDispatcher(): GlobalDispatcher;
+type CreateTileMeshOptions = {
+    granularity?: number;
+    generateBorders?: boolean;
+    extendToNorthPole?: boolean;
+    extendToSouthPole?: boolean;
+};
+type TileMesh = {
+    vertices: ArrayBuffer;
+    indices: ArrayBuffer;
+    uses32bitIndices: boolean;
+};
+type IndicesType = "32bit" | "16bit" | undefined;
+function createTileMesh(options: CreateTileMeshOptions, forceIndicesSize?: IndicesType): TileMesh;
+class GPUInitializationError extends Error {
+    readonly requestedAttributes: WebGLContextAttributes;
+    readonly statusMessage: string | null;
+    constructor(requestedAttributes: WebGLContextAttributes, creationEvent: WebGLContextEvent | null);
+}
+const EXTENT = 8192;
+function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void>;
+function getRTLTextPluginStatus(): string;
+function getVersion(): string;
+function getWorkerCount(): number;
+function setWorkerCount(count: number): void;
+function getMaxParallelImageRequests(): number;
+function setMaxParallelImageRequests(numRequests: number): void;
+function getWorkerUrl(): string;
+function setWorkerUrl(value: string): void;
+function importScriptInWorkers(workerUrl: string): Promise<void>;
+type GeoJsonTypes = GeoJSON$1["type"];
+type BBox = [
+    number,
+    number,
+    number,
+    number
+] | [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number
+];
+type Position = number[];
+interface GeoJsonObject {
+    type: GeoJsonTypes;
+    bbox?: BBox | undefined;
+}
+type GeoJSON$1<G extends Geometry | null = Geometry, P = GeoJsonProperties> = G | Feature$1<G, P> | FeatureCollection<G, P>;
+type Geometry = Point$1 | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon | GeometryCollection;
+interface Point$1 extends GeoJsonObject {
+    type: "Point";
+    coordinates: Position;
+}
+interface MultiPoint extends GeoJsonObject {
+    type: "MultiPoint";
+    coordinates: Position[];
+}
+interface LineString extends GeoJsonObject {
+    type: "LineString";
+    coordinates: Position[];
+}
+interface MultiLineString extends GeoJsonObject {
+    type: "MultiLineString";
+    coordinates: Position[][];
+}
+interface Polygon extends GeoJsonObject {
+    type: "Polygon";
+    coordinates: Position[][];
+}
+interface MultiPolygon extends GeoJsonObject {
+    type: "MultiPolygon";
+    coordinates: Position[][][];
+}
+interface GeometryCollection<G extends Geometry = Geometry> extends GeoJsonObject {
+    type: "GeometryCollection";
+    geometries: G[];
+}
+type GeoJsonProperties = {
+    [name: string]: any;
+} | null;
+interface Feature$1<G extends Geometry | null = Geometry, P = GeoJsonProperties> extends GeoJsonObject {
+    type: "Feature";
+    geometry: G;
+    id?: string | number | undefined;
+    properties: P;
+}
+interface FeatureCollection<G extends Geometry | null = Geometry, P = GeoJsonProperties> extends GeoJsonObject {
+    type: "FeatureCollection";
+    features: Array<Feature$1<G, P>>;
+}
+type Theme = "light" | "dark";
+type MapViewport = {
+    center: [
+        number,
+        number
+    ];
+    zoom: number;
+    bearing: number;
+    pitch: number;
+};
+type MapStyleOption = string | StyleSpecification;
+type MapRef = Map$1;
+type MapProps = {
+    children?: React$1.ReactNode;
+    className?: string;
+    theme?: Theme;
+    styles?: {
+        light?: MapStyleOption;
+        dark?: MapStyleOption;
+    };
+    blank?: boolean;
+    projection?: ProjectionSpecification;
+    viewport?: Partial<MapViewport>;
+    onViewportChange?: (viewport: MapViewport) => void;
+    loading?: boolean;
+} & Omit<MapOptions, "container" | "style">;
+type MapControlsProps = {
+    position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+    showZoom?: boolean;
+    showCompass?: boolean;
+    showLocate?: boolean;
+    showFullscreen?: boolean;
+    className?: string;
+    onLocate?: (coords: {
+        longitude: number;
+        latitude: number;
+    }) => void;
+};
+function MapControls({ position, showZoom, showCompass, showLocate, showFullscreen, className, onLocate }: MapControlsProps): React$1.JSX.Element;
+type MapGeoJSONData<P extends GeoJsonProperties = GeoJsonProperties> = FeatureCollection<Geometry, P> | Feature$1<Geometry, P> | Geometry | string;
+type MapFillPaint = NonNullable<FillLayerSpecification["paint"]>;
+type MapLinePaint = NonNullable<LineLayerSpecification["paint"]>;
+type MapGeoJSONFeature$1<P extends GeoJsonProperties = GeoJsonProperties> = Omit<MapGeoJSONFeature, "properties"> & {
+    properties: P;
+};
+type MapGeoJSONEvent<P extends GeoJsonProperties = GeoJsonProperties> = {
+    feature: MapGeoJSONFeature$1<P>;
+    longitude: number;
+    latitude: number;
+    originalEvent: MapLayerMouseEvent;
+};
+type MapGeoJSONProps<P extends GeoJsonProperties = GeoJsonProperties> = {
+    data: MapGeoJSONData<P>;
+    id?: string;
+    promoteId?: string;
+    fillPaint?: MapFillPaint | false;
+    linePaint?: MapLinePaint | false;
+    fillHoverPaint?: MapFillPaint;
+    onClick?: (e: MapGeoJSONEvent<P>) => void;
+    onHover?: (e: MapGeoJSONEvent<P> | null) => void;
+    interactive?: boolean;
+    beforeId?: string;
+};
+function MapGeoJSON<P extends GeoJsonProperties = GeoJsonProperties>({ data, id: propId, promoteId, fillPaint, linePaint, fillHoverPaint, onClick, onHover, interactive, beforeId }: MapGeoJSONProps<P>): null;
 type TimestampFormat = "date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time";
 function Timestamp({ value, format, className, ...props }: Omit<React$1.ComponentPropsWithoutRef<"span">, "children"> & {
     value: number | string;
     format?: TimestampFormat;
 }): React$1.JSX.Element | null;
-type MapData = string | number | boolean | null | MapData[] | {
-    [key: string]: MapData;
-};
-function Maps(props: {
-    label: string;
-    geography: MapData;
-    objectName?: string;
-    labelKey?: string;
-    selectedId?: string;
-    selectableIds?: string[];
-    onSelect?: (id: string) => void;
-    projection?: "geoEqualEarth" | "geoMercator" | "geoEquirectangular";
-    center?: [
-        number,
-        number
-    ];
-    scale?: number;
-    zoom?: number;
-    height?: number | string;
-    fit?: "contain" | "cover";
-}): React$1.JSX.Element;
 function FileViewer({ src, title }: {
     src: string;
     title: string;
@@ -7406,18 +34058,18 @@ const coreRowModelsFeature: TableFeature;
 const coreRowsFeature: TableFeature;
 const coreTablesFeature: TableFeature;
 interface InteropSubscribable<T> {
-    subscribe: (observer: Observer<T>) => Subscription;
+    subscribe: (observer: Observer<T>) => Subscription$1;
 }
 type Observer<T> = {
     next?: (value: T) => void;
     error?: (err: unknown) => void;
     complete?: () => void;
 };
-interface Subscription {
+interface Subscription$1 {
     unsubscribe: () => void;
 }
 interface Subscribable<T> extends InteropSubscribable<T> {
-    subscribe: ((observer: Observer<T>) => Subscription) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription);
+    subscribe: ((observer: Observer<T>) => Subscription$1) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$1);
 }
 interface Readable<T> extends Subscribable<T> {
     get: () => T;
@@ -7448,7 +34100,7 @@ class Store$1<T, TActions extends StoreActionMap = never> {
     setState(updater: (prev: T) => T): void;
     get state(): T;
     get(): T;
-    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription;
+    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription$1;
 }
 class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
     private atom;
@@ -7456,7 +34108,7 @@ class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
     constructor(initialValue: T);
     get state(): T;
     get(): T;
-    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription;
+    subscribe(observerOrFn: Observer<T> | ((value: T) => void)): Subscription$1;
 }
 interface TableAtomOptions<T> extends AtomOptions<T> {
     debugName: string;
@@ -7465,7 +34117,7 @@ interface TableReactivityBindings {
     createOptionsStore: boolean;
     wrapExternalAtoms: boolean;
     commit?: () => void;
-    addSubscription: (subscription: Subscription) => void;
+    addSubscription: (subscription: Subscription$1) => void;
     createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
     createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
     untrack: <T>(fn: () => T) => T;
@@ -10548,7 +37200,7 @@ type State$1<Payload> = PopupStoreState<Payload> & {
     viewportElement: HTMLElement | null;
     role: "dialog" | "alertdialog";
 };
-type Context$1 = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
+type Context$2 = PopupStoreContext<DialogRoot.ChangeEventDetails> & {
     readonly popupRef: React$1.RefObject<HTMLElement | null>;
     readonly backdropRef: React$1.RefObject<HTMLDivElement | null>;
     readonly internalBackdropRef: React$1.RefObject<HTMLDivElement | null>;
@@ -10928,7 +37580,7 @@ const selectors$2: {
     role: (state: State$1<unknown>) => "alertdialog" | "dialog";
 };
 type DialogHandleStore<Payload> = PopupTriggerDataStore<State$1<Payload>>;
-class DialogStore<Payload> extends ReactStore<Readonly<State$1<Payload>>, Context$1, typeof selectors$2> {
+class DialogStore<Payload> extends ReactStore<Readonly<State$1<Payload>>, Context$2, typeof selectors$2> {
     constructor(initialState: Partial<State$1<Payload>> | undefined, floatingId: string | undefined, nested: boolean);
     setOpen: (nextOpen: boolean, eventDetails: Omit<DialogRoot.ChangeEventDetails, "preventUnmountOnClose">) => void;
 }
@@ -11008,12 +37660,12 @@ const VALIDATION_MODE: {
 type Observer$1<T> = {
     next: (value: T) => void;
 };
-type Subscription$1 = {
+type Subscription$2 = {
     unsubscribe: Noop;
 };
 type Subject<T> = {
     readonly observers: Observer$1<T>[];
-    subscribe: (value: Observer$1<T>) => Subscription$1;
+    subscribe: (value: Observer$1<T>) => Subscription$2;
     unsubscribe: Noop;
 } & Observer$1<T>;
 type EventType = "focus" | "blur" | "change" | "changeText" | "valueChange" | "contentSizeChange" | "endEditing" | "keyPress" | "submitEditing" | "layout" | "selectionChange" | "longPress" | "press" | "pressIn" | "pressOut" | "momentumScrollBegin" | "momentumScrollEnd" | "scroll" | "scrollBeginDrag" | "scrollEndDrag" | "load" | "error" | "progress" | "custom";
@@ -11255,7 +37907,7 @@ type UseFormWatch<TFieldValues extends FieldValues> = {
         ...TFieldNames
     ], defaultValue?: DeepPartial<TFieldValues>): FieldPathValues<TFieldValues, TFieldNames>;
     <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, defaultValue?: FieldPathValue<TFieldValues, TFieldName>): FieldPathValue<TFieldValues, TFieldName>;
-    (callback: WatchObserver<TFieldValues>, defaultValues?: DeepPartial<TFieldValues>): Subscription$1;
+    (callback: WatchObserver<TFieldValues>, defaultValues?: DeepPartial<TFieldValues>): Subscription$2;
 };
 type UseFormTrigger<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: TriggerConfig) => Promise<boolean>;
 type UseFormClearErrors<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[] | ErrorNamespacePath) => void;
@@ -11695,6 +38347,73 @@ export function ChartLegend<Row extends object>({ series, data, nameKey, valueKe
     valueKey?: ChartValueKey<Row>;
     formatValue?: (value: number) => React$1.ReactNode;
 })): React$1.JSX.Element | null;
+export type MapCoordinate = [
+    longitude: number,
+    latitude: number
+];
+type MapViewport$1 = {
+    center: MapCoordinate;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+};
+export type MapMarker = {
+    id: string;
+    coordinates: MapCoordinate;
+    label: string;
+    description?: string;
+};
+export type MapRoute = {
+    id: string;
+    coordinates: MapCoordinate[];
+    label?: string;
+};
+export type MapArc = {
+    id: string;
+    from: MapCoordinate;
+    to: MapCoordinate;
+};
+export type MapGeography = FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties>;
+export type MapControlsOptions = Omit<MapControlsProps, "className">;
+type MapOptions$1 = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "className" | "style" | "onError" | "onSelect"> & {
+    center?: MapCoordinate;
+    zoom?: number;
+    controls?: boolean | MapControlsOptions;
+    interactive?: boolean;
+    blank?: boolean;
+    projection?: "mercator" | "globe";
+    viewport?: Partial<MapViewport$1>;
+    onViewportChange?: (viewport: MapViewport$1) => void;
+};
+export function StreetMap({ locations, routes, clusters, connections, onSelectLocation, ...props }: MapOptions$1 & {
+    locations?: readonly MapMarker[];
+    routes?: readonly MapRoute[];
+    clusters?: readonly MapMarker[];
+    connections?: readonly MapArc[];
+    onSelectLocation?: (location: MapMarker) => void;
+}): React$1.JSX.Element;
+export function MarkerMap({ data, onSelect, ...props }: MapOptions$1 & {
+    data: readonly MapMarker[];
+    onSelect?: (marker: MapMarker) => void;
+}): React$1.JSX.Element;
+export function RouteMap({ data, onSelect, ...props }: MapOptions$1 & {
+    data: readonly MapRoute[];
+    onSelect?: (route: MapRoute) => void;
+}): React$1.JSX.Element;
+export function ClusterMap({ data, onSelect, radius, ...props }: MapOptions$1 & {
+    data: readonly MapMarker[];
+    radius?: number;
+    onSelect?: (marker: MapMarker) => void;
+}): React$1.JSX.Element;
+export function GeoJSONMap({ data: input, onSelect, ...props }: MapOptions$1 & {
+    data: MapGeography;
+    onSelect?: (feature: MapGeography["features"][number]) => void;
+}): React$1.JSX.Element;
+export function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
+    data: readonly MapArc[];
+    curvature?: number;
+    onSelect?: (arc: MapArc) => void;
+}): React$1.JSX.Element;
 export type ChartConfig = Record<string, {
     label?: React$1.ReactNode;
     icon?: React$1.ComponentType;
@@ -11705,6 +38424,9 @@ export type ChartConfig = Record<string, {
     color?: never;
     theme: Record<"light" | "dark", string>;
 })>;
+type MapData = string | number | boolean | null | MapData[] | {
+    [key: string]: MapData;
+};
 type CountryUsage = {
     id: string;
     name: string;
@@ -11779,7 +38501,9 @@ const Icon$1: PublicComponent<typeof Icon>;
 const Link$1: PublicComponent<typeof Link>;
 const Currency$1: PublicComponent<typeof Currency>;
 const FileViewer$1: PublicComponent<typeof FileViewer>;
-const Maps$1: PublicComponent<typeof Maps>;
+const ViewMap: (props: PublicProps<MapProps & React$1.RefAttributes<MapRef>>) => React$1.ReactNode;
+const MapGeoJSON$1: PublicComponent<typeof MapGeoJSON>;
+const MapControls$1: PublicComponent<typeof MapControls>;
 const Frame$2: PublicComponent<typeof Frame$1>;
 const dataGridFeatures$1: Omit<DataGridFeatures, "columnMeta"> & {
     columnMeta: PublicProps<DataGridFeatures["columnMeta"]>;
@@ -12199,8 +38923,8 @@ type ToEnum<T extends EnumValue> = Flatten<{
 }>;
 type KeysEnum<T extends object> = ToEnum<Exclude<keyof T, symbol>>;
 type KeysArray<T extends object> = Flatten<(keyof T & string)[]>;
-type Literal = string | number | bigint | boolean | null | undefined;
-type LiteralArray = Array<Literal>;
+type Literal$1 = string | number | bigint | boolean | null | undefined;
+type LiteralArray = Array<Literal$1>;
 type Primitive$1 = string | number | symbol | bigint | boolean | null | undefined;
 type PrimitiveArray = Array<Primitive$1>;
 type HasSize = {
@@ -14074,7 +40798,7 @@ interface $ZodConfig {
     postProcessor?: ((inst: any) => void) | undefined;
 }
 const globalConfig: $ZodConfig;
-function config(newConfig?: Partial<$ZodConfig>): $ZodConfig;
+function config$1(newConfig?: Partial<$ZodConfig>): $ZodConfig;
 type $ZodErrorClass = {
     new (issues: $ZodIssue[]): $ZodError;
 };
@@ -14095,7 +40819,7 @@ type $SafeParseAsync = <T extends schemas.$ZodType>(schema: T, value: unknown, _
 const _safeParseAsync: (_Err: $ZodErrorClass) => $SafeParseAsync;
 const safeParseAsync: $SafeParseAsync;
 type $Validate = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => value is input<T>;
-const validate: $Validate;
+const validate$1: $Validate;
 type $ValidateAsync = <T extends schemas.$ZodType>(schema: T, value: unknown, _ctx?: schemas.ParseContext<$ZodIssue>) => Promise<boolean>;
 const validateAsync: $ValidateAsync;
 type $Encode = <T extends schemas.$ZodType>(schema: T, value: output<T>, _ctx?: schemas.ParseContext<$ZodIssue>, _params?: $ParseParams) => input<T>;
@@ -15648,7 +42372,7 @@ namespace JSONSchema$1 {
     export { ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, JSONSchema, NullSchema, NumberSchema, ObjectSchema, Schema, SchemaType, StringSchema, _JSONSchema };
 }
 namespace util {
-    export { AnyFunc, AssertEqual, AssertExtends, AssertNotEqual, BIGINT_FORMAT_RANGES, BuiltIn, CONSTANT_CATCH, Class, CleanKey, Constructor, EmptyObject, EmptyToNever, EnumLike, EnumValue, Exactly, Extend, ExtractIndexSignature, Flatten, FromCleanMap, HasLength, HasSize, HashAlgorithm, HashEncoding, HashFormat, IPVersion, Identity, InexactPartial$1 as InexactPartial, IsAny$3 as IsAny, IsProp, JSONType, JWTAlgorithm, KeyOf, Keys, KeysArray, KeysEnum, Literal, LiteralArray, LoosePartial, MakePartial, MakeReadonly, MakeRequired, Mapped, Mask, MaybeAsync, MimeTypes, NUMBER_FORMAT_RANGES, NoNever, NoNeverKeys, NoUndefined, Normalize, Numeric, Omit$1 as Omit, OmitIndexSignature, OmitKeys, ParsedTypes, Prettify$2 as Prettify, Primitive$1 as Primitive, PrimitiveArray, PrimitiveSet, PropValues, ProtoOf, SafeParseError, SafeParseResult, SafeParseSuccess, SchemaClass, ShapeGetter, SomeObject, ToCleanMap, ToEnum, TupleItems, Whatever, Widen, Writeable, aborted, allowsEval, assert, assertEqual, assertIs, assertNever, assertNotEqual, assignProp, attachSchema, base64ToUint8Array, base64urlToUint8Array, cached, captureStackTrace, cleanEnum, cleanRegex, clone, cloneDef, codePointLength, constantCatch, createTransparentProxy, defineLazy, defineLazyInternal, derived, esc, escapeRegex, explicitlyAborted, extend, finalizeIssue, floatSafeRemainder, getElementAtPath, getEnumValues, getLengthableOrigin, getParsedType, getSizableOrigin, hexToUint8Array, hide, installLazyProp, isObject, isPlainObject, issue, joinValues, jsonStringifyReplacer, members, merge, mergeDefs, normalizeParams, nullish, numKeys, objectClone, omit, optionalKeys, own, parsedType, partial, pick, prefixIssues, primitiveTypes, promiseAllObject, propertyKeyTypes, randomString, rawShape, required, safeExtend, shallowClone, sizeCaps, slugify, stringifyPrimitive, toZod, uint8ArrayToBase64, uint8ArrayToBase64url, uint8ArrayToHex, unwrapMessage };
+    export { AnyFunc, AssertEqual, AssertExtends, AssertNotEqual, BIGINT_FORMAT_RANGES, BuiltIn, CONSTANT_CATCH, Class, CleanKey, Constructor, EmptyObject, EmptyToNever, EnumLike, EnumValue, Exactly, Extend, ExtractIndexSignature, Flatten, FromCleanMap, HasLength, HasSize, HashAlgorithm, HashEncoding, HashFormat, IPVersion, Identity, InexactPartial$1 as InexactPartial, IsAny$3 as IsAny, IsProp, JSONType, JWTAlgorithm, KeyOf, Keys, KeysArray, KeysEnum, Literal$1 as Literal, LiteralArray, LoosePartial, MakePartial, MakeReadonly, MakeRequired, Mapped, Mask, MaybeAsync, MimeTypes, NUMBER_FORMAT_RANGES, NoNever, NoNeverKeys, NoUndefined, Normalize, Numeric, Omit$1 as Omit, OmitIndexSignature, OmitKeys, ParsedTypes, Prettify$2 as Prettify, Primitive$1 as Primitive, PrimitiveArray, PrimitiveSet, PropValues, ProtoOf, SafeParseError, SafeParseResult, SafeParseSuccess, SchemaClass, ShapeGetter, SomeObject, ToCleanMap, ToEnum, TupleItems, Whatever, Widen, Writeable, aborted, allowsEval, assert, assertEqual, assertIs, assertNever, assertNotEqual, assignProp, attachSchema, base64ToUint8Array, base64urlToUint8Array, cached, captureStackTrace, cleanEnum, cleanRegex, clone, cloneDef, codePointLength, constantCatch, createTransparentProxy, defineLazy, defineLazyInternal, derived, esc, escapeRegex, explicitlyAborted, extend, finalizeIssue, floatSafeRemainder, getElementAtPath, getEnumValues, getLengthableOrigin, getParsedType, getSizableOrigin, hexToUint8Array, hide, installLazyProp, isObject, isPlainObject, issue, joinValues, jsonStringifyReplacer, members, merge, mergeDefs, normalizeParams, nullish, numKeys, objectClone, omit, optionalKeys, own, parsedType, partial, pick, prefixIssues, primitiveTypes, promiseAllObject, propertyKeyTypes, randomString, rawShape, required, safeExtend, shallowClone, sizeCaps, slugify, stringifyPrimitive, toZod, uint8ArrayToBase64, uint8ArrayToBase64url, uint8ArrayToHex, unwrapMessage };
 }
 namespace coerce {
     export { ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, bigint$2 as bigint, boolean$2 as boolean, date$3 as date, number$2 as number, string$2 as string };
@@ -15666,17 +42390,18 @@ namespace schemas$1 {
     export { SafeExtendShape, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodExactOptional, ZodFile, ZodFloat32, ZodFloat64, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRecord, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _enum$1 as enum, _function, _function as function, _instanceof as instanceof, _null$2 as null, _undefined$2 as undefined, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, codec, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, exactOptional, file, float32, float64, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, looseObject, looseRecord, mac$1 as mac, map, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, partialRecord, pipe, prefault, preprocess, promise, readonly, record, refine, set, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, transform, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, xid$1 as xid, xor };
 }
 namespace core {
-    export { $Decode, $DecodeAsync, $DiscriminatedOption, $DiscriminatorValue, $Encode, $EncodeAsync, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $Parse, $ParseAsync, $PartsToTemplateLiteral, $RefinementCtx, $SafeDecode, $SafeDecodeAsync, $SafeEncode, $SafeEncodeAsync, $SafeParse, $SafeParseAsync, $Validate, $ValidateAsync, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodAnyParams, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodArrayParams, $ZodAsyncError, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64Params, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBase64URLParams, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntFormatParams, $ZodBigIntFormats, $ZodBigIntInternals, $ZodBigIntParams, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodBooleanParams, $ZodBranded, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv4Params, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCIDRv6Params, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUID2Params, $ZodCUIDDef, $ZodCUIDInternals, $ZodCUIDParams, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCatchParams, $ZodCheck, $ZodCheckBase64Params, $ZodCheckBase64URLParams, $ZodCheckBigIntFormat, $ZodCheckBigIntFormatDef, $ZodCheckBigIntFormatInternals, $ZodCheckBigIntFormatParams, $ZodCheckCIDRv4Params, $ZodCheckCIDRv6Params, $ZodCheckCUID2Params, $ZodCheckCUIDParams, $ZodCheckCreditCardParams, $ZodCheckDef, $ZodCheckE164Params, $ZodCheckEmailParams, $ZodCheckEmojiParams, $ZodCheckEndsWith, $ZodCheckEndsWithDef, $ZodCheckEndsWithInternals, $ZodCheckEndsWithParams, $ZodCheckGUIDParams, $ZodCheckGreaterThan, $ZodCheckGreaterThanDef, $ZodCheckGreaterThanInternals, $ZodCheckGreaterThanParams, $ZodCheckIBANParams, $ZodCheckIPv4Params, $ZodCheckIPv6Params, $ZodCheckISODateParams, $ZodCheckISODateTimeParams, $ZodCheckISODurationParams, $ZodCheckISOTimeParams, $ZodCheckIncludes, $ZodCheckIncludesDef, $ZodCheckIncludesInternals, $ZodCheckIncludesParams, $ZodCheckInternals, $ZodCheckJWTParams, $ZodCheckKSUIDParams, $ZodCheckLengthEquals, $ZodCheckLengthEqualsDef, $ZodCheckLengthEqualsInternals, $ZodCheckLengthEqualsParams, $ZodCheckLessThan, $ZodCheckLessThanDef, $ZodCheckLessThanInternals, $ZodCheckLessThanParams, $ZodCheckLowerCase, $ZodCheckLowerCaseDef, $ZodCheckLowerCaseInternals, $ZodCheckLowerCaseParams, $ZodCheckMACParams, $ZodCheckMaxLength, $ZodCheckMaxLengthDef, $ZodCheckMaxLengthInternals, $ZodCheckMaxLengthParams, $ZodCheckMaxSize, $ZodCheckMaxSizeDef, $ZodCheckMaxSizeInternals, $ZodCheckMaxSizeParams, $ZodCheckMimeType, $ZodCheckMimeTypeDef, $ZodCheckMimeTypeInternals, $ZodCheckMimeTypeParams, $ZodCheckMinLength, $ZodCheckMinLengthDef, $ZodCheckMinLengthInternals, $ZodCheckMinLengthParams, $ZodCheckMinSize, $ZodCheckMinSizeDef, $ZodCheckMinSizeInternals, $ZodCheckMinSizeParams, $ZodCheckMultipleOf, $ZodCheckMultipleOfDef, $ZodCheckMultipleOfInternals, $ZodCheckMultipleOfParams, $ZodCheckNanoIDParams, $ZodCheckNumberFormat, $ZodCheckNumberFormatDef, $ZodCheckNumberFormatInternals, $ZodCheckNumberFormatParams, $ZodCheckOverwrite, $ZodCheckOverwriteDef, $ZodCheckOverwriteInternals, $ZodCheckProperties, $ZodCheckPropertiesDef, $ZodCheckPropertiesInput, $ZodCheckPropertiesInternals, $ZodCheckPropertiesParams, $ZodCheckProperty, $ZodCheckPropertyDef, $ZodCheckPropertyInternals, $ZodCheckPropertyParams, $ZodCheckRegex, $ZodCheckRegexDef, $ZodCheckRegexInternals, $ZodCheckRegexParams, $ZodCheckSizeEquals, $ZodCheckSizeEqualsDef, $ZodCheckSizeEqualsInternals, $ZodCheckSizeEqualsParams, $ZodCheckStartsWith, $ZodCheckStartsWithDef, $ZodCheckStartsWithInternals, $ZodCheckStartsWithParams, $ZodCheckStringFormat, $ZodCheckStringFormatDef, $ZodCheckStringFormatInternals, $ZodCheckStringFormatParams, $ZodCheckULIDParams, $ZodCheckURLParams, $ZodCheckUUIDParams, $ZodCheckUUIDv4Params, $ZodCheckUUIDv6Params, $ZodCheckUUIDv7Params, $ZodCheckUpperCase, $ZodCheckUpperCaseDef, $ZodCheckUpperCaseInternals, $ZodCheckUpperCaseParams, $ZodCheckXIDParams, $ZodChecks, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodConfig, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCreditCardParams, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomParams, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodCyclicError, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDateParams, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDefaultParams, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodDiscriminatedUnionParams, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodE164Params, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmailParams, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEmojiParams, $ZodEncodeError, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodEnumParams, $ZodError, $ZodErrorClass, $ZodErrorMap, $ZodErrorTree, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFileParams, $ZodFlattenedError, $ZodFormattedError, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodGUIDParams, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIBANParams, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv4Params, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodIPv6Params, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateParams, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODateTimeParams, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISODurationParams, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodISOTimeParams, $ZodInternalIssue, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodIntersectionParams, $ZodInvalidTypeExpected, $ZodIssue, $ZodIssueBase, $ZodIssueCode, $ZodIssueCustom, $ZodIssueInvalidElement, $ZodIssueInvalidKey, $ZodIssueInvalidStringFormat, $ZodIssueInvalidType, $ZodIssueInvalidUnion, $ZodIssueInvalidValue, $ZodIssueNotMultipleOf, $ZodIssueStringCommonFormats, $ZodIssueStringEndsWith, $ZodIssueStringIncludes, $ZodIssueStringInvalidJWT, $ZodIssueStringInvalidRegex, $ZodIssueStringStartsWith, $ZodIssueTooBig, $ZodIssueTooSmall, $ZodIssueUnrecognizedKeys, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodJWTParams, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodKSUIDParams, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLazyParams, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLiteralParams, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMACParams, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMapParams, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNaNParams, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNanoIDParams, $ZodNarrow, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNeverParams, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNonOptionalParams, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullParams, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNullableParams, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberFormatParams, $ZodNumberFormats, $ZodNumberInternals, $ZodNumberParams, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodObjectParams, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodOptionalParams, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPipeParams, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodPromiseParams, $ZodRawIssue, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodReadonlyParams, $ZodRealError$1 as $ZodRealError, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodRecordParams, $ZodRegistry, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodSetParams, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringBoolParams, $ZodStringDef, $ZodStringFormat, $ZodStringFormatChecks, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatIssues, $ZodStringFormatParams, $ZodStringFormatTypes, $ZodStringFormats, $ZodStringInternals, $ZodStringParams, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSuccessParams, $ZodSuperRefineIssue, $ZodSuperRefineParams, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodSymbolParams, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralParams, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTransformParams, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodTupleParams, $ZodType, $ZodTypeDef, $ZodTypeDiscriminable, $ZodTypeDiscriminableInternals, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodULIDParams, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodURLParams, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUUIDParams, $ZodUUIDv4Params, $ZodUUIDv6Params, $ZodUUIDv7Params, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUndefinedParams, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnionParams, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodUnknownParams, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodVoidParams, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXIDParams, $ZodXor, $ZodXorInternals, $ZodXorParams, $brand, $catchall, $constructor, $constructorParams, $input, $loose, $output, $partial, $replace, $strict, $strip, CheckFn, CheckParams, CheckStringFormatParams, CheckTypeParams, CompileOptions, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, Doc, File$2 as File, GlobalMeta, INVALID, JSONSchema$1 as JSONSchema, JSONSchemaGenerator, JSONSchemaGeneratorParams, JSONSchemaMeta, NEVER, Params, ParseContext, ParseContextInternal, ParsePayload, ProcessParams, Processor, RegistryToJSONSchemaParams, Seen, SomeType, StringFormatParams, TimePrecision, ToJSONSchemaContext, ToJSONSchemaParams, ToTemplateLiteral, TypeParams, URL_BAD_FORMAT, URL_UNPARSEABLE, UnrepresentableHandler, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodStandardJSONSchemaPayload, ZodStandardSchemaWithJSON, _$ZodType, _$ZodTypeInternals, _any, _array, _base64, _base64url, _bigint, _boolean, _catch, _check, _cidrv4, _cidrv6, _coercedBigint, _coercedBoolean, _coercedDate, _coercedNumber, _coercedString, _creditCard, _cuid, _cuid2, _custom, _date, _decode, _decodeAsync, _default$63 as _default, _discriminatedUnion, _e164, _email, _emoji, _encode, _encodeAsync, _endsWith, _enum, _file, _float32, _float64, _gt, _gte, _gte as _min, _guid, _iban, _includes, _int, _int32, _int64, _intersection, _ipv4, _ipv6, _isoDate, _isoDateTime, _isoDuration, _isoTime, _jwt, _ksuid, _lazy, _length, _literal, _lowercase, _lt, _lte, _lte as _max, _mac, _map, _maxLength, _maxSize, _mime, _minLength, _minSize, _multipleOf, _nan, _nanoid, _nativeEnum, _negative, _never, _nonnegative, _nonoptional, _nonpositive, _normalize, _null$1 as _null, _nullable, _number, _optional, _overwrite, _parse, _parseAsync, _pipe, _positive, _promise, _properties, _property, _readonly, _record, _refine, _regex, _safeDecode, _safeDecodeAsync, _safeEncode, _safeEncodeAsync, _safeParse, _safeParseAsync, _set, _size, _slugify, _startsWith, _string, _stringFormat, _stringbool, _success, _superRefine, _symbol, _templateLiteral, _toLowerCase, _toUpperCase, _transform, _trim, _tuple, _uint32, _uint64, _ulid, _undefined$1 as _undefined, _union, _unknown, _uppercase, _url, _uuid, _uuidv4, _uuidv6, _uuidv7, _void, _xid, _xor, base64Charset, base64urlCharset, canParseURL, clone, compile, compileFn, config, createStandardJSONSchemaMethod, createToJSONSchemaMethod, decode, decodeAsync, describe, encode, encodeAsync, extractDefs, finalize, flattenError, formatError, getDiscriminatedOption, globalConfig, globalRegistry, handleUnrepresentable, initializeContext, input, isBackEdge, isRecursiveSchema, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, locales, memoizer, mergeValues, meta, output, output as infer, parse, parseAsync, parseURLObject, prettifyError, processSchema, processSchema as process, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, standardProps, stripTabAndNewline, toDotPath, toJSONSchema, toZod, treeifyError, urlHostnameOk, urlProtocolOk, util, validate, validateAsync, validateURL, version, withParser };
+    export { $Decode, $DecodeAsync, $DiscriminatedOption, $DiscriminatorValue, $Encode, $EncodeAsync, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $Parse, $ParseAsync, $PartsToTemplateLiteral, $RefinementCtx, $SafeDecode, $SafeDecodeAsync, $SafeEncode, $SafeEncodeAsync, $SafeParse, $SafeParseAsync, $Validate, $ValidateAsync, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodAnyParams, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodArrayParams, $ZodAsyncError, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64Params, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBase64URLParams, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntFormatParams, $ZodBigIntFormats, $ZodBigIntInternals, $ZodBigIntParams, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodBooleanParams, $ZodBranded, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv4Params, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCIDRv6Params, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUID2Params, $ZodCUIDDef, $ZodCUIDInternals, $ZodCUIDParams, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCatchParams, $ZodCheck, $ZodCheckBase64Params, $ZodCheckBase64URLParams, $ZodCheckBigIntFormat, $ZodCheckBigIntFormatDef, $ZodCheckBigIntFormatInternals, $ZodCheckBigIntFormatParams, $ZodCheckCIDRv4Params, $ZodCheckCIDRv6Params, $ZodCheckCUID2Params, $ZodCheckCUIDParams, $ZodCheckCreditCardParams, $ZodCheckDef, $ZodCheckE164Params, $ZodCheckEmailParams, $ZodCheckEmojiParams, $ZodCheckEndsWith, $ZodCheckEndsWithDef, $ZodCheckEndsWithInternals, $ZodCheckEndsWithParams, $ZodCheckGUIDParams, $ZodCheckGreaterThan, $ZodCheckGreaterThanDef, $ZodCheckGreaterThanInternals, $ZodCheckGreaterThanParams, $ZodCheckIBANParams, $ZodCheckIPv4Params, $ZodCheckIPv6Params, $ZodCheckISODateParams, $ZodCheckISODateTimeParams, $ZodCheckISODurationParams, $ZodCheckISOTimeParams, $ZodCheckIncludes, $ZodCheckIncludesDef, $ZodCheckIncludesInternals, $ZodCheckIncludesParams, $ZodCheckInternals, $ZodCheckJWTParams, $ZodCheckKSUIDParams, $ZodCheckLengthEquals, $ZodCheckLengthEqualsDef, $ZodCheckLengthEqualsInternals, $ZodCheckLengthEqualsParams, $ZodCheckLessThan, $ZodCheckLessThanDef, $ZodCheckLessThanInternals, $ZodCheckLessThanParams, $ZodCheckLowerCase, $ZodCheckLowerCaseDef, $ZodCheckLowerCaseInternals, $ZodCheckLowerCaseParams, $ZodCheckMACParams, $ZodCheckMaxLength, $ZodCheckMaxLengthDef, $ZodCheckMaxLengthInternals, $ZodCheckMaxLengthParams, $ZodCheckMaxSize, $ZodCheckMaxSizeDef, $ZodCheckMaxSizeInternals, $ZodCheckMaxSizeParams, $ZodCheckMimeType, $ZodCheckMimeTypeDef, $ZodCheckMimeTypeInternals, $ZodCheckMimeTypeParams, $ZodCheckMinLength, $ZodCheckMinLengthDef, $ZodCheckMinLengthInternals, $ZodCheckMinLengthParams, $ZodCheckMinSize, $ZodCheckMinSizeDef, $ZodCheckMinSizeInternals, $ZodCheckMinSizeParams, $ZodCheckMultipleOf, $ZodCheckMultipleOfDef, $ZodCheckMultipleOfInternals, $ZodCheckMultipleOfParams, $ZodCheckNanoIDParams, $ZodCheckNumberFormat, $ZodCheckNumberFormatDef, $ZodCheckNumberFormatInternals, $ZodCheckNumberFormatParams, $ZodCheckOverwrite, $ZodCheckOverwriteDef, $ZodCheckOverwriteInternals, $ZodCheckProperties, $ZodCheckPropertiesDef, $ZodCheckPropertiesInput, $ZodCheckPropertiesInternals, $ZodCheckPropertiesParams, $ZodCheckProperty, $ZodCheckPropertyDef, $ZodCheckPropertyInternals, $ZodCheckPropertyParams, $ZodCheckRegex, $ZodCheckRegexDef, $ZodCheckRegexInternals, $ZodCheckRegexParams, $ZodCheckSizeEquals, $ZodCheckSizeEqualsDef, $ZodCheckSizeEqualsInternals, $ZodCheckSizeEqualsParams, $ZodCheckStartsWith, $ZodCheckStartsWithDef, $ZodCheckStartsWithInternals, $ZodCheckStartsWithParams, $ZodCheckStringFormat, $ZodCheckStringFormatDef, $ZodCheckStringFormatInternals, $ZodCheckStringFormatParams, $ZodCheckULIDParams, $ZodCheckURLParams, $ZodCheckUUIDParams, $ZodCheckUUIDv4Params, $ZodCheckUUIDv6Params, $ZodCheckUUIDv7Params, $ZodCheckUpperCase, $ZodCheckUpperCaseDef, $ZodCheckUpperCaseInternals, $ZodCheckUpperCaseParams, $ZodCheckXIDParams, $ZodChecks, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodConfig, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCreditCardParams, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomParams, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodCyclicError, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDateParams, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDefaultParams, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodDiscriminatedUnionParams, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodE164Params, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmailParams, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEmojiParams, $ZodEncodeError, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodEnumParams, $ZodError, $ZodErrorClass, $ZodErrorMap, $ZodErrorTree, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFileParams, $ZodFlattenedError, $ZodFormattedError, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodGUIDParams, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIBANParams, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv4Params, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodIPv6Params, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateParams, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODateTimeParams, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISODurationParams, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodISOTimeParams, $ZodInternalIssue, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodIntersectionParams, $ZodInvalidTypeExpected, $ZodIssue, $ZodIssueBase, $ZodIssueCode, $ZodIssueCustom, $ZodIssueInvalidElement, $ZodIssueInvalidKey, $ZodIssueInvalidStringFormat, $ZodIssueInvalidType, $ZodIssueInvalidUnion, $ZodIssueInvalidValue, $ZodIssueNotMultipleOf, $ZodIssueStringCommonFormats, $ZodIssueStringEndsWith, $ZodIssueStringIncludes, $ZodIssueStringInvalidJWT, $ZodIssueStringInvalidRegex, $ZodIssueStringStartsWith, $ZodIssueTooBig, $ZodIssueTooSmall, $ZodIssueUnrecognizedKeys, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodJWTParams, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodKSUIDParams, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLazyParams, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLiteralParams, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMACParams, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMapParams, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNaNParams, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNanoIDParams, $ZodNarrow, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNeverParams, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNonOptionalParams, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullParams, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNullableParams, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberFormatParams, $ZodNumberFormats, $ZodNumberInternals, $ZodNumberParams, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodObjectParams, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodOptionalParams, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPipeParams, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodPromiseParams, $ZodRawIssue, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodReadonlyParams, $ZodRealError$1 as $ZodRealError, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodRecordParams, $ZodRegistry, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodSetParams, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringBoolParams, $ZodStringDef, $ZodStringFormat, $ZodStringFormatChecks, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatIssues, $ZodStringFormatParams, $ZodStringFormatTypes, $ZodStringFormats, $ZodStringInternals, $ZodStringParams, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSuccessParams, $ZodSuperRefineIssue, $ZodSuperRefineParams, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodSymbolParams, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralParams, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTransformParams, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodTupleParams, $ZodType, $ZodTypeDef, $ZodTypeDiscriminable, $ZodTypeDiscriminableInternals, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodULIDParams, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodURLParams, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUUIDParams, $ZodUUIDv4Params, $ZodUUIDv6Params, $ZodUUIDv7Params, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUndefinedParams, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnionParams, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodUnknownParams, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodVoidParams, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXIDParams, $ZodXor, $ZodXorInternals, $ZodXorParams, $brand, $catchall, $constructor, $constructorParams, $input, $loose, $output, $partial, $replace, $strict, $strip, CheckFn, CheckParams, CheckStringFormatParams, CheckTypeParams, CompileOptions, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, Doc, File$2 as File, GlobalMeta, INVALID, JSONSchema$1 as JSONSchema, JSONSchemaGenerator, JSONSchemaGeneratorParams, JSONSchemaMeta, NEVER, Params, ParseContext, ParseContextInternal, ParsePayload, ProcessParams, Processor, RegistryToJSONSchemaParams, Seen, SomeType, StringFormatParams, TimePrecision, ToJSONSchemaContext, ToJSONSchemaParams, ToTemplateLiteral, TypeParams, URL_BAD_FORMAT, URL_UNPARSEABLE, UnrepresentableHandler, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodStandardJSONSchemaPayload, ZodStandardSchemaWithJSON, _$ZodType, _$ZodTypeInternals, _any, _array, _base64, _base64url, _bigint, _boolean, _catch, _check, _cidrv4, _cidrv6, _coercedBigint, _coercedBoolean, _coercedDate, _coercedNumber, _coercedString, _creditCard, _cuid, _cuid2, _custom, _date, _decode, _decodeAsync, _default$63 as _default, _discriminatedUnion, _e164, _email, _emoji, _encode, _encodeAsync, _endsWith, _enum, _file, _float32, _float64, _gt, _gte, _gte as _min, _guid, _iban, _includes, _int, _int32, _int64, _intersection, _ipv4, _ipv6, _isoDate, _isoDateTime, _isoDuration, _isoTime, _jwt, _ksuid, _lazy, _length, _literal, _lowercase, _lt, _lte, _lte as _max, _mac, _map, _maxLength, _maxSize, _mime, _minLength, _minSize, _multipleOf, _nan, _nanoid, _nativeEnum, _negative, _never, _nonnegative, _nonoptional, _nonpositive, _normalize, _null$1 as _null, _nullable, _number, _optional, _overwrite, _parse, _parseAsync, _pipe, _positive, _promise, _properties, _property, _readonly, _record, _refine, _regex, _safeDecode, _safeDecodeAsync, _safeEncode, _safeEncodeAsync, _safeParse, _safeParseAsync, _set, _size, _slugify, _startsWith, _string, _stringFormat, _stringbool, _success, _superRefine, _symbol, _templateLiteral, _toLowerCase, _toUpperCase, _transform, _trim, _tuple, _uint32, _uint64, _ulid, _undefined$1 as _undefined, _union, _unknown, _uppercase, _url, _uuid, _uuidv4, _uuidv6, _uuidv7, _void, _xid, _xor, base64Charset, base64urlCharset, canParseURL, clone, compile, compileFn, config$1 as config, createStandardJSONSchemaMethod, createToJSONSchemaMethod, decode, decodeAsync, describe, encode, encodeAsync, extractDefs, finalize, flattenError, formatError, getDiscriminatedOption, globalConfig, globalRegistry, handleUnrepresentable, initializeContext, input, isBackEdge, isRecursiveSchema, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, locales, memoizer, mergeValues, meta, output, output as infer, parse, parseAsync, parseURLObject, prettifyError, processSchema, processSchema as process, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, standardProps, stripTabAndNewline, toDotPath, toJSONSchema, toZod, treeifyError, urlHostnameOk, urlProtocolOk, util, validate$1 as validate, validateAsync, validateURL, version, withParser };
 }
 namespace iso {
     export { ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, date$2 as date, datetime$1 as datetime, duration$1 as duration, time$1 as time };
 }
 namespace z {
-    export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, withParser, xid$1 as xid, xor };
+    export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$2 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, Maps$1 as Maps, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, dataGridFeatures$1 as dataGridFeatures, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$2 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, MapControls$1 as MapControls, MapGeoJSON$1 as MapGeoJSON, MapViewport$1 as MapViewport, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, ViewMap as Map, dataGridFeatures$1 as dataGridFeatures, z, };
 }
 
+declare const ArcMap: typeof NativeFrontend.ArcMap;
 declare const AreaChart: typeof NativeFrontend.AreaChart;
 declare const Avatar: typeof NativeFrontend.Avatar;
 declare const AvatarGroup: typeof NativeFrontend.AvatarGroup;
@@ -15693,6 +42418,7 @@ import ChartConfig = NativeFrontend.ChartConfig;
 declare const ChartLegend: typeof NativeFrontend.ChartLegend;
 import ChartSeries = NativeFrontend.ChartSeries;
 declare const Checkbox: typeof NativeFrontend.Checkbox;
+declare const ClusterMap: typeof NativeFrontend.ClusterMap;
 import ColumnDef = NativeFrontend.ColumnDef;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const Controller: typeof NativeFrontend.Controller;
@@ -15734,6 +42460,7 @@ import FormOption = NativeFrontend.FormOption;
 declare const FormProvider: typeof NativeFrontend.FormProvider;
 declare const Frame: typeof NativeFrontend.Frame;
 import FrontendElementType = NativeFrontend.FrontendElementType;
+declare const GeoJSONMap: typeof NativeFrontend.GeoJSONMap;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridItem: typeof NativeFrontend.GridItem;
 declare const Heading: typeof NativeFrontend.Heading;
@@ -15741,7 +42468,16 @@ declare const Icon: typeof NativeFrontend.Icon;
 declare const Input: typeof NativeFrontend.Input;
 declare const LineChart: typeof NativeFrontend.LineChart;
 declare const Link: typeof NativeFrontend.Link;
-declare const Maps: typeof NativeFrontend.Maps;
+import MapArc = NativeFrontend.MapArc;
+declare const MapControls: typeof NativeFrontend.MapControls;
+import MapControlsOptions = NativeFrontend.MapControlsOptions;
+import MapCoordinate = NativeFrontend.MapCoordinate;
+declare const MapGeoJSON: typeof NativeFrontend.MapGeoJSON;
+import MapGeography = NativeFrontend.MapGeography;
+import MapMarker = NativeFrontend.MapMarker;
+import MapRoute = NativeFrontend.MapRoute;
+import MapViewport = NativeFrontend.MapViewport;
+declare const MarkerMap: typeof NativeFrontend.MarkerMap;
 declare const Menu: typeof NativeFrontend.Menu;
 declare const MenuItem: typeof NativeFrontend.MenuItem;
 declare const MenuSection: typeof NativeFrontend.MenuSection;
@@ -15752,6 +42488,7 @@ declare const Progress: typeof NativeFrontend.Progress;
 declare const RadarChart: typeof NativeFrontend.RadarChart;
 declare const RadialBarChart: typeof NativeFrontend.RadialBarChart;
 declare const RadioGroup: typeof NativeFrontend.RadioGroup;
+declare const RouteMap: typeof NativeFrontend.RouteMap;
 import RowSelectionState = NativeFrontend.RowSelectionState;
 declare const Sankey: typeof NativeFrontend.Sankey;
 import SankeyLink = NativeFrontend.SankeyLink;
@@ -15762,6 +42499,7 @@ declare const Slider: typeof NativeFrontend.Slider;
 import SortingState = NativeFrontend.SortingState;
 declare const Stack: typeof NativeFrontend.Stack;
 declare const StackItem: typeof NativeFrontend.StackItem;
+declare const StreetMap: typeof NativeFrontend.StreetMap;
 declare const Switch: typeof NativeFrontend.Switch;
 declare const Tab: typeof NativeFrontend.Tab;
 declare const Table: typeof NativeFrontend.Table;

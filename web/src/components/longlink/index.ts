@@ -19,9 +19,10 @@ import * as dropdown from './action/dropdown';
 import * as currency from './display/currency';
 import * as progress from './display/progress';
 import * as fileType from './display/file-type';
+import * as mapcn from '@/components/mapcn/map';
 import * as timestamp from './display/timestamp';
-import * as maps from '@/components/custom/maps';
 import * as fileViewer from './display/file-viewer';
+import type { ReactNode, RefAttributes } from 'react';
 import * as group from '@/components/shadcn/button-group';
 import * as separator from '@/components/shadcn/separator';
 import type { TableFeatures } from '@tanstack/react-table';
@@ -90,7 +91,10 @@ export const Icon: PublicComponent<typeof icon.Icon> = icon.Icon;
 export const Link: PublicComponent<typeof link.Link> = link.Link;
 export const Currency: PublicComponent<typeof currency.Currency> = currency.Currency;
 export const FileViewer: PublicComponent<typeof fileViewer.FileViewer> = fileViewer.FileViewer;
-export const Maps: PublicComponent<typeof maps.Maps> = maps.Maps;
+const ViewMap: (props: PublicProps<mapcn.MapProps & RefAttributes<mapcn.MapRef>>) => ReactNode = mapcn.Map;
+export { ViewMap as Map };
+export const MapGeoJSON: PublicComponent<typeof mapcn.MapGeoJSON> = mapcn.MapGeoJSON;
+export const MapControls: PublicComponent<typeof mapcn.MapControls> = mapcn.MapControls;
 export const Frame: PublicComponent<typeof frame.Frame> = frame.Frame;
 
 export { Controller, FormProvider } from 'react-hook-form';
@@ -111,6 +115,21 @@ export { RadarChart } from './charts/radar';
 export { RadialBarChart } from './charts/radial-bar';
 export { Sankey } from './charts/sankey';
 export { ChartLegend } from './charts/legend';
+export { StreetMap } from './maps/street';
+export { MarkerMap } from './maps/markers';
+export { RouteMap } from './maps/routes';
+export { ClusterMap } from './maps/clusters';
+export { GeoJSONMap } from './maps/geojson';
+export { ArcMap } from './maps/arcs';
+export type {
+    MapCoordinate,
+    MapViewport,
+    MapMarker,
+    MapRoute,
+    MapArc,
+    MapGeography,
+    MapControlsOptions
+} from './maps/types';
 export type { ChartSeries, SankeyNode, SankeyLink } from './charts/types';
 export type { ChartConfig } from '@/components/shadcn/chart';
 export { CountryChart } from '@/components/custom/country-chart';

@@ -28,6 +28,56 @@ const table = useTable({
     getRowId: (row) => row.id
 });
 const query = createFilterQuery();
+/** @type {MapMarker[]} */
+const mapLocations = [{ id: 'office', coordinates: [8.54, 47.37], label: 'Office' }];
+/** @type {MapRoute[]} */
+const mapRoutes = [{ id: 'delivery', coordinates: [[8.54, 47.37], [7.44, 46.94]] }];
+/** @type {MapArc[]} */
+const mapArcs = [{ id: 'connection', from: [8.54, 47.37], to: [2.35, 48.85] }];
+/** @type {MapGeography} */
+const mapRegions = { type: 'FeatureCollection', features: [] };
+const composedMap = (
+    <Box height={320}>
+        <Map blank center={[8.23, 46.8]} zoom={6}>
+            <MapGeoJSON data={mapRegions} fillPaint={{ 'fill-opacity': 0.8 }} />
+            <MapControls
+                position="top-right"
+                showZoom
+                showCompass
+                showLocate
+                showFullscreen
+                onLocate={(coordinates) => coordinates.longitude.toFixed(2)}
+            />
+        </Map>
+    </Box>
+);
+const mapCollection = new Map([['office', 'Zurich']]);
+mapCollection.get('office')?.trim();
+// @ts-expect-error Native map props must retain their coordinate contract.
+const invalidMapCenter = <Map blank center="Switzerland" />;
+// @ts-expect-error The retired SVG map is no longer part of the public View API.
+const legacyMap = <Maps label="Legacy map" geography={mapRegions} />;
+const mapElements = (
+    <Box height={320}>
+        <StreetMap
+            locations={mapLocations}
+            routes={mapRoutes}
+            clusters={mapLocations}
+            connections={mapArcs}
+            center={[8.54, 47.37]}
+            zoom={6}
+            onSelectLocation={(location) => location.label.trim()}
+            onViewportChange={(viewport) => viewport.center[0].toFixed(2)}
+        />
+        <MarkerMap data={mapLocations} onSelect={(marker) => marker.label.trim()} />
+        <RouteMap data={mapRoutes} onSelect={(route) => route.coordinates[0][0].toFixed(2)} />
+        <ClusterMap data={mapLocations} radius={60} onSelect={(marker) => marker.id.trim()} />
+        <GeoJSONMap data={mapRegions} onSelect={(feature) => String(feature.id)} />
+        <ArcMap data={mapArcs} onSelect={(arc) => arc.to[0].toFixed(2)} />
+    </Box>
+);
+// @ts-expect-error Map data must be supplied as parsed geometry, not arbitrary URLs.
+const externalMapData = <GeoJSONMap data="https://untrusted.example/regions.json" />;
 const icon = <Icon icon="triangle-exclamation-point" size="sm" tile="soft" variant="destructive" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;

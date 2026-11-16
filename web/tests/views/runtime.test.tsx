@@ -377,7 +377,8 @@ it('keeps a draft in a retained authored Tab while selecting another panel', asy
 
 it('preserves composed controls and form updates through authored JSX', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        const [name, setName] = useState('Draft');
+        const labels = new Map([['name', 'Draft']]);
+        const [name, setName] = useState(labels.get('name'));
         const [saved, setSaved] = useState('');
         return <Card>
             <Input id="order-name" aria-label="Order name"

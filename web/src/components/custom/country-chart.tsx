@@ -1,5 +1,5 @@
-import { Maps } from './maps';
 import type { MapData } from './map-data';
+import { CountryMap } from './country-map';
 import { useState, type ReactNode } from 'react';
 import { Button } from '@/components/shadcn/button';
 import { IconTile } from '@/components/reui/icon-tile';
@@ -113,17 +113,12 @@ export function CountryChart<T extends CountryUsage>({
                     ))}
                 </div>
                 <div className="relative h-60 overflow-hidden @min-[640px]/country:absolute @min-[640px]/country:inset-0 @min-[640px]/country:left-[28%] @min-[640px]/country:h-auto">
-                    <Maps
+                    <CountryMap
                         label={label}
                         geography={geography}
-                        selectedId={selected?.id}
-                        selectableIds={countries.map((country) => country.id)}
+                        countries={countries}
+                        selected={selected}
                         onSelect={setSelectedId}
-                        height="100%"
-                        fit="cover"
-                        center={selected?.center}
-                        scale={200}
-                        zoom={selected?.zoom ?? 1.5}
                     />
                 </div>
                 {selected && (

@@ -88,7 +88,11 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
 
                     const assets = ports[1];
                     expect(frame.sandbox.toString()).not.toContain('allow-same-origin');
-                    expect(frame.srcdoc).toContain("connect-src 'none'");
+                    expect(frame.srcdoc).toContain(
+                        'connect-src data: https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com;'
+                    );
+                    expect(frame.srcdoc).toContain('worker-src data:;');
+                    expect(frame.srcdoc).not.toContain('https://unpkg.com');
                     expect(frame.srcdoc).not.toContain('private source');
                     expect(fetched).toEqual(['/proxy/views/runtime.js', '/proxy/views/runtime.css']);
 

@@ -361,8 +361,10 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const bindings = {
             // Keep JSX compilation separate from the public View API.
-            __jsx: React.createElement,
+            __jsx: (type: React.ElementType, props: React.Attributes | null, ...children: React.ReactNode[]) =>
+                React.createElement(Object.is(type, globalThis.Map) ? components.Map : type, props, ...children),
             ...components,
+            Map: globalThis.Map,
             request,
             navigate
         };

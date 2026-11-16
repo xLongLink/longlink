@@ -3,6 +3,7 @@
 import type * as MapLibreGL from 'maplibre-gl';
 import type { PopupOptions, MarkerOptions } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import workerSource from 'maplibre-gl/dist/maplibre-gl-worker.mjs?raw';
 import type * as GeoJSON from 'geojson';
 import {
     createContext,
@@ -30,7 +31,7 @@ function loadMapLibre() {
     maplibrePromise ??= import('maplibre-gl')
         .then((lib) => {
             if (!lib.getWorkerUrl()) {
-                lib.setWorkerUrl(`https://unpkg.com/maplibre-gl@${lib.getVersion()}/dist/maplibre-gl-worker.mjs`);
+                lib.setWorkerUrl(`data:text/javascript;charset=utf-8,${encodeURIComponent(workerSource)}`);
             }
             return lib;
         })
@@ -40,8 +41,6 @@ function loadMapLibre() {
         });
     return maplibrePromise;
 }
-
-if (typeof window !== 'undefined') loadMapLibre().catch(() => {});
 
 const defaultStyles = {
     dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
