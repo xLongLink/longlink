@@ -17,6 +17,7 @@ import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
 import { TimestampExample } from './views/timestamp';
+import { PaginationExample } from './views/pagination';
 import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
@@ -109,6 +110,7 @@ const previews = new Map(
             </Card>
         ),
         Dropdown: <DropdownExample />,
+        Pagination: <PaginationExample />,
         Empty: <Empty icon="folder-code" title="No projects" />,
         FileViewer: (
             <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">

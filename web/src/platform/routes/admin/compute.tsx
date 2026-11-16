@@ -7,7 +7,7 @@ import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { DataPagination } from '@/components/custom/data-pagination';
+import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
@@ -110,7 +110,7 @@ export default function Compute() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <DataPagination {...pagination} totalItems={computes.total} />
+                    <Pagination {...pagination} totalItems={computes.total} />
                 </footer>
             </Stack>
             {dialog?.kind === 'registration' && (

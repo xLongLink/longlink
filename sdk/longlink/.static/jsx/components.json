@@ -1233,9 +1233,9 @@
             "justification": "Coordinates Solution side navigation, section selection, and persistent section content."
         },
         {
-            "name": "DataPagination",
+            "name": "Pagination",
             "category": "Action",
-            "guidance": "Renamed from Pagination. Existing Views that use page, pageSize, totalItems, and onPageChange must use DataPagination; Pagination now exposes native shadcn composition.",
+            "guidance": "Control the current page with page and onPageChange. Numbered pages, ellipses, and previous/next controls are calculated from totalItems and pageSize.",
             "introduction": "Navigates pages of table or gallery items without owning their data or selection.",
             "properties": [
                 { "name": "page", "type": "number", "description": "Current page number, starting at 1." },
@@ -1247,12 +1247,12 @@
                 {
                     "name": "totalItems",
                     "type": "number",
-                    "description": "Total item count used to calculate pages, overriding totalPages."
+                    "description": "Total item count used to calculate pages. Empty or non-finite totals render no pagination."
                 },
                 {
                     "name": "pageSize",
                     "type": "number",
-                    "description": "Number of items per page. Coerced to a positive integer; non-finite values fall back to the default."
+                    "description": "Number of items per page. Coerced to a positive integer; non-finite values fall back to 10."
                 },
                 {
                     "name": "label",
@@ -1726,18 +1726,6 @@
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/button-group"
-        },
-        {
-            "name": "Pagination",
-            "category": "Action",
-            "introduction": "Native shadcn pagination composition with anchor attributes.",
-            "guidance": "Compose PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, and PaginationEllipsis. Use DataPagination for page-count calculations and callbacks.",
-            "properties": [
-                { "name": "PaginationLink.href", "type": "string", "description": "Page destination URL." },
-                { "name": "PaginationLink.isActive", "type": "boolean", "description": "Identifies the current page." }
-            ],
-            "source": "shadcn",
-            "reference": "https://ui.shadcn.com/docs/components/pagination"
         }
     ],
     "groups": {

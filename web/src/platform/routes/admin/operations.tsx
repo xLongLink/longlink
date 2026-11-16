@@ -4,7 +4,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
-import { DataPagination } from '@/components/custom/data-pagination';
+import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -114,7 +114,7 @@ export default function Operations() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <DataPagination {...pagination} totalItems={operations.total} />
+                    <Pagination {...pagination} totalItems={operations.total} />
                 </footer>
             </Stack>
             {metadata && <OperationMetadata open metadata={metadata} onOpenChange={() => setMetadataId(null)} />}

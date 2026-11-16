@@ -8,8 +8,8 @@ import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { DataPagination } from '@/components/custom/data-pagination';
 import { NativeLink as Link } from '@/components/custom/native-link';
+import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -120,7 +120,7 @@ export default function Organizations() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <DataPagination {...pagination} totalItems={organizations.total} />
+                    <Pagination {...pagination} totalItems={organizations.total} />
                 </footer>
             </Stack>
             {metadata && (

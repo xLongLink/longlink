@@ -9103,20 +9103,6 @@ interface FiltersProps<V = unknown, O = unknown> {
     children?: React$1.ReactNode;
 }
 function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
-function Pagination({ className, ...props }: React$1.ComponentProps<"nav">): React$1.JSX.Element;
-function PaginationContent({ className, ...props }: React$1.ComponentProps<"ul">): React$1.JSX.Element;
-function PaginationItem({ ...props }: React$1.ComponentProps<"li">): React$1.JSX.Element;
-type PaginationLinkProps = {
-    isActive?: boolean;
-} & Pick<React$1.ComponentProps<typeof Button$1>, "size"> & React$1.ComponentProps<"a">;
-function PaginationLink({ className, isActive, size, ...props }: PaginationLinkProps): React$1.JSX.Element;
-function PaginationPrevious({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
-    text?: string;
-}): React$1.JSX.Element;
-function PaginationNext({ className, text, ...props }: React$1.ComponentProps<typeof PaginationLink> & {
-    text?: string;
-}): React$1.JSX.Element;
-function PaginationEllipsis({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
 interface DataGridI18nLabels {
     sortAscending: string;
     sortDescending: string;
@@ -9327,13 +9313,6 @@ function DataGridContainer({ children, className }: {
     className?: string;
     border?: boolean;
 }): React$1.JSX.Element;
-function DataPagination(props: {
-    page: number;
-    onPageChange: (page: number) => void;
-    totalItems: number;
-    pageSize: number;
-    label?: string;
-}): React$1.JSX.Element | null;
 export function DataGridTableRowSelect<TData extends object>({ row }: {
     row: Row<DataGridFeatures, TData>;
 }): React$1.JSX.Element;
@@ -11004,6 +10983,13 @@ function Dialog$2({ open, defaultOpen, onOpenChange, title, description, trigger
     fullscreen?: boolean;
     dismissible?: boolean;
 }): React$1.JSX.Element;
+export function Pagination(props: {
+    page: number;
+    onPageChange: (page: number) => void;
+    totalItems: number;
+    pageSize: number;
+    label?: string;
+}): React$1.JSX.Element | null;
 const EVENTS: {
     readonly BLUR: "blur";
     readonly FOCUS_OUT: "focusout";
@@ -11780,14 +11766,6 @@ const TableRow$1: PublicComponent<typeof TableRow>;
 const TableHead$1: PublicComponent<typeof TableHead>;
 const TableCell$1: PublicComponent<typeof TableCell>;
 const TableCaption$1: PublicComponent<typeof TableCaption>;
-const Pagination$1: PublicComponent<typeof Pagination>;
-const PaginationContent$1: PublicComponent<typeof PaginationContent>;
-const PaginationItem$1: PublicComponent<typeof PaginationItem>;
-const PaginationLink$1: PublicComponent<typeof PaginationLink>;
-const PaginationPrevious$1: PublicComponent<typeof PaginationPrevious>;
-const PaginationNext$1: PublicComponent<typeof PaginationNext>;
-const PaginationEllipsis$1: PublicComponent<typeof PaginationEllipsis>;
-const DataPagination$1: PublicComponent<typeof DataPagination>;
 const Timestamp$1: PublicComponent<typeof Timestamp>;
 const Progress$2: PublicComponent<typeof Progress$1>;
 const Tabs$3: PublicComponent<typeof Tabs$2>;
@@ -15696,7 +15674,7 @@ namespace iso {
 namespace z {
     export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate, validateAsync, withParser, xid$1 as xid, xor };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, DataPagination$1 as DataPagination, Dialog$2 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, Maps$1 as Maps, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Pagination$1 as Pagination, PaginationContent$1 as PaginationContent, PaginationEllipsis$1 as PaginationEllipsis, PaginationItem$1 as PaginationItem, PaginationLink$1 as PaginationLink, PaginationNext$1 as PaginationNext, PaginationPrevious$1 as PaginationPrevious, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, dataGridFeatures$1 as dataGridFeatures, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$2 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, Maps$1 as Maps, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, dataGridFeatures$1 as dataGridFeatures, z, };
 }
 
 declare const AreaChart: typeof NativeFrontend.AreaChart;
@@ -15732,7 +15710,6 @@ declare const DataGridTable: typeof NativeFrontend.DataGridTable;
 import DataGridTableInstance = NativeFrontend.DataGridTableInstance;
 declare const DataGridTableRowSelect: typeof NativeFrontend.DataGridTableRowSelect;
 declare const DataGridTableRowSelectAll: typeof NativeFrontend.DataGridTableRowSelectAll;
-declare const DataPagination: typeof NativeFrontend.DataPagination;
 declare const Dialog: typeof NativeFrontend.Dialog;
 declare const Dropdown: typeof NativeFrontend.Dropdown;
 declare const DropdownCheckboxItem: typeof NativeFrontend.DropdownCheckboxItem;
@@ -15770,12 +15747,6 @@ declare const MenuItem: typeof NativeFrontend.MenuItem;
 declare const MenuSection: typeof NativeFrontend.MenuSection;
 declare const MenuSubSection: typeof NativeFrontend.MenuSubSection;
 declare const Pagination: typeof NativeFrontend.Pagination;
-declare const PaginationContent: typeof NativeFrontend.PaginationContent;
-declare const PaginationEllipsis: typeof NativeFrontend.PaginationEllipsis;
-declare const PaginationItem: typeof NativeFrontend.PaginationItem;
-declare const PaginationLink: typeof NativeFrontend.PaginationLink;
-declare const PaginationNext: typeof NativeFrontend.PaginationNext;
-declare const PaginationPrevious: typeof NativeFrontend.PaginationPrevious;
 declare const PieChart: typeof NativeFrontend.PieChart;
 declare const Progress: typeof NativeFrontend.Progress;
 declare const RadarChart: typeof NativeFrontend.RadarChart;

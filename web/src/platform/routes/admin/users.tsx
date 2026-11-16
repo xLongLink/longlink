@@ -5,7 +5,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Timestamp } from '@/components/longlink/display/timestamp';
-import { DataPagination } from '@/components/custom/data-pagination';
+import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
@@ -97,7 +97,7 @@ export default function Users() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <DataPagination {...pagination} totalItems={users.total} />
+                    <Pagination {...pagination} totalItems={users.total} />
                 </footer>
             </Stack>
         </Stack>

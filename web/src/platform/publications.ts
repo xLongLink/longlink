@@ -99,6 +99,7 @@ export const componentDocumentation = [
     { name: 'Currency', category: 'Display', icon: CreditCard },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
     { name: 'Dropdown', category: 'Action', icon: ListCollapse },
+    { name: 'Pagination', category: 'Action', icon: ListCollapse },
     { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileType', category: 'Display', icon: FileText },
     { name: 'FileViewer', category: 'Display', icon: FileText },

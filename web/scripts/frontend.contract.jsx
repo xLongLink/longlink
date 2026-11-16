@@ -160,13 +160,7 @@ const nativeComposition = (
             >
                 <Input label="Reference" />
             </Dialog>
-            <Pagination aria-label="Pages">
-                <PaginationContent>
-                    <PaginationItem><PaginationLink href="?page=1" isActive>1</PaginationLink></PaginationItem>
-                    <PaginationItem><PaginationNext href="?page=2" /></PaginationItem>
-                </PaginationContent>
-            </Pagination>
-            <DataPagination page={1} onPageChange={(page) => page.toFixed()} totalItems={50} pageSize={10} />
+            <Pagination page={1} onPageChange={(page) => page.toFixed()} totalItems={50} pageSize={10} label="Pages" />
                 <Input
                     id="native-name"
                     label="Name"
@@ -401,8 +395,8 @@ const _conflictingLinkActions = <Link href="/api/report" preview="report.pdf" do
 const _missingFilePath = <Link preview="report.pdf">Preview</Link>;
 // @ts-expect-error A link requires a destination or an action.
 const _missingLinkAction = <Link>Report</Link>;
-// @ts-expect-error Native Pagination is composed from anchors, not the custom data pagination contract.
-const _customPaginationProps = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}} />;
+// @ts-expect-error Pagination owns its controls instead of accepting anchor composition.
+const _paginationChildren = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}}><a href="?page=1">1</a></Pagination>;
 
 // @ts-expect-error Views select supported variants instead of overriding component classes.
 const _buttonClasses = <Button className="bg-red-500" />;

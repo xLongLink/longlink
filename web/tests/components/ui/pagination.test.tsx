@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+import { Pagination } from '@/components/longlink';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { DataPagination } from '@/components/custom/data-pagination';
 
 it('navigates through a large result set without submitting its enclosing form or crossing boundaries', async () => {
     const user = userEvent.setup();
@@ -14,7 +14,7 @@ it('navigates through a large result set without submitting its enclosing form o
 
         return (
             <form>
-                <DataPagination page={page} totalItems={1000} pageSize={25} onPageChange={setPage} />
+                <Pagination page={page} totalItems={1000} pageSize={25} onPageChange={setPage} />
             </form>
         );
     }
@@ -62,7 +62,7 @@ it('keeps middle pages reachable and clamps previous navigation after results sh
         return (
             <>
                 <button onClick={() => setTotal(20)}>Filter results</button>
-                <DataPagination page={10} totalItems={total} pageSize={10} onPageChange={selected} />
+                <Pagination page={10} totalItems={total} pageSize={10} onPageChange={selected} />
             </>
         );
     }
@@ -86,7 +86,7 @@ it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
     'does not expose phantom pages for an invalid or empty total (%s)',
     (totalItems) => {
         const output = renderStatic(
-            <DataPagination page={1} totalItems={totalItems} pageSize={10} onPageChange={() => undefined} />
+            <Pagination page={1} totalItems={totalItems} pageSize={10} onPageChange={() => undefined} />
         );
 
         expect(output.querySelector('nav')).toBeNull();
@@ -100,7 +100,7 @@ it.each([0, -2, Number.NaN, Number.POSITIVE_INFINITY])(
         const user = userEvent.setup();
 
         await withMounted(
-            <DataPagination page={1} totalItems={21} pageSize={pageSize} onPageChange={selected} />,
+            <Pagination page={1} totalItems={21} pageSize={pageSize} onPageChange={selected} />,
             async (output) => {
                 const next = output.querySelector<HTMLButtonElement>('[aria-label="Go to next page"]');
 
