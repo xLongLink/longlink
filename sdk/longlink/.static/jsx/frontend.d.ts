@@ -4690,11 +4690,12 @@ type Defaultize<P, D> = P extends any ? string extends keyof P ? P : Pick<P, Exc
 type ReactManagedAttributes<C, P> = C extends {
     defaultProps: infer D;
 } ? Defaultize<P, D> : P;
-function Box({ width, height, maxWidth, minHeight, background, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+function Box({ width, height, maxWidth, minHeight, center, background, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
     width?: React$1.CSSProperties["width"];
     height?: React$1.CSSProperties["height"];
     maxWidth?: React$1.CSSProperties["maxWidth"];
     minHeight?: React$1.CSSProperties["minHeight"];
+    center?: boolean;
     background?: "none" | "primary" | "secondary" | "outline";
 }): React$1.JSX.Element;
 type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type" | "className"> & ({
@@ -12221,7 +12222,9 @@ export function BarChart<Row extends object>({ data: rows, xKey, series, axes, l
 export function LineChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, ...props }: CartesianChartProps<Row> & {
     curve?: ChartCurve;
 }): React$1.JSX.Element;
-export function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, ...props }: ValueChartProps<Row>): React$1.JSX.Element;
+export function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, center, ...props }: ValueChartProps<Row> & {
+    center?: React$1.ReactNode;
+}): React$1.JSX.Element;
 export function RadarChart<Row extends object>({ data: rows, categoryKey, series, axes, legend, tooltip, ...props }: ChartOptions & {
     data: readonly Row[];
     categoryKey: ChartKey<Row>;
@@ -12235,17 +12238,23 @@ export function Sankey({ nodes, links, tooltip, ...props }: Omit<ChartOptions, "
     nodes: readonly SankeyNode[];
     links: readonly SankeyLink[];
 }): React$1.JSX.Element;
-export function ChartLegend<Row extends object>({ series, data, nameKey, ...props }: Omit<React$1.ComponentPropsWithoutRef<"ul">, "children" | "className" | "style"> & ({
+export function ChartLegend<Row extends object>({ series, data, nameKey, valueKey, formatValue, orientation, ...props }: Omit<React$1.ComponentPropsWithoutRef<"ul">, "children" | "className" | "style"> & {
+    orientation?: "horizontal" | "vertical";
+} & ({
     series: readonly {
         key: string;
         label?: string;
     }[];
     data?: never;
     nameKey?: never;
+    valueKey?: never;
+    formatValue?: never;
 } | {
     series?: never;
     data: readonly Row[];
     nameKey: ChartKey<Row>;
+    valueKey?: ChartValueKey<Row>;
+    formatValue?: (value: number) => React$1.ReactNode;
 })): React$1.JSX.Element | null;
 export type ChartConfig = Record<string, {
     label?: React$1.ReactNode;
@@ -12257,19 +12266,6 @@ export type ChartConfig = Record<string, {
     color?: never;
     theme: Record<"light" | "dark", string>;
 })>;
-type ProviderShare = {
-    name: string;
-    value: number;
-    providerCount?: number;
-};
-export function ProviderChart({ providers, total, title, description, totalLabel, footer }: {
-    providers: ProviderShare[];
-    total: number;
-    title: React$1.ReactNode;
-    description?: React$1.ReactNode;
-    totalLabel: React$1.ReactNode;
-    footer?: React$1.ReactNode;
-}): React$1.JSX.Element;
 type UsagePoint = {
     date: string;
 } & Record<string, string | number>;
@@ -16373,7 +16369,6 @@ declare const PaginationNext: typeof NativeFrontend.PaginationNext;
 declare const PaginationPrevious: typeof NativeFrontend.PaginationPrevious;
 declare const PieChart: typeof NativeFrontend.PieChart;
 declare const Progress: typeof NativeFrontend.Progress;
-declare const ProviderChart: typeof NativeFrontend.ProviderChart;
 declare const RadarChart: typeof NativeFrontend.RadarChart;
 declare const RadialBarChart: typeof NativeFrontend.RadialBarChart;
 declare const RadioGroup: typeof NativeFrontend.RadioGroup;

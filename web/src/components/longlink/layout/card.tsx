@@ -35,7 +35,7 @@ export function Card({
                     )}
                 </card.CardHeader>
             )}
-            <card.CardContent className={padding === 'none' ? 'px-0' : undefined}>{children}</card.CardContent>
+            <card.CardContent className={padding === 'none' ? 'flex-1 px-0' : 'flex-1'}>{children}</card.CardContent>
             {footer != null && (
                 <card.CardFooter className="justify-between gap-2 bg-transparent py-1.5 text-xs text-muted-foreground">
                     {footer}

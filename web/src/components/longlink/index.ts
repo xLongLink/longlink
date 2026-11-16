@@ -127,7 +127,7 @@ export { Sankey } from './charts/sankey';
 export { ChartLegend } from './charts/legend';
 export type { ChartSeries, SankeyNode, SankeyLink } from './charts/types';
 export type { ChartConfig } from '@/components/shadcn/chart';
-export { ProviderChart, UsageChart } from '@/components/custom/analytics';
+export { UsageChart } from '@/components/custom/analytics';
 export { CountryChart } from '@/components/custom/country-chart';
 export { RevenueFlow } from '@/components/custom/revenue-flow';
 

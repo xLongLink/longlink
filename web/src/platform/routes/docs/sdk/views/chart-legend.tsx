@@ -12,7 +12,16 @@ export function ChartLegendExample({ isCompact = false }: { isCompact?: boolean 
             ]}
         />
     ) : (
-        <ChartLegend data={[{ status: 'Queued' }, { status: 'Processing' }, { status: 'Complete' }]} nameKey="status" />
+        <ChartLegend
+            data={[
+                { status: 'Queued', count: 18 },
+                { status: 'Processing', count: 7 },
+                { status: 'Complete', count: 42 }
+            ]}
+            nameKey="status"
+            valueKey="count"
+            orientation="vertical"
+        />
     );
 }
 
@@ -31,11 +40,13 @@ export default function ChartLegendPage() {
   return (
     <ChartLegend
       data={[
-        { status: 'Queued' },
-        { status: 'Processing' },
-        { status: 'Complete' },
+        { status: 'Queued', count: 18 },
+        { status: 'Processing', count: 7 },
+        { status: 'Complete', count: 42 },
       ]}
       nameKey="status"
+      valueKey="count"
+      orientation="vertical"
     />
   );
 }`

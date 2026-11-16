@@ -186,6 +186,78 @@ it('matches external segment legends to plotted order and clears them when data 
     });
 });
 
+it('updates doughnut center content and value legends together, clearing stale totals when data disappears', async () => {
+    function Preview() {
+        const [rows, setRows] = useState([
+            { name: 'Partner', count: 60 },
+            { name: 'Direct', count: 40 }
+        ]);
+
+        return (
+            <div ref={(element) => measureCharts(element)}>
+                <button
+                    type="button"
+                    onClick={() =>
+                        setRows([
+                            { name: 'Direct', count: 50 },
+                            { name: 'Partner', count: 150 }
+                        ])
+                    }
+                >
+                    Refresh
+                </button>
+                <button type="button" onClick={() => setRows([])}>
+                    Clear
+                </button>
+                <Box height={280}>
+                    <PieChart
+                        data={rows}
+                        nameKey="name"
+                        valueKey="count"
+                        center={<span>{rows.reduce((sum, row) => sum + row.count, 0)} total requests</span>}
+                    />
+                </Box>
+                <ChartLegend
+                    data={rows}
+                    nameKey="name"
+                    valueKey="count"
+                    formatValue={(value) => `${value} requests`}
+                    orientation="vertical"
+                />
+            </div>
+        );
+    }
+
+    await withMounted(<Preview />, async (output) => {
+        const user = userEvent.setup();
+        const [refresh, clear] = output.querySelectorAll('button');
+
+        if (!refresh || !clear) throw new Error('Expected chart refresh controls');
+
+        await vi.waitFor(() =>
+            expect(output.querySelector('[data-slot="chart-center"]')?.textContent).toBe('100 total requests')
+        );
+        expect(Array.from(output.querySelectorAll('[data-slot="chart-legend"] li'), (row) => row.textContent)).toEqual([
+            'Partner60 requests',
+            'Direct40 requests'
+        ]);
+
+        await act(async () => user.click(refresh));
+        await vi.waitFor(() =>
+            expect(output.querySelector('[data-slot="chart-center"]')?.textContent).toBe('200 total requests')
+        );
+        expect(Array.from(output.querySelectorAll('[data-slot="chart-legend"] li'), (row) => row.textContent)).toEqual([
+            'Direct50 requests',
+            'Partner150 requests'
+        ]);
+
+        await act(async () => user.click(clear));
+        expect(output.querySelector('[data-slot="chart-center"]')).toBeNull();
+        expect(output.querySelector('[data-slot="chart-legend"]')).toBeNull();
+        expect(output.querySelector('[role="status"]')?.textContent).toBe('No data');
+    });
+});
+
 it('refreshes literal row keys without accepting row styling or treating zero as missing data', async () => {
     function Preview() {
         const [value, setValue] = useState(12);

@@ -1,12 +1,13 @@
 import { cn } from 'cn';
 import type { ComponentPropsWithoutRef, CSSProperties } from 'react';
 
-/** Owns container sizing and semantic surfaces without arranging its children. */
+/** Owns container sizing, semantic surfaces, and optional content centering. */
 export function Box({
     width,
     height,
     maxWidth,
     minHeight,
+    center = false,
     background = 'none',
     ...props
 }: Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style'> & {
@@ -14,6 +15,7 @@ export function Box({
     height?: CSSProperties['height'];
     maxWidth?: CSSProperties['maxWidth'];
     minHeight?: CSSProperties['minHeight'];
+    center?: boolean;
     background?: 'none' | 'primary' | 'secondary' | 'outline';
 }) {
     return (
@@ -22,6 +24,7 @@ export function Box({
             {...props}
             className={cn(
                 'min-w-0',
+                center && 'flex items-center justify-center',
                 {
                     none: '',
                     primary: 'bg-primary text-primary-foreground',

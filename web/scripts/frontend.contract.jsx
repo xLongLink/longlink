@@ -117,7 +117,7 @@ const nativeComposition = (
                 <Avatar size="md" name="Account" src="/account.png" />
                 <Avatar shape="rounded" name="Acme" />
             </AvatarGroup>
-            <Box width={320} maxWidth="100%" minHeight={120} background="outline">
+            <Box width={320} maxWidth="100%" minHeight={120} center background="outline">
             <Stack
                 aria-label="Preview"
                 gap={4}
@@ -498,7 +498,7 @@ const _charts = (
             <BarChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total' }]} />
             <LineChart data={[{ period: 'January', total: null }, { period: 'February', total: 0 }]} xKey="period" series={[{ key: 'total' }]} />
             <RadarChart data={[{ category: 'Speed', total: 120 }]} categoryKey="category" series={[{ key: 'total' }]} />
-            <PieChart data={[{ label: 'Revenue', total: 120 }]} nameKey="label" valueKey="total" />
+            <PieChart data={[{ label: 'Revenue', total: 120 }]} nameKey="label" valueKey="total" center={<Text>120</Text>} />
             <RadialBarChart data={[{ label: 'Target', total: 40 }]} nameKey="label" valueKey="total" max={100} />
             <Sankey nodes={[{ name: 'Revenue' }, { name: 'Profit' }]} links={[{ source: 0, target: 1, value: 40 }]} aria-label="Revenue allocation" />
         </Box>

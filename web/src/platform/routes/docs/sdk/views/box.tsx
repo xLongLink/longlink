@@ -2,7 +2,6 @@ import ViewLayout from './view-layout';
 import { Box } from '@/components/longlink/layout/box';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Text } from '@/components/longlink/display/text';
-import { Stack } from '@/components/longlink/layout/stack';
 
 /** Documents Box sizing and semantic backgrounds in LongLink Views. */
 export default function BoxPage() {
@@ -15,6 +14,7 @@ export default function BoxPage() {
                 { name: 'height', type: 'string | number' },
                 { name: 'maxWidth', type: 'string | number' },
                 { name: 'minHeight', type: 'string | number' },
+                { name: 'center', type: 'boolean' },
                 { name: 'background', type: '"none" | "primary" | "secondary" | "outline"' }
             ]}
             example={{
@@ -24,17 +24,17 @@ export default function BoxPage() {
   return (
     <Box width={320} maxWidth="100%">
       <Grid columns={2} gap={3}>
-        <Box background="none">
-          <Stack padding={4} align="center"><Text>none</Text></Stack>
+        <Box height={96} center background="none">
+          <Text>none</Text>
         </Box>
-        <Box background="primary">
-          <Stack padding={4} align="center"><Text>primary</Text></Stack>
+        <Box height={96} center background="primary">
+          <Text>primary</Text>
         </Box>
-        <Box background="secondary">
-          <Stack padding={4} align="center"><Text>secondary</Text></Stack>
+        <Box height={96} center background="secondary">
+          <Text>secondary</Text>
         </Box>
-        <Box background="outline">
-          <Stack padding={4} align="center"><Text>outline</Text></Stack>
+        <Box height={96} center background="outline">
+          <Text>outline</Text>
         </Box>
       </Grid>
     </Box>
@@ -50,25 +50,17 @@ export function BoxExample() {
     return (
         <Box width={320} maxWidth="100%">
             <Grid columns={2} gap={3}>
-                <Box background="none">
-                    <Stack padding={4} align="center">
-                        <Text>none</Text>
-                    </Stack>
+                <Box height={96} center background="none">
+                    <Text>none</Text>
                 </Box>
-                <Box background="primary">
-                    <Stack padding={4} align="center">
-                        <Text>primary</Text>
-                    </Stack>
+                <Box height={96} center background="primary">
+                    <Text>primary</Text>
                 </Box>
-                <Box background="secondary">
-                    <Stack padding={4} align="center">
-                        <Text>secondary</Text>
-                    </Stack>
+                <Box height={96} center background="secondary">
+                    <Text>secondary</Text>
                 </Box>
-                <Box background="outline">
-                    <Stack padding={4} align="center">
-                        <Text>outline</Text>
-                    </Stack>
+                <Box height={96} center background="outline">
+                    <Text>outline</Text>
                 </Box>
             </Grid>
         </Box>

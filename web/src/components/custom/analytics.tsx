@@ -1,8 +1,7 @@
 import { useId, useState, type ReactNode } from 'react';
-import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
-import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/shadcn/chart';
 import {
     Card,
@@ -15,87 +14,6 @@ import {
 } from '@/components/shadcn/card';
 
 const compactNumber = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
-
-export type ProviderShare = { name: string; value: number; providerCount?: number };
-
-/** Shows provider shares with a centered total and a compact aligned legend. */
-export function ProviderChart({
-    providers,
-    total,
-    title,
-    description,
-    totalLabel,
-    footer
-}: {
-    providers: ProviderShare[];
-    total: number;
-    title: ReactNode;
-    description?: ReactNode;
-    totalLabel: ReactNode;
-    footer?: ReactNode;
-}) {
-    const data = providers.map((provider, index) => ({ ...provider, fill: `var(--chart-${(index % 5) + 1})` }));
-
-    const topShare = [...providers]
-        .sort((left, right) => right.value - left.value)
-        .slice(0, 3)
-        .reduce((sum, provider) => sum + provider.value, 0);
-
-    return (
-        <Card className="@container/provider h-full min-w-0">
-            <CardHeader className="gap-0 border-b">
-                <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
-                <CardAction>
-                    <Badge variant="secondary">
-                        {providers.reduce((sum, provider) => sum + (provider.providerCount ?? 1), 0)} providers
-                    </Badge>
-                </CardAction>
-            </CardHeader>
-            <CardContent className="flex min-h-64 flex-1 flex-col items-center justify-center gap-4 @min-[360px]/provider:flex-row">
-                <div className="relative size-40 shrink-0 @min-[360px]/provider:size-48">
-                    <ChartContainer
-                        config={{ value: { label: 'Share' } }}
-                        className="size-full aspect-square"
-                        aria-label="Provider shares"
-                    >
-                        <PieChart>
-                            <Pie
-                                data={data}
-                                dataKey="value"
-                                nameKey="name"
-                                innerRadius="66%"
-                                outerRadius="94%"
-                                paddingAngle={4}
-                                cornerRadius={5}
-                                stroke="none"
-                                isAnimationActive={false}
-                            />
-                            <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                        </PieChart>
-                    </ChartContainer>
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0 text-center">
-                        <span className="text-2xl font-medium tabular-nums">{compactNumber.format(total)}</span>
-                        <span className="text-xs text-muted-foreground">{totalLabel}</span>
-                    </div>
-                </div>
-                <div className="flex w-full min-w-0 flex-1 flex-col divide-y">
-                    {data.map((provider) => (
-                        <div key={provider.name} className="flex items-center gap-2 py-3 text-[13px]">
-                            <span className="size-2 shrink-0 rounded-full" style={{ background: provider.fill }} />
-                            <span className="flex-1">{provider.name}</span>
-                            <span className="font-medium tabular-nums">{provider.value.toFixed(1)}%</span>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-            <CardFooter className="justify-between gap-2 border-t bg-transparent py-1.5 text-xs text-muted-foreground">
-                <span>{topShare.toFixed(1)}% from the top 3 providers</span>
-                {footer}
-            </CardFooter>
-        </Card>
-    );
-}
 
 export type UsagePoint = { date: string } & Record<string, string | number>;
 

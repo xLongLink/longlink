@@ -31,35 +31,6 @@
             ]
         },
         {
-            "name": "ProviderChart",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Composes a Recharts donut, centered total, and aligned share legend inside a shadcn Card.",
-            "introduction": "Provider doughnut chart with percentage legend and total.",
-            "properties": [
-                {
-                    "name": "providers",
-                    "type": "ProviderShare[]",
-                    "description": "Segment name, percentage value, and optional providerCount for grouped providers."
-                },
-                {
-                    "name": "total",
-                    "type": "number",
-                    "description": "Total value, compactly formatted inside the ring."
-                },
-                {
-                    "name": "title / totalLabel",
-                    "type": "ReactNode",
-                    "description": "Required caller-owned heading and total label."
-                },
-                {
-                    "name": "description / footer",
-                    "type": "ReactNode",
-                    "description": "Optional caller-owned description and footer content."
-                }
-            ]
-        },
-        {
             "name": "UsageChart",
             "category": "Charts",
             "source": "custom",
@@ -373,7 +344,22 @@
                     "type": "readonly Row[]",
                     "description": "Segment rows, in chart order. Requires nameKey; cannot be combined with series."
                 },
-                { "name": "nameKey", "type": "keyof Row", "description": "Text or finite numeric segment label field." }
+                {
+                    "name": "nameKey",
+                    "type": "keyof Row",
+                    "description": "Text or finite numeric segment label field."
+                },
+                {
+                    "name": "valueKey",
+                    "type": "numeric keyof Row",
+                    "description": "Optional numeric value shown alongside each segment label."
+                },
+                {
+                    "name": "formatValue",
+                    "type": "(value: number) => ReactNode",
+                    "description": "Formats values when valueKey is supplied."
+                },
+                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "default": "horizontal" }
             ],
             "source": "custom",
             "justification": "Owns a context-independent legend with the same ordered theme colors as LongLink charts.",
@@ -485,6 +471,11 @@
             "guidance": "Place inside a Box with an explicit height. Supply label and numeric value keys. Empty data or a zero total displays No data; invalid segment values are rejected.",
             "keywords": ["doughnut", "donut", "pie"],
             "properties": [
+                {
+                    "name": "center",
+                    "type": "ReactNode",
+                    "description": "Optional content centered inside the doughnut. Hidden when data is empty or invalid."
+                },
                 { "name": "data", "type": "readonly Row[]" },
                 { "name": "nameKey", "type": "keyof Row", "description": "Segment label field." },
                 {
@@ -671,8 +662,8 @@
         {
             "name": "Box",
             "category": "Layouts",
-            "introduction": "Controls container dimensions and semantic backgrounds without arranging its children.",
-            "guidance": "Use Box around Stack or Grid to control sizing. Numeric dimensions are pixels; strings are CSS sizes. Omitted backgrounds remain transparent. Native div attributes and events are supported without refs or styling overrides.",
+            "introduction": "Controls container dimensions, semantic backgrounds, and optional content centering.",
+            "guidance": "Use Box around Stack or Grid to control sizing. Set center to center children horizontally and vertically within the available space. Numeric dimensions are pixels; strings are CSS sizes. Omitted backgrounds remain transparent. Native div attributes and events are supported without refs or styling overrides.",
             "keywords": ["container", "width", "height", "background", "sizing"],
             "properties": [
                 { "name": "children", "type": "ReactNode" },
@@ -680,6 +671,12 @@
                 { "name": "height", "type": "string | number", "description": "Container height." },
                 { "name": "maxWidth", "type": "string | number", "description": "Maximum container width." },
                 { "name": "minHeight", "type": "string | number", "description": "Minimum container height." },
+                {
+                    "name": "center",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Centers children horizontally and vertically."
+                },
                 {
                     "name": "background",
                     "type": "\"none\" | \"primary\" | \"secondary\" | \"outline\"",

@@ -1,6 +1,7 @@
 import * as data from './data';
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
+import type { ReactNode } from 'react';
 import type { ValueChartProps } from './types';
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/shadcn/chart';
 
@@ -11,8 +12,9 @@ export function PieChart<Row extends object>({
     valueKey,
     legend = false,
     tooltip = false,
+    center,
     ...props
-}: ValueChartProps<Row>) {
+}: ValueChartProps<Row> & { center?: ReactNode }) {
     const prepared = data.prepareSegments(rows, nameKey, valueKey);
 
     return (
@@ -32,7 +34,35 @@ export function PieChart<Row extends object>({
                     outerRadius="85%"
                     paddingAngle={2}
                     isAnimationActive={false}
-                />
+                >
+                    {center != null && (
+                        <recharts.Label
+                            content={({ viewBox }) => {
+                                if (!viewBox || !('cx' in viewBox) || !('innerRadius' in viewBox)) return null;
+
+                                const { cx, cy, innerRadius } = viewBox;
+
+                                if (typeof cx !== 'number' || typeof cy !== 'number' || typeof innerRadius !== 'number')
+                                    return null;
+
+                                return (
+                                    <foreignObject
+                                        data-slot="chart-center"
+                                        x={cx - innerRadius}
+                                        y={cy - innerRadius}
+                                        width={innerRadius * 2}
+                                        height={innerRadius * 2}
+                                        pointerEvents="none"
+                                    >
+                                        <div className="flex size-full flex-col items-center justify-center text-center">
+                                            {center}
+                                        </div>
+                                    </foreignObject>
+                                );
+                            }}
+                        />
+                    )}
+                </recharts.Pie>
                 {tooltip && (
                     <ChartTooltip isAnimationActive={false} content={<ChartTooltipContent nameKey="id" hideLabel />} />
                 )}
