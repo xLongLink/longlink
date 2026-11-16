@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Empty } from '@/components/longlink/display/empty';
 
@@ -11,10 +12,20 @@ export function PageLoading({ label }: { label: string }) {
 }
 
 /** Renders a full-page unavailable state. */
-export function PageError({ description, title }: { description: string; title: string }) {
+export function PageError({
+    description,
+    title,
+    children
+}: {
+    description?: string;
+    title: string;
+    children?: ReactNode;
+}) {
     return (
         <div className="flex min-h-[70dvh] min-w-0 items-center justify-center">
-            <Empty role="status" aria-atomic="true" title={<h1>{title}</h1>} description={description} />
+            <Empty role="status" aria-atomic="true" title={<h1>{title}</h1>} description={description}>
+                {children}
+            </Empty>
         </div>
     );
 }

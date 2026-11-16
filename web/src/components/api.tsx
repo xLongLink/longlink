@@ -1,10 +1,9 @@
 import { useLocation } from 'react-router';
-import { PageLoading } from '@/components/ui/utils';
 import { Toaster } from '@/components/shadcn/sonner';
 import { createQueryRuntime } from '@/lib/react-query';
-import { LoadError } from '@/components/custom/load-error';
 import { ApiErrorContext, useApiError } from '@/lib/errors';
 import { Button } from '@/components/longlink/action/button';
+import { PageError, PageLoading } from '@/components/ui/utils';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { Suspense, useEffect, useId, useState, type ReactNode } from 'react';
 import { createNotifications, NotificationContext } from '@/lib/notifications';
@@ -62,14 +61,11 @@ export function ApiBoundary({
                     fallbackRender={
                         fallbackRender ??
                         (({ resetErrorBoundary }) => (
-                            <LoadError
-                                message="Unable to load this page."
-                                className="flex flex-col items-center gap-4 p-6"
-                            >
+                            <PageError title="Unable to load this page.">
                                 <Button type="button" variant="primary" onClick={resetErrorBoundary}>
                                     Retry
                                 </Button>
-                            </LoadError>
+                            </PageError>
                         ))
                     }
                 >

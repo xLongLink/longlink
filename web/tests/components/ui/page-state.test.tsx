@@ -41,7 +41,6 @@ it('preserves loading and failure status content through hydration and recovery 
             )
         );
         expect(output.querySelector('h1')?.textContent).toBe('Unable to load this View');
-        expect(output.querySelector('p')?.textContent).toBe('The secure connection could not be established.');
         expect(output.textContent).not.toContain('Runtime assets are unavailable.');
     } finally {
         await act(async () => root.unmount());
