@@ -7,5 +7,3 @@ export { useConfirm } from './hooks/use-confirm';
 export { useForm } from './hooks/use-form';
 export { useFormContext } from './hooks/use-form-context';
 export { useSubmit } from './hooks/use-submit';
-export { useTable } from './hooks/use-table';
-export type { ColumnDef, CellContext, RowSelectionState, SortingState } from './hooks/use-table';

@@ -53,7 +53,11 @@ test('published component provenance matches the implementation exposed to Views
         assert.ok(symbol, `${component.name} is documented but not exposed to Views.`);
         let implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
         const declaration = implementation.declarations?.[0];
-        if (declaration && ts.isVariableDeclaration(declaration) && declaration.getSourceFile().fileName === entry) {
+        if (
+            declaration &&
+            ts.isVariableDeclaration(declaration) &&
+            declaration.getSourceFile().fileName.includes('/components/longlink/')
+        ) {
             const initializer = declaration.initializer;
             assert.ok(
                 initializer && (ts.isPropertyAccessExpression(initializer) || ts.isIdentifier(initializer)),

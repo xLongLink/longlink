@@ -13,6 +13,7 @@ import { DropdownExample } from './views/dropdown';
 import { ProgressExample } from './views/progress';
 import { TextareaExample } from './views/textarea';
 import { FileText, ImageIcon } from 'lucide-react';
+import { DataGridExample } from './views/data-grid';
 import { FileTypeExample } from './views/file-type';
 import { Button } from '@/components/shadcn/button';
 import { ChartExample } from './views/chart-example';
@@ -100,6 +101,7 @@ const previews = new Map(
         Card: <LongLinkCard>Order summary</LongLinkCard>,
         Checkbox: <CheckboxExample />,
         Currency: <Currency value={1275.5} currency="CHF" />,
+        DataGrid: <DataGridExample />,
         Dialog: (
             <Card size="sm" className="w-full">
                 <CardHeader>

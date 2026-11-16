@@ -36,7 +36,7 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/data-grid",
             "introduction": "Native ReUI data grid with caller-owned TanStack state and columns.",
-            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface. For row selection, provide stable domain IDs through getRowId and compose DataGridTableRowSelectAll and DataGridTableRowSelect in the selection column.",
+            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface. For row selection, enableRowSelection, provide stable domain IDs through getRowId, and compose DataGridTableRowSelectAll (no props) and DataGridTableRowSelect in the selection column. Client pagination uses zero-based state.pagination.pageIndex. Server pagination also requires manualPagination: true and rowCount: total in useTable; recordCount alone does not configure the table. Keep data loading and mutations in the View. Use isLoading for skeleton rows; emptyMessage accepts an Empty component with a recovery action or a request error with Retry.",
             "properties": [
                 {
                     "name": "table",
@@ -49,6 +49,113 @@
                     "name": "children",
                     "type": "ReactNode",
                     "description": "Native grid composition, including scroll area, table, and pagination."
+                },
+                {
+                    "name": "isLoading",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Displays loading rows while the View loads data."
+                },
+                { "name": "loadingMode", "type": "\"skeleton\" | \"spinner\"", "default": "skeleton" },
+                {
+                    "name": "loadingMessage",
+                    "type": "ReactNode",
+                    "description": "Message displayed in spinner loading mode."
+                },
+                {
+                    "name": "onRowClick",
+                    "type": "(row: T) => void",
+                    "description": "Receives the original domain record."
+                },
+                {
+                    "name": "i18n",
+                    "type": "{ labels?: Partial<DataGridI18nLabels> }",
+                    "description": "Overrides built-in labels, including accessible names and pagination text."
+                },
+                {
+                    "name": "tableLayout",
+                    "type": "DataGridProps<F, T>[\"tableLayout\"]",
+                    "description": "Layout and interaction flags such as dense, rowBorder, headerBackground, headerSticky, width, columnsVisibility, columnsResizable, columnsPinnable, and cellSelection. Styling overrides remain internal."
+                },
+                {
+                    "name": "DataGridContainer.children",
+                    "type": "ReactNode",
+                    "description": "Clips table overflow. Scrolling belongs to DataGridScrollArea; Frame can own the surface instead."
+                },
+                {
+                    "name": "DataGridScrollArea.children",
+                    "type": "ReactNode",
+                    "description": "Contains DataGridTable and keeps overflow inside the grid."
+                },
+                {
+                    "name": "DataGridScrollArea.orientation",
+                    "type": "\"horizontal\" | \"vertical\" | \"both\"",
+                    "default": "both"
+                },
+                {
+                    "name": "DataGridTable.footerContent",
+                    "type": "ReactNode",
+                    "description": "Optional table footer rows."
+                },
+                { "name": "DataGridTable.renderHeader", "type": "boolean", "default": true },
+                {
+                    "name": "DataGridColumnHeader.column",
+                    "type": "Column<DataGridFeatures, T, V>",
+                    "description": "Column supplied to a column definition's header callback."
+                },
+                {
+                    "name": "DataGridColumnHeader.title",
+                    "type": "string",
+                    "description": "Defaults to meta.headerTitle, a string column header, or the column ID."
+                },
+                { "name": "DataGridColumnHeader.icon", "type": "ReactNode" },
+                {
+                    "name": "DataGridColumnHeader.filter",
+                    "type": "ReactNode",
+                    "description": "Optional column filter control."
+                },
+                {
+                    "name": "DataGridColumnHeader.visibility",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables visibility controls when tableLayout.columnsVisibility is enabled."
+                },
+                {
+                    "name": "DataGridTableRowSelect.row",
+                    "type": "Row<DataGridFeatures, T>",
+                    "description": "Row supplied to a selection column's cell callback. Pair with DataGridTableRowSelectAll in its header; that component takes no props."
+                },
+                {
+                    "name": "DataGridPagination.sizes",
+                    "type": "number[]",
+                    "default": [5, 10, 25, 50, 100],
+                    "description": "Available page sizes. Uses the containing grid's table state."
+                },
+                {
+                    "name": "DataGridPagination.moreLimit",
+                    "type": "number",
+                    "default": 5,
+                    "description": "Bound for the truncated page-number window."
+                },
+                {
+                    "name": "DataGridPagination.info",
+                    "type": "string",
+                    "description": "Row count template with {from}, {to}, and {count} placeholders."
+                },
+                {
+                    "name": "DataGridPagination.rowsPerPageLabel",
+                    "type": "string",
+                    "description": "Accessible page-size selector label."
+                },
+                {
+                    "name": "DataGridPagination.previousPageLabel",
+                    "type": "string",
+                    "description": "Accessible previous-page button label."
+                },
+                {
+                    "name": "DataGridPagination.nextPageLabel",
+                    "type": "string",
+                    "description": "Accessible next-page button label."
                 }
             ]
         },

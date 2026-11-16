@@ -2,9 +2,9 @@
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
-import { useTable } from '@/views/hooks/use-table';
 import userEvent from '@testing-library/user-event';
-import type { ColumnDef, RowSelectionState, SortingState } from '@/views/hooks/use-table';
+import { useTable } from '@/components/longlink/hooks/use-table';
+import type { ColumnDef, RowSelectionState, SortingState } from '@/components/longlink/hooks/use-table';
 import {
     DataGrid,
     DataGridContainer,

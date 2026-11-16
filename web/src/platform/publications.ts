@@ -105,6 +105,7 @@ export const componentDocumentation = [
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
+    { name: 'DataGrid', category: 'Display', icon: Grip },
     { name: 'Dialog', category: 'Layouts', icon: AppWindow },
     { name: 'Dropdown', category: 'Action', icon: ListCollapse },
     { name: 'Pagination', category: 'Action', icon: ListCollapse },

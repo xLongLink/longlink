@@ -5,7 +5,5 @@ export { z } from 'zod';
 export { useForm } from '../src/views/hooks/use-form';
 export { useFormContext } from '../src/views/hooks/use-form-context';
 export { useSubmit } from '../src/views/hooks/use-submit';
-export { useTable } from '../src/views/hooks/use-table';
-export type { ColumnDef, CellContext, RowSelectionState, SortingState } from '../src/views/hooks/use-table';
 export type FrontendElement = JSX.Element;
 export type FrontendElementType = JSX.ElementType;

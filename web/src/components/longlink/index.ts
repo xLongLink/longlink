@@ -25,14 +25,8 @@ import * as fileViewer from './display/file-viewer';
 import type { ReactNode, RefAttributes } from 'react';
 import * as group from '@/components/shadcn/button-group';
 import * as separator from '@/components/shadcn/separator';
-import type { TableFeatures } from '@tanstack/react-table';
 import type { PublicComponent, PublicProps } from './props';
 import * as filters from '@/components/reui/filters/filters';
-import * as dataGrid from '@/components/reui/data-grid/data-grid';
-import * as gridTable from '@/components/reui/data-grid/data-grid-table';
-import * as gridScroll from '@/components/reui/data-grid/data-grid-scroll-area';
-import * as gridHeader from '@/components/reui/data-grid/data-grid-column-header';
-import * as gridPagination from '@/components/reui/data-grid/data-grid-pagination';
 
 export const Box: PublicComponent<typeof box.Box> = box.Box;
 export const Stack: PublicComponent<typeof stack.Stack> = stack.Stack;
@@ -134,33 +128,28 @@ export type { ChartSeries, SankeyNode, SankeyLink } from './charts/types';
 export type { ChartConfig } from '@/components/shadcn/chart';
 export { CountryChart } from '@/components/custom/country-chart';
 
-export const dataGridFeatures: Omit<dataGrid.DataGridFeatures, 'columnMeta'> & {
-    columnMeta: PublicProps<dataGrid.DataGridFeatures['columnMeta']>;
-} = dataGrid.dataGridFeatures;
-
-export type DataGridFeatures = typeof dataGridFeatures;
-export type { DataGridTableInstance } from '@/components/reui/data-grid/data-grid';
-export type DataGridProps<Features extends TableFeatures, Data extends object> = PublicProps<
-    dataGrid.DataGridProps<Features, Data>
->;
-export type DataGridColumnMeta<Data> = PublicProps<dataGrid.DataGridColumnMeta<Data>>;
-
-export const DataGrid: <Features extends TableFeatures, Data extends object>(
-    props: DataGridProps<Features, Data>
-) => ReturnType<typeof dataGrid.DataGrid> = dataGrid.DataGrid;
-
-export const DataGridContainer: PublicComponent<typeof dataGrid.DataGridContainer> = dataGrid.DataGridContainer;
-export { DataGridTable, DataGridTableRowSelect } from '@/components/reui/data-grid/data-grid-table';
-export const DataGridTableRowSelectAll: PublicComponent<typeof gridTable.DataGridTableRowSelectAll> =
-    gridTable.DataGridTableRowSelectAll;
-
-export const DataGridColumnHeader: <Data extends object, Value>(
-    props: PublicProps<Parameters<typeof gridHeader.DataGridColumnHeader<Data, Value>>[0]>
-) => ReturnType<typeof gridHeader.DataGridColumnHeader> = gridHeader.DataGridColumnHeader;
-
-export const DataGridPagination: PublicComponent<typeof gridPagination.DataGridPagination> =
-    gridPagination.DataGridPagination;
-export const DataGridScrollArea: PublicComponent<typeof gridScroll.DataGridScrollArea> = gridScroll.DataGridScrollArea;
+export {
+    useTable,
+    dataGridFeatures,
+    type DataGridFeatures,
+    type ColumnDef,
+    type CellContext,
+    type RowSelectionState,
+    type SortingState
+} from './hooks/use-table';
+export {
+    DataGrid,
+    DataGridContainer,
+    DataGridTable,
+    DataGridTableRowSelect,
+    DataGridTableRowSelectAll,
+    DataGridColumnHeader,
+    DataGridPagination,
+    DataGridScrollArea,
+    type DataGridTableInstance,
+    type DataGridProps,
+    type DataGridColumnMeta
+} from './display/data-grid';
 
 export const Filters: <Value = unknown, Option = unknown>(
     props: PublicProps<Parameters<typeof filters.Filters<Value, Option>>[0]>

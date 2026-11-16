@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import { useMemo, useState } from 'react';
-import { useTable, type ColumnDef } from '@/views/hooks/use-table';
+import { useTable, type ColumnDef } from '@/components/longlink/hooks/use-table';
 import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import {
     Box,
