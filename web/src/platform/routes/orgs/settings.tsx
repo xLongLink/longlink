@@ -8,11 +8,12 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import { useState, useTransition } from 'react';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -388,7 +389,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
     const reportError = useApiError();
-    const revocationInFlight = useRef(false);
     const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
@@ -397,6 +397,15 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     const [invitations, invalidateInvitations] = useApi(
         `${base}/invitations`,
         schemas.zOrganizationInvitationResponse.array()
+    );
+
+    // Serialize revocation until the refreshed list is available.
+    const revokeInvitation = useSubmit(
+        async (id: string) => {
+            await api.delete(`${base}/invitations/${id}`);
+            await invalidateInvitations();
+        },
+        { onError: () => {} }
     );
 
     /** Closes only the invitation attempt that owns this callback. */
@@ -460,21 +469,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                             variant="destructive"
                                             disabled={revoking}
                                             aria-busy={revoking || undefined}
-                                            onClick={() => {
-                                                // Serialize revocation until the refreshed list is available.
-                                                if (revocationInFlight.current) return;
-                                                revocationInFlight.current = true;
-                                                startRevocation(async () => {
-                                                    try {
-                                                        await api.delete(`${base}/invitations/${row.id}`);
-                                                        await invalidateInvitations();
-                                                    } catch (cause) {
-                                                        reportError(cause);
-                                                    } finally {
-                                                        revocationInFlight.current = false;
-                                                    }
-                                                });
-                                            }}
+                                            onClick={() => startRevocation(() => revokeInvitation(row.id))}
                                         >
                                             Revoke
                                         </Button>

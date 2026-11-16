@@ -26,7 +26,10 @@ test('published component provenance matches the implementation exposed to Views
     for (const statement of source.statements) {
         assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
         const target = statement.moduleSpecifier.text;
-        assert.match(target, /^(?:@\/components\/longlink|react|zod|@hookform\/resolvers\/zod|\.\/hooks\/[^/]+)$/);
+        assert.match(
+            target,
+            /^(?:@\/components\/longlink|@\/components\/custom\/confirmation|@\/lib\/hooks\/use-submit|react|react-hook-form|zod|@hookform\/resolvers\/zod|\.\/hooks\/(?:use-api|use-form))$/
+        );
         if (target.startsWith('./hooks/') && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
             for (const specifier of statement.exportClause.elements) {
                 if (!statement.isTypeOnly && !specifier.isTypeOnly) {
@@ -44,7 +47,10 @@ test('published component provenance matches the implementation exposed to Views
         true
     );
     for (const statement of frontend.statements.filter(ts.isExportDeclaration)) {
-        assert.match(statement.moduleSpecifier?.text ?? '', /^(?:zod|\.\.\/src\/(?:components\/longlink|views\/hooks\/[^/]+))$/);
+        assert.match(
+            statement.moduleSpecifier?.text ?? '',
+            /^(?:zod|react-hook-form|\.\.\/src\/(?:components\/longlink|views\/hooks\/use-form|lib\/hooks\/use-submit))$/
+        );
     }
 
     // Resolve actual TypeScript aliases so a custom wrapper cannot masquerade as a native component.

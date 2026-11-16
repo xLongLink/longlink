@@ -32,11 +32,7 @@ export function useDownload() {
     return { download, error };
 }
 
-type PreviewState =
-    | { status: 'loading' }
-    | { status: 'unsupported' }
-    | { status: 'error'; cause: unknown }
-    | { status: 'ready'; url: string };
+type PreviewState = { status: 'loading' } | { status: 'unavailable' } | { status: 'ready'; url: string };
 
 /** Owns a mounted image preview; inline images remain caller-owned. */
 export function usePreview(src: string): PreviewState {
@@ -62,7 +58,7 @@ export function usePreview(src: string): PreviewState {
 
                 // Reject non-image responses without exposing their contents in the View.
                 if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
-                    setPreview({ status: 'unsupported' });
+                    setPreview({ status: 'unavailable' });
 
                     return;
                 }
@@ -70,8 +66,8 @@ export function usePreview(src: string): PreviewState {
                 // oxlint-disable-next-line react/immutability -- Effect-local cleanup; oxc-project/oxc#28401.
                 objectUrl = URL.createObjectURL(value);
                 setPreview({ status: 'ready', url: objectUrl });
-            } catch (cause) {
-                if (active) setPreview({ status: 'error', cause });
+            } catch {
+                if (active) setPreview({ status: 'unavailable' });
             }
         }
 

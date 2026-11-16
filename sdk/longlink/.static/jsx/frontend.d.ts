@@ -6640,19 +6640,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     doc: {
         category: "document";
-        color: string;
     };
     docx: {
         category: "document";
-        color: string;
     };
     odt: {
         category: "document";
-        color: string;
     };
     rtf: {
         category: "document";
-        color: string;
     };
     pages: {
         category: "document";
@@ -6692,31 +6688,24 @@ const FILE_TYPE_EXTENSIONS: {
     };
     xls: {
         category: "spreadsheet";
-        color: string;
     };
     xlsx: {
         category: "spreadsheet";
-        color: string;
     };
     xlsm: {
         category: "spreadsheet";
-        color: string;
     };
     ods: {
         category: "spreadsheet";
-        color: string;
     };
     csv: {
         category: "spreadsheet";
-        color: string;
     };
     tsv: {
         category: "spreadsheet";
-        color: string;
     };
     numbers: {
         category: "spreadsheet";
-        color: string;
         label: string;
     };
     parquet: {
@@ -6734,15 +6723,12 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ppt: {
         category: "presentation";
-        color: string;
     };
     pptx: {
         category: "presentation";
-        color: string;
     };
     odp: {
         category: "presentation";
-        color: string;
     };
     key: {
         category: "presentation";
@@ -6754,43 +6740,33 @@ const FILE_TYPE_EXTENSIONS: {
     };
     jpg: {
         category: "image";
-        color: string;
     };
     jpeg: {
         category: "image";
-        color: string;
     };
     gif: {
         category: "image";
-        color: string;
     };
     webp: {
         category: "image";
-        color: string;
     };
     avif: {
         category: "image";
-        color: string;
     };
     heic: {
         category: "image";
-        color: string;
     };
     bmp: {
         category: "image";
-        color: string;
     };
     tif: {
         category: "image";
-        color: string;
     };
     tiff: {
         category: "image";
-        color: string;
     };
     ico: {
         category: "image";
-        color: string;
     };
     raw: {
         category: "image";
@@ -6802,75 +6778,57 @@ const FILE_TYPE_EXTENSIONS: {
     };
     jxl: {
         category: "image";
-        color: string;
     };
     mp4: {
         category: "video";
-        color: string;
     };
     mov: {
         category: "video";
-        color: string;
     };
     avi: {
         category: "video";
-        color: string;
     };
     mkv: {
         category: "video";
-        color: string;
     };
     webm: {
         category: "video";
-        color: string;
     };
     mpeg: {
         category: "video";
-        color: string;
     };
     mpg: {
         category: "video";
-        color: string;
     };
     wmv: {
         category: "video";
-        color: string;
     };
     m3u8: {
         category: "video";
-        color: string;
     };
     mp3: {
         category: "audio";
-        color: string;
     };
     wav: {
         category: "audio";
-        color: string;
     };
     aac: {
         category: "audio";
-        color: string;
     };
     flac: {
         category: "audio";
-        color: string;
     };
     ogg: {
         category: "audio";
-        color: string;
     };
     m4a: {
         category: "audio";
-        color: string;
     };
     aiff: {
         category: "audio";
-        color: string;
     };
     opus: {
         category: "audio";
-        color: string;
     };
     js: {
         category: "code";
@@ -6886,11 +6844,9 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ts: {
         category: "code";
-        color: string;
     };
     tsx: {
         category: "code";
-        color: string;
     };
     html: {
         category: "code";
@@ -6930,7 +6886,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     py: {
         category: "code";
-        color: string;
     };
     java: {
         category: "code";
@@ -6958,7 +6913,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     cpp: {
         category: "code";
-        color: string;
     };
     h: {
         category: "code";
@@ -6982,7 +6936,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     mts: {
         category: "code";
-        color: string;
     };
     vue: {
         category: "code";
@@ -7035,7 +6988,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     lua: {
         category: "code";
-        color: string;
     };
     r: {
         category: "code";
@@ -7055,11 +7007,9 @@ const FILE_TYPE_EXTENSIONS: {
     };
     hpp: {
         category: "code";
-        color: string;
     };
     cc: {
         category: "code";
-        color: string;
     };
     cu: {
         category: "code";
@@ -7067,7 +7017,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ps1: {
         category: "code";
-        color: string;
     };
     bat: {
         category: "code";
@@ -7123,7 +7072,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     dockerfile: {
         category: "code";
-        color: string;
         label: string;
     };
     makefile: {
@@ -7145,7 +7093,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     proto: {
         category: "code";
-        color: string;
     };
     jsonl: {
         category: "code";
@@ -7173,39 +7120,30 @@ const FILE_TYPE_EXTENSIONS: {
     };
     zip: {
         category: "archive";
-        color: string;
     };
     rar: {
         category: "archive";
-        color: string;
     };
     "7z": {
         category: "archive";
-        color: string;
     };
     tar: {
         category: "archive";
-        color: string;
     };
     gz: {
         category: "archive";
-        color: string;
     };
     tgz: {
         category: "archive";
-        color: string;
     };
     bz2: {
         category: "archive";
-        color: string;
     };
     xz: {
         category: "archive";
-        color: string;
     };
     zst: {
         category: "archive";
-        color: string;
     };
     jar: {
         category: "archive";
@@ -7217,16 +7155,13 @@ const FILE_TYPE_EXTENSIONS: {
     };
     safetensors: {
         category: "archive";
-        color: string;
         label: string;
     };
     gguf: {
         category: "archive";
-        color: string;
     };
     onnx: {
         category: "archive";
-        color: string;
     };
     pt: {
         category: "archive";
@@ -7234,7 +7169,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     fig: {
         category: "design";
-        color: string;
     };
     sketch: {
         category: "design";
@@ -7250,7 +7184,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     eps: {
         category: "design";
-        color: string;
     };
     indd: {
         category: "design";
@@ -7266,15 +7199,12 @@ const FILE_TYPE_EXTENSIONS: {
     };
     exe: {
         category: "executable";
-        color: string;
     };
     msi: {
         category: "executable";
-        color: string;
     };
     dmg: {
         category: "executable";
-        color: string;
     };
     apk: {
         category: "executable";
@@ -7286,19 +7216,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     iso: {
         category: "executable";
-        color: string;
     };
     app: {
         category: "executable";
-        color: string;
     };
     pkg: {
         category: "executable";
-        color: string;
     };
     ipa: {
         category: "executable";
-        color: string;
     };
     aab: {
         category: "executable";
@@ -7310,19 +7236,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ttf: {
         category: "font";
-        color: string;
     };
     otf: {
         category: "font";
-        color: string;
     };
     woff: {
         category: "font";
-        color: string;
     };
     woff2: {
         category: "font";
-        color: string;
     };
 };
 const FILE_TYPE_CATEGORIES: readonly [

@@ -24,7 +24,7 @@ function FileContent({ src, title }: { src: string; title: string }) {
 
     // Ignore replaced requests without moving file rendering outside the View.
     useEffect(() => {
-        const controller = new AbortController();
+        let active = true;
 
         /** Ignore responses from replaced or unmounted file requests. */
         async function load() {
@@ -33,16 +33,17 @@ function FileContent({ src, title }: { src: string; title: string }) {
 
                 if (!(body instanceof Blob)) throw new Error('File preview unavailable');
 
-                if (!controller.signal.aborted) setPreview(body);
+                if (active) setPreview(body);
             } catch (cause) {
-                if (!controller.signal.aborted)
-                    setPreview(cause instanceof Error ? cause : new Error('File preview failed'));
+                if (active) setPreview(cause instanceof Error ? cause : new Error('File preview failed'));
             }
         }
 
         void load();
 
-        return () => controller.abort();
+        return () => {
+            active = false;
+        };
     }, [request, src]);
 
     // Keep one bounded viewer region with no custom View or Download buttons.

@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useApiError } from '@/lib/errors';
+import { useTransition } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
-import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Separator } from '@/components/shadcn/separator';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
@@ -13,27 +13,18 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage] = useApi(`${base}/usage`, schemas.zOrganizationUsage);
-    const reportError = useApiError();
-    const inFlight = useRef(false);
     const [pending, startRegistration] = useTransition();
 
     /** Opens owner-authorized Stripe card registration without an immediate payment. */
-    async function registerCard() {
-        // Guard checkout creation before pending state renders.
-        if (inFlight.current) return;
-        inFlight.current = true;
-
-        try {
+    const registerCard = useSubmit<void>(
+        async () => {
             const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
 
             // Redirect only after validating the API's hosted URL.
             window.location.assign(response.url);
-        } catch (cause) {
-            reportError(cause);
-        } finally {
-            inFlight.current = false;
-        }
-    }
+        },
+        { onError: () => {} }
+    );
 
     return (
         <Stack gap={4}>

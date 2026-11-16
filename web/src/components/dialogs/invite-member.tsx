@@ -21,17 +21,13 @@ export function InviteMember({
     onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
     const formId = useId();
-    const roles = [
-        { value: 'read', icon: EyeOff },
-        { value: 'write', icon: ArrowUp },
-        { value: 'maintain', icon: Wrench },
-        ...(canInviteAdmin ? [{ value: 'admin', icon: CheckCheck }] : [])
-    ];
+    const roleSchema = z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain']);
+    const roles = roleSchema.options.map((value) => ({
+        value,
+        icon: { read: EyeOff, write: ArrowUp, maintain: Wrench, admin: CheckCheck }[value]
+    }));
 
-    const schema = z.object({
-        email: z.email(),
-        role: z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain'])
-    });
+    const schema = z.object({ email: z.email(), role: roleSchema });
 
     const form = useForm<z.input<typeof schema>>({
         resolver: zodResolver(schema),
