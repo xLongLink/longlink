@@ -4,12 +4,12 @@ export const documentationLastUpdated = '2026-10-02';
 export const documentationCategories: string[] = [
     'Runtime',
     'Hooks',
+    'Layouts',
     'Action',
     'Display',
     'Form',
     'Charts',
-    'Others',
-    'Layouts'
+    'Others'
 ];
 
 // Describe the runtime bindings exposed to Views.

@@ -42,6 +42,7 @@ function SliderControl({ className, ...props }: SliderPrimitive.Control.Props) {
         <SliderPrimitive.Control
             className={cn(
                 'relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-40 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col',
+                'not-data-disabled:cursor-pointer data-disabled:cursor-not-allowed',
                 className
             )}
             {...props}

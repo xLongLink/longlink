@@ -15713,7 +15713,9 @@ type TimePickerActionProps$1 = ViewProps<TimePickerActionProps>;
 function Switch$1({ className, size, ...props }: Switch.Root.Props & {
     size?: "sm" | "default";
 }): React$1.JSX.Element;
-function Switch$2({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Switch$1>, "children" | "className" | "style" | "render"> & FieldProps): React$1.JSX.Element;
+function Switch$2({ label, description, error, size, ...props }: Omit<React$1.ComponentProps<typeof Switch$1>, "children" | "className" | "style" | "render" | "size"> & FieldProps & {
+    size?: "sm" | "md";
+}): React$1.JSX.Element;
 function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
 function Checkbox$2({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Checkbox$1>, "children" | "className" | "style" | "render"> & FieldProps): React$1.JSX.Element;
 function RadioGroup$1({ options, label, description, error, ref, ...props }: FieldProps & Omit<RadioGroup.Props<string>, "children" | "className" | "style" | "render" | "ref" | "inputRef"> & {

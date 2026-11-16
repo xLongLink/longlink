@@ -8,8 +8,10 @@ export function Switch({
     label,
     description,
     error,
+    size = 'md',
     ...props
-}: Omit<ComponentProps<typeof toggle.Switch>, 'children' | 'className' | 'style' | 'render'> & fields.FieldProps) {
+}: Omit<ComponentProps<typeof toggle.Switch>, 'children' | 'className' | 'style' | 'render' | 'size'> &
+    fields.FieldProps & { size?: 'sm' | 'md' }) {
     const field = fields.useField({ ...props, label, description, error });
 
     return (
@@ -22,7 +24,14 @@ export function Switch({
             form={props.form}
             horizontal
         >
-            <toggle.Switch {...props} {...field} className={undefined} style={undefined} render={undefined} />
+            <toggle.Switch
+                {...props}
+                {...field}
+                size={size === 'md' ? 'default' : size}
+                className={undefined}
+                style={undefined}
+                render={undefined}
+            />
         </FieldFrame>
     );
 }

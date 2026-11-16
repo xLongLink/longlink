@@ -7,6 +7,7 @@ export function RadioGroupExample() {
         <RadioGroup
             name="plan"
             label="Plan"
+            description="Choose a plan for this workspace."
             defaultValue="team"
             options={[
                 { value: 'solo', label: 'Solo' },
@@ -27,6 +28,7 @@ export default function RadioGroupPage() {
     <RadioGroup
       name="plan"
       label="Plan"
+      description="Choose a plan for this workspace."
       defaultValue="team"
       options={[
         { value: "solo", label: "Solo" },

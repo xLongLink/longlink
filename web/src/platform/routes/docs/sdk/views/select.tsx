@@ -7,6 +7,7 @@ export function SelectExample() {
         <Select
             name="status"
             label="Status"
+            description="Choose the current order status."
             defaultValue="open"
             options={[
                 { value: 'open', label: 'Open' },
@@ -27,6 +28,7 @@ export default function SelectPage() {
     <Select
       name="status"
       label="Status"
+      description="Choose the current order status."
       defaultValue="open"
       options={[
         { value: "open", label: "Open" },

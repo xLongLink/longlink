@@ -40,7 +40,11 @@ export function RadioGroup({
                 render={undefined}
             >
                 {options.map((option, index) => (
-                    <FieldLabel key={option.value} htmlFor={`${optionId}-${index}`}>
+                    <FieldLabel
+                        key={option.value}
+                        htmlFor={`${optionId}-${index}`}
+                        className="cursor-pointer has-data-disabled:cursor-not-allowed"
+                    >
                         <radio.RadioGroupItem
                             id={`${optionId}-${index}`}
                             value={option.value}

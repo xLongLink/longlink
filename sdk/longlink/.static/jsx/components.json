@@ -223,31 +223,32 @@
                     "type": "string",
                     "description": "Caller-owned validation message; marks the input invalid."
                 },
-                {
-                    "name": "name / type / required / disabled / readOnly / maxLength",
-                    "type": "native input props",
-                    "description": "Standard HTML form control behavior."
-                },
-                {
-                    "name": "min / max / step",
-                    "type": "string | number",
-                    "description": "Native number, date, and time constraints. Use step=\"any\" for decimals."
-                },
+                { "name": "name", "type": "string" },
+                { "name": "type", "type": "HTMLInputTypeAttribute" },
+                { "name": "required", "type": "boolean" },
+                { "name": "disabled", "type": "boolean" },
+                { "name": "readOnly", "type": "boolean" },
+                { "name": "maxLength", "type": "number" },
+                { "name": "min", "type": "string | number" },
+                { "name": "max", "type": "string | number" },
+                { "name": "step", "type": "string | number", "description": "Use \"any\" for decimals." },
                 {
                     "name": "onChange",
                     "type": "ChangeEventHandler<HTMLInputElement>",
                     "description": "DOM event; read event.currentTarget.value, or event.currentTarget.files for file inputs."
                 },
                 {
-                    "name": "value / defaultValue",
+                    "name": "value",
                     "type": "string | number",
-                    "description": "Controlled or uncontrolled value. File inputs remain uncontrolled."
+                    "description": "Controlled value. File inputs remain uncontrolled."
                 },
+                { "name": "defaultValue", "type": "string | number", "description": "Initial uncontrolled value." },
                 {
-                    "name": "accept / multiple",
-                    "type": "string / boolean",
-                    "description": "File picker hints and multiple selection. Validate file types, counts, and sizes in the form schema and on the server."
-                }
+                    "name": "accept",
+                    "type": "string",
+                    "description": "File picker hint; validate file types on the server."
+                },
+                { "name": "multiple", "type": "boolean", "description": "Allows multiple file selections." }
             ],
             "source": "custom",
             "justification": "Owns field labeling, validation feedback, and fixed presentation while retaining the installed native input.",
@@ -261,17 +262,19 @@
                 { "name": "label", "type": "string" },
                 { "name": "description", "type": "string" },
                 { "name": "error", "type": "string", "description": "Caller-owned validation message." },
-                {
-                    "name": "name / rows / required / disabled / readOnly / maxLength",
-                    "type": "native textarea props",
-                    "description": "Standard HTML textarea behavior."
-                },
+                { "name": "name", "type": "string" },
+                { "name": "rows", "type": "number" },
+                { "name": "required", "type": "boolean" },
+                { "name": "disabled", "type": "boolean" },
+                { "name": "readOnly", "type": "boolean" },
+                { "name": "maxLength", "type": "number" },
                 {
                     "name": "onChange",
                     "type": "ChangeEventHandler<HTMLTextAreaElement>",
                     "description": "DOM event; read event.currentTarget.value."
                 },
-                { "name": "value / defaultValue", "type": "string", "description": "Controlled or uncontrolled value." }
+                { "name": "value", "type": "string", "description": "Controlled value." },
+                { "name": "defaultValue", "type": "string", "description": "Initial uncontrolled value." }
             ],
             "source": "custom",
             "justification": "Owns field presentation while preserving native textarea values, events, refs, and constraints.",
@@ -285,22 +288,17 @@
                 { "name": "label", "type": "string" },
                 { "name": "description", "type": "string" },
                 { "name": "error", "type": "string", "description": "Caller-owned validation message." },
-                {
-                    "name": "checked / defaultChecked",
-                    "type": "boolean",
-                    "description": "Controlled or initial checked state."
-                },
+                { "name": "checked", "type": "boolean", "description": "Controlled checked state." },
+                { "name": "defaultChecked", "type": "boolean", "description": "Initial uncontrolled checked state." },
                 { "name": "indeterminate", "type": "boolean", "description": "Mixed state." },
                 {
                     "name": "onCheckedChange",
                     "type": "(checked, eventDetails) => void",
                     "description": "Native Base UI callback."
                 },
-                {
-                    "name": "name / required / disabled",
-                    "type": "native control props",
-                    "description": "Standard form control behavior."
-                }
+                { "name": "name", "type": "string" },
+                { "name": "required", "type": "boolean" },
+                { "name": "disabled", "type": "boolean" }
             ],
             "source": "custom",
             "justification": "Owns labeled checkbox presentation without replacing Base UI checked state or native form participation.",
@@ -1441,20 +1439,23 @@
                 { "name": "placeholder", "type": "string" },
                 { "name": "multiple", "type": "boolean", "default": false },
                 {
-                    "name": "value / defaultValue",
+                    "name": "value",
                     "type": "string | readonly string[] | null",
-                    "description": "Controlled or initial selection; multiple controls array selection."
+                    "description": "Controlled selection; multiple controls array selection."
+                },
+                {
+                    "name": "defaultValue",
+                    "type": "string | readonly string[] | null",
+                    "description": "Initial uncontrolled selection."
                 },
                 {
                     "name": "onValueChange",
                     "type": "(value, details) => void",
                     "description": "Native selection changes with cancelable event details."
                 },
-                {
-                    "name": "name / required / disabled",
-                    "type": "Native form props",
-                    "description": "Native form participation and validation."
-                },
+                { "name": "name", "type": "string" },
+                { "name": "required", "type": "boolean" },
+                { "name": "disabled", "type": "boolean" },
                 { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" }
             ],
             "source": "custom",
@@ -1478,25 +1479,31 @@
                 { "name": "placeholder", "type": "string" },
                 { "name": "emptyText", "type": "string", "default": "No results" },
                 { "name": "multiple", "type": "boolean", "default": false },
+                { "name": "name", "type": "string" },
+                { "name": "form", "type": "string" },
+                { "name": "required", "type": "boolean" },
+                { "name": "disabled", "type": "boolean" },
+                { "name": "readOnly", "type": "boolean" },
                 {
-                    "name": "name / form / required / disabled / readOnly",
-                    "type": "Native form props",
-                    "description": "Native form participation and interaction constraints."
+                    "name": "value",
+                    "type": "string | readonly string[] | null",
+                    "description": "Controlled selection; multiple controls array selection."
                 },
                 {
-                    "name": "value / defaultValue",
+                    "name": "defaultValue",
                     "type": "string | readonly string[] | null",
-                    "description": "Controlled or initial selection; multiple controls array selection."
+                    "description": "Initial uncontrolled selection."
                 },
                 {
                     "name": "onValueChange",
                     "type": "(value, details) => void",
                     "description": "Native selection changes."
                 },
+                { "name": "inputValue", "type": "string", "description": "Controlled search text." },
                 {
-                    "name": "inputValue / onInputValueChange",
-                    "type": "Native input props",
-                    "description": "Controls search text independently from selection."
+                    "name": "onInputValueChange",
+                    "type": "(value: string, eventDetails) => void",
+                    "description": "Receives search text changes."
                 }
             ],
             "source": "custom",
@@ -1561,11 +1568,8 @@
                     "default": "edge"
                 },
                 { "name": "thumbCollisionBehavior", "type": "\"push\" | \"swap\" | \"none\"", "default": "push" },
-                {
-                    "name": "format / locale",
-                    "type": "Intl.NumberFormatOptions / Intl.LocalesArgument",
-                    "description": "Native value formatting."
-                }
+                { "name": "format", "type": "Intl.NumberFormatOptions" },
+                { "name": "locale", "type": "Intl.LocalesArgument" }
             ],
             "source": "custom",
             "justification": "Owns thumb composition and accessible field feedback while Base UI manages values, keyboard editing, and form inputs.",
@@ -1717,7 +1721,7 @@
                     "type": "(checked, eventDetails) => void",
                     "description": "Native Base UI callback."
                 },
-                { "name": "size", "type": "\"sm\" | \"default\"", "description": "Installed control size." },
+                { "name": "size", "type": "\"sm\" | \"md\"", "default": "md" },
                 {
                     "name": "disabled",
                     "type": "boolean",

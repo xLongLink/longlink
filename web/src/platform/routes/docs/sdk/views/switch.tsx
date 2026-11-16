@@ -3,7 +3,14 @@ import { Switch } from '@/views/adapter/form/switch';
 
 /** Shows a labeled boolean preference. */
 export function SwitchExample() {
-    return <Switch name="notifications" label="Email notifications" defaultChecked />;
+    return (
+        <Switch
+            name="notifications"
+            label="Email notifications"
+            description="Receive an email when an order changes."
+            defaultChecked
+        />
+    );
 }
 
 /** Documents controlled and uncontrolled boolean preferences. */
@@ -19,6 +26,7 @@ export default function SwitchPage() {
     <Switch
       name="notifications"
       label="Email notifications"
+      description="Receive an email when an order changes."
       checked={checked}
       onCheckedChange={setChecked}
     />

@@ -56,7 +56,13 @@ export function FieldFrame({
         group ? (
             <field.FieldTitle id={`${id}-label`}>{label}</field.FieldTitle>
         ) : (
-            <field.FieldLabel id={`${id}-label`} htmlFor={id}>
+            <field.FieldLabel
+                id={`${id}-label`}
+                htmlFor={id}
+                className={
+                    horizontal ? 'cursor-pointer group-data-[disabled=true]/field:cursor-not-allowed' : undefined
+                }
+            >
                 {label}
             </field.FieldLabel>
         )

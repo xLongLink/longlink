@@ -7,6 +7,7 @@ export function ComboboxExample() {
         <Combobox
             name="status"
             label="Status"
+            description="Search for an order status."
             placeholder="Search statuses"
             options={[
                 { value: 'open', label: 'Open' },
@@ -27,6 +28,7 @@ export default function ComboboxPage() {
     <Combobox
       name="status"
       label="Status"
+      description="Search for an order status."
       placeholder="Search statuses"
       options={[
         { value: "open", label: "Open" },
