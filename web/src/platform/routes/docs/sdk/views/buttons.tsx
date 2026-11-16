@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
+import { ButtonGroup } from '@/components/longlink';
 import { Icon } from '@/components/longlink/display/icon';
 import { Button } from '@/components/longlink/action/button';
-import { ButtonGroup } from '@/components/shadcn/button-group';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
