@@ -3,8 +3,8 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
-import { Token } from '@/components/custom/token';
 import { Separator } from '@/components/shadcn/separator';
+import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -91,7 +91,7 @@ function RegisteredCards({ base }: { base: string }) {
                             </span>
                         </TableCell>
                         <TableCell>{`${String(row.exp_month).padStart(2, '0')}/${row.exp_year}`}</TableCell>
-                        <TableCell>{row.is_default ? <Token label="Default" /> : null}</TableCell>
+                        <TableCell>{row.is_default ? <Badge variant="secondary">Default</Badge> : null}</TableCell>
                     </TableRow>
                 ))}
                 {cards.length === 0 && (

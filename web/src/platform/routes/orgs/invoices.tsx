@@ -1,7 +1,7 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
-import { Token } from '@/components/custom/token';
 import { Separator } from '@/components/shadcn/separator';
+import { Badge } from '@/components/longlink/display/badge';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
@@ -70,7 +70,7 @@ function InvoiceTable({ base }: { base: string }) {
                                 )}
                             </TableCell>
                             <TableCell>
-                                <Token label={row.status?.replaceAll('_', ' ') ?? 'Unknown'} />
+                                <Badge variant="secondary">{row.status?.replaceAll('_', ' ') ?? 'Unknown'}</Badge>
                             </TableCell>
                             <TableCell>
                                 {row.has_pdf ? (
