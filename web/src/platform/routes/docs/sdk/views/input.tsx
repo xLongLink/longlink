@@ -15,19 +15,11 @@ export default function InputPage() {
             code={`function Example() {
   const form = useForm(z.object({ name: z.string().trim().min(1, "Enter an order name.") }), {
     defaultValues: { name: "New order" },
+    action: "/api/orders",
   });
-  const submit = useSubmit("/api/orders", {
-    onError: () => form.setError("root", { message: "Could not save. Please try again." }),
-  });
-
-  async function save(values) {
-    const data = new FormData();
-    data.append("name", values.name);
-    await submit(data);
-  }
 
   return (
-    <form onSubmit={form.handleSubmit(save)} noValidate>
+    <form onSubmit={form.submit} noValidate>
       <Stack gap={4}>
         <Input
           {...form.register("name")}

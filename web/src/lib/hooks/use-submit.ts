@@ -4,7 +4,7 @@ import type { ViewData } from '@/views/protocol';
 import { useCallback, useContext, useRef } from 'react';
 import { FormRequestContext } from '@/components/custom/contexts';
 
-type SubmitOptions = {
+export type SubmitOptions = {
     method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     onSuccess?: (data: ViewData) => void | Promise<void>;
     onError?: (error: Error) => void | Promise<void>;

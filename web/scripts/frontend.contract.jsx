@@ -338,6 +338,17 @@ const schemaValue = { name: 'Order' };
 // @ts-expect-error Zod's namespace types must retain schema inference in standalone SDK declarations.
 schemaValue.name = 42;
 const orderForm = useForm(formSchema, { defaultValues: { name: '' } });
+const submittingForm = useForm(formSchema, {
+    defaultValues: { name: '' },
+    action: '/api/orders',
+    method: 'PATCH',
+    onSuccess: async (data) => { String(data); },
+    onError: async (error) => { error.message.trim(); }
+});
+const automaticForm = <form onSubmit={submittingForm.submit}><Input {...submittingForm.register('name')} /></form>;
+submittingForm.submit().then(() => {});
+// @ts-expect-error Form actions must use write methods.
+const readOnlySubmission = useForm(formSchema, { action: '/api/orders', method: 'GET' });
 // @ts-expect-error Controller names must match the form's values.
 const unknownField = <Controller name="missing" control={orderForm.control} render={() => <div />} />;
 const convertedForm = useForm(z.object({ quantity: z.string().transform(Number) }), {

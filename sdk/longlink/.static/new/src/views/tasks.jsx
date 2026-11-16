@@ -13,23 +13,14 @@ const taskSchema = z.object({
 
 /** Validates task values with the form schema. */
 function TaskForm({ onSuccess, onCancel }) {
-    const form = useForm(taskSchema, { defaultValues: { title: '', attachment: null } });
-    const submit = useSubmit('/api/tasks', {
-        onSuccess,
-        onError: () => form.setError('root', { message: 'Could not create the task. Please try again.' })
+    const form = useForm(taskSchema, {
+        defaultValues: { title: '', attachment: null },
+        action: '/api/tasks',
+        onSuccess
     });
 
-    /** Preserves the attachment as binary form data rather than serializing it as JSON. */
-    async function createTask(values) {
-        const data = new FormData();
-
-        data.append('title', values.title);
-        if (values.attachment) data.append('attachment', values.attachment);
-        await submit(data);
-    }
-
     return (
-        <form onSubmit={form.handleSubmit(createTask)} noValidate aria-busy={form.formState.isSubmitting}>
+        <form onSubmit={form.submit} noValidate aria-busy={form.formState.isSubmitting}>
             <fieldset disabled={form.formState.isSubmitting} className="contents">
                 <Stack gap={4}>
                     <Controller

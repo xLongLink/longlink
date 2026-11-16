@@ -27,12 +27,12 @@ export const viewHooks = [
     {
         name: 'useForm(schema, options?)',
         description:
-            'React Hook Form state, reset, and submission with automatic Zod validation. Pass the schema first and editing defaults through options.defaultValues. Schema input types govern fields and schema output types govern handleSubmit. FormProvider and useFormContext share a form with Wizard.'
+            'React Hook Form state with automatic Zod validation. Pass editing defaults and an action endpoint, then use form.submit for duplicate-protected multipart submission. Parsed scalars become text, files remain binary, arrays repeat field names, and null values are omitted; nested objects are rejected. Failures populate formState.errors.root and preserve the draft. Standard methods remain available for local or custom forms.'
     },
     {
         name: 'useSubmit(path, options)',
         description:
-            'Returns an awaitable, duplicate-protected scoped submission function accepting FormData. Options: method (POST by default, PUT, PATCH, DELETE), onSuccess, and onError. Successful writes refresh cached View data before onSuccess. In onError, use form.setError("root", { message }) to show failure and keep isSubmitSuccessful false; unhandled failures reject. React Hook Form owns submitting state. Append files and repeated values explicitly; do not serialize them as JSON.'
+            'Returns an awaitable, duplicate-protected scoped submission function accepting FormData for standalone actions. Use useForm(schema, { action }) for forms instead. Options: method (POST by default, PUT, PATCH, DELETE), onSuccess, and onError. Successful writes refresh cached View data before onSuccess; unhandled failures reject. Await the action in a Button handler to retain pending behavior.'
     },
     {
         name: 'useConfirm()',

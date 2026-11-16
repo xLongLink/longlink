@@ -1,14 +1,22 @@
 import ViewLayout from './view-layout';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
-/** Documents schema-owned validation with caller-owned editing defaults. */
+/** Documents schema validation, editing defaults, and scoped multipart form submission. */
 export default function UseFormPage() {
     return (
         <ViewLayout
             name="useForm"
             properties={[
                 { name: 'schema', type: 'ZodType<Output, Input>' },
-                { name: 'options', type: 'Omit<UseFormProps<Input, Context, Output>, "resolver">' },
+                {
+                    name: 'options',
+                    type: 'Omit<UseFormProps<Input, Context, Output>, "resolver"> & SubmitOptions & { action?: string }'
+                },
+                { name: 'options.action', type: 'string' },
+                { name: 'options.method', type: '"POST" | "PUT" | "PATCH" | "DELETE"' },
+                { name: 'options.onSuccess', type: '(data: ViewData) => void | Promise<void>' },
+                { name: 'options.onError', type: '(error: Error) => void | Promise<void>' },
+                { name: 'submit', type: '(event?: BaseSyntheticEvent) => Promise<void>' },
                 { name: 'control', type: 'Control<Input, Context, Output>' },
                 { name: 'formState', type: 'FormState<Input>' },
                 { name: 'handleSubmit', type: 'UseFormHandleSubmit<Input, Output>' },
@@ -24,17 +32,11 @@ export default function UseFormPage() {
                 code={`export default function ItemForm() {
   const form = useForm(z.object({ name: z.string().trim().min(1, 'Enter a name') }), {
     defaultValues: { name: '' },
-  });
-  const submit = useSubmit('/api/items', {
-    onError: (error) => form.setError('root', { message: error.message })
+    action: '/api/items',
   });
 
   return (
-    <form onSubmit={form.handleSubmit(async (values) => {
-      const data = new FormData();
-      data.set('name', values.name);
-      await submit(data);
-    })}>
+    <form onSubmit={form.submit} noValidate>
       <Controller
         name="name"
         control={form.control}

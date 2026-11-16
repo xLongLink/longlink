@@ -1064,7 +1064,7 @@
             "category": "Form",
             "introduction": "Shares React Hook Form methods with nested controls and Wizard.",
             "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
-            "guidance": "Call useForm(schema, { defaultValues }) for automatic Zod validation. Editing defaults stay explicit and do not need to satisfy the schema before submission. Use Controller for controlled controls, and pass label and error directly to each control. Render a form with onSubmit={form.handleSubmit(save)}. Spread form methods onto FormProvider when descendants need useFormContext. useSubmit owns only the scoped request. Validate and authorize mutations on the server.",
+            "guidance": "Call useForm(schema, { defaultValues, action }) and use form.submit for automatic validation and scoped multipart submission. Editing defaults stay explicit and do not need to satisfy the schema before submission. Parsed scalar values become text; files remain binary; arrays repeat field names; null and undefined are omitted, not treated as clearing a value. Nested objects and nonfinite numbers are rejected before transport. Submission failures populate formState.errors.root and preserve the draft. Standard methods remain available for local or custom forms. Spread methods onto FormProvider only when descendants need useFormContext. Validate and authorize mutations on the server.",
             "properties": [
                 {
                     "name": "...form",
@@ -1182,11 +1182,11 @@
             "members": [
                 {
                     "name": "useForm(schema, options?)",
-                    "description": "React Hook Form state with automatic Zod validation. Pass the schema first and editing defaults through options.defaultValues. Fields use schema input types; handleSubmit receives parsed output, including transformations. FormProvider/useFormContext support nested forms and Wizard."
+                    "description": "React Hook Form state with automatic Zod validation. Pass defaultValues and an action endpoint, then use form.submit for duplicate-protected multipart submission of parsed values. Scalars become text, files remain binary, arrays repeat field names, and null values are omitted; nested objects are rejected. Failures populate formState.errors.root and preserve the draft. Native handleSubmit remains available for custom submissions."
                 },
                 {
                     "name": "useSubmit(path, options)",
-                    "description": "Returns an awaitable, duplicate-protected scoped write function accepting FormData. Options: method (POST by default, PUT, PATCH, DELETE), onSuccess(data), and onError(error). Cache refresh completes before onSuccess. In onError, call form.setError('root', { message }) so failure is visible and isSubmitSuccessful stays false. Unhandled failures reject. Append repeated values and binary files explicitly; React Hook Form owns submitting state."
+                    "description": "Returns an awaitable, duplicate-protected scoped submission function accepting FormData for standalone actions. Use useForm(schema, { action }) for forms. Successful writes refresh cached View data before onSuccess. Unhandled failures reject."
                 },
                 {
                     "name": "useState(initial)",

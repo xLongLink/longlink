@@ -17984,7 +17984,6 @@ function bigint$2<T = unknown>(params?: string | core.$ZodBigIntParams): ZodCoer
 interface ZodCoercedDate<T = unknown> extends schemas$1._ZodDate<core.$ZodDateInternals<T>> {
 }
 function date$3<T = unknown>(params?: string | core.$ZodDateParams): ZodCoercedDate<T>;
-export function useForm<Input extends FieldValues, Context = unknown, Output extends FieldValues = Input>(schema: z.ZodType<Output, Input>, options?: Omit<UseFormProps<Input, Context, Output>, "resolver">): UseFormReturn<Input, Context, Output>;
 const responseSchema: z.ZodUnion<readonly [
     z.ZodJSONSchema,
     z.ZodInstanceOf<Blob>
@@ -17997,6 +17996,11 @@ type SubmitOptions = {
 };
 export function useSubmit(path: string, options?: SubmitOptions): (data: FormData) => Promise<void>;
 export function useSubmit<T>(action: (data: T) => void | Promise<void>, options?: Pick<SubmitOptions, "onError">): (data: T) => Promise<void>;
+export function useForm<Input extends FieldValues, Context = unknown, Output extends FieldValues = Input>(schema: z.ZodType<Output, Input>, options?: Omit<UseFormProps<Input, Context, Output>, "resolver"> & SubmitOptions & {
+    action?: string;
+}): UseFormReturn<Input, Context, Output> & {
+    submit: (event?: React$1.BaseSyntheticEvent) => Promise<void>;
+};
 export type FrontendElement = React$1.JSX.Element;
 export type FrontendElementType = React$1.JSX.ElementType;
 namespace CSS$1 {

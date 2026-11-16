@@ -89,7 +89,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
             expect(document.contains(form)).toBe(true);
             expect(title.value).toBe('Review invoice');
             expect(upload.files?.[0]).toBe(file);
-            expect(form.textContent).toContain('Could not create the task. Please try again.');
+            expect(form.textContent).toContain('Unavailable');
 
             await React.act(async () => {
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));

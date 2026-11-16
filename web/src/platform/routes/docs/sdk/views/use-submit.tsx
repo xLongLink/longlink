@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
-/** Documents awaitable, duplicate-protected writes. */
+/** Documents standalone writes; forms submit through useForm. */
 export default function UseSubmitPage() {
     return (
         <ViewLayout
@@ -17,32 +17,13 @@ export default function UseSubmitPage() {
         >
             <CodeBlock
                 language="jsx"
-                code={`export default function RenameItem({ params }) {
-  const form = useForm(z.object({ name: z.string().trim().min(1, 'Enter a name') }), {
-    defaultValues: { name: '' },
-  });
-  const submit = useSubmit(\`/api/items/\${params.item}\`, {
-    method: 'PATCH',
-    onSuccess: () => form.reset(),
-    onError: (error) => form.setError('root', { message: error.message })
-  });
+                code={`export default function RetryItem({ params }) {
+  const submit = useSubmit(\`/api/items/\${params.item}/retry\`);
 
   return (
-    <form onSubmit={form.handleSubmit(async (values) => {
-      const data = new FormData();
-      data.set('name', values.name);
-      await submit(data);
-    })}>
-      <Controller
-        name="name"
-        control={form.control}
-        render={({ field, fieldState }) => <Input {...field} label="Item name" error={fieldState.error?.message} />}
-      />
-      {form.formState.errors.root && (
-        <Text role="alert">{form.formState.errors.root.message}</Text>
-      )}
-      <Button type="submit" disabled={form.formState.isSubmitting}>Rename</Button>
-    </form>
+    <Button onClick={async () => { await submit(new FormData()); }}>
+      Retry
+    </Button>
   );
 }`}
             >
