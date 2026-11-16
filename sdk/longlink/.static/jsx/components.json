@@ -31,20 +31,6 @@
             ]
         },
         {
-            "name": "RevenueFlow",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Adds accessible directed tracing, category isolation, quarter selection, and bounded scrolling to a native Recharts Sankey.",
-            "introduction": "Balanced revenue Sankey with keyboard node tracing and quarter controls.",
-            "properties": [
-                {
-                    "name": "quarters",
-                    "type": "RevenueQuarter[]",
-                    "description": "Newest first: label, revenue/grossProfit/operatingIncome/netIncome metrics, and acyclic nodes/links. Margin and change badges compare against the next quarter. Node categories are revenue, profit, or expense."
-                }
-            ]
-        },
-        {
             "name": "DataGrid",
             "category": "Display",
             "source": "reui",

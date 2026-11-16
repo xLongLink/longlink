@@ -12265,30 +12265,6 @@ export function CountryChart<T extends CountryUsage>({ countries, geography, sum
     label: string;
     renderDetails?: (country: T) => React$1.ReactNode;
 }): React$1.JSX.Element;
-type FlowNode = {
-    name: string;
-    category: "revenue" | "profit" | "expense";
-};
-type FlowLink = {
-    source: number;
-    target: number;
-    value: number;
-};
-type FlowData = {
-    nodes: FlowNode[];
-    links: FlowLink[];
-};
-type RevenueQuarter = {
-    label: string;
-    revenue: number;
-    grossProfit: number;
-    operatingIncome: number;
-    netIncome: number;
-    data: FlowData;
-};
-export function RevenueFlow({ quarters }: {
-    quarters: RevenueQuarter[];
-}): React$1.JSX.Element | null;
 const Box$1: PublicComponent<typeof Box>;
 const Stack$1: PublicComponent<typeof Stack>;
 const StackItem$1: PublicComponent<typeof StackItem>;
@@ -16333,7 +16309,6 @@ declare const Progress: typeof NativeFrontend.Progress;
 declare const RadarChart: typeof NativeFrontend.RadarChart;
 declare const RadialBarChart: typeof NativeFrontend.RadialBarChart;
 declare const RadioGroup: typeof NativeFrontend.RadioGroup;
-declare const RevenueFlow: typeof NativeFrontend.RevenueFlow;
 import RowSelectionState = NativeFrontend.RowSelectionState;
 declare const Sankey: typeof NativeFrontend.Sankey;
 import SankeyLink = NativeFrontend.SankeyLink;

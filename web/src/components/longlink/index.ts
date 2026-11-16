@@ -125,7 +125,6 @@ export { ChartLegend } from './charts/legend';
 export type { ChartSeries, SankeyNode, SankeyLink } from './charts/types';
 export type { ChartConfig } from '@/components/shadcn/chart';
 export { CountryChart } from '@/components/custom/country-chart';
-export { RevenueFlow } from '@/components/custom/revenue-flow';
 
 export const dataGridFeatures: Omit<dataGrid.DataGridFeatures, 'columnMeta'> & {
     columnMeta: PublicProps<dataGrid.DataGridFeatures['columnMeta']>;

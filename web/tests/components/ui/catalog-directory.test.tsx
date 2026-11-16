@@ -6,9 +6,6 @@ import * as components from '@/views';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { traceFlow } from '@/components/custom/flow';
-import type { RevenueQuarter } from '@/components/custom/flow';
-import { RevenueFlow } from '@/components/custom/revenue-flow';
 import { FileRequestContext } from '@/components/custom/preview';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
@@ -146,107 +143,6 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
             expect(download).not.toHaveBeenCalled();
         }
     );
-});
-
-it('traces directed ancestors and descendants without including a sibling branch', () => {
-    const traced = traceFlow(
-        {
-            nodes: [
-                { name: 'Source', category: 'revenue' },
-                { name: 'Revenue', category: 'revenue' },
-                { name: 'Profit', category: 'profit' },
-                { name: 'Costs', category: 'expense' },
-                { name: 'Net', category: 'profit' }
-            ],
-            links: [
-                { source: 0, target: 1, value: 100 },
-                { source: 1, target: 2, value: 60 },
-                { source: 1, target: 3, value: 40 },
-                { source: 2, target: 4, value: 60 }
-            ]
-        },
-        [2]
-    );
-
-    expect(traced).toEqual(new Set([0, 1, 3]));
-    expect(traced.has(2)).toBe(false);
-});
-
-it('clears a keyboard-selected Sankey trace when the quarter changes', async () => {
-    const user = userEvent.setup();
-
-    const quarters: RevenueQuarter[] = ['Current', 'Previous'].map((label, index) => ({
-        label,
-        revenue: index ? 80000 : 100000,
-        grossProfit: index ? 40000 : 60000,
-        operatingIncome: index ? 32000 : 60000,
-        netIncome: index ? 24000 : 60000,
-        data: {
-            nodes: [
-                { name: 'Revenue', category: 'revenue' },
-                { name: 'Profit', category: 'profit' },
-                { name: 'Costs', category: 'expense' }
-            ],
-            links: [
-                { source: 0, target: 1, value: index ? 40000 : 60000 },
-                { source: 0, target: 2, value: 40000 }
-            ]
-        }
-    }));
-
-    // Supply the layout boundary that happy-dom cannot calculate.
-    const bounds = vi
-        .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
-        .mockReturnValue(new DOMRect(0, 0, 1040, 520));
-
-    try {
-        await withMounted(<RevenueFlow quarters={quarters} />, async (output) => {
-            const profit = output.querySelector<SVGElement>('[role="button"][aria-label^="Profit,"]');
-
-            if (!profit) throw new Error('Expected keyboard-accessible Sankey node');
-
-            await act(async () => profit.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
-            expect(output.querySelector('[role="status"]')?.textContent).toBe('Tracing Profit');
-            const quarter = output.querySelector<HTMLButtonElement>('[aria-label="Revenue quarter"]');
-
-            if (!quarter) throw new Error('Expected quarter selection');
-
-            await act(async () => user.click(quarter));
-
-            const previous = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
-                (option) => option.textContent === 'Previous'
-            );
-
-            if (!previous) throw new Error('Expected previous quarter');
-
-            await act(async () => user.click(previous));
-            expect(output.querySelector('[role="status"]')?.textContent).toBe('All revenue connections');
-            expect(output.querySelector('[role="button"][aria-pressed="true"]')).toBeNull();
-            expect(output.querySelector('[aria-label="Revenue quarter"]')?.textContent).toContain('Previous');
-
-            const margin = [...output.querySelectorAll('p')].find(
-                (paragraph) => paragraph.textContent === 'Gross Margin'
-            );
-
-            expect(margin?.parentElement?.textContent).toContain('50.0%');
-            const expenses = [...output.querySelectorAll('button')].find((button) => button.textContent === 'Costs');
-
-            if (!expenses) throw new Error('Expected expense category');
-
-            await act(async () => user.click(expenses));
-            expect(output.querySelector('[role="status"]')?.textContent).toBe('Costs connections');
-            expect(output.querySelectorAll('path[stroke-opacity="0.035"]')).toHaveLength(1);
-            const clear = [...output.querySelectorAll('button')].find((button) => button.textContent === 'All');
-
-            if (!clear) throw new Error('Expected trace reset');
-
-            await act(async () => user.click(clear));
-            expect(output.querySelectorAll('path[stroke-opacity="0.035"]')).toHaveLength(0);
-            expect(output.querySelector('[role="status"]')?.textContent).toBe('All revenue connections');
-        });
-    } finally {
-        bounds.mockRestore();
-    }
 });
 
 it('switches the shipped usage period with keyboard controls and clears stale readouts when data is empty', async () => {
