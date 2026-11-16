@@ -18,6 +18,8 @@ export type ChartOptions = Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'c
 export type CartesianChartProps<Row extends object> = ChartOptions & {
     axes?: boolean;
     padding?: number;
+    xTickFormatter?: (value: string | number) => string;
+    yTickFormatter?: (value: number) => string;
     data: readonly Row[];
     xKey: ChartKey<Row>;
     series: readonly ChartSeries<Row>[];

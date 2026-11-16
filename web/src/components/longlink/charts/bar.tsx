@@ -13,6 +13,8 @@ export function BarChart<Row extends object>({
     legend = false,
     tooltip = false,
     padding = axes ? 12 : 0,
+    xTickFormatter,
+    yTickFormatter,
     ...props
 }: CartesianChartProps<Row>) {
     const prepared = data.prepareSeries(rows, xKey, series);
@@ -31,8 +33,21 @@ export function BarChart<Row extends object>({
                 margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
                 {axes && <recharts.CartesianGrid vertical={false} />}
-                <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
-                <recharts.YAxis hide={!axes} axisLine={false} tickLine={false} width={48} />
+                <recharts.XAxis
+                    dataKey="category"
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={8}
+                    tickFormatter={xTickFormatter}
+                />
+                <recharts.YAxis
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
+                    tickFormatter={yTickFormatter}
+                />
                 {series.map((item, index) => (
                     <recharts.Bar
                         key={item.key}

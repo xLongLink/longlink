@@ -12197,6 +12197,8 @@ type ChartOptions = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "
 type CartesianChartProps<Row extends object> = ChartOptions & {
     axes?: boolean;
     padding?: number;
+    xTickFormatter?: (value: string | number) => string;
+    yTickFormatter?: (value: number) => string;
     data: readonly Row[];
     xKey: ChartKey<Row>;
     series: readonly ChartSeries<Row>[];
@@ -12214,12 +12216,12 @@ export type SankeyLink = {
     target: number;
     value: number;
 };
-export function AreaChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, fill, ...props }: CartesianChartProps<Row> & {
+export function AreaChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, fill, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row> & {
     curve?: ChartCurve;
     fill?: "solid" | "gradient";
 }): React$1.JSX.Element;
-export function BarChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
-export function LineChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, ...props }: CartesianChartProps<Row> & {
+export function BarChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
+export function LineChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row> & {
     curve?: ChartCurve;
 }): React$1.JSX.Element;
 export function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, center, ...props }: ValueChartProps<Row> & {
@@ -12266,22 +12268,6 @@ export type ChartConfig = Record<string, {
     color?: never;
     theme: Record<"light" | "dark", string>;
 })>;
-type UsagePoint = {
-    date: string;
-} & Record<string, string | number>;
-export function UsageChart({ data, config, periods, title, description, label, emptyMessage, formatValue }: {
-    data: UsagePoint[];
-    config: ChartConfig;
-    periods: {
-        value: number;
-        label: string;
-    }[];
-    title: React$1.ReactNode;
-    description?: React$1.ReactNode;
-    label: string;
-    emptyMessage?: React$1.ReactNode;
-    formatValue?: (value: number) => string;
-}): React$1.JSX.Element;
 type CountryUsage = {
     id: string;
     name: string;
@@ -16397,7 +16383,6 @@ declare const TableRow: typeof NativeFrontend.TableRow;
 declare const Tabs: typeof NativeFrontend.Tabs;
 declare const Textarea: typeof NativeFrontend.Textarea;
 declare const Timestamp: typeof NativeFrontend.Timestamp;
-declare const UsageChart: typeof NativeFrontend.UsageChart;
 declare const Wizard: typeof NativeFrontend.Wizard;
 declare const createFilterQuery: typeof NativeFrontend.createFilterQuery;
 declare const dataGridFeatures: typeof NativeFrontend.dataGridFeatures;

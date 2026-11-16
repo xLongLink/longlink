@@ -31,47 +31,6 @@
             ]
         },
         {
-            "name": "UsageChart",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Owns responsive geometry, keyboard-accessible period selection, and readouts for caller-defined Recharts series.",
-            "introduction": "Area chart with caller-defined series, labels, and periods.",
-            "properties": [
-                {
-                    "name": "data",
-                    "type": "UsagePoint[]",
-                    "description": "Date and numeric series values in chronological order. Period values select the last N records."
-                },
-                {
-                    "name": "config",
-                    "type": "ChartConfig",
-                    "description": "Series keys, display labels, and semantic chart colors."
-                },
-                {
-                    "name": "periods",
-                    "type": "{ value: number; label: string }[]",
-                    "description": "Available positive record counts and their labels. The last option is initially selected."
-                },
-                {
-                    "name": "title / description",
-                    "type": "ReactNode",
-                    "description": "Required heading and optional description."
-                },
-                { "name": "label", "type": "string", "description": "Accessible chart label." },
-                {
-                    "name": "emptyMessage",
-                    "type": "ReactNode",
-                    "description": "Empty-data feedback.",
-                    "default": "No data"
-                },
-                {
-                    "name": "formatValue",
-                    "type": "(value: number) => string",
-                    "description": "Formats numeric axis values and footer readouts."
-                }
-            ]
-        },
-        {
             "name": "RevenueFlow",
             "category": "Charts",
             "source": "custom",
@@ -378,6 +337,16 @@
                 },
                 { "name": "curve", "type": "\"linear\" | \"monotone\" | \"step\"", "default": "monotone" },
                 { "name": "fill", "type": "\"solid\" | \"gradient\"", "default": "solid" },
+                {
+                    "name": "xTickFormatter",
+                    "type": "(value: string | number) => string",
+                    "description": "Formats category axis labels."
+                },
+                {
+                    "name": "yTickFormatter",
+                    "type": "(value: number) => string",
+                    "description": "Formats value axis labels."
+                },
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
@@ -405,6 +374,16 @@
             "introduction": "Compares grouped numeric series with fixed chart presentation.",
             "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Loading and retry belong to the caller.",
             "properties": [
+                {
+                    "name": "xTickFormatter",
+                    "type": "(value: string | number) => string",
+                    "description": "Formats category axis labels."
+                },
+                {
+                    "name": "yTickFormatter",
+                    "type": "(value: number) => string",
+                    "description": "Formats value axis labels."
+                },
                 {
                     "name": "padding",
                     "type": "number",
@@ -437,6 +416,16 @@
             "introduction": "Plots numeric line series without joining missing data points.",
             "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Null values leave gaps; zero values are preserved. Loading and retry belong to the caller.",
             "properties": [
+                {
+                    "name": "xTickFormatter",
+                    "type": "(value: string | number) => string",
+                    "description": "Formats category axis labels."
+                },
+                {
+                    "name": "yTickFormatter",
+                    "type": "(value: number) => string",
+                    "description": "Formats value axis labels."
+                },
                 {
                     "name": "padding",
                     "type": "number",

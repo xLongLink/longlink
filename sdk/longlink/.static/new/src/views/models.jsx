@@ -1,8 +1,18 @@
+const compactNumber = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+const usageSeries = [
+    { key: 'claude', label: 'Claude' },
+    { key: 'gpt', label: 'GPT' },
+    { key: 'gemini', label: 'Gemini' }
+];
+
 /** Displays model usage, geographic reach, and provider shares. */
 export default function Models() {
     // Load bundled sample analytics and atlas boundaries through the scoped SDK transport.
     const [analytics] = useApi('/assets/analytics.json');
     const [geography] = useApi('/assets/world.json');
+    const [period, setPeriod] = useState('30');
+    const usage = analytics.usage.slice(-Number(period));
+    const latest = usage.at(-1);
     const metricIcons = { models: 'sparkles', reviews: 'message-square', messages: 'activity', providers: 'globe' };
     const providerCount = analytics.providers.reduce((sum, provider) => sum + (provider.providerCount ?? 1), 0);
     const topShare = [...analytics.providers]
@@ -94,10 +104,7 @@ export default function Models() {
                                                 center={
                                                     <Stack align="center" gap={0}>
                                                         <Text className="text-2xl font-medium tabular-nums">
-                                                            {new Intl.NumberFormat('en', {
-                                                                notation: 'compact',
-                                                                maximumFractionDigits: 1
-                                                            }).format(analytics.geographySummary.messages)}
+                                                            {compactNumber.format(analytics.geographySummary.messages)}
                                                         </Text>
                                                         <Text className="text-xs text-muted-foreground">Messages</Text>
                                                     </Stack>
@@ -116,20 +123,47 @@ export default function Models() {
                             </Box>
                         </Card>
                     </Grid>
-                    <UsageChart
-                        data={analytics.usage}
-                        config={{
-                            claude: { label: 'Claude', color: 'var(--chart-1)' },
-                            gpt: { label: 'GPT', color: 'var(--chart-2)' },
-                            gemini: { label: 'Gemini', color: 'var(--chart-3)' }
-                        }}
-                        periods={[
-                            { value: 7, label: 'Last 7 days' },
-                            { value: 30, label: 'Last 30 days' }
-                        ]}
+                    <Card
                         title="Model usage"
-                        label="Model usage over time"
-                    />
+                        action={
+                            <ButtonGroup aria-label="Usage period">
+                                {[7, 30].map((days) => (
+                                    <Button
+                                        key={days}
+                                        type="button"
+                                        size="sm"
+                                        variant={period === String(days) ? 'secondary' : 'ghost'}
+                                        aria-pressed={period === String(days)}
+                                        onClick={() => setPeriod(String(days))}
+                                    >
+                                        Last {days} days
+                                    </Button>
+                                ))}
+                            </ButtonGroup>
+                        }
+                        footer={
+                            <ChartLegend
+                                data={usageSeries.map(({ key, label }) => ({ label, value: latest?.[key] ?? 0 }))}
+                                nameKey="label"
+                                valueKey="value"
+                                formatValue={(value) => (latest ? compactNumber.format(value) : '—')}
+                            />
+                        }
+                    >
+                        <Box height={320}>
+                            <AreaChart
+                                data={usage}
+                                xKey="date"
+                                series={usageSeries}
+                                axes
+                                tooltip
+                                fill="gradient"
+                                xTickFormatter={(value) => String(value).slice(5)}
+                                yTickFormatter={compactNumber.format}
+                                aria-label="Model usage over time"
+                            />
+                        </Box>
+                    </Card>
                 </Stack>
             </Box>
         </Stack>

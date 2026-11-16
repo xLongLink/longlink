@@ -494,7 +494,7 @@ const _removedStepper = <Stepper />;
 const _charts = (
     <>
         <Box height={280}>
-            <AreaChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total', label: 'Total' }]} axes legend tooltip padding={0} curve="linear" fill="gradient" aria-label="Revenue" />
+            <AreaChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total', label: 'Total' }]} axes legend tooltip padding={0} curve="linear" fill="gradient" xTickFormatter={(value) => String(value)} yTickFormatter={(value) => value.toLocaleString()} aria-label="Revenue" />
             <BarChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total' }]} />
             <LineChart data={[{ period: 'January', total: null }, { period: 'February', total: 0 }]} xKey="period" series={[{ key: 'total' }]} />
             <RadarChart data={[{ category: 'Speed', total: 120 }]} categoryKey="category" series={[{ key: 'total' }]} />

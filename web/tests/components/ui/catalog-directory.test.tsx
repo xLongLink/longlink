@@ -7,11 +7,13 @@ import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { traceFlow } from '@/components/custom/flow';
-import { UsageChart } from '@/components/custom/analytics';
 import type { RevenueQuarter } from '@/components/custom/flow';
 import { RevenueFlow } from '@/components/custom/revenue-flow';
 import { FileRequestContext } from '@/components/custom/preview';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
+import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
+import geographyFixture from '../../../../sdk/longlink/.static/new/src/assets/world.json';
+import analyticsFixture from '../../../../sdk/longlink/.static/new/src/assets/analytics.json';
 
 // Exercise the shipped View against the real shared components and scoped download boundary.
 const code = transform(source, {
@@ -247,7 +249,7 @@ it('clears a keyboard-selected Sankey trace when the quarter changes', async () 
     }
 });
 
-it('changes the plotted model usage period and displays its human-readable selection', async () => {
+it('switches the shipped usage period with keyboard controls and clears stale readouts when data is empty', async () => {
     const user = userEvent.setup();
 
     const data = Array.from({ length: 30 }, (_, index) => ({
@@ -256,6 +258,32 @@ it('changes the plotted model usage period and displays its human-readable selec
         gpt: (index + 1) * 80000,
         gemini: (index + 1) * 60000
     }));
+    const analytics = { ...analyticsFixture, usage: data };
+    const modelBindings = {
+        ...bindings,
+        useApi: (path: string) => [path === '/assets/analytics.json' ? analytics : geographyFixture]
+    };
+    const modelModule = { exports: {} };
+    const modelCode = transform(modelSource, {
+        transforms: ['jsx', 'imports'],
+        jsxRuntime: 'classic',
+        jsxPragma: '__jsx',
+        jsxFragmentPragma: 'Fragment',
+        production: true
+    }).code;
+
+    // oxlint-disable-next-line typescript/no-implied-eval -- Exercise the repository-owned starter View with scoped data bindings.
+    const evaluateModels = new Function(
+        'module',
+        'exports',
+        ...Object.keys(modelBindings),
+        `${modelCode}\nreturn module.exports.default;`
+    );
+    const Models = evaluateModels(
+        modelModule,
+        modelModule.exports,
+        ...Object.values(modelBindings)
+    ) as React.ComponentType;
 
     const bounds = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
         this: HTMLElement
@@ -264,40 +292,41 @@ it('changes the plotted model usage period and displays its human-readable selec
     });
 
     try {
-        await withMounted(
-            <UsageChart
-                data={data}
-                config={{
-                    claude: { label: 'Claude', color: 'var(--chart-1)' },
-                    gpt: { label: 'GPT', color: 'var(--chart-2)' },
-                    gemini: { label: 'Gemini', color: 'var(--chart-3)' }
-                }}
-                periods={[
-                    { value: 7, label: 'Last 7 days' },
-                    { value: 30, label: 'Last 30 days' }
-                ]}
-                title="Model usage"
-                label="Model usage over time"
-            />,
-            async (output) => {
-                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
+        await withMounted(<Models />, async (output) => {
+            const usageCard = output
+                .querySelector('[data-slot="card-header"] [role="group"][aria-label="Usage period"]')
+                ?.closest('[data-slot="card"]');
 
-                const option = [...output.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
-                    (item) => item.textContent === 'Last 7 days'
-                );
+            if (!usageCard) throw new Error('Expected model usage card');
 
-                if (!option) throw new Error('Expected seven-day tab');
+            await vi.waitFor(() =>
+                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
+            );
+            expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toContain('Claude3M');
 
-                await act(async () => user.click(option));
-                expect(option.getAttribute('aria-selected')).toBe('true');
-                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24');
-                expect(output.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-02');
-                option.focus();
-                await act(async () => user.keyboard('{ArrowRight}'));
-                expect(output.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('Last 30 days');
-                expect(output.querySelector('[data-slot="chart"]')?.textContent).toContain('10-02');
-            }
-        );
+            const option = [...usageCard.querySelectorAll<HTMLButtonElement>('button')].find(
+                (item) => item.textContent === 'Last 7 days'
+            );
+
+            if (!option) throw new Error('Expected seven-day control');
+
+            await act(async () => user.click(option));
+            expect(option.getAttribute('aria-pressed')).toBe('true');
+            await vi.waitFor(() =>
+                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-24')
+            );
+            expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).not.toContain('10-01');
+            option.focus();
+            await act(async () => user.keyboard('{Tab}{Enter}'));
+            expect(usageCard.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Last 30 days');
+            await vi.waitFor(() =>
+                expect(usageCard.querySelector('[data-slot="chart"]')?.textContent).toContain('10-01')
+            );
+            analytics.usage = [];
+            await act(async () => user.click(option));
+            expect(usageCard.querySelector('[role="status"]')?.textContent).toBe('No data');
+            expect(usageCard.querySelector('[data-slot="chart-legend"]')?.textContent).toBe('Claude—GPT—Gemini—');
+        });
     } finally {
         bounds.mockRestore();
     }

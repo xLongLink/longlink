@@ -14,6 +14,8 @@ export function LineChart<Row extends object>({
     tooltip = false,
     padding = axes ? 12 : 0,
     curve = 'monotone',
+    xTickFormatter,
+    yTickFormatter,
     ...props
 }: CartesianChartProps<Row> & { curve?: ChartCurve }) {
     const prepared = data.prepareSeries(rows, xKey, series);
@@ -32,8 +34,21 @@ export function LineChart<Row extends object>({
                 margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
                 {axes && <recharts.CartesianGrid vertical={false} />}
-                <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
-                <recharts.YAxis hide={!axes} axisLine={false} tickLine={false} width={48} />
+                <recharts.XAxis
+                    dataKey="category"
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={8}
+                    tickFormatter={xTickFormatter}
+                />
+                <recharts.YAxis
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
+                    tickFormatter={yTickFormatter}
+                />
                 {series.map((item, index) => (
                     <recharts.Line
                         key={item.key}

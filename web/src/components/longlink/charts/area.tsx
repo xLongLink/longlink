@@ -16,6 +16,8 @@ export function AreaChart<Row extends object>({
     padding = axes ? 12 : 0,
     curve = 'monotone',
     fill = 'solid',
+    xTickFormatter,
+    yTickFormatter,
     ...props
 }: CartesianChartProps<Row> & { curve?: ChartCurve; fill?: 'solid' | 'gradient' }) {
     const id = useId().replaceAll(':', '');
@@ -45,8 +47,21 @@ export function AreaChart<Row extends object>({
                     </defs>
                 )}
                 {axes && <recharts.CartesianGrid vertical={false} />}
-                <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
-                <recharts.YAxis hide={!axes} axisLine={false} tickLine={false} width={48} />
+                <recharts.XAxis
+                    dataKey="category"
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={8}
+                    tickFormatter={xTickFormatter}
+                />
+                <recharts.YAxis
+                    hide={!axes}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
+                    tickFormatter={yTickFormatter}
+                />
                 {series.map((item, index) => (
                     <recharts.Area
                         key={item.key}
