@@ -714,40 +714,6 @@ it('toggles and resets checkbox form data through its owned label in authored Vi
     }
 });
 
-it('edits and resets native ReUI time picker values through the authored View boundary', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        return <form>
-            <label htmlFor="native-time">Appointment</label>
-            <TimePicker id="native-time" name="appointment" defaultValue="09:30" hourCycle={24}>
-                <TimePickerInput />
-                <TimePickerContent />
-            </TimePicker>
-            <button type="reset">Reset</button>
-        </form>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('#native-time')).not.toBeNull());
-        const form = runtime.mount.querySelector('form');
-        const input = runtime.mount.querySelector<HTMLInputElement>('#native-time');
-        const reset = runtime.mount.querySelector<HTMLButtonElement>('button[type="reset"]');
-
-        if (!form || !input || !reset) throw new Error('Expected the authored appointment form');
-
-        const user = userEvent.setup();
-
-        await user.clear(input);
-        await user.type(input, '10:15');
-        await user.tab();
-        expect(new FormData(form).getAll('appointment')).toEqual(['10:15']);
-        await user.click(reset);
-        await vi.waitFor(() => expect(new FormData(form).getAll('appointment')).toEqual(['09:30']));
-        expect(input.value).toBe('09:30');
-    } finally {
-        runtime.close();
-    }
-});
-
 it('keeps navigation and attachment downloads on distinct scoped capabilities in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <>

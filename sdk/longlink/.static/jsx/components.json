@@ -1872,65 +1872,6 @@
             "justification": "Provides line-count-based truncation on a span; no Text primitive exists in shadcn/ui or ReUI."
         },
         {
-            "name": "TimePicker",
-            "category": "Form",
-            "source": "reui",
-            "reference": "https://reui.io/docs/components/base/time-picker",
-            "introduction": "Native ReUI time picker with composable input, columns, and footer.",
-            "guidance": "Use TimePickerInput or TimePickerTrigger with TimePickerContent, or TimePickerPanel for an inline picker. Native ReUI behavior snaps typed edits to available times. Use Input type=\"time\" for a browser-native time input.",
-            "properties": [
-                {
-                    "name": "value / defaultValue",
-                    "type": "string | null",
-                    "description": "Canonical HH:mm or HH:mm:ss value; null is empty."
-                },
-                {
-                    "name": "onValueChange",
-                    "type": "(value: string | null) => void",
-                    "description": "Receives a changed canonical value or null when cleared."
-                },
-                { "name": "hourCycle", "type": "12 | 24", "description": "Displayed hour cycle.", "default": 24 },
-                {
-                    "name": "granularity",
-                    "type": "\"hour\" | \"minute\" | \"second\"",
-                    "description": "Finest displayed and submitted unit.",
-                    "default": "minute"
-                },
-                {
-                    "name": "min / max",
-                    "type": "string",
-                    "description": "Inclusive selectable bounds; min after max represents an overnight window."
-                },
-                {
-                    "name": "hourStep / minuteStep / secondStep",
-                    "type": "number",
-                    "description": "Available steps counted from zero in each unit.",
-                    "default": 1
-                },
-                {
-                    "name": "name / form",
-                    "type": "string",
-                    "description": "Native form submission name and optional external form association."
-                },
-                {
-                    "name": "required / disabled / readOnly",
-                    "type": "boolean",
-                    "description": "Native validation and editing constraints."
-                },
-                {
-                    "name": "requireConfirm",
-                    "type": "boolean",
-                    "description": "Retains picker selections as drafts until confirmed.",
-                    "default": false
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Native TimePickerTrigger, TimePickerInput, TimePickerContent, TimePickerPanel, TimePickerColumns, TimePickerColumn, TimePickerFooter, TimePickerNow, TimePickerClear, TimePickerConfirm, and TimePickerValue composition."
-                }
-            ]
-        },
-        {
             "name": "Timestamp",
             "category": "Display",
             "introduction": "Formats a date or timestamp using the standard date formats.",

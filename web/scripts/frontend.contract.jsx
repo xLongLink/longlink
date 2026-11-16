@@ -189,30 +189,6 @@ const nativeComposition = (
                 size="sm"
             />
                 <Switch id="notifications" label="Notifications" defaultChecked />
-            <div>
-                <label htmlFor="appointment-time">Appointment time</label>
-                <TimePicker
-                    id="appointment-time"
-                    name="appointment"
-                    defaultValue="09:30"
-                    hourCycle={24}
-                    granularity="minute"
-                    min="09:00"
-                    max="17:00"
-                    required
-                    onValueChange={(value) => value?.trim()}
-                >
-                    <TimePickerInput onBlur={(event) => event.currentTarget.checkValidity()} />
-                    <TimePickerContent>
-                        <TimePickerColumns />
-                        <TimePickerFooter>
-                            <TimePickerNow />
-                            <TimePickerClear />
-                            <TimePickerConfirm />
-                        </TimePickerFooter>
-                    </TimePickerContent>
-                </TimePicker>
-            </div>
             <RadioGroup
                 name="plan"
                 label="Plan"
