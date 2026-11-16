@@ -1149,7 +1149,7 @@
         {
             "name": "FileViewer",
             "category": "Display",
-            "introduction": "Displays images, PDFs, text, audio, and video inline using browser-native media controls.",
+            "introduction": "Displays images, PDFs, text, audio, and video inside the View, with PDF.js rendering and native media controls.",
             "properties": [
                 {
                     "name": "src",

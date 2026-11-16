@@ -1,7 +1,7 @@
 import { NativeFile } from '@/components/custom/native-file';
 import { Dialog } from '@/components/longlink/layout/dialog';
 
-/** Displays host-fetched PDF and media bytes with their native viewer layout. */
+/** Displays host-fetched documents and media with the shared file renderer. */
 export function FilePreview({
     body,
     title,

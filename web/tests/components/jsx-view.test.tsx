@@ -92,6 +92,8 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                         'connect-src data: https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com;'
                     );
                     expect(frame.srcdoc).toContain('worker-src data:;');
+                    expect(frame.srcdoc).toContain('media-src blob:;');
+                    expect(frame.srcdoc).toContain("frame-src 'none';");
                     expect(frame.srcdoc).not.toContain('https://unpkg.com');
                     expect(frame.srcdoc).not.toContain('private source');
                     expect(fetched).toEqual(['/proxy/views/runtime.js', '/proxy/views/runtime.css']);

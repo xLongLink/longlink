@@ -9,7 +9,6 @@ import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
 import { FileRequestContext } from '@/components/custom/preview';
-import { FileViewerContext } from '@/components/custom/file-context';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
@@ -222,34 +221,6 @@ function initialize(event: MessageEvent<unknown>): void {
     // Supply file previews and downloads without exposing the general request API to file components.
     const fileRequests = { load: loadFile, preview: requestPreview, download };
 
-    /** Tracks an inline slot while native document rendering remains host-owned. */
-    function mountFileViewer(element: HTMLElement, path: string, title: string): () => void {
-        const id = sequence++;
-        let animation: number;
-        let previous = '';
-
-        /** Transfer geometry only when layout or visibility changes. */
-        function measure() {
-            const rect = element.getBoundingClientRect();
-            const bounds = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-            const serialized = JSON.stringify(bounds);
-
-            if (serialized !== previous) {
-                previous = serialized;
-                port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds });
-            }
-
-            animation = requestAnimationFrame(measure);
-        }
-
-        measure();
-
-        return () => {
-            cancelAnimationFrame(animation);
-            port.postMessage({ type: 'file-viewer', id, path, title: title.slice(0, 256), bounds: null });
-        };
-    }
-
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {
         port.postMessage({ type: 'navigate', path, newTab });
@@ -418,15 +389,13 @@ function initialize(event: MessageEvent<unknown>): void {
                                 <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
                                     <MenuNavigationProvider>
                                         <FileRequestContext value={fileRequests}>
-                                            <FileViewerContext value={mountFileViewer}>
-                                                <DialogActivityContext value={modalActivity}>
-                                                    <FormRequestContext value={request}>
-                                                        <ViewRequestContext value={request}>
-                                                            <View params={params} />
-                                                        </ViewRequestContext>
-                                                    </FormRequestContext>
-                                                </DialogActivityContext>
-                                            </FileViewerContext>
+                                            <DialogActivityContext value={modalActivity}>
+                                                <FormRequestContext value={request}>
+                                                    <ViewRequestContext value={request}>
+                                                        <View params={params} />
+                                                    </ViewRequestContext>
+                                                </FormRequestContext>
+                                            </DialogActivityContext>
                                         </FileRequestContext>
                                     </MenuNavigationProvider>
                                 </LinkNavigationContext>

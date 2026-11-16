@@ -92,12 +92,11 @@ it('ignores a pending response after replacing the file and releases the display
     }
 });
 
-it('displays PDFs natively and retypes active text documents before embedding', async () => {
-    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:document');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+it('displays active text documents as inert text without creating nested frames', async () => {
+    const create = vi.spyOn(URL, 'createObjectURL');
 
     try {
-        for (const type of ['application/pdf', 'text/html']) {
+        for (const type of ['application/xml', 'text/html']) {
             const body = new Blob(['<script>active()</script>'], { type });
             await withMounted(
                 <FileRequestContext
@@ -112,25 +111,16 @@ it('displays PDFs natively and retypes active text documents before embedding', 
                     <FileViewer src="/api/report" title="Report" />
                 </FileRequestContext>,
                 async (output) => {
-                    const frame = output.querySelector('iframe');
-                    expect(frame?.getAttribute('src')).toBe('blob:document');
-                    expect(frame?.title).toBe('Report');
-                    const served = create.mock.lastCall?.[0];
-                    expect(served).toBeInstanceOf(Blob);
-
-                    if (!(served instanceof Blob)) throw new Error('Expected document bytes');
-                    expect(served.type).toBe(
-                        type === 'application/pdf' ? 'application/pdf' : 'text/plain;charset=utf-8'
+                    await vi.waitFor(() =>
+                        expect(output.querySelector('pre')?.textContent).toBe('<script>active()</script>')
                     );
-
-                    if (type === 'text/html') expect(frame?.getAttribute('sandbox')).toBe('');
-                    expect(output.querySelector('script, object, embed, button')).toBeNull();
+                    expect(output.querySelector('iframe, script, object, embed, button')).toBeNull();
+                    expect(create).not.toHaveBeenCalled();
                 }
             );
         }
     } finally {
         create.mockRestore();
-        revoke.mockRestore();
     }
 });
 

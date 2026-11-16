@@ -1,10 +1,9 @@
 import { Spinner } from '@/components/shadcn/spinner';
+import { useContext, useEffect, useState } from 'react';
 import { NativeFile } from '@/components/custom/native-file';
-import { useContext, useEffect, useRef, useState } from 'react';
 import { FileRequestContext } from '@/components/custom/preview';
-import { FileViewerContext } from '@/components/custom/file-context';
 
-/** Displays supported attachments immediately using native browser media controls. */
+/** Displays supported attachments inside the View using scoped file requests. */
 export function FileViewer({
     src,
     title
@@ -18,16 +17,13 @@ export function FileViewer({
     return <FileContent key={`${src}\0${title}`} src={src} title={title} />;
 }
 
-/** Reserves a host-owned document slot or loads a trusted native-page example. */
+/** Owns the request and rendering lifetime of one inline attachment. */
 function FileContent({ src, title }: { src: string; title: string }) {
-    const element = useRef<HTMLDivElement>(null);
-    const mount = useContext(FileViewerContext);
     const request = useContext(FileRequestContext)?.load;
     const [preview, setPreview] = useState<Blob | Error>();
 
-    // The host renders native plugins without weakening the Solution sandbox.
+    // Ignore replaced requests without moving file rendering outside the View.
     useEffect(() => {
-        if (mount && element.current) return mount(element.current, src, title);
         const controller = new AbortController();
 
         /** Ignore responses from replaced or unmounted file requests. */
@@ -47,19 +43,18 @@ function FileContent({ src, title }: { src: string; title: string }) {
         void load();
 
         return () => controller.abort();
-    }, [mount, request, src, title]);
+    }, [request, src]);
 
     // Keep one bounded viewer region with no custom View or Download buttons.
     return (
-        <div ref={element} className="flex h-96 w-full min-w-0 items-center justify-center" aria-label={title}>
-            {!mount &&
-                (preview instanceof Blob ? (
-                    <NativeFile body={preview} title={title} />
-                ) : preview instanceof Error ? (
-                    <span role="status">{preview.message}</span>
-                ) : (
-                    <Spinner role="progressbar" aria-label={`Loading ${title}`} />
-                ))}
+        <div className="flex h-96 w-full min-w-0 items-center justify-center" aria-label={title}>
+            {preview instanceof Blob ? (
+                <NativeFile body={preview} title={title} />
+            ) : preview instanceof Error ? (
+                <span role="status">{preview.message}</span>
+            ) : (
+                <Spinner role="progressbar" aria-label={`Loading ${title}`} />
+            )}
         </div>
     );
 }

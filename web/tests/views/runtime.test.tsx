@@ -151,51 +151,46 @@ it('rejects an unfinished authored request with View closed on pagehide before i
     }
 }, 10_000);
 
-it('cleans authored effects and releases the host file slot before closing the port on pagehide', async () => {
+it('renders file bytes inside the View and releases them with authored effects on pagehide', async () => {
     // Observe real unmount cleanup without keeping the authored tree alive.
     const cleaned = vi.fn();
     window.addEventListener('authored-cleanup', cleaned);
-    const frames = vi.spyOn(globalThis, 'requestAnimationFrame');
-    const cancelFrame = vi.spyOn(globalThis, 'cancelAnimationFrame');
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:inline-file');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const runtime = await initializeRuntime(`export default function View() {
         useEffect(() => () => window.dispatchEvent(new Event('authored-cleanup')), []);
         return <FileViewer src="/api/report" title="Report" />;
     }`);
 
-    const post = vi.spyOn(runtime.channel.port1, 'postMessage');
     const close = vi.spyOn(runtime.channel.port1, 'close');
+    let request: { id: number } | undefined;
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+        if (command.type === 'request' && command.path === '/api/report') {
+            request = command;
+        }
+    };
 
     try {
+        await vi.waitFor(() => expect(request).toBeDefined());
+        if (!request) throw new Error('Expected a scoped file request');
+        runtime.send({ id: request.id, ok: true, data: new Blob(['image'], { type: 'image/png' }) });
         await vi.waitFor(() =>
-            expect(
-                post.mock.calls.some(
-                    ([command]) =>
-                        command.type === 'file-viewer' && command.path === '/api/report' && command.bounds !== null
-                )
-            ).toBe(true)
+            expect(runtime.mount.querySelector('img')?.getAttribute('src')).toBe('blob:inline-file')
         );
-        const animation: unknown = frames.mock.results.at(-1)?.value;
-        expect(animation).toBeDefined();
         expect(cleaned).not.toHaveBeenCalled();
         window.dispatchEvent(new Event('pagehide'));
 
-        // A closed port must not strand host UI or its measuring loop.
+        // Closing the View must release displayed bytes before revoking its capabilities.
         expect(cleaned).toHaveBeenCalledOnce();
-        expect(cancelFrame).toHaveBeenCalledWith(animation);
-
-        const release = post.mock.calls.findIndex(
-            ([command]) => command.type === 'file-viewer' && command.path === '/api/report' && command.bounds === null
-        );
-
-        expect(release).toBeGreaterThanOrEqual(0);
-        expect(post.mock.invocationCallOrder[release]).toBeLessThan(close.mock.invocationCallOrder[0]);
+        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:inline-file');
+        expect(revoke.mock.invocationCallOrder[0]).toBeLessThan(close.mock.invocationCallOrder[0]);
     } finally {
         runtime.close();
-        post.mockRestore();
         close.mockRestore();
-        frames.mockRestore();
-        cancelFrame.mockRestore();
+        create.mockRestore();
+        revoke.mockRestore();
         window.removeEventListener('authored-cleanup', cleaned);
     }
 });

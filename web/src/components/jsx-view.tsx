@@ -8,9 +8,7 @@ import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
 import type { Appearance } from '@/lib/appearance';
 import type { ViewRuntime } from '@/views/manifest';
-import { SolutionFile } from '@/components/solution-file';
 import { ViewBackdrop } from '@/components/view-backdrop';
-import type { FileViewerCommand } from '@/views/protocol';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
@@ -54,7 +52,6 @@ export function JsxView({
     const [height, setHeight] = useState(1);
     const [frameBounds, setFrameBounds] = useState<DOMRect>();
     const [modal, setModal] = useState({ depth: 0, fullscreen: false });
-    const [fileViewers, setFileViewers] = useState<FileViewerCommand[]>([]);
 
     const [filePreview, setFilePreview] = useState<
         { title: string } & ({ type: 'pdf' | 'media'; body: Blob } | { type: 'text'; text: string })
@@ -210,7 +207,6 @@ export function JsxView({
             controller.abort();
             setModal({ depth: 0, fullscreen: false });
             setFilePreview(undefined);
-            setFileViewers([]);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
             viewportObserver.disconnect();
@@ -320,23 +316,6 @@ export function JsxView({
 
             if (!parsed.success || controller.signal.aborted) return;
             const command = parsed.data;
-
-            // Slots can cover only this View's clipped content, never Platform controls.
-            if (command.type === 'file-viewer') {
-                setFileViewers((current) => {
-                    if (!command.bounds) return current.filter((viewer) => viewer.id !== command.id);
-
-                    if (current.some((viewer) => viewer.id === command.id)) {
-                        return current.map((viewer) => (viewer.id === command.id ? command : viewer));
-                    }
-
-                    if (current.length >= 32) return current;
-
-                    return [...current, command];
-                });
-
-                return;
-            }
 
             // Size the isolated document without creating a second page scrollport.
             if (command.type === 'resize') {
@@ -453,11 +432,11 @@ export function JsxView({
 
             const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
             const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
-            // Chunked runtimes bundle map workers; only CARTO map assets may use the network.
+            // Bundle map and PDF workers locally; external requests remain limited to CARTO assets.
             const mapSources = runtime.modules
                 ? 'https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com'
                 : '';
-            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'${runtime.modules ? ' blob:' : ''}; style-src 'unsafe-inline'; img-src data: blob:${mapSources ? ` ${mapSources}` : ''}; font-src data:; connect-src ${mapSources ? `data: ${mapSources}` : "'none'"}; frame-src 'none'; worker-src ${runtime.modules ? 'data:' : "'none'"}; object-src 'none'; base-uri 'none'; form-action 'none'`;
+            const policy = `default-src 'none'; script-src 'sha256-${hash}' 'unsafe-eval'${runtime.modules ? ' blob:' : ''}; style-src 'unsafe-inline'; img-src data: blob:${mapSources ? ` ${mapSources}` : ''}; media-src blob:; font-src data: blob:; connect-src ${mapSources ? `data: ${mapSources}` : "'none'"}; frame-src 'none'; worker-src ${runtime.modules ? 'data:' : "'none'"}; object-src 'none'; base-uri 'none'; form-action 'none'`;
 
             if (!controller.signal.aborted) {
                 // A blocked bootstrap script must surface an error instead of leaving a blank frame.
@@ -510,25 +489,6 @@ export function JsxView({
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }
             />
-            <div className="pointer-events-none absolute inset-0 overflow-hidden" hidden={modal.depth > 0}>
-                {fileViewers.map(
-                    (viewer) =>
-                        viewer.bounds && (
-                            <div
-                                key={`${requestBaseUrl}\0${viewer.id}\0${viewer.path}`}
-                                className="pointer-events-auto absolute flex items-center justify-center overflow-hidden"
-                                style={{
-                                    top: viewer.bounds.top,
-                                    left: viewer.bounds.left,
-                                    width: viewer.bounds.width,
-                                    height: viewer.bounds.height
-                                }}
-                            >
-                                <SolutionFile base={requestBaseUrl} path={viewer.path} title={viewer.title} />
-                            </div>
-                        )
-                )}
-            </div>
             {(filePreview?.type === 'pdf' || filePreview?.type === 'media') && (
                 <FilePreview
                     open
