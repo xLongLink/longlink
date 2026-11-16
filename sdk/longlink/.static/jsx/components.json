@@ -305,7 +305,8 @@
         {
             "name": "Map",
             "category": "Maps",
-            "source": "mapcn",
+            "source": "custom",
+            "justification": "Preserves native mapcn composition while containing WebGL initialization failures and retry within the map region.",
             "reference": "https://www.mapcn.dev/docs/basic-map",
             "introduction": "Native mapcn map container for composable geographic layers.",
             "guidance": "Place Map inside a Box with an explicit height. Use blank for a transparent basemap with no street tiles, then compose MapGeoJSON inside it. Coordinates use longitude, latitude. The bundled worker stays local; external map resources remain limited to the approved CARTO origins.",

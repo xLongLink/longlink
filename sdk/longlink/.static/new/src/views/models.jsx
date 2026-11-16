@@ -11,6 +11,15 @@ export default function Models() {
     const [analytics] = useApi('/assets/analytics.json');
     const [geography] = useApi('/assets/world.json');
     const [period, setPeriod] = useState('30');
+    const [countryId, setCountryId] = useState();
+    const [countryMap, setCountryMap] = useState(null);
+    const [mapFailed, setMapFailed] = useState(false);
+    const countries = analytics.countries;
+    const countryIndex = Math.max(
+        0,
+        countries.findIndex((country) => country.id === countryId)
+    );
+    const selectedCountry = countries[countryIndex];
     const usage = analytics.usage.slice(-Number(period));
     const latest = usage.at(-1);
     const metricIcons = { models: 'sparkles', reviews: 'message-square', messages: 'activity', providers: 'globe' };
@@ -19,6 +28,29 @@ export default function Models() {
         .sort((left, right) => right.value - left.value)
         .slice(0, 3)
         .reduce((sum, provider) => sum + provider.value, 0);
+
+    // Synchronize the external camera with ranking selection without recreating the map.
+    useEffect(() => {
+        if (!countryMap) return;
+        countryMap.easeTo({
+            center: selectedCountry?.center ?? [0, 20],
+            zoom: selectedCountry?.zoom ?? 1.5,
+            duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300
+        });
+        return () => {
+            countryMap.stop();
+        };
+    }, [countryMap, selectedCountry]);
+
+    // Keep map failures local so the rankings remain usable during recovery.
+    useEffect(() => {
+        if (!countryMap) return;
+        const fail = () => setMapFailed(true);
+        countryMap.on('error', fail);
+        return () => {
+            countryMap.off('error', fail);
+        };
+    }, [countryMap]);
 
     return (
         <Stack align="center" padding={4}>
@@ -66,25 +98,173 @@ export default function Models() {
                     </Grid>
                     <Grid columns={3} gap={2}>
                         <GridItem columns={2}>
-                            <CountryChart
-                                countries={analytics.countries}
-                                geography={geography}
-                                title="Top countries this month"
-                                description="Share of messages"
-                                label="Community messages by country"
-                                summary={`${analytics.geographySummary.countries} countries · ${new Intl.NumberFormat('en', { notation: 'compact' }).format(analytics.geographySummary.messages)} messages`}
-                                renderDetails={(country) => (
-                                    <>
-                                        <Text className="block text-xs text-muted-foreground">
-                                            {new Intl.NumberFormat('en', { notation: 'compact' }).format(
-                                                country.messages
-                                            )}{' '}
-                                            messages · {country.people.toLocaleString()} people
-                                        </Text>
-                                        <Badge variant="info-light">Most used: {country.model}</Badge>
-                                    </>
-                                )}
-                            />
+                            <Card padding="none">
+                                <div className="@container/country relative isolate">
+                                    <div className="flex flex-col gap-4 p-4">
+                                        <div className="relative z-20 flex items-start justify-between gap-3">
+                                            <div>
+                                                <h2 className="text-base leading-snug font-medium">
+                                                    Top countries this month
+                                                </h2>
+                                                <p className="text-sm text-muted-foreground">Share of messages</p>
+                                            </div>
+                                            <Stack direction="horizontal" align="center" gap={2}>
+                                                <span className="text-xs text-muted-foreground tabular-nums">
+                                                    {countries.length ? countryIndex + 1 : 0} / {countries.length}
+                                                </span>
+                                                <Button
+                                                    type="button"
+                                                    size="icon-sm"
+                                                    variant="ghost"
+                                                    aria-label="Previous country"
+                                                    disabled={!countries.length}
+                                                    onClick={() =>
+                                                        setCountryId(
+                                                            countries[
+                                                                (countryIndex + countries.length - 1) % countries.length
+                                                            ]?.id
+                                                        )
+                                                    }
+                                                >
+                                                    <Icon icon="chevron-left" size="sm" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon-sm"
+                                                    variant="ghost"
+                                                    aria-label="Next country"
+                                                    disabled={!countries.length}
+                                                    onClick={() =>
+                                                        setCountryId(
+                                                            countries[(countryIndex + 1) % countries.length]?.id
+                                                        )
+                                                    }
+                                                >
+                                                    <Icon icon="chevron-right" size="sm" />
+                                                </Button>
+                                            </Stack>
+                                        </div>
+                                        <div className="flex min-w-0 flex-1 flex-col gap-4 @min-[640px]/country:min-h-84">
+                                            <div className="relative z-20 flex flex-col gap-2 @min-[640px]/country:w-[44%]">
+                                                {countries.length ? (
+                                                    countries.map((country) => (
+                                                        <Button
+                                                            key={country.id}
+                                                            type="button"
+                                                            size="lg"
+                                                            variant={
+                                                                selectedCountry?.id === country.id
+                                                                    ? 'secondary'
+                                                                    : 'ghost'
+                                                            }
+                                                            aria-pressed={selectedCountry?.id === country.id}
+                                                            onPointerEnter={() => setCountryId(country.id)}
+                                                            onFocus={() => setCountryId(country.id)}
+                                                            onClick={() => setCountryId(country.id)}
+                                                        >
+                                                            <span className="flex w-full min-w-0 items-center gap-3">
+                                                                <span className="text-xl" aria-hidden="true">
+                                                                    {country.flag}
+                                                                </span>
+                                                                <span className="min-w-0 flex-1 truncate text-left">
+                                                                    {country.name}
+                                                                </span>
+                                                                <span className="text-xs text-muted-foreground tabular-nums">
+                                                                    {country.share}%
+                                                                </span>
+                                                            </span>
+                                                        </Button>
+                                                    ))
+                                                ) : (
+                                                    <Empty title="No countries" />
+                                                )}
+                                            </div>
+                                            <div
+                                                role="group"
+                                                aria-label="Community messages by country"
+                                                className="relative h-60 overflow-hidden @min-[640px]/country:absolute @min-[640px]/country:inset-0 @min-[640px]/country:left-[28%] @min-[640px]/country:h-auto"
+                                            >
+                                                {mapFailed ? (
+                                                    <Empty role="alert" title="Unable to load map">
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => setMapFailed(false)}
+                                                        >
+                                                            Retry
+                                                        </Button>
+                                                    </Empty>
+                                                ) : (
+                                                    <Map
+                                                        ref={setCountryMap}
+                                                        blank
+                                                        center={selectedCountry?.center ?? [0, 20]}
+                                                        zoom={selectedCountry?.zoom ?? 1.5}
+                                                    >
+                                                        <MapGeoJSON
+                                                            data={geography}
+                                                            fillPaint={{
+                                                                'fill-opacity': [
+                                                                    'case',
+                                                                    [
+                                                                        '==',
+                                                                        ['to-string', ['id']],
+                                                                        selectedCountry?.id ?? ''
+                                                                    ],
+                                                                    1,
+                                                                    0.35
+                                                                ]
+                                                            }}
+                                                            interactive={countries.length > 0}
+                                                            onClick={({ feature }) => {
+                                                                const country = countries.find(
+                                                                    (country) => country.id === String(feature.id)
+                                                                );
+                                                                if (country) setCountryId(country.id);
+                                                            }}
+                                                        />
+                                                    </Map>
+                                                )}
+                                            </div>
+                                            <div
+                                                aria-hidden="true"
+                                                className="pointer-events-none absolute inset-0 z-10 hidden bg-linear-to-r from-card from-25% via-card/95 via-42% to-transparent to-70% @min-[640px]/country:block"
+                                            />
+                                            <div
+                                                aria-hidden="true"
+                                                className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden h-28 bg-linear-to-b from-card via-card/85 to-transparent @min-[640px]/country:block"
+                                            />
+                                            <div
+                                                aria-hidden="true"
+                                                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-20 bg-linear-to-t from-card/90 to-transparent @min-[640px]/country:block"
+                                            />
+                                            {selectedCountry && (
+                                                <div
+                                                    className="relative z-20 flex max-w-full flex-col items-start gap-1 self-end bg-card/90 p-3 @min-[640px]/country:absolute @min-[640px]/country:right-4 @min-[640px]/country:bottom-4 @min-[640px]/country:max-w-[48%]"
+                                                    aria-live="polite"
+                                                >
+                                                    <span className="text-sm font-medium">
+                                                        {selectedCountry.flag} #{countryIndex + 1}{' '}
+                                                        {selectedCountry.name}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {compactNumber.format(selectedCountry.messages)} messages ·{' '}
+                                                        {selectedCountry.people.toLocaleString()} people
+                                                    </span>
+                                                    <Badge variant="info-light">
+                                                        Most used: {selectedCountry.model}
+                                                    </Badge>
+                                                </div>
+                                            )}
+                                            <p className="relative z-20 mt-auto text-xs text-muted-foreground @min-[640px]/country:w-[48%]">
+                                                {analytics.geographySummary.countries} countries ·{' '}
+                                                {compactNumber.format(analytics.geographySummary.messages)} messages
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
                         </GridItem>
                         <Card
                             title="Provider share"

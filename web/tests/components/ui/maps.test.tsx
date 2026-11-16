@@ -1,3 +1,6 @@
+import * as React from 'react';
+import { transform } from 'sucrase';
+import * as components from '@/views';
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { withMounted } from '../../render';
@@ -7,7 +10,9 @@ import { CountryMap } from '@/components/custom/country-map';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
 import atlas from '../../../../sdk/longlink/.static/new/src/assets/world.json';
 import { CountryChart, type CountryUsage } from '@/components/custom/country-chart';
+import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
 import { prepareMap, type MapData, type MapFeatures } from '@/components/custom/map-data';
+import analyticsFixture from '../../../../sdk/longlink/.static/new/src/assets/analytics.json';
 
 type Layer = { id: string; type: string; source: string; paint: Record<string, unknown> };
 type Source = { data: MapFeatures; setData: (data: MapFeatures) => Promise<void> };
@@ -21,7 +26,7 @@ type Engine = {
     fire: (event: string, layer?: string, value?: unknown) => void;
 };
 
-const engines = vi.hoisted(() => ({ maps: [] as Engine[] }));
+const engines = vi.hoisted(() => ({ maps: [] as Engine[], failNext: false }));
 
 // Replace only the WebGL engine; mapcn's layer lifecycle and the application selection remain real.
 vi.mock('maplibre-gl', () => ({
@@ -37,6 +42,10 @@ vi.mock('maplibre-gl', () => ({
         zoom: number;
 
         constructor(options: { center: [number, number]; zoom: number }) {
+            if (engines.failNext) {
+                engines.failNext = false;
+                throw new Error('WebGL initialization failed');
+            }
             this.center = options.center;
             this.zoom = options.zoom;
             engines.maps.push(this);
@@ -117,6 +126,7 @@ vi.mock('maplibre-gl', () => ({
 
 beforeEach(() => {
     engines.maps.length = 0;
+    engines.failNext = false;
 });
 
 const countries: CountryUsage[] = [
@@ -299,6 +309,87 @@ it('keeps country details, highlights, and map focus together when selection or 
         expect(opacity(map, '12')).toBeGreaterThan(opacity(map, 'east'));
         await act(async () => map.fire('click', layer.id, { features: [previousEast], lngLat: { lng: 30, lat: 10 } }));
         expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
+    });
+});
+
+it('coordinates the composed starter country panel and recovers its map without losing selection', async () => {
+    const analytics = {
+        ...analyticsFixture,
+        countries: countries.map((country) => ({ ...country, messages: 1200, people: 23, model: 'Sample' }))
+    };
+    const bindings = {
+        __jsx: React.createElement,
+        ...components,
+        useApi: (path: string) => [path === '/assets/analytics.json' ? analytics : geography]
+    };
+    const code = transform(modelSource, {
+        transforms: ['jsx', 'imports'],
+        jsxRuntime: 'classic',
+        jsxPragma: '__jsx',
+        production: true
+    }).code;
+    const module = { exports: {} };
+
+    // oxlint-disable-next-line typescript/no-implied-eval -- Exercise the shipped View with real shared components.
+    const evaluate = new Function(
+        'module',
+        'exports',
+        ...Object.keys(bindings),
+        `${code}\nreturn module.exports.default;`
+    );
+    const Models = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
+    const user = userEvent.setup();
+
+    await withMounted(<Models />, async (output) => {
+        const card = [...output.querySelectorAll('[data-slot="card"]')].find(
+            (card) => card.querySelector('h2')?.textContent === 'Top countries this month'
+        );
+        const east = [...(card?.querySelectorAll<HTMLButtonElement>('button[aria-pressed]') ?? [])].find((button) =>
+            button.textContent?.includes('East')
+        );
+        const next = card?.querySelector<HTMLButtonElement>('[aria-label="Next country"]');
+        if (!card || !east || !next) throw new Error('Expected the composed country panel');
+        const map = await loadMap();
+
+        expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
+        await act(async () => user.hover(east));
+        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+        expect(east.getAttribute('aria-pressed')).toBe('true');
+        expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+        expect(map.getCenter()).toEqual({ lng: 30, lat: 10 });
+
+        await act(async () => {
+            next.focus();
+            await user.keyboard('{Enter}');
+        });
+        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
+        const layer = selectionLayer(map);
+        const feature = map.sources.get(layer.source)?.data.features.find((feature) => feature.id === 'east');
+        if (!feature) throw new Error('Expected the selectable East boundary');
+        await act(async () => map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } }));
+        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
+
+        await act(async () => map.fire('error'));
+        expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map');
+        expect(map.removed).toBe(true);
+        expect(east.getAttribute('aria-pressed')).toBe('true');
+        const retry = [...card.querySelectorAll('button')].find((button) => button.textContent === 'Retry');
+        if (!retry) throw new Error('Expected map recovery');
+        engines.failNext = true;
+        await act(async () => user.click(retry));
+        await vi.waitFor(() =>
+            expect(card.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map')
+        );
+        expect(east.getAttribute('aria-pressed')).toBe('true');
+        const retryInitialization = [...card.querySelectorAll('button')].find(
+            (button) => button.textContent === 'Retry'
+        );
+        if (!retryInitialization) throw new Error('Expected WebGL initialization recovery');
+        await act(async () => user.click(retryInitialization));
+        const recovered = await loadMap();
+        expect(recovered.getCenter()).toEqual({ lng: 30, lat: 10 });
+        expect(opacity(recovered, 'east')).toBeGreaterThan(opacity(recovered, '12'));
+        expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
     });
 });
 
