@@ -69,6 +69,15 @@ const filenames = new Map([
     ['containerfile', 'dockerfile']
 ]);
 
+/** Classifies normalized MIME types without inferring support from filenames. */
+export function previewKind(mediaType: string): 'image' | 'audio' | 'video' | 'pdf' | 'text' | undefined {
+    if (/^image\/(?:png|jpeg|gif|webp)$/.test(mediaType)) return 'image';
+    if (/^audio\/(?:mpeg|ogg)$/.test(mediaType)) return 'audio';
+    if (mediaType === 'video/mp4') return 'video';
+    if (mediaType === 'application/pdf') return 'pdf';
+    if (textLanguage('', mediaType) !== undefined) return 'text';
+}
+
 /** Recognizes text attachments by filename or declared media type without interpreting their contents. */
 export function textLanguage(filename: string, mediaType = ''): string | undefined {
     const name = filename.replaceAll('\\', '/').split('/').at(-1)?.toLowerCase() ?? '';

@@ -35,6 +35,28 @@ describe('Solution request URLs', () => {
 });
 
 describe('Solution response loading', () => {
+    it.each([
+        { media: 'IMAGE/PNG; charset=binary', expected: 'image/png' },
+        { media: 'audio/ogg', expected: 'audio/ogg' },
+        { media: 'video/mp4', expected: 'video/mp4' },
+        { media: 'application/pdf', expected: 'application/pdf' },
+        { media: 'text/html; charset=utf-8', expected: 'text/html' },
+        { media: 'application/xml', expected: 'application/xml' },
+        { media: 'image/svg+xml', expected: 'application/octet-stream' },
+        { media: 'application/x-unknown', expected: 'application/octet-stream' }
+    ])('admits $media as $expected without changing attachment bytes', async ({ media, expected }) => {
+        const bytes = new Uint8Array([0x00, 0xff, 0x3c, 0x3e]);
+        vi.spyOn(globalThis, 'fetch').mockImplementation(
+            async () => new Response(bytes, { headers: { 'Content-Type': media } })
+        );
+        const controller = new AbortController();
+
+        const body = await load('https://solution.example/attachment.png', { signal: controller.signal });
+
+        expect(body.type).toBe(expected);
+        expect(new Uint8Array(await body.arrayBuffer())).toEqual(bytes);
+    });
+
     it('rejects redirects without requesting their destination', async () => {
         // Arrange
         let sourceRequests = 0;

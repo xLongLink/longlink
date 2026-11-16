@@ -1,6 +1,6 @@
 import type { Options } from 'ky';
 import { api, ApiError } from '@/lib/api';
-import { textLanguage } from '@/lib/files';
+import { previewKind } from '@/lib/files';
 import { resolveRequestUrl } from '@/lib/url';
 import { REQUEST_TIMEOUT, responseSchema, type ViewData, type RequestCommand, type DownloadCommand } from './protocol';
 
@@ -30,11 +30,7 @@ export async function load(
     // Preserve only supported media types before granting a binary response to the sandbox.
     const media = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? '';
 
-    const type =
-        textLanguage('', media) ||
-        /^(?:image\/(?:png|jpeg|gif|webp)|audio\/(?:mpeg|ogg)|video\/mp4|application\/pdf)$/.test(media)
-            ? media
-            : 'application/octet-stream';
+    const type = previewKind(media) !== undefined ? media : 'application/octet-stream';
 
     // Read the complete response within the request lifetime.
     const body = await response.blob();

@@ -1,21 +1,16 @@
 import { PdfFile } from './pdf-file';
-import { textLanguage } from '@/lib/files';
+import { previewKind } from '@/lib/files';
 import { useEffect, useRef, useState } from 'react';
 
 /** Displays admitted media and inert document content without nested frames. */
 export function NativeFile({ body, title }: { body: Blob; title: string }) {
     const container = useRef<HTMLDivElement>(null);
     const media = body.type.split(';', 1)[0].toLowerCase();
-    const image = /^image\/(?:png|jpeg|gif|webp)$/.test(media);
-    const audio = /^audio\/(?:mpeg|ogg)$/.test(media);
-    const video = media === 'video/mp4';
-    const pdf = media === 'application/pdf';
-    const text = textLanguage('', media) !== undefined;
-    const supported = image || audio || video || pdf || text;
+    const kind = previewKind(media);
 
     // Never grant HTML, SVG, or unknown binary bytes a host-origin document.
     useEffect(() => {
-        if (!image && !audio && !video) return;
+        if (kind !== 'image' && kind !== 'audio' && kind !== 'video') return;
 
         const element = container.current?.querySelector<HTMLImageElement | HTMLMediaElement>('img, audio, video');
 
@@ -27,21 +22,21 @@ export function NativeFile({ body, title }: { body: Blob; title: string }) {
             element.removeAttribute('src');
             URL.revokeObjectURL(source);
         };
-    }, [body, image, audio, video]);
+    }, [body, kind]);
 
     // Use browser controls rather than a custom attachment toolbar.
-    if (!supported) return <span role="status">Preview unavailable for this file type.</span>;
+    if (kind === undefined) return <span role="status">Preview unavailable for this file type.</span>;
 
     // PDF parsing and text rendering remain in the same document as the caller.
     return (
         <div ref={container} className="flex size-full items-center justify-center">
-            {image ? (
+            {kind === 'image' ? (
                 <img alt={title} className="size-full object-contain" />
-            ) : audio ? (
+            ) : kind === 'audio' ? (
                 <audio controls preload="metadata" aria-label={title} className="w-full" />
-            ) : video ? (
+            ) : kind === 'video' ? (
                 <video controls preload="metadata" aria-label={title} className="size-full" />
-            ) : pdf ? (
+            ) : kind === 'pdf' ? (
                 <PdfFile body={body} title={title} />
             ) : (
                 <TextFile body={body} />

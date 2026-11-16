@@ -124,29 +124,32 @@ it('displays active text documents as inert text without creating nested frames'
     }
 });
 
-it('does not embed unknown binary files or interpret their content', async () => {
-    const create = vi.spyOn(URL, 'createObjectURL');
+it.each(['application/octet-stream', 'image/svg+xml'])(
+    'does not embed or interpret unsupported %s files',
+    async (type) => {
+        const create = vi.spyOn(URL, 'createObjectURL');
 
-    try {
-        await withMounted(
-            <FileRequestContext
-                value={{
-                    load: async () => new Blob(['<script>active()</script>'], { type: 'application/octet-stream' }),
-                    preview: async () => {
-                        throw new Error('Native viewers must not open a host preview');
-                    },
-                    download: async () => undefined
-                }}
-            >
-                <FileViewer src="/api/file" title="Attachment" />
-            </FileRequestContext>,
-            async (output) => {
-                expect(output.querySelector('[role="status"]')?.textContent).toContain('Preview unavailable');
-                expect(output.querySelector('img, script, iframe, object, embed')).toBeNull();
-                expect(create).not.toHaveBeenCalled();
-            }
-        );
-    } finally {
-        create.mockRestore();
+        try {
+            await withMounted(
+                <FileRequestContext
+                    value={{
+                        load: async () => new Blob(['<script>active()</script>'], { type }),
+                        preview: async () => {
+                            throw new Error('Native viewers must not open a host preview');
+                        },
+                        download: async () => undefined
+                    }}
+                >
+                    <FileViewer src="/api/file" title="Attachment" />
+                </FileRequestContext>,
+                async (output) => {
+                    expect(output.querySelector('[role="status"]')?.textContent).toContain('Preview unavailable');
+                    expect(output.querySelector('img, script, iframe, object, embed')).toBeNull();
+                    expect(create).not.toHaveBeenCalled();
+                }
+            );
+        } finally {
+            create.mockRestore();
+        }
     }
-});
+);
