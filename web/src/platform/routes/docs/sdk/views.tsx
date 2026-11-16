@@ -151,7 +151,7 @@ const previews = new Map(
             <div className="flex items-center gap-4">
                 <Icon icon="info" size="md" />
                 <Icon icon="check" size="md" />
-                <Icon icon="clock" size="md" />
+                <Icon icon="clock" size="md" tile="soft" />
             </div>
         ),
         Image: (

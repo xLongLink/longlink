@@ -9,8 +9,8 @@ export function PieChart<Row extends object>({
     data: rows,
     nameKey,
     valueKey,
-    legend = true,
-    tooltip = true,
+    legend = false,
+    tooltip = false,
     ...props
 }: ValueChartProps<Row>) {
     const prepared = data.prepareSegments(rows, nameKey, valueKey);

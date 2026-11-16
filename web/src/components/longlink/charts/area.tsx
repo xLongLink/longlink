@@ -1,7 +1,8 @@
+import { useId } from 'react';
 import * as data from './data';
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
-import type { CartesianChartProps } from './types';
+import type { CartesianChartProps, ChartCurve } from './types';
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/shadcn/chart';
 
 /** Plots numeric area series without filling gaps in missing data. */
@@ -9,11 +10,15 @@ export function AreaChart<Row extends object>({
     data: rows,
     xKey,
     series,
-    axes = true,
-    legend = true,
-    tooltip = true,
+    axes = false,
+    legend = false,
+    tooltip = false,
+    padding = axes ? 12 : 0,
+    curve = 'monotone',
+    fill = 'solid',
     ...props
-}: CartesianChartProps<Row>) {
+}: CartesianChartProps<Row> & { curve?: ChartCurve; fill?: 'solid' | 'gradient' }) {
+    const id = useId().replaceAll(':', '');
     const prepared = data.prepareSeries(rows, xKey, series);
 
     return (
@@ -27,8 +32,18 @@ export function AreaChart<Row extends object>({
             <recharts.AreaChart
                 data={prepared.rows}
                 accessibilityLayer
-                margin={{ top: 12, right: 12, left: axes ? 0 : 12, bottom: axes ? 0 : 12 }}
+                margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
+                {fill === 'gradient' && (
+                    <defs>
+                        {series.map((item, index) => (
+                            <linearGradient key={item.key} id={`area-${id}-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={data.color(index)} stopOpacity={0.15} />
+                                <stop offset="100%" stopColor={data.color(index)} stopOpacity={0} />
+                            </linearGradient>
+                        ))}
+                    </defs>
+                )}
                 {axes && <recharts.CartesianGrid vertical={false} />}
                 <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
                 <recharts.YAxis hide={!axes} axisLine={false} tickLine={false} width={48} />
@@ -37,10 +52,11 @@ export function AreaChart<Row extends object>({
                         key={item.key}
                         dataKey={`series-${index}`}
                         name={`series-${index}`}
-                        type="monotone"
+                        type={curve}
                         stroke={data.color(index)}
-                        fill={data.color(index)}
-                        fillOpacity={0.15}
+                        fill={fill === 'gradient' ? `url(#area-${id}-${index})` : data.color(index)}
+                        fillOpacity={fill === 'gradient' ? 1 : 0.15}
+                        activeDot={tooltip}
                         connectNulls={false}
                         isAnimationActive={false}
                     />

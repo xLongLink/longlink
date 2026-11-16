@@ -1,35 +1,6 @@
 {
     "components": [
         {
-            "name": "MetricGrid",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Owns the responsive one/two/four-column composition of MetricCard instances.",
-            "introduction": "Responsive KPI row with compact gutters.",
-            "properties": [
-                {
-                    "name": "metrics",
-                    "type": "AnalyticsMetric[]",
-                    "description": "Metric records passed to MetricCard in display order."
-                }
-            ]
-        },
-        {
-            "name": "MetricCard",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Composes a shadcn Card, ReUI IconTile, and Recharts sparkline with bounded metric geometry.",
-            "introduction": "Displays a labeled KPI, change Badge, and full-width angular sparkline.",
-            "properties": [
-                {
-                    "name": "metric",
-                    "type": "AnalyticsMetric",
-                    "description": "Label, formatted value, change, optional ReUI Badge changeVariant, optional icon element, and numeric trend. The caller chooses icons and change semantics."
-                },
-                { "name": "index", "type": "number", "description": "Categorical icon color index.", "default": 0 }
-            ]
-        },
-        {
             "name": "CountryChart",
             "category": "Charts",
             "source": "custom",
@@ -205,14 +176,6 @@
                 { "name": "stacked", "type": "boolean", "default": false },
                 { "name": "dense", "type": "boolean", "default": false }
             ]
-        },
-        {
-            "name": "IconTile",
-            "category": "Display",
-            "source": "reui",
-            "reference": "https://reui.io/docs/components/base/icon-tile",
-            "introduction": "Native ReUI icon surface.",
-            "properties": []
         },
         {
             "name": "Input",
@@ -419,15 +382,22 @@
         {
             "name": "AreaChart",
             "category": "Charts",
-            "introduction": "Plots numeric area series with theme-owned colors, axes, tooltip, and legend.",
+            "introduction": "Plots numeric area series with theme-owned colors and optional chart controls.",
             "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Null values leave gaps; zero values are preserved. Loading and retry belong to the caller.",
             "properties": [
+                {
+                    "name": "padding",
+                    "type": "number",
+                    "description": "Plot padding in pixels. Defaults to 0, or 12 when axes are enabled."
+                },
+                { "name": "curve", "type": "\"linear\" | \"monotone\" | \"step\"", "default": "monotone" },
+                { "name": "fill", "type": "\"solid\" | \"gradient\"", "default": "solid" },
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
                     "name": "axes",
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Shows category and value axes with grid lines."
                 },
                 {
@@ -435,8 +405,8 @@
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels. Colors are assigned internally."
                 },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -449,12 +419,17 @@
             "introduction": "Compares grouped numeric series with fixed chart presentation.",
             "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Loading and retry belong to the caller.",
             "properties": [
+                {
+                    "name": "padding",
+                    "type": "number",
+                    "description": "Plot padding in pixels. Defaults to 0, or 12 when axes are enabled."
+                },
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
                     "name": "axes",
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Shows category and value axes with grid lines."
                 },
                 {
@@ -462,8 +437,8 @@
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels. Colors are assigned internally."
                 },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -476,12 +451,18 @@
             "introduction": "Plots numeric line series without joining missing data points.",
             "guidance": "Place inside a Box with an explicit height. Supply xKey and series keys from your row data. Null values leave gaps; zero values are preserved. Loading and retry belong to the caller.",
             "properties": [
+                {
+                    "name": "padding",
+                    "type": "number",
+                    "description": "Plot padding in pixels. Defaults to 0, or 12 when axes are enabled."
+                },
+                { "name": "curve", "type": "\"linear\" | \"monotone\" | \"step\"", "default": "monotone" },
                 { "name": "data", "type": "readonly Row[]", "description": "Rows in your own shape." },
                 { "name": "xKey", "type": "keyof Row", "description": "Text or numeric category field." },
                 {
                     "name": "axes",
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Shows category and value axes with grid lines."
                 },
                 {
@@ -489,8 +470,8 @@
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels. Colors are assigned internally."
                 },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -511,8 +492,8 @@
                     "type": "numeric keyof Row",
                     "description": "Finite, nonnegative segment value field."
                 },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -525,6 +506,12 @@
             "introduction": "Compares numeric series across named categories on polar axes.",
             "guidance": "Place inside a Box with an explicit height. Supply categoryKey and numeric series keys. Presentation is owned by the component.",
             "properties": [
+                {
+                    "name": "axes",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Shows polar axes and grid lines."
+                },
                 { "name": "data", "type": "readonly Row[]" },
                 { "name": "categoryKey", "type": "keyof Row", "description": "Category label field." },
                 {
@@ -532,8 +519,8 @@
                     "type": "readonly ChartSeries<Row>[]",
                     "description": "Numeric field keys and optional labels."
                 },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -550,8 +537,8 @@
                 { "name": "nameKey", "type": "keyof Row", "description": "Radial bar label field." },
                 { "name": "valueKey", "type": "numeric keyof Row", "description": "Finite, nonnegative value field." },
                 { "name": "max", "type": "number", "description": "Required finite, positive upper scale limit." },
-                { "name": "legend", "type": "boolean", "default": true },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "legend", "type": "boolean", "default": false },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -575,7 +562,7 @@
                     "type": "readonly { source: number; target: number; value: number }[]",
                     "description": "Indexed links with finite, nonnegative values."
                 },
-                { "name": "tooltip", "type": "boolean", "default": true },
+                { "name": "tooltip", "type": "boolean", "default": false },
                 { "name": "aria-label", "type": "string", "description": "Accessible chart name." }
             ],
             "source": "custom",
@@ -774,6 +761,12 @@
                 { "name": "children", "type": "ReactNode" },
                 { "name": "footer", "type": "ReactNode" },
                 { "name": "size", "type": "\"default\" | \"sm\"", "default": "default" },
+                {
+                    "name": "padding",
+                    "type": "\"default\" | \"none\"",
+                    "default": "default",
+                    "description": "Removes outer vertical and body padding when set to none. Header and footer retain their section spacing."
+                },
                 {
                     "name": "aria-* / data-*",
                     "type": "Native div props",
@@ -1225,7 +1218,18 @@
                 {
                     "name": "size",
                     "type": "\"sm\" | \"lg\" | \"md\"",
-                    "description": "Icon size; inherits the parent default or falls back to md."
+                    "description": "Glyph size and optional tile size.",
+                    "default": "md"
+                },
+                {
+                    "name": "tile",
+                    "type": "\"outline\" | \"elevated\" | \"soft\" | \"solid\" | \"frame\"",
+                    "description": "Optional ReUI icon tile. Omit for a plain icon."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"primary\" | \"secondary\" | \"outline\" | \"destructive\"",
+                    "description": "Badge-style theme color for the glyph and tile. Omit to preserve inherited glyph color or the tile's default color."
                 }
             ],
             "source": "custom",
@@ -1946,44 +1950,6 @@
             ],
             "source": "custom",
             "justification": "Formats timestamps and relative times with viewer-locale details and copy controls."
-        },
-        {
-            "name": "Token",
-            "category": "Display",
-            "introduction": "Displays a tag, category, or selection with optional click and removal actions.",
-            "keywords": ["tag", "category", "status", "state"],
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "string",
-                    "description": "Visible text and accessible name for the token. Long labels truncate to fit."
-                },
-                {
-                    "name": "size",
-                    "type": "\"xs\" | \"sm\" | \"default\" | \"lg\" | \"xl\"",
-                    "description": "Native ReUI Badge size.",
-                    "default": "lg"
-                },
-                { "name": "icon", "type": "IconName", "description": "Optional icon rendered before the label." },
-                { "name": "disabled", "type": "boolean", "description": "Disables the token." },
-                {
-                    "name": "description",
-                    "type": "string",
-                    "description": "Accessible description of the tag or selection."
-                },
-                {
-                    "name": "onClick",
-                    "type": "() => void",
-                    "description": "Runs when the token is clicked. Use Button or Link for primary actions or navigation."
-                },
-                {
-                    "name": "onRemove",
-                    "type": "() => void",
-                    "description": "Shows a remove button and runs when it is clicked."
-                }
-            ],
-            "source": "custom",
-            "justification": "Combines Lucide icons with selectable or removable tokens and scoped action controls."
         },
         {
             "name": "ButtonGroup",

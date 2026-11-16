@@ -28,8 +28,7 @@ const table = useTable({
     getRowId: (row) => row.id
 });
 const query = createFilterQuery();
-const icon = <Icon icon="triangle-exclamation-point" size="sm" />;
-const token = <Token icon="user-round" label="Owner" />;
+const icon = <Icon icon="triangle-exclamation-point" size="sm" tile="soft" variant="destructive" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;
 const menuComposition = (
@@ -274,11 +273,6 @@ const nativeComposition = (
             <Badge onAnimationStart={(event) => event.currentTarget.focus()}>
                 Ready
             </Badge>
-            <Token label="Priority" size="xs" />
-            <Token label="Priority" size="sm" />
-            <Token label="Priority" size="md" />
-            <Token label="Priority" size="lg" />
-            <Token label="Priority" size="xl" />
             <Button
                 ref={remembered}
                 formAction="/save"
@@ -396,7 +390,7 @@ const nativeForm = (
 );
 
 const _adapters = (
-    <Card size="sm" isSelected onChange={() => {}}>
+    <Card size="sm" padding="none" isSelected onChange={() => {}}>
             <Dialog fullscreen title="Title" dismissible={false} open onOpenChange={() => {}}>
                     {nativeComposition}
             </Dialog>
@@ -524,7 +518,7 @@ const _removedStepper = <Stepper />;
 const _charts = (
     <>
         <Box height={280}>
-            <AreaChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total', label: 'Total' }]} aria-label="Revenue" />
+            <AreaChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total', label: 'Total' }]} axes legend tooltip padding={0} curve="linear" fill="gradient" aria-label="Revenue" />
             <BarChart data={[{ period: 'January', total: 120 }]} xKey="period" series={[{ key: 'total' }]} />
             <LineChart data={[{ period: 'January', total: null }, { period: 'February', total: 0 }]} xKey="period" series={[{ key: 'total' }]} />
             <RadarChart data={[{ category: 'Speed', total: 120 }]} categoryKey="category" series={[{ key: 'total' }]} />

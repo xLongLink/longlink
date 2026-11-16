@@ -9,11 +9,9 @@ export default function IconsPage() {
             name="Icon"
             properties={[
                 { name: 'icon', type: 'IconName', description: 'Lucide kebab-case icon name.' },
-                {
-                    name: 'size',
-                    type: '"sm" | "md" | "lg"',
-                    description: 'Icon size; inherits the parent default or falls back to md.'
-                }
+                { name: 'size', type: '"sm" | "md" | "lg"', description: 'Glyph size and optional tile size.' },
+                { name: 'tile', type: '"outline" | "elevated" | "soft" | "solid" | "frame"' },
+                { name: 'variant', type: '"primary" | "secondary" | "outline" | "destructive"' }
             ]}
             example={{
                 title: 'Icon',
@@ -26,14 +24,26 @@ export default function IconsPage() {
   ];
 
   return (
-    <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
-      {icons.map((icon) => (
-        <div key={icon} className="flex items-center justify-center gap-4">
-          {['sm', 'md', 'lg'].map((size) => (
-            <Icon key={size} icon={icon} size={size} />
-          ))}
-        </div>
-      ))}
+    <div className="flex flex-col items-center gap-6">
+      <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
+        {icons.map((icon) => (
+          <div key={icon} className="flex items-center justify-center gap-4">
+            {['sm', 'md', 'lg'].map((size) => (
+              <Icon key={size} icon={icon} size={size} />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        {['outline', 'elevated', 'soft', 'solid', 'frame'].map((tile) => (
+          <Icon key={tile} icon="sparkles" size="lg" tile={tile} />
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        {['primary', 'secondary', 'outline', 'destructive'].map((variant) => (
+          <Icon key={variant} icon="sparkles" size="lg" tile="soft" variant={variant} />
+        ))}
+      </div>
     </div>
   );
 }`
@@ -61,14 +71,26 @@ export function IconExample() {
 
     // Compare every supported size across a responsive grid of icons.
     return (
-        <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
-            {icons.map((icon) => (
-                <div key={icon} className="flex items-center justify-center gap-4">
-                    {(['sm', 'md', 'lg'] as const).map((size) => (
-                        <Icon key={size} icon={icon} size={size} />
-                    ))}
-                </div>
-            ))}
+        <div className="flex flex-col items-center gap-6">
+            <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
+                {icons.map((icon) => (
+                    <div key={icon} className="flex items-center justify-center gap-4">
+                        {(['sm', 'md', 'lg'] as const).map((size) => (
+                            <Icon key={size} icon={icon} size={size} />
+                        ))}
+                    </div>
+                ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+                {(['outline', 'elevated', 'soft', 'solid', 'frame'] as const).map((tile) => (
+                    <Icon key={tile} icon="sparkles" size="lg" tile={tile} />
+                ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+                {(['primary', 'secondary', 'outline', 'destructive'] as const).map((variant) => (
+                    <Icon key={variant} icon="sparkles" size="lg" tile="soft" variant={variant} />
+                ))}
+            </div>
         </div>
     );
 }

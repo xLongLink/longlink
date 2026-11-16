@@ -8,7 +8,7 @@ import { ChartTooltip, ChartTooltipContent } from '@/components/shadcn/chart';
 export function Sankey({
     nodes,
     links,
-    tooltip = true,
+    tooltip = false,
     ...props
 }: Omit<ChartOptions, 'legend'> & { nodes: readonly SankeyNode[]; links: readonly SankeyLink[] }) {
     const error = data.flowError(nodes, links);

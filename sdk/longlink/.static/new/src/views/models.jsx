@@ -9,13 +9,46 @@ export default function Models() {
         <Stack align="center" padding={4}>
             <Box width="100%" maxWidth={1280}>
                 <Stack gap={2}>
-                    <MetricGrid
-                        metrics={analytics.metrics.map((metric) => ({
-                            ...metric,
-                            changeVariant: metric.change.startsWith('-') ? 'destructive-light' : 'success-light',
-                            icon: <Icon icon={metricIcons[metric.icon]} size="lg" />
-                        }))}
-                    />
+                    <Grid columns={4} gap={2}>
+                        {analytics.metrics.map((metric) => {
+                            const changeVariant = metric.change.startsWith('-') ? 'destructive-light' : 'success-light';
+                            return (
+                                <Card key={metric.label} size="sm" padding="none">
+                                    <Stack gap={3}>
+                                        <Stack direction="horizontal" align="center" gap={3} padding={3}>
+                                            <Icon
+                                                icon={metricIcons[metric.icon]}
+                                                size="lg"
+                                                tile="soft"
+                                                variant="primary"
+                                            />
+                                            <Stack gap={1}>
+                                                <Text className="text-[13px] text-muted-foreground">
+                                                    {metric.label}
+                                                </Text>
+                                                <Stack direction="horizontal" align="center" wrap="wrap" gap={2}>
+                                                    <Text className="text-xl font-medium tabular-nums">
+                                                        {metric.value}
+                                                    </Text>
+                                                    <Badge variant={changeVariant}>{metric.change}</Badge>
+                                                </Stack>
+                                            </Stack>
+                                        </Stack>
+                                        <Box height={96}>
+                                            <AreaChart
+                                                aria-label={`${metric.label} trend`}
+                                                data={metric.trend.map((value, point) => ({ point, value }))}
+                                                xKey="point"
+                                                series={[{ key: 'value', label: metric.label }]}
+                                                curve="linear"
+                                                fill="gradient"
+                                            />
+                                        </Box>
+                                    </Stack>
+                                </Card>
+                            );
+                        })}
+                    </Grid>
                     <Grid columns={3} gap={2}>
                         <GridItem columns={2}>
                             <CountryChart

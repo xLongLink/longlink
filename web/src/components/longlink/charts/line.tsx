@@ -1,7 +1,7 @@
 import * as data from './data';
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
-import type { CartesianChartProps } from './types';
+import type { CartesianChartProps, ChartCurve } from './types';
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/shadcn/chart';
 
 /** Plots numeric line series while preserving zero values and missing-point gaps. */
@@ -9,11 +9,13 @@ export function LineChart<Row extends object>({
     data: rows,
     xKey,
     series,
-    axes = true,
-    legend = true,
-    tooltip = true,
+    axes = false,
+    legend = false,
+    tooltip = false,
+    padding = axes ? 12 : 0,
+    curve = 'monotone',
     ...props
-}: CartesianChartProps<Row>) {
+}: CartesianChartProps<Row> & { curve?: ChartCurve }) {
     const prepared = data.prepareSeries(rows, xKey, series);
 
     return (
@@ -27,7 +29,7 @@ export function LineChart<Row extends object>({
             <recharts.LineChart
                 data={prepared.rows}
                 accessibilityLayer
-                margin={{ top: 12, right: 12, left: axes ? 0 : 12, bottom: axes ? 0 : 12 }}
+                margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
                 {axes && <recharts.CartesianGrid vertical={false} />}
                 <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />
@@ -37,10 +39,11 @@ export function LineChart<Row extends object>({
                         key={item.key}
                         dataKey={`series-${index}`}
                         name={`series-${index}`}
-                        type="monotone"
+                        type={curve}
                         stroke={data.color(index)}
                         strokeWidth={2}
                         dot={false}
+                        activeDot={tooltip}
                         connectNulls={false}
                         isAnimationActive={false}
                     />

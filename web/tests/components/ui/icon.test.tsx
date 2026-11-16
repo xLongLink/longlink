@@ -29,14 +29,25 @@ it('shares glyph loading while preserving decorative slots', async () => {
     try {
         await withMounted(
             <>
-                <Icon icon="search" size="sm" />
-                <Icon ref={iconRef} icon="search" aria-hidden={false} aria-label="Search" role="img" />
+                <Icon icon="search" size="sm" variant="primary" />
+                <Icon
+                    ref={iconRef}
+                    icon="search"
+                    tile="soft"
+                    variant="secondary"
+                    aria-hidden={false}
+                    aria-label="Search"
+                    role="img"
+                />
             </>,
             async (output) => {
                 expect(load).toHaveBeenCalledExactlyOnceWith('search');
                 expect(output.querySelectorAll('svg')).toHaveLength(2);
                 expect(output.querySelector('svg path')).toBeNull();
                 expect(iconRef.current).toBe(output.querySelector('[data-slot="icon"][role="img"]'));
+                const tile = output.querySelector('[data-slot="icon-tile"]');
+
+                expect(tile?.contains(iconRef.current)).toBe(true);
 
                 await act(async () => {
                     release();
@@ -55,6 +66,8 @@ it('shares glyph loading while preserving decorative slots', async () => {
                 ]);
                 expect(iconRef.current).toBe(output.querySelector('[data-slot="icon"][role="img"]'));
                 expect(iconRef.current?.getAttribute('aria-label')).toBe('Search');
+                expect(output.querySelector('[data-slot="icon-tile"]')).toBe(tile);
+                expect(tile?.contains(iconRef.current)).toBe(true);
             }
         );
     } finally {

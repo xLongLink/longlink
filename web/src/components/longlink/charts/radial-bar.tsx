@@ -10,8 +10,8 @@ export function RadialBarChart<Row extends object>({
     nameKey,
     valueKey,
     max,
-    legend = true,
-    tooltip = true,
+    legend = false,
+    tooltip = false,
     ...props
 }: ValueChartProps<Row> & { max: number }) {
     const prepared = data.prepareSegments(rows, nameKey, valueKey);

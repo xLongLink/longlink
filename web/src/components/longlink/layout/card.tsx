@@ -8,6 +8,7 @@ export function Card({
     description,
     action,
     footer,
+    padding = 'default',
     children,
     ...props
 }: Omit<ComponentProps<typeof InteractiveCard>, 'className' | 'style' | 'title'> & {
@@ -15,9 +16,10 @@ export function Card({
     description?: ReactNode;
     action?: ReactNode;
     footer?: ReactNode;
+    padding?: 'default' | 'none';
 }) {
     return (
-        <InteractiveCard {...props} className={undefined} style={undefined}>
+        <InteractiveCard {...props} className={padding === 'none' ? 'py-0' : undefined} style={undefined}>
             {(title != null || description != null || action != null) && (
                 <card.CardHeader className="gap-x-3 gap-y-0 border-b">
                     {title != null && <card.CardTitle>{title}</card.CardTitle>}
@@ -33,7 +35,7 @@ export function Card({
                     )}
                 </card.CardHeader>
             )}
-            <card.CardContent>{children}</card.CardContent>
+            <card.CardContent className={padding === 'none' ? 'px-0' : undefined}>{children}</card.CardContent>
             {footer != null && (
                 <card.CardFooter className="justify-between gap-2 bg-transparent py-1.5 text-xs text-muted-foreground">
                     {footer}

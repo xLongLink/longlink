@@ -26,6 +26,7 @@ export default function CardPage() {
                 { name: 'children', type: 'ReactNode' },
                 { name: 'footer', type: 'ReactNode' },
                 { name: 'size', type: '"default" | "sm"' },
+                { name: 'padding', type: '"default" | "none"' },
                 { name: 'label', type: 'string' },
                 { name: 'onClick', type: '(event: MouseEvent<HTMLElement>) => void' },
                 { name: 'href', type: 'string' },
@@ -74,6 +75,8 @@ export default function CardPage() {
             xKey="month"
             series={[{ key: 'requests', label: 'Requests' }]}
             legend={false}
+            axes
+            tooltip
             aria-label="Monthly API requests"
           />
         </Box>
@@ -117,6 +120,8 @@ export function CardExample() {
                         xKey="month"
                         series={[{ key: 'requests', label: 'Requests' }]}
                         legend={false}
+                        axes
+                        tooltip
                         aria-label="Monthly API requests"
                     />
                 </Box>

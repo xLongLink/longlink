@@ -9,9 +9,10 @@ export function BarChart<Row extends object>({
     data: rows,
     xKey,
     series,
-    axes = true,
-    legend = true,
-    tooltip = true,
+    axes = false,
+    legend = false,
+    tooltip = false,
+    padding = axes ? 12 : 0,
     ...props
 }: CartesianChartProps<Row>) {
     const prepared = data.prepareSeries(rows, xKey, series);
@@ -27,7 +28,7 @@ export function BarChart<Row extends object>({
             <recharts.BarChart
                 data={prepared.rows}
                 accessibilityLayer
-                margin={{ top: 12, right: 12, left: axes ? 0 : 12, bottom: axes ? 0 : 12 }}
+                margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
                 {axes && <recharts.CartesianGrid vertical={false} />}
                 <recharts.XAxis dataKey="category" hide={!axes} axisLine={false} tickLine={false} tickMargin={8} />

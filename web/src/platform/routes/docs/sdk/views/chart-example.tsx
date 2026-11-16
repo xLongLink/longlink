@@ -75,6 +75,7 @@ export function ChartExample({
             <charts.RadarChart
                 data={data}
                 categoryKey="month"
+                axes={!isCompact}
                 series={series}
                 legend={false}
                 tooltip={!isCompact}

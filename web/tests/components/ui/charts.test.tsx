@@ -72,6 +72,75 @@ it('keeps a footer legend aligned with chart colors when series are reordered', 
     });
 });
 
+it('keeps a compact plot edge-to-edge and adds or removes chart controls only when requested', async () => {
+    function Preview() {
+        const [details, setDetails] = useState(false);
+
+        return (
+            <div ref={(element) => measureCharts(element)}>
+                <button type="button" onClick={() => setDetails((value) => !value)}>
+                    Toggle details
+                </button>
+                <Box height={280}>
+                    <AreaChart
+                        data={[
+                            { month: 'Jan', requests: 10 },
+                            { month: 'Feb', requests: 20 },
+                            { month: 'Mar', requests: 5 }
+                        ]}
+                        xKey="month"
+                        series={[{ key: 'requests', label: 'Requests' }]}
+                        curve="linear"
+                        fill="gradient"
+                        {...(details ? { axes: true, legend: true, tooltip: true } : {})}
+                    />
+                </Box>
+            </div>
+        );
+    }
+
+    await withMounted(<Preview />, async (output) => {
+        const user = userEvent.setup();
+        const toggle = output.querySelector('button');
+
+        if (!toggle) throw new Error('Expected chart detail control');
+
+        await vi.waitFor(() => {
+            const path = output.querySelector('.recharts-area-curve')?.getAttribute('d');
+            expect(path).toBe('M0,140L320,0L640,210');
+        });
+        expect(output.querySelector('.recharts-cartesian-grid')).toBeNull();
+        expect(output.querySelector('.recharts-cartesian-axis-tick')).toBeNull();
+        expect(output.querySelector('.recharts-legend-wrapper')).toBeNull();
+        expect(output.querySelector('.recharts-tooltip-wrapper')).toBeNull();
+
+        await act(async () => user.click(toggle));
+        await vi.waitFor(() => {
+            expect(output.querySelector('.recharts-cartesian-grid')).not.toBeNull();
+            expect(output.textContent).toContain('Jan');
+            expect(output.querySelector('.recharts-legend-wrapper')?.textContent).toContain('Requests');
+        });
+        const chart = output.querySelector<SVGSVGElement>('svg[role="application"]');
+
+        if (!chart) throw new Error('Expected keyboard-accessible chart');
+
+        await act(async () => chart.focus());
+        await act(async () => user.keyboard('{ArrowRight}'));
+        await vi.waitFor(() =>
+            expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('Requests')
+        );
+
+        await act(async () => user.click(toggle));
+        expect(output.querySelector('.recharts-cartesian-grid')).toBeNull();
+        expect(output.querySelector('.recharts-legend-wrapper')).toBeNull();
+        expect(output.querySelector('.recharts-tooltip-wrapper')).toBeNull();
+        expect(output.querySelector('.recharts-active-dot')).toBeNull();
+        await vi.waitFor(() =>
+            expect(output.querySelector('.recharts-area-curve')?.getAttribute('d')).toBe('M0,140L320,0L640,210')
+        );
+    });
+});
+
 it('matches external segment legends to plotted order and clears them when data is removed', async () => {
     function Preview() {
         const [rows, setRows] = useState(
@@ -135,6 +204,9 @@ it('refreshes literal row keys without accepting row styling or treating zero as
                 <Box height={280}>
                     <BarChart
                         aria-label="Shipment volumes"
+                        axes
+                        legend
+                        tooltip
                         data={[{ 'month.name': 'January', 'shipments.total': value, fill: '#ff0000' }]}
                         xKey="month.name"
                         series={[{ key: 'shipments.total', label: 'Shipments' }]}
@@ -206,6 +278,7 @@ it('distinguishes an empty pie from a valid zero-progress radial chart and rejec
                         nameKey="name"
                         valueKey="value"
                         max={max}
+                        legend
                     />
                 </Box>
             </div>

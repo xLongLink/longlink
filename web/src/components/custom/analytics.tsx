@@ -1,7 +1,6 @@
-import { IconTile } from '@/components/reui/icon-tile';
+import { useId, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
-import { useId, useState, type ReactNode, type ComponentProps } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs';
 import { Area, AreaChart, CartesianGrid, Pie, PieChart, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/shadcn/chart';
@@ -15,77 +14,7 @@ import {
     CardTitle
 } from '@/components/shadcn/card';
 
-export type AnalyticsMetric = {
-    label: string;
-    value: string;
-    change: string;
-    changeVariant?: ComponentProps<typeof Badge>['variant'];
-    icon?: ReactNode;
-    trend: number[];
-};
-
 const compactNumber = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
-
-/** Keeps KPI breakpoints consistent with the dashboard's compact layout. */
-export function MetricGrid({ metrics }: { metrics: AnalyticsMetric[] }) {
-    return (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {metrics.map((metric, index) => (
-                <MetricCard key={metric.label} metric={metric} index={index} />
-            ))}
-        </div>
-    );
-}
-
-/** Pairs a metric with a quiet, full-width angular sparkline. */
-export function MetricCard({ metric, index = 0 }: { metric: AnalyticsMetric; index?: number }) {
-    const id = useId().replaceAll(':', '');
-    const color = `var(--chart-${(index % 5) + 1})`;
-
-    return (
-        <Card size="sm" className="min-w-0 gap-6 overflow-hidden pb-0">
-            <CardHeader className="flex flex-row items-center gap-3">
-                {metric.icon && (
-                    <IconTile size="lg" variant="soft" style={{ color }}>
-                        {metric.icon}
-                    </IconTile>
-                )}
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="text-[13px] text-muted-foreground">{metric.label}</p>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xl font-medium tabular-nums">{metric.value}</p>
-                        <Badge variant={metric.changeVariant ?? 'secondary'}>{metric.change}</Badge>
-                    </div>
-                </div>
-            </CardHeader>
-            <ChartContainer
-                config={{ value: { label: metric.label, color } }}
-                className="h-24 w-full aspect-auto"
-                aria-label={`${metric.label} trend`}
-            >
-                <AreaChart
-                    data={metric.trend.map((value) => ({ value }))}
-                    margin={{ top: 4, bottom: 0, left: 0, right: 0 }}
-                >
-                    <defs>
-                        <linearGradient id={`metric-${id}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.12} />
-                            <stop offset="100%" stopColor={color} stopOpacity={0.01} />
-                        </linearGradient>
-                    </defs>
-                    <Area
-                        dataKey="value"
-                        type="linear"
-                        stroke={color}
-                        strokeWidth={2}
-                        fill={`url(#metric-${id})`}
-                        isAnimationActive={false}
-                    />
-                </AreaChart>
-            </ChartContainer>
-        </Card>
-    );
-}
 
 export type ProviderShare = { name: string; value: number; providerCount?: number };
 

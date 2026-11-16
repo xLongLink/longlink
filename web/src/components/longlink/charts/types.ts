@@ -8,6 +8,7 @@ export type ChartValueKey<Row> = {
     string;
 
 export type ChartSeries<Row> = { key: ChartValueKey<Row>; label?: string };
+export type ChartCurve = 'linear' | 'monotone' | 'step';
 
 export type ChartOptions = Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'className' | 'style'> & {
     legend?: boolean;
@@ -16,6 +17,7 @@ export type ChartOptions = Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'c
 
 export type CartesianChartProps<Row extends object> = ChartOptions & {
     axes?: boolean;
+    padding?: number;
     data: readonly Row[];
     xKey: ChartKey<Row>;
     series: readonly ChartSeries<Row>[];

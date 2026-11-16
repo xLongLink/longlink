@@ -40,12 +40,12 @@ export default function ChartDocumentation({ name }: { name: ChartName }) {
   }`;
 
     const props = sankey
-        ? 'nodes={nodes} links={links} aria-label="Revenue allocation"'
+        ? 'nodes={nodes} links={links} tooltip aria-label="Revenue allocation"'
         : cartesian
-          ? 'data={data} xKey="month" series={series} aria-label="Monthly requests and responses"'
+          ? 'data={data} xKey="month" series={series} axes tooltip aria-label="Monthly requests and responses"'
           : radar
-            ? 'data={data} categoryKey="month" series={series} aria-label="Monthly requests and responses"'
-            : `data={data} nameKey="month" valueKey="requests"${name === 'RadialBarChart' ? ' max={300}' : ''} aria-label="Monthly requests"`;
+            ? 'data={data} categoryKey="month" series={series} axes tooltip aria-label="Monthly requests and responses"'
+            : `data={data} nameKey="month" valueKey="requests"${name === 'RadialBarChart' ? ' max={300}' : ''} tooltip aria-label="Monthly requests"`;
 
     return (
         <ViewLayout

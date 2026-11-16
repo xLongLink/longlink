@@ -9,10 +9,16 @@ export function RadarChart<Row extends object>({
     data: rows,
     categoryKey,
     series,
-    legend = true,
-    tooltip = true,
+    axes = false,
+    legend = false,
+    tooltip = false,
     ...props
-}: ChartOptions & { data: readonly Row[]; categoryKey: ChartKey<Row>; series: readonly ChartSeries<Row>[] }) {
+}: ChartOptions & {
+    data: readonly Row[];
+    categoryKey: ChartKey<Row>;
+    series: readonly ChartSeries<Row>[];
+    axes?: boolean;
+}) {
     const prepared = data.prepareSeries(rows, categoryKey, series);
 
     return (
@@ -24,8 +30,8 @@ export function RadarChart<Row extends object>({
             error={prepared.error}
         >
             <recharts.RadarChart data={prepared.rows} accessibilityLayer outerRadius="75%">
-                <recharts.PolarGrid />
-                <recharts.PolarAngleAxis dataKey="category" />
+                {axes && <recharts.PolarGrid />}
+                <recharts.PolarAngleAxis dataKey="category" tick={axes} axisLine={axes} />
                 <recharts.PolarRadiusAxis axisLine={false} tick={false} />
                 {series.map((item, index) => (
                     <recharts.Radar
@@ -35,6 +41,7 @@ export function RadarChart<Row extends object>({
                         stroke={data.color(index)}
                         fill={data.color(index)}
                         fillOpacity={0.15}
+                        activeDot={tooltip}
                         isAnimationActive={false}
                     />
                 ))}
