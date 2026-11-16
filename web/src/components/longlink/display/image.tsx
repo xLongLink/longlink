@@ -1,7 +1,7 @@
 import { cn } from 'cn';
-import { usePreview } from './preview';
 import { useState, type ComponentProps } from 'react';
 import { Skeleton } from '@/components/shadcn/skeleton';
+import { usePreview } from '@/components/custom/preview';
 import { AspectRatio } from '@/components/shadcn/aspect-ratio';
 
 type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {

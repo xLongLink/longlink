@@ -5112,6 +5112,16 @@ function Empty({ icon, title, description, children, ...props }: Omit<React$1.Co
     title: React$1.ReactNode;
     description?: React$1.ReactNode;
 }): React$1.JSX.Element;
+type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
+    src: string;
+    alt: string;
+    ratio?: number;
+    srcSet?: never;
+    srcset?: never;
+    children?: never;
+    dangerouslySetInnerHTML?: never;
+};
+function Image$1(props: ImageProps): React$1.JSX.Element;
 function Table({ wrap, ...props }: Omit<React$1.ComponentProps<"table">, "className" | "style"> & {
     wrap?: boolean;
 }): React$1.JSX.Element;
@@ -7354,16 +7364,6 @@ function Maps(props: {
     height?: number | string;
     fit?: "contain" | "cover";
 }): React$1.JSX.Element;
-type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
-    src: string;
-    alt: string;
-    ratio?: number;
-    srcSet?: never;
-    srcset?: never;
-    children?: never;
-    dangerouslySetInnerHTML?: never;
-};
-function Image$1(props: ImageProps): React$1.JSX.Element;
 function Token({ size, ...props }: {
     label: string;
     size?: React$1.ComponentProps<typeof Badge>["size"];
