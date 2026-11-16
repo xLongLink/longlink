@@ -3,26 +3,23 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
+import { Tabs, Tab } from '@/components/longlink/layout/tabs';
 
 it('selects composed panels without activating disabled tabs', async () => {
+    const overrides = { className: 'hidden', style: { display: 'none' } };
+    const changed = vi.fn();
     // Nested labels and separate panels must remain connected through native composition.
     await withMounted(
-        <Tabs defaultValue="orders">
-            <TabsList aria-label="Orders">
-                <TabsTrigger value="orders">
-                    <span>Orders</span>
-                </TabsTrigger>
-                <TabsTrigger value="restricted" disabled>
-                    Restricted
-                </TabsTrigger>
-                <TabsTrigger value="archive">Archive</TabsTrigger>
-            </TabsList>
-            <section>
-                <TabsContent value="orders">Order list</TabsContent>
-                <TabsContent value="restricted">Restricted details</TabsContent>
-                <TabsContent value="archive">Archived list</TabsContent>
-            </section>
+        <Tabs {...overrides} defaultValue="orders" aria-label="Orders" onValueChange={changed}>
+            <Tab {...overrides} value="orders" label={<span>Orders</span>}>
+                Order list
+            </Tab>
+            <Tab value="restricted" label="Restricted" disabled>
+                Restricted details
+            </Tab>
+            <Tab {...overrides} value="archive" label="Archive">
+                Archived list
+            </Tab>
         </Tabs>,
         async (output) => {
             const user = userEvent.setup();
@@ -43,6 +40,8 @@ it('selects composed panels without activating disabled tabs', async () => {
             expect(tabs[2].getAttribute('aria-selected')).toBe('true');
             expect(tabs[2].getAttribute('aria-controls')).toBe(panel?.id);
             expect(panel?.getAttribute('aria-labelledby')).toBe(tabs[2].id);
+            expect(changed).toHaveBeenCalledExactlyOnceWith('archive');
+            expect(output.querySelector('.hidden, [style*="display: none"]')).toBeNull();
         }
     );
 });
@@ -52,7 +51,7 @@ it('lets the caller accept controlled selection changes', async () => {
 
     // The owner can reject an activation and later accept the same requested value.
     function ControlledTabs() {
-        const [value, setValue] = useState<unknown>('orders');
+        const [value, setValue] = useState('orders');
         const [acceptChanges, setAcceptChanges] = useState(false);
 
         return (
@@ -68,12 +67,12 @@ it('lets the caller accept controlled selection changes', async () => {
                         if (acceptChanges) setValue(nextValue);
                     }}
                 >
-                    <TabsList>
-                        <TabsTrigger value="orders">Orders</TabsTrigger>
-                        <TabsTrigger value="archive">Archive</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="orders">Order list</TabsContent>
-                    <TabsContent value="archive">Archived list</TabsContent>
+                    <Tab value="orders" label="Orders">
+                        Order list
+                    </Tab>
+                    <Tab value="archive" label="Archive">
+                        Archived list
+                    </Tab>
                 </Tabs>
             </>
         );

@@ -1261,7 +1261,12 @@
                     "type": "ReactNode",
                     "description": "MenuSection elements defining navigation and content."
                 },
-                { "name": "gap", "type": "0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10", "default": 3 },
+                {
+                    "name": "gap",
+                    "type": "number",
+                    "description": "Spacing between navigation and content using the shared spacing scale.",
+                    "default": 3
+                },
                 {
                     "name": "MenuSection.children",
                     "type": "ReactNode",
@@ -1762,68 +1767,48 @@
             "name": "Tabs",
             "category": "Layouts",
             "introduction": "Switches between related content panels.",
+            "guidance": "Compose Tabs with Tab children. Each Tab supplies a stable string value, a label, and its panel content. The first enabled Tab is selected when defaultValue is omitted.",
             "keywords": ["tabs", "panels", "sections"],
             "properties": [
                 {
                     "name": "children",
                     "type": "ReactNode",
-                    "description": "TabsList with TabsTrigger buttons, followed by matching TabsContent panels."
+                    "description": "Tab definitions containing labels and panel content."
                 },
-                { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "default": "horizontal" },
                 {
                     "name": "defaultValue",
-                    "type": "unknown",
-                    "description": "Initial uncontrolled selection; null selects no tab."
+                    "type": "string",
+                    "description": "Initial uncontrolled selection; defaults to the first enabled Tab value."
                 },
                 {
                     "name": "onValueChange",
-                    "type": "(value, details) => void",
-                    "description": "Receives selection changes and native change event details, including activationDirection."
+                    "type": "(value: string) => void",
+                    "description": "Receives the selected value without library event details."
                 },
-                { "name": "value", "type": "unknown", "description": "Controlled selection; null selects no tab." },
+                { "name": "value", "type": "string", "description": "Controlled selection." },
                 {
-                    "name": "TabsList.variant",
+                    "name": "variant",
                     "type": "\"default\" | \"line\"",
                     "description": "Tab list appearance.",
                     "default": "default"
                 },
+                { "name": "Tab.disabled", "type": "boolean", "description": "Whether the tab is disabled." },
                 {
-                    "name": "TabsList.activateOnFocus",
-                    "type": "boolean",
-                    "description": "Selects tabs on arrow-key focus.",
-                    "default": false
+                    "name": "Tab.value",
+                    "type": "string",
+                    "description": "Stable selection value associating the tab with its panel."
                 },
+                { "name": "Tab.label", "type": "ReactNode", "description": "Visible tab label." },
+                { "name": "Tab.children", "type": "ReactNode", "description": "Panel content mounted when selected." },
                 {
-                    "name": "TabsList.loopFocus",
-                    "type": "boolean",
-                    "description": "Wraps keyboard focus at list boundaries.",
-                    "default": true
-                },
-                { "name": "TabsTrigger.disabled", "type": "boolean", "description": "Whether the tab is disabled." },
-                {
-                    "name": "TabsTrigger.value / TabsContent.value",
-                    "type": "unknown",
-                    "description": "Required matching values associating a trigger and panel."
-                },
-                {
-                    "name": "TabsTrigger.children / TabsContent.children",
-                    "type": "ReactNode",
-                    "description": "Visible tab label or panel content. All parts support native DOM attributes, refs, and render; component styling is fixed."
-                },
-                {
-                    "name": "TabsTrigger.nativeButton",
-                    "type": "boolean",
-                    "description": "Set false when render replaces the native button with another element.",
-                    "default": true
-                },
-                {
-                    "name": "TabsContent.keepMounted",
+                    "name": "Tab.keepMounted",
                     "type": "boolean",
                     "description": "Keeps an inactive panel in the DOM.",
                     "default": false
                 }
             ],
-            "source": "shadcn",
+            "source": "custom",
+            "justification": "Owns tab and panel composition through Tabs and Tab while retaining native selection, keyboard behavior, and fixed styling.",
             "reference": "https://ui.shadcn.com/docs/components/tabs"
         },
         {

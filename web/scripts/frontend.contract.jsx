@@ -32,6 +32,34 @@ const icon = <Icon icon="triangle-exclamation-point" size="sm" />;
 const token = <Token icon="user-round" label="Owner" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;
+const menuComposition = (
+    <Menu gap={2.5}>
+        <MenuSection title="Settings" isHeaderHidden>
+            {menuItem}
+            <MenuSubSection label="Workspace" icon="users">
+                <MenuItem label="Members"><Text>Members</Text></MenuItem>
+            </MenuSubSection>
+        </MenuSection>
+    </Menu>
+);
+// @ts-expect-error Menu styling is owned by the component.
+const _menuClasses = <Menu className="hidden" />;
+// @ts-expect-error Tabs styling is owned by the component.
+const _tabsClasses = <Tabs className="hidden" />;
+// @ts-expect-error Tab styling is owned by the component.
+const _tabStyle = <Tab value="one" label="One" style={{ display: 'none' }} />;
+// @ts-expect-error Tabs owns its focus behavior.
+const _tabsActivateOnFocus = <Tabs activateOnFocus />;
+// @ts-expect-error Tabs owns its focus behavior.
+const _tabsLoopFocus = <Tabs loopFocus={false} />;
+// @ts-expect-error Tab values must be strings.
+const _tabNumericValue = <Tab value={1} label="One" />;
+// @ts-expect-error Tabs values must be strings.
+const _tabsNumericValue = <Tabs value={1} />;
+// @ts-expect-error Tabs default values must be strings.
+const _tabsNumericDefault = <Tabs defaultValue={1} />;
+// @ts-expect-error Tabs always uses horizontal orientation.
+const _tabsOrientation = <Tabs orientation="vertical" />;
 // @ts-expect-error LongLink aliases are not Lucide names.
 const legacyIcon = <Icon icon="close" size="sm" />;
 // @ts-expect-error Icon names do not accept a provider prefix.
@@ -271,11 +299,8 @@ const nativeComposition = (
                 </Button>
             </ButtonGroup>
             <FileViewer src="/attachment" title="Attachment" />
-            <Tabs value={selected} onValueChange={(value) => setSelected(String(value))}>
-                <TabsList variant="line">
-                    <TabsTrigger value="one">One</TabsTrigger>
-                </TabsList>
-                <TabsContent value="one">Content</TabsContent>
+            <Tabs value={selected} variant="line" onValueChange={(value) => setSelected(String(value))}>
+                <Tab value="one" label="One">Content</Tab>
             </Tabs>
             <Slider
                 defaultValue={[10, 20]}

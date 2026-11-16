@@ -186,7 +186,7 @@ export { Progress } from './display/progress';
 export { Wizard, Step } from './layouts/wizard';
 
 /** @category Layouts */
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './layouts/tabs';
+export { Tabs, Tab } from './layouts/tabs';
 
 /** @category Display */
 export { Empty } from './display/empty';

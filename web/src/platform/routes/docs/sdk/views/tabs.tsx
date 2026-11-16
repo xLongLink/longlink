@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
+import { Tabs, Tab } from '@/components/longlink/layout/tabs';
 
 /** Documents native tab composition and selection. */
 export default function TabsPage() {
@@ -8,30 +8,15 @@ export default function TabsPage() {
         <ViewLayout
             name="Tabs"
             properties={[
-                {
-                    name: 'defaultValue',
-                    type: 'unknown',
-                    description: 'Initially selected value in uncontrolled mode.'
-                },
-                { name: 'value', type: 'unknown', description: 'Selected value in controlled mode.' },
-                {
-                    name: 'onValueChange',
-                    type: '(value: unknown, eventDetails: Tabs.Root.ChangeEventDetails) => void',
-                    description: 'Called when the selected tab changes.'
-                },
-                { name: 'orientation', type: '"horizontal" | "vertical"' },
-                { name: 'TabsList.variant', type: '"default" | "line"' },
-                {
-                    name: 'TabsList.activateOnFocus',
-                    type: 'boolean',
-                    description: 'Select tabs when keyboard focus moves.'
-                },
-                { name: 'TabsTrigger.value', type: 'unknown', description: 'Value associated with this tab.' },
-                { name: 'TabsTrigger.disabled', type: 'boolean' },
-                { name: 'TabsTrigger.children', type: 'ReactNode', description: 'Visible tab label.' },
-                { name: 'TabsContent.value', type: 'unknown', description: 'Value associated with this panel.' },
-                { name: 'TabsContent.keepMounted', type: 'boolean', description: 'Keep an inactive panel in the DOM.' },
-                { name: 'TabsContent.children', type: 'ReactNode', description: 'Panel content.' }
+                { name: 'defaultValue', type: 'string' },
+                { name: 'value', type: 'string' },
+                { name: 'onValueChange', type: '(value: string) => void' },
+                { name: 'variant', type: '"default" | "line"' },
+                { name: 'Tab.value', type: 'string' },
+                { name: 'Tab.label', type: 'ReactNode' },
+                { name: 'Tab.disabled', type: 'boolean' },
+                { name: 'Tab.keepMounted', type: 'boolean' },
+                { name: 'Tab.children', type: 'ReactNode' }
             ]}
             example={{
                 title: 'Tabs',
@@ -39,16 +24,12 @@ export default function TabsPage() {
                 code: `function Example() {
   return (
     <Tabs defaultValue="overview">
-      <TabsList>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="activity">Activity</TabsTrigger>
-      </TabsList>
-      <TabsContent value="overview">
+      <Tab value="overview" label="Overview">
         <Text>Overview content</Text>
-      </TabsContent>
-      <TabsContent value="activity">
+      </Tab>
+      <Tab value="activity" label="Activity">
         <Text>Activity content</Text>
-      </TabsContent>
+      </Tab>
     </Tabs>
   );
 }`
@@ -62,16 +43,12 @@ function TabsExample() {
     // Let the native tabs manage selection.
     return (
         <Tabs defaultValue="overview">
-            <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview">
+            <Tab value="overview" label="Overview">
                 <span>Overview content</span>
-            </TabsContent>
-            <TabsContent value="activity">
+            </Tab>
+            <Tab value="activity" label="Activity">
                 <span>Activity content</span>
-            </TabsContent>
+            </Tab>
         </Tabs>
     );
 }

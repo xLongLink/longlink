@@ -1,5 +1,5 @@
 import { viewComponent } from '../props';
-import * as menu from '@/components/custom/menu';
+import * as menu from '@/components/longlink/layout/menu';
 
 export const Menu = viewComponent(menu.Menu);
 

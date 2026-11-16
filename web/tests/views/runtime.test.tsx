@@ -340,28 +340,61 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
+it('keeps a draft in a retained authored Tab while selecting another panel', async () => {
+    const runtime = await initializeRuntime(`export default function View() {
+        return <Tabs aria-label="Order">
+            <Tab value="restricted" label="Restricted" disabled>Restricted details</Tab>
+            <Tab value="details" label="Details" keepMounted>
+                <input aria-label="Order draft" defaultValue="Draft" />
+            </Tab>
+            <Tab value="history" label="History">Order history</Tab>
+        </Tabs>;
+    }`);
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelector('input')).not.toBeNull());
+        const input = runtime.mount.querySelector<HTMLInputElement>('input');
+        const tabs = runtime.mount.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+        const user = userEvent.setup();
+
+        if (!input || !tabs[0] || !tabs[1] || !tabs[2]) throw new Error('Expected order tabs');
+        expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+        await user.type(input, ' order');
+        await user.click(tabs[0]);
+        expect(runtime.mount.textContent).not.toContain('Restricted details');
+
+        await user.click(tabs[2]);
+        await vi.waitFor(() => expect(tabs[2].getAttribute('aria-selected')).toBe('true'));
+        expect(runtime.mount.textContent).toContain('Order history');
+        await user.click(tabs[1]);
+        await vi.waitFor(() => expect(tabs[1].getAttribute('aria-selected')).toBe('true'));
+        expect(runtime.mount.querySelector('input')).toBe(input);
+        expect(input.value).toBe('Draft order');
+    } finally {
+        runtime.close();
+    }
+});
+
 it('ignores authored styling overrides while preserving composed controls and form updates', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [name, setName] = useState('Draft');
         const [saved, setSaved] = useState('');
         const overrides = { className: 'authored-override', style: { color: 'red', padding: 100 } };
         return <Card {...overrides}>
-            <CardContent {...overrides}>
-                <Input {...overrides} id="order-name" aria-label="Order name"
-                    value={name} onChange={(event) => setName(event.target.value)} />
-                <Button {...overrides} variant="outline" size="sm" onClick={() => setSaved(name)}>
-                    Save order
-                </Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button {...overrides} variant="outline" />}>
-                        Actions
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent {...overrides}>
-                        <DropdownMenuItem onClick={() => setSaved('Archived')}>Archive</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <output>{saved}</output>
-            </CardContent>
+            <Input {...overrides} id="order-name" aria-label="Order name"
+                value={name} onChange={(event) => setName(event.target.value)} />
+            <Button {...overrides} variant="outline" size="sm" onClick={() => setSaved(name)}>
+                Save order
+            </Button>
+            <Dropdown>
+                <DropdownTrigger render={<Button {...overrides} variant="outline" />}>
+                    Actions
+                </DropdownTrigger>
+                <DropdownContent {...overrides}>
+                    <DropdownItem onClick={() => setSaved('Archived')}>Archive</DropdownItem>
+                </DropdownContent>
+            </Dropdown>
+            <output>{saved}</output>
         </Card>;
     }`);
 
@@ -535,12 +568,12 @@ it('uses composed menu actions to transition authored table results to empty and
         const [present, setPresent] = useState(true);
         const [open, setOpen] = useState(false);
         return <>
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-                <DropdownMenuTrigger>Order actions</DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setPresent(false)}>Remove order</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <Dropdown open={open} onOpenChange={setOpen}>
+                <DropdownTrigger>Order actions</DropdownTrigger>
+                <DropdownContent>
+                    <DropdownItem onClick={() => setPresent(false)}>Remove order</DropdownItem>
+                </DropdownContent>
+            </Dropdown>
             {present ? <Table aria-label="Orders">
                 <TableCaption>Open orders</TableCaption>
                 <TableHeader><TableRow><TableHead scope="col">Reference</TableHead></TableRow></TableHeader>

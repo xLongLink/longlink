@@ -1,10 +1,10 @@
 import { cn } from 'cn';
-import { spacing } from './layout';
 import { ChevronDown } from 'lucide-react';
-import { MenuNavigationContext } from './contexts';
+import { spacing } from '@/components/custom/layout';
 import type { IconName } from 'lucide-react/dynamic';
 import { Icon } from '@/components/longlink/display/icon';
 import { Button, buttonVariants } from '@/components/shadcn/button';
+import { MenuNavigationContext } from '@/components/custom/contexts';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
@@ -47,7 +47,7 @@ function isMenuItem(child: ReactNode): child is ReactElement<MenuItemProps> {
 /** Renders section navigation beside content, or above it at View widths of 768px and below. */
 export function Menu({
     children,
-    gap = 3
+    gap
 }: {
     /** MenuSection elements defining navigation and content. */
     children?: ReactNode;
@@ -125,7 +125,10 @@ export function Menu({
 
     // CSS changes the rail's position without remounting its disclosures or the active content.
     return (
-        <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[768px]:grid-cols-[minmax(0,1fr)]">
+        <div
+            className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start gap-3 max-[768px]:grid-cols-[minmax(0,1fr)]"
+            style={{ gap: gap === undefined ? undefined : spacing(gap) }}
+        >
             <nav
                 className="box-border min-w-0 bg-inherit ps-2 pe-6 pb-2 font-sans max-[768px]:pe-2"
                 aria-label="Settings navigation"
@@ -181,9 +184,7 @@ export function Menu({
                     </div>
                 ))}
             </nav>
-            <div className="flex min-w-0 flex-col" style={{ gap: spacing(gap) }}>
-                {activeItem?.props.children}
-            </div>
+            <div className="flex min-w-0 flex-col">{activeItem?.props.children}</div>
         </div>
     );
 }
