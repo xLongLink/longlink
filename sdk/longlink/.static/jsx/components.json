@@ -813,63 +813,6 @@
             "reference": "https://ui.shadcn.com/docs/components/card"
         },
         {
-            "name": "CodeBlock",
-            "reference": "https://reui.io/docs/components/base/code-block",
-            "category": "Display",
-            "introduction": "Native ReUI CodeBlock composition with syntax highlighting and bounded tokenization.",
-            "guidance": "Pass code and language to the root. Compose CodeBlockHeader, CodeBlockTitle, CodeBlockLanguage, CodeBlockCopyButton, CodeBlockWrapToggle, and CodeBlockExpandButton as needed. Use showLineNumbers, highlightedLines, wrap/defaultWrap, and maxLines directly. For an external scroll viewport, compose CodeBlockContent and label the scroll container. Unknown languages and sources over 50,000 characters render as text. Copy buttons strip ReUI notation comments and expose onCopyError for recovery.",
-            "properties": [
-                { "name": "code", "type": "string", "description": "The code string to display." },
-                {
-                    "name": "language",
-                    "type": "string",
-                    "description": "Language for syntax highlighting. Unknown languages render as plain text."
-                },
-                {
-                    "name": "lines",
-                    "type": "CodeBlockLine[]",
-                    "description": "Pre-highlighted lines. Bypasses client tokenization."
-                },
-                {
-                    "name": "highlight",
-                    "type": "boolean",
-                    "description": "Enable syntax highlighting.",
-                    "default": true
-                },
-                {
-                    "name": "showLineNumbers",
-                    "type": "boolean",
-                    "description": "Show a line number gutter.",
-                    "default": false
-                },
-                {
-                    "name": "highlightedLines",
-                    "type": "number[] | string",
-                    "description": "Source lines to highlight, as line numbers or a range such as 2-4,7."
-                },
-                { "name": "wrap", "type": "boolean", "description": "Controlled soft wrapping." },
-                { "name": "defaultWrap", "type": "boolean", "description": "Initial soft wrapping.", "default": false },
-                {
-                    "name": "maxLines",
-                    "type": "number",
-                    "description": "Caps the built-in viewport height. Compose CodeBlockExpandButton to expand it."
-                },
-                { "name": "expanded", "type": "boolean", "description": "Controlled expanded state under maxLines." },
-                {
-                    "name": "variant",
-                    "type": "\"default\" | \"ghost\"",
-                    "description": "Use ghost when a parent already supplies the surface.",
-                    "default": "default"
-                },
-                {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Composable header, copy, wrap, expand, line actions, and optional CodeBlockContent."
-                }
-            ],
-            "source": "reui"
-        },
-        {
             "name": "Currency",
             "category": "Display",
             "introduction": "Formats a monetary amount with the viewer's locale using Intl.NumberFormat; neither library supplies this domain formatter.",

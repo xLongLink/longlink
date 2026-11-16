@@ -30,7 +30,6 @@ import type { TableFeatures } from '@tanstack/react-table';
 import type { PublicComponent, PublicProps } from './props';
 import * as filters from '@/components/reui/filters/filters';
 import * as pagination from '@/components/shadcn/pagination';
-import * as code from '@/components/reui/code-block/code-block';
 import * as dataGrid from '@/components/reui/data-grid/data-grid';
 import * as dataPagination from '@/components/custom/data-pagination';
 import * as gridTable from '@/components/reui/data-grid/data-grid-table';
@@ -91,17 +90,6 @@ export const PaginationNext: PublicComponent<typeof pagination.PaginationNext> =
 export const PaginationEllipsis: PublicComponent<typeof pagination.PaginationEllipsis> = pagination.PaginationEllipsis;
 export const DataPagination: PublicComponent<typeof dataPagination.DataPagination> = dataPagination.DataPagination;
 export const Timestamp: PublicComponent<typeof timestamp.Timestamp> = timestamp.Timestamp;
-export const CodeBlock: PublicComponent<typeof code.CodeBlock> = code.CodeBlock;
-export const CodeBlockContent: PublicComponent<typeof code.CodeBlockContent> = code.CodeBlockContent;
-export const CodeBlockCopyButton: PublicComponent<typeof code.CodeBlockCopyButton> = code.CodeBlockCopyButton;
-export const CodeBlockDownloadButton: PublicComponent<typeof code.CodeBlockDownloadButton> =
-    code.CodeBlockDownloadButton;
-export const CodeBlockExpandButton: PublicComponent<typeof code.CodeBlockExpandButton> = code.CodeBlockExpandButton;
-export const CodeBlockHeader: PublicComponent<typeof code.CodeBlockHeader> = code.CodeBlockHeader;
-export const CodeBlockLanguage: PublicComponent<typeof code.CodeBlockLanguage> = code.CodeBlockLanguage;
-export const CodeBlockLineActions: PublicComponent<typeof code.CodeBlockLineActions> = code.CodeBlockLineActions;
-export const CodeBlockTitle: PublicComponent<typeof code.CodeBlockTitle> = code.CodeBlockTitle;
-export const CodeBlockWrapToggle: PublicComponent<typeof code.CodeBlockWrapToggle> = code.CodeBlockWrapToggle;
 export const Progress: PublicComponent<typeof progress.Progress> = progress.Progress;
 export const Wizard: PublicComponent<typeof wizard.Wizard> = wizard.Wizard;
 export const Step: PublicComponent<typeof wizard.Step> = wizard.Step;
@@ -142,16 +130,6 @@ export type { ChartConfig } from '@/components/shadcn/chart';
 export { ProviderChart, UsageChart } from '@/components/custom/analytics';
 export { CountryChart } from '@/components/custom/country-chart';
 export { RevenueFlow } from '@/components/custom/revenue-flow';
-export type CodeBlockProps = PublicProps<code.CodeBlockProps>;
-export type CodeBlockCopyButtonProps = PublicProps<code.CodeBlockCopyButtonProps>;
-export type CodeBlockDownloadButtonProps = PublicProps<code.CodeBlockDownloadButtonProps>;
-export type CodeBlockLineActionsProps = PublicProps<code.CodeBlockLineActionsProps>;
-export type {
-    CodeBlockFoldRegion,
-    CodeBlockLine,
-    CodeBlockLineSpec,
-    CodeBlockThemes
-} from '@/components/reui/code-block/code-block';
 
 export const dataGridFeatures: Omit<dataGrid.DataGridFeatures, 'columnMeta'> & {
     columnMeta: PublicProps<dataGrid.DataGridFeatures['columnMeta']>;
