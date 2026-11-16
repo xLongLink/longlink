@@ -91,42 +91,44 @@ export default function ProjectSettings() {
                     </MenuItem>
                 </MenuSection>
             </Menu>
-            <Dialog fullscreen open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
-                <DialogContent className="flex h-[95dvh] w-[95dvw] max-w-[95dvw] flex-col sm:max-w-[95dvw]">
-                    <DialogHeader>
-                        <DialogTitle>Fullscreen settings</DialogTitle>
-                    </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-auto">
-                        <Stack gap={4}>
-                            <Input
-                                id="fullscreen-company-name"
-                                label="Company name"
-                                value={company}
-                                onChange={(event) => setCompany(event.currentTarget.value)}
-                            />
-                            <Select
-                                id="fullscreen-default-currency"
-                                label="Default currency"
-                                options={[
-                                    { value: 'CHF', label: 'CHF' },
-                                    { value: 'EUR', label: 'EUR' },
-                                    { value: 'USD', label: 'USD' }
-                                ]}
-                                value={currency}
-                                onValueChange={(value) => {
-                                    if (value !== null) setCurrency(value);
-                                }}
-                            />
-                            <Switch
-                                id="fullscreen-approval-required"
-                                label="Require project approval"
-                                checked={approvalRequired}
-                                onCheckedChange={setApprovalRequired}
-                            />
-                            <Button onClick={() => setIsFullscreenOpen(false)}>Done</Button>
-                        </Stack>
-                    </div>
-                </DialogContent>
+            <Dialog
+                fullscreen
+                open={isFullscreenOpen}
+                onOpenChange={setIsFullscreenOpen}
+                title="Fullscreen settings"
+                footer={
+                    <Button type="button" onClick={() => setIsFullscreenOpen(false)}>
+                        Done
+                    </Button>
+                }
+            >
+                <Stack gap={4}>
+                    <Input
+                        id="fullscreen-company-name"
+                        label="Company name"
+                        value={company}
+                        onChange={(event) => setCompany(event.currentTarget.value)}
+                    />
+                    <Select
+                        id="fullscreen-default-currency"
+                        label="Default currency"
+                        options={[
+                            { value: 'CHF', label: 'CHF' },
+                            { value: 'EUR', label: 'EUR' },
+                            { value: 'USD', label: 'USD' }
+                        ]}
+                        value={currency}
+                        onValueChange={(value) => {
+                            if (value !== null) setCurrency(value);
+                        }}
+                    />
+                    <Switch
+                        id="fullscreen-approval-required"
+                        label="Require project approval"
+                        checked={approvalRequired}
+                        onCheckedChange={setApprovalRequired}
+                    />
+                </Stack>
             </Dialog>
         </Stack>
     );

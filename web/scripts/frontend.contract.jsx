@@ -145,20 +145,17 @@ const nativeComposition = (
                 <Button>Cancel</Button>
             </ButtonGroup>
             <Dialog
+                title="Details"
+                description="Review the order."
+                trigger={<Button>Open</Button>}
+                footer={<Button onClick={() => setSelected('done')}>Done</Button>}
                 defaultOpen={false}
                 onOpenChange={(open, details) => {
                     open.valueOf();
                     details.cancel();
                 }}
             >
-                <DialogTrigger render={<Button />}>Open</DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Details</DialogTitle>
-                        <DialogDescription>Review the order.</DialogDescription>
-                    </DialogHeader>
-                    <DialogClose render={<Button />}>Close</DialogClose>
-                </DialogContent>
+                <Input label="Reference" />
             </Dialog>
             <Pagination aria-label="Pages">
                 <PaginationContent>
@@ -371,13 +368,8 @@ const nativeForm = (
 
 const _adapters = (
     <Card size="sm" isSelected onChange={() => {}}>
-            <Dialog fullscreen open onOpenChange={() => {}}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Title</DialogTitle>
-                    </DialogHeader>
+            <Dialog fullscreen title="Title" dismissible={false} open onOpenChange={() => {}}>
                     {nativeComposition}
-                </DialogContent>
             </Dialog>
     </Card>
 );
@@ -397,8 +389,16 @@ const _legacyMenu = <Dropdown items={[]} />;
 
 // @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
 const _customGroupProps = <ButtonGroup isDisabled />;
-// @ts-expect-error Native Dialog does not accept the framed visibility contract.
-const _customDialogProps = <Dialog isOpen open onOpenChange={() => {}} />;
+// @ts-expect-error Dialog visibility uses open, not isOpen.
+const _customDialogProps = <Dialog title="Details" isOpen open onOpenChange={() => {}} />;
+// @ts-expect-error Dialog uses fullscreen rather than a size selector.
+const _dialogSize = <Dialog title="Details" size="lg" />;
+// @ts-expect-error Dialog requires an accessible title.
+const _dialogTitle = <Dialog open />;
+// @ts-expect-error Dialog presentation is owned internally.
+const _dialogStyle = <Dialog title="Details" style={{ width: 900 }} />;
+// @ts-expect-error Fullscreen is a boolean, not a size name.
+const _dialogFullscreen = <Dialog title="Details" fullscreen="fullscreen" />;
 // @ts-expect-error Ordinary links use the native href property.
 const _legacyLink = <Link to="/orders">Orders</Link>;
 // @ts-expect-error A file action cannot preview and download simultaneously.

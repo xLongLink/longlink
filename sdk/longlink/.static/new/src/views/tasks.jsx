@@ -132,13 +132,8 @@ export default function Tasks() {
                     </DataGridScrollArea>
                 </DataGridContainer>
             </DataGrid>
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add task</DialogTitle>
-                    </DialogHeader>
-                    {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
-                </DialogContent>
+            <Dialog title="Add task" open={isOpen} onOpenChange={setIsOpen}>
+                {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
             </Dialog>
         </Stack>
     );

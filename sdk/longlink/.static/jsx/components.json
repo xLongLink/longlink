@@ -358,13 +358,13 @@
                 {
                     "name": "scale",
                     "type": "number",
-                    "description": "Projection scale in the 800 \u00d7 400 coordinate space.",
+                    "description": "Projection scale in the 800 × 400 coordinate space.",
                     "default": 140
                 },
                 {
                     "name": "zoom",
                     "type": "number",
-                    "description": "Optional viewport zoom (1\u20134). Enables dragging and smooth focus on center while preserving wheel scrolling and reduced motion."
+                    "description": "Optional viewport zoom (1–4). Enables dragging and smooth focus on center while preserving wheel scrolling and reduced motion."
                 },
                 {
                     "name": "height",
@@ -920,11 +920,17 @@
             "category": "Layouts",
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/dialog",
-            "justification": "Tracks native dialog visibility for isolated View host coordination without adding frame styling.",
-            "guidance": "Compose the native DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, and DialogClose components.",
-            "introduction": "Native Dialog root properties with isolated View host coordination.",
+            "justification": "Owns modal composition, responsive sizing, body scrolling, and dismissal while Base UI retains focus management and isolated View host coordination.",
+            "guidance": "Supply a required title, optional description and footer, and body content as children. Use trigger for an internally connected button or control open from an external action. Set fullscreen=true for the expanded layout; Dialog owns dimensions because it is portaled. Set dismissible=false during noninterruptible work and close through controlled open state when complete. Validation, submission, and pending state remain caller-owned. Use useConfirm for destructive confirmations.",
+            "introduction": "A props-based modal with centered or fullscreen sizing and internally composed accessible chrome.",
             "properties": [
-                { "name": "open / defaultOpen", "type": "boolean", "description": "Controlled or initial visibility." },
+                { "name": "open", "type": "boolean", "description": "Controlled visibility." },
+                {
+                    "name": "defaultOpen",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Initial uncontrolled visibility."
+                },
                 {
                     "name": "onOpenChange",
                     "type": "(open, eventDetails) => void",
@@ -933,9 +939,24 @@
                 {
                     "name": "fullscreen",
                     "type": "boolean",
-                    "description": "Expands the isolated View host over Platform navigation without styling the dialog content."
+                    "default": false,
+                    "description": "Default is 960px wide and up to 560px high, constrained to the available viewport. Fullscreen uses 95% of the viewport with an outer inset and expands the isolated View host."
                 },
-                { "name": "children", "type": "ReactNode", "description": "Native dialog composition." }
+                { "name": "title", "type": "string", "description": "Required visible and accessible dialog title." },
+                { "name": "description", "type": "string", "description": "Optional accessible supporting text." },
+                {
+                    "name": "trigger",
+                    "type": "ReactElement",
+                    "description": "Optional opening button; its props and event handlers are preserved."
+                },
+                { "name": "children", "type": "ReactNode", "description": "Scrollable body content." },
+                { "name": "footer", "type": "ReactNode", "description": "Optional fixed footer actions." },
+                {
+                    "name": "dismissible",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the close button, Escape, and outside dismissal. Controlled open can still close the dialog."
+                }
             ]
         },
         {

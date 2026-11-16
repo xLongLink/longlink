@@ -794,16 +794,13 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     }
 });
 
-it('controls a native compound Dialog with public Buttons inside an authored View', async () => {
+it('controls an owned Dialog with public Buttons inside an authored View', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [open, setOpen] = useState(false);
         return <>
             <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
-                    <DialogTitle>Order details</DialogTitle>
+            <Dialog title="Order details" open={open} onOpenChange={setOpen}>
                 <p>Review the order</p>
-                </DialogContent>
             </Dialog>
         </>;
     }`);
@@ -836,14 +833,8 @@ it('controls a native compound Dialog with public Buttons inside an authored Vie
 it('updates scrolled viewport geometry through the admitted port and releases nested fullscreen state', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <div style={{height: 6000}}>
-            <Dialog defaultOpen>
-                <DialogContent>
-                    <DialogTitle>Order details</DialogTitle>
-                    <Dialog fullscreen>
-                        <DialogTrigger>Preview</DialogTrigger>
-                        <DialogContent><DialogTitle>Attachment</DialogTitle></DialogContent>
-                    </Dialog>
-                </DialogContent>
+            <Dialog title="Order details" defaultOpen>
+                <Dialog title="Attachment" fullscreen trigger={<Button>Preview</Button>} />
             </Dialog>
         </div>;
     }`);

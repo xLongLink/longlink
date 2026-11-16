@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/longlink/action/link';
-import { Dialog } from '@/components/custom/native-dialog';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {
@@ -58,11 +57,8 @@ export default function LinkPage() {
         sample-document.txt
       </Link>
       <Link onClick={() => setIsOpen(true)}>Document details</Link>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Document details</DialogTitle></DialogHeader>
+      <Dialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
           <Text>Document details opened without navigation.</Text>
-        </DialogContent>
       </Dialog>
     </Stack>
   );
@@ -81,13 +77,8 @@ export function LinkExample() {
         <Stack>
             <Link href="/docs/sdk/views">Docs</Link>
             <Link onClick={() => setIsOpen(true)}>Document details</Link>
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Document details</DialogTitle>
-                    </DialogHeader>
-                    <span>Document details opened without navigation.</span>
-                </DialogContent>
+            <Dialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
+                <span>Document details opened without navigation.</span>
             </Dialog>
         </Stack>
     );
