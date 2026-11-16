@@ -25,10 +25,10 @@ export default function List() {
             header: ({ column }) => <DataGridColumnHeader column={column} title="File" />,
             cell: ({ row }) => (
                 <Link href={`/assets/${row.original.filename}`} preview={row.original.filename}>
-                    <span className="inline-flex items-center gap-2">
+                    <Text className="inline-flex items-center gap-2">
                         <FileType type={row.original.type} size="xs" aria-hidden="true" />
                         {row.original.filename}
-                    </span>
+                    </Text>
                 </Link>
             )
         },
@@ -57,12 +57,11 @@ export default function List() {
                 recordCount={filtered.length}
                 tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
                 emptyMessage={
-                    <div className="flex flex-col items-center gap-3 py-10">
-                        <p>No files found</p>
+                    <Empty title="No files found">
                         <Button type="button" size="sm" variant="outline" onClick={() => setSearch('')}>
                             Clear search
                         </Button>
-                    </div>
+                    </Empty>
                 }
             >
                 <Frame variant="ghost" stacked dense spacing="sm" className="min-w-0">

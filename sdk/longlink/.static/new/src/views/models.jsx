@@ -27,12 +27,12 @@ export default function Models() {
                                 summary={`${analytics.geographySummary.countries} countries · ${new Intl.NumberFormat('en', { notation: 'compact' }).format(analytics.geographySummary.messages)} messages`}
                                 renderDetails={(country) => (
                                     <>
-                                        <p className="text-xs text-muted-foreground">
+                                        <Text className="block text-xs text-muted-foreground">
                                             {new Intl.NumberFormat('en', { notation: 'compact' }).format(
                                                 country.messages
                                             )}{' '}
                                             messages · {country.people.toLocaleString()} people
-                                        </p>
+                                        </Text>
                                         <Badge variant="info-light">Most used: {country.model}</Badge>
                                     </>
                                 )}

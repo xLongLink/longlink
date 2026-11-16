@@ -62,7 +62,9 @@ function TaskForm({ onSuccess, onCancel }) {
                         </Button>
                         <Button type="submit">Create task</Button>
                     </Stack>
-                    {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
+                    {form.formState.errors.root?.message && (
+                        <Text role="alert">{form.formState.errors.root.message}</Text>
+                    )}
                 </Stack>
             </fieldset>
         </form>
