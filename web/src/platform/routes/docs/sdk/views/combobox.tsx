@@ -1,5 +1,5 @@
+import { Combobox } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Combobox } from '@/views/adapter/form/combobox';
 
 /** Shows searchable labels with stable submitted values. */
 export function ComboboxExample() {

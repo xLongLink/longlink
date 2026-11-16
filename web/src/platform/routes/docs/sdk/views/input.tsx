@@ -1,4 +1,4 @@
-import { Input } from '@/views/adapter/form/input';
+import { Input } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
 
 /** Shows a native text input with control-owned labeling and feedback. */

@@ -2,8 +2,8 @@
 import * as React from 'react';
 import { transform } from 'sucrase';
 import { it, expect } from 'vitest';
+import * as components from '@/views';
 import { withMounted } from '../../render';
-import * as components from '@/views/adapter';
 import { ReportedError } from '@/lib/reported';
 import userEvent from '@testing-library/user-event';
 import { FormRequestContext } from '@/components/custom/contexts';

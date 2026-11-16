@@ -1,5 +1,5 @@
+import { RadioGroup } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { RadioGroup } from '@/views/adapter/form/radio-group';
 
 /** Shows independently labeled radio options inside a named group. */
 export function RadioGroupExample() {

@@ -375,22 +375,21 @@ it('keeps a draft in a retained authored Tab while selecting another panel', asy
     }
 });
 
-it('ignores authored styling overrides while preserving composed controls and form updates', async () => {
+it('preserves composed controls and form updates through authored JSX', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [name, setName] = useState('Draft');
         const [saved, setSaved] = useState('');
-        const overrides = { className: 'authored-override', style: { color: 'red', padding: 100 } };
-        return <Card {...overrides}>
-            <Input {...overrides} id="order-name" aria-label="Order name"
+        return <Card>
+            <Input id="order-name" aria-label="Order name"
                 value={name} onChange={(event) => setName(event.target.value)} />
-            <Button {...overrides} variant="outline" size="sm" onClick={() => setSaved(name)}>
+            <Button variant="outline" size="sm" onClick={() => setSaved(name)}>
                 Save order
             </Button>
             <Dropdown>
-                <DropdownTrigger render={<Button {...overrides} variant="outline" />}>
+                <DropdownTrigger render={<Button variant="outline" />}>
                     Actions
                 </DropdownTrigger>
-                <DropdownContent {...overrides}>
+                <DropdownContent>
                     <DropdownItem onClick={() => setSaved('Archived')}>Archive</DropdownItem>
                 </DropdownContent>
             </Dropdown>
@@ -409,10 +408,6 @@ it('ignores authored styling overrides while preserving composed controls and fo
         const actions = runtime.mount.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
 
         if (!input || !save || !actions) throw new Error('Expected editable order controls');
-        expect(runtime.mount.querySelector('.authored-override')).toBeNull();
-        expect(runtime.mount.querySelector('[style*="red"]')).toBeNull();
-        expect(input.className).not.toBe('');
-        expect(save.className).not.toBe('');
 
         const user = userEvent.setup();
         await user.clear(input);
@@ -424,8 +419,6 @@ it('ignores authored styling overrides while preserving composed controls and fo
         const archive = document.querySelector<HTMLElement>('[role="menuitem"]');
 
         if (!archive) throw new Error('Expected archive action');
-        expect(document.querySelector('.authored-override')).toBeNull();
-        expect(archive.closest('[role="menu"]')?.getAttribute('style')).not.toContain('red');
         await user.click(archive);
         await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Archived'));
     } finally {
@@ -433,40 +426,34 @@ it('ignores authored styling overrides while preserving composed controls and fo
     }
 });
 
-it('ignores grid slot and column styling without losing native sorting or mutating column definitions', async () => {
+it('sorts authored grid results and reports row actions', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         const [selected, setSelected] = useState('');
         const columns = useMemo(() => [{
             header: 'Orders',
-            meta: { headerClassName: 'authored-group' },
             columns: [{
                 accessorKey: 'name',
-                header: ({ column }) => <DataGridColumnHeader column={column} title="Order" className="authored-header" />,
-                meta: { headerClassName: 'authored-column', cellClassName: 'authored-cell' }
+                header: ({ column }) => <DataGridColumnHeader column={column} title="Order" />
             }]
         }], []);
         const table = useTable({
             features: dataGridFeatures,
             data: [{ name: 'Zebra' }, { name: 'Alpha' }],
-            columns,
-            defaultColumn: { meta: { cellClassName: 'authored-default' } }
+            columns
         });
         return <>
-            <DataGrid table={table} recordCount={2} className="authored-root"
-                tableClassNames={{ body: 'authored-body', bodyRow: 'authored-row' }}
+            <DataGrid table={table} recordCount={2}
                 onRowClick={(row) => setSelected(row.name)}>
-                <DataGridContainer className="authored-container">
+                <DataGridContainer>
                     <DataGridTable />
                 </DataGridContainer>
             </DataGrid>
             <output>{selected}</output>
-            <output data-original>{columns[0].columns[0].meta.cellClassName}</output>
         </>;
     }`);
 
     try {
         await vi.waitFor(() => expect(runtime.mount.querySelector('tbody tr')?.textContent).toBe('Zebra'));
-        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
         const sort = runtime.mount.querySelector<HTMLButtonElement>('thead button');
 
         if (!sort) throw new Error('Expected order sorting control');
@@ -478,8 +465,6 @@ it('ignores grid slot and column styling without losing native sorting or mutati
         if (!first) throw new Error('Expected sorted order');
         await user.click(first);
         await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Alpha'));
-        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
-        expect(runtime.mount.querySelector('[data-original]')?.textContent).toBe('authored-cell');
     } finally {
         runtime.close();
     }
@@ -491,11 +476,6 @@ it('returns native Calendar ranges to authored state without selecting disabled 
         const [range, setRange] = useState(undefined);
         return <>
             <Calendar mode="range" defaultMonth={new Date(2026, 0, 1)}
-                classNames={{ root: 'authored-calendar' }}
-                styles={{ root: { color: 'red' } }}
-                modifiersClassNames={{ selected: 'authored-selected' }}
-                modifiersStyles={{ selected: { background: 'red' } }}
-                components={{ DayButton: () => <button>Replacement day</button> }}
                 selected={range} onSelect={setRange} disabled={new Date(2026, 0, 12)} />
             <output>{range?.from?.getDate() ?? '-'}:{range?.to?.getDate() ?? '-'}</output>
         </>;
@@ -521,9 +501,6 @@ it('returns native Calendar ranges to authored state without selecting disabled 
         await user.click(end);
         await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('10:14'));
         expect(runtime.mount.querySelector('button[data-range-middle="true"]')).not.toBeNull();
-        expect(runtime.mount.querySelector('[class*="authored-"]')).toBeNull();
-        expect(runtime.mount.querySelector('[style*="red"]')).toBeNull();
-        expect(runtime.mount.textContent).not.toContain('Replacement day');
     } finally {
         runtime.close();
     }

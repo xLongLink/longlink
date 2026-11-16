@@ -1,5 +1,5 @@
+import { Switch } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Switch } from '@/views/adapter/form/switch';
 
 /** Shows a labeled boolean preference. */
 export function SwitchExample() {

@@ -3,11 +3,8 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { Select } from '@/views/adapter/form/select';
-import { Slider } from '@/views/adapter/form/slider';
 import { Controller, useForm } from 'react-hook-form';
-import { Combobox } from '@/views/adapter/form/combobox';
-import { RadioGroup } from '@/views/adapter/form/radio-group';
+import { Select, Slider, Combobox, RadioGroup } from '@/components/longlink';
 
 it.each([Select, Combobox, RadioGroup])(
     'focuses the owned control when form validation rejects an empty selection',

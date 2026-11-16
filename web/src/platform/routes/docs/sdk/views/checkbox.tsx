@@ -1,5 +1,5 @@
+import { Checkbox } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Checkbox } from '@/views/adapter/form/checkbox';
 
 /** Shows a checkbox whose visible label activates the control. */
 export function CheckboxExample() {

@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { ChartLegend } from '@/views/adapter/charts/chart';
+import { ChartLegend } from '@/components/longlink';
 import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Shows standalone legends for series and segment charts without chart context. */

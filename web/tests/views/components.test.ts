@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import * as components from '@/views/adapter';
+import * as components from '@/views';
 import { Card } from '@/components/longlink/layout/card';
 
 it('exposes one Card API without separate compound parts or an interactive variant', () => {

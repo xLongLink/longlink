@@ -1,5 +1,5 @@
+import { Textarea } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Textarea } from '@/views/adapter/form/textarea';
 
 /** Shows an uncontrolled textarea with an associated label. */
 export function TextareaExample() {

@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import * as React from 'react';
 import { transform } from 'sucrase';
+import * as components from './index';
 import { CircleX } from 'lucide-react';
-import * as components from './adapter';
 import { createRoot } from 'react-dom/client';
 import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
-import { createViewElement } from './adapter/runtime/element';
 import { FileRequestContext } from '@/components/custom/preview';
 import { FileViewerContext } from '@/components/custom/file-context';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
@@ -362,7 +361,7 @@ function initialize(event: MessageEvent<unknown>): void {
 
         const bindings = {
             // Keep JSX compilation separate from the public View API.
-            __jsx: createViewElement(components),
+            __jsx: React.createElement,
             ...components,
             request,
             navigate

@@ -1,5 +1,5 @@
+import { Select } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Select } from '@/views/adapter/form/select';
 
 /** Shows labeled options rather than public popup composition. */
 export function SelectExample() {

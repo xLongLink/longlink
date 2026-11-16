@@ -1,6 +1,5 @@
-import { Card } from '@/views/adapter/layouts/card';
+import * as charts from '@/components/longlink';
 import { Box } from '@/components/longlink/layout/box';
-import * as charts from '@/views/adapter/charts/chart';
 
 export type ChartName =
     | 'AreaChart'
@@ -107,7 +106,7 @@ export function ChartExample({
 
     return (
         <Box width="100%">
-            <Card
+            <charts.Card
                 footer={
                     name === 'PieChart' || name === 'RadialBarChart' ? (
                         <charts.ChartLegend data={data} nameKey="month" />
@@ -117,7 +116,7 @@ export function ChartExample({
                 }
             >
                 {chart}
-            </Card>
+            </charts.Card>
         </Box>
     );
 }

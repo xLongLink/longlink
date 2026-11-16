@@ -2,10 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { Card } from '@/views/adapter/layouts/card';
 import userEvent from '@testing-library/user-event';
 import { Box } from '@/components/longlink/layout/box';
-import { ChartLegend } from '@/views/adapter/charts/chart';
+import { Card, ChartLegend } from '@/components/longlink';
 import { BarChart } from '@/components/longlink/charts/bar';
 import { PieChart } from '@/components/longlink/charts/pie';
 import { Sankey } from '@/components/longlink/charts/sankey';

@@ -15,7 +15,7 @@ import {
     DataGridTableRowSelectAll,
     dataGridFeatures,
     type DataGridFeatures
-} from '@/views/adapter/display/data-grid';
+} from '@/components/longlink';
 
 type Shipment = { id: string; name: string; price: number };
 

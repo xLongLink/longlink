@@ -2,9 +2,9 @@ import { act } from 'react';
 // @vitest-environment happy-dom
 import * as React from 'react';
 import { transform } from 'sucrase';
+import * as components from '@/views';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
-import * as components from '@/views/adapter';
 import userEvent from '@testing-library/user-event';
 import { traceFlow } from '@/components/custom/flow';
 import { UsageChart } from '@/components/custom/analytics';

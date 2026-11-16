@@ -1,5 +1,5 @@
+import { Slider } from '@/components/longlink';
 import FormDocumentation from './form-documentation';
-import { Slider } from '@/views/adapter/form/slider';
 
 /** Shows a scalar slider with one native form value and associated feedback. */
 export function SliderExample() {
