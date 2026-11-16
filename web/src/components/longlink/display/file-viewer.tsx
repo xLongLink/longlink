@@ -1,8 +1,8 @@
-import { NativeFile } from './native-file';
-import { FileRequestContext } from './preview';
-import { FileViewerContext } from './file-context';
 import { Spinner } from '@/components/shadcn/spinner';
+import { NativeFile } from '@/components/custom/native-file';
 import { useContext, useEffect, useRef, useState } from 'react';
+import { FileRequestContext } from '@/components/custom/preview';
+import { FileViewerContext } from '@/components/custom/file-context';
 
 /** Displays supported attachments immediately using native browser media controls. */
 export function FileViewer({

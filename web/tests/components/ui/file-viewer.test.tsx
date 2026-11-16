@@ -2,8 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { FileViewer } from '@/components/custom/file-viewer';
 import { FileRequestContext } from '@/components/custom/preview';
+import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 it('displays an image immediately without custom preview or download actions', async () => {
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');

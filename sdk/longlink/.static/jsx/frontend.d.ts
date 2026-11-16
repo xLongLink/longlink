@@ -7378,6 +7378,10 @@ function Maps(props: {
     height?: number | string;
     fit?: "contain" | "cover";
 }): React$1.JSX.Element;
+function FileViewer({ src, title }: {
+    src: string;
+    title: string;
+}): React$1.JSX.Element;
 type StepProps = {
     label: string;
     fields?: string[];
@@ -11970,10 +11974,6 @@ function PaginationNext({ className, text, ...props }: React$1.ComponentProps<ty
     text?: string;
 }): React$1.JSX.Element;
 function PaginationEllipsis({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-function FileViewer({ src, title }: {
-    src: string;
-    title: string;
-}): React$1.JSX.Element;
 interface Data {
 }
 interface Point {

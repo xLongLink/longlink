@@ -1,7 +1,7 @@
 import * as host from '@/views/host';
 import ViewLayout from './view-layout';
-import { FileViewer } from '@/components/custom/file-viewer';
 import { FileRequestContext } from '@/components/custom/preview';
+import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 /** Documents inline file previews through the scoped Solution API. */
 export default function FileViewerPage() {
