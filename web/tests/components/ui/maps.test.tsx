@@ -1,21 +1,22 @@
+// @vitest-environment happy-dom
+import { act } from 'react';
 import * as React from 'react';
 import { transform } from 'sucrase';
 import * as components from '@/views';
-// @vitest-environment happy-dom
-import { act, useState } from 'react';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
-import { CountryMap } from '@/components/custom/country-map';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
+import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import atlas from '../../../../sdk/longlink/.static/new/src/assets/world.json';
-import { CountryChart, type CountryUsage } from '@/components/custom/country-chart';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
-import { prepareMap, type MapData, type MapFeatures } from '@/components/custom/map-data';
 import analyticsFixture from '../../../../sdk/longlink/.static/new/src/assets/analytics.json';
 
 type Layer = { id: string; type: string; source: string; paint: Record<string, unknown> };
-type Source = { data: MapFeatures; setData: (data: MapFeatures) => Promise<void> };
+type Source = {
+    data: FeatureCollection<Polygon, { name: string }>;
+    setData: (data: FeatureCollection<Polygon, { name: string }>) => Promise<void>;
+};
 type Listener = (event?: unknown) => void;
 type Engine = {
     removed: boolean;
@@ -68,7 +69,7 @@ vi.mock('maplibre-gl', () => ({
         fire(event: string, layer?: string, value?: unknown) {
             for (const listener of this.listeners.get(layer ? `${event}:${layer}` : event) ?? []) listener(value);
         }
-        addSource(id: string, options: { data: MapFeatures }) {
+        addSource(id: string, options: { data: Source['data'] }) {
             const source: Source = {
                 data: options.data,
                 setData: async (data) => {
@@ -129,11 +130,11 @@ beforeEach(() => {
     engines.failNext = false;
 });
 
-const countries: CountryUsage[] = [
+const countries = [
     { id: '12', name: 'West', flag: '🇺🇸', share: 60, center: [-10, 10], zoom: 2 },
     { id: 'east', name: 'East', flag: '🇯🇵', share: 40, center: [30, 10], zoom: 2 }
 ];
-const geography: MapData = {
+const geography: Source['data'] = {
     type: 'FeatureCollection',
     features: [
         {
@@ -218,100 +219,6 @@ function opacity(map: Engine, id: string) {
     return value;
 }
 
-it('draws country fills once and selects only ranked countries by stable feature IDs', async () => {
-    function Regions() {
-        const [selectedId, setSelectedId] = useState('east');
-        return (
-            <>
-                <CountryMap
-                    label="Country usage"
-                    countries={countries}
-                    geography={geography}
-                    selected={countries.find((country) => country.id === selectedId)}
-                    onSelect={setSelectedId}
-                />
-                <output>{selectedId}</output>
-            </>
-        );
-    }
-
-    await withMounted(<Regions />, async (output) => {
-        const map = await loadMap();
-        const layer = selectionLayer(map);
-        const source = map.sources.get(layer.source);
-        if (!source) throw new Error('Expected country source');
-        const other = [...map.sources.values()]
-            .flatMap((source) => source.data.features)
-            .find((feature) => feature.id === 'other');
-        if (!other) throw new Error('Expected an unranked country boundary');
-        const fills = [...map.layers.values()]
-            .filter((layer) => layer.type === 'fill')
-            .flatMap((layer) => map.sources.get(layer.source)?.data.features ?? []);
-
-        // Duplicate fills compound opacity and introduce competing tile-clipping passes.
-        for (const feature of source.data.features) {
-            expect(fills.filter((fill) => fill.id === feature.id)).toHaveLength(1);
-        }
-        expect(fills).toContain(other);
-        await act(async () =>
-            map.fire('click', layer.id, { features: [source.data.features[0]], lngLat: { lng: -10, lat: 10 } })
-        );
-        expect(output.querySelector('output')?.textContent).toBe('12');
-        expect(opacity(map, '12')).toBeGreaterThan(opacity(map, 'east'));
-        await act(async () => map.fire('click', layer.id, { features: [other], lngLat: { lng: 50, lat: 10 } }));
-        expect(output.querySelector('output')?.textContent).toBe('12');
-    });
-});
-
-it('keeps country details, highlights, and map focus together when selection or results change', async () => {
-    const user = userEvent.setup();
-    function Results() {
-        const [visible, setVisible] = useState(countries);
-        return (
-            <>
-                <button type="button" onClick={() => setVisible([countries[0]])}>
-                    Refresh countries
-                </button>
-                <CountryChart countries={visible} geography={geography} title="Countries" label="Country usage" />
-            </>
-        );
-    }
-
-    await withMounted(<Results />, async (output) => {
-        const map = await loadMap();
-        const previousEast = map.sources
-            .get(selectionLayer(map).source)
-            ?.data.features.find((feature) => feature.id === 'east');
-        if (!previousEast) throw new Error('Expected the previously ranked country');
-        const east = [...output.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find((button) =>
-            button.textContent?.includes('East')
-        );
-        const next = output.querySelector<HTMLButtonElement>('[aria-label="Next country"]');
-        const refresh = [...output.querySelectorAll('button')].find(
-            (button) => button.textContent === 'Refresh countries'
-        );
-        if (!east || !next || !refresh) throw new Error('Expected country controls');
-        expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
-        await act(async () => user.hover(east));
-        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
-        expect(east.getAttribute('aria-pressed')).toBe('true');
-        expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
-        expect(map.getCenter()).toEqual({ lng: 30, lat: 10 });
-        await act(async () => user.click(next));
-        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
-        expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
-        await act(async () => east.focus());
-        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
-        await act(async () => user.click(refresh));
-        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
-        expect(map.getCenter()).toEqual({ lng: -10, lat: 10 });
-        const layer = selectionLayer(map);
-        expect(opacity(map, '12')).toBeGreaterThan(opacity(map, 'east'));
-        await act(async () => map.fire('click', layer.id, { features: [previousEast], lngLat: { lng: 30, lat: 10 } }));
-        expect(output.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
-    });
-});
-
 it('coordinates the composed starter country panel and recovers its map without losing selection', async () => {
     const analytics = {
         ...analyticsFixture,
@@ -394,12 +301,11 @@ it('coordinates the composed starter country panel and recovers its map without 
 });
 
 it('keeps bundled country boundaries from stretching across the map at the date line', () => {
-    const result = prepareMap(atlas as MapData);
-    if (result.status !== 'ready') throw new Error('Expected valid country boundaries');
-    expect(result.data.features.length).toBeGreaterThan(0);
+    const boundaries = atlas as FeatureCollection<Polygon | MultiPolygon>;
+    expect(boundaries.features.length).toBeGreaterThan(0);
 
     // Planar renderers require date-line splits; only a pole connector can span the world.
-    for (const feature of result.data.features) {
+    for (const feature of boundaries.features) {
         const geometry = feature.geometry;
         if (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon') throw new Error('Expected polygons');
         const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
@@ -418,74 +324,4 @@ it('keeps bundled country boundaries from stretching across the map at the date 
             }
         }
     }
-});
-
-it('chooses the requested topology layer and rejects missing layers or broken arcs', () => {
-    const topology: MapData = {
-        type: 'Topology',
-        objects: {
-            districts: {
-                type: 'GeometryCollection',
-                geometries: [{ type: 'Polygon', id: 'district', arcs: [[0]], properties: { name: 'District' } }]
-            },
-            regions: {
-                type: 'GeometryCollection',
-                geometries: [{ type: 'Polygon', id: 'region', arcs: [[0]], properties: { name: 'Region' } }]
-            },
-            broken: { type: 'Polygon', arcs: [[4]] }
-        },
-        arcs: [
-            [
-                [0, 0],
-                [0, 10],
-                [10, 10],
-                [10, 0],
-                [0, 0]
-            ]
-        ]
-    };
-    const selected = prepareMap(topology, 'regions');
-    const first = prepareMap(topology);
-    if (selected.status !== 'ready' || first.status !== 'ready') throw new Error('Expected valid map data');
-    expect(selected.data.features.map((feature) => feature.id)).toEqual(['region']);
-    expect(first.data.features.map((feature) => feature.id)).toEqual(['district']);
-    expect(prepareMap(topology, 'missing').status).toBe('invalid');
-    expect(prepareMap(topology, 'broken').status).toBe('invalid');
-});
-
-it('releases stale boundaries for empty results and recovers on the next result', async () => {
-    const user = userEvent.setup();
-    function Results() {
-        const [empty, setEmpty] = useState(false);
-        return (
-            <>
-                <button type="button" onClick={() => setEmpty(!empty)}>
-                    Toggle results
-                </button>
-                <CountryMap
-                    countries={countries}
-                    geography={empty ? { type: 'FeatureCollection', features: [] } : geography}
-                    selected={countries[0]}
-                    label="Country usage"
-                    onSelect={() => {}}
-                />
-            </>
-        );
-    }
-
-    await withMounted(<Results />, async (output) => {
-        const map = await loadMap();
-        const toggle = output.querySelector('button');
-        if (!toggle) throw new Error('Expected result toggle');
-        expect(map.sources.size).toBeGreaterThan(0);
-        await act(async () => user.click(toggle));
-        expect(output.textContent).toContain('No map data');
-        expect(map.removed).toBe(true);
-        expect(map.sources.size).toBe(0);
-        await act(async () => user.click(toggle));
-        const recovered = await loadMap();
-        expect(recovered).not.toBe(map);
-        expect(output.textContent).not.toContain('No map data');
-        expect(recovered.sources.size).toBeGreaterThan(0);
-    });
 });

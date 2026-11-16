@@ -36725,29 +36725,6 @@ export type ChartConfig = Record<string, {
     color?: never;
     theme: Record<"light" | "dark", string>;
 })>;
-type MapData = string | number | boolean | null | MapData[] | {
-    [key: string]: MapData;
-};
-type CountryUsage = {
-    id: string;
-    name: string;
-    flag: string;
-    share: number;
-    center: [
-        number,
-        number
-    ];
-    zoom?: number;
-};
-export function CountryChart<T extends CountryUsage>({ countries, geography, summary, title, description, label, renderDetails }: {
-    countries: T[];
-    geography: MapData;
-    summary?: React$1.ReactNode;
-    title: React$1.ReactNode;
-    description?: React$1.ReactNode;
-    label: string;
-    renderDetails?: (country: T) => React$1.ReactNode;
-}): React$1.JSX.Element;
 interface DataGridI18nLabels {
     sortAscending: string;
     sortDescending: string;
@@ -42418,7 +42395,6 @@ declare const ClusterMap: typeof NativeFrontend.ClusterMap;
 import ColumnDef = NativeFrontend.ColumnDef;
 declare const Combobox: typeof NativeFrontend.Combobox;
 declare const Controller: typeof NativeFrontend.Controller;
-declare const CountryChart: typeof NativeFrontend.CountryChart;
 declare const Currency: typeof NativeFrontend.Currency;
 declare const DataGrid: typeof NativeFrontend.DataGrid;
 declare const DataGridColumnHeader: typeof NativeFrontend.DataGridColumnHeader;

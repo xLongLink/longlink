@@ -1,36 +1,6 @@
 {
     "components": [
         {
-            "name": "CountryChart",
-            "category": "Charts",
-            "source": "custom",
-            "justification": "Synchronizes mapcn country boundaries, camera focus, and a keyboard-selectable country leaderboard inside a shadcn Card.",
-            "introduction": "Country usage leaderboard and selectable World Atlas boundary map.",
-            "properties": [
-                {
-                    "name": "countries",
-                    "type": "CountryUsage[]",
-                    "description": "ID, name, flag, share, geographic center, and optional MapLibre zoom level for each leaderboard row. Additional caller-owned fields are retained for renderDetails."
-                },
-                {
-                    "name": "geography",
-                    "type": "GeoJSON | TopoJSON",
-                    "description": "Parsed local polygon boundaries with matching country IDs."
-                },
-                {
-                    "name": "title / description / summary",
-                    "type": "ReactNode",
-                    "description": "Caller-owned heading, optional description, and optional summary."
-                },
-                { "name": "label", "type": "string", "description": "Accessible label for the boundary map." },
-                {
-                    "name": "renderDetails",
-                    "type": "(country: T) => ReactNode",
-                    "description": "Optional application-specific details for the selected country."
-                }
-            ]
-        },
-        {
             "name": "DataGrid",
             "category": "Display",
             "source": "reui",

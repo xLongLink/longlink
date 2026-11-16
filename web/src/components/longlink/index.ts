@@ -126,7 +126,6 @@ export type {
 } from './maps/types';
 export type { ChartSeries, SankeyNode, SankeyLink } from './charts/types';
 export type { ChartConfig } from '@/components/shadcn/chart';
-export { CountryChart } from '@/components/custom/country-chart';
 
 export {
     useTable,
