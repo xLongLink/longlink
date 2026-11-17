@@ -192,7 +192,6 @@ describe('DeploymentReview', () => {
                                 path="/orgs/:organization"
                                 element={
                                     <DeploymentReview
-                                        open
                                         item={{ id: solutionId, name: 'Sample' }}
                                         onSuccess={onSuccess}
                                         onOpenChange={() => {}}

@@ -297,8 +297,6 @@ type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 /** Every type the table knows. Any other string renders as a neutral file. */
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 
-const FILE_TYPE_EXTENSION_NAMES = Object.keys(FILE_TYPE_EXTENSIONS) as FileTypeExtensionName[];
-
 /* -------------------------------------------------------------------------- */
 /*                                 Resolution                                 */
 /* -------------------------------------------------------------------------- */
@@ -344,263 +342,6 @@ function resolveFileType(type?: string): ResolvedFileType {
     }
 
     return { type: key, category: 'file', label: key.toUpperCase(), color: CATEGORY_COLORS.file };
-}
-
-/**
- * MIME types whose subtype does not name the extension. Anything else under
- * image/, video/, audio/ or font/ falls back to its family.
- */
-const MIME_TYPES: Record<string, FileTypeName> = {
-    'application/pdf': 'pdf',
-    'application/msword': 'doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-    'application/vnd.oasis.opendocument.text': 'odt',
-    'application/rtf': 'rtf',
-    'application/vnd.ms-excel': 'xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-    'application/vnd.oasis.opendocument.spreadsheet': 'ods',
-    'application/vnd.ms-powerpoint': 'ppt',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
-    'application/vnd.oasis.opendocument.presentation': 'odp',
-    'application/vnd.ms-excel.sheet.macroenabled.12': 'xlsm',
-    'application/vnd.apple.keynote': 'key',
-    'application/zip': 'zip',
-    'application/x-zip-compressed': 'zip',
-    'application/vnd.rar': 'rar',
-    'application/x-rar-compressed': 'rar',
-    'application/x-7z-compressed': '7z',
-    'application/x-tar': 'tar',
-    'application/gzip': 'gz',
-    'application/x-gzip': 'gz',
-    'application/x-bzip2': 'bz2',
-    'application/json': 'json',
-    'application/xml': 'xml',
-    'application/yaml': 'yaml',
-    'application/x-yaml': 'yaml',
-    'application/rss+xml': 'rss',
-    'application/javascript': 'js',
-    'application/x-httpd-php': 'php',
-    'application/x-sh': 'sh',
-    'application/x-msdownload': 'exe',
-    'application/x-msi': 'msi',
-    'application/vnd.android.package-archive': 'apk',
-    'application/vnd.debian.binary-package': 'deb',
-    'application/x-apple-diskimage': 'dmg',
-    'application/x-iso9660-image': 'iso',
-    'application/x-font-ttf': 'ttf',
-    'application/font-woff': 'woff',
-    'application/postscript': 'eps',
-    'application/vnd.adobe.photoshop': 'psd',
-    'image/vnd.adobe.photoshop': 'psd',
-    'image/jpeg': 'jpg',
-    'image/svg+xml': 'svg',
-    'image/x-icon': 'ico',
-    'image/vnd.microsoft.icon': 'ico',
-    'video/quicktime': 'mov',
-    'video/x-msvideo': 'avi',
-    'video/x-matroska': 'mkv',
-    'audio/mpeg': 'mp3',
-    'audio/wav': 'wav',
-    'audio/x-wav': 'wav',
-    'audio/mp4': 'm4a',
-    'audio/x-m4a': 'm4a',
-    'audio/x-flac': 'flac',
-    'audio/x-aiff': 'aiff',
-    'video/x-ms-wmv': 'wmv',
-    'text/plain': 'txt',
-    'text/markdown': 'md',
-    'text/x-markdown': 'md',
-    'text/x-python': 'py',
-    'text/x-c': 'c',
-    'text/yaml': 'yaml',
-    'text/csv': 'csv',
-    'text/tab-separated-values': 'tsv',
-    'text/html': 'html',
-    'text/css': 'css',
-    'text/javascript': 'js',
-    'text/xml': 'xml',
-    'application/node': 'cjs',
-    'application/java-archive': 'jar',
-    'application/x-ipynb+json': 'ipynb',
-    'application/x-ndjson': 'ndjson',
-    'application/vnd.sqlite3': 'sqlite',
-    'application/x-sqlite3': 'sqlite',
-    'application/vnd.apple.mpegurl': 'm3u8',
-    'application/x-mpegurl': 'm3u8',
-    'application/x-subrip': 'srt',
-    'message/rfc822': 'eml',
-    'application/x-rpm': 'rpm',
-    'application/x-pem-file': 'pem',
-    'application/x-x509-ca-cert': 'crt',
-    'application/pkix-cert': 'crt',
-    'application/zstd': 'zst',
-    'application/x-xz': 'xz',
-    'text/x-c++src': 'cpp',
-    'text/x-c++hdr': 'hpp',
-    'text/x-kotlin': 'kt',
-    'text/x-swift': 'swift',
-    'text/x-rsrc': 'r',
-    'text/x-lua': 'lua',
-    'text/x-scala': 'scala',
-    'text/x-diff': 'diff',
-    'text/x-patch': 'patch',
-    'text/x-makefile': 'makefile'
-};
-
-/**
- * Names that carry their type with no extension of their own, or with one
- * that names something else ("go.mod" is not a tracker module).
- */
-const FILE_NAMES: Record<string, FileTypeName> = {
-    containerfile: 'dockerfile',
-    gnumakefile: 'makefile',
-    '.dev.vars': 'env',
-    '.gitignore': 'git',
-    '.gitattributes': 'git',
-    '.gitmodules': 'git',
-    '.gitkeep': 'git',
-    '.gitconfig': 'git',
-    '.git-blame-ignore-revs': 'git',
-    '.mailmap': 'git',
-    'bun.lockb': 'lock',
-    'go.sum': 'lock',
-    'go.mod': 'go',
-    'go.work': 'go',
-    gemfile: 'rb',
-    rakefile: 'rb',
-    brewfile: 'rb',
-    podfile: 'rb',
-    vagrantfile: 'rb',
-    fastfile: 'rb',
-    '.bashrc': 'bash',
-    '.bash_profile': 'bash',
-    '.bash_aliases': 'bash',
-    '.bash_logout': 'bash',
-    '.zshrc': 'zsh',
-    '.zprofile': 'zsh',
-    '.zshenv': 'zsh',
-    '.zlogin': 'zsh',
-    '.envrc': 'sh',
-    '.profile': 'sh',
-    '.editorconfig': 'ini',
-    '.npmrc': 'ini',
-    '.pypirc': 'ini',
-    '.flake8': 'ini',
-    '.pylintrc': 'ini',
-    '.coveragerc': 'ini',
-    caddyfile: 'conf',
-    '.htaccess': 'conf',
-    '.babelrc': 'json',
-    '.swcrc': 'json',
-    '.cursorrules': 'md',
-    readme: 'txt',
-    license: 'txt',
-    licence: 'txt',
-    changelog: 'txt',
-    codeowners: 'txt',
-    '.nvmrc': 'txt',
-    '.node-version': 'txt',
-    '.python-version': 'txt',
-    '.ruby-version': 'txt',
-    '.tool-versions': 'txt',
-    '.terraform-version': 'txt'
-};
-
-/** Other extensions of a known type. */
-const EXTENSION_ALIASES: Record<string, FileTypeName> = {
-    cer: 'crt',
-    mak: 'makefile',
-    mk: 'makefile',
-    sqlite3: 'sqlite'
-};
-
-/**
- * Name families, read only when the name does not end in a known extension:
- * ".env.local" is an env file and "Dockerfile.dev" a Dockerfile, while
- * "Dockerfile.md" is Markdown.
- */
-const NAME_PATTERNS: [RegExp, FileTypeName][] = [
-    [/^\.env\./, 'env'],
-    [/^(docker|container)file\./, 'dockerfile'],
-    [/^\.[\w-]+ignore$/, 'ignore']
-];
-
-const MIME_FAMILIES: Record<string, FileTypeName> = {
-    image: 'image',
-    video: 'video',
-    audio: 'audio',
-    font: 'font',
-    text: 'txt'
-};
-
-const MIME_PATTERN = /^(application|audio|font|image|message|model|multipart|text|video)\/[\w.+-]+$/;
-const URL_ORIGIN = /^[a-z][\w+.-]*:\/\/[^/]*/;
-/**
- * A value ending in an extension or a slash carries no query or hash. An
- * extension has a letter, so "?v=1.2" is still a query.
- */
-const NAME_END = /(\.\d*[a-z][a-z\d]*|[\\/])$/;
-
-/**
- * Resolves a file name, path, URL, bare extension or MIME type to a `type`.
- * A path ending in a slash is a folder; a well-known name resolves to its
- * type (Dockerfile, .env.local, go.mod, LICENSE); any other name without an
- * extension is an empty file; an unknown extension is returned as is and
- * renders neutral.
- */
-function getFileType(value: string): FileTypeName | (string & {}) {
-    let input = value.trim().toLowerCase();
-
-    // A URL is read by its path, so a bare host is not a ".com" file. A "?" or
-    // "#" can be part of a plain name ("invoice #12.pdf"), so outside a URL it
-    // starts a query only when the value does not already end like a name.
-    if (URL_ORIGIN.test(input)) {
-        input = input.split(/[?#]/)[0].replace(URL_ORIGIN, '');
-        if (input === '/') return 'empty';
-    } else if (!NAME_END.test(input)) {
-        input = input.split(/[?#]/)[0];
-    }
-    if (!input) return 'empty';
-    if (input.endsWith('/') || input.endsWith('\\')) return 'folder';
-
-    const mime = input.split(';')[0].trim();
-    if (MIME_PATTERN.test(mime)) {
-        if (has(MIME_TYPES, mime)) return MIME_TYPES[mime];
-        const [family, subtype] = mime.split('/');
-        // A known extension after a dot makes it a storage key ("image/a.png").
-        const tail = subtype.slice(subtype.lastIndexOf('.') + 1);
-        if (subtype.includes('.') && has(extensions, tail)) return tail;
-        // A media subtype counts only inside its own family: audio/webm is audio.
-        if (
-            has(extensions, subtype) &&
-            (family === 'application' || family === 'text' || extensions[subtype].category === family)
-        ) {
-            return subtype;
-        }
-        return has(MIME_FAMILIES, family) ? MIME_FAMILIES[family] : 'empty';
-    }
-
-    const name = input.split(/[\\/]/).pop() ?? '';
-    if (has(FILE_NAMES, name)) return FILE_NAMES[name];
-    const dot = name.lastIndexOf('.');
-    const extension = name.slice(dot + 1);
-    if (has(EXTENSION_ALIASES, extension)) return EXTENSION_ALIASES[extension];
-    if (!has(extensions, extension)) {
-        const match = NAME_PATTERNS.find(([pattern]) => pattern.test(name));
-        if (match) return match[1];
-    }
-    // No dot, or only a leading one: a bare extension or family ("pdf",
-    // ".pdf", "image") resolves, anything else ("notes", ".hidden") has no type.
-    if (dot <= 0) {
-        return resolveFileType(extension).category === 'file' ? 'empty' : extension;
-    }
-
-    return extension || 'empty';
-}
-
-/** The family of any `type`, for grouping or filtering a file list. */
-function getFileTypeCategory(type?: string): FileTypeCategory {
-    return resolveFileType(type).category;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -829,7 +570,6 @@ type FileTypeProps = Omit<ComponentProps<'span'>, 'children' | 'className' | 'st
     /**
      * An extension (`"pdf"`, `".docx"`), a family (`"image"`, `"folder"`) or
      * `"empty"`. Unknown extensions render as a neutral file with their label.
-     * Use `getFileType` to resolve a file name or MIME type.
      */
     type?: FileTypeName | (string & {});
     /** `mono` draws every type in the theme's gray instead of its own color. */
@@ -967,11 +707,8 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
 
 export {
     FILE_TYPE_CATEGORIES,
-    FILE_TYPE_EXTENSION_NAMES,
     FileType,
     fileTypeVariants,
-    getFileType,
-    getFileTypeCategory,
     type FileTypeCategory,
     type FileTypeName,
     type FileTypeProps,

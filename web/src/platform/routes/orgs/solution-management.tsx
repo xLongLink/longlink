@@ -303,12 +303,7 @@ export default function SolutionManagement({
                 )}
             </Stack>
             {selected?.kind === 'create' && (
-                <CreateSolution
-                    open
-                    organizationId={organization.id}
-                    onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
-                />
+                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onOpenChange={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
@@ -331,7 +326,6 @@ export default function SolutionManagement({
             )}
             {selected?.kind === 'update' && (
                 <DeploymentReview
-                    open
                     key={selected.item.id}
                     item={selected.item}
                     onSuccess={onSuccess}

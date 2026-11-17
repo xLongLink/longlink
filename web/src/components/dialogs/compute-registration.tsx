@@ -20,10 +20,8 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
 
 export function ComputeRegistration({
     onSuccess,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => Promise<void>;
 }) {
@@ -87,7 +85,7 @@ export function ComputeRegistration({
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title="Register Compute"
             footer={

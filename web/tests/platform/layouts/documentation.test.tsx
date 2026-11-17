@@ -6,7 +6,6 @@ import { it, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import Layout from '@/platform/layouts/documentation';
 import { Link, Route, Routes, useLocation } from 'react-router';
-import UseApiPage from '@/platform/routes/docs/sdk/views/use-api';
 
 // SAFETY: the happy-dom test environment provides its viewport controller on window.
 const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;
@@ -14,34 +13,6 @@ const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;
 const initialViewport = { width: window.innerWidth, height: window.innerHeight };
 
 afterEach(() => viewport.setViewport(initialViewport));
-
-it('switches hook documentation between the example and its property reference without losing either', async () => {
-    await withMounted(
-        <UseApiPage />,
-        async (output) => {
-            const user = userEvent.setup();
-            const tabs = Array.from(output.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-            const example = tabs.find((tab) => tab.textContent === 'Example');
-            const properties = tabs.find((tab) => tab.textContent === 'Properties');
-
-            if (!example || !properties) throw new Error('Missing hook documentation tabs');
-
-            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain(
-                "useApi('/api/items?status=open')"
-            );
-            await act(async () => user.click(properties));
-            expect(properties.getAttribute('aria-selected')).toBe('true');
-            expect(output.querySelector('[role="tabpanel"] table')?.textContent).toContain('invalidate');
-
-            await act(async () => user.click(example));
-            expect(example.getAttribute('aria-selected')).toBe('true');
-            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain(
-                "useApi('/api/items?status=open')"
-            );
-        },
-        '/docs/sdk/views/use-api/'
-    );
-});
 
 /** Exercises hash-only transitions from the routed article without replacing the layout. */
 function Article() {

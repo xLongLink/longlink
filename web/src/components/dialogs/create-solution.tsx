@@ -14,10 +14,10 @@ import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
     organizationId: string;
+    onOpenChange: (open: boolean) => void;
     onSuccess: () => void | Promise<void>;
 }) {
     const formId = useId();
@@ -115,7 +115,7 @@ export default function CreateSolution({
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title="Create solution"
             footer={
