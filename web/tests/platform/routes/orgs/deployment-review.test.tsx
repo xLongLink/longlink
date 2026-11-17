@@ -113,8 +113,22 @@ describe('DeploymentReview', () => {
         expect(button('Update solution').disabled).toBe(true);
         await act(async () => button('Update solution').click());
         expect(submissions).toEqual([]);
+        await act(async () => user.click(input('NEW_SECRET')));
+        await act(async () => user.keyboard('{Enter}'));
+        expect(submissions).toEqual([]);
+        const form = input('NEW_SECRET').form;
+
+        if (!form) throw new Error('Expected the deployment form');
+
+        await act(async () => form.requestSubmit());
+        expect(input('NEW_SECRET').getAttribute('aria-invalid')).toBe('true');
+        expect(document.activeElement).toBe(input('NEW_SECRET'));
+        expect(document.body.textContent).toContain('Please complete this field.');
+        expect(submissions).toEqual([]);
         await act(async () => user.clear(input('NEW_SECRET')));
-        await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
+        await act(async () => user.type(input('NEW_SECRET'), 'n'));
+        expect(input('NEW_SECRET').getAttribute('aria-invalid')).toBe('false');
+        await act(async () => user.type(input('NEW_SECRET'), 'ew-fixture-value'));
         expect(button('Update solution').disabled).toBe(false);
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));

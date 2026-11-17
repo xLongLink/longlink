@@ -1,10 +1,8 @@
 from . import tags, image, payments, solutions, registries, organizations
-from src import auth
-from fastapi import Depends, APIRouter
+from fastapi import APIRouter
 
-router = APIRouter(dependencies=[Depends(auth.authmember)])
+router = APIRouter()
 
-# Require active Organization membership before running scoped endpoints.
 router.include_router(image.router)
 router.include_router(tags.router)
 router.include_router(payments.router)
