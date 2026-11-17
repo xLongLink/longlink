@@ -48,7 +48,8 @@ async function withOrganizationSettings(
     memberRows: OrganizationMemberAccessResponse[],
     check: (output: HTMLElement, client: QueryClient) => Promise<void>,
     fragment = 'members',
-    search = ''
+    search = '',
+    expectedErrors: unknown[] = []
 ) {
     const errors: unknown[] = [];
 
@@ -82,7 +83,7 @@ async function withOrganizationSettings(
             async (output) => check(output, client),
             `/orgs/${access.organization.id}/settings${search}#${fragment}`
         );
-        expect(errors).toEqual([]);
+        expect(errors).toEqual(expectedErrors);
     } finally {
         client.clear();
     }
@@ -481,6 +482,90 @@ it('serializes rapid invitation revocations across rows until the refreshed list
     } finally {
         finishDeletion(new Response(null, { status: 204 }));
         finishRefresh(Response.json([invitations[1]]));
+        transport.mockRestore();
+    }
+});
+
+it('retains a failed invitation draft, refreshes saved invitations, and retries successfully', async () => {
+    // Arrange
+    const invitation = schemas.zOrganizationInvitationResponse.parse({
+        id: '00000000-0000-4000-8000-000000000005',
+        email: 'first@example.com',
+        role: 'write',
+        created_at: '2026-10-02T00:00:00Z'
+    });
+
+    let attempts = 0;
+    const requests: string[] = [];
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+        requests.push(`${request.method} ${path}`);
+
+        if (request.method === 'POST' && path === `${base}/invitations`) {
+            expect(await request.json()).toEqual({ email: invitation.email, role: invitation.role });
+            attempts += 1;
+
+            return attempts === 1
+                ? Response.json({ detail: 'Invitation email unavailable' }, { status: 503 })
+                : new Response(null, { status: 204 });
+        }
+
+        if (request.method === 'GET' && path === `${base}/invitations`) return Response.json([invitation]);
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withOrganizationSettings(
+            membership,
+            members,
+            async (output) => {
+                const events = userEvent.setup();
+                const open = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Invite'
+                );
+
+                if (!open) throw new Error('Expected the invitation action');
+
+                // Act
+                await act(async () => events.click(open));
+                const email = document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]');
+                const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
+
+                if (!email || !submit) throw new Error('Expected the invitation form');
+
+                await act(async () => events.type(email, invitation.email));
+                await act(async () => events.click(submit));
+
+                // Assert
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+                        'Could not send the invitation. Please try again.'
+                    )
+                );
+                expect(email.value).toBe(invitation.email);
+                expect(submit.disabled).toBe(false);
+                await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain(invitation.email));
+
+                // Act
+                await act(async () => events.click(submit));
+
+                // Assert
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                expect(requests).toEqual([
+                    `POST ${base}/invitations`,
+                    `GET ${base}/invitations`,
+                    `POST ${base}/invitations`,
+                    `GET ${base}/invitations`
+                ]);
+            },
+            'invitations',
+            '',
+            [expect.any(Error)]
+        );
+    } finally {
         transport.mockRestore();
     }
 });

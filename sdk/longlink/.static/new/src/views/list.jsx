@@ -14,8 +14,6 @@ const files = [
 /** Lists bundled file types with on-demand preview dialogs. */
 export default function List() {
     const [search, setSearch] = useState('');
-    const [sorting, setSorting] = useState([{ id: 'filename', desc: false }]);
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const term = search.trim().toLowerCase();
     const filtered = useMemo(() => files.filter((file) => file.filename.includes(term)), [term]);
 
@@ -44,9 +42,7 @@ export default function List() {
         data: filtered,
         columns,
         getRowId: (file) => file.filename,
-        state: { sorting, pagination },
-        onSortingChange: setSorting,
-        onPaginationChange: setPagination
+        initialState: { sorting: [{ id: 'filename', desc: false }], pagination: { pageIndex: 0, pageSize: 10 } }
     });
 
     // Reuse scoped attachment previews without owning dialog or file-loading state.
@@ -78,7 +74,7 @@ export default function List() {
                                 value={search}
                                 onChange={(event) => {
                                     setSearch(event.target.value);
-                                    setPagination((current) => ({ ...current, pageIndex: 0 }));
+                                    table.setPageIndex(0);
                                 }}
                             />
                         </Box>

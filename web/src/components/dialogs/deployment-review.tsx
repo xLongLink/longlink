@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -54,11 +55,16 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
     });
 
     // Preserve configured required secrets, and require values for new required environments.
-    const missingRequired = (candidate?.metadata.environments ?? []).some(
-        (environment) =>
+    function isMissingRequired(environment: z.output<typeof schemas.zEnvironmentMetadata>, value: string | undefined) {
+        return (
             environment.required &&
             (envs[environment.name]?.removed === true ||
-                (!candidate?.configured_envs.includes(environment.name) && !envs[environment.name]?.value?.trim()))
+                (!candidate?.configured_envs.includes(environment.name) && !value?.trim()))
+        );
+    }
+
+    const missingRequired = (candidate?.metadata.environments ?? []).some((environment) =>
+        isMissingRequired(environment, envs[environment.name]?.value)
     );
 
     const hasChanges =
@@ -163,10 +169,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                         control={form.control}
                                         rules={{
                                             validate: (value) =>
-                                                !environment.required ||
-                                                configured ||
-                                                !!value?.trim() ||
-                                                'Please complete this field.'
+                                                !isMissingRequired(environment, value) || 'Please complete this field.'
                                         }}
                                         render={({ field, fieldState }) => (
                                             <Field

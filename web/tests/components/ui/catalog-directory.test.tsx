@@ -30,7 +30,7 @@ const evaluate = new Function('module', 'exports', ...Object.keys(bindings), `${
 // SAFETY: The source is the repository-owned starter View, not an external module.
 const List = evaluate(module, module.exports, ...Object.values(bindings)) as React.ComponentType;
 
-it('normalizes file searches and restores results after an empty search', async () => {
+it('normalizes file searches, restores empty results, and preserves sorting while filtering', async () => {
     const user = userEvent.setup();
 
     await withMounted(<List />, async (output) => {
@@ -57,6 +57,16 @@ it('normalizes file searches and restores results after an empty search', async 
         expect(output.querySelector('tbody')?.textContent).toContain('example.png');
         expect(output.querySelector('tbody')?.textContent).toContain('garden.jpg');
         expect(output.querySelector('tbody')?.textContent).not.toContain('No files found');
+        expect(output.querySelector('tbody tr')?.textContent).toContain('example.gif');
+
+        const sort = [...output.querySelectorAll('thead button')].find((button) => button.textContent === 'File');
+
+        if (!sort) throw new Error('Expected file sorting');
+
+        await act(async () => user.click(sort));
+        expect(output.querySelector('tbody tr')?.textContent).toContain('garden.jpg');
+        await act(async () => user.type(search, 'example'));
+        expect(output.querySelector('tbody tr')?.textContent).toContain('example.yaml');
     });
 });
 

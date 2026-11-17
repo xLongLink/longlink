@@ -4,7 +4,6 @@ import { api } from '@/lib/api';
 import TabsSection from './tags';
 import Invoices from './invoices';
 import Registries from './registries';
-import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
@@ -387,7 +386,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 /** Owns invitation drafts and actions only while their section is active. */
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
-    const reportError = useApiError();
     const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
@@ -420,8 +418,6 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 json: schemas.zOrganizationInvitationCreate.parse({ role: data.role, email: data.email.trim() })
             });
             closeInvitation();
-        } catch (failure) {
-            reportError(failure);
         } finally {
             await invalidateInvitations();
         }
