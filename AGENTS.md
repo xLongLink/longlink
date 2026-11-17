@@ -69,20 +69,11 @@ UI/COMPONENTS:
 - ShadcnUI reference: https://ui.shadcn.com/llms.txt.
 
 VIEWS 
+- One file, one view
+- LongLink exposes shared UI components for `.jsx` Views to use directly.
+- Components are expored with parameters so that the views do not have to apply classNames
 
-LongLink exposes shared UI components for `.jsx` Views to use directly.
-
-- DO place custom components in a `custom` folder.
-- DO preserve ReUI or shadcn/ui APIs, composition patterns, and accessibility conventions.
-- DO keep reusable interactions, keyboard navigation, and focus management inside components.
-- DO expose clear props, events, and composition slots so Views don't rebuild component internals.
-- DO support controlled state when Views need coordination; otherwise, prefer component-owned state.
-- DO centralize shared appearance through theme tokens and component variants.
-- DO keep View-level styling focused on layout and application-specific presentation.
-- DO keep data loading, business rules, permissions, and application-specific actions outside generic UI components.
-- DON'T add pass-through wrappers, speculative options, or abstractions for one-off layouts.
-
-## Commit and Merge Structure
+COMMIT & MERGE
 
 - USE Conventional Commits for commit messages
 - CHOSE a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
