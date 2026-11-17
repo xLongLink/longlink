@@ -1,9 +1,9 @@
 import { useId } from 'react';
 import { api } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -70,28 +70,22 @@ export function RegistryForm({
                 />
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
                     <p>GitHub Container Registry (ghcr.io)</p>
-                    <Controller
-                        name="credential"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>
-                                <Input
-                                    {...field}
-                                    id="registry-credential"
-                                    type="password"
-                                    placeholder="ghp_..."
-                                    autoComplete="new-password"
-                                    aria-invalid={fieldState.invalid}
-                                    aria-describedby="registry-credential-description"
-                                />
-                                <FieldDescription id="registry-credential-description">
-                                    Requires the read:packages scope.
-                                </FieldDescription>
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.credential)}>
+                        <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>
+                        <Input
+                            {...form.register('credential')}
+                            id="registry-credential"
+                            type="password"
+                            placeholder="ghp_..."
+                            autoComplete="new-password"
+                            aria-invalid={Boolean(form.formState.errors.credential)}
+                            aria-describedby="registry-credential-description"
+                        />
+                        <FieldDescription id="registry-credential-description">
+                            Requires the read:packages scope.
+                        </FieldDescription>
+                        <FieldError errors={[form.formState.errors.credential]} />
+                    </Field>
                 </fieldset>
                 <FieldError errors={[form.formState.errors.root]} />
             </form>

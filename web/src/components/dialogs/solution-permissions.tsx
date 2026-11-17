@@ -17,16 +17,14 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     solutionId: string;
     organizationId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution permissions">
+        <Dialog open onOpenChange={onOpenChange} title="Solution permissions">
             <ApiBoundary key={solutionId}>
                 <SolutionPermissions
                     solutionId={solutionId}

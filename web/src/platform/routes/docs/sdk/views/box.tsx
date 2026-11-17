@@ -8,15 +8,6 @@ export default function BoxPage() {
     return (
         <ViewLayout
             name="Box"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'width', type: 'string | number' },
-                { name: 'height', type: 'string | number' },
-                { name: 'maxWidth', type: 'string | number' },
-                { name: 'minHeight', type: 'string | number' },
-                { name: 'center', type: 'boolean' },
-                { name: 'background', type: '"none" | "primary" | "secondary" | "outline"' }
-            ]}
             example={{
                 title: 'Box styles',
                 preview: <BoxExample />,

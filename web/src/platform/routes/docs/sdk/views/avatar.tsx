@@ -8,13 +8,6 @@ export default function AvatarPage() {
     return (
         <ViewLayout
             name="Avatar"
-            properties={[
-                { name: 'shape', type: '"circle" | "square" | "rounded"' },
-                { name: 'name', type: 'string' },
-                { name: 'src', type: 'string | null' },
-                { name: 'size', type: '"sm" | "md" | "lg"' },
-                { name: 'AvatarGroup.children', type: 'ReactNode' }
-            ]}
             example={{
                 title: 'Avatar',
                 preview: <AvatarExample />,

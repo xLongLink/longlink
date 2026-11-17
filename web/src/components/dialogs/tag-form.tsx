@@ -85,17 +85,15 @@ export function TagForm({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
-                    <Controller
-                        name="name"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="tag-name">Name</FieldLabel>
-                                <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.name)}>
+                        <FieldLabel htmlFor="tag-name">Name</FieldLabel>
+                        <Input
+                            {...form.register('name')}
+                            id="tag-name"
+                            aria-invalid={Boolean(form.formState.errors.name)}
+                        />
+                        <FieldError errors={[form.formState.errors.name]} />
+                    </Field>
                     <Controller
                         name="icon"
                         control={form.control}

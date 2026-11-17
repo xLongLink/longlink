@@ -77,23 +77,17 @@ export function InviteMember({
                     className="size-20 self-center object-contain invert dark:invert-0"
                 />
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
-                    <Controller
-                        name="email"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="invite-email">Email</FieldLabel>
-                                <Input
-                                    {...field}
-                                    id="invite-email"
-                                    type="email"
-                                    placeholder="user@example.com"
-                                    aria-invalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.email)}>
+                        <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                        <Input
+                            {...form.register('email')}
+                            id="invite-email"
+                            type="email"
+                            placeholder="user@example.com"
+                            aria-invalid={Boolean(form.formState.errors.email)}
+                        />
+                        <FieldError errors={[form.formState.errors.email]} />
+                    </Field>
                     <Controller
                         name="role"
                         control={form.control}

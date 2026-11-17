@@ -7,11 +7,6 @@ export default function CurrencyPage() {
     return (
         <ViewLayout
             name="Currency"
-            properties={[
-                { name: 'value', type: 'number' },
-                { name: 'currency', type: 'string' },
-                { name: 'locale', type: 'string' }
-            ]}
             example={{
                 title: 'Currency',
                 preview: <CurrencyExample />,

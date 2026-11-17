@@ -539,6 +539,12 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
 
                 if (!form || !email || !submit) throw new Error('Expected the invitation form');
 
+                // Invalid input must not reach the write and must retain validation focus.
+                await act(async () => events.click(submit));
+                expect(requests).toEqual([]);
+                expect(email.getAttribute('aria-invalid')).toBe('true');
+                expect(document.activeElement).toBe(email);
+
                 await act(async () => {
                     await events.type(email, 'first@example.com');
                     await events.click(submit);

@@ -90,13 +90,15 @@ it('gates creation on inspection and validation, retaining configuration through
                 expect(completions).toEqual([]);
 
                 const name = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
+                const description = dialog?.querySelector<HTMLInputElement>('input[name="description"]');
                 const secret = dialog?.querySelector<HTMLInputElement>('input[name="envs.API_KEY"]');
                 const create = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
                 const back = [...(dialog?.querySelectorAll('button') ?? [])].find(
                     (button) => button.textContent === 'Back'
                 );
 
-                if (!name || !secret || !create || !back) throw new Error('Expected configuration controls');
+                if (!name || !description || !secret || !create || !back)
+                    throw new Error('Expected configuration controls');
 
                 // Invalid configuration cannot create a Solution, and focus moves to the invalid field.
                 await act(async () => events.click(create));
@@ -107,6 +109,10 @@ it('gates creation on inspection and validation, retaining configuration through
                 expect(submissions).toEqual([]);
                 expect(document.activeElement).toBe(secret);
                 await act(async () => events.type(secret, 'fixture-api-key'));
+                await act(async () => {
+                    await events.clear(description);
+                    await events.type(description, 'Approvals dashboard');
+                });
                 await act(async () => events.click(back));
 
                 const resume = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -118,6 +124,9 @@ it('gates creation on inspection and validation, retaining configuration through
                 const retry = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
                 if (!retainedName || !retainedSecret || !retry) throw new Error('Expected retained configuration');
                 expect(retainedName.value).toBe('Sample');
+                expect(dialog?.querySelector<HTMLInputElement>('input[name="description"]')?.value).toBe(
+                    'Approvals dashboard'
+                );
                 expect(retainedSecret.value).toBe('fixture-api-key');
                 expect(requests).toHaveLength(1);
 
@@ -128,7 +137,7 @@ it('gates creation on inspection and validation, retaining configuration through
                 expect(retainedName.value).toBe('Sample');
                 expect(retainedSecret.value).toBe('fixture-api-key');
                 expect(submissions).toEqual([
-                    { image, name: 'Sample', description: 'Sample Solution', envs: { API_KEY: 'fixture-api-key' } }
+                    { image, name: 'Sample', description: 'Approvals dashboard', envs: { API_KEY: 'fixture-api-key' } }
                 ]);
                 await act(async () => events.click(retry));
                 await vi.waitFor(() => expect(completions).toEqual(['created']));

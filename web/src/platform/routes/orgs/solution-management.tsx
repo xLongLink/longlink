@@ -315,7 +315,6 @@ export default function SolutionManagement({
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
-                    open
                     solutionId={selected.id}
                     organizationId={organization.id}
                     onOpenChange={closeSelected}
@@ -339,13 +338,9 @@ export default function SolutionManagement({
                     onOpenChange={closeSelected}
                 />
             )}
-            {selected?.kind === 'logs' && (
-                <SolutionLogsDialog open solutionId={selected.id} onOpenChange={closeSelected} />
-            )}
+            {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onOpenChange={closeSelected} />}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
-            {selected?.kind === 'mcp' && (
-                <SolutionMcpDialog open solutionId={selected.id} onOpenChange={closeSelected} />
-            )}
+            {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onOpenChange={closeSelected} />}
             <DeletionDialog
                 confirmation={
                     selected?.kind === 'delete'

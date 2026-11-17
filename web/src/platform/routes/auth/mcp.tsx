@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { AuthLayout } from './auth-layout';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
@@ -13,7 +13,8 @@ import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */
 export default function McpAuthorization() {
     const [params] = useSearchParams();
-    const form = useForm();
+    const [pending, setPending] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const { data: user, isLoading: loadingUser } = useCurrentUser();
     const query = params.toString();
 
@@ -30,20 +31,28 @@ export default function McpAuthorization() {
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
     async function decide(data: FormData) {
-        const decision = data.get('decision');
+        setPending(true);
+        setSubmitError(null);
 
-        if (decision !== 'allow' && decision !== 'deny') throw new Error('An explicit consent decision is required');
+        try {
+            const decision = data.get('decision');
 
-        // Preserve the validated request parameters and redirect contract.
-        const result = await api
-            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
-            .json(zAuthorizationRedirect);
+            if (decision !== 'allow' && decision !== 'deny')
+                throw new Error('An explicit consent decision is required');
 
-        window.location.assign(result.url);
+            // Preserve the validated request parameters and redirect contract.
+            const result = await api
+                .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
+                .json(zAuthorizationRedirect);
+
+            window.location.assign(result.url);
+        } finally {
+            setPending(false);
+        }
     }
 
     const submit = useSubmit(decide, {
-        onError: () => form.setError('root', { message: 'Could not submit the decision. Please try again.' })
+        onError: () => setSubmitError('Could not submit the decision. Please try again.')
     });
 
     // Preserve only this first-party approval route across password or provider login.
@@ -62,14 +71,13 @@ export default function McpAuthorization() {
             {consent ? (
                 <form
                     onSubmit={(event) => {
+                        event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-                        void form.handleSubmit(async () => {
-                            await submit(data);
-                        })(event);
+                        void submit(data);
                     }}
-                    aria-busy={form.formState.isSubmitting}
+                    aria-busy={pending}
                 >
-                    <fieldset disabled={form.formState.isSubmitting} className="contents">
+                    <fieldset disabled={pending} className="contents">
                         <Stack gap={4}>
                             <Stack gap={2}>
                                 <p>
@@ -105,7 +113,7 @@ export default function McpAuthorization() {
                             </Button>
                         </Stack>
                     </fieldset>
-                    <FieldError errors={[form.formState.errors.root]} />
+                    <FieldError>{submitError}</FieldError>
                 </form>
             ) : null}
         </AuthLayout>

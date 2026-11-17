@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { RefreshCw } from 'lucide-react';
-import { useApiError } from '@/lib/errors';
-import { useApi } from '@/lib/hooks/use-api';
-import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
+import { apiQueryOptions } from '@/lib/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
@@ -11,15 +10,13 @@ import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/r
 
 export function SolutionLogsDialog({
     solutionId,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     solutionId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution logs">
+        <Dialog open onOpenChange={onOpenChange} title="Solution logs">
             <ApiBoundary key={solutionId}>
                 <SolutionLogs solutionId={solutionId} onClose={() => onOpenChange(false)} />
             </ApiBoundary>
@@ -28,10 +25,11 @@ export function SolutionLogsDialog({
 }
 
 function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
-    const [logs, invalidate] = useApi(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string()));
-    const reportError = useApiError();
-    const inFlight = useRef(false);
-    const [pending, startRefresh] = useTransition();
+    const {
+        data: logs,
+        isFetching,
+        refetch
+    } = useSuspenseQuery(apiQueryOptions(`/api/v1/solutions/${solutionId}/logs`, z.array(z.string())));
 
     return (
         <Stack gap={3} className="h-full">
@@ -54,28 +52,18 @@ function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: ()
                 </Button>
                 <Button
                     variant="outline"
-                    disabled={pending}
-                    aria-busy={pending || undefined}
+                    disabled={isFetching}
+                    aria-busy={isFetching || undefined}
                     onClick={() => {
-                        // Keep one refresh active until invalidation finishes.
-                        if (inFlight.current) return;
-                        inFlight.current = true;
-                        startRefresh(async () => {
-                            try {
-                                await invalidate();
-                            } catch (cause) {
-                                reportError(cause);
-                            } finally {
-                                inFlight.current = false;
-                            }
-                        });
+                        // Join an active refresh; the query cache reports failures.
+                        void refetch({ cancelRefetch: false });
                     }}
                 >
                     <RefreshCw className="size-4" aria-hidden="true" />
                     Refresh logs
                 </Button>
                 <span role="status" className="sr-only">
-                    {pending ? 'Loading' : ''}
+                    {isFetching ? 'Loading' : ''}
                 </span>
             </Stack>
         </Stack>

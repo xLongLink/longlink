@@ -12,15 +12,13 @@ import { NativeNavigationLink } from '@/components/custom/native-link';
 
 export function SolutionMcpDialog({
     solutionId,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     solutionId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Model Context Protocol">
+        <Dialog open onOpenChange={onOpenChange} title="Model Context Protocol">
             <Stack gap={4}>
                 <Plug className="size-20 self-center text-muted-foreground" aria-hidden="true" />
                 <ApiBoundary key={solutionId}>

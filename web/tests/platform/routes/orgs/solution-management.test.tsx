@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
-import { act, Suspense } from 'react';
 import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import { ApiProvider } from '@/components/api';
+import { act, Suspense, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import Management from '@/platform/routes/orgs/solution-management';
+import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
 const solution = {
@@ -19,6 +20,107 @@ const solution = {
 };
 
 const mcpResource = `https://solutions.example/api/v1/solutions/${solution.id}/proxy/mcp`;
+
+it('joins repeated log refreshes, retains logs after failure, and recovers before reopening', async () => {
+    const events = userEvent.setup();
+    let requests = 0;
+    let finishRefresh: ((response: Response) => void) | undefined;
+    const refresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+
+        if (request.method !== 'GET' || new URL(request.url).pathname !== `/api/v1/solutions/${solution.id}/logs`) {
+            throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+        }
+
+        requests++;
+        if (requests === 1) return Response.json(['Deployment started']);
+        if (requests === 2) return refresh;
+        return Response.json(['Deployment recovered']);
+    });
+
+    /** Mounts each logs attempt using the same visibility ownership as Solution management. */
+    function Logs() {
+        const [open, setOpen] = useState(true);
+
+        return open ? (
+            <SolutionLogsDialog solutionId={solution.id} onOpenChange={setOpen} />
+        ) : (
+            <button onClick={() => setOpen(true)}>Open logs</button>
+        );
+    }
+
+    try {
+        await withMounted(
+            <ApiProvider>
+                <Logs />
+            </ApiProvider>,
+            async () => {
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[aria-label="Deployment logs"]')?.textContent).toContain(
+                        'Deployment started'
+                    )
+                );
+                const button = Array.from(document.querySelectorAll('button')).find(
+                    (element) => element.textContent === 'Refresh logs'
+                );
+
+                if (!button) throw new Error('Missing logs refresh');
+
+                // Activate twice before React publishes pending feedback.
+                await act(async () => {
+                    button.click();
+                    button.click();
+                });
+                expect(requests).toBe(2);
+                expect(button.disabled).toBe(true);
+                expect(button.getAttribute('aria-busy')).toBe('true');
+
+                await act(async () => finishRefresh?.(Response.json({ detail: 'Logs unavailable' }, { status: 503 })));
+                await vi.waitFor(() => {
+                    expect(button.disabled).toBe(false);
+                    expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Logs unavailable');
+                });
+                expect(document.querySelector('[aria-label="Deployment logs"]')?.textContent).toContain(
+                    'Deployment started'
+                );
+                expect(document.querySelectorAll('[data-sonner-toast]')).toHaveLength(1);
+
+                await act(async () => events.click(button));
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[aria-label="Deployment logs"]')?.textContent).toContain(
+                        'Deployment recovered'
+                    )
+                );
+                expect(requests).toBe(3);
+
+                const close = Array.from(document.querySelectorAll('button')).find(
+                    (element) => element.textContent === 'Close'
+                );
+
+                if (!close) throw new Error('Missing logs close');
+                await act(async () => events.click(close));
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                const reopen = Array.from(document.querySelectorAll('button')).find(
+                    (element) => element.textContent === 'Open logs'
+                );
+
+                if (!reopen) throw new Error('Missing logs opener');
+                await act(async () => events.click(reopen));
+                await vi.waitFor(() =>
+                    expect(document.querySelector('[aria-label="Deployment logs"]')?.textContent).toContain(
+                        'Deployment recovered'
+                    )
+                );
+            }
+        );
+    } finally {
+        finishRefresh?.(Response.json([]));
+        transport.mockRestore();
+    }
+});
 
 /** Loads a populated settings table through the real query and response schema. */
 async function withSolutions(role: OrganizationContext['role'], check: (output: HTMLElement) => Promise<void>) {

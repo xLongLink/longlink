@@ -9,22 +9,6 @@ export default function StackPage() {
     return (
         <ViewLayout
             name="Stack"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'gap', type: 'number' },
-                { name: 'padding', type: 'number' },
-                { name: 'paddingInline', type: 'number' },
-                { name: 'paddingBlock', type: 'number' },
-                { name: 'background', type: '"muted"' },
-                { name: 'direction', type: '"horizontal" | "vertical"' },
-                { name: 'justify', type: '"start" | "center" | "end" | "between" | "around" | "evenly"' },
-                { name: 'align', type: '"start" | "center" | "end" | "stretch"' },
-                { name: 'wrap', type: '"nowrap" | "wrap" | "wrap-reverse"' },
-                { name: 'StackItem.children', type: 'ReactNode' },
-                { name: 'StackItem.size', type: '"fill" | "static"' },
-                { name: 'StackItem.isScrollable', type: 'boolean' },
-                { name: 'StackItem.crossAlignSelf', type: '"start" | "center" | "end" | "stretch"' }
-            ]}
             example={{
                 title: 'Stack',
                 preview: <StackExample />,
