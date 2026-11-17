@@ -4,11 +4,11 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { act, type ContextType } from 'react';
 import { ReportedError } from '@/lib/reported';
-import { RequestContext } from '@/views/context';
 import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
 import userEvent from '@testing-library/user-event';
 import { Input } from '@/components/longlink/form/input';
+import { RequestContext } from '@/components/custom/contexts';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi

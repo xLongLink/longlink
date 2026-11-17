@@ -4,12 +4,12 @@ import { useApiError } from '@/lib/errors';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
@@ -56,20 +56,21 @@ export default function OrganizationManagement({ presentation }: { presentation:
             <Stack
                 gap={onboarding ? 8 : 4}
                 justify={onboarding ? 'center' : undefined}
-                minHeight={
+                className={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing) * 8)'
+                        ? 'min-h-[calc(100dvh-var(--\\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-var(--spacing)*8)]'
                         : undefined
                 }
             >
                 {presentation === 'settings' ? (
                     <>
                         <Stack
+                            gap={0}
                             direction="horizontal"
                             justify="between"
                             align="end"
                             wrap="wrap"
-                            minHeight="calc(var(--spacing)*8)"
+                            className="min-h-8"
                         >
                             <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Organizations
@@ -81,7 +82,14 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         <Separator />
                     </>
                 ) : !onboarding ? (
-                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
+                    <Stack
+                        gap={0}
+                        direction="horizontal"
+                        justify="between"
+                        align="center"
+                        wrap="wrap"
+                        className="min-h-12"
+                    >
                         <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
                         <Button onClick={() => setSelected({ type: 'create' })}>Create Organization</Button>
                     </Stack>
@@ -212,7 +220,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
             )}
             {selected && selected.type !== 'create' && (
                 <InvitationResponse
-                    open
                     invitation={selected}
                     onOpenChange={closeSelected}
                     onConfirm={async () => {

@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { Grid } from '@/components/longlink/layout/grid';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Code2, Lightbulb, ServerCog } from 'lucide-react';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const cardClassName =

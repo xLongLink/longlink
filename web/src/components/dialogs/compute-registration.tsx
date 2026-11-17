@@ -3,11 +3,11 @@ import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { useEffect, useId, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 
@@ -18,7 +18,13 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
-export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => void; onSuccess: () => Promise<void> }) {
+export function ComputeRegistration({
+    onSuccess,
+    onOpenChange
+}: {
+    onOpenChange: (open: boolean) => void;
+    onSuccess: () => Promise<void>;
+}) {
     const formId = useId();
     const form = useForm({
         resolver: zodResolver(registrationSchema),
@@ -27,15 +33,13 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
 
     const kubeconfig = useWatch({ control: form.control, name: 'kubeconfig' });
     const { setValue } = form;
-    const [file, setFile] = useState<File | null>(null);
-
     const [fileRead, setFileRead] = useState<
-        { kind: 'idle' } | { kind: 'reading' } | { kind: 'error'; message: string }
+        { kind: 'idle' } | { kind: 'reading'; file: File } | { kind: 'error'; message: string }
     >({ kind: 'idle' });
 
     // Ignore an obsolete read after replacing, clearing, or dismissing the selected file.
     useEffect(() => {
-        if (!file) return;
+        if (fileRead.kind !== 'reading') return;
         let canceled = false;
 
         async function readKubeconfig(selected: File) {
@@ -59,12 +63,12 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
             }
         }
 
-        void readKubeconfig(file);
+        void readKubeconfig(fileRead.file);
 
         return () => {
             canceled = true;
         };
-    }, [file, setValue]);
+    }, [fileRead, setValue]);
 
     async function registerCompute(data: z.output<typeof registrationSchema>) {
         if (fileRead.kind === 'reading') return;
@@ -80,11 +84,16 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
     return (
         <Dialog
             open
-            onOpenChange={onClose}
+            onOpenChange={onOpenChange}
             title="Register Compute"
             footer={
                 <>
-                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
                         Cancel
                     </Button>
                     <Button
@@ -114,18 +123,15 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
                             ['storage_endpoint', 'Storage endpoint']
                         ] as const
                     ).map(([name, label]) => (
-                        <Controller
-                            key={name}
-                            name={name}
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor={`compute-${name}`}>{label}</FieldLabel>
-                                    <Input {...field} id={`compute-${name}`} aria-invalid={fieldState.invalid} />
-                                    <FieldError errors={[fieldState.error]} />
-                                </Field>
-                            )}
-                        />
+                        <Field key={name} data-invalid={Boolean(form.formState.errors[name])}>
+                            <FieldLabel htmlFor={`compute-${name}`}>{label}</FieldLabel>
+                            <Input
+                                {...form.register(name)}
+                                id={`compute-${name}`}
+                                aria-invalid={Boolean(form.formState.errors[name])}
+                            />
+                            <FieldError errors={[form.formState.errors[name]]} />
+                        </Field>
                     ))}
                     <Field data-invalid={fileRead.kind === 'error'}>
                         <FieldLabel htmlFor="compute-kubeconfig-file">Kubeconfig file</FieldLabel>
@@ -141,7 +147,6 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
                                 form.setValue('kubeconfig', '');
 
                                 if (selected && !/\.ya?ml$/i.test(selected.name)) {
-                                    setFile(null);
                                     setFileRead({
                                         kind: 'error',
                                         message: `"${selected.name}" is not an accepted file type`
@@ -150,40 +155,33 @@ export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => voi
                                     return;
                                 }
 
-                                setFile(selected);
-                                setFileRead({ kind: selected ? 'reading' : 'idle' });
+                                setFileRead(selected ? { kind: 'reading', file: selected } : { kind: 'idle' });
                             }}
                         />
                         {fileRead.kind === 'error' && (
                             <FieldError id="compute-file-error">{fileRead.message}</FieldError>
                         )}
                     </Field>
-                    <Controller
-                        name="kubeconfig"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="compute-kubeconfig">Kubeconfig</FieldLabel>
-                                <Textarea
-                                    {...field}
-                                    id="compute-kubeconfig"
-                                    rows={8}
-                                    placeholder="Paste the Compute kubeconfig"
-                                    required
-                                    disabled={fileRead.kind === 'reading'}
-                                    aria-busy={fileRead.kind === 'reading' || undefined}
-                                    spellCheck={false}
-                                    aria-invalid={fieldState.invalid}
-                                />
-                                {fileRead.kind === 'reading' && (
-                                    <span role="status" className="sr-only">
-                                        Loading
-                                    </span>
-                                )}
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
+                    <Field data-invalid={Boolean(form.formState.errors.kubeconfig)}>
+                        <FieldLabel htmlFor="compute-kubeconfig">Kubeconfig</FieldLabel>
+                        <Textarea
+                            {...form.register('kubeconfig')}
+                            id="compute-kubeconfig"
+                            rows={8}
+                            placeholder="Paste the Compute kubeconfig"
+                            required
+                            disabled={fileRead.kind === 'reading'}
+                            aria-busy={fileRead.kind === 'reading' || undefined}
+                            spellCheck={false}
+                            aria-invalid={Boolean(form.formState.errors.kubeconfig)}
+                        />
+                        {fileRead.kind === 'reading' && (
+                            <span role="status" className="sr-only">
+                                Loading
+                            </span>
                         )}
-                    />
+                        <FieldError errors={[form.formState.errors.kubeconfig]} />
+                    </Field>
                 </fieldset>
                 <FieldError errors={[form.formState.errors.root]} />
             </form>

@@ -1,14 +1,13 @@
 import { api } from '@/lib/api';
-import { useRef, useState } from 'react';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
@@ -16,7 +15,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
 
     const [dialog, setDialog] = useState<
@@ -37,7 +38,7 @@ export default function Compute() {
     return (
         <Stack gap={2}>
             <title>Compute | LongLink</title>
-            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+            <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
                 <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
                 <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
@@ -48,20 +49,20 @@ export default function Compute() {
                         ref={searchInput}
                         id="search-compute"
                         placeholder="Search by name or endpoint"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search compute"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -83,7 +84,7 @@ export default function Compute() {
                         {computes.items.map((row) => (
                             <TableRow key={row.id}>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>{row.name}</span>
                                         <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
                                     </Stack>
@@ -110,7 +111,12 @@ export default function Compute() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={computes.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={computes.total}
+                    />
                 </footer>
             </Stack>
             {dialog?.kind === 'registration' && (
@@ -120,7 +126,7 @@ export default function Compute() {
                         await invalidate();
                         setDialog((current) => (current === dialog ? null : current));
                     }}
-                    onClose={() => {
+                    onOpenChange={() => {
                         // An obsolete registration cannot dismiss a replacement dialog selection.
                         setDialog((current) => (current === dialog ? null : current));
                     }}

@@ -58,7 +58,7 @@ export function prepareSegments<Row extends object>(
     valueKey: ChartValueKey<Row>
 ) {
     const config: ChartConfig = {};
-    const segments: { id: string; name: string; value: number; fill: string }[] = [];
+    const segments: { name: string; value: number; fill: string }[] = [];
     let total = 0;
 
     for (const [index, row] of data.entries()) {
@@ -77,7 +77,7 @@ export function prepareSegments<Row extends object>(
 
         const name = `segment-${index}`;
         config[name] = { label: String(label), color: color(index) };
-        segments.push({ id: name, name, value, fill: color(index) });
+        segments.push({ name, value, fill: color(index) });
         total += value;
     }
 

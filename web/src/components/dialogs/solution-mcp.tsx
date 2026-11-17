@@ -4,23 +4,21 @@ import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/openai';
 import { useNotification } from '@/lib/notifications';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 export function SolutionMcpDialog({
     solutionId,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     solutionId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Model Context Protocol">
+        <Dialog open onOpenChange={onOpenChange} title="Model Context Protocol">
             <Stack gap={4}>
                 <Plug className="size-20 self-center text-muted-foreground" aria-hidden="true" />
                 <ApiBoundary key={solutionId}>

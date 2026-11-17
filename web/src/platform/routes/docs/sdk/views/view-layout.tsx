@@ -2,17 +2,17 @@ import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
+import { Stack } from '@/components/longlink/layout/stack';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
-type ViewProperty = { name: string; type: string; description?: string };
+type ViewProperty = { name: string; type: string };
 
 type ViewExample = { title: string; code: string; preview: ReactNode; language?: 'jsx' | 'tsx' };
 
@@ -46,6 +46,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     data-code={showCode || undefined}
                 >
                     <Stack
+                        gap={0}
                         className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0!'}
                         align="center"
                         aria-label={`${example.title} preview`}
@@ -72,7 +73,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 /** Provides an example and property references for an independently authored View page. */
 export default function ViewLayout({
     name,
-    properties = [],
+    properties,
     example,
     children,
     toc
@@ -90,8 +91,9 @@ export default function ViewLayout({
     const runtime = component.category === 'Runtime';
 
     // Read published defaults without duplicating component configuration in each documentation page.
+    const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
     const defaults = new Map(
-        (viewCatalog.components.find((entry) => entry.name === name)?.properties ?? []).map((property) => [
+        (catalogComponent?.properties ?? []).map((property) => [
             property.name,
             'default' in property ? property.default : undefined
         ])
@@ -101,8 +103,8 @@ export default function ViewLayout({
     const groups = new Map<string, ViewProperty[]>();
 
     if (!runtime) {
-        // Group the page's authored properties by component.
-        for (const property of properties) {
+        // Group authored overrides or published properties by component.
+        for (const property of properties ?? catalogComponent?.properties ?? []) {
             const separator = property.name.indexOf('.');
             const group = separator < 0 ? name : property.name.slice(0, separator);
 

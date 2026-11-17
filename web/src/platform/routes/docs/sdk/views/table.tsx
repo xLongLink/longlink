@@ -10,15 +10,10 @@ export default function TablePage() {
         <ViewLayout
             name="Table"
             properties={[
-                {
-                    name: 'children',
-                    type: 'ReactNode',
-                    description:
-                        'Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption.'
-                },
-                { name: 'wrap', type: 'boolean', description: 'Wraps cell text instead of keeping it on one line.' },
-                { name: 'TableHead.align', type: '"start" | "center" | "end"', description: 'Header text alignment.' },
-                { name: 'TableCell.align', type: '"start" | "center" | "end"', description: 'Cell text alignment.' }
+                { name: 'children', type: 'ReactNode' },
+                { name: 'wrap', type: 'boolean' },
+                { name: 'TableHead.align', type: '"start" | "center" | "end"' },
+                { name: 'TableCell.align', type: '"start" | "center" | "end"' }
             ]}
             example={{
                 title: 'Projects',

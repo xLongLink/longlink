@@ -383,6 +383,108 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
     }
 });
 
+it('serializes rapid invitation revocations across rows until the refreshed list returns, then allows another revoke', async () => {
+    // Arrange
+    const invitations = schemas.zOrganizationInvitationResponse.array().parse([
+        {
+            id: '00000000-0000-4000-8000-000000000005',
+            email: 'first@example.com',
+            role: 'write',
+            created_at: '2026-10-02T00:00:00Z'
+        },
+        {
+            id: '00000000-0000-4000-8000-000000000006',
+            email: 'second@example.com',
+            role: 'read',
+            created_at: '2026-10-02T00:00:00Z'
+        }
+    ]);
+    const requests: string[] = [];
+    let finishDeletion: (response: Response) => void = () => undefined;
+    let finishRefresh: (response: Response) => void = () => undefined;
+    const pendingDeletion = new Promise<Response>((resolve) => {
+        finishDeletion = resolve;
+    });
+    const pendingRefresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+        requests.push(`${request.method} ${path}`);
+
+        if (request.method === 'DELETE' && path === `${base}/invitations/${invitations[0].id}`) {
+            return pendingDeletion;
+        }
+
+        if (request.method === 'DELETE' && path === `${base}/invitations/${invitations[1].id}`) {
+            return new Response(null, { status: 204 });
+        }
+
+        if (request.method === 'GET' && path === `${base}/invitations`) {
+            return requests.includes(`DELETE ${base}/invitations/${invitations[1].id}`)
+                ? Response.json([])
+                : pendingRefresh;
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withOrganizationSettings(
+            membership,
+            members,
+            async (output, client) => {
+                await act(async () => client.setQueryData(['api', `${base}/invitations`], invitations));
+                await vi.waitFor(() => expect(output.querySelectorAll('tbody button')).toHaveLength(2));
+                const buttons = Array.from(output.querySelectorAll<HTMLButtonElement>('tbody button'));
+
+                // Activate different rows before React can disable either control.
+                await act(async () => {
+                    buttons[0].click();
+                    buttons[1].click();
+                    buttons[0].click();
+                });
+                expect(requests).toEqual([`DELETE ${base}/invitations/${invitations[0].id}`]);
+                expect(buttons.every((button) => button.disabled)).toBe(true);
+                await act(async () => buttons[1].click());
+                expect(requests).toHaveLength(1);
+
+                // The delete response must not release pending state while the list is stale.
+                await act(async () => finishDeletion(new Response(null, { status: 204 })));
+                await vi.waitFor(() => expect(requests).toContain(`GET ${base}/invitations`));
+                expect(output.querySelector('tbody')?.textContent).toContain(invitations[0].email);
+                expect(buttons.every((button) => button.disabled)).toBe(true);
+                await act(async () => buttons[1].click());
+                expect(requests).toHaveLength(2);
+
+                // A refreshed row remains actionable after the first submission settles.
+                await act(async () => finishRefresh(Response.json([invitations[1]])));
+                await vi.waitFor(() => {
+                    expect(output.querySelector('tbody')?.textContent).not.toContain(invitations[0].email);
+                    expect(output.querySelector<HTMLButtonElement>('tbody button')?.disabled).toBe(false);
+                });
+                await act(async () => output.querySelector<HTMLButtonElement>('tbody button')?.click());
+                await vi.waitFor(() =>
+                    expect(output.querySelector('tbody')?.textContent).not.toContain('@example.com')
+                );
+                expect(requests).toEqual([
+                    `DELETE ${base}/invitations/${invitations[0].id}`,
+                    `GET ${base}/invitations`,
+                    `DELETE ${base}/invitations/${invitations[1].id}`,
+                    `GET ${base}/invitations`
+                ]);
+            },
+            'invitations'
+        );
+    } finally {
+        finishDeletion(new Response(null, { status: 204 }));
+        finishRefresh(Response.json([invitations[1]]));
+        transport.mockRestore();
+    }
+});
+
 it('does not dismiss a reopened invitation dialog when an earlier submission completes', async () => {
     // Arrange
     const invitation = schemas.zOrganizationInvitationResponse.parse({
@@ -436,6 +538,12 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
                 const submit = document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]');
 
                 if (!form || !email || !submit) throw new Error('Expected the invitation form');
+
+                // Invalid input must not reach the write and must retain validation focus.
+                await act(async () => events.click(submit));
+                expect(requests).toEqual([]);
+                expect(email.getAttribute('aria-invalid')).toBe('true');
+                expect(document.activeElement).toBe(email);
 
                 await act(async () => {
                     await events.type(email, 'first@example.com');

@@ -33,6 +33,7 @@ RULES:
 PYTHON:
 - AVOID renaming imports.
 - DO use clear domain names.
+- DO FOLLOW the zen of python.
 - PREFER single-word Python filenames.
 - DO use exceptions for genuine errors.
 - DO validate types at system boundaries.
@@ -49,7 +50,7 @@ PYTHON:
 - DO use `collections.abc.Sequence` instead of `list` for read-only query result return types.
 - PREFER explicit duplication to a local helper, When duplication makes lifecycle code clearer.
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
-- DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
+- DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`.
 
 TESTING:
 - DO use Arrange, Act, and Assert sections.

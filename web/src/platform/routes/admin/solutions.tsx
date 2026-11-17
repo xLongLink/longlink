@@ -1,15 +1,14 @@
 import { api } from '@/lib/api';
-import { useRef, useState } from 'react';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
@@ -17,19 +16,21 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
-
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
     const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
-    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    // Forget missing metadata while retaining the captured identity of a pending deletion.
     const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
 
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
+    const deletion = dialog?.kind === 'deletion' ? dialog.item : null;
 
     return (
         <Stack gap={2}>
@@ -42,20 +43,20 @@ export default function Solutions() {
                         ref={searchInput}
                         id="search-solutions"
                         placeholder="Search by name, description, or organization"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search solutions"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -79,7 +80,7 @@ export default function Solutions() {
                         {solutions.items.map((row) => (
                             <TableRow key={row.id}>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Link href={`/orgs/${row.organization.id}/solutions/${row.id}`}>
                                                 {row.name}
@@ -104,14 +105,14 @@ export default function Solutions() {
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar shape="rounded" name={row.organization.name} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
                                             <span className="text-xs text-muted-foreground">Organization</span>
                                         </Stack>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>
                                             {row.image_desired.replace(
                                                 /@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/,
@@ -145,7 +146,12 @@ export default function Solutions() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={solutions.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={solutions.total}
+                    />
                 </footer>
             </Stack>
             {metadata && (
@@ -158,13 +164,13 @@ export default function Solutions() {
             )}
             <DeletionDialog
                 confirmation={
-                    dialog?.kind === 'deletion'
+                    deletion
                         ? {
                               title: 'Delete solution',
-                              description: `Delete solution ${dialog.item.name}?`,
+                              description: `Delete solution ${deletion.name}?`,
                               onDelete: async () => {
                                   // Refresh the list only after deletion succeeds.
-                                  await api.delete(`/api/v1/solutions/${dialog.item.id}`);
+                                  await api.delete(`/api/v1/solutions/${deletion.id}`);
                                   await invalidate();
                                   setDialog(null);
                               }

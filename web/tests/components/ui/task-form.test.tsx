@@ -5,8 +5,8 @@ import { it, expect } from 'vitest';
 import * as components from '@/views';
 import { withMounted } from '../../render';
 import { ReportedError } from '@/lib/reported';
-import { RequestContext } from '@/views/context';
 import userEvent from '@testing-library/user-event';
+import { RequestContext } from '@/components/custom/contexts';
 import source from '../../../../sdk/longlink/.static/new/src/views/tasks.jsx?raw';
 
 const code = transform(source, {
@@ -35,8 +35,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
     await withMounted(
         <RequestContext
             value={async (path, options) => {
-                if (!options) throw new Error('Expected a scoped write');
-
+                if (!options) throw new Error('Expected a write request');
                 expect(path).toBe('/api/tasks');
                 expect(options.method).toBe('POST');
                 writes.push(options.form);

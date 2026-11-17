@@ -5,16 +5,16 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { ArrowRight, RefreshCw } from 'lucide-react';
 import { Checkbox } from '@/components/shadcn/checkbox';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type DeploymentReviewProps = {
-    onClose: () => void;
     item: { id: string; name: string };
+    onOpenChange: (open: boolean) => void;
     onSuccess: () => void | Promise<void>;
 };
 
@@ -25,7 +25,7 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ item, onSuccess, onClose }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onOpenChange }: DeploymentReviewProps) {
     const formId = useId();
     // Scope inspection and drafts to one freshly opened review attempt.
     const [attemptId] = useState(() => crypto.randomUUID());
@@ -92,11 +92,16 @@ export default function DeploymentReview({ item, onSuccess, onClose }: Deploymen
     return (
         <Dialog
             open
-            onOpenChange={onClose}
+            onOpenChange={onOpenChange}
             title={`Update ${item.name}`}
             footer={
                 <>
-                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
                         Cancel
                     </Button>
                     {candidate ? (

@@ -1,15 +1,19 @@
 import ViewLayout from './view-layout';
-import { viewHooks } from '@/lib/documentation';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 const examples = {
-    useState: `export default function Counter() {
+    useState: {
+        signature: 'useState(initial)',
+        code: `export default function Counter() {
   const [count, setCount] = useState(0);
 
   return <Button onClick={() => setCount((previous) => previous + 1)}>{count}</Button>;
-}`,
-    useEffect: `export default function ConnectionStatus() {
+}`
+    },
+    useEffect: {
+        signature: 'useEffect(effect, dependencies)',
+        code: `export default function ConnectionStatus() {
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
@@ -24,8 +28,11 @@ const examples = {
   }, []);
 
   return <Text>{online ? 'Online' : 'Offline'}</Text>;
-}`,
-    useMemo: `export default function SortedItems() {
+}`
+    },
+    useMemo: {
+        signature: 'useMemo(factory, dependencies)',
+        code: `export default function SortedItems() {
   const [items] = useApi('/api/items');
   const sorted = useMemo(
     () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
@@ -33,8 +40,11 @@ const examples = {
   );
 
   return <Stack>{sorted.map((item) => <Text key={item.id}>{item.name}</Text>)}</Stack>;
-}`,
-    useRef: `export default function NameInput() {
+}`
+    },
+    useRef: {
+        signature: 'useRef(initial)',
+        code: `export default function NameInput() {
   const input = useRef(null);
 
   return (
@@ -44,6 +54,7 @@ const examples = {
     </Stack>
   );
 }`
+    }
 };
 
 /** Documents the React hooks available without imports in Views. */
@@ -64,18 +75,12 @@ export default function ReactHooksPage() {
                 { name: 'useRef.return', type: '{ current: T }' }
             ]}
         >
-            {Object.entries(examples).map(([name, code]) => (
+            {Object.entries(examples).map(([name, { signature, code }]) => (
                 <section key={name} className="flex min-w-0 flex-col gap-3">
                     <h2 className="font-semibold tracking-tight text-3xl" id={name.toLowerCase()}>
                         {name}
                     </h2>
-                    {viewHooks
-                        .filter((hook) => hook.name.startsWith(`${name}(`))
-                        .map((hook) => (
-                            <div key={hook.name} className="flex flex-col gap-3">
-                                <InlineCode className="self-start">{hook.name}</InlineCode>
-                            </div>
-                        ))}
+                    <InlineCode className="self-start">{signature}</InlineCode>
                     <CodeBlock language="jsx" code={code}>
                         <CodeBlockCopyButton />
                     </CodeBlock>

@@ -1,10 +1,8 @@
 import ViewLayout from './view-layout';
 import { MapExample, type MapName } from './map-example';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents the props-based map elements with parent-controlled sizing. */
-export default function MapDocumentation({ name }: { name: Exclude<MapName, 'GeoJSONMap'> }) {
-    const component = catalog.components.find((entry) => entry.name === name);
+export default function MapDocumentation({ name }: { name: MapName }) {
     const dataType = name === 'RouteMap' ? 'MapRoute[]' : name === 'ArcMap' ? 'MapArc[]' : 'MapMarker[]';
     const data =
         name === 'StreetMap'
@@ -13,8 +11,8 @@ export default function MapDocumentation({ name }: { name: Exclude<MapName, 'Geo
               ? `const data = [{ id: 'delivery', coordinates: [[8.5417, 47.3769], [8.3093, 47.0502], [7.4474, 46.948]] }];`
               : name === 'ArcMap'
                 ? `const data = [
-    { id: 'paris', from: [8.5417, 47.3769], to: [2.3522, 48.8566] },
-    { id: 'rome', from: [8.5417, 47.3769], to: [12.4964, 41.9028] },
+    { id: 'zurich-bern', from: [8.5417, 47.3769], to: [7.4474, 46.948] },
+    { id: 'zurich-lucerne', from: [8.5417, 47.3769], to: [8.3093, 47.0502] },
   ];`
                 : `const data = [
     { id: 'zurich', coordinates: [8.5417, 47.3769], label: 'Zurich', description: 'Main office' },
@@ -25,14 +23,13 @@ export default function MapDocumentation({ name }: { name: Exclude<MapName, 'Geo
     return (
         <ViewLayout
             name={name}
-            properties={component?.properties ?? []}
             example={{
                 title: name,
                 preview: <MapExample name={name} />,
                 code: `function Example() {
   ${data ? `/** @type {${dataType}} */\n  ${data}\n\n  ` : ''}return (
     <Box width="100%" height={320}>
-      <${name}${name === 'StreetMap' ? '' : ' data={data}'} center={[8.1, 47.2]} zoom={${name === 'ArcMap' ? '3.5' : '6.5'}} aria-label="${name === 'ArcMap' ? 'Office connections' : 'Swiss service network'}" />
+      <${name}${name === 'StreetMap' ? '' : ' data={data}'} center={[8.23, 46.8]} zoom={5.8} aria-label="${name === 'ArcMap' ? 'Office connections' : 'Swiss service network'}" />
     </Box>
   );
 }`

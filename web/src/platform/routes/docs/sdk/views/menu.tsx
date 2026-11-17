@@ -1,7 +1,7 @@
 import ViewLayout from './view-layout';
 import { useLocation, useNavigate } from 'react-router';
+import { Stack } from '@/components/longlink/layout/stack';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/longlink/layout/menu';
 
 /** Documents section navigation and selected content. */
@@ -75,7 +75,7 @@ function MenuExample() {
                 }
             }}
         >
-            <Stack padding={4}>
+            <Stack gap={0} padding={4}>
                 <Menu>
                     <MenuSection title="Settings">
                         <MenuItem label="Profile" icon="user-round">

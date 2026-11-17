@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { RequestContext } from '@/views/context';
 import { Input } from '@/components/shadcn/input';
 import { withMounted } from '../../../../../render';
 import userEvent from '@testing-library/user-event';
+import { RequestContext } from '@/components/custom/contexts';
 import FormPreview from '@/platform/routes/docs/sdk/views/form-preview';
 
 it('keeps edited fields local when a preview form is submitted', async () => {

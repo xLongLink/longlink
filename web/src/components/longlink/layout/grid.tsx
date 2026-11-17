@@ -1,20 +1,8 @@
-import { GridCollapseContext, spacing } from '@/components/custom/layout';
-import { useContext, useSyncExternalStore, type ComponentPropsWithoutRef } from 'react';
-
-const mobileViewport = '(max-width: 768px)';
-
-/** Tracks the shared mobile breakpoint without retaining listeners after unmount. */
-function subscribeToViewport(onChange: () => void) {
-    if (!window.matchMedia) return () => {};
-    const media = window.matchMedia(mobileViewport);
-    media.addEventListener('change', onChange);
-
-    return () => media.removeEventListener('change', onChange);
-}
+import type { CSSProperties, ComponentPropsWithoutRef } from 'react';
 
 /** Arranges equal-width columns, automatically collapsing to one column on mobile. */
 export function Grid({
-    columns: configuredColumns,
+    columns,
     gap,
     align,
     justify,
@@ -27,32 +15,24 @@ export function Grid({
     align?: 'start' | 'center' | 'end' | 'stretch';
     justify?: 'start' | 'center' | 'end' | 'stretch';
 }) {
-    // Keep server rendering deterministic while mounted grids follow the shared mobile breakpoint.
-    const collapsed = useSyncExternalStore(
-        subscribeToViewport,
-        () => Boolean(window.matchMedia) && window.matchMedia(mobileViewport).matches,
-        () => false
-    );
-
-    // Collapse the configured column count without creating implicit tracks for spanning items.
-    const columns = collapsed ? 1 : configuredColumns;
-
+    // Keep configured tracks above the mobile breakpoint without a viewport subscription.
     return (
-        <GridCollapseContext value={collapsed}>
-            <div
-                data-slot="grid"
-                {...props}
-                className="grid grid-cols-1 gap-3"
-                style={{
-                    gridTemplateColumns: columns !== undefined && columns > 0 ? `repeat(${columns}, 1fr)` : undefined,
-                    gap: gap === undefined ? undefined : spacing(gap),
+        <div
+            data-slot="grid"
+            {...props}
+            className="grid grid-cols-1 gap-3 [@media(width>768px)]:grid-cols-(--grid-columns)"
+            style={
+                {
+                    '--grid-columns':
+                        columns !== undefined && columns > 0 ? `repeat(${columns}, 1fr)` : 'repeat(1, 1fr)',
+                    gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
                     alignItems: align,
                     justifyItems: justify
-                }}
-            >
-                {children}
-            </div>
-        </GridCollapseContext>
+                } as CSSProperties
+            }
+        >
+            {children}
+        </div>
     );
 }
 
@@ -64,18 +44,13 @@ export function GridItem({
     /** Number of columns to occupy, or full to span the entire grid. */
     columns?: number | 'full';
 }) {
-    // Avoid implicit extra tracks when the parent collapses to a single column.
-    const collapsed = useContext(GridCollapseContext);
-
+    // Span the single mobile track without creating implicit extra columns.
     return (
         <div
             data-slot="grid-item"
             {...props}
-            className="col-span-1 grid h-full min-w-0 grid-cols-[minmax(0,1fr)]"
-            style={{
-                gridColumn:
-                    collapsed || columns === 'full' ? '1 / -1' : columns === undefined ? undefined : `span ${columns}`
-            }}
+            className="col-span-full grid h-full min-w-0 grid-cols-[minmax(0,1fr)] [@media(width>768px)]:[grid-column:var(--grid-item-column)]"
+            style={{ '--grid-item-column': columns === 'full' ? '1 / -1' : `span ${columns ?? 1}` } as CSSProperties}
         />
     );
 }

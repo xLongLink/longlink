@@ -106,10 +106,7 @@ export default function Login() {
                         }
                     >
                         <div className="flex flex-col gap-2">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-sm font-medium">Email</span>
-                                <TextField control={form.control} name="email" labelHidden label="Email" type="email" />
-                            </div>
+                            <TextField control={form.control} name="email" label="Email" type="email" />
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium">Password</span>

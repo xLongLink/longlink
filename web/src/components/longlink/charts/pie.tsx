@@ -64,7 +64,10 @@ export function PieChart<Row extends object>({
                     )}
                 </recharts.Pie>
                 {tooltip && (
-                    <ChartTooltip isAnimationActive={false} content={<ChartTooltipContent nameKey="id" hideLabel />} />
+                    <ChartTooltip
+                        isAnimationActive={false}
+                        content={<ChartTooltipContent nameKey="name" hideLabel />}
+                    />
                 )}
                 {legend && (
                     <ChartLegend

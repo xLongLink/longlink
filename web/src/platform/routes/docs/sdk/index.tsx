@@ -1,6 +1,6 @@
 import { MoveRight } from 'lucide-react';
+import { Stack } from '@/components/longlink/layout/stack';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -29,7 +29,14 @@ export default function DocsArticleRoute() {
                     may change. As information becomes fragmented, more time is spent finding data, reconstructing
                     decisions, coordinating people, and correcting mistakes.
                 </p>
-                <Stack direction="horizontal" gap={6} justify="center" paddingBlock={6} align="center" width="100%">
+                <Stack
+                    direction="horizontal"
+                    gap={6}
+                    justify="center"
+                    paddingBlock={6}
+                    align="center"
+                    className="w-full"
+                >
                     <span className="tracking-tight font-semibold block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic] text-sm sm:text-xl md:text-2xl">
                         Problem
                     </span>

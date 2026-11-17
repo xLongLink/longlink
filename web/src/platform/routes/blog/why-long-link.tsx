@@ -1,5 +1,5 @@
+import { Stack } from '@/components/longlink/layout/stack';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 const article = {
     description:

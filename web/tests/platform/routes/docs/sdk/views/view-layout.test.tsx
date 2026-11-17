@@ -12,6 +12,73 @@ it('rejects references absent from the published component catalog', () => {
     );
 });
 
+it.each([
+    { label: 'omitted', properties: undefined, hasCatalogProperties: true },
+    { label: 'explicitly empty', properties: [], hasCatalogProperties: false }
+])('respects $label property selection', async ({ properties, hasCatalogProperties }) => {
+    const user = userEvent.setup();
+
+    await withMounted(<ViewLayout name="Button" properties={properties} />, async (output) => {
+        const propertiesTab = output.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
+
+        if (!propertiesTab) throw new Error('Expected properties tab');
+        await act(async () => user.click(propertiesTab));
+        const table = output.querySelector('table[aria-label="Button properties"]');
+
+        if (!hasCatalogProperties) {
+            expect(table).toBeNull();
+            expect(output.querySelector('table')).toBeNull();
+            return;
+        }
+
+        expect(table).not.toBeNull();
+        const sizeRow = Array.from(table?.querySelectorAll('tbody tr') ?? []).find(
+            (row) => row.querySelector('td')?.textContent === 'size'
+        );
+
+        expect(sizeRow).toBeDefined();
+        expect(sizeRow?.lastElementChild?.textContent).toBe('"default"');
+    });
+});
+
+it('keeps authored companion references in separate tables without merging published properties', async () => {
+    const user = userEvent.setup();
+
+    await withMounted(
+        <ViewLayout
+            name="Button"
+            properties={[
+                { name: 'size', type: 'AuthoredButtonSize' },
+                { name: 'ButtonGroup.children', type: 'ReactNode' }
+            ]}
+        />,
+        async (output) => {
+            const propertiesTab = output.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
+
+            if (!propertiesTab) throw new Error('Expected properties tab');
+            await act(async () => user.click(propertiesTab));
+            expect(Array.from(output.querySelectorAll('h3'), (heading) => heading.textContent)).toEqual([
+                'Button',
+                'ButtonGroup'
+            ]);
+            const tables = output.querySelectorAll('table');
+
+            expect(Array.from(tables, (table) => table.getAttribute('aria-label'))).toEqual([
+                'Button properties',
+                'ButtonGroup properties'
+            ]);
+            expect(
+                Array.from(output.querySelectorAll('tbody tr'), (row) =>
+                    Array.from(row.querySelectorAll('td'), (cell) => cell.textContent)
+                )
+            ).toEqual([
+                ['size', 'AuthoredButtonSize', '"default"'],
+                ['children', 'ReactNode', '-']
+            ]);
+        }
+    );
+});
+
 it('keeps an edited preview mounted while its code switch changes modes', async () => {
     const user = userEvent.setup();
     const code = 'const retainedPreviewExample = true;';
@@ -46,9 +113,9 @@ it('opens the example first and lets readers switch to the property reference an
         <ViewLayout
             name="Button"
             properties={[
-                { name: 'size', type: '"default" | "sm" | "lg"', description: 'Control size.' },
-                { name: 'focusableWhenDisabled', type: 'boolean', description: 'Retain keyboard focus.' },
-                { name: 'children', type: 'ReactNode', description: 'Visible content.' }
+                { name: 'size', type: '"default" | "sm" | "lg"' },
+                { name: 'focusableWhenDisabled', type: 'boolean' },
+                { name: 'children', type: 'ReactNode' }
             ]}
             example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,
@@ -76,9 +143,6 @@ it('opens the example first and lets readers switch to the property reference an
                 ['focusableWhenDisabled', 'boolean', 'false'],
                 ['children', 'ReactNode', '-']
             ]);
-            expect(output.textContent).not.toContain('Control size.');
-            expect(output.textContent).not.toContain('Retain keyboard focus.');
-            expect(output.textContent).not.toContain('Visible content.');
             expect(output.textContent).not.toContain('Order details');
 
             await act(async () => user.click(exampleTab));

@@ -1,121 +1,80 @@
 # LongLink Agent Guide
 
-## General rules
+PRINCIPLES:
+- KISS: Choose the simplest correct implementation.
+- SRP / Separation of concerns: Keep responsibilities focused and ownership clear.
+- High cohesion / Low coupling: Keep related behavior together and reduce unnecessary dependencies.
+- YAGNI: Avoid features, abstractions, configuration, and extension points needed only for hypothetical future use.
+- DRY: Avoid duplicated knowledge or business rules. AVOID abstractions that only remove superficial similarity.
 
-- The direct Web `isbot` dependency is intentional. You CAN retain it.
-- PREFER simple, maintainable, conventional solutions.
-- After creating a merge request, DO return the local checkout to its previous branch.
-- When they simplify implementation, PREFER the standard library or established libraries over handwritten implementations.
+GENERAL RULES:
 - DO validate inputs at system boundaries.
-- When duplication improves clarity, PREFER explicit duplication to helpers or shared code.
-- Where practical, PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
-- NEVER EVER EVER add any new comment in markdown files, only fix existing one.
+- PREFER simple, maintainable, conventional solutions.
 - NEVER create new markdown files unless indicated from the user.
+- NEVER EVER EVER add any new comment in markdown files, only fix existing one.
+- After creating a merge request, DO return the local checkout to its previous branch.
+- When duplication improves clarity, PREFER explicit duplication to helpers or shared code.
+- When they simplify implementation, PREFER the standard/established library over handwritten implementations.
 
-## Terminology
+TESTING:
+- BE critical, test what matters.
+- DO use Arrange, Act, and Assert sections.
+- DO mock external boundaries, not business logic.
+- DO test observable behavior with clear, deterministic assertions.
+- PREFER real implementations and explicit dependency boundaries to mocks or global runtime-state changes.
 
-- **Platform:** The system for building and operating process-specific business applications. It manages organizations, access, infrastructure, and deployment.
-- **Solution:** The simplest representation of a business process expressed as code.
-- **View:** A `.jsx` Solution interface definition rendered by the isolated shared Web runtime. Bundled Platform pages are trusted native `.tsx` modules.
-
-## Testing Guidelines
-
-- DO prioritize failures that matter to users: unauthorized access, data disclosure, lost updates, unusable credentials, misleading success, and broken recovery.
-- Before proposing tests, DO inspect the workflow, its actors, ownership boundaries, state transitions, failure paths, and existing protection across test layers.
-- Before writing a test, DO name the realistic regression it should detect and identify the observable assertion that would fail.
-- DO test actual behavior with independently specified expectations instead of duplicating production logic or asserting mock configuration.
-- DO cover meaningful contrasts: privileged versus restricted users, own versus another tenant's resources, and initial denial versus access revoked after data has loaded.
-- DO use otherwise valid inputs and existing resources so rejection is caused by the boundary under test, not an unrelated failure.
-- DO assert consequential outcomes and forbidden effects. An error response alone does not prove that no data was changed, disclosed, or queued for processing.
-- DO keep the mechanism establishing the guarantee real, including authorization, database constraints, transactions, form submission, cancellation, and recovery. Replace only boundaries outside the behavior under test.
-- PREFER the lowest test level that proves the contract. Add end-to-end coverage only when it protects a distinct integration boundary or user journey not already established by narrower tests.
-- DON'T add trivial getter/setter tests, duplicate happy paths, or surface-level interaction tests without a concrete regression risk.
-- DON'T treat line coverage, test counts, assertion counts, or mutation scores as evidence of behavioral completeness or as targets.
-- DO propose only consequential, evidence-backed gaps. DON'T invent scenarios to fill a requested batch; report when fewer worthwhile candidates remain.
-- DO report which behaviors were verified, which checks actually ran, and which material gaps remain. DON'T equate a passing suite with production readiness.
-
-## Python Guidelines
-
+PYTHON:
 - AVOID renaming imports.
-- DO FOLLOW the zen of python.
-- PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
-- DO construct class instances in separate, multi-line assignments before invoking their methods.
-- PREFER idiomatic Python and readability over efficiency.
 - DO use clear domain names.
+- DO FOLLOW the zen of python.
 - PREFER single-word Python filenames.
-- DO use `Protocol` for behavioral interfaces and dependency contracts.
-- DO represent application state with typed models, enums, or structured objects.
-- PREFER namespaced module APIs to importing many related functions directly.
 - DO use exceptions for genuine errors.
+- DO validate types at system boundaries.
 - AVOID unnecessary `try`/`except` blocks.
-- DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
-- DO use `collections.abc.Sequence` instead of `list` for read-only query result return types.
-- DO declare `response_model` on FastAPI routes and let FastAPI validate responses.
+- PREFER the simplest correct implementation.
 - DO group Pydantic fields into commented sections.
-- Within each section, DO order fields from the shortest name to the longest name.
-- DO add a descriptive `# ...` comment before each logic block, with one blank line before the comment.
-
-## JavaScript / TypeScript Guidelines
-
-- DON'T use browsers or browser automation to inspect or verify changes.
-- DO inspect source and run code-level checks instead.
-- PREFER precise types, generics, `unknown` with narrowing, discriminated unions, and established validation libraries.
-- Unless extraction improves reuse, readability, or separation of concerns, PREFER inline logic.
-- AVOID single-use helpers, unnecessary abstractions, duplicated state, dead code, or unnecessarily complex solutions.
-- DO keep changes small and follow existing project conventions.
-- DO add JSDoc to JavaScript functions.
-- When types do not make behavior clear, DO add JSDoc to TypeScript functions.
-- DO add a descriptive `// ...` comment before each logic block, with one blank line before the comment.
-- DO keep each lookup and its immediate existence check together, with the block comment before the lookup.
-- DO use clear domain terms, concise filenames, consistent plural model names, and namespaced APIs for related factories or facades.
-- Unless renaming improves clarity, AVOID renaming imports.
-- DO inline simple, single-use prop types and `className` expressions.
-- When prop types are shared or complex, DO keep named prop types.
-- DO extract components only for meaningful UI boundaries.
-- DO keep React component modules limited to component and type exports; place shared contexts, hooks, and utilities in separate non-component modules, except framework-supported route exports.
-- AVOID unnecessary cards, duplicated derived state, and effects that do not synchronize with external systems.
+- AVOID features needed only for hypothetical future use.
+- PREFER idiomatic Python and readability over efficiency.
+- DO use `Protocol` for behavioral interfaces and dependency contracts.
+- PREFER namespaced module APIs to importing many related functions directly.
+- DO represent application state with typed models, enums, or structured objects.
+- DO declare `response_model` on FastAPI routes and let FastAPI validate responses.
+- DO order Pydantic fields within each section from the shortest name to the longest name.
+- DO use `collections.abc.Sequence` instead of `list` for read-only query result return types.
+- PREFER explicit duplication to a local helper, When duplication makes lifecycle code clearer.
+- DO construct class instances in separate, multi-line assignments before invoking their methods.
+- DO store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`.
+  
+TYPESCRIPT:
+- AVOID renaming imports.
 - PREFER explicit async/await.
+- DO declare route response schemas.
+- DO keep each page simple and standalone.
 - DO use concurrency only for independent operations.
 - DO clean up timers, listeners, subscriptions, and observers.
-- Unless unavoidable, AVOID changing global runtime state.
-- DO declare route response schemas.
-- DO return raw domain objects or primitive values without reconstructing response models solely for validation.
+- When prop types are shared or complex, DO keep named prop types.
+- DO inline simple, single-use prop types and `className` expressions.
 - DO run formatting, linting, type checking, and relevant existing tests.
-- After verification, DO review the implementation for further simplification.
-- DO use only `lucide-react` icons.
-- For brand logos, you CAN use custom SVG components with official brand colors.
-- DO keep each page simple and standalone.
+- Unless extraction improves reuse, readability, or separation of concerns, PREFER inline logic.
+- DO keep each lookup and its immediate existence check together, with the block comment before the lookup.
+- AVOID unnecessary cards, duplicated derived state, and effects that do not synchronize with external systems.
+- DO return raw domain objects or primitive values without reconstructing response models solely for validation.
+- AVOID single-use helpers, unnecessary abstractions, duplicated state, dead code, or complex solutions.
 
-## UI / LongLink components
-
-LongLink exposes shared UI components for `.jsx` Views to use directly.
-
+UI/COMPONENTS:
+- Use tailwindcss for styling.
+- USE react-error-boundary for errors.
 - ReUI reference: https://reui.io/llms.txt.
-- shadcn/ui reference: https://ui.shadcn.com/llms.txt.
-- DO reuse existing LongLink, ReUI, or shadcn/ui components before building equivalents.
-- DO place custom components in a `custom` folder.
-- DO preserve ReUI or shadcn/ui APIs, composition patterns, and accessibility conventions.
-- DO keep reusable interactions, keyboard navigation, and focus management inside components.
-- DO expose clear props, events, and composition slots so Views don't rebuild component internals.
-- DO support controlled state when Views need coordination; otherwise, prefer component-owned state.
-- DO centralize shared appearance through theme tokens and component variants.
-- DO keep View-level styling focused on layout and application-specific presentation.
-- DO keep data loading, business rules, permissions, and application-specific actions outside generic UI components.
-- DO handle applicable loading, empty, error, disabled, and pending states.
-- DON'T add pass-through wrappers, speculative options, or abstractions for one-off layouts.
+- MapCN reference: https://www.mapcn.dev/llms.txt
+- ShadcnUI reference: https://ui.shadcn.com/llms.txt.
 
-## Commit and Merge Structure
+VIEWS 
+- One file, one view
+- LongLink exposes shared UI components for `.jsx` Views to use directly.
+- Components are expored with parameters so that the views do not have to apply classNames
 
-- USE Conventional Commits for commit messages: type, optional scope in parentheses, a colon, a space, and a short imperative description.
-- CHOSE a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`.
+COMMIT & MERGE
+
+- USE Conventional Commits for commit messages
+- CHOSE a type from `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 - Optional scopes are `api`, `sdk`, and `web`; omit the scope for cross-area changes.
-
-```markdown
-## Summary
-
-- What changed and why.
-
-## Validation
-
-- Checks run and results, or why not run.
-```

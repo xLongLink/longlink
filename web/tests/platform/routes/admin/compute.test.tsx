@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { renderPlatform } from '../../render';
 import Page from '@/platform/routes/admin/compute';
@@ -19,7 +19,7 @@ it('offers registration for an empty Compute registry without exposing credentia
     expect(output.querySelector('textarea')).toBeNull();
 });
 
-it('preserves secret YAML exactly and locks the textarea with loading feedback while reading a file', async () => {
+it('submits exact secret YAML and metadata after file-read recovery without accepting obsolete credentials', async () => {
     // A pending file must not submit stale pasted credentials or let a manual edit race its result.
     const user = userEvent.setup({ applyAccept: false });
     let resolveRead: (value: string) => void = () => undefined;
@@ -41,6 +41,21 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
     const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, refetchOnMount: false } } });
 
     client.setQueryData(['api', '/api/v1/computes?page=1&page_size=25&search='], { items: [], total: 0 });
+    const writes: unknown[] = [];
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+
+        if (new URL(request.url).pathname === '/api/v1/computes') {
+            if (request.method === 'POST') {
+                writes.push(await request.json());
+                return new Response(null, { status: 204 });
+            }
+
+            if (request.method === 'GET') return Response.json({ items: [], total: 0 });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+    });
 
     try {
         await withMounted(
@@ -153,10 +168,24 @@ it('preserves secret YAML exactly and locks the textarea with loading feedback w
                 expect(textarea.value).toBe(yaml);
                 expect(textarea.disabled).toBe(false);
                 expect(submit.disabled).toBe(false);
+
+                // Submit through the footer after recovery, preserving every YAML byte.
+                expect(writes).toEqual([]);
+                await act(async () => user.click(submit));
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                expect(writes).toEqual([
+                    {
+                        name: 'Fixture Compute',
+                        gateway_url: 'https://gateway.example.com',
+                        storage_endpoint: 'https://storage.example.com',
+                        kubeconfig: yaml
+                    }
+                ]);
             },
             '/admin/compute'
         );
     } finally {
+        transport.mockRestore();
         client.clear();
     }
 });

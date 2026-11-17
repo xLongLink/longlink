@@ -4,11 +4,11 @@ import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
 import { TagForm } from '@/components/dialogs/tag-form';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
@@ -44,7 +44,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
     return (
         <>
             <Stack gap={3}>
-                <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
                     <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
                         Tabs
                     </h4>
@@ -139,7 +139,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
                     tag={action.kind === 'create' ? null : action.tag}
-                    onClose={() => setAction(null)}
+                    onOpenChange={() => setAction(null)}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
                         await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });

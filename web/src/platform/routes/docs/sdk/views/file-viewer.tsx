@@ -10,12 +10,8 @@ export default function FileViewerPage() {
         <ViewLayout
             name="FileViewer"
             properties={[
-                {
-                    name: 'src',
-                    type: 'string',
-                    description: 'Scoped Solution operation path returning the file to preview.'
-                },
-                { name: 'title', type: 'string', description: 'Accessible name for the embedded file.' }
+                { name: 'src', type: 'string' },
+                { name: 'title', type: 'string' }
             ]}
             example={{
                 title: 'FileViewer',

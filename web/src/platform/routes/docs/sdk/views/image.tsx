@@ -9,13 +9,9 @@ export default function ImagePage() {
         <ViewLayout
             name="Image"
             properties={[
-                { name: 'src', type: 'string', description: 'Scoped Solution image path, or an image data/blob URL.' },
-                { name: 'alt', type: 'string', description: 'Accessible description of the photo.' },
-                {
-                    name: 'ratio',
-                    type: 'number',
-                    description: 'Optional frame ratio; omitted images retain intrinsic proportions.'
-                }
+                { name: 'src', type: 'string' },
+                { name: 'alt', type: 'string' },
+                { name: 'ratio', type: 'number' }
             ]}
             example={{
                 title: 'Card photo',

@@ -55,6 +55,12 @@ export function Combobox<Multiple extends boolean = false>({
     });
     const anchor = useRef<HTMLDivElement | null>(null);
 
+    // Keep the first option authoritative when values repeat.
+    const optionsByValue = new Map<string, fields.FormOption>();
+    for (const option of options) {
+        if (!optionsByValue.has(option.value)) optionsByValue.set(option.value, option);
+    }
+
     return (
         <FieldFrame
             id={field.id}
@@ -67,7 +73,7 @@ export function Combobox<Multiple extends boolean = false>({
             <combobox.Combobox
                 {...props}
                 items={options.map((option) => option.value)}
-                itemToStringLabel={(value) => options.find((option) => option.value === value)?.label ?? value}
+                itemToStringLabel={(value) => optionsByValue.get(value)?.label ?? value}
             >
                 {props.multiple ? (
                     <combobox.ComboboxChips ref={anchor}>
@@ -75,7 +81,7 @@ export function Combobox<Multiple extends boolean = false>({
                             {(values: string[]) => (
                                 <>
                                     {values.map((value) => {
-                                        const option = options.find((option) => option.value === value);
+                                        const option = optionsByValue.get(value);
                                         const label = option?.label ?? value;
 
                                         return (
@@ -111,7 +117,7 @@ export function Combobox<Multiple extends boolean = false>({
                     <combobox.ComboboxEmpty>{emptyText}</combobox.ComboboxEmpty>
                     <combobox.ComboboxList>
                         {(value: string) => {
-                            const option = options.find((item) => item.value === value);
+                            const option = optionsByValue.get(value);
                             if (!option) return null;
 
                             return (

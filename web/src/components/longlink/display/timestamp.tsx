@@ -28,8 +28,6 @@ export function Timestamp({
     if (Number.isNaN(date.getTime())) return null;
 
     const relative = format === 'relative' && now !== null;
-    const fullDate = formatTimestamp(date, 'full');
-
     const text = relative
         ? formatRelativeTimestamp(date, now)
         : formatTimestamp(date, format === 'relative' ? 'date_time' : format, format === 'relative');
@@ -38,18 +36,7 @@ export function Timestamp({
     return (
         <span data-slot="timestamp" {...props} className={cn('text-xs text-muted-foreground', className)}>
             {relative ? (
-                <TimestampDetails
-                    dateTime={date.toISOString()}
-                    fullDate={fullDate}
-                    label={formatTimestamp(date, 'full', false, true)}
-                    zoneName={
-                        new Intl.DateTimeFormat('en', { timeZoneName: 'long' })
-                            .formatToParts(date)
-                            .find((part) => part.type === 'timeZoneName')?.value ?? ''
-                    }
-                >
-                    {text}
-                </TimestampDetails>
+                <TimestampDetails date={date}>{text}</TimestampDetails>
             ) : (
                 <time dateTime={date.toISOString()}>{text}</time>
             )}

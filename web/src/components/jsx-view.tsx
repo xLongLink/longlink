@@ -54,7 +54,7 @@ export function JsxView({
     const [modal, setModal] = useState({ depth: 0, fullscreen: false });
 
     const [filePreview, setFilePreview] = useState<
-        { title: string } & ({ type: 'pdf' | 'media'; body: Blob } | { type: 'text'; text: string })
+        { title: string } & ({ type: 'file'; body: Blob } | { type: 'text'; text: string })
     >();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
@@ -397,20 +397,16 @@ export function JsxView({
 
                     controller.signal.throwIfAborted();
 
-                    if (body.type === 'application/pdf') {
-                        setFilePreview({ type: 'pdf', body, title: command.title });
-                        data = null;
-                    } else if (textLanguage(command.title, body.type) !== undefined) {
+                    if (body.type !== 'application/pdf' && textLanguage(command.title, body.type) !== undefined) {
                         // Render text as inert content, never as a document in the host origin.
                         const bytes = await body.arrayBuffer();
                         const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
                         controller.signal.throwIfAborted();
                         setFilePreview({ type: 'text', text, title: command.title });
-                        data = null;
                     } else {
-                        setFilePreview({ type: 'media', body, title: command.title });
-                        data = null;
+                        setFilePreview({ type: 'file', body, title: command.title });
                     }
+                    data = null;
                 } else {
                     data = await host.request(requestBaseUrl, command, controller.signal);
                 }
@@ -489,9 +485,8 @@ export function JsxView({
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }
             />
-            {(filePreview?.type === 'pdf' || filePreview?.type === 'media') && (
+            {filePreview?.type === 'file' && (
                 <FilePreview
-                    open
                     body={filePreview.body}
                     title={filePreview.title}
                     onOpenChange={() => setFilePreview(undefined)}
@@ -499,7 +494,6 @@ export function JsxView({
             )}
             {filePreview?.type === 'text' && (
                 <TextPreview
-                    open
                     text={filePreview.text}
                     title={filePreview.title}
                     onOpenChange={() => setFilePreview(undefined)}

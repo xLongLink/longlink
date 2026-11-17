@@ -14,10 +14,10 @@ import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onClose
+    onOpenChange
 }: {
-    onClose: () => void;
     organizationId: string;
+    onOpenChange: (open: boolean) => void;
     onSuccess: () => void | Promise<void>;
 }) {
     const formId = useId();
@@ -116,11 +116,11 @@ export default function CreateSolution({
     return (
         <Dialog
             open
-            onOpenChange={onClose}
+            onOpenChange={onOpenChange}
             title="Create solution"
             footer={
                 <>
-                    <Button type="button" variant="outline" disabled={pending} onClick={onClose}>
+                    <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     {stage === 'configure' && (
@@ -167,23 +167,17 @@ export default function CreateSolution({
                                 decoding="async"
                                 className="size-20 self-center object-contain invert dark:invert-0"
                             />
-                            <Controller
-                                name="image"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="solution-image">Image</FieldLabel>
-                                        <Input
-                                            {...field}
-                                            id="solution-image"
-                                            autoFocus
-                                            placeholder="ghcr.io/longlink/dashboard:latest"
-                                            aria-invalid={fieldState.invalid}
-                                        />
-                                        <FieldError errors={[fieldState.error]} />
-                                    </Field>
-                                )}
-                            />
+                            <Field data-invalid={Boolean(form.formState.errors.image)}>
+                                <FieldLabel htmlFor="solution-image">Image</FieldLabel>
+                                <Input
+                                    {...form.register('image')}
+                                    id="solution-image"
+                                    autoFocus
+                                    placeholder="ghcr.io/longlink/dashboard:latest"
+                                    aria-invalid={Boolean(form.formState.errors.image)}
+                                />
+                                <FieldError errors={[form.formState.errors.image]} />
+                            </Field>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -203,25 +197,18 @@ export default function CreateSolution({
                                 className="size-20 self-center object-contain invert dark:invert-0"
                             />
                             {(['name', 'description'] as const).map((name) => (
-                                <Controller
-                                    key={name}
-                                    name={name}
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field data-invalid={fieldState.invalid}>
-                                            <FieldLabel htmlFor={`solution-${name}`}>
-                                                {name === 'name' ? 'Name' : 'Description'}
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={`solution-${name}`}
-                                                autoFocus={name === 'name'}
-                                                aria-invalid={fieldState.invalid}
-                                            />
-                                            <FieldError errors={[fieldState.error]} />
-                                        </Field>
-                                    )}
-                                />
+                                <Field key={name} data-invalid={Boolean(form.formState.errors[name])}>
+                                    <FieldLabel htmlFor={`solution-${name}`}>
+                                        {name === 'name' ? 'Name' : 'Description'}
+                                    </FieldLabel>
+                                    <Input
+                                        {...form.register(name)}
+                                        id={`solution-${name}`}
+                                        autoFocus={name === 'name'}
+                                        aria-invalid={Boolean(form.formState.errors[name])}
+                                    />
+                                    <FieldError errors={[form.formState.errors[name]]} />
+                                </Field>
                             ))}
                             {!!inspection?.metadata.environments?.length && (
                                 <img

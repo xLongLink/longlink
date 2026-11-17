@@ -8,29 +8,12 @@ export default function FileTypePage() {
         <ViewLayout
             name="FileType"
             properties={[
-                {
-                    name: 'type',
-                    type: 'string',
-                    description:
-                        'Extension such as "pdf" or ".docx", family such as "image" or "folder", or "empty". Unknown extensions render as neutral files.'
-                },
-                {
-                    name: 'variant',
-                    type: '"outline" | "solid" | "light" | "mono"',
-                    description: 'Appearance. Defaults to "outline".'
-                },
-                {
-                    name: 'size',
-                    type: '"mini" | "xs" | "sm" | "md" | "lg" | "xl"',
-                    description: 'Icon size. Defaults to "md".'
-                },
-                {
-                    name: 'label',
-                    type: 'ReactNode',
-                    description: 'Replaces the extension label. Use null or an empty string to hide it.'
-                },
-                { name: 'glyph', type: 'boolean', description: 'Shows the family glyph instead of the label.' },
-                { name: 'icon', type: 'ReactNode', description: 'Custom icon replacing the label and family glyph.' }
+                { name: 'type', type: 'string' },
+                { name: 'variant', type: '"outline" | "solid" | "light" | "mono"' },
+                { name: 'size', type: '"mini" | "xs" | "sm" | "md" | "lg" | "xl"' },
+                { name: 'label', type: 'ReactNode' },
+                { name: 'glyph', type: 'boolean' },
+                { name: 'icon', type: 'ReactNode' }
             ]}
             example={{
                 title: 'File types',

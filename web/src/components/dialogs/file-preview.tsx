@@ -5,15 +5,14 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 export function FilePreview({
     body,
     title,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     body: Blob;
     title: string;
 }) {
     return (
-        <Dialog fullscreen {...dialogProps} title={title}>
+        <Dialog open fullscreen onOpenChange={onOpenChange} title={title}>
             <div className="h-full min-h-0">
                 <NativeFile body={body} title={title} />
             </div>

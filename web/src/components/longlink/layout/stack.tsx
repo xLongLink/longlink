@@ -1,23 +1,67 @@
-import { NativeStack, type StackLayoutProps } from '@/components/custom/native-stack';
-import { useCallback, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
+import { cn } from 'cn';
+import { createElement, useCallback, useState, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
 
-/** Arranges View content with a three-step gap and explicit layout controls. */
-export function Stack(
-    props: Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style'> &
-        Pick<
-            StackLayoutProps,
-            | 'direction'
-            | 'justify'
-            | 'align'
-            | 'wrap'
-            | 'gap'
-            | 'padding'
-            | 'paddingInline'
-            | 'paddingBlock'
-            | 'background'
-        >
-) {
-    return <NativeStack data-slot="stack" {...props} className="gap-3" />;
+type StackProps = Omit<HTMLAttributes<HTMLElement>, 'style'> & {
+    as?: 'div' | 'main' | 'section' | 'aside' | 'figure' | 'footer';
+    direction?: 'horizontal' | 'vertical';
+    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+    align?: 'start' | 'center' | 'end' | 'stretch';
+    wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+    gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
+    background?: 'muted';
+};
+
+/** Arranges content with a three-step default gap and explicit layout controls. */
+export function Stack({
+    as: Component = 'div',
+    direction = 'vertical',
+    justify,
+    align,
+    wrap,
+    gap,
+    padding,
+    paddingInline = padding,
+    paddingBlock = padding,
+    background,
+    className,
+    children,
+    ...props
+}: StackProps): ReactElement {
+    // Keep omitted spacing in CSS so caller utility classes can override the defaults.
+    return createElement(
+        Component,
+        {
+            'data-slot': 'stack',
+            ...props,
+            className: cn(
+                'flex gap-3',
+                direction === 'horizontal' ? 'flex-row' : 'flex-col',
+                justify &&
+                    {
+                        start: 'justify-start',
+                        center: 'justify-center',
+                        end: 'justify-end',
+                        between: 'justify-between',
+                        around: 'justify-around',
+                        evenly: 'justify-evenly'
+                    }[justify],
+                align &&
+                    { start: 'items-start', center: 'items-center', end: 'items-end', stretch: 'items-stretch' }[align],
+                background === 'muted' && 'bg-muted',
+                className
+            ),
+            style: {
+                gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
+                paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
+                paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
+                flexWrap: wrap
+            }
+        },
+        children
+    );
 }
 
 /** Controls how one item participates in its surrounding Stack. */

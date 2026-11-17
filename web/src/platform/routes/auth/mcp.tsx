@@ -1,19 +1,20 @@
 import { api } from '@/lib/api';
-import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
+import { useState, useTransition } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */
 export default function McpAuthorization() {
     const [params] = useSearchParams();
-    const form = useForm();
+    const [pending, startDecision] = useTransition();
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const { data: user, isLoading: loadingUser } = useCurrentUser();
     const query = params.toString();
 
@@ -30,6 +31,8 @@ export default function McpAuthorization() {
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
     async function decide(data: FormData) {
+        setSubmitError(null);
+
         const decision = data.get('decision');
 
         if (decision !== 'allow' && decision !== 'deny') throw new Error('An explicit consent decision is required');
@@ -43,7 +46,7 @@ export default function McpAuthorization() {
     }
 
     const submit = useSubmit(decide, {
-        onError: () => form.setError('root', { message: 'Could not submit the decision. Please try again.' })
+        onError: () => setSubmitError('Could not submit the decision. Please try again.')
     });
 
     // Preserve only this first-party approval route across password or provider login.
@@ -62,14 +65,15 @@ export default function McpAuthorization() {
             {consent ? (
                 <form
                     onSubmit={(event) => {
+                        event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-                        void form.handleSubmit(async () => {
+                        startDecision(async () => {
                             await submit(data);
-                        })(event);
+                        });
                     }}
-                    aria-busy={form.formState.isSubmitting}
+                    aria-busy={pending}
                 >
-                    <fieldset disabled={form.formState.isSubmitting} className="contents">
+                    <fieldset disabled={pending} className="contents">
                         <Stack gap={4}>
                             <Stack gap={2}>
                                 <p>
@@ -105,7 +109,7 @@ export default function McpAuthorization() {
                             </Button>
                         </Stack>
                     </fieldset>
-                    <FieldError errors={[form.formState.errors.root]} />
+                    <FieldError>{submitError}</FieldError>
                 </form>
             ) : null}
         </AuthLayout>

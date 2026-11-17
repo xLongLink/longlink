@@ -1,5 +1,5 @@
+import { X } from 'lucide-react';
 import { useRef, useTransition } from 'react';
-import { X, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import {
     AlertDialog,
@@ -35,11 +35,9 @@ export function DeletionDialog({
         <Button
             type="button"
             variant="destructive"
-            className="relative min-w-0"
             disabled={isDeleting}
             focusableWhenDisabled
             aria-busy={isDeleting || undefined}
-            aria-label={isDeleting ? 'Delete' : undefined}
             onClick={() => {
                 // Deduplicate same-tick clicks before the transition's pending state renders.
                 if (deletionInFlight.current) return;
@@ -55,18 +53,7 @@ export function DeletionDialog({
                 });
             }}
         >
-            <span
-                className="flex min-w-0 max-w-full flex-1 items-center justify-center gap-[inherit] transition-opacity duration-0 aria-hidden:opacity-0 aria-hidden:delay-200 motion-reduce:aria-hidden:delay-0"
-                aria-hidden={isDeleting || undefined}
-            >
-                <span className="min-w-0 overflow-hidden text-ellipsis">Delete</span>
-            </span>
-            {isDeleting && (
-                <LoaderCircle
-                    aria-hidden="true"
-                    className="absolute inset-0 m-auto size-3.5 transition-opacity duration-0 delay-200 motion-safe:animate-spin motion-reduce:delay-0 starting:opacity-0"
-                />
-            )}
+            Delete
         </Button>
     );
 

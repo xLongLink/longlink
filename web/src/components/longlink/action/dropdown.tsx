@@ -1,13 +1,11 @@
 import type { ComponentProps } from 'react';
 import * as menu from '@/components/shadcn/dropdown-menu';
 
-export function Dropdown(props: ComponentProps<typeof menu.DropdownMenu>) {
-    return <menu.DropdownMenu {...props} />;
-}
-
-export function DropdownPortal(props: ComponentProps<typeof menu.DropdownMenuPortal>) {
-    return <menu.DropdownMenuPortal {...props} />;
-}
+export {
+    DropdownMenu as Dropdown,
+    DropdownMenuPortal as DropdownPortal,
+    DropdownMenuSub as DropdownSub
+} from '@/components/shadcn/dropdown-menu';
 
 export function DropdownTrigger(props: Omit<ComponentProps<typeof menu.DropdownMenuTrigger>, 'className'>) {
     return <menu.DropdownMenuTrigger {...props} className={undefined} />;
@@ -47,10 +45,6 @@ export function DropdownSeparator(props: Omit<ComponentProps<typeof menu.Dropdow
 
 export function DropdownShortcut(props: Omit<ComponentProps<typeof menu.DropdownMenuShortcut>, 'className'>) {
     return <menu.DropdownMenuShortcut {...props} className={undefined} />;
-}
-
-export function DropdownSub(props: ComponentProps<typeof menu.DropdownMenuSub>) {
-    return <menu.DropdownMenuSub {...props} />;
 }
 
 export function DropdownSubTrigger(props: Omit<ComponentProps<typeof menu.DropdownMenuSubTrigger>, 'className'>) {

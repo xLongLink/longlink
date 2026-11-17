@@ -21,17 +21,13 @@ export function InviteMember({
     onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
     const formId = useId();
-    const roles = [
-        { value: 'read', icon: EyeOff },
-        { value: 'write', icon: ArrowUp },
-        { value: 'maintain', icon: Wrench },
-        ...(canInviteAdmin ? [{ value: 'admin', icon: CheckCheck }] : [])
-    ];
+    const roleSchema = z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain']);
+    const roles = roleSchema.options.map((value) => ({
+        value,
+        icon: { read: EyeOff, write: ArrowUp, maintain: Wrench, admin: CheckCheck }[value]
+    }));
 
-    const schema = z.object({
-        email: z.email(),
-        role: z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain'])
-    });
+    const schema = z.object({ email: z.email(), role: roleSchema });
 
     const form = useForm<z.input<typeof schema>>({
         resolver: zodResolver(schema),
@@ -81,23 +77,17 @@ export function InviteMember({
                     className="size-20 self-center object-contain invert dark:invert-0"
                 />
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
-                    <Controller
-                        name="email"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="invite-email">Email</FieldLabel>
-                                <Input
-                                    {...field}
-                                    id="invite-email"
-                                    type="email"
-                                    placeholder="user@example.com"
-                                    aria-invalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.email)}>
+                        <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                        <Input
+                            {...form.register('email')}
+                            id="invite-email"
+                            type="email"
+                            placeholder="user@example.com"
+                            aria-invalid={Boolean(form.formState.errors.email)}
+                        />
+                        <FieldError errors={[form.formState.errors.email]} />
+                    </Field>
                     <Controller
                         name="role"
                         control={form.control}

@@ -4,8 +4,8 @@ import { act, useState } from 'react';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
+import { Grid } from '@/components/longlink/layout/grid';
 import { PageContainer } from '@/components/ui/page-container';
-import { Grid, GridItem } from '@/components/longlink/layout/grid';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
@@ -15,7 +15,7 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
             <PageContainer>
                 <h1>Default page</h1>
             </PageContainer>
-            <PageContainer height="100%" minHeight={0} maxWidth={720} gap={8} padding={2} paddingInline={0}>
+            <PageContainer className="h-full min-h-0 max-w-[720px]" gap={8} padding={2} paddingInline={0}>
                 <h2>Sized page</h2>
             </PageContainer>
         </>
@@ -25,12 +25,14 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
     const sized = output.querySelector('h2')?.parentElement;
 
     if (!plain || !sized) throw new Error('Expected page containers');
-    expect(plain.style.gap).toBe('');
+    expect(plain.style.gap).toBe('calc(var(--spacing) * 0)');
     expect(plain.style.paddingInline).toBe('');
     expect(plain.style.paddingBlock).toBe('');
-    expect(sized.style.height).toBe('100%');
-    expect(Number.parseFloat(sized.style.minHeight)).toBe(0);
-    expect(sized.style.maxWidth).toBe('720px');
+    expect(plain.classList.contains('max-w-[1000px]')).toBe(true);
+    expect(sized.classList.contains('h-full')).toBe(true);
+    expect(sized.classList.contains('min-h-0')).toBe(true);
+    expect(sized.classList.contains('max-w-[720px]')).toBe(true);
+    expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
     expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
     expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
@@ -108,57 +110,6 @@ it('retains an unsaved content draft when its toolbar is removed and restored', 
         await act(async () => user.click(submit));
         expect(submissions).toEqual(['Retained draft']);
     });
-});
-
-it('automatically collapses and restores nested grid spans on viewport changes', async () => {
-    const originalWidth = window.innerWidth;
-
-    try {
-        await act(async () => {
-            window.innerWidth = 1000;
-            window.dispatchEvent(new Event('resize'));
-        });
-
-        await withMounted(
-            <Grid columns={3}>
-                <GridItem columns={2}>
-                    <Grid columns={2}>
-                        <GridItem columns={2}>Nested</GridItem>
-                    </Grid>
-                </GridItem>
-            </Grid>,
-            async (output) => {
-                const grids = output.querySelectorAll<HTMLElement>('[data-slot="grid"]');
-                const spans = output.querySelectorAll<HTMLElement>('[data-slot="grid-item"]');
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('span 2');
-
-                await act(async () => {
-                    window.innerWidth = 768;
-                    window.dispatchEvent(new Event('resize'));
-                });
-
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('1 / -1');
-                expect(spans[1]?.style.gridColumn).toBe('1 / -1');
-
-                await act(async () => {
-                    window.innerWidth = 769;
-                    window.dispatchEvent(new Event('resize'));
-                });
-
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('span 2');
-                expect(spans[1]?.style.gridColumn).toBe('span 2');
-            }
-        );
-    } finally {
-        window.innerWidth = originalWidth;
-        window.dispatchEvent(new Event('resize'));
-    }
 });
 
 it('names a scrolling StackItem only while its retained content overflows', async () => {

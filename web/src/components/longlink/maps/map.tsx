@@ -6,7 +6,7 @@ import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 
 /** Keeps WebGL initialization failures local to the composed map region. */
-export function ViewMap(props: PublicProps<mapcn.MapProps & RefAttributes<mapcn.MapRef>>) {
+export function ViewMap(props: PublicProps<Omit<mapcn.MapProps, 'theme'> & RefAttributes<mapcn.MapRef>>) {
     return (
         <ErrorBoundary
             fallbackRender={({ resetErrorBoundary }) => (
@@ -17,7 +17,7 @@ export function ViewMap(props: PublicProps<mapcn.MapProps & RefAttributes<mapcn.
                 </Empty>
             )}
         >
-            <mapcn.Map {...props} />
+            <mapcn.Map {...props} theme={undefined} />
         </ErrorBoundary>
     );
 }

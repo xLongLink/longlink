@@ -1,28 +1,26 @@
 import { Check, Copy } from 'lucide-react';
+import { formatTimestamp } from '@/lib/timestamp';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 
 /** Shows the relative timestamp's keyboard-accessible, copyable absolute instant. */
-export function TimestampDetails({
-    children,
-    dateTime,
-    fullDate,
-    label,
-    zoneName
-}: {
-    children: string;
-    dateTime: string;
-    fullDate: string;
-    label: string;
-    zoneName: string;
-}) {
+export function TimestampDetails({ children, date }: { children: string; date: Date }) {
     const triggerId = useId();
     const [open, setOpen] = useState(false);
     const [copies, setCopies] = useState(0);
     const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const suppressFocus = useRef(false);
     const mounted = useRef(false);
+
+    // Derive the absolute-date details from the timestamp's instant.
+    const dateTime = date.toISOString();
+    const fullDate = formatTimestamp(date, 'full');
+    const label = formatTimestamp(date, 'full', false, true);
+    const zoneName =
+        new Intl.DateTimeFormat('en', { timeZoneName: 'long' })
+            .formatToParts(date)
+            .find((part) => part.type === 'timeZoneName')?.value ?? '';
 
     // A pending clipboard write must not start a feedback timer after the card unmounts.
     useEffect(() => {

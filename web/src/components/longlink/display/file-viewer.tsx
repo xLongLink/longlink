@@ -14,7 +14,7 @@ export function FileViewer({
     title: string;
 }) {
     // Give replacement files independent requests and object-URL lifetimes.
-    return <FileContent key={`${src}\0${title}`} src={src} title={title} />;
+    return <FileContent key={src} src={src} title={title} />;
 }
 
 /** Owns the request and rendering lifetime of one inline attachment. */
@@ -24,7 +24,7 @@ function FileContent({ src, title }: { src: string; title: string }) {
 
     // Ignore replaced requests without moving file rendering outside the View.
     useEffect(() => {
-        const controller = new AbortController();
+        let active = true;
 
         /** Ignore responses from replaced or unmounted file requests. */
         async function load() {
@@ -33,16 +33,17 @@ function FileContent({ src, title }: { src: string; title: string }) {
 
                 if (!(body instanceof Blob)) throw new Error('File preview unavailable');
 
-                if (!controller.signal.aborted) setPreview(body);
+                if (active) setPreview(body);
             } catch (cause) {
-                if (!controller.signal.aborted)
-                    setPreview(cause instanceof Error ? cause : new Error('File preview failed'));
+                if (active) setPreview(cause instanceof Error ? cause : new Error('File preview failed'));
             }
         }
 
         void load();
 
-        return () => controller.abort();
+        return () => {
+            active = false;
+        };
     }, [request, src]);
 
     // Keep one bounded viewer region with no custom View or Download buttons.

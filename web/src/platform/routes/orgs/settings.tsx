@@ -8,19 +8,20 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import { useState, useTransition } from 'react';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRef, useState, useTransition } from 'react';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
@@ -173,7 +174,7 @@ function GeneralSection({
 
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+            <Stack gap={0} justify="end" className="min-h-8">
                 <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     General
                 </h2>
@@ -182,7 +183,7 @@ function GeneralSection({
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
-                    <Stack className="text-red-600 dark:text-red-400">
+                    <Stack gap={0} className="text-red-600 dark:text-red-400">
                         <h4 aria-level={3} className="font-semibold tracking-tight text-xl text-inherit">
                             Danger zone
                         </h4>
@@ -253,7 +254,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
     return (
         <>
             <Stack gap={4}>
-                <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                <Stack gap={0} justify="end" className="min-h-8">
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Members
                     </h2>
@@ -272,7 +273,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar name={row.user.name} src={row.user.avatar} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.user.name}</span>
                                                 <span className="text-xs text-muted-foreground">{row.role}</span>
@@ -339,7 +340,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
             </Stack>
             {canManageSelectedMember && member && (
                 <MemberAccess
-                    open
                     name={selectedMember.user.name}
                     action={member.action}
                     onOpenChange={() => setMember(null)}
@@ -388,7 +388,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
     const reportError = useApiError();
-    const revocationInFlight = useRef(false);
     const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
@@ -397,6 +396,15 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     const [invitations, invalidateInvitations] = useApi(
         `${base}/invitations`,
         schemas.zOrganizationInvitationResponse.array()
+    );
+
+    // Serialize revocation until the refreshed list is available.
+    const revokeInvitation = useSubmit(
+        async (id: string) => {
+            await api.delete(`${base}/invitations/${id}`);
+            await invalidateInvitations();
+        },
+        { onError: () => {} }
     );
 
     /** Closes only the invitation attempt that owns this callback. */
@@ -422,13 +430,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     return (
         <>
             <Stack gap={4}>
-                <Stack
-                    direction="horizontal"
-                    justify="between"
-                    align="end"
-                    wrap="wrap"
-                    minHeight="calc(var(--spacing)*8)"
-                >
+                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
                     </h2>
@@ -460,21 +462,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                             variant="destructive"
                                             disabled={revoking}
                                             aria-busy={revoking || undefined}
-                                            onClick={() => {
-                                                // Serialize revocation until the refreshed list is available.
-                                                if (revocationInFlight.current) return;
-                                                revocationInFlight.current = true;
-                                                startRevocation(async () => {
-                                                    try {
-                                                        await api.delete(`${base}/invitations/${row.id}`);
-                                                        await invalidateInvitations();
-                                                    } catch (cause) {
-                                                        reportError(cause);
-                                                    } finally {
-                                                        revocationInFlight.current = false;
-                                                    }
-                                                });
-                                            }}
+                                            onClick={() => startRevocation(() => revokeInvitation(row.id))}
                                         >
                                             Revoke
                                         </Button>

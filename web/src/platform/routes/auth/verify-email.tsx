@@ -10,11 +10,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
@@ -153,29 +153,15 @@ export default function VerifyEmail() {
                 <Separator />
                 <form noValidate action={() => form.handleSubmit(handleComplete)()}>
                     <div className="flex flex-col gap-2">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm font-medium">Name</span>
-                            <TextField
-                                control={form.control}
-                                name="name"
-                                autoComplete="name"
-                                labelHidden
-                                required
-                                label="Name"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm font-medium">Password</span>
-                            <TextField
-                                control={form.control}
-                                name="password"
-                                autoComplete="new-password"
-                                labelHidden
-                                required
-                                label="Password"
-                                type="password"
-                            />
-                        </div>
+                        <TextField control={form.control} name="name" autoComplete="name" required label="Name" />
+                        <TextField
+                            control={form.control}
+                            name="password"
+                            autoComplete="new-password"
+                            required
+                            label="Password"
+                            type="password"
+                        />
                         <Button className="w-full" type="submit">
                             Create account
                         </Button>

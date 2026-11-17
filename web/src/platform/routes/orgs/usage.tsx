@@ -2,10 +2,10 @@ import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Progress } from '@/components/longlink/display/progress';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 
@@ -18,7 +18,7 @@ export default function Usage({ base }: { base: string }) {
     // Retain the existing settings shell and its spacing.
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+            <Stack gap={0} justify="end" className="min-h-8">
                 <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Usage
                 </h2>

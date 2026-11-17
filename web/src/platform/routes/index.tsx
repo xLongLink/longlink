@@ -9,11 +9,11 @@ import { Grid } from '@/components/longlink/layout/grid';
 import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { buttonVariants } from '@/components/longlink/action/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -33,7 +33,7 @@ const technologies = [
 export default function Home() {
     return (
         <Page description={homeDescription} title="LongLink | Build and Operate business solutions">
-            <Stack as="main">
+            <Stack as="main" gap={0}>
                 <section className="relative isolate flex flex-col overflow-hidden">
                     <img
                         alt=""
@@ -44,10 +44,10 @@ export default function Home() {
                         width={1672}
                     />
                     <Stack
-                        className="relative flex-1 bg-linear-to-t from-black via-black/50 to-transparent p-6 sm:p-10"
+                        gap={0}
+                        className="relative min-h-svh flex-1 bg-linear-to-t from-black via-black/50 to-transparent p-6 sm:p-10"
                         align="start"
                         justify="end"
-                        minHeight="100svh"
                     >
                         <Stack className="max-w-xl text-left" gap={6} align="start">
                             <h1 className="font-semibold text-balance text-start text-4xl tracking-tight text-white sm:text-6xl">
@@ -75,7 +75,7 @@ export default function Home() {
                 </section>
                 <Foundation />
                 <section className="px-6 py-10">
-                    <Stack className="mx-auto" maxWidth={1200} gap={8} align="center">
+                    <Stack className="mx-auto max-w-[1200px]" gap={8} align="center">
                         <img
                             alt="An architectural drawing of an orderly library with connected workspaces and sweeping staircases."
                             className="aspect-2/1 w-full object-cover sm:aspect-5/2"
@@ -94,11 +94,9 @@ export default function Home() {
                 <section className="py-16 sm:py-24">
                     <div className="px-6 py-3">
                         <Stack
-                            className="relative mx-auto py-32 text-center sm:py-40"
+                            className="relative mx-auto w-full max-w-[1000px] py-32 text-center sm:py-40"
                             gap={6}
                             align="center"
-                            maxWidth={1000}
-                            width="100%"
                         >
                             {technologies.map((technology) => (
                                 <technology.logo

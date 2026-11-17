@@ -59,21 +59,18 @@ export function SolutionPage({
             const manifest = manifestSchema.parse(data);
 
             const tabs =
-                manifest.tabs ??
-                manifest.views
-                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
-                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
-
-            return {
-                ...manifest,
-                tabs: tabs.map((tab) => ({
+                manifest.tabs?.map((tab) => ({
                     route: tab.route,
                     label:
                         tab.label ??
                         viewLabel(manifest.views.find((view) => view.route === tab.route)?.path ?? tab.route),
                     icon: tab.icon
-                }))
-            };
+                })) ??
+                manifest.views
+                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
+                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
+
+            return { ...manifest, tabs };
         }
     });
 
@@ -183,12 +180,7 @@ export function SolutionPage({
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>
-            <PageContainer
-                height="100%"
-                minHeight={0}
-                padding={2}
-                maxWidth={activeView?.width === 'wide' ? 'none' : undefined}
-            >
+            <PageContainer padding={2} className={`h-full min-h-0${activeView?.width === 'wide' ? ' max-w-none' : ''}`}>
                 {content}
             </PageContainer>
         </Platform>

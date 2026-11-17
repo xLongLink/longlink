@@ -3,6 +3,7 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
 import { membership, user } from '../render';
+import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import Layout from '@/platform/layouts/organization';
 import { Outlet, Route, Routes } from 'react-router';
@@ -33,7 +34,14 @@ it('selects the query category and updates it when following organization links'
                     <AuthenticatedUserContext value={user}>
                         <Routes>
                             <Route element={<Outlet context={membership} />}>
-                                <Route path="/orgs/:organization" element={<Layout />} />
+                                <Route
+                                    path="/orgs/:organization"
+                                    element={
+                                        <ApiBoundary>
+                                            <Layout />
+                                        </ApiBoundary>
+                                    }
+                                />
                             </Route>
                         </Routes>
                     </AuthenticatedUserContext>

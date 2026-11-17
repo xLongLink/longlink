@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { renderStatic } from '../render';
+import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import { Outlet, Route, Routes } from 'react-router';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
@@ -36,7 +37,7 @@ export function renderPlatform(
                 <AuthenticatedUserContext value={user}>
                     <Routes>
                         <Route element={<Outlet context={context} />}>
-                            <Route path={pattern} element={children} />
+                            <Route path={pattern} element={<ApiBoundary>{children}</ApiBoundary>} />
                         </Route>
                     </Routes>
                 </AuthenticatedUserContext>

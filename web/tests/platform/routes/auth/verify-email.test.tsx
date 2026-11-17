@@ -78,6 +78,19 @@ it('allows account credential entry only after the email proof exchange succeeds
                     'POST /api/v1/auth/verify'
                 ]);
                 expect(errors).toEqual([]);
+
+                const events = userEvent.setup();
+
+                for (const name of ['name', 'password']) {
+                    const input = output.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+                    const label = [...output.querySelectorAll('label')].find((label) => label.htmlFor === input?.id);
+
+                    if (!input || !label) throw new Error(`Expected the ${name} field and label`);
+                    expect(label.classList.contains('sr-only')).toBe(false);
+                    await act(async () => events.click(label));
+                    expect(document.activeElement).toBe(input);
+                }
+                expect(requests).toHaveLength(1);
             },
             '/auth/verify-email#token=registration-proof'
         );

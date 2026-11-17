@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useRef, useState } from 'react';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -10,7 +10,6 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
@@ -18,20 +17,22 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
-
     const [dialog, setDialog] = useState<
         { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
     >(null);
 
     const [organizations, invalidate] = useApi(`/api/v1/organizations${suffix}`, zPageOrganizationIdentity);
 
-    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
+    // Forget missing metadata while retaining the captured identity of a pending deletion.
     const metadata =
         dialog?.kind === 'metadata' ? organizations.items.find((item) => item.id === dialog.id) : undefined;
 
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
+    const deletion = dialog?.kind === 'deletion' ? dialog.item : null;
 
     return (
         <Stack gap={2}>
@@ -44,20 +45,20 @@ export default function Organizations() {
                         ref={searchInput}
                         id="search-organizations"
                         placeholder="Search by name"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search organizations"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -81,7 +82,7 @@ export default function Organizations() {
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar shape="rounded" name={row.name} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <Link href={`/orgs/${row.id}`}>{row.name}</Link>
                                                 {row.status !== 'running' && (
@@ -120,7 +121,12 @@ export default function Organizations() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={organizations.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={organizations.total}
+                    />
                 </footer>
             </Stack>
             {metadata && (
@@ -133,13 +139,13 @@ export default function Organizations() {
             )}
             <DeletionDialog
                 confirmation={
-                    dialog?.kind === 'deletion'
+                    deletion
                         ? {
                               title: 'Delete organization',
-                              description: `Delete organization ${dialog.item.name}?`,
+                              description: `Delete organization ${deletion.name}?`,
                               onDelete: async () => {
                                   // Refresh the list only after deletion succeeds.
-                                  await api.delete(`/api/v1/organizations/${dialog.item.id}`);
+                                  await api.delete(`/api/v1/organizations/${deletion.id}`);
                                   await invalidate();
                                   setDialog(null);
                               }

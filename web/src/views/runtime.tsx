@@ -3,7 +3,6 @@ import * as React from 'react';
 import { transform } from 'sucrase';
 import * as components from './index';
 import { CircleX } from 'lucide-react';
-import { RequestContext } from './context';
 import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -12,7 +11,12 @@ import { FileRequestContext } from '@/components/custom/preview';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
-import { LinkNavigationContext, MenuNavigationContext, DialogActivityContext } from '@/components/custom/contexts';
+import {
+    RequestContext,
+    LinkNavigationContext,
+    MenuNavigationContext,
+    DialogActivityContext
+} from '@/components/custom/contexts';
 import {
     requestSchema,
     parametersSchema,
@@ -69,10 +73,7 @@ function MenuNavigationProvider({ children }: { children: React.ReactNode }) {
 /** Keeps loaded Views and compilation errors in the same content region. */
 function ViewLayout({ children }: { children: React.ReactNode }) {
     return (
-        <section
-            className="min-h-full min-w-0 p-0 [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-            aria-label="Solution View"
-        >
+        <section className="min-h-full min-w-0 p-0" aria-label="Solution View">
             {children}
         </section>
     );
@@ -228,7 +229,6 @@ function initialize(event: MessageEvent<unknown>): void {
 
             if (viewport.success) {
                 document.documentElement.style.setProperty('--view-viewport-top', `${viewport.data.top}px`);
-                document.documentElement.style.setProperty('--view-viewport-bottom', `${viewport.data.bottom}px`);
                 document.documentElement.style.setProperty('--view-viewport-height', `${viewport.data.height}px`);
             }
 
@@ -296,7 +296,7 @@ function initialize(event: MessageEvent<unknown>): void {
             document.documentElement.removeAttribute('data-view-runtime');
             document.documentElement.removeAttribute('data-view-fullscreen');
 
-            for (const property of ['--view-viewport-top', '--view-viewport-bottom', '--view-viewport-height']) {
+            for (const property of ['--view-viewport-top', '--view-viewport-height']) {
                 document.documentElement.style.removeProperty(property);
             }
 

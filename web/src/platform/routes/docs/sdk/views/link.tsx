@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/longlink/action/link';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {
@@ -11,35 +11,13 @@ export default function LinkPage() {
         <ViewLayout
             name="Link"
             properties={[
-                {
-                    name: 'href',
-                    type: 'string',
-                    description: 'Navigation or file destination. Omit for an onClick-only action.'
-                },
-                {
-                    name: 'preview',
-                    type: 'string',
-                    description: 'Open a scoped Solution file in a preview dialog using this filename as its title.'
-                },
-                {
-                    name: 'download',
-                    type: 'string',
-                    description: 'Download filename for a scoped Solution attachment instead of navigation.'
-                },
-                { name: 'disabled', type: 'boolean', description: 'Disables navigation or the action.' },
-                {
-                    name: 'onClick',
-                    type: '(event: MouseEvent) => void | Promise<void>',
-                    description:
-                        'Runs a callback. Actions track async loading; preventDefault cancels navigation or file handling.'
-                },
-                { name: 'children', type: 'ReactNode', description: 'Caller-owned link content.' },
-                {
-                    name: '...props',
-                    type: 'Native anchor or button props',
-                    description:
-                        'Navigation forwards anchor props and ref. File and callback actions forward button props and ref.'
-                }
+                { name: 'href', type: 'string' },
+                { name: 'preview', type: 'string' },
+                { name: 'download', type: 'string' },
+                { name: 'disabled', type: 'boolean' },
+                { name: 'onClick', type: '(event: MouseEvent) => void | Promise<void>' },
+                { name: 'children', type: 'ReactNode' },
+                { name: '...props', type: 'Native anchor or button props' }
             ]}
             example={{
                 title: 'Link',
@@ -74,7 +52,7 @@ export function LinkExample() {
 
     // Keep navigation separate from the action that opens the dialog.
     return (
-        <Stack>
+        <Stack gap={0}>
             <Link href="/docs/sdk/views">Docs</Link>
             <Link onClick={() => setIsOpen(true)}>Document details</Link>
             <Dialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>

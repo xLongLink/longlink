@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { useId } from 'react';
 import { api } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -78,24 +78,18 @@ export default function CreateOrganization({
                     className="size-20 self-center object-contain invert dark:invert-0"
                 />
                 <fieldset disabled={form.formState.isSubmitting} className="contents">
-                    <Controller
-                        name="name"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="organization-name">Name</FieldLabel>
-                                <Input
-                                    {...field}
-                                    id="organization-name"
-                                    placeholder="Example LongLink"
-                                    required
-                                    aria-required="true"
-                                    aria-invalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.name)}>
+                        <FieldLabel htmlFor="organization-name">Name</FieldLabel>
+                        <Input
+                            {...form.register('name')}
+                            id="organization-name"
+                            placeholder="Example LongLink"
+                            required
+                            aria-required="true"
+                            aria-invalid={Boolean(form.formState.errors.name)}
+                        />
+                        <FieldError errors={[form.formState.errors.name]} />
+                    </Field>
                 </fieldset>
                 <FieldError errors={[form.formState.errors.root]} />
             </form>

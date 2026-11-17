@@ -11,7 +11,6 @@ import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solu
 /** Switches local request identity without exposing production account controls. */
 export function DevelopmentProfile() {
     const sidebar = useContext(SidebarContext);
-    const [isOpen, setIsOpen] = useState(false);
     const [profile] = useState(getDevelopmentUser);
     const { user } = profile;
 
@@ -21,7 +20,7 @@ export function DevelopmentProfile() {
     }, [profile]);
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen} modal="trap-focus">
+        <Popover modal="trap-focus">
             <PopoverTrigger
                 type="button"
                 render={
@@ -79,21 +78,29 @@ export function DevelopmentProfile() {
                     ))}
                 </section>
                 <Separator />
-                <a
+                <PopoverPrimitive.Close
+                    nativeButton={false}
+                    render={(props) => (
+                        <a
+                            {...props}
+                            href="https://www.longlink.dev/docs/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            role={undefined}
+                            onKeyDown={undefined}
+                            onKeyUp={undefined}
+                        />
+                    )}
                     className={buttonVariants({
                         variant: 'ghost',
                         size: 'lg',
                         className: 'w-full justify-start font-normal'
                     })}
-                    href="https://www.longlink.dev/docs/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClickCapture={() => setIsOpen(false)}
                 >
                     <BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />
                     Documentation
                     <ExternalLink aria-hidden="true" className="ms-auto text-muted-foreground" size={12} />
-                </a>
+                </PopoverPrimitive.Close>
                 <PopoverPrimitive.Close
                     type="button"
                     render={<Button variant="ghost" />}

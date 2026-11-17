@@ -4,11 +4,11 @@ import { ApiBoundary } from '@/components/api';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
 import * as permissions from '@/platform/permissions';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
 import { Empty } from '@/components/longlink/display/empty';
 import { SolutionPage } from '@/components/ui/solution-page';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -70,7 +70,7 @@ export default function OrganizationSolution() {
                 <div
                     className={`flex min-h-[calc(100vh-14rem)] w-full justify-center p-6 ${solutionAccess.status === 'failed' ? 'items-stretch' : 'items-center'}`}
                 >
-                    <Stack gap={6} maxWidth={1200} width="100%">
+                    <Stack gap={6} className="w-full max-w-[1200px]">
                         {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
                                 fallback={<span className="text-muted-foreground">Loading pod logs…</span>}

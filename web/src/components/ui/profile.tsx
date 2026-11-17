@@ -6,6 +6,7 @@ import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { useContext, useRef, useState } from 'react';
 import { clearAppearanceCache } from '@/lib/appearance';
+import { useErrorBoundary } from 'react-error-boundary';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
@@ -28,12 +29,9 @@ export function ProfileMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const [pending, setPending] = useState(false);
     const [error, setError] = useState('');
-    const [unexpectedError, setUnexpectedError] = useState<{ cause: unknown } | null>(null);
+    const { showBoundary } = useErrorBoundary();
     const inFlight = useRef(false);
     const closeMenu = () => setIsOpen(false);
-
-    // Keep programming failures visible to the nearest React error boundary.
-    if (unexpectedError !== null) throw unexpectedError.cause;
 
     async function signOut() {
         if (inFlight.current) return;
@@ -50,7 +48,7 @@ export function ProfileMenu() {
                 setError('Sign out failed. Please try again.');
                 setIsOpen(true);
             } else {
-                setUnexpectedError({ cause });
+                showBoundary(cause);
             }
 
             inFlight.current = false;

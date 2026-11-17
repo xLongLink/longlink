@@ -279,14 +279,13 @@
             "justification": "Preserves native mapcn composition while containing WebGL initialization failures and retry within the map region.",
             "reference": "https://www.mapcn.dev/docs/basic-map",
             "introduction": "Native mapcn map container for composable geographic layers.",
-            "guidance": "Place Map inside a Box with an explicit height. Use blank for a transparent basemap with no street tiles, then compose MapGeoJSON inside it. Coordinates use longitude, latitude. The bundled worker stays local; external map resources remain limited to the approved CARTO origins.",
+            "guidance": "Place Map inside a Box with an explicit height. Use blank for a transparent basemap with no street tiles, then compose MapGeoJSON inside it. The map follows the UI theme automatically. Coordinates use longitude, latitude. The bundled worker stays local; external map resources remain limited to the approved CARTO origins.",
             "properties": [
                 { "name": "children", "type": "ReactNode" },
                 { "name": "blank", "type": "boolean", "default": false },
                 { "name": "center", "type": "[number, number]" },
                 { "name": "zoom", "type": "number" },
                 { "name": "projection", "type": "{ type: \"mercator\" | \"globe\" }" },
-                { "name": "theme", "type": "\"light\" | \"dark\"" },
                 { "name": "viewport", "type": "Partial<MapViewport>" },
                 { "name": "onViewportChange", "type": "(viewport: MapViewport) => void" },
                 { "name": "loading", "type": "boolean", "default": false }
@@ -418,28 +417,6 @@
                 { "name": "data", "type": "readonly MapMarker[]", "required": true },
                 { "name": "onSelect", "type": "(marker: MapMarker) => void" },
                 { "name": "radius", "type": "number", "default": 50 },
-                { "name": "center", "type": "[number, number]", "default": [0, 20] },
-                { "name": "zoom", "type": "number", "default": 2 },
-                { "name": "controls", "type": "boolean | MapControlsOptions", "default": true },
-                { "name": "interactive", "type": "boolean", "default": true },
-                { "name": "blank", "type": "boolean", "default": false },
-                { "name": "projection", "type": "\"mercator\" | \"globe\"", "default": "mercator" },
-                { "name": "viewport", "type": "Partial<MapViewport>" },
-                { "name": "onViewportChange", "type": "(viewport: MapViewport) => void" },
-                { "name": "aria-label", "type": "string", "default": "Map" }
-            ]
-        },
-        {
-            "name": "GeoJSONMap",
-            "category": "Maps",
-            "source": "custom",
-            "justification": "Validates supplied polygon GeoJSON and owns mapcn layer composition without allowing arbitrary source URLs.",
-            "reference": "https://www.mapcn.dev/docs/geojson",
-            "introduction": "Polygon regions from a supplied GeoJSON feature collection.",
-            "guidance": "Pass parsed GeoJSON rather than a URL. Data loading and business rules stay in the Solution. Size with Box. Supports the same map options as StreetMap.",
-            "properties": [
-                { "name": "data", "type": "MapGeography", "required": true },
-                { "name": "onSelect", "type": "(feature: MapGeography['features'][number]) => void" },
                 { "name": "center", "type": "[number, number]", "default": [0, 20] },
                 { "name": "zoom", "type": "number", "default": 2 },
                 { "name": "controls", "type": "boolean | MapControlsOptions", "default": true },
@@ -1088,7 +1065,7 @@
                     "description": "Native compound menu parts with their documented props."
                 }
             ],
-            "source": "custom",
+            "source": "shadcn",
             "justification": "Exposes the shared shadcn menu parts without className overrides while preserving native menu composition and behavior.",
             "reference": "https://ui.shadcn.com/docs/components/dropdown-menu"
         },

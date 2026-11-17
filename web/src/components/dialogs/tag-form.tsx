@@ -27,9 +27,9 @@ export function TagForm({
     base,
     tag,
     onSuccess,
-    onClose
+    onOpenChange
 }: {
-    onClose: () => void;
+    onOpenChange: (open: boolean) => void;
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
@@ -57,11 +57,16 @@ export function TagForm({
     return (
         <Dialog
             open
-            onOpenChange={onClose}
+            onOpenChange={onOpenChange}
             title={tag ? 'Edit tab' : 'New tab'}
             footer={
                 <>
-                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={form.formState.isSubmitting}
+                        onClick={() => onOpenChange(false)}
+                    >
                         Cancel
                     </Button>
                     <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
@@ -80,17 +85,15 @@ export function TagForm({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
-                    <Controller
-                        name="name"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="tag-name">Name</FieldLabel>
-                                <Input {...field} id="tag-name" aria-invalid={fieldState.invalid} />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
-                    />
+                    <Field data-invalid={Boolean(form.formState.errors.name)}>
+                        <FieldLabel htmlFor="tag-name">Name</FieldLabel>
+                        <Input
+                            {...form.register('name')}
+                            id="tag-name"
+                            aria-invalid={Boolean(form.formState.errors.name)}
+                        />
+                        <FieldError errors={[form.formState.errors.name]} />
+                    </Field>
                     <Controller
                         name="icon"
                         control={form.control}

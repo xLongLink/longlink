@@ -199,6 +199,56 @@ it('keeps controlled radio selection and option labels associated after a caller
     });
 });
 
+it('keeps the first duplicate combobox option authoritative and refreshes labels when options change', async () => {
+    function Example() {
+        const [updated, setUpdated] = useState(false);
+
+        return (
+            <form>
+                <Combobox
+                    multiple
+                    name="teams"
+                    label="Teams"
+                    defaultValue={['design', 'retired']}
+                    options={[
+                        { value: 'design', label: updated ? 'Product design' : 'Design', disabled: true },
+                        { value: 'design', label: 'Duplicate design' },
+                        { value: 'engineering', label: 'Engineering' }
+                    ]}
+                />
+                <button type="button" onClick={() => setUpdated(true)}>
+                    Refresh
+                </button>
+            </form>
+        );
+    }
+
+    await withMounted(<Example />, async (output) => {
+        const input = output.querySelector<HTMLInputElement>('[role="combobox"]');
+        const form = output.querySelector('form');
+        const refresh = Array.from(output.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Refresh'
+        );
+
+        if (!input || !form || !refresh) throw new Error('Expected team selection and refresh control');
+        expect(output.querySelector('[data-slot="combobox-chip"][aria-label="Design"]')).not.toBeNull();
+        expect(output.querySelector('[data-slot="combobox-chip"][aria-label="retired"]')).not.toBeNull();
+        const user = userEvent.setup();
+        await act(async () => user.click(input));
+        await vi.waitFor(() => {
+            const options = Array.from(document.querySelectorAll('[role="option"]'));
+            expect(options.map((option) => option.textContent)).toEqual(['Design', 'Design', 'Engineering']);
+            expect(options.slice(0, 2).every((option) => option.getAttribute('aria-disabled') === 'true')).toBe(true);
+        });
+        await act(async () => user.keyboard('{Escape}'));
+        await act(async () => user.click(refresh));
+        await vi.waitFor(() =>
+            expect(output.querySelector('[data-slot="combobox-chip"][aria-label="Product design"]')).not.toBeNull()
+        );
+        expect(new FormData(form).getAll('teams')).toEqual(['design', 'retired']);
+    });
+});
+
 it('preserves thumb focus and range values while editing the internally composed slider', async () => {
     function Range() {
         const [value, setValue] = useState([20, 80]);

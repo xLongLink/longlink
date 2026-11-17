@@ -4,6 +4,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import Page from '@/platform/routes/auth/mcp';
+import { ApiErrorContext } from '@/lib/errors';
 import { renderPlatform, user } from '../../render';
 import { AccountAppearanceProvider } from '@/components/appearance';
 
@@ -112,3 +113,101 @@ it.each([
         }
     }
 );
+
+it('prevents duplicate decisions while pending and permits retry after a reported, invalid redirect response', async () => {
+    // Arrange
+    const decisions: Request[] = [];
+    const responses: Array<(response: Response) => void> = [];
+    const reportError = vi.fn();
+    const url = 'https://client.example/callback?error=access_denied';
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const pathname = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && pathname === '/api/v1/me') return Response.json(user);
+
+        if (request.method === 'GET' && pathname === '/api/v1/mcp/consent') {
+            return Response.json({
+                client_name: 'MCP client',
+                redirect_uri: 'https://client.example/callback',
+                solution_name: 'Invoices',
+                expires_in: 2592000
+            });
+        }
+
+        if (request.method === 'POST' && pathname === '/api/v1/mcp/consent') {
+            decisions.push(request);
+            return await new Promise<Response>((resolve) => responses.push(resolve));
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+    });
+    const navigation = vi.spyOn(window.location, 'assign').mockImplementation(() => undefined);
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <AccountAppearanceProvider>
+                    <Page />
+                </AccountAppearanceProvider>
+            </ApiErrorContext>,
+            async (output) => {
+                await act(async () => {
+                    await vi.waitFor(() => expect(output.textContent).toContain('Allow access'));
+                });
+
+                const form = output.querySelector('form');
+                const fieldset = form?.querySelector('fieldset');
+                const allow = output.querySelector<HTMLButtonElement>('button[value="allow"]');
+                const deny = output.querySelector<HTMLButtonElement>('button[value="deny"]');
+
+                if (!form || !fieldset || !allow || !deny) throw new Error('Expected consent controls');
+
+                // Activate both decisions before React can disable the fieldset.
+                await act(async () => {
+                    allow.click();
+                    deny.click();
+                });
+                await vi.waitFor(() => expect(decisions).toHaveLength(1));
+                expect(await decisions[0]?.clone().json()).toEqual({ approve: true });
+                expect(form.getAttribute('aria-busy')).toBe('true');
+                expect(fieldset.disabled).toBe(true);
+                expect(navigation).not.toHaveBeenCalled();
+
+                // An invalid response must not navigate or expose validation details inline.
+                const fail = responses[0];
+
+                if (!fail) throw new Error('Expected the pending decision');
+
+                await act(async () => fail(Response.json({ url: 42 })));
+                await vi.waitFor(() => expect(reportError).toHaveBeenCalledOnce());
+                expect(output.querySelector('[role="alert"]')?.textContent).toBe(
+                    'Could not submit the decision. Please try again.'
+                );
+                expect(navigation).not.toHaveBeenCalled();
+                expect(form.getAttribute('aria-busy')).toBe('false');
+                expect(fieldset.disabled).toBe(false);
+
+                // Retry with the other decision and clear the previous error while pending.
+                await act(async () => deny.click());
+                await vi.waitFor(() => expect(decisions).toHaveLength(2));
+                expect(await decisions[1]?.clone().json()).toEqual({ approve: false });
+                expect(output.querySelector('[role="alert"]')).toBeNull();
+                expect(form.getAttribute('aria-busy')).toBe('true');
+
+                const succeed = responses[1];
+
+                if (!succeed) throw new Error('Expected the retry decision');
+
+                await act(async () => succeed(Response.json({ url })));
+                await vi.waitFor(() => expect(navigation).toHaveBeenCalledExactlyOnceWith(url));
+                expect(decisions).toHaveLength(2);
+                expect(reportError).toHaveBeenCalledOnce();
+            },
+            '/mcp/authorize'
+        );
+    } finally {
+        navigation.mockRestore();
+        transport.mockRestore();
+    }
+});

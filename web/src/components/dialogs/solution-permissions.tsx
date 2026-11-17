@@ -5,11 +5,11 @@ import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -17,16 +17,14 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 export function SolutionPermissionsDialog({
     solutionId,
     organizationId,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     solutionId: string;
     organizationId: string;
 }) {
     return (
-        <Dialog {...dialogProps} onOpenChange={onOpenChange} title="Solution permissions">
+        <Dialog open onOpenChange={onOpenChange} title="Solution permissions">
             <ApiBoundary key={solutionId}>
                 <SolutionPermissions
                     solutionId={solutionId}

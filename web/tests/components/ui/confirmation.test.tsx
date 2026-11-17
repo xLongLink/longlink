@@ -3,8 +3,7 @@ import { act } from 'react';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { useConfirm } from '@/components/custom/confirmation';
-import { ControlSizeContext } from '@/components/custom/contexts';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 
 it('keeps a destructive operation open while pending, retains failure for retry, and restores the opener after success', async () => {
     let reject!: (error: Error) => void;
@@ -19,12 +18,12 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         )
         .mockResolvedValueOnce(undefined);
 
-    /** Runs the real confirmation owner inside an inherited control size. */
+    /** Runs the real confirmation owner. */
     function Probe() {
         const confirm = useConfirm();
 
         return (
-            <ControlSizeContext value="lg">
+            <>
                 <button
                     type="button"
                     onClick={() =>
@@ -39,7 +38,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
                     Open
                 </button>
                 {confirm.element}
-            </ControlSizeContext>
+            </>
         );
     }
 
@@ -71,7 +70,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         await act(async () => events.click(submit));
         expect(document.activeElement).toBe(submit);
         expect(submit.getAttribute('aria-disabled')).toBe('true');
-        expect(submit.getAttribute('aria-label')).toBe('Delete');
+        expect(submit.textContent).toBe('Delete');
         await act(async () => events.keyboard('{Escape}'));
         expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
         expect(document.activeElement).toBe(submit);

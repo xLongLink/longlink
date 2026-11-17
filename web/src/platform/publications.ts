@@ -1,4 +1,3 @@
-import { documentationCategories } from '../lib/documentation';
 import {
     AppWindow,
     Badge,
@@ -61,6 +60,18 @@ type DocumentationPage = {
 
 type DocumentationSection = { title: string; pages: DocumentationPage[]; paths?: readonly string[] };
 
+// Keep category navigation and overview headings in the same reading order.
+export const documentationCategories = [
+    { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
+    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
+    { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
+    { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
+    { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
+    { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
+    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
+    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
+];
+
 // Keep branding navigation and publication paths in their established reading order.
 export const brandingPages = [
     { path: '/branding/assets', label: 'Brand assets', icon: Image },
@@ -90,13 +101,12 @@ export const componentDocumentation = [
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
     { name: 'Map', category: 'Maps', icon: Map },
-    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
     { name: 'MapControls', category: 'Maps', icon: Settings2 },
+    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
     { name: 'StreetMap', category: 'Maps', icon: Map },
     { name: 'MarkerMap', category: 'Maps', icon: Map },
     { name: 'RouteMap', category: 'Maps', icon: Waypoints },
     { name: 'ClusterMap', category: 'Maps', icon: Map },
-    { name: 'GeoJSONMap', category: 'Maps', icon: Globe },
     { name: 'ArcMap', category: 'Maps', icon: Waypoints },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
@@ -154,26 +164,19 @@ export const componentDocumentation = [
     slug:
         component.name === 'MapGeoJSON'
             ? 'map-geojson'
-            : component.name === 'GeoJSONMap'
-              ? 'geojson-map'
-              : component.name === 'RadialBarChart'
-                ? 'radial-chart'
-                : component.name === 'Sankey'
-                  ? 'sankey-chart'
-                  : component.name === 'Button'
-                    ? 'buttons'
-                    : component.name === 'Icon'
-                      ? 'icons'
-                      : component.name
-                            .replace(/([a-z])([A-Z])/g, '$1-$2')
-                            .replace(/\s+/g, '-')
-                            .toLowerCase()
+            : component.name === 'RadialBarChart'
+              ? 'radial-chart'
+              : component.name === 'Sankey'
+                ? 'sankey-chart'
+                : component.name === 'Button'
+                  ? 'buttons'
+                  : component.name === 'Icon'
+                    ? 'icons'
+                    : component.name
+                          .replace(/([a-z])([A-Z])/g, '$1-$2')
+                          .replace(/\s+/g, '-')
+                          .toLowerCase()
 }));
-
-export const documentationIntroduction: DocumentationSection = {
-    title: 'Introduction',
-    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }]
-};
 
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
     {
@@ -202,22 +205,13 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                 title: 'Views',
                 paths: [
                     '/docs/sdk/views',
-                    ...documentationCategories.flatMap((category) =>
+                    ...documentationCategories.flatMap(({ category }) =>
                         componentDocumentation.flatMap((component) =>
                             component.category === category ? [`/docs/sdk/views/${component.slug}`] : []
                         )
                     )
                 ],
-                pages: [
-                    { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
-                    { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
-                    { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
-                    { label: 'Action', category: 'Action', anchor: '#action', icon: Waypoints },
-                    { label: 'Display', category: 'Display', anchor: '#display', icon: Image },
-                    { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
-                    { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
-                    { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
-                ].map(({ label, category, anchor, icon }) => ({
+                pages: documentationCategories.map(({ label, category, anchor, icon }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,
                     icon,
@@ -265,6 +259,8 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
 
 // Keep static tutorials and generated component references in their published reading order.
 export const documentationPaths = [
-    documentationIntroduction,
-    ...documentationNavigation.flatMap(({ sections }) => sections)
-].flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path));
+    '/docs',
+    ...documentationNavigation.flatMap(({ sections }) =>
+        sections.flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path))
+    )
+];

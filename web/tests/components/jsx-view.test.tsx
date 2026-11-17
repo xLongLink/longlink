@@ -125,3 +125,102 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
         load.mockRestore();
     }
 });
+
+it('keeps PDFs binary despite a text filename and previews recognized text as inert content', async () => {
+    // Replace HTTP only so MIME classification and the authenticated preview capability remain real.
+    const script = '/* Preview bootstrap */';
+    const version = createHash('sha256').update(`${script}\n`).digest('hex');
+    const text = '<script>window.previewExecuted = true</script><img src=x onerror="alert(1)">';
+    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+
+        if (path === '/proxy/views/runtime.js') return new Response(script);
+        if (path === '/proxy/views/runtime.css') return new Response('');
+        if (path === '/proxy/report') {
+            return new Response(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xff]), {
+                headers: { 'Content-Type': 'application/pdf' }
+            });
+        }
+        if (path === '/proxy/source') return new Response(text, { headers: { 'Content-Type': 'text/html' } });
+        throw new Error(`Unexpected request: ${path}`);
+    });
+    const reportError = vi.fn();
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <JsxView source="" params={{}} requestBaseUrl="/proxy/" navigationBaseUrl="/" runtime={{ version }} />
+            </ApiErrorContext>,
+            async (mounted) => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(mounted.querySelector('iframe')).not.toBeNull();
+                });
+                const frame = mounted.querySelector('iframe');
+                const contentWindow = frame?.contentWindow;
+
+                if (!frame || !contentWindow) throw new Error('Expected prepared sandbox');
+                const session = /__VIEW_SESSION__=("[^"]+");/.exec(frame.srcdoc)?.[1];
+
+                if (!session) throw new Error('Expected bootstrap session');
+                const transfer = vi.spyOn(contentWindow, 'postMessage').mockImplementation(() => {});
+
+                try {
+                    await act(async () => {
+                        window.dispatchEvent(
+                            new MessageEvent('message', {
+                                source: contentWindow,
+                                origin: 'null',
+                                data: JSON.parse(session) as unknown
+                            })
+                        );
+                    });
+                    const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
+                    const ports = calls[0]?.[2];
+
+                    if (!Array.isArray(ports) || !(ports[0] instanceof workers.MessagePort)) {
+                        throw new Error('Expected isolated preview transport');
+                    }
+                    const commands = ports[0];
+
+                    // Invalid UTF-8 must reach the PDF renderer instead of failing text decoding.
+                    const pdfReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+
+                    await act(async () => {
+                        commands.postMessage({ id: 0, type: 'preview', path: 'report', title: 'report.txt' });
+                        await expect(pdfReply).resolves.toEqual({ id: 0, ok: true, data: null });
+                    });
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        expect(document.querySelector('[role="dialog"]')?.textContent).toContain('report.txt');
+                        expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+                            'Unable to display this PDF.'
+                        );
+                    });
+
+                    // Switching previews must retain literal markup without introducing executable DOM.
+                    const textReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+
+                    await act(async () => {
+                        commands.postMessage({ id: 1, type: 'preview', path: 'source', title: 'source.html' });
+                        await expect(textReply).resolves.toEqual({ id: 1, ok: true, data: null });
+                    });
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        const dialog = document.querySelector('[role="dialog"]');
+
+                        expect(dialog?.textContent).toContain('source.html');
+                        expect(dialog?.textContent).toContain(text);
+                        expect(dialog?.querySelector('script, img, iframe, object, embed')).toBeNull();
+                        expect(dialog?.textContent).not.toContain('Unable to display this PDF.');
+                    });
+                    expect(reportError).not.toHaveBeenCalled();
+                } finally {
+                    transfer.mockRestore();
+                }
+            }
+        );
+    } finally {
+        fetch.mockRestore();
+    }
+});

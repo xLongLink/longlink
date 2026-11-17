@@ -26,7 +26,7 @@ type FileTypeCategory =
 type FileTypeExtension = {
     category: FileTypeCategory;
     /** The format's text color class. */
-    color: string;
+    color?: string;
     /** A short label for a key too long for the band, as DOCK for Dockerfile. */
     label?: string;
 };
@@ -91,10 +91,10 @@ const CATEGORY_NAMES: Record<FileTypeCategory, string> = {
 const FILE_TYPE_EXTENSIONS = {
     // Documents
     pdf: { category: 'document', color: 'text-orange-600' },
-    doc: { category: 'document', color: 'text-blue-600' },
-    docx: { category: 'document', color: 'text-blue-600' },
-    odt: { category: 'document', color: 'text-blue-600' },
-    rtf: { category: 'document', color: 'text-blue-600' },
+    doc: { category: 'document' },
+    docx: { category: 'document' },
+    odt: { category: 'document' },
+    rtf: { category: 'document' },
     pages: { category: 'document', color: 'text-amber-600' },
     txt: { category: 'document', color: NEUTRAL },
     md: { category: 'document', color: NEUTRAL },
@@ -105,61 +105,61 @@ const FILE_TYPE_EXTENSIONS = {
     srt: { category: 'document', color: NEUTRAL },
     vtt: { category: 'document', color: NEUTRAL },
     // Spreadsheets
-    xls: { category: 'spreadsheet', color: 'text-green-600' },
-    xlsx: { category: 'spreadsheet', color: 'text-green-600' },
-    xlsm: { category: 'spreadsheet', color: 'text-green-600' },
-    ods: { category: 'spreadsheet', color: 'text-green-600' },
-    csv: { category: 'spreadsheet', color: 'text-green-600' },
-    tsv: { category: 'spreadsheet', color: 'text-green-600' },
-    numbers: { category: 'spreadsheet', color: 'text-green-600', label: 'NUM' },
+    xls: { category: 'spreadsheet' },
+    xlsx: { category: 'spreadsheet' },
+    xlsm: { category: 'spreadsheet' },
+    ods: { category: 'spreadsheet' },
+    csv: { category: 'spreadsheet' },
+    tsv: { category: 'spreadsheet' },
+    numbers: { category: 'spreadsheet', label: 'NUM' },
     parquet: { category: 'spreadsheet', color: NEUTRAL, label: 'PARQ' },
     sqlite: { category: 'spreadsheet', color: 'text-sky-600' },
     db: { category: 'spreadsheet', color: NEUTRAL },
     // Presentations
-    ppt: { category: 'presentation', color: 'text-red-600' },
-    pptx: { category: 'presentation', color: 'text-red-600' },
-    odp: { category: 'presentation', color: 'text-red-600' },
+    ppt: { category: 'presentation' },
+    pptx: { category: 'presentation' },
+    odp: { category: 'presentation' },
     key: { category: 'presentation', color: 'text-blue-600' },
     // Images
     png: { category: 'image', color: YELLOW },
-    jpg: { category: 'image', color: 'text-violet-600' },
-    jpeg: { category: 'image', color: 'text-violet-600' },
-    gif: { category: 'image', color: 'text-violet-600' },
-    webp: { category: 'image', color: 'text-violet-600' },
-    avif: { category: 'image', color: 'text-violet-600' },
-    heic: { category: 'image', color: 'text-violet-600' },
-    bmp: { category: 'image', color: 'text-violet-600' },
-    tif: { category: 'image', color: 'text-violet-600' },
-    tiff: { category: 'image', color: 'text-violet-600' },
-    ico: { category: 'image', color: 'text-violet-600' },
+    jpg: { category: 'image' },
+    jpeg: { category: 'image' },
+    gif: { category: 'image' },
+    webp: { category: 'image' },
+    avif: { category: 'image' },
+    heic: { category: 'image' },
+    bmp: { category: 'image' },
+    tif: { category: 'image' },
+    tiff: { category: 'image' },
+    ico: { category: 'image' },
     raw: { category: 'image', color: NEUTRAL },
     svg: { category: 'image', color: YELLOW },
-    jxl: { category: 'image', color: 'text-violet-600' },
+    jxl: { category: 'image' },
     // Video
-    mp4: { category: 'video', color: 'text-blue-600' },
-    mov: { category: 'video', color: 'text-blue-600' },
-    avi: { category: 'video', color: 'text-blue-600' },
-    mkv: { category: 'video', color: 'text-blue-600' },
-    webm: { category: 'video', color: 'text-blue-600' },
-    mpeg: { category: 'video', color: 'text-blue-600' },
-    mpg: { category: 'video', color: 'text-blue-600' },
-    wmv: { category: 'video', color: 'text-blue-600' },
-    m3u8: { category: 'video', color: 'text-blue-600' },
+    mp4: { category: 'video' },
+    mov: { category: 'video' },
+    avi: { category: 'video' },
+    mkv: { category: 'video' },
+    webm: { category: 'video' },
+    mpeg: { category: 'video' },
+    mpg: { category: 'video' },
+    wmv: { category: 'video' },
+    m3u8: { category: 'video' },
     // Audio
-    mp3: { category: 'audio', color: 'text-pink-600' },
-    wav: { category: 'audio', color: 'text-pink-600' },
-    aac: { category: 'audio', color: 'text-pink-600' },
-    flac: { category: 'audio', color: 'text-pink-600' },
-    ogg: { category: 'audio', color: 'text-pink-600' },
-    m4a: { category: 'audio', color: 'text-pink-600' },
-    aiff: { category: 'audio', color: 'text-pink-600' },
-    opus: { category: 'audio', color: 'text-pink-600' },
+    mp3: { category: 'audio' },
+    wav: { category: 'audio' },
+    aac: { category: 'audio' },
+    flac: { category: 'audio' },
+    ogg: { category: 'audio' },
+    m4a: { category: 'audio' },
+    aiff: { category: 'audio' },
+    opus: { category: 'audio' },
     // Code and data
     js: { category: 'code', color: YELLOW },
     jsx: { category: 'code', color: YELLOW },
     mjs: { category: 'code', color: YELLOW },
-    ts: { category: 'code', color: 'text-blue-600' },
-    tsx: { category: 'code', color: 'text-blue-600' },
+    ts: { category: 'code' },
+    tsx: { category: 'code' },
     html: { category: 'code', color: 'text-orange-600' },
     htm: { category: 'code', color: 'text-orange-600' },
     css: { category: 'code', color: 'text-purple-600' },
@@ -169,20 +169,20 @@ const FILE_TYPE_EXTENSIONS = {
     yaml: { category: 'code', color: NEUTRAL },
     yml: { category: 'code', color: NEUTRAL },
     sql: { category: 'code', color: NEUTRAL },
-    py: { category: 'code', color: 'text-blue-600' },
+    py: { category: 'code' },
     java: { category: 'code', color: 'text-orange-600' },
     php: { category: 'code', color: 'text-indigo-600' },
     rb: { category: 'code', color: 'text-red-600' },
     go: { category: 'code', color: 'text-cyan-600' },
     rs: { category: 'code', color: 'text-orange-600' },
     c: { category: 'code', color: NEUTRAL },
-    cpp: { category: 'code', color: 'text-blue-600' },
+    cpp: { category: 'code' },
     h: { category: 'code', color: NEUTRAL },
     cs: { category: 'code', color: 'text-purple-600' },
     sh: { category: 'code', color: 'text-green-600' },
     rss: { category: 'code', color: 'text-orange-600' },
     cjs: { category: 'code', color: YELLOW },
-    mts: { category: 'code', color: 'text-blue-600' },
+    mts: { category: 'code' },
     vue: { category: 'code', color: 'text-emerald-600' },
     svelte: { category: 'code', color: 'text-orange-600' },
     astro: { category: 'code', color: 'text-orange-600' },
@@ -195,15 +195,15 @@ const FILE_TYPE_EXTENSIONS = {
     kts: { category: 'code', color: 'text-violet-600' },
     swift: { category: 'code', color: 'text-red-600' },
     dart: { category: 'code', color: 'text-teal-600' },
-    lua: { category: 'code', color: 'text-blue-600' },
+    lua: { category: 'code' },
     r: { category: 'code', color: 'text-sky-600' },
     scala: { category: 'code', color: 'text-rose-600' },
     ex: { category: 'code', color: 'text-purple-600' },
     exs: { category: 'code', color: 'text-purple-600' },
-    hpp: { category: 'code', color: 'text-blue-600' },
-    cc: { category: 'code', color: 'text-blue-600' },
+    hpp: { category: 'code' },
+    cc: { category: 'code' },
     cu: { category: 'code', color: 'text-green-600' },
-    ps1: { category: 'code', color: 'text-blue-600' },
+    ps1: { category: 'code' },
     bat: { category: 'code', color: 'text-green-600' },
     bash: { category: 'code', color: 'text-green-600' },
     zsh: { category: 'code', color: 'text-green-600' },
@@ -218,12 +218,12 @@ const FILE_TYPE_EXTENSIONS = {
     lock: { category: 'code', color: NEUTRAL },
     git: { category: 'code', color: 'text-red-600' },
     ignore: { category: 'code', color: NEUTRAL },
-    dockerfile: { category: 'code', color: 'text-blue-600', label: 'DOCK' },
+    dockerfile: { category: 'code', label: 'DOCK' },
     makefile: { category: 'code', color: 'text-green-600', label: 'MAKE' },
     tf: { category: 'code', color: 'text-purple-600' },
     tfvars: { category: 'code', color: 'text-purple-600' },
     hcl: { category: 'code', color: 'text-purple-600' },
-    proto: { category: 'code', color: 'text-blue-600' },
+    proto: { category: 'code' },
     jsonl: { category: 'code', color: NEUTRAL },
     ndjson: { category: 'code', color: NEUTRAL },
     diff: { category: 'code', color: NEUTRAL },
@@ -231,48 +231,48 @@ const FILE_TYPE_EXTENSIONS = {
     pem: { category: 'code', color: NEUTRAL },
     crt: { category: 'code', color: NEUTRAL },
     // Archives
-    zip: { category: 'archive', color: NEUTRAL },
-    rar: { category: 'archive', color: NEUTRAL },
-    '7z': { category: 'archive', color: NEUTRAL },
-    tar: { category: 'archive', color: NEUTRAL },
-    gz: { category: 'archive', color: NEUTRAL },
-    tgz: { category: 'archive', color: NEUTRAL },
-    bz2: { category: 'archive', color: NEUTRAL },
-    xz: { category: 'archive', color: NEUTRAL },
-    zst: { category: 'archive', color: NEUTRAL },
+    zip: { category: 'archive' },
+    rar: { category: 'archive' },
+    '7z': { category: 'archive' },
+    tar: { category: 'archive' },
+    gz: { category: 'archive' },
+    tgz: { category: 'archive' },
+    bz2: { category: 'archive' },
+    xz: { category: 'archive' },
+    zst: { category: 'archive' },
     jar: { category: 'archive', color: 'text-orange-600' },
     whl: { category: 'archive', color: 'text-blue-600' },
     // Model weights, packed like an archive
-    safetensors: { category: 'archive', color: NEUTRAL, label: 'SAFE' },
-    gguf: { category: 'archive', color: NEUTRAL },
-    onnx: { category: 'archive', color: NEUTRAL },
+    safetensors: { category: 'archive', label: 'SAFE' },
+    gguf: { category: 'archive' },
+    onnx: { category: 'archive' },
     pt: { category: 'archive', color: 'text-red-600' },
     // Design
-    fig: { category: 'design', color: 'text-purple-600' },
+    fig: { category: 'design' },
     sketch: { category: 'design', color: 'text-amber-600' },
     psd: { category: 'design', color: 'text-sky-600' },
     ai: { category: 'design', color: 'text-orange-600' },
-    eps: { category: 'design', color: 'text-purple-600' },
+    eps: { category: 'design' },
     indd: { category: 'design', color: 'text-pink-600' },
     aep: { category: 'design', color: 'text-violet-600' },
     xd: { category: 'design', color: 'text-fuchsia-600' },
     // Applications
-    exe: { category: 'executable', color: NEUTRAL },
-    msi: { category: 'executable', color: NEUTRAL },
-    dmg: { category: 'executable', color: NEUTRAL },
+    exe: { category: 'executable' },
+    msi: { category: 'executable' },
+    dmg: { category: 'executable' },
     apk: { category: 'executable', color: 'text-green-600' },
     deb: { category: 'executable', color: 'text-rose-600' },
-    iso: { category: 'executable', color: NEUTRAL },
-    app: { category: 'executable', color: NEUTRAL },
-    pkg: { category: 'executable', color: NEUTRAL },
-    ipa: { category: 'executable', color: NEUTRAL },
+    iso: { category: 'executable' },
+    app: { category: 'executable' },
+    pkg: { category: 'executable' },
+    ipa: { category: 'executable' },
     aab: { category: 'executable', color: 'text-green-600' },
     rpm: { category: 'executable', color: 'text-red-600' },
     // Fonts
-    ttf: { category: 'font', color: NEUTRAL },
-    otf: { category: 'font', color: NEUTRAL },
-    woff: { category: 'font', color: NEUTRAL },
-    woff2: { category: 'font', color: NEUTRAL }
+    ttf: { category: 'font' },
+    otf: { category: 'font' },
+    woff: { category: 'font' },
+    woff2: { category: 'font' }
 } satisfies Record<string, FileTypeExtension>;
 
 /** The families that can be passed as a `type` on their own, glyph only. */
@@ -296,8 +296,6 @@ type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 
 /** Every type the table knows. Any other string renders as a neutral file. */
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
-
-const FILE_TYPE_EXTENSION_NAMES = Object.keys(FILE_TYPE_EXTENSIONS) as FileTypeExtensionName[];
 
 /* -------------------------------------------------------------------------- */
 /*                                 Resolution                                 */
@@ -335,7 +333,7 @@ function resolveFileType(type?: string): ResolvedFileType {
             type: key,
             category: extension.category,
             label: extension.label ?? key.toUpperCase(),
-            color: extension.color
+            color: extension.color ?? CATEGORY_COLORS[extension.category]
         };
     }
 
@@ -344,263 +342,6 @@ function resolveFileType(type?: string): ResolvedFileType {
     }
 
     return { type: key, category: 'file', label: key.toUpperCase(), color: CATEGORY_COLORS.file };
-}
-
-/**
- * MIME types whose subtype does not name the extension. Anything else under
- * image/, video/, audio/ or font/ falls back to its family.
- */
-const MIME_TYPES: Record<string, FileTypeName> = {
-    'application/pdf': 'pdf',
-    'application/msword': 'doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-    'application/vnd.oasis.opendocument.text': 'odt',
-    'application/rtf': 'rtf',
-    'application/vnd.ms-excel': 'xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-    'application/vnd.oasis.opendocument.spreadsheet': 'ods',
-    'application/vnd.ms-powerpoint': 'ppt',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
-    'application/vnd.oasis.opendocument.presentation': 'odp',
-    'application/vnd.ms-excel.sheet.macroenabled.12': 'xlsm',
-    'application/vnd.apple.keynote': 'key',
-    'application/zip': 'zip',
-    'application/x-zip-compressed': 'zip',
-    'application/vnd.rar': 'rar',
-    'application/x-rar-compressed': 'rar',
-    'application/x-7z-compressed': '7z',
-    'application/x-tar': 'tar',
-    'application/gzip': 'gz',
-    'application/x-gzip': 'gz',
-    'application/x-bzip2': 'bz2',
-    'application/json': 'json',
-    'application/xml': 'xml',
-    'application/yaml': 'yaml',
-    'application/x-yaml': 'yaml',
-    'application/rss+xml': 'rss',
-    'application/javascript': 'js',
-    'application/x-httpd-php': 'php',
-    'application/x-sh': 'sh',
-    'application/x-msdownload': 'exe',
-    'application/x-msi': 'msi',
-    'application/vnd.android.package-archive': 'apk',
-    'application/vnd.debian.binary-package': 'deb',
-    'application/x-apple-diskimage': 'dmg',
-    'application/x-iso9660-image': 'iso',
-    'application/x-font-ttf': 'ttf',
-    'application/font-woff': 'woff',
-    'application/postscript': 'eps',
-    'application/vnd.adobe.photoshop': 'psd',
-    'image/vnd.adobe.photoshop': 'psd',
-    'image/jpeg': 'jpg',
-    'image/svg+xml': 'svg',
-    'image/x-icon': 'ico',
-    'image/vnd.microsoft.icon': 'ico',
-    'video/quicktime': 'mov',
-    'video/x-msvideo': 'avi',
-    'video/x-matroska': 'mkv',
-    'audio/mpeg': 'mp3',
-    'audio/wav': 'wav',
-    'audio/x-wav': 'wav',
-    'audio/mp4': 'm4a',
-    'audio/x-m4a': 'm4a',
-    'audio/x-flac': 'flac',
-    'audio/x-aiff': 'aiff',
-    'video/x-ms-wmv': 'wmv',
-    'text/plain': 'txt',
-    'text/markdown': 'md',
-    'text/x-markdown': 'md',
-    'text/x-python': 'py',
-    'text/x-c': 'c',
-    'text/yaml': 'yaml',
-    'text/csv': 'csv',
-    'text/tab-separated-values': 'tsv',
-    'text/html': 'html',
-    'text/css': 'css',
-    'text/javascript': 'js',
-    'text/xml': 'xml',
-    'application/node': 'cjs',
-    'application/java-archive': 'jar',
-    'application/x-ipynb+json': 'ipynb',
-    'application/x-ndjson': 'ndjson',
-    'application/vnd.sqlite3': 'sqlite',
-    'application/x-sqlite3': 'sqlite',
-    'application/vnd.apple.mpegurl': 'm3u8',
-    'application/x-mpegurl': 'm3u8',
-    'application/x-subrip': 'srt',
-    'message/rfc822': 'eml',
-    'application/x-rpm': 'rpm',
-    'application/x-pem-file': 'pem',
-    'application/x-x509-ca-cert': 'crt',
-    'application/pkix-cert': 'crt',
-    'application/zstd': 'zst',
-    'application/x-xz': 'xz',
-    'text/x-c++src': 'cpp',
-    'text/x-c++hdr': 'hpp',
-    'text/x-kotlin': 'kt',
-    'text/x-swift': 'swift',
-    'text/x-rsrc': 'r',
-    'text/x-lua': 'lua',
-    'text/x-scala': 'scala',
-    'text/x-diff': 'diff',
-    'text/x-patch': 'patch',
-    'text/x-makefile': 'makefile'
-};
-
-/**
- * Names that carry their type with no extension of their own, or with one
- * that names something else ("go.mod" is not a tracker module).
- */
-const FILE_NAMES: Record<string, FileTypeName> = {
-    containerfile: 'dockerfile',
-    gnumakefile: 'makefile',
-    '.dev.vars': 'env',
-    '.gitignore': 'git',
-    '.gitattributes': 'git',
-    '.gitmodules': 'git',
-    '.gitkeep': 'git',
-    '.gitconfig': 'git',
-    '.git-blame-ignore-revs': 'git',
-    '.mailmap': 'git',
-    'bun.lockb': 'lock',
-    'go.sum': 'lock',
-    'go.mod': 'go',
-    'go.work': 'go',
-    gemfile: 'rb',
-    rakefile: 'rb',
-    brewfile: 'rb',
-    podfile: 'rb',
-    vagrantfile: 'rb',
-    fastfile: 'rb',
-    '.bashrc': 'bash',
-    '.bash_profile': 'bash',
-    '.bash_aliases': 'bash',
-    '.bash_logout': 'bash',
-    '.zshrc': 'zsh',
-    '.zprofile': 'zsh',
-    '.zshenv': 'zsh',
-    '.zlogin': 'zsh',
-    '.envrc': 'sh',
-    '.profile': 'sh',
-    '.editorconfig': 'ini',
-    '.npmrc': 'ini',
-    '.pypirc': 'ini',
-    '.flake8': 'ini',
-    '.pylintrc': 'ini',
-    '.coveragerc': 'ini',
-    caddyfile: 'conf',
-    '.htaccess': 'conf',
-    '.babelrc': 'json',
-    '.swcrc': 'json',
-    '.cursorrules': 'md',
-    readme: 'txt',
-    license: 'txt',
-    licence: 'txt',
-    changelog: 'txt',
-    codeowners: 'txt',
-    '.nvmrc': 'txt',
-    '.node-version': 'txt',
-    '.python-version': 'txt',
-    '.ruby-version': 'txt',
-    '.tool-versions': 'txt',
-    '.terraform-version': 'txt'
-};
-
-/** Other extensions of a known type. */
-const EXTENSION_ALIASES: Record<string, FileTypeName> = {
-    cer: 'crt',
-    mak: 'makefile',
-    mk: 'makefile',
-    sqlite3: 'sqlite'
-};
-
-/**
- * Name families, read only when the name does not end in a known extension:
- * ".env.local" is an env file and "Dockerfile.dev" a Dockerfile, while
- * "Dockerfile.md" is Markdown.
- */
-const NAME_PATTERNS: [RegExp, FileTypeName][] = [
-    [/^\.env\./, 'env'],
-    [/^(docker|container)file\./, 'dockerfile'],
-    [/^\.[\w-]+ignore$/, 'ignore']
-];
-
-const MIME_FAMILIES: Record<string, FileTypeName> = {
-    image: 'image',
-    video: 'video',
-    audio: 'audio',
-    font: 'font',
-    text: 'txt'
-};
-
-const MIME_PATTERN = /^(application|audio|font|image|message|model|multipart|text|video)\/[\w.+-]+$/;
-const URL_ORIGIN = /^[a-z][\w+.-]*:\/\/[^/]*/;
-/**
- * A value ending in an extension or a slash carries no query or hash. An
- * extension has a letter, so "?v=1.2" is still a query.
- */
-const NAME_END = /(\.\d*[a-z][a-z\d]*|[\\/])$/;
-
-/**
- * Resolves a file name, path, URL, bare extension or MIME type to a `type`.
- * A path ending in a slash is a folder; a well-known name resolves to its
- * type (Dockerfile, .env.local, go.mod, LICENSE); any other name without an
- * extension is an empty file; an unknown extension is returned as is and
- * renders neutral.
- */
-function getFileType(value: string): FileTypeName | (string & {}) {
-    let input = value.trim().toLowerCase();
-
-    // A URL is read by its path, so a bare host is not a ".com" file. A "?" or
-    // "#" can be part of a plain name ("invoice #12.pdf"), so outside a URL it
-    // starts a query only when the value does not already end like a name.
-    if (URL_ORIGIN.test(input)) {
-        input = input.split(/[?#]/)[0].replace(URL_ORIGIN, '');
-        if (input === '/') return 'empty';
-    } else if (!NAME_END.test(input)) {
-        input = input.split(/[?#]/)[0];
-    }
-    if (!input) return 'empty';
-    if (input.endsWith('/') || input.endsWith('\\')) return 'folder';
-
-    const mime = input.split(';')[0].trim();
-    if (MIME_PATTERN.test(mime)) {
-        if (has(MIME_TYPES, mime)) return MIME_TYPES[mime];
-        const [family, subtype] = mime.split('/');
-        // A known extension after a dot makes it a storage key ("image/a.png").
-        const tail = subtype.slice(subtype.lastIndexOf('.') + 1);
-        if (subtype.includes('.') && has(extensions, tail)) return tail;
-        // A media subtype counts only inside its own family: audio/webm is audio.
-        if (
-            has(extensions, subtype) &&
-            (family === 'application' || family === 'text' || extensions[subtype].category === family)
-        ) {
-            return subtype;
-        }
-        return has(MIME_FAMILIES, family) ? MIME_FAMILIES[family] : 'empty';
-    }
-
-    const name = input.split(/[\\/]/).pop() ?? '';
-    if (has(FILE_NAMES, name)) return FILE_NAMES[name];
-    const dot = name.lastIndexOf('.');
-    const extension = name.slice(dot + 1);
-    if (has(EXTENSION_ALIASES, extension)) return EXTENSION_ALIASES[extension];
-    if (!has(extensions, extension)) {
-        const match = NAME_PATTERNS.find(([pattern]) => pattern.test(name));
-        if (match) return match[1];
-    }
-    // No dot, or only a leading one: a bare extension or family ("pdf",
-    // ".pdf", "image") resolves, anything else ("notes", ".hidden") has no type.
-    if (dot <= 0) {
-        return resolveFileType(extension).category === 'file' ? 'empty' : extension;
-    }
-
-    return extension || 'empty';
-}
-
-/** The family of any `type`, for grouping or filtering a file list. */
-function getFileTypeCategory(type?: string): FileTypeCategory {
-    return resolveFileType(type).category;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -683,17 +424,6 @@ const PAGE_PATH =
 const FOLD_PATH = 'M14 2v5a1 1 0 0 0 1 1h5';
 /** The folded corner, traced along the page edge so it never leaves the page. */
 const FLAP_PATH = 'M13.586 2a2 2 0 0 1 1.414.586l4.414 4.414A2 2 0 0 1 20 8.414V8h-5a1 1 0 0 1-1-1V2Z';
-
-/**
- * Lyra and Sera square every radius, so the page, its fold and the flap square
- * too: both shapes render, and a per-style variable shows one. Outside a style
- * the var() fallback keeps the rounded page.
- */
-const PAGE_PATH_SQUARE = 'M4 22V2h10l6 6v14Z';
-const FOLD_PATH_SQUARE = 'M14 2v6h6';
-const FLAP_PATH_SQUARE = 'M14 2l6 6h-6Z';
-const ROUND = '[display:var(--file-type-round,inline)]';
-const SQUARE = '[display:var(--file-type-square,none)]';
 
 /**
  * CSS variable architecture, all read from the root:
@@ -829,7 +559,6 @@ type FileTypeProps = Omit<ComponentProps<'span'>, 'children' | 'className' | 'st
     /**
      * An extension (`"pdf"`, `".docx"`), a family (`"image"`, `"folder"`) or
      * `"empty"`. Unknown extensions render as a neutral file with their label.
-     * Use `getFileType` to resolve a file name or MIME type.
      */
     type?: FileTypeName | (string & {});
     /** `mono` draws every type in the theme's gray instead of its own color. */
@@ -889,32 +618,11 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
                 strokeLinejoin="round"
                 aria-hidden="true"
                 focusable="false"
-                className={cn(
-                    'absolute inset-0 size-full overflow-visible [stroke-width:var(--file-type-stroke,max(1px,2.5cqw))] [--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_40%,transparent))] @max-[21px]:[--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_65%,transparent))]',
-                    '[--file-type-round:inline]',
-                    '[--file-type-square:none]'
-                )}
+                className="absolute inset-0 size-full overflow-visible [stroke-width:var(--file-type-stroke,max(1px,2.5cqw))] [--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_40%,transparent))] @max-[21px]:[--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_65%,transparent))]"
             >
-                <path {...STROKE} d={PAGE_PATH} className={cn(PAGE_CLASS[variant], ROUND)} />
-                <path
-                    {...STROKE}
-                    d={PAGE_PATH_SQUARE}
-                    strokeLinejoin="miter"
-                    className={cn(PAGE_CLASS[variant], SQUARE)}
-                />
-                {variant === 'solid' ? (
-                    <>
-                        <path d={FLAP_PATH} className={cn('fill-white/30 stroke-none', ROUND)} />
-                        <path d={FLAP_PATH_SQUARE} className={cn('fill-white/30 stroke-none', SQUARE)} />
-                    </>
-                ) : null}
-                <path {...STROKE} d={FOLD_PATH} className={cn(FOLD_CLASS[variant], ROUND)} />
-                <path
-                    {...STROKE}
-                    d={FOLD_PATH_SQUARE}
-                    strokeLinejoin="miter"
-                    className={cn(FOLD_CLASS[variant], SQUARE)}
-                />
+                <path {...STROKE} d={PAGE_PATH} className={PAGE_CLASS[variant]} />
+                {variant === 'solid' ? <path d={FLAP_PATH} className="fill-white/30 stroke-none" /> : null}
+                <path {...STROKE} d={FOLD_PATH} className={FOLD_CLASS[variant]} />
                 {glyphNode ? (
                     <g
                         data-slot="file-type-glyph"
@@ -967,11 +675,8 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
 
 export {
     FILE_TYPE_CATEGORIES,
-    FILE_TYPE_EXTENSION_NAMES,
     FileType,
     fileTypeVariants,
-    getFileType,
-    getFileTypeCategory,
     type FileTypeCategory,
     type FileTypeName,
     type FileTypeProps,

@@ -4743,7 +4743,7 @@ function Card$1({ title, description, action, footer, padding, children, ...prop
     footer?: React$1.ReactNode;
     padding?: "default" | "none";
 }): React$1.JSX.Element;
-function Grid({ columns: configuredColumns, gap, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+function Grid({ columns, gap, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
     columns?: number;
     gap?: number;
     align?: "start" | "center" | "end" | "stretch";
@@ -5058,7 +5058,7 @@ namespace useRender {
 }
 const iconTileVariants: (props?: ({
     variant?: "outline" | "frame" | "elevated" | "soft" | "solid" | null | undefined;
-    size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface IconTileProps extends useRender.ComponentProps<"span"> {
@@ -5069,7 +5069,7 @@ interface IconTileProps extends useRender.ComponentProps<"span"> {
 function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 const badgeVariants: (props?: ({
     variant?: "primary" | "secondary" | "outline" | "destructive" | null | undefined;
-    size?: "sm" | "md" | "lg" | "xs" | "xl" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "xl" | "md" | null | undefined;
     radius?: "sm" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface BadgeProps extends Omit<useRender.ComponentProps<"span">, "className"> {
@@ -5090,7 +5090,7 @@ interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "colo
 function Text$1({ maxLines, className, style, ...props }: TextProps): React$1.JSX.Element;
 const frameVariants: (props?: ({
     variant?: "default" | "ghost" | "inverse" | null | undefined;
-    spacing?: "default" | "sm" | "lg" | "xs" | null | undefined;
+    spacing?: "default" | "xs" | "sm" | "lg" | null | undefined;
     stacked?: boolean | null | undefined;
     dense?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
@@ -5102,7 +5102,8 @@ function Frame$1({ title, description, action, footer, padding, children, ...pro
     footer?: React$1.ReactNode;
     padding?: "default" | "none";
 }): React$1.JSX.Element;
-type StackLayoutProps = {
+type StackProps = Omit<React$1.HTMLAttributes<HTMLElement>, "style"> & {
+    as?: "div" | "main" | "section" | "aside" | "figure" | "footer";
     direction?: "horizontal" | "vertical";
     justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
     align?: "start" | "center" | "end" | "stretch";
@@ -5111,13 +5112,9 @@ type StackLayoutProps = {
     padding?: number;
     paddingInline?: number;
     paddingBlock?: number;
-    width?: React$1.CSSProperties["width"];
-    height?: React$1.CSSProperties["height"];
-    maxWidth?: React$1.CSSProperties["maxWidth"];
-    minHeight?: React$1.CSSProperties["minHeight"];
     background?: "muted";
 };
-function Stack(props: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & Pick<StackLayoutProps, "direction" | "justify" | "align" | "wrap" | "gap" | "padding" | "paddingInline" | "paddingBlock" | "background">): React$1.JSX.Element;
+function Stack({ as: Component, direction, justify, align, wrap, gap, padding, paddingInline, paddingBlock, background, className, children, ...props }: StackProps): React$1.ReactElement;
 function StackItem(props: {
     children?: React$1.ReactNode;
     size?: "static" | "fill";
@@ -5166,7 +5163,7 @@ namespace Button {
 }
 const buttonVariants: (props?: ({
     variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
-    size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+    size?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
@@ -6553,8 +6550,6 @@ function DropdownMenuRadioItem({ className, children, inset, ...props }: MenuRad
 }): React$1.JSX.Element;
 function DropdownMenuSeparator({ className, ...props }: Separator.Props): React$1.JSX.Element;
 function DropdownMenuShortcut({ className, ...props }: React$1.ComponentProps<"span">): React$1.JSX.Element;
-function Dropdown(props: React$1.ComponentProps<typeof DropdownMenu>): React$1.JSX.Element;
-function DropdownPortal(props: React$1.ComponentProps<typeof DropdownMenuPortal>): React$1.JSX.Element;
 function DropdownTrigger(props: Omit<React$1.ComponentProps<typeof DropdownMenuTrigger>, "className">): React$1.JSX.Element;
 function DropdownContent(props: Omit<React$1.ComponentProps<typeof DropdownMenuContent>, "className">): React$1.JSX.Element;
 function DropdownGroup(props: Omit<React$1.ComponentProps<typeof DropdownMenuGroup>, "className">): React$1.JSX.Element;
@@ -6565,7 +6560,6 @@ function DropdownRadioGroup(props: Omit<React$1.ComponentProps<typeof DropdownMe
 function DropdownRadioItem(props: Omit<React$1.ComponentProps<typeof DropdownMenuRadioItem>, "className">): React$1.JSX.Element;
 function DropdownSeparator(props: Omit<React$1.ComponentProps<typeof DropdownMenuSeparator>, "className">): React$1.JSX.Element;
 function DropdownShortcut(props: Omit<React$1.ComponentProps<typeof DropdownMenuShortcut>, "className">): React$1.JSX.Element;
-function DropdownSub(props: React$1.ComponentProps<typeof DropdownMenuSub>): React$1.JSX.Element;
 function DropdownSubTrigger(props: Omit<React$1.ComponentProps<typeof DropdownMenuSubTrigger>, "className">): React$1.JSX.Element;
 function DropdownSubContent(props: Omit<React$1.ComponentProps<typeof DropdownMenuSubContent>, "className">): React$1.JSX.Element;
 function Currency({ value, currency, locale, className, ...props }: Omit<React$1.ComponentPropsWithoutRef<"span">, "children"> & {
@@ -6640,19 +6634,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     doc: {
         category: "document";
-        color: string;
     };
     docx: {
         category: "document";
-        color: string;
     };
     odt: {
         category: "document";
-        color: string;
     };
     rtf: {
         category: "document";
-        color: string;
     };
     pages: {
         category: "document";
@@ -6692,31 +6682,24 @@ const FILE_TYPE_EXTENSIONS: {
     };
     xls: {
         category: "spreadsheet";
-        color: string;
     };
     xlsx: {
         category: "spreadsheet";
-        color: string;
     };
     xlsm: {
         category: "spreadsheet";
-        color: string;
     };
     ods: {
         category: "spreadsheet";
-        color: string;
     };
     csv: {
         category: "spreadsheet";
-        color: string;
     };
     tsv: {
         category: "spreadsheet";
-        color: string;
     };
     numbers: {
         category: "spreadsheet";
-        color: string;
         label: string;
     };
     parquet: {
@@ -6734,15 +6717,12 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ppt: {
         category: "presentation";
-        color: string;
     };
     pptx: {
         category: "presentation";
-        color: string;
     };
     odp: {
         category: "presentation";
-        color: string;
     };
     key: {
         category: "presentation";
@@ -6754,43 +6734,33 @@ const FILE_TYPE_EXTENSIONS: {
     };
     jpg: {
         category: "image";
-        color: string;
     };
     jpeg: {
         category: "image";
-        color: string;
     };
     gif: {
         category: "image";
-        color: string;
     };
     webp: {
         category: "image";
-        color: string;
     };
     avif: {
         category: "image";
-        color: string;
     };
     heic: {
         category: "image";
-        color: string;
     };
     bmp: {
         category: "image";
-        color: string;
     };
     tif: {
         category: "image";
-        color: string;
     };
     tiff: {
         category: "image";
-        color: string;
     };
     ico: {
         category: "image";
-        color: string;
     };
     raw: {
         category: "image";
@@ -6802,75 +6772,57 @@ const FILE_TYPE_EXTENSIONS: {
     };
     jxl: {
         category: "image";
-        color: string;
     };
     mp4: {
         category: "video";
-        color: string;
     };
     mov: {
         category: "video";
-        color: string;
     };
     avi: {
         category: "video";
-        color: string;
     };
     mkv: {
         category: "video";
-        color: string;
     };
     webm: {
         category: "video";
-        color: string;
     };
     mpeg: {
         category: "video";
-        color: string;
     };
     mpg: {
         category: "video";
-        color: string;
     };
     wmv: {
         category: "video";
-        color: string;
     };
     m3u8: {
         category: "video";
-        color: string;
     };
     mp3: {
         category: "audio";
-        color: string;
     };
     wav: {
         category: "audio";
-        color: string;
     };
     aac: {
         category: "audio";
-        color: string;
     };
     flac: {
         category: "audio";
-        color: string;
     };
     ogg: {
         category: "audio";
-        color: string;
     };
     m4a: {
         category: "audio";
-        color: string;
     };
     aiff: {
         category: "audio";
-        color: string;
     };
     opus: {
         category: "audio";
-        color: string;
     };
     js: {
         category: "code";
@@ -6886,11 +6838,9 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ts: {
         category: "code";
-        color: string;
     };
     tsx: {
         category: "code";
-        color: string;
     };
     html: {
         category: "code";
@@ -6930,7 +6880,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     py: {
         category: "code";
-        color: string;
     };
     java: {
         category: "code";
@@ -6958,7 +6907,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     cpp: {
         category: "code";
-        color: string;
     };
     h: {
         category: "code";
@@ -6982,7 +6930,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     mts: {
         category: "code";
-        color: string;
     };
     vue: {
         category: "code";
@@ -7035,7 +6982,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     lua: {
         category: "code";
-        color: string;
     };
     r: {
         category: "code";
@@ -7055,11 +7001,9 @@ const FILE_TYPE_EXTENSIONS: {
     };
     hpp: {
         category: "code";
-        color: string;
     };
     cc: {
         category: "code";
-        color: string;
     };
     cu: {
         category: "code";
@@ -7067,7 +7011,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ps1: {
         category: "code";
-        color: string;
     };
     bat: {
         category: "code";
@@ -7123,7 +7066,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     dockerfile: {
         category: "code";
-        color: string;
         label: string;
     };
     makefile: {
@@ -7145,7 +7087,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     proto: {
         category: "code";
-        color: string;
     };
     jsonl: {
         category: "code";
@@ -7173,39 +7114,30 @@ const FILE_TYPE_EXTENSIONS: {
     };
     zip: {
         category: "archive";
-        color: string;
     };
     rar: {
         category: "archive";
-        color: string;
     };
     "7z": {
         category: "archive";
-        color: string;
     };
     tar: {
         category: "archive";
-        color: string;
     };
     gz: {
         category: "archive";
-        color: string;
     };
     tgz: {
         category: "archive";
-        color: string;
     };
     bz2: {
         category: "archive";
-        color: string;
     };
     xz: {
         category: "archive";
-        color: string;
     };
     zst: {
         category: "archive";
-        color: string;
     };
     jar: {
         category: "archive";
@@ -7217,16 +7149,13 @@ const FILE_TYPE_EXTENSIONS: {
     };
     safetensors: {
         category: "archive";
-        color: string;
         label: string;
     };
     gguf: {
         category: "archive";
-        color: string;
     };
     onnx: {
         category: "archive";
-        color: string;
     };
     pt: {
         category: "archive";
@@ -7234,7 +7163,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     fig: {
         category: "design";
-        color: string;
     };
     sketch: {
         category: "design";
@@ -7250,7 +7178,6 @@ const FILE_TYPE_EXTENSIONS: {
     };
     eps: {
         category: "design";
-        color: string;
     };
     indd: {
         category: "design";
@@ -7266,15 +7193,12 @@ const FILE_TYPE_EXTENSIONS: {
     };
     exe: {
         category: "executable";
-        color: string;
     };
     msi: {
         category: "executable";
-        color: string;
     };
     dmg: {
         category: "executable";
-        color: string;
     };
     apk: {
         category: "executable";
@@ -7286,19 +7210,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     iso: {
         category: "executable";
-        color: string;
     };
     app: {
         category: "executable";
-        color: string;
     };
     pkg: {
         category: "executable";
-        color: string;
     };
     ipa: {
         category: "executable";
-        color: string;
     };
     aab: {
         category: "executable";
@@ -7310,19 +7230,15 @@ const FILE_TYPE_EXTENSIONS: {
     };
     ttf: {
         category: "font";
-        color: string;
     };
     otf: {
         category: "font";
-        color: string;
     };
     woff: {
         category: "font";
-        color: string;
     };
     woff2: {
         category: "font";
-        color: string;
     };
 };
 const FILE_TYPE_CATEGORIES: readonly [
@@ -7343,7 +7259,7 @@ const FILE_TYPE_CATEGORIES: readonly [
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 const fileTypeVariants: (props?: ({
-    size?: "sm" | "md" | "lg" | "xs" | "xl" | "mini" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "xl" | "md" | "mini" | null | undefined;
 } & ClassProp) | undefined) => string;
 type FileTypeVariant = "outline" | "solid" | "light" | "mono";
 type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "className" | "style"> & {
@@ -35942,7 +35858,7 @@ export function Pagination(props: {
     pageSize: number;
     label?: string;
 }): React$1.JSX.Element | null;
-function ViewMap(props: PublicProps<MapProps & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
+function ViewMap(props: PublicProps<Omit<MapProps, "theme"> & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
 const EVENTS: {
     readonly BLUR: "blur";
     readonly FOCUS_OUT: "focusout";
@@ -36705,10 +36621,6 @@ export function ClusterMap({ data, onSelect, radius, ...props }: MapOptions$1 & 
     data: readonly MapMarker[];
     radius?: number;
     onSelect?: (marker: MapMarker) => void;
-}): React$1.JSX.Element;
-export function GeoJSONMap({ data: input, onSelect, ...props }: MapOptions$1 & {
-    data: MapGeography;
-    onSelect?: (feature: MapGeography["features"][number]) => void;
 }): React$1.JSX.Element;
 export function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
     data: readonly MapArc[];
@@ -38436,7 +38348,7 @@ const DataGridColumnHeader$1: <Data extends object, Value>(props: PublicProps<Pa
 const DataGridPagination$1: PublicComponent<typeof DataGridPagination>;
 const DataGridScrollArea$1: PublicComponent<typeof DataGridScrollArea>;
 const Box$1: PublicComponent<typeof Box>;
-const Stack$1: PublicComponent<typeof Stack>;
+const Stack$1: (props: Omit<PublicProps<Parameters<typeof Stack>[0]>, "as">) => React$1.ReactNode;
 const StackItem$1: PublicComponent<typeof StackItem>;
 const Grid$1: PublicComponent<typeof Grid>;
 const GridItem$1: PublicComponent<typeof GridItem>;
@@ -38452,8 +38364,8 @@ const Button$3: PublicComponent<typeof Button$2>;
 const ButtonGroup$1: PublicComponent<typeof ButtonGroup>;
 const ButtonGroupText$1: PublicComponent<typeof ButtonGroupText>;
 const ButtonGroupSeparator$1: PublicComponent<typeof ButtonGroupSeparator>;
-const Dropdown$1: PublicComponent<typeof Dropdown>;
-const DropdownPortal$1: PublicComponent<typeof DropdownPortal>;
+export const Dropdown: PublicComponent<typeof DropdownMenu>;
+export const DropdownPortal: PublicComponent<typeof DropdownMenuPortal>;
 const DropdownTrigger$1: PublicComponent<typeof DropdownTrigger>;
 const DropdownContent$1: PublicComponent<typeof DropdownContent>;
 const DropdownGroup$1: PublicComponent<typeof DropdownGroup>;
@@ -38464,7 +38376,7 @@ const DropdownRadioGroup$1: PublicComponent<typeof DropdownRadioGroup>;
 const DropdownRadioItem$1: PublicComponent<typeof DropdownRadioItem>;
 const DropdownSeparator$1: PublicComponent<typeof DropdownSeparator>;
 const DropdownShortcut$1: PublicComponent<typeof DropdownShortcut>;
-const DropdownSub$1: PublicComponent<typeof DropdownSub>;
+export const DropdownSub: PublicComponent<typeof DropdownMenuSub>;
 const DropdownSubTrigger$1: PublicComponent<typeof DropdownSubTrigger>;
 const DropdownSubContent$1: PublicComponent<typeof DropdownSubContent>;
 const Separator$2: PublicComponent<typeof Separator$1>;
@@ -42371,7 +42283,7 @@ namespace iso {
 namespace z {
     export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, Dropdown$1 as Dropdown, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownPortal$1 as DropdownPortal, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSub$1 as DropdownSub, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, MapControls$1 as MapControls, MapGeoJSON$1 as MapGeoJSON, MapViewport$1 as MapViewport, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, ViewMap$1 as Map, dataGridFeatures$1 as dataGridFeatures, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, MapControls$1 as MapControls, MapGeoJSON$1 as MapGeoJSON, MapViewport$1 as MapViewport, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, ViewMap$1 as Map, dataGridFeatures$1 as dataGridFeatures, z, };
 }
 
 declare const ArcMap: typeof NativeFrontend.ArcMap;
@@ -42432,7 +42344,6 @@ import FormOption = NativeFrontend.FormOption;
 declare const FormProvider: typeof NativeFrontend.FormProvider;
 declare const Frame: typeof NativeFrontend.Frame;
 import FrontendElementType = NativeFrontend.FrontendElementType;
-declare const GeoJSONMap: typeof NativeFrontend.GeoJSONMap;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridItem: typeof NativeFrontend.GridItem;
 declare const Heading: typeof NativeFrontend.Heading;

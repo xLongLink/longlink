@@ -2,6 +2,7 @@ import { TextExample } from './views/text';
 import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
 import { TableExample } from './views/table';
+import { WorldMapExample } from './views/map';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
@@ -23,20 +24,20 @@ import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
 import { ChartLegendExample } from './views/chart-legend';
+import { MapControlsPreview } from './views/map-controls';
 import { Icon } from '@/components/longlink/display/icon';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { Tabs, Tab } from '@/components/longlink/layout/tabs';
-import { documentationCategories } from '@/lib/documentation';
 import { SwitzerlandExample } from './views/switzerland-example';
-import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
+import { componentDocumentation, documentationCategories } from '@/platform/publications';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -52,8 +53,8 @@ const article = {
     toc: [
         { id: 'views', label: 'Views', level: 1 },
         ...documentationCategories
-            .filter((category) => category !== 'Runtime')
-            .map((category) => ({ id: category.toLowerCase().replace(/\W+/g, '-'), label: category, level: 2 }))
+            .filter(({ category }) => category !== 'Runtime')
+            .map(({ category, anchor }) => ({ id: anchor.slice(1), label: category, level: 2 }))
     ],
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
@@ -71,14 +72,13 @@ const previews = new Map(
         RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
         Sankey: <ChartExample name="Sankey" height={160} isCompact />,
         ChartLegend: <ChartLegendExample isCompact />,
-        Map: <SwitzerlandExample height={160} isCompact />,
+        Map: <WorldMapExample height={160} isCompact />,
         MapGeoJSON: <SwitzerlandExample height={160} isCompact />,
-        MapControls: <SwitzerlandExample height={220} />,
+        MapControls: <MapControlsPreview />,
         StreetMap: <MapExample name="StreetMap" height={160} isCompact />,
         MarkerMap: <MapExample name="MarkerMap" height={160} isCompact />,
         RouteMap: <MapExample name="RouteMap" height={160} isCompact />,
         ClusterMap: <MapExample name="ClusterMap" height={160} isCompact />,
-        GeoJSONMap: <MapExample name="GeoJSONMap" height={160} isCompact />,
         ArcMap: <MapExample name="ArcMap" height={160} isCompact />,
         Avatar: (
             <AvatarGroup className="items-center">
@@ -152,7 +152,7 @@ const previews = new Map(
         ),
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
-            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
+            <Stack gap={0} className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
                 <ViewHeading level={1}>Heading</ViewHeading>
             </Stack>
         ),
@@ -292,13 +292,10 @@ export default function Item({ params }) {
                     </CollapsibleContent>
                 </Collapsible>
                 {documentationCategories
-                    .filter((category) => category !== 'Runtime')
-                    .map((category) => (
+                    .filter(({ category }) => category !== 'Runtime')
+                    .map(({ category, anchor }) => (
                         <Stack key={category} gap={3}>
-                            <h2
-                                className="font-semibold tracking-tight text-3xl"
-                                id={category.toLowerCase().replace(/\W+/g, '-')}
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl" id={anchor.slice(1)}>
                                 {category}
                             </h2>
                             <Grid columns={3} gap={4}>
@@ -310,16 +307,14 @@ export default function Item({ params }) {
                                                 aria-hidden="true"
                                                 inert
                                                 size="sm"
-                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0' : ''}`}
+                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
                                             >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
                                                 <div
                                                     className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
                                                 >
                                                     <Stack
-                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
-                                                        width="100%"
-                                                        maxWidth="100%"
+                                                        className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
                                                         align={
                                                             component.category === 'Form' &&
                                                             !['Checkbox', 'RadioGroup', 'Switch'].includes(

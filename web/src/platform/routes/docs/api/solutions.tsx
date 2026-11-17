@@ -1,5 +1,5 @@
+import { Stack } from '@/components/longlink/layout/stack';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 

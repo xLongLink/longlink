@@ -83,32 +83,39 @@ it('releases owned previews on source changes and ignores late responses', async
     }
 });
 
-it('never renders a remote source directly when the scoped host rejects it', async () => {
-    // A URL-looking path still belongs to the host capability, not the browser network.
-    const requests: string[] = [];
+it.each(['rejected', 'non-image'] as const)(
+    'keeps a %s scoped response unavailable without exposing its source',
+    async (result) => {
+        // A URL-looking path still belongs to the host capability, not the browser network.
+        const requests: string[] = [];
 
-    const files = {
-        load: async (path: string) => {
-            requests.push(path);
-            throw new Error('Denied');
-        },
-        preview: async () => {
-            throw new Error('Images must not open a host preview');
-        },
-        download: async () => undefined
-    };
+        const files = {
+            load: async (path: string) => {
+                requests.push(path);
+                if (result === 'rejected') throw new Error('Denied');
 
-    await withMounted(
-        <FileRequestContext value={files}>
-            <Image src="https://untrusted.example/photo.png" alt="Photo" />
-        </FileRequestContext>,
-        async (output) => {
-            expect(requests).toEqual(['https://untrusted.example/photo.png']);
-            expect(output.querySelector('img')).toBeNull();
-            expect(output.textContent).toContain('Photo unavailable');
-        }
-    );
-});
+                return new Blob(['<script>private attachment</script>'], { type: 'text/html' });
+            },
+            preview: async () => {
+                throw new Error('Images must not open a host preview');
+            },
+            download: async () => undefined
+        };
+
+        await withMounted(
+            <FileRequestContext value={files}>
+                <Image src="https://untrusted.example/photo.png" alt="Photo" />
+            </FileRequestContext>,
+            async (output) => {
+                expect(requests).toEqual(['https://untrusted.example/photo.png']);
+                expect(output.querySelector('img')).toBeNull();
+                expect(output.querySelector('script')).toBeNull();
+                expect(output.textContent).not.toContain('private attachment');
+                expect(output.textContent).toContain('Photo unavailable');
+            }
+        );
+    }
+);
 
 it('recovers from an inline decode failure on source change without revoking caller URLs', async () => {
     // A failed image must not leave the next source stuck in its placeholder state.

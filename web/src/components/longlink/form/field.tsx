@@ -13,7 +13,7 @@ export function FieldFrame({
     horizontal = false,
     group = false,
     children
-}: FieldProps & {
+}: Pick<FieldProps, 'label' | 'description' | 'error'> & {
     id: string;
     disabled?: boolean;
     form?: string;

@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 // Describe the runtime bindings exposed to Views.

@@ -194,7 +194,7 @@ describe('DeploymentReview', () => {
                                     <DeploymentReview
                                         item={{ id: solutionId, name: 'Sample' }}
                                         onSuccess={onSuccess}
-                                        onClose={() => {}}
+                                        onOpenChange={() => {}}
                                     />
                                 }
                             />
