@@ -1,23 +1,26 @@
+import { useRef } from 'react';
 import { api } from '@/lib/api';
-import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Info, Search, X } from 'lucide-react';
 import { useAdminSelection } from './use-selection';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { AdminSearch } from '@/components/custom/admin-search';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists organizations and confirms administrator deletion. */
 export default function Organizations() {
     const { search, pagination, suffix } = useAdminList();
+    const searchInput = useRef<HTMLInputElement>(null);
 
     const [organizations, invalidate] = useApi(`/api/v1/organizations${suffix}`, zPageOrganizationIdentity);
 
@@ -27,12 +30,36 @@ export default function Organizations() {
         <Stack gap={2}>
             <title>Organizations | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
-            <AdminSearch
-                id="search-organizations"
-                label="Search organizations"
-                placeholder="Search by name"
-                {...search}
-            />
+            <Field>
+                <FieldLabel htmlFor="search-organizations">Search organizations</FieldLabel>
+                <InputGroup>
+                    <InputGroupInput
+                        ref={searchInput}
+                        id="search-organizations"
+                        placeholder="Search by name"
+                        value={search.value}
+                        onChange={(event) => search.onChange(event.target.value)}
+                    />
+                    <InputGroupAddon aria-hidden="true">
+                        <Search />
+                    </InputGroupAddon>
+                    {search.value !== '' && (
+                        <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                                size="icon-xs"
+                                aria-label="Clear Search organizations"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    search.onChange('');
+                                    searchInput.current?.focus({ preventScroll: true });
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
+                        </InputGroupAddon>
+                    )}
+                </InputGroup>
+            </Field>
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>

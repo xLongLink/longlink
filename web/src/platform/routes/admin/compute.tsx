@@ -1,21 +1,23 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
-import { Info } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Info, Search, X } from 'lucide-react';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
-import { AdminSearch } from '@/components/custom/admin-search';
+import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
     const { search, pagination, suffix } = useAdminList();
+    const searchInput = useRef<HTMLInputElement>(null);
 
     const [dialog, setDialog] = useState<
         | { kind: 'registration' }
@@ -39,12 +41,36 @@ export default function Compute() {
                 <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
                 <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
-            <AdminSearch
-                id="search-compute"
-                label="Search compute"
-                placeholder="Search by name or endpoint"
-                {...search}
-            />
+            <Field>
+                <FieldLabel htmlFor="search-compute">Search compute</FieldLabel>
+                <InputGroup>
+                    <InputGroupInput
+                        ref={searchInput}
+                        id="search-compute"
+                        placeholder="Search by name or endpoint"
+                        value={search.value}
+                        onChange={(event) => search.onChange(event.target.value)}
+                    />
+                    <InputGroupAddon aria-hidden="true">
+                        <Search />
+                    </InputGroupAddon>
+                    {search.value !== '' && (
+                        <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                                size="icon-xs"
+                                aria-label="Clear Search compute"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                    search.onChange('');
+                                    searchInput.current?.focus({ preventScroll: true });
+                                }}
+                            >
+                                <X aria-hidden="true" />
+                            </InputGroupButton>
+                        </InputGroupAddon>
+                    )}
+                </InputGroup>
+            </Field>
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>
