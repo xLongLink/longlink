@@ -1,8 +1,7 @@
-import { useRef, useState } from 'react';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Pagination } from '@/components/longlink/action/pagination';
@@ -22,7 +21,9 @@ const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed
 
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
     const [metadataId, setMetadataId] = useState<string | null>(null);
 
@@ -44,20 +45,20 @@ export default function Operations() {
                         ref={searchInput}
                         id="search-operations"
                         placeholder="Search by operation kind or resource name"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search operations"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -114,7 +115,12 @@ export default function Operations() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={operations.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={operations.total}
+                    />
                 </footer>
             </Stack>
             {metadata && <OperationMetadata open metadata={metadata} onOpenChange={() => setMetadataId(null)} />}

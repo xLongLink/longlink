@@ -1,9 +1,8 @@
 import { api } from '@/lib/api';
-import { useRef, useState } from 'react';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
@@ -16,7 +15,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
 
     const [dialog, setDialog] = useState<
@@ -48,20 +49,20 @@ export default function Compute() {
                         ref={searchInput}
                         id="search-compute"
                         placeholder="Search by name or endpoint"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search compute"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -110,7 +111,12 @@ export default function Compute() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={computes.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={computes.total}
+                    />
                 </footer>
             </Stack>
             {dialog?.kind === 'registration' && (

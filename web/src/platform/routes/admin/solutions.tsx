@@ -1,10 +1,8 @@
-import { useRef } from 'react';
 import { api } from '@/lib/api';
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
-import { useAdminSelection } from './use-selection';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
@@ -18,12 +16,21 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
+    const [dialog, setDialog] = useState<
+        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
+    >(null);
 
     const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
-    const { metadata, deletion, openMetadata, confirmDeletion, close } = useAdminSelection(solutions.items);
+    // Forget missing metadata while retaining the captured identity of a pending deletion.
+    const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
+
+    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
+    const deletion = dialog?.kind === 'deletion' ? dialog.item : null;
 
     return (
         <Stack gap={2}>
@@ -36,20 +43,20 @@ export default function Solutions() {
                         ref={searchInput}
                         id="search-solutions"
                         placeholder="Search by name, description, or organization"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search solutions"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -118,7 +125,11 @@ export default function Solutions() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
-                                    <Button size="sm" variant="ghost" onClick={() => openMetadata(row.id)}>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setDialog({ kind: 'metadata', id: row.id })}
+                                    >
                                         <Info aria-hidden="true" />
                                         Metadata
                                     </Button>
@@ -135,10 +146,22 @@ export default function Solutions() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={solutions.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={solutions.total}
+                    />
                 </footer>
             </Stack>
-            {metadata && <SolutionMetadata open metadata={metadata} onOpenChange={close} onDelete={confirmDeletion} />}
+            {metadata && (
+                <SolutionMetadata
+                    open
+                    metadata={metadata}
+                    onOpenChange={() => setDialog(null)}
+                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
+                />
+            )}
             <DeletionDialog
                 confirmation={
                     deletion
@@ -149,12 +172,12 @@ export default function Solutions() {
                                   // Refresh the list only after deletion succeeds.
                                   await api.delete(`/api/v1/solutions/${deletion.id}`);
                                   await invalidate();
-                                  close();
+                                  setDialog(null);
                               }
                           }
                         : null
                 }
-                onClose={close}
+                onClose={() => setDialog(null)}
             />
         </Stack>
     );

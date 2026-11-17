@@ -1,6 +1,6 @@
-import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useDeferredValue, useRef, useState } from 'react';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Timestamp } from '@/components/longlink/display/timestamp';
@@ -11,7 +11,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
-    const { search, pagination, suffix } = useAdminList();
+    const [filters, setFilters] = useState({ search: '', page: 1 });
+    const { search, page } = useDeferredValue(filters);
+    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
 
     const [users] = useApi(`/api/v1/users${suffix}`, zPageAdminUserSummary);
@@ -27,20 +29,20 @@ export default function Users() {
                         ref={searchInput}
                         id="search-users"
                         placeholder="Search by name or email"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
+                        value={filters.search}
+                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
                     />
                     <InputGroupAddon aria-hidden="true">
                         <Search />
                     </InputGroupAddon>
-                    {search.value !== '' && (
+                    {filters.search !== '' && (
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton
                                 size="icon-xs"
                                 aria-label="Clear Search users"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    search.onChange('');
+                                    setFilters({ search: '', page: 1 });
                                     searchInput.current?.focus({ preventScroll: true });
                                 }}
                             >
@@ -95,12 +97,16 @@ export default function Users() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination {...pagination} totalItems={users.total} />
+                    <Pagination
+                        page={filters.page}
+                        pageSize={25}
+                        onPageChange={(page) => setFilters({ ...filters, page })}
+                        totalItems={users.total}
+                    />
                 </footer>
             </Stack>
         </Stack>
     );
 }
-import { useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Empty } from '@/components/longlink/display/empty';
