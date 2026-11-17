@@ -114,7 +114,6 @@ export { StreetMap } from './maps/street';
 export { MarkerMap } from './maps/markers';
 export { RouteMap } from './maps/routes';
 export { ClusterMap } from './maps/clusters';
-export { GeoJSONMap } from './maps/geojson';
 export { ArcMap } from './maps/arcs';
 export type {
     MapCoordinate,

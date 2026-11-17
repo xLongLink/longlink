@@ -2,6 +2,7 @@ import { TextExample } from './views/text';
 import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
 import { TableExample } from './views/table';
+import { WorldMapExample } from './views/map';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
@@ -23,6 +24,7 @@ import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
 import { ChartLegendExample } from './views/chart-legend';
+import { MapControlsPreview } from './views/map-controls';
 import { Icon } from '@/components/longlink/display/icon';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
@@ -71,14 +73,13 @@ const previews = new Map(
         RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
         Sankey: <ChartExample name="Sankey" height={160} isCompact />,
         ChartLegend: <ChartLegendExample isCompact />,
-        Map: <SwitzerlandExample height={160} isCompact />,
+        Map: <WorldMapExample height={160} isCompact />,
         MapGeoJSON: <SwitzerlandExample height={160} isCompact />,
-        MapControls: <SwitzerlandExample height={220} />,
+        MapControls: <MapControlsPreview />,
         StreetMap: <MapExample name="StreetMap" height={160} isCompact />,
         MarkerMap: <MapExample name="MarkerMap" height={160} isCompact />,
         RouteMap: <MapExample name="RouteMap" height={160} isCompact />,
         ClusterMap: <MapExample name="ClusterMap" height={160} isCompact />,
-        GeoJSONMap: <MapExample name="GeoJSONMap" height={160} isCompact />,
         ArcMap: <MapExample name="ArcMap" height={160} isCompact />,
         Avatar: (
             <AvatarGroup className="items-center">
@@ -310,7 +311,7 @@ export default function Item({ params }) {
                                                 aria-hidden="true"
                                                 inert
                                                 size="sm"
-                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0' : ''}`}
+                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
                                             >
                                                 {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
                                                 <div

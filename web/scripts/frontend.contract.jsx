@@ -55,6 +55,8 @@ const mapCollection = new Map([['office', 'Zurich']]);
 mapCollection.get('office')?.trim();
 // @ts-expect-error Native map props must retain their coordinate contract.
 const invalidMapCenter = <Map blank center="Switzerland" />;
+// @ts-expect-error Map follows the UI theme instead of accepting an override.
+const customMapTheme = <Map theme="dark" />;
 // @ts-expect-error The retired SVG map is no longer part of the public View API.
 const legacyMap = <Maps label="Legacy map" geography={mapRegions} />;
 const mapElements = (
@@ -72,12 +74,9 @@ const mapElements = (
         <MarkerMap data={mapLocations} onSelect={(marker) => marker.label.trim()} />
         <RouteMap data={mapRoutes} onSelect={(route) => route.coordinates[0][0].toFixed(2)} />
         <ClusterMap data={mapLocations} radius={60} onSelect={(marker) => marker.id.trim()} />
-        <GeoJSONMap data={mapRegions} onSelect={(feature) => String(feature.id)} />
         <ArcMap data={mapArcs} onSelect={(arc) => arc.to[0].toFixed(2)} />
     </Box>
 );
-// @ts-expect-error Map data must be supplied as parsed geometry, not arbitrary URLs.
-const externalMapData = <GeoJSONMap data="https://untrusted.example/regions.json" />;
 const icon = <Icon icon="triangle-exclamation-point" size="sm" tile="soft" variant="destructive" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;

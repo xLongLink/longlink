@@ -90,13 +90,12 @@ export const componentDocumentation = [
     { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
     { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
     { name: 'Map', category: 'Maps', icon: Map },
-    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
     { name: 'MapControls', category: 'Maps', icon: Settings2 },
+    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
     { name: 'StreetMap', category: 'Maps', icon: Map },
     { name: 'MarkerMap', category: 'Maps', icon: Map },
     { name: 'RouteMap', category: 'Maps', icon: Waypoints },
     { name: 'ClusterMap', category: 'Maps', icon: Map },
-    { name: 'GeoJSONMap', category: 'Maps', icon: Globe },
     { name: 'ArcMap', category: 'Maps', icon: Waypoints },
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
@@ -154,20 +153,18 @@ export const componentDocumentation = [
     slug:
         component.name === 'MapGeoJSON'
             ? 'map-geojson'
-            : component.name === 'GeoJSONMap'
-              ? 'geojson-map'
-              : component.name === 'RadialBarChart'
-                ? 'radial-chart'
-                : component.name === 'Sankey'
-                  ? 'sankey-chart'
-                  : component.name === 'Button'
-                    ? 'buttons'
-                    : component.name === 'Icon'
-                      ? 'icons'
-                      : component.name
-                            .replace(/([a-z])([A-Z])/g, '$1-$2')
-                            .replace(/\s+/g, '-')
-                            .toLowerCase()
+            : component.name === 'RadialBarChart'
+              ? 'radial-chart'
+              : component.name === 'Sankey'
+                ? 'sankey-chart'
+                : component.name === 'Button'
+                  ? 'buttons'
+                  : component.name === 'Icon'
+                    ? 'icons'
+                    : component.name
+                          .replace(/([a-z])([A-Z])/g, '$1-$2')
+                          .replace(/\s+/g, '-')
+                          .toLowerCase()
 }));
 
 export const documentationIntroduction: DocumentationSection = {

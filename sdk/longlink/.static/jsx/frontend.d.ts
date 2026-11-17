@@ -35858,7 +35858,7 @@ export function Pagination(props: {
     pageSize: number;
     label?: string;
 }): React$1.JSX.Element | null;
-function ViewMap(props: PublicProps<MapProps & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
+function ViewMap(props: PublicProps<Omit<MapProps, "theme"> & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
 const EVENTS: {
     readonly BLUR: "blur";
     readonly FOCUS_OUT: "focusout";
@@ -36621,10 +36621,6 @@ export function ClusterMap({ data, onSelect, radius, ...props }: MapOptions$1 & 
     data: readonly MapMarker[];
     radius?: number;
     onSelect?: (marker: MapMarker) => void;
-}): React$1.JSX.Element;
-export function GeoJSONMap({ data: input, onSelect, ...props }: MapOptions$1 & {
-    data: MapGeography;
-    onSelect?: (feature: MapGeography["features"][number]) => void;
 }): React$1.JSX.Element;
 export function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
     data: readonly MapArc[];
@@ -42348,7 +42344,6 @@ import FormOption = NativeFrontend.FormOption;
 declare const FormProvider: typeof NativeFrontend.FormProvider;
 declare const Frame: typeof NativeFrontend.Frame;
 import FrontendElementType = NativeFrontend.FrontendElementType;
-declare const GeoJSONMap: typeof NativeFrontend.GeoJSONMap;
 declare const Grid: typeof NativeFrontend.Grid;
 declare const GridItem: typeof NativeFrontend.GridItem;
 declare const Heading: typeof NativeFrontend.Heading;

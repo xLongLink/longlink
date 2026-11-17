@@ -1,15 +1,12 @@
-import { switzerland } from './switzerland';
 import { Box } from '@/components/longlink/layout/box';
 import { ArcMap } from '@/components/longlink/maps/arcs';
 import { RouteMap } from '@/components/longlink/maps/routes';
 import { StreetMap } from '@/components/longlink/maps/street';
 import { MarkerMap } from '@/components/longlink/maps/markers';
-import { GeoJSONMap } from '@/components/longlink/maps/geojson';
 import { ClusterMap } from '@/components/longlink/maps/clusters';
-import { SwitzerlandAttribution } from './switzerland-attribution';
 import type { MapMarker, MapRoute, MapArc, MapOptions } from '@/components/longlink/maps/types';
 
-export type MapName = 'StreetMap' | 'MarkerMap' | 'RouteMap' | 'ClusterMap' | 'GeoJSONMap' | 'ArcMap';
+export type MapName = 'StreetMap' | 'MarkerMap' | 'RouteMap' | 'ClusterMap' | 'ArcMap';
 
 const locations: MapMarker[] = [
     { id: 'zurich', coordinates: [8.5417, 47.3769], label: 'Zurich', description: 'Main office' },
@@ -26,10 +23,9 @@ const routes: MapRoute[] = [
         ]
     }
 ];
-const arcs: MapArc[] = [
-    { id: 'zurich-paris', from: [8.5417, 47.3769], to: [2.3522, 48.8566] },
-    { id: 'zurich-rome', from: [8.5417, 47.3769], to: [12.4964, 41.9028] }
-];
+const arcs: MapArc[] = locations
+    .slice(1)
+    .map((location) => ({ id: `zurich-${location.id}`, from: locations[0].coordinates, to: location.coordinates }));
 const clusterLocations: MapMarker[] = locations.flatMap((location) =>
     Array.from({ length: 12 }, (_, index) => ({
         id: `${location.id}-${index}`,
@@ -52,29 +48,20 @@ export function MapExample({
     isCompact?: boolean;
 }) {
     const options = {
-        center: name === 'GeoJSONMap' ? [8.23, 46.8] : name === 'ArcMap' ? [7, 46] : [8.1, 47.2],
-        zoom: name === 'GeoJSONMap' ? (isCompact ? 4.8 : 6) : name === 'ArcMap' ? 3.5 : 6.5,
-        blank: name === 'GeoJSONMap',
-        controls: isCompact
-            ? false
-            : name === 'GeoJSONMap'
-              ? { position: 'top-right', showZoom: true, showCompass: true, showLocate: true, showFullscreen: true }
-              : true,
+        center: [8.23, 46.8],
+        zoom: isCompact ? 4.8 : 5.8,
+        controls: !isCompact,
         interactive: !isCompact,
-        'aria-label': name === 'GeoJSONMap' ? 'Swiss cantons' : name.replace(/([a-z])([A-Z])/g, '$1 $2')
+        'aria-label': name.replace(/([a-z])([A-Z])/g, '$1 $2')
     } satisfies MapOptions;
 
     return (
-        <div className="flex w-full flex-col gap-2">
-            <Box width="100%" height={height}>
-                {name === 'StreetMap' && <StreetMap {...options} />}
-                {name === 'MarkerMap' && <MarkerMap {...options} data={locations} />}
-                {name === 'RouteMap' && <RouteMap {...options} data={routes} />}
-                {name === 'ClusterMap' && <ClusterMap {...options} data={clusterLocations} />}
-                {name === 'GeoJSONMap' && <GeoJSONMap {...options} data={switzerland} />}
-                {name === 'ArcMap' && <ArcMap {...options} data={arcs} />}
-            </Box>
-            {name === 'GeoJSONMap' && <SwitzerlandAttribution />}
-        </div>
+        <Box width="100%" height={height}>
+            {name === 'StreetMap' && <StreetMap {...options} />}
+            {name === 'MarkerMap' && <MarkerMap {...options} data={locations} />}
+            {name === 'RouteMap' && <RouteMap {...options} data={routes} />}
+            {name === 'ClusterMap' && <ClusterMap {...options} data={clusterLocations} />}
+            {name === 'ArcMap' && <ArcMap {...options} data={arcs} />}
+        </Box>
     );
 }
