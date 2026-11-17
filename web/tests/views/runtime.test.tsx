@@ -28,7 +28,7 @@ it('ignores a mismatched session and releases an admitted port when its mount is
             source: 'export default function View() { return null; }',
             params: {},
             navigationBaseUrl: 'https://platform.example/',
-            appearance: { theme: 'system', accent: 'neutral' }
+            appearance: { theme: 'system' }
         };
 
         window.dispatchEvent(
@@ -200,7 +200,6 @@ async function initializeRuntime(source: string) {
     vi.resetModules();
     const previousSession = window.__VIEW_SESSION__;
     const previousTheme = document.documentElement.getAttribute('data-theme');
-    const previousAccent = document.documentElement.getAttribute('data-accent');
     window.__VIEW_SESSION__ = 'appearance-test-session';
     const mount = document.createElement('div');
     mount.id = 'view';
@@ -216,7 +215,7 @@ async function initializeRuntime(source: string) {
                 session: 'appearance-test-session',
                 params: {},
                 navigationBaseUrl: 'https://platform.example/',
-                appearance: { theme: 'light', accent: 'neutral' }
+                appearance: { theme: 'light' }
             }
         })
     );
@@ -224,7 +223,7 @@ async function initializeRuntime(source: string) {
     return {
         mount,
         channel,
-        send(data: ViewReply | { type: 'appearance'; appearance: { theme: string; accent: string } }) {
+        send(data: ViewReply | { type: 'appearance'; appearance: { theme: string } }) {
             channel.port1.onmessage?.call(channel.port1, new MessageEvent('message', { data }));
         },
         close() {
@@ -234,13 +233,8 @@ async function initializeRuntime(source: string) {
             mount.remove();
             window.__VIEW_SESSION__ = previousSession;
 
-            for (const [name, value] of [
-                ['data-theme', previousTheme],
-                ['data-accent', previousAccent]
-            ] as const) {
-                if (value === null) document.documentElement.removeAttribute(name);
-                else document.documentElement.setAttribute(name, value);
-            }
+            if (previousTheme === null) document.documentElement.removeAttribute('data-theme');
+            else document.documentElement.setAttribute('data-theme', previousTheme);
         }
     };
 }
@@ -269,18 +263,16 @@ it('keeps authored state and unsaved input through live appearance updates and r
         expect(document.documentElement.dataset.theme).toBe('light');
 
         for (const theme of ['dark', 'light', 'system']) {
-            runtime.send({ type: 'appearance', appearance: { theme, accent: 'blue' } });
+            runtime.send({ type: 'appearance', appearance: { theme } });
             expect(document.documentElement.dataset.theme).toBe(theme === 'system' ? undefined : theme);
-            expect(document.documentElement.dataset.accent).toBe('blue');
             expect(runtime.mount.querySelector('input')).toBe(input);
             expect(input.value).toBe('Unsaved note');
             expect(runtime.mount.querySelector('button')).toBe(button);
             expect(button.textContent).toBe('Count 1');
         }
 
-        runtime.send({ type: 'appearance', appearance: { theme: 'invalid', accent: 'red' } });
+        runtime.send({ type: 'appearance', appearance: { theme: 'invalid' } });
         expect(document.documentElement.dataset.theme).toBeUndefined();
-        expect(document.documentElement.dataset.accent).toBe('blue');
         await user.click(button);
         expect(button.textContent).toBe('Count 2');
     } finally {
@@ -492,7 +484,7 @@ it('updates labeled Progress values inside the isolated View runtime', async () 
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('80%');
         expect(runtime.mount.querySelectorAll('[data-slot="progress-value"]')[1]?.textContent).toBe('40 / 50');
         expect(runtime.mount.querySelector('[data-slot="progress-value"] strong')?.textContent).toBe('40 / 50');
-        runtime.send({ type: 'appearance', appearance: { theme: 'dark', accent: 'blue' } });
+        runtime.send({ type: 'appearance', appearance: { theme: 'dark' } });
         expect(document.documentElement.dataset.theme).toBe('dark');
         expect(runtime.mount.querySelector('[role="progressbar"]')).toBe(progress);
     } finally {

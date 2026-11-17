@@ -21,7 +21,7 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
     html.classList.add('host-document');
     html.style.setProperty('color-scheme', 'light', 'important');
     html.style.setProperty('scrollbar-gutter', 'stable');
-    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark', accent: 'blue' }));
+    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark' }));
 
     const content = (
         <StrictMode>
@@ -37,7 +37,6 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
     expect(html.dataset.theme).toBe('light');
     vm.runInNewContext(appearanceBootstrap, { document, location, localStorage });
     expect(html.dataset.theme).toBe('dark');
-    expect(html.dataset.accent).toBe('blue');
 
     const recover = vi.fn();
     const root = hydrateRoot(output, content, { onRecoverableError: recover });
@@ -49,36 +48,33 @@ it('hydrates cached appearance, follows cross-tab mode changes, and restores hos
 
         // A system preference releases the explicit mode so browser color-scheme follows OS changes.
         await act(async () => {
-            localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'system', accent: 'green' }));
+            localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'system' }));
             window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
         });
         expect(html.hasAttribute('data-theme')).toBe(false);
-        expect(html.dataset.accent).toBe('green');
 
         // Authoritative preferences win over startup data and subsequent cross-tab notifications.
         await act(async () =>
             root.render(
                 <StrictMode>
-                    <AppearanceProvider preference={{ theme: 'light', accent: 'rose' }}>
+                    <AppearanceProvider preference={{ theme: 'light' }}>
                         <p>Account</p>
                     </AppearanceProvider>
                 </StrictMode>
             )
         );
         await act(async () => {
-            localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark', accent: 'blue' }));
+            localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark' }));
             window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
         });
         expect(html.dataset.theme).toBe('light');
         expect(html.style.colorScheme).toBe('light');
-        expect(html.dataset.accent).toBe('rose');
     } finally {
         await act(async () => root.unmount());
         output.remove();
 
         // Unmount must not leak theme mutations or erase unrelated host layout styles.
         expect(html.dataset.theme).toBe('dark');
-        expect(html.dataset.accent).toBe('blue');
         expect(html.style.getPropertyValue('color-scheme')).toBe('light');
         expect(html.style.getPropertyPriority('color-scheme')).toBe('important');
         expect(html.style.getPropertyValue('scrollbar-gutter')).toBe('stable');
@@ -100,7 +96,7 @@ it('does not replace startup styling with cache updates while account preference
     const cached = localStorage.getItem('longlink:appearance');
 
     // A newer cache entry must not replace startup styling while account identity is unresolved.
-    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'light', accent: 'rose' }));
+    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'light' }));
 
     try {
         await withMounted(
@@ -109,14 +105,12 @@ it('does not replace startup styling with cache updates while account preference
             </AppearanceProvider>,
             async () => {
                 expect(document.documentElement.dataset.theme).toBe('dark');
-                expect(document.documentElement.dataset.accent).toBe('neutral');
 
                 await act(async () => {
-                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'system', accent: 'green' }));
+                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'system' }));
                     window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
                 });
                 expect(document.documentElement.dataset.theme).toBe('dark');
-                expect(document.documentElement.dataset.accent).toBe('neutral');
             }
         );
     } finally {

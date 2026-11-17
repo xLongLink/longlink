@@ -10,7 +10,7 @@ it('keeps ambient assets mounted without changing an explicit wordmark mode duri
         const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
         return (
-            <AppearanceProvider preference={{ theme, accent: 'neutral' }}>
+            <AppearanceProvider preference={{ theme }}>
                 <Wordmark />
                 <Wordmark mode="light" size="heading" />
                 <img

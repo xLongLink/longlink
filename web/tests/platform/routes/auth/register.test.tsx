@@ -45,7 +45,7 @@ it('delivers registration failure and confirmed success through one Sonner queue
         flushSync(() =>
             root.render(
                 <MemoryRouter initialEntries={['/auth/register?email=owner%40example.com']}>
-                    <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
+                    <AppearanceProvider preference={{ theme: 'dark' }}>
                         <ApiProvider>
                             <ApiBoundary>
                                 <Page />

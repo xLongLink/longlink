@@ -21,7 +21,7 @@ it('does not mount protected content while the identity request is unresolved', 
 it('refreshes the startup cache when the account changes without changing its appearance', async () => {
     let account = user;
     const cached = localStorage.getItem('longlink:appearance');
-    const preference = JSON.stringify({ theme: user.theme, accent: user.accent });
+    const preference = JSON.stringify({ theme: user.theme });
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json(account));
 
     try {
@@ -42,7 +42,7 @@ it('refreshes the startup cache when the account changes without changing its ap
                 // Another tab's cache is not authoritative for the newly authenticated account.
                 await act(async () => {
                     account = { ...user, id: '00000000-0000-4000-8000-000000000003' };
-                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark', accent: 'rose' }));
+                    localStorage.setItem('longlink:appearance', JSON.stringify({ theme: 'dark' }));
                     window.dispatchEvent(new StorageEvent('storage', { key: 'longlink:appearance' }));
                 });
                 await vi.waitFor(async () => {
@@ -117,9 +117,7 @@ it.each([401, 503])(
                     if (status === 401) {
                         expect(localStorage.getItem('longlink:appearance')).toBeNull();
                     } else {
-                        expect(localStorage.getItem('longlink:appearance')).toBe(
-                            JSON.stringify({ theme: user.theme, accent: user.accent })
-                        );
+                        expect(localStorage.getItem('longlink:appearance')).toBe(JSON.stringify({ theme: user.theme }));
 
                         const retry = Array.from(output.querySelectorAll('button')).find(
                             (button) => button.textContent === 'Retry'

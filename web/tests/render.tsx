@@ -20,7 +20,7 @@ export function renderStatic(
     try {
         const markup = renderToStaticMarkup(
             <MemoryRouter initialEntries={[path]}>
-                <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
+                <AppearanceProvider preference={{ theme: 'dark' }}>
                     <div data-theme-scope="stone" data-theme="dark">
                         <QueryClientProvider client={client}>{children}</QueryClientProvider>
                     </div>
@@ -50,7 +50,7 @@ export async function withMounted(children: ReactNode, check: (output: HTMLEleme
         await act(async () =>
             root.render(
                 <MemoryRouter initialEntries={[path]}>
-                    <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
+                    <AppearanceProvider preference={{ theme: 'dark' }}>
                         <div data-theme-scope="stone" data-theme="dark">
                             <QueryClientProvider client={client}>{children}</QueryClientProvider>
                         </div>

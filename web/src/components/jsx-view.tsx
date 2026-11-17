@@ -42,9 +42,9 @@ export function JsxView({
 }) {
     const frame = useRef<HTMLIFrameElement>(null);
 
-    const { theme, accent } = useAppearance();
+    const { theme } = useAppearance();
 
-    const currentAppearance = useRef<Appearance>({ theme, accent });
+    const currentAppearance = useRef<Appearance>({ theme });
 
     const appearancePort = useRef<MessagePort | null>(null);
     const navigate = useNavigate();
@@ -111,9 +111,9 @@ export function JsxView({
 
     // Update the mounted View without replacing its document or losing authored state.
     useEffect(() => {
-        currentAppearance.current = { theme, accent };
+        currentAppearance.current = { theme };
         appearancePort.current?.postMessage({ type: 'appearance', appearance: currentAppearance.current });
-    }, [theme, accent]);
+    }, [theme]);
 
     const { data: kernel, error: runtimeError } = useQuery({
         queryKey: ['view-runtime', requestBaseUrl, runtime],
@@ -440,7 +440,7 @@ export function JsxView({
                 handshakeTimer = setTimeout(() => fail('readiness'), BOOTSTRAP_TIMEOUT_MS);
                 const appearance = currentAppearance.current;
                 const mode = appearance.theme === 'system' ? '' : ` data-theme="${appearance.theme}"`;
-                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-theme-scope="stone" data-accent="${appearance.accent}"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-foreground"><main id="view"></main><script>${code}</script></body></html>`;
+                const document = `<!doctype html><html class="overflow-hidden [scrollbar-gutter:auto]" data-theme-scope="stone"${mode}><head><meta http-equiv="Content-Security-Policy" content="${policy}"><meta name="referrer" content="no-referrer"><style>${styles.replace(/<\/style/gi, '<\\/style')}</style></head><body class="overflow-hidden bg-transparent text-foreground"><main id="view"></main><script>${code}</script></body></html>`;
 
                 // Keep startup failure latched until the route owner mounts a fresh View.
                 setBootstrapState((current) =>

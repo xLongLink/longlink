@@ -33,11 +33,7 @@ export default function PlatformRoot() {
         </ApiProvider>
     );
 
-    return isHome ? (
-        <AppearanceContext value={{ theme: 'dark', accent: 'neutral' }}>{content}</AppearanceContext>
-    ) : (
-        content
-    );
+    return isHome ? <AppearanceContext value={{ theme: 'dark' }}>{content}</AppearanceContext> : content;
 }
 
 /** Adds website analytics only to production Platform documents. */

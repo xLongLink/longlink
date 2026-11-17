@@ -151,26 +151,6 @@ export const zCurrentUser = z.object({
         'system',
         'light',
         'dark'
-    ]),
-    accent: z.enum([
-        'neutral',
-        'red',
-        'orange',
-        'amber',
-        'yellow',
-        'lime',
-        'green',
-        'emerald',
-        'teal',
-        'cyan',
-        'sky',
-        'blue',
-        'indigo',
-        'violet',
-        'purple',
-        'fuchsia',
-        'pink',
-        'rose'
     ])
 });
 
@@ -847,26 +827,6 @@ export const zUserUpdate = z.object({
         'system',
         'light',
         'dark'
-    ]).nullish(),
-    accent: z.enum([
-        'neutral',
-        'red',
-        'orange',
-        'amber',
-        'yellow',
-        'lime',
-        'green',
-        'emerald',
-        'teal',
-        'cyan',
-        'sky',
-        'blue',
-        'indigo',
-        'violet',
-        'purple',
-        'fuchsia',
-        'pink',
-        'rose'
     ]).nullish()
 });
 

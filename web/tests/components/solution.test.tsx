@@ -289,7 +289,7 @@ describe('SolutionPage', () => {
             source,
             params: {},
             navigationBaseUrl: 'http://localhost:3000/',
-            appearance: { theme: 'system', accent: 'neutral' }
+            appearance: { theme: 'system' }
         });
         await act(async () => vi.advanceTimersByTimeAsync(10_000));
         expect(output.querySelector('iframe')).toBe(frame);
@@ -716,7 +716,7 @@ describe('SolutionPage', () => {
         if (!Array.isArray(ports) || !(ports[0] instanceof MessagePort))
             throw new Error('Missing transferred capability port');
 
-        expect(args[0]).toMatchObject({ appearance: { theme: 'system', accent: 'neutral' } });
+        expect(args[0]).toMatchObject({ appearance: { theme: 'system' } });
 
         return ports[0];
     }

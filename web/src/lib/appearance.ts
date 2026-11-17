@@ -1,13 +1,11 @@
 import type { z } from 'zod';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 
-export const appearanceSchema = zCurrentUser.pick({ theme: true, accent: true });
-
-export const accentColors = zCurrentUser.shape.accent.options;
+export const appearanceSchema = zCurrentUser.pick({ theme: true });
 
 export type Appearance = z.output<typeof appearanceSchema>;
 
-export const defaultAppearance: Appearance = { theme: 'system', accent: 'neutral' };
+export const defaultAppearance: Appearance = { theme: 'system' };
 
 // Restore the saved appearance before the shared stylesheet renders the document.
 export const appearanceBootstrap = `(() => {
@@ -15,12 +13,9 @@ export const appearanceBootstrap = `(() => {
         if (location.pathname === '/' && document.currentScript?.hasAttribute('data-platform')) return;
         if (/^\\/(login|register|auth)(\\/|$)/.test(location.pathname)) return;
         const preference = JSON.parse(localStorage.getItem('longlink:appearance') || 'null');
-        const accents = ${JSON.stringify(accentColors)};
         const modes = ${JSON.stringify(zCurrentUser.shape.theme.options)};
-        if (!preference || !modes.includes(preference.theme) ||
-            !accents.includes(preference.accent)) return;
+        if (!preference || !modes.includes(preference.theme)) return;
         const root = document.documentElement;
-        root.dataset.accent = preference.accent;
         if (preference.theme !== 'system') root.dataset.theme = preference.theme;
     } catch {}
 })();`;

@@ -130,7 +130,7 @@ it('closes logout urgently, retains the session preference on denial, and retrie
     );
 
     const previousAppearance = localStorage.getItem('longlink:appearance');
-    const appearance = JSON.stringify({ theme: 'dark', accent: 'neutral' });
+    const appearance = JSON.stringify({ theme: 'dark' });
     localStorage.setItem('longlink:appearance', appearance);
 
     const navigate = vi.spyOn(window.location, 'assign').mockImplementation(() => {
