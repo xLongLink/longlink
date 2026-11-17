@@ -1,4 +1,4 @@
-import { MembershipConfirmation } from '@/components/custom/membership-confirmation';
+import { MembershipConfirmation } from './membership-confirmation';
 
 export function MemberAccess({
     name,
