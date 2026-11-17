@@ -2,8 +2,8 @@ import { CircleX } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
+import { DialogActivityContext } from '@/components/custom/contexts';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
-import { ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -122,45 +122,43 @@ function ConfirmationDialog({
                 aria-busy={isPending || undefined}
                 onClick={(event) => event.stopPropagation()}
             >
-                <ControlSizeContext value={null}>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{options.title}</AlertDialogTitle>
-                        {options.description && <AlertDialogDescription>{options.description}</AlertDialogDescription>}
-                        {error && (
-                            <Alert variant="destructive">
-                                <CircleX aria-hidden="true" />
-                                <AlertDescription className="min-w-0 wrap-anywhere">{error}</AlertDescription>
-                            </Alert>
-                        )}
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <Button
-                            ref={cancel}
-                            type="button"
-                            variant="ghost"
-                            disabled={isPending}
-                            focusableWhenDisabled
-                            onClick={() => {
-                                if (!isPending) onCancel();
-                            }}
-                        >
-                            {options.cancelLabel ?? 'Cancel'}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={options.actionVariant === 'destructive' ? 'destructive' : 'primary'}
-                            disabled={isPending}
-                            focusableWhenDisabled
-                            aria-busy={isPending || undefined}
-                            onClick={onAction}
-                        >
-                            {options.actionLabel}
-                        </Button>
-                        <span role="status" className="sr-only">
-                            {isPending ? 'Loading' : ''}
-                        </span>
-                    </AlertDialogFooter>
-                </ControlSizeContext>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{options.title}</AlertDialogTitle>
+                    {options.description && <AlertDialogDescription>{options.description}</AlertDialogDescription>}
+                    {error && (
+                        <Alert variant="destructive">
+                            <CircleX aria-hidden="true" />
+                            <AlertDescription className="min-w-0 wrap-anywhere">{error}</AlertDescription>
+                        </Alert>
+                    )}
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <Button
+                        ref={cancel}
+                        type="button"
+                        variant="ghost"
+                        disabled={isPending}
+                        focusableWhenDisabled
+                        onClick={() => {
+                            if (!isPending) onCancel();
+                        }}
+                    >
+                        {options.cancelLabel ?? 'Cancel'}
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={options.actionVariant === 'destructive' ? 'destructive' : 'primary'}
+                        disabled={isPending}
+                        focusableWhenDisabled
+                        aria-busy={isPending || undefined}
+                        onClick={onAction}
+                    >
+                        {options.actionLabel}
+                    </Button>
+                    <span role="status" className="sr-only">
+                        {isPending ? 'Loading' : ''}
+                    </span>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );

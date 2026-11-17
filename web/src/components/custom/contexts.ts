@@ -1,8 +1,6 @@
 import { createContext } from 'react';
 import type { ViewData } from '@/views/protocol';
 
-export const ControlSizeContext = createContext<'sm' | 'md' | 'lg' | null>(null);
-
 export const FormRequestContext = createContext<
     | ((
           path: string,

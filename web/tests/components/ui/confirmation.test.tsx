@@ -3,7 +3,6 @@ import { act } from 'react';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { ControlSizeContext } from '@/components/custom/contexts';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 
 it('keeps a destructive operation open while pending, retains failure for retry, and restores the opener after success', async () => {
@@ -19,12 +18,12 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         )
         .mockResolvedValueOnce(undefined);
 
-    /** Runs the real confirmation owner inside an inherited control size. */
+    /** Runs the real confirmation owner. */
     function Probe() {
         const confirm = useConfirm();
 
         return (
-            <ControlSizeContext value="lg">
+            <>
                 <button
                     type="button"
                     onClick={() =>
@@ -39,7 +38,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
                     Open
                 </button>
                 {confirm.element}
-            </ControlSizeContext>
+            </>
         );
     }
 
