@@ -4,7 +4,7 @@ import { it, expect } from 'vitest';
 import { useForm } from 'react-hook-form';
 import { withMounted } from '../../render';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { FormRequestContext } from '@/components/custom/contexts';
+import { RequestContext } from '@/components/custom/contexts';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',
@@ -44,8 +44,9 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
         }
 
         await withMounted(
-            <FormRequestContext
+            <RequestContext
                 value={async (path, options) => {
+                    if (!options) throw new Error('Expected a write request');
                     submissions.push([path, options.method, options.form]);
                     expect(completed).toBe(false);
 
@@ -53,7 +54,7 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
                 }}
             >
                 <Example />
-            </FormRequestContext>,
+            </RequestContext>,
             async (output) => {
                 const button = output.querySelector('button');
 

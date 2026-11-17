@@ -62,7 +62,6 @@ it.each(['remove', 'role', 'accept', 'decline'] as const)(
             <ApiErrorContext value={createErrorReporter(notify)}>
                 {kind === 'remove' || kind === 'role' ? (
                     <MemberAccess
-                        open
                         name="Reader"
                         action={kind === 'remove' ? { kind: 'remove' } : { kind: 'role', role: 'Admin' }}
                         onOpenChange={dismiss}
@@ -70,7 +69,6 @@ it.each(['remove', 'role', 'accept', 'decline'] as const)(
                     />
                 ) : (
                     <InvitationResponse
-                        open
                         invitation={{ type: kind, name: 'Team' }}
                         onOpenChange={dismiss}
                         onConfirm={confirm}

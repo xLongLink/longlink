@@ -178,11 +178,6 @@ export const componentDocumentation = [
                           .toLowerCase()
 }));
 
-export const documentationIntroduction: DocumentationSection = {
-    title: 'Introduction',
-    pages: [{ path: '/docs', label: 'Documentation', icon: BookOpen }]
-};
-
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
     {
         path: '/docs/sdk',
@@ -264,6 +259,8 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
 
 // Keep static tutorials and generated component references in their published reading order.
 export const documentationPaths = [
-    documentationIntroduction,
-    ...documentationNavigation.flatMap(({ sections }) => sections)
-].flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path));
+    '/docs',
+    ...documentationNavigation.flatMap(({ sections }) =>
+        sections.flatMap(({ paths, pages }) => paths ?? pages.map(({ path }) => path))
+    )
+];

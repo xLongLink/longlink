@@ -14,6 +14,5 @@ it('exposes the authored View API without privileged host providers', () => {
     expect(components).toHaveProperty('Stack');
     expect(Object.hasOwn(components, 'Root')).toBe(false);
     expect(Object.hasOwn(components, 'FileRequestContext')).toBe(false);
-    expect(Object.hasOwn(components, 'FormRequestContext')).toBe(false);
-    expect(Object.hasOwn(components, 'ViewRequestContext')).toBe(false);
+    expect(Object.hasOwn(components, 'RequestContext')).toBe(false);
 });

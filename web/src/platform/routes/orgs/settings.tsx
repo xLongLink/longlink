@@ -340,7 +340,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
             </Stack>
             {canManageSelectedMember && member && (
                 <MemberAccess
-                    open
                     name={selectedMember.user.name}
                     action={member.action}
                     onOpenChange={() => setMember(null)}

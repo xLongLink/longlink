@@ -7,6 +7,7 @@ import { user } from '../platform/render';
 import { useLocation } from 'react-router';
 import { SidebarContext } from '@/lib/sidebar';
 import userEvent from '@testing-library/user-event';
+import { ErrorBoundary } from 'react-error-boundary';
 import { ProfileMenu } from '@/components/ui/profile';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 
@@ -36,7 +37,9 @@ it.each([false, true])(
         await withMounted(
             <AuthenticatedUserContext value={{ ...user, administrator }}>
                 <SidebarContext value="expanded">
-                    <ProfileMenu />
+                    <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
+                        <ProfileMenu />
+                    </ErrorBoundary>
                 </SidebarContext>
                 <Location />
             </AuthenticatedUserContext>,
@@ -80,7 +83,9 @@ it('dismisses by keyboard and outside interaction and restores trigger focus', a
     const events = userEvent.setup();
     await withMounted(
         <AuthenticatedUserContext value={user}>
-            <ProfileMenu />
+            <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
+                <ProfileMenu />
+            </ErrorBoundary>
             <button type="button">Outside</button>
         </AuthenticatedUserContext>,
         async () => {
@@ -135,7 +140,9 @@ it('closes logout urgently, retains the session preference on denial, and retrie
     try {
         await withMounted(
             <AuthenticatedUserContext value={user}>
-                <ProfileMenu />
+                <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
+                    <ProfileMenu />
+                </ErrorBoundary>
             </AuthenticatedUserContext>,
             async () => {
                 await act(async () => await events.click(button('Owner')));

@@ -220,7 +220,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
             )}
             {selected && selected.type !== 'create' && (
                 <InvitationResponse
-                    open
                     invitation={selected}
                     onOpenChange={closeSelected}
                     onConfirm={async () => {

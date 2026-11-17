@@ -4,7 +4,6 @@ import { transform } from 'sucrase';
 import * as components from './index';
 import { CircleX } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
-import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
@@ -13,7 +12,7 @@ import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
-    FormRequestContext,
+    RequestContext,
     LinkNavigationContext,
     MenuNavigationContext,
     DialogActivityContext
@@ -230,7 +229,6 @@ function initialize(event: MessageEvent<unknown>): void {
 
             if (viewport.success) {
                 document.documentElement.style.setProperty('--view-viewport-top', `${viewport.data.top}px`);
-                document.documentElement.style.setProperty('--view-viewport-bottom', `${viewport.data.bottom}px`);
                 document.documentElement.style.setProperty('--view-viewport-height', `${viewport.data.height}px`);
             }
 
@@ -298,7 +296,7 @@ function initialize(event: MessageEvent<unknown>): void {
             document.documentElement.removeAttribute('data-view-runtime');
             document.documentElement.removeAttribute('data-view-fullscreen');
 
-            for (const property of ['--view-viewport-top', '--view-viewport-bottom', '--view-viewport-height']) {
+            for (const property of ['--view-viewport-top', '--view-viewport-height']) {
                 document.documentElement.style.removeProperty(property);
             }
 
@@ -387,11 +385,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                     <MenuNavigationProvider>
                                         <FileRequestContext value={fileRequests}>
                                             <DialogActivityContext value={modalActivity}>
-                                                <FormRequestContext value={request}>
-                                                    <ViewRequestContext value={request}>
-                                                        <View params={params} />
-                                                    </ViewRequestContext>
-                                                </FormRequestContext>
+                                                <RequestContext value={request}>
+                                                    <View params={params} />
+                                                </RequestContext>
                                             </DialogActivityContext>
                                         </FileRequestContext>
                                     </MenuNavigationProvider>

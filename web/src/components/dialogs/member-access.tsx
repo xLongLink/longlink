@@ -4,7 +4,7 @@ export function MemberAccess({
     name,
     action,
     ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+}: { onOpenChange: (open: boolean) => void } & {
     name: string;
     action: { kind: 'role'; role: string } | { kind: 'remove' };
     onConfirm: () => Promise<void>;

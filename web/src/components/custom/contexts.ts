@@ -1,10 +1,10 @@
 import { createContext } from 'react';
 import type { ViewData } from '@/views/protocol';
 
-export const FormRequestContext = createContext<
+export const RequestContext = createContext<
     | ((
           path: string,
-          options: { method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'; form: [string, string | Blob][] }
+          options?: { method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'; form: [string, string | Blob][] }
       ) => Promise<ViewData>)
     | null
 >(null);

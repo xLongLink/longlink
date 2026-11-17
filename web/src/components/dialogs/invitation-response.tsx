@@ -3,7 +3,7 @@ import { MembershipConfirmation } from './membership-confirmation';
 export function InvitationResponse({
     invitation,
     ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+}: { onOpenChange: (open: boolean) => void } & {
     invitation: { type: 'accept' | 'decline'; name: string };
     onConfirm: () => Promise<void>;
 }) {

@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { AuthLayout } from './auth-layout';
+import { useState, useTransition } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { useCurrentUser } from '@/lib/hooks/use-user';
@@ -13,7 +13,7 @@ import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */
 export default function McpAuthorization() {
     const [params] = useSearchParams();
-    const [pending, setPending] = useState(false);
+    const [pending, startDecision] = useTransition();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const { data: user, isLoading: loadingUser } = useCurrentUser();
     const query = params.toString();
@@ -31,24 +31,18 @@ export default function McpAuthorization() {
 
     /** Posts an explicit decision; the server validates permissions and the callback again. */
     async function decide(data: FormData) {
-        setPending(true);
         setSubmitError(null);
 
-        try {
-            const decision = data.get('decision');
+        const decision = data.get('decision');
 
-            if (decision !== 'allow' && decision !== 'deny')
-                throw new Error('An explicit consent decision is required');
+        if (decision !== 'allow' && decision !== 'deny') throw new Error('An explicit consent decision is required');
 
-            // Preserve the validated request parameters and redirect contract.
-            const result = await api
-                .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
-                .json(zAuthorizationRedirect);
+        // Preserve the validated request parameters and redirect contract.
+        const result = await api
+            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
+            .json(zAuthorizationRedirect);
 
-            window.location.assign(result.url);
-        } finally {
-            setPending(false);
-        }
+        window.location.assign(result.url);
     }
 
     const submit = useSubmit(decide, {
@@ -73,7 +67,9 @@ export default function McpAuthorization() {
                     onSubmit={(event) => {
                         event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-                        void submit(data);
+                        startDecision(async () => {
+                            await submit(data);
+                        });
                     }}
                     aria-busy={pending}
                 >

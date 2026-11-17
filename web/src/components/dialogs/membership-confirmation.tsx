@@ -16,7 +16,6 @@ export function MembershipConfirmation({
     description,
     actionLabel,
     destructive,
-    open,
     onOpenChange,
     onConfirm
 }: {
@@ -24,7 +23,6 @@ export function MembershipConfirmation({
     description: string;
     actionLabel: string;
     destructive: boolean;
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     onConfirm: () => Promise<void>;
 }) {
@@ -73,7 +71,7 @@ export function MembershipConfirmation({
     if (destructive) {
         return (
             <AlertDialog
-                open={open}
+                open
                 onOpenChange={(nextOpen) => {
                     if (!pending && !inFlight.current) onOpenChange(nextOpen);
                 }}
@@ -89,5 +87,5 @@ export function MembershipConfirmation({
         );
     }
 
-    return <Dialog open={open} onOpenChange={onOpenChange} title={title} description={description} footer={footer} />;
+    return <Dialog open onOpenChange={onOpenChange} title={title} description={description} footer={footer} />;
 }

@@ -6,7 +6,7 @@ import * as components from '@/views';
 import { withMounted } from '../../render';
 import { ReportedError } from '@/lib/reported';
 import userEvent from '@testing-library/user-event';
-import { FormRequestContext } from '@/components/custom/contexts';
+import { RequestContext } from '@/components/custom/contexts';
 import source from '../../../../sdk/longlink/.static/new/src/views/tasks.jsx?raw';
 
 const code = transform(source, {
@@ -33,8 +33,9 @@ it('validates the shipped task form, retains the file and draft on failure, and 
     const writes: [string, string | Blob][][] = [];
 
     await withMounted(
-        <FormRequestContext
+        <RequestContext
             value={async (path, options) => {
+                if (!options) throw new Error('Expected a write request');
                 expect(path).toBe('/api/tasks');
                 expect(options.method).toBe('POST');
                 writes.push(options.form);
@@ -45,7 +46,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
             }}
         >
             <Tasks />
-        </FormRequestContext>,
+        </RequestContext>,
         async (output) => {
             const add = [...output.querySelectorAll('button')].find((button) =>
                 button.textContent?.includes('Add task')
