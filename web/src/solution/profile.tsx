@@ -1,16 +1,16 @@
-import { SidebarContext } from '@/lib/sidebar';
+import { useLayoutEffect, useState } from 'react';
 import { Separator } from '@/components/shadcn/separator';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { useContext, useLayoutEffect, useState } from 'react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
+import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
 
 /** Switches local request identity without exposing production account controls. */
 export function DevelopmentProfile() {
-    const sidebar = useContext(SidebarContext);
+    const { isMobile } = useSidebar();
     const [profile] = useState(getDevelopmentUser);
     const { user } = profile;
 
@@ -21,32 +21,22 @@ export function DevelopmentProfile() {
 
     return (
         <Popover modal="trap-focus">
-            <PopoverTrigger
-                type="button"
-                render={
-                    <Button
-                        variant="ghost"
-                        size={sidebar === 'expanded' ? 'lg' : 'icon-lg'}
-                        className={sidebar === 'expanded' ? 'w-full min-w-0 justify-start text-start' : undefined}
-                    />
-                }
-                aria-label={user.name}
-            >
+            <PopoverTrigger type="button" render={<SidebarMenuButton size="lg" />} aria-label={user.name}>
                 <Avatar name={user.name} size="sm" />
-                {sidebar === 'expanded' && (
-                    <>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate text-sm leading-4">{user.name}</span>
-                            <span className="truncate text-xs leading-4 text-muted-foreground">{user.email}</span>
-                        </span>
-                        <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
-                    </>
-                )}
+                <span className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
+                    <span className="truncate text-sm leading-4">{user.name}</span>
+                    <span className="truncate text-xs leading-4 text-muted-foreground">{user.email}</span>
+                </span>
+                <ChevronsUpDown
+                    aria-hidden="true"
+                    className="text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    size={16}
+                />
             </PopoverTrigger>
             <PopoverContent
                 className="max-h-(--available-height) max-w-(--available-width) overflow-y-auto"
-                side={sidebar === null ? 'bottom' : 'top'}
-                align={sidebar === null ? 'end' : 'start'}
+                side={isMobile ? 'bottom' : 'right'}
+                align="end"
                 sideOffset={4}
                 aria-label="Development user"
             >

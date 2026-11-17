@@ -5,10 +5,10 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { user } from '../platform/render';
 import { useLocation } from 'react-router';
-import { SidebarContext } from '@/lib/sidebar';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ProfileMenu } from '@/components/ui/profile';
+import { SidebarProvider } from '@/components/shadcn/sidebar';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 
 /** Observes real Router navigation without replacing its link behavior. */
@@ -36,11 +36,11 @@ it.each([false, true])(
         const events = userEvent.setup();
         await withMounted(
             <AuthenticatedUserContext value={{ ...user, administrator }}>
-                <SidebarContext value="expanded">
+                <SidebarProvider>
                     <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
                         <ProfileMenu />
                     </ErrorBoundary>
-                </SidebarContext>
+                </SidebarProvider>
                 <Location />
             </AuthenticatedUserContext>,
             async (output) => {
@@ -84,7 +84,9 @@ it('dismisses by keyboard and outside interaction and restores trigger focus', a
     await withMounted(
         <AuthenticatedUserContext value={user}>
             <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
-                <ProfileMenu />
+                <SidebarProvider>
+                    <ProfileMenu />
+                </SidebarProvider>
             </ErrorBoundary>
             <button type="button">Outside</button>
         </AuthenticatedUserContext>,
@@ -141,7 +143,9 @@ it('closes logout urgently, retains the session preference on denial, and retrie
         await withMounted(
             <AuthenticatedUserContext value={user}>
                 <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
-                    <ProfileMenu />
+                    <SidebarProvider>
+                        <ProfileMenu />
+                    </SidebarProvider>
                 </ErrorBoundary>
             </AuthenticatedUserContext>,
             async () => {

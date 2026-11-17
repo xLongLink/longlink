@@ -1,13 +1,23 @@
-import { PanelLeft } from 'lucide-react';
-import { SidebarContext } from '@/lib/sidebar';
-import { Button } from '@base-ui/react/button';
 import Content from '@/components/layouts/content';
 import { Separator } from '@/components/shadcn/separator';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { useMediaQuery } from '@/lib/hooks/use-media-query';
+import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { Link as RouterLink, useLocation } from 'react-router';
-import { useId, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
+import { useId, useRef, type ReactElement, type ReactNode } from 'react';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarProvider,
+    SidebarSeparator,
+    SidebarTrigger,
+    useSidebar
+} from '@/components/shadcn/sidebar';
 
 type NavigationTab = { href: string; icon?: ReactElement; label: string };
 
@@ -43,7 +53,17 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Owns sidebar navigation, responsive collapse state, and the content toolbar. */
-export default function Platform({
+export default function Platform(props: PlatformProps) {
+    return (
+        <TooltipProvider>
+            <SidebarProvider className="relative min-h-[calc(100dvh-var(--\_app-shell-header-height,0px))] bg-background">
+                <PlatformLayout {...props} />
+            </SidebarProvider>
+        </TooltipProvider>
+    );
+}
+
+function PlatformLayout({
     action,
     activeTab,
     breadcrumb,
@@ -54,40 +74,32 @@ export default function Platform({
 }: PlatformProps) {
     const { pathname } = useLocation();
     const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
-    const isSmallScreen = useMediaQuery('(width < 1024px)');
-    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
-    const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
-    const isCollapsed = isSmallScreen ? isMobileCollapsed : isDesktopCollapsed;
-    const onCollapsedChange = isSmallScreen ? setIsMobileCollapsed : setIsDesktopCollapsed;
+    const { state, isMobile, openMobile, setOpenMobile } = useSidebar();
+    const isCollapsed = !isMobile && state === 'collapsed';
     const mainId = useId();
     const navId = useId();
     const mainRef = useRef<HTMLElement>(null);
 
     return (
-        <SidebarContext value={isCollapsed ? 'collapsed' : 'expanded'}>
-            <section
-                className="group/platform relative flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px))] overflow-clip bg-background"
-                data-collapsed={isCollapsed || undefined}
+        <>
+            <a
+                className="absolute -m-px size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:m-0 focus:h-auto focus:w-auto focus:overflow-visible focus:bg-card focus:px-4 focus:py-2 focus:text-foreground focus:[clip-path:none] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
+                href={`#${mainId}`}
+                onClick={() => mainRef.current?.focus()}
             >
-                <a
-                    className="absolute -m-px size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:m-0 focus:h-auto focus:w-auto focus:overflow-visible focus:bg-card focus:px-4 focus:py-2 focus:text-foreground focus:[clip-path:none] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
-                    href={`#${mainId}`}
-                    onClick={() => mainRef.current?.focus()}
-                >
-                    Skip to content
-                </a>
-                <nav
-                    aria-label="Section navigation"
-                    className="sticky top-[var(--\_app-shell-header-height,0px)] flex h-[calc(100dvh-var(--\_app-shell-header-height,0px))] min-h-0 w-[260px] flex-[0_0_260px] flex-col overflow-hidden bg-inherit group-data-collapsed/platform:w-12 group-data-collapsed/platform:basis-12"
-                    id={navId}
-                >
-                    <header className="flex flex-none flex-col gap-3 p-2 group-data-collapsed/platform:gap-2 group-data-collapsed/platform:px-1 group-data-collapsed/platform:pb-0">
-                        <section className="flex h-14 w-full flex-none flex-col justify-center group-data-collapsed/platform:h-auto">
+                Skip to content
+            </a>
+            <Sidebar
+                collapsible="icon"
+                className="top-[var(--\_app-shell-header-height,0px)] h-[calc(100dvh-var(--\_app-shell-header-height,0px))] group-data-[side=left]:border-r-0 group-data-[side=right]:border-l-0"
+            >
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
                             {sidebarHeader ?? (
-                                <RouterLink
-                                    aria-label="LongLink home"
-                                    className="flex w-full px-6 py-1.5 text-inherit no-underline group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
-                                    to={homeHref}
+                                <SidebarMenuButton
+                                    size="lg"
+                                    render={<RouterLink to={homeHref} aria-label="LongLink home" />}
                                 >
                                     {(['light', 'dark'] as const).map((mode) => (
                                         <img
@@ -103,97 +115,87 @@ export default function Platform({
                                             width={isCollapsed ? 32 : 1939}
                                         />
                                     ))}
-                                </RouterLink>
+                                </SidebarMenuButton>
+                            )}
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
+                <SidebarSeparator />
+                <SidebarContent>
+                    <SidebarGroup>
+                        <nav aria-label="Section navigation" id={navId}>
+                            <SidebarMenu>
+                                {tabs.map((tab) => (
+                                    <SidebarMenuItem key={tab.href}>
+                                        <SidebarMenuButton
+                                            isActive={selectedTab === tab.href}
+                                            tooltip={{ children: tab.label, className: '[&[hidden]]:hidden' }}
+                                            aria-label={tab.label}
+                                            aria-current={selectedTab === tab.href ? 'page' : undefined}
+                                            onClick={(event) => {
+                                                if (
+                                                    event.defaultPrevented ||
+                                                    event.button !== 0 ||
+                                                    event.metaKey ||
+                                                    event.ctrlKey ||
+                                                    event.shiftKey ||
+                                                    event.altKey
+                                                )
+                                                    return;
+                                                setOpenMobile(false);
+                                            }}
+                                            render={<RouterLink to={tab.href} />}
+                                        >
+                                            {tab.icon && (
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="flex size-4 flex-none items-center justify-center [&_svg]:size-full"
+                                                >
+                                                    {tab.icon}
+                                                </span>
+                                            )}
+                                            <span>{tab.label}</span>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </nav>
+                    </SidebarGroup>
+                </SidebarContent>
+                <SidebarSeparator />
+                <SidebarFooter>
+                    <SidebarMenu>
+                        <SidebarMenuItem>{action}</SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+            </Sidebar>
+            <main
+                className="min-w-0 flex-1 pb-[env(safe-area-inset-bottom,0px)] outline-none"
+                id={mainId}
+                ref={mainRef}
+                tabIndex={-1}
+            >
+                <Content
+                    toolbar={
+                        <section className="flex h-(--platform-toolbar-height) items-center gap-3 p-3">
+                            <SidebarTrigger
+                                type="button"
+                                aria-controls={navId}
+                                aria-expanded={isMobile ? openMobile : !isCollapsed}
+                                aria-label={
+                                    (isMobile ? openMobile : !isCollapsed) ? 'Collapse sidebar' : 'Expand sidebar'
+                                }
+                            />
+                            <Separator className="h-5" orientation="vertical" />
+                            {breadcrumb ?? (
+                                <Breadcrumbs items={[{ label: tabs.find((tab) => tab.href === selectedTab)?.label }]} />
                             )}
                         </section>
-                        <Separator />
-                    </header>
-                    <TooltipProvider>
-                        <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-1 group-data-collapsed/platform:py-2">
-                            {tabs.map((tab) => (
-                                <Tooltip key={tab.href} disabled={!isCollapsed || !tab.icon}>
-                                    <TooltipTrigger
-                                        render={
-                                            <RouterLink
-                                                aria-current={selectedTab === tab.href ? 'page' : undefined}
-                                                aria-label={tab.label}
-                                                className="box-border flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-sm leading-(--text-sm--line-height) text-muted-foreground no-underline [&[aria-current]]:bg-secondary [&[aria-current]]:font-medium [&[aria-current]]:text-foreground [&[hidden]]:hidden group-data-collapsed/platform:size-8 group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2 [&:not([aria-current]):hover]:[@media(hover:hover)]:bg-muted [&:not([aria-current]):active]:bg-accent forced-colors:[&[aria-current]]:bg-[Highlight] forced-colors:[&[aria-current]]:text-[HighlightText]"
-                                                hidden={isCollapsed && !tab.icon}
-                                                tabIndex={isCollapsed && !tab.icon ? -1 : undefined}
-                                                to={tab.href}
-                                                onClick={(event) => {
-                                                    // Native and cancelled gestures must not change the current sidebar.
-                                                    if (
-                                                        event.defaultPrevented ||
-                                                        event.button !== 0 ||
-                                                        event.metaKey ||
-                                                        event.ctrlKey ||
-                                                        event.shiftKey ||
-                                                        event.altKey
-                                                    )
-                                                        return;
-
-                                                    setIsMobileCollapsed(true);
-                                                }}
-                                            >
-                                                {tab.icon && (
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className="flex size-4 flex-none items-center justify-center [&_svg]:size-full"
-                                                    >
-                                                        {tab.icon}
-                                                    </span>
-                                                )}
-                                                <span className="min-w-0 truncate group-data-collapsed/platform:hidden">
-                                                    {tab.label}
-                                                </span>
-                                            </RouterLink>
-                                        }
-                                    />
-                                    <TooltipContent side="inline-end">{tab.label}</TooltipContent>
-                                </Tooltip>
-                            ))}
-                        </section>
-                    </TooltipProvider>
-                    <footer className="flex-none px-2 pt-1 pb-2 group-data-collapsed/platform:flex group-data-collapsed/platform:justify-center group-data-collapsed/platform:px-1 group-data-collapsed/platform:pt-0">
-                        <section className="flex flex-col gap-3 group-data-collapsed/platform:flex-none group-data-collapsed/platform:gap-2">
-                            <Separator />
-                            {action}
-                        </section>
-                    </footer>
-                </nav>
-                <main
-                    className="min-w-0 flex-1 pb-[env(safe-area-inset-bottom,0px)] outline-none"
-                    id={mainId}
-                    ref={mainRef}
-                    tabIndex={-1}
+                    }
                 >
-                    <Content
-                        toolbar={
-                            <section className="flex h-(--platform-toolbar-height) items-center gap-3 p-3">
-                                <Button
-                                    aria-controls={navId}
-                                    aria-expanded={!isCollapsed}
-                                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                                    className="inline-flex size-8 flex-none cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-foreground hover:bg-muted active:bg-accent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
-                                    onClick={() => onCollapsedChange(!isCollapsed)}
-                                    type="button"
-                                >
-                                    <PanelLeft aria-hidden="true" size={16} />
-                                </Button>
-                                <Separator className="h-5" orientation="vertical" />
-                                {breadcrumb ?? (
-                                    <Breadcrumbs
-                                        items={[{ label: tabs.find((tab) => tab.href === selectedTab)?.label }]}
-                                    />
-                                )}
-                            </section>
-                        }
-                    >
-                        {children}
-                    </Content>
-                </main>
-            </section>
-        </SidebarContext>
+                    {children}
+                </Content>
+            </main>
+        </>
     );
 }
