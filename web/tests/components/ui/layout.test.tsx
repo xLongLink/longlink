@@ -4,8 +4,8 @@ import { act, useState } from 'react';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { PageContainer } from '@/components/ui/page-container';
 import { Grid } from '@/components/longlink/layout/grid';
+import { PageContainer } from '@/components/ui/page-container';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
