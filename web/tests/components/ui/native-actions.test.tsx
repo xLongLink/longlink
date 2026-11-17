@@ -37,7 +37,7 @@ it('ignores class overrides supplied outside the typed LongLink Button API', () 
     expect(button?.classList.contains('bg-primary')).toBe(true);
 });
 
-it.each(['member', 'invitation'] as const)(
+it.each(['remove', 'role', 'accept', 'decline'] as const)(
     'deduplicates %s confirmation, reports failure, and allows retry',
     async (kind) => {
         let reject: (cause: Error) => void = () => {};
@@ -49,6 +49,9 @@ it.each(['member', 'invitation'] as const)(
         const action = vi.fn<() => Promise<void>>().mockReturnValueOnce(pending).mockResolvedValue(undefined);
         const notify = vi.fn();
         const close = vi.fn();
+        const dismiss = vi.fn();
+        const destructive = kind === 'remove' || kind === 'decline';
+        const actionLabel = { remove: 'Remove member', role: 'Confirm', accept: 'Accept', decline: 'Decline' }[kind];
 
         const confirm = async () => {
             await action();
@@ -57,19 +60,19 @@ it.each(['member', 'invitation'] as const)(
 
         await withMounted(
             <ApiErrorContext value={createErrorReporter(notify)}>
-                {kind === 'member' ? (
+                {kind === 'remove' || kind === 'role' ? (
                     <MemberAccess
                         open
                         name="Reader"
-                        action={{ kind: 'remove' }}
-                        onOpenChange={close}
+                        action={kind === 'remove' ? { kind: 'remove' } : { kind: 'role', role: 'Admin' }}
+                        onOpenChange={dismiss}
                         onConfirm={confirm}
                     />
                 ) : (
                     <InvitationResponse
                         open
-                        invitation={{ type: 'accept', name: 'Team' }}
-                        onOpenChange={close}
+                        invitation={{ type: kind, name: 'Team' }}
+                        onOpenChange={dismiss}
                         onConfirm={confirm}
                     />
                 )}
@@ -77,9 +80,13 @@ it.each(['member', 'invitation'] as const)(
             async () => {
                 const button = Array.from(
                     document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button, [role="alertdialog"] button')
-                ).find((control) => control.textContent === (kind === 'member' ? 'Remove member' : 'Accept'));
+                ).find((control) => control.textContent === actionLabel);
 
                 if (!button) throw new Error('Expected confirmation');
+                const cancel = Array.from(
+                    document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button, [role="alertdialog"] button')
+                ).find((control) => control.textContent === 'Cancel');
+                if (!cancel) throw new Error('Expected confirmation cancellation');
 
                 await act(async () => {
                     button.click();
@@ -90,23 +97,24 @@ it.each(['member', 'invitation'] as const)(
                 expect(button.getAttribute('aria-busy')).toBe('true');
                 expect(button.disabled).toBe(true);
 
-                if (kind === 'member') {
-                    const cancel = Array.from(
-                        document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
-                    ).find((control) => control.textContent === 'Cancel');
-                    if (!cancel) throw new Error('Expected destructive confirmation cancellation');
-                    await act(async () => {
-                        cancel.click();
-                        await userEvent.setup().keyboard('{Escape}');
-                    });
+                expect(cancel.disabled).toBe(destructive);
+                await act(async () => {
+                    cancel.click();
+                    await userEvent.setup().keyboard('{Escape}');
+                });
+                if (destructive) {
                     expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
-                    expect(close).not.toHaveBeenCalled();
+                    expect(dismiss).not.toHaveBeenCalled();
+                } else {
+                    expect(dismiss).toHaveBeenCalledTimes(2);
+                    expect(dismiss).toHaveBeenCalledWith(false);
                 }
 
                 await act(async () => reject(new Error('Transport failure')));
                 expect(notify).toHaveBeenCalledWith(expect.stringContaining('Please try again.'));
                 expect(close).not.toHaveBeenCalled();
                 expect(button.disabled).toBe(false);
+                expect(cancel.disabled).toBe(false);
 
                 await act(async () => button.click());
                 expect(action).toHaveBeenCalledTimes(2);

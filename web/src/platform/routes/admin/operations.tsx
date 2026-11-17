@@ -1,14 +1,13 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Info, Search, X } from 'lucide-react';
 import { Button } from '@/components/longlink/action/button';
-import { Field, FieldLabel } from '@/components/shadcn/field';
+import { AdminSearch } from '@/components/custom/admin-search';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const kinds = {
@@ -23,7 +22,6 @@ const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
     const { search, pagination, suffix } = useAdminList();
-    const searchInput = useRef<HTMLInputElement>(null);
     const [metadataId, setMetadataId] = useState<string | null>(null);
 
     const [operations] = useApi(`/api/v1/operations${suffix}`, zPageOperationResponse);
@@ -37,36 +35,12 @@ export default function Operations() {
         <Stack gap={2}>
             <title>Operations | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Operations</h1>
-            <Field>
-                <FieldLabel htmlFor="search-operations">Search operations</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-operations"
-                        placeholder="Search by operation kind or resource name"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {search.value !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search operations"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    search.onChange('');
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            <AdminSearch
+                id="search-operations"
+                label="Search operations"
+                placeholder="Search by operation kind or resource name"
+                {...search}
+            />
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>

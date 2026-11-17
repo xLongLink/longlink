@@ -1,70 +1,37 @@
 import { api } from '@/lib/api';
-import { useRef, useState } from 'react';
+import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
-import { Info, Search, X } from 'lucide-react';
+import { useAdminSelection } from './use-selection';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Field, FieldLabel } from '@/components/shadcn/field';
+import { AdminSearch } from '@/components/custom/admin-search';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
     const { search, pagination, suffix } = useAdminList();
-    const searchInput = useRef<HTMLInputElement>(null);
-
-    const [dialog, setDialog] = useState<
-        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
-    >(null);
 
     const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
-    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
-    const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
-
-    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
+    const { metadata, deletion, openMetadata, confirmDeletion, close } = useAdminSelection(solutions.items);
 
     return (
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Solutions</h1>
-            <Field>
-                <FieldLabel htmlFor="search-solutions">Search solutions</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-solutions"
-                        placeholder="Search by name, description, or organization"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {search.value !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search solutions"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    search.onChange('');
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            <AdminSearch
+                id="search-solutions"
+                label="Search solutions"
+                placeholder="Search by name, description, or organization"
+                {...search}
+            />
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>
@@ -124,11 +91,7 @@ export default function Solutions() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                    >
+                                    <Button size="sm" variant="ghost" onClick={() => openMetadata(row.id)}>
                                         <Info aria-hidden="true" />
                                         Metadata
                                     </Button>
@@ -148,30 +111,23 @@ export default function Solutions() {
                     <Pagination {...pagination} totalItems={solutions.total} />
                 </footer>
             </Stack>
-            {metadata && (
-                <SolutionMetadata
-                    open
-                    metadata={metadata}
-                    onOpenChange={() => setDialog(null)}
-                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
-                />
-            )}
+            {metadata && <SolutionMetadata open metadata={metadata} onOpenChange={close} onDelete={confirmDeletion} />}
             <DeletionDialog
                 confirmation={
-                    dialog?.kind === 'deletion'
+                    deletion
                         ? {
                               title: 'Delete solution',
-                              description: `Delete solution ${dialog.item.name}?`,
+                              description: `Delete solution ${deletion.name}?`,
                               onDelete: async () => {
                                   // Refresh the list only after deletion succeeds.
-                                  await api.delete(`/api/v1/solutions/${dialog.item.id}`);
+                                  await api.delete(`/api/v1/solutions/${deletion.id}`);
                                   await invalidate();
-                                  setDialog(null);
+                                  close();
                               }
                           }
                         : null
                 }
-                onClose={() => setDialog(null)}
+                onClose={close}
             />
         </Stack>
     );

@@ -46,9 +46,25 @@ it('installs the initial request persona before passive requests and reloads onl
                 expect(popup?.querySelector('a[href="/user/settings"]')).toBeNull();
                 expect(popup?.textContent).not.toContain('Sign out');
                 const docs = popup?.querySelector('a');
+                expect(docs?.getAttribute('role')).not.toBe('button');
                 expect(docs?.target).toBe('_blank');
                 expect(docs?.relList.contains('noopener')).toBe(true);
-                const readUser = popup?.querySelector<HTMLButtonElement>('button[aria-pressed="false"]');
+
+                if (!docs) throw new Error('Missing documentation link');
+                const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+                await act(async () => {
+                    docs.focus();
+                    docs.dispatchEvent(space);
+                    docs.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true, cancelable: true }));
+                });
+                expect(space.defaultPrevented).toBe(false);
+                expect(document.querySelector('[role="dialog"]')).toBe(popup);
+                await act(async () => await events.click(docs));
+                expect(document.querySelector('[role="dialog"]')).toBeNull();
+                await act(async () => await events.click(trigger));
+                const readUser = document.querySelector<HTMLButtonElement>(
+                    '[role="dialog"] button[aria-pressed="false"]'
+                );
 
                 if (!readUser) throw new Error('Missing read persona');
                 await act(async () => await events.click(readUser));

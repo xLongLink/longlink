@@ -1,20 +1,16 @@
-import { useRef } from 'react';
-import { Search, X } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Field, FieldLabel } from '@/components/shadcn/field';
+import { AdminSearch } from '@/components/custom/admin-search';
 import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists Platform users with server-side pagination. */
 export default function Users() {
     const { search, pagination, suffix } = useAdminList();
-    const searchInput = useRef<HTMLInputElement>(null);
 
     const [users] = useApi(`/api/v1/users${suffix}`, zPageAdminUserSummary);
 
@@ -22,36 +18,7 @@ export default function Users() {
         <Stack gap={2}>
             <title>Users | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Users</h1>
-            <Field>
-                <FieldLabel htmlFor="search-users">Search users</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-users"
-                        placeholder="Search by name or email"
-                        value={search.value}
-                        onChange={(event) => search.onChange(event.target.value)}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {search.value !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search users"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    search.onChange('');
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            <AdminSearch id="search-users" label="Search users" placeholder="Search by name or email" {...search} />
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>

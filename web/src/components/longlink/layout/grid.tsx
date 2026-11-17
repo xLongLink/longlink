@@ -1,16 +1,6 @@
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
+import { useContext, type ComponentPropsWithoutRef } from 'react';
 import { GridCollapseContext, spacing } from '@/components/custom/layout';
-import { useContext, useSyncExternalStore, type ComponentPropsWithoutRef } from 'react';
-
-const mobileViewport = '(max-width: 768px)';
-
-/** Tracks the shared mobile breakpoint without retaining listeners after unmount. */
-function subscribeToViewport(onChange: () => void) {
-    if (!window.matchMedia) return () => {};
-    const media = window.matchMedia(mobileViewport);
-    media.addEventListener('change', onChange);
-
-    return () => media.removeEventListener('change', onChange);
-}
 
 /** Arranges equal-width columns, automatically collapsing to one column on mobile. */
 export function Grid({
@@ -28,11 +18,7 @@ export function Grid({
     justify?: 'start' | 'center' | 'end' | 'stretch';
 }) {
     // Keep server rendering deterministic while mounted grids follow the shared mobile breakpoint.
-    const collapsed = useSyncExternalStore(
-        subscribeToViewport,
-        () => Boolean(window.matchMedia) && window.matchMedia(mobileViewport).matches,
-        () => false
-    );
+    const collapsed = useMediaQuery('(max-width: 768px)');
 
     // Collapse the configured column count without creating implicit tracks for spanning items.
     const columns = collapsed ? 1 : configuredColumns;
