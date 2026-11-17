@@ -168,11 +168,19 @@ class LongLink(RouteDecorators, FastAPI):
                 business_routes = self.permission_routes()
                 catalog = permissions.discover(business_routes)
                 self.state.permission_catalog = catalog
+
+                # Compile each route's grants against the same catalog identity and endpoint order.
+                digest = catalog.digest
+                indices: dict[str, dict[str, int]] = {}
+                for index, endpoint in enumerate(catalog.endpoints):
+                    indices.setdefault(endpoint.path, {})[endpoint.method] = index
+
+                # Guard each executable handler until application shutdown.
                 for route in business_routes:
                     # FastAPI owns a separate executable handler for each included-router context.
                     target = route._route_context or route.original_route
                     original = getattr(target, "app")
-                    setattr(target, "app", permissions.Guard(original, route.path or "", catalog))
+                    setattr(target, "app", permissions.Guard(original, digest, indices.get(route.path or "", {})))
                     guards.callback(setattr, target, "app", original)
 
                 # Use a fresh schema, including routes registered after an earlier OpenAPI request.

@@ -38,20 +38,20 @@ async def claim_operation() -> Operation | None:
         return operation
 
 
-async def complete_operation(operation_id: UUID) -> bool:
+async def complete_operation(operation: Operation) -> bool:
     """Complete one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
-        completed = await operations.complete(session, operation_id)
+        completed = await operations.complete(session, operation)
         await session.commit()
         return completed
 
 
-async def fail_operation(operation_id: UUID, reason: str = "Operation failed") -> bool:
+async def fail_operation(operation: Operation, reason: str = "Operation failed") -> bool:
     """Fail one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
-        failed = await operations.fail(session, operation_id, reason)
+        failed = await operations.fail(session, operation, reason)
         await session.commit()
         return failed
 

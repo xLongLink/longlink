@@ -72,7 +72,7 @@ async def test_operations_endpoint_serializes_failed_organization_operation(
     await queue_operation(target_id=organization.id)
     operation = await claim_operation()
     assert operation is not None
-    failed = await fail_operation(operation.id, "Compute provisioning failed")
+    failed = await fail_operation(operation, "Compute provisioning failed")
     assert failed is True
 
     # Act

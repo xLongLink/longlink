@@ -4743,7 +4743,7 @@ function Card$1({ title, description, action, footer, padding, children, ...prop
     footer?: React$1.ReactNode;
     padding?: "default" | "none";
 }): React$1.JSX.Element;
-function Grid({ columns: configuredColumns, gap, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+function Grid({ columns, gap, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
     columns?: number;
     gap?: number;
     align?: "start" | "center" | "end" | "stretch";
@@ -5058,7 +5058,7 @@ namespace useRender {
 }
 const iconTileVariants: (props?: ({
     variant?: "outline" | "frame" | "elevated" | "soft" | "solid" | null | undefined;
-    size?: "default" | "sm" | "lg" | "xs" | "xl" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface IconTileProps extends useRender.ComponentProps<"span"> {
@@ -5069,7 +5069,7 @@ interface IconTileProps extends useRender.ComponentProps<"span"> {
 function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 const badgeVariants: (props?: ({
     variant?: "primary" | "secondary" | "outline" | "destructive" | null | undefined;
-    size?: "sm" | "md" | "lg" | "xs" | "xl" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "xl" | "md" | null | undefined;
     radius?: "sm" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface BadgeProps extends Omit<useRender.ComponentProps<"span">, "className"> {
@@ -5090,7 +5090,7 @@ interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "colo
 function Text$1({ maxLines, className, style, ...props }: TextProps): React$1.JSX.Element;
 const frameVariants: (props?: ({
     variant?: "default" | "ghost" | "inverse" | null | undefined;
-    spacing?: "default" | "sm" | "lg" | "xs" | null | undefined;
+    spacing?: "default" | "xs" | "sm" | "lg" | null | undefined;
     stacked?: boolean | null | undefined;
     dense?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
@@ -5163,7 +5163,7 @@ namespace Button {
 }
 const buttonVariants: (props?: ({
     variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
-    size?: "default" | "icon" | "sm" | "lg" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+    size?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
@@ -7259,7 +7259,7 @@ const FILE_TYPE_CATEGORIES: readonly [
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 const fileTypeVariants: (props?: ({
-    size?: "sm" | "md" | "lg" | "xs" | "xl" | "mini" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "xl" | "md" | "mini" | null | undefined;
 } & ClassProp) | undefined) => string;
 type FileTypeVariant = "outline" | "solid" | "light" | "mono";
 type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "className" | "style"> & {

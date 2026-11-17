@@ -38,13 +38,13 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
 
-    async def delayed_complete(session: AsyncSession, operation_id: UUID) -> bool:
+    async def delayed_complete(session: AsyncSession, claimed: Operation) -> bool:
         """Delay the terminal transition until after worker cancellation."""
 
-        assert operation_id == operation.id
+        assert claimed.id == operation.id
         started.set()
         await release.wait()
-        return await complete(session, operation_id)
+        return await complete(session, claimed)
 
     monkeypatch.setattr(operation_worker.operations, "complete", delayed_complete)
 
@@ -84,7 +84,7 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def fail(_session: object, _operation_id: UUID, reason: str) -> bool:
+    async def fail(_session: object, _operation: Operation, reason: str) -> bool:
         """Fail only after cancellation reaches the protected transition."""
 
         assert reason == "Operation cancelled"
@@ -93,7 +93,7 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
         raise RuntimeError("database unavailable")
 
     # Act
-    transition = asyncio.create_task(operation_worker._finish_transition(partial(fail, reason="Operation cancelled"), UUID(int=1)))
+    transition = asyncio.create_task(operation_worker._finish_transition(partial(fail, reason="Operation cancelled"), leased_operation()))
     try:
         await asyncio.wait_for(started.wait(), timeout=3)
         transition.cancel()
@@ -269,7 +269,7 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
 
         # Commit the lost lease before the worker attempts its real terminal transition.
         async with operation_worker.session_scope() as session:
-            assert await operation_worker.operations.release(session, operation.id) is True
+            assert await operation_worker.operations.release(session, operation) is True
             await session.commit()
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)

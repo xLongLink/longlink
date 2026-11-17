@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from functools import partial
@@ -14,7 +13,7 @@ from src.database.models.operations import Operation
 OPERATION_TIMEOUT_SECONDS = 180
 
 
-async def _finish_transition(transition: Callable[[AsyncSession, UUID], Awaitable[bool]], operation_id: UUID) -> bool:
+async def _finish_transition(transition: Callable[[AsyncSession, Operation], Awaitable[bool]], operation: Operation) -> bool:
     """Finish one terminal transition before propagating worker cancellation."""
 
     # Run persistence independently so repeated cancellation cannot interrupt it.
@@ -22,7 +21,7 @@ async def _finish_transition(transition: Callable[[AsyncSession, UUID], Awaitabl
         """Persist one terminal transition in a fresh transaction."""
 
         async with session_scope() as session:
-            updated = await transition(session, operation_id)
+            updated = await transition(session, operation)
             await session.commit()
             return updated
 
@@ -61,7 +60,7 @@ async def execute(operation: Operation) -> None:
     # Graceful shutdown leaves interrupted work available for the next scheduler.
     except asyncio.CancelledError:
         with contextlib.suppress(Exception):
-            await _finish_transition(operations.release, operation.id)
+            await _finish_transition(operations.release, operation)
         raise
 
     # Timeouts are terminal handler failures with a bounded queue-visible reason.
@@ -86,7 +85,7 @@ async def execute(operation: Operation) -> None:
         transition = partial(operations.fail, reason=reason)
 
     # Finish the terminal database transition even when shutdown cancels this worker.
-    updated = await _finish_transition(transition, operation.id)
+    updated = await _finish_transition(transition, operation)
 
     # Reject completion when the worker no longer owns its leased Operation.
     if not updated:
