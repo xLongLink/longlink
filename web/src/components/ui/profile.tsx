@@ -1,16 +1,13 @@
-import { cn } from 'cn';
+import { useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import { SidebarContext } from '@/lib/sidebar';
 import { Link as RouterLink } from 'react-router';
 import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
-import { useContext, useRef, useState } from 'react';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useErrorBoundary } from 'react-error-boundary';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Button as ButtonPrimitive } from '@base-ui/react/button';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
+import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -25,7 +22,7 @@ import {
 /** Renders a user profile menu with authentication and navigation actions. */
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
-    const sidebar = useContext(SidebarContext);
+    const { isMobile } = useSidebar();
     const [isOpen, setIsOpen] = useState(false);
     const [pending, setPending] = useState(false);
     const [error, setError] = useState('');
@@ -61,8 +58,7 @@ export function ProfileMenu() {
         window.location.assign('/user/organizations');
     }
 
-    // Keep the same avatar size in expanded and collapsed sidebar controls.
-    const avatar = <Avatar size={sidebar === null ? 'sm' : 'md'} src={user.avatar} name={user.name} />;
+    const avatar = <Avatar size="md" src={user.avatar} name={user.name} />;
 
     const identity = (
         <>
@@ -76,39 +72,22 @@ export function ProfileMenu() {
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger
-                type="button"
-                aria-label={user.name}
-                render={
-                    sidebar === null ? (
-                        <Button variant="ghost" size="icon-lg" />
-                    ) : (
-                        <ButtonPrimitive
-                            className={cn(
-                                buttonVariants({ variant: 'ghost', size: null }),
-                                'border-0',
-                                sidebar === 'expanded'
-                                    ? 'w-full min-w-0 justify-start gap-2 p-2 text-start'
-                                    : 'size-10 p-1'
-                            )}
-                        />
-                    )
-                }
-                data-expanded={sidebar === 'expanded' || undefined}
-            >
-                {sidebar === 'expanded' ? (
-                    <>
-                        {identity}
-                        <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
-                    </>
-                ) : (
-                    avatar
-                )}
+            <DropdownMenuTrigger type="button" aria-label={user.name} render={<SidebarMenuButton size="lg" />}>
+                {avatar}
+                <span className="flex min-w-0 flex-1 flex-col text-start leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate text-sm font-medium">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                </span>
+                <ChevronsUpDown
+                    aria-hidden="true"
+                    className="text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    size={16}
+                />
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 className="min-w-56"
-                side={sidebar === null ? 'bottom' : 'top'}
-                align={sidebar === null ? 'end' : 'start'}
+                side={isMobile ? 'bottom' : 'right'}
+                align="end"
                 sideOffset={4}
                 aria-label={user.name}
             >

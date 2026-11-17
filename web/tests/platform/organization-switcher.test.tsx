@@ -6,6 +6,7 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
+import { SidebarProvider } from '@/components/shadcn/sidebar';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 
 /** Observes actual Router navigation. */
@@ -36,7 +37,9 @@ it('loads lazily, recovers from a failed request, and closes immediately on nati
     try {
         await withMounted(
             <>
-                <OrganizationSwitcher organization={membership.organization} />
+                <SidebarProvider>
+                    <OrganizationSwitcher organization={membership.organization} />
+                </SidebarProvider>
                 <Location />
             </>,
             async (output) => {
@@ -92,7 +95,9 @@ it('supports keyboard, outside, and touch dismissal and aborts the request when 
     try {
         await withMounted(
             <>
-                <OrganizationSwitcher organization={membership.organization} />
+                <SidebarProvider>
+                    <OrganizationSwitcher organization={membership.organization} />
+                </SidebarProvider>
                 <button type="button">Outside</button>
             </>,
             async () => {

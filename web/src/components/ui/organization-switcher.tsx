@@ -1,13 +1,11 @@
-import { cn } from 'cn';
 import { api } from '@/lib/api';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { ChevronsUpDown } from 'lucide-react';
-import { SidebarContext } from '@/lib/sidebar';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
+import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Button as ButtonPrimitive } from '@base-ui/react/button';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
+import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
     DropdownMenu,
@@ -22,7 +20,7 @@ export type OrganizationIdentity = { id: string; name?: string };
 
 /** Switches Organizations from the sidebar account row. */
 export function OrganizationSwitcher({ organization }: { organization: OrganizationIdentity }) {
-    const sidebar = useContext(SidebarContext);
+    const { isMobile } = useSidebar();
     const [isOpen, setIsOpen] = useState(false);
 
     // Fetch memberships only when the switcher opens, without suspending the page header.
@@ -45,34 +43,20 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger
-                type="button"
-                render={
-                    <ButtonPrimitive
-                        className={cn(
-                            buttonVariants({ variant: 'ghost', size: null }),
-                            'border-0',
-                            sidebar !== 'collapsed'
-                                ? 'w-full min-w-0 justify-start gap-2 p-2 text-start'
-                                : 'size-10 p-1'
-                        )}
-                    />
-                }
-                aria-label={name}
-            >
+            <DropdownMenuTrigger type="button" render={<SidebarMenuButton size="lg" />} aria-label={name}>
                 <Avatar shape="rounded" name={name} />
-                {sidebar !== 'collapsed' && (
-                    <>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate text-sm leading-4">{name}</span>
-                            <span className="truncate text-xs leading-4 text-muted-foreground">Organization</span>
-                        </span>
-                        <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" size={16} />
-                    </>
-                )}
+                <span className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
+                    <span className="truncate text-sm leading-4">{name}</span>
+                    <span className="truncate text-xs leading-4 text-muted-foreground">Organization</span>
+                </span>
+                <ChevronsUpDown
+                    aria-hidden="true"
+                    className="text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    size={16}
+                />
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                side="bottom"
+                side={isMobile ? 'bottom' : 'right'}
                 align="start"
                 sideOffset={4}
                 className="min-w-56"

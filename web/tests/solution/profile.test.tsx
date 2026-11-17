@@ -5,6 +5,7 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { DevelopmentProfile } from '@/solution/profile';
+import { SidebarProvider } from '@/components/shadcn/sidebar';
 import { developmentCookie, getDevelopmentUser } from '@/solution/development';
 
 it('installs the initial request persona before passive requests and reloads only after persisting a new persona', async () => {
@@ -33,7 +34,9 @@ it('installs the initial request persona before passive requests and reloads onl
     try {
         await withMounted(
             <>
-                <DevelopmentProfile />
+                <SidebarProvider>
+                    <DevelopmentProfile />
+                </SidebarProvider>
                 <BusinessRequests />
             </>,
             async (output) => {

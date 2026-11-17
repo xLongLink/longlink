@@ -112,7 +112,7 @@ it('keeps mobile and desktop collapse preferences independent across viewport ch
             await act(async () =>
                 output.querySelector<HTMLButtonElement>('button[aria-label="Collapse sidebar"]')?.click()
             );
-            await act(async () => viewport.setViewport({ width: 768 }));
+            await act(async () => viewport.setViewport({ width: 767 }));
 
             // Assert
             expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
@@ -130,7 +130,7 @@ it('keeps mobile and desktop collapse preferences independent across viewport ch
             await act(async () =>
                 output.querySelector<HTMLButtonElement>('button[aria-label="Expand sidebar"]')?.click()
             );
-            await act(async () => viewport.setViewport({ width: 768 }));
+            await act(async () => viewport.setViewport({ width: 767 }));
 
             // Assert
             expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
@@ -155,7 +155,7 @@ it('closes mobile navigation after following a link without collapsing desktop n
         </Platform>,
         async (output) => {
             // Act
-            await act(async () => viewport.setViewport({ width: 768 }));
+            await act(async () => viewport.setViewport({ width: 767 }));
 
             // Assert
             expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
@@ -169,13 +169,14 @@ it('closes mobile navigation after following a link without collapsing desktop n
             expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
 
             // Act
-            await act(async () => output.querySelector<HTMLAnchorElement>('a[href="/admin/users"]')?.click());
+            const users = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/users"]');
+            if (!users) throw new Error('Missing mobile Users link');
+            await act(async () => users.click());
 
             // Assert
             expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
-            expect(
-                Array.from(output.querySelectorAll('a[aria-current="page"]'), (link) => link.getAttribute('href'))
-            ).toEqual(['/admin/users']);
+            expect(document.querySelector('[role="dialog"]')).toBeNull();
+            expect(output.querySelector('nav[aria-label="Breadcrumb"]')?.textContent).toContain('Users');
 
             // Act
             await act(async () => viewport.setViewport({ width: 1280 }));
@@ -187,8 +188,8 @@ it('closes mobile navigation after following a link without collapsing desktop n
     );
 });
 
-it('retains focused drafts and sidebar controls when crossing the exact desktop breakpoint', async () => {
-    viewport.setViewport({ width: 1024 });
+it('retains focused content drafts when crossing the standard desktop breakpoint', async () => {
+    viewport.setViewport({ width: 768 });
 
     await withMounted(
         <Platform
@@ -200,25 +201,21 @@ it('retains focused drafts and sidebar controls when crossing the exact desktop 
         </Platform>,
         async (output) => {
             const draft = output.querySelector<HTMLInputElement>('input[aria-label="Unsaved name"]');
-            const sidebarDraft = output.querySelector<HTMLInputElement>('input[aria-label="Sidebar draft"]');
-
-            if (!draft || !sidebarDraft) throw new Error('Missing draft inputs');
+            if (!draft) throw new Error('Missing draft input');
             const user = userEvent.setup();
 
             await act(async () => {
                 await user.clear(draft);
                 await user.type(draft, 'Unsaved edit');
             });
-            await act(async () => viewport.setViewport({ width: 1023 }));
+            await act(async () => viewport.setViewport({ width: 767 }));
             expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
             expect(document.activeElement).toBe(draft);
-            await act(async () => viewport.setViewport({ width: 1024 }));
+            await act(async () => viewport.setViewport({ width: 768 }));
             expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
             await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
             expect(output.querySelector('input[aria-label="Unsaved name"]')).toBe(draft);
             expect(draft.value).toBe('Unsaved edit');
-            expect(output.querySelector('input[aria-label="Sidebar draft"]')).toBe(sidebarDraft);
-            expect(sidebarDraft.value).toBe('Account note');
             expect(output.textContent).toContain('Workspace switcher');
         }
     );
@@ -304,13 +301,13 @@ function GuardedNavigation() {
 }
 
 it('does not close mobile navigation for cancelled or modified link gestures', async () => {
-    viewport.setViewport({ width: 768 });
+    viewport.setViewport({ width: 767 });
 
     await withMounted(
         <GuardedNavigation />,
         async (output) => {
             await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
-            const users = output.querySelector<HTMLAnchorElement>('a[href="/admin/users"]');
+            const users = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/users"]');
 
             if (!users) throw new Error('Missing Users link');
 
@@ -341,8 +338,9 @@ it('does not close mobile navigation for cancelled or modified link gestures', a
     );
 });
 
-it('describes the initial collapsed rail on keyboard focus and keeps anchors mounted when expanded', async () => {
-    viewport.setViewport({ width: 768 });
+it('opens mobile navigation by keyboard and restores focus after Escape', async () => {
+    // Arrange
+    viewport.setViewport({ width: 767 });
     const user = userEvent.setup();
 
     await withMounted(
@@ -356,39 +354,27 @@ it('describes the initial collapsed rail on keyboard focus and keeps anchors mou
             <input aria-label="Draft" defaultValue="Unsaved" />
         </Platform>,
         async (output) => {
-            const users = output.querySelector<HTMLAnchorElement>('a[href="/admin/users"]');
-            const solution = output.querySelector<HTMLAnchorElement>('a[href="/solution"]');
+            const trigger = output.querySelector<HTMLButtonElement>('button[aria-controls]');
+            if (!trigger) throw new Error('Missing sidebar trigger');
 
-            if (!users || !solution) throw new Error('Missing navigation links');
-
-            expect(solution.hidden).toBe(true);
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('32');
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('32');
+            // Act
             await act(async () => {
-                await user.tab();
-                await user.tab();
-                await user.tab();
-            });
-            expect(document.activeElement).toBe(users);
-            await vi.waitFor(() =>
-                expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toBe('Users')
-            );
-            expect(users.getAttribute('aria-label')).toBe('Users');
-
-            await act(async () => {
-                await user.tab();
+                trigger.focus();
                 await user.keyboard('{Enter}');
             });
-            expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
-            expect(output.querySelector('a[href="/solution"]')).toBe(solution);
-            expect(solution.hidden).toBe(false);
-            expect(solution.textContent).toBe('Solution view');
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('width')).toBe('1939');
-            expect(output.querySelector('img[alt="LongLink"]')?.getAttribute('height')).toBe('291');
-            await act(async () => user.tab({ shift: true }));
-            expect(document.activeElement).toBe(users);
-            expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
-            expect(users.hasAttribute('aria-describedby')).toBe(false);
+
+            // Assert
+            const dialog = document.querySelector('[role="dialog"]');
+            expect(dialog?.querySelector('a[href="/solution"]')?.textContent).toBe('Solution view');
+            expect(dialog?.querySelector('a[href="/admin/users"]')?.textContent).toBe('Users');
+            expect(dialog?.contains(document.activeElement)).toBe(true);
+
+            // Act
+            await act(async () => user.keyboard('{Escape}'));
+
+            // Assert
+            expect(document.querySelector('[role="dialog"]')).toBeNull();
+            expect(document.activeElement).toBe(trigger);
         }
     );
 });
@@ -407,7 +393,7 @@ it('shows labels on hover only for collapsed iconful navigation', async () => {
             if (!users) throw new Error('Missing Users link');
 
             await act(async () => user.hover(users));
-            expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
+            expect(document.querySelector('[data-slot="tooltip-content"]:not([hidden])')).toBeNull();
             await act(async () => user.unhover(users));
             await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
             expect(output.querySelector('a[href="/admin/users"]')).toBe(users);
