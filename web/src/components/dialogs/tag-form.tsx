@@ -27,9 +27,9 @@ export function TagForm({
     base,
     tag,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
+    onOpenChange: (open: boolean) => void;
     base: string;
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
@@ -56,7 +56,7 @@ export function TagForm({
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title={tag ? 'Edit tab' : 'New tab'}
             footer={

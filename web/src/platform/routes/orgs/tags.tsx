@@ -136,7 +136,6 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
             </Stack>
             {action && action.kind !== 'delete' && (
                 <TagForm
-                    open
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
                     tag={action.kind === 'create' ? null : action.tag}

@@ -60,7 +60,7 @@ it('saves a searched icon identifier and trimmed name through the controlled tab
 
     try {
         await withMounted(
-            <TagForm open base="/api/v1/organizations/test" tag={null} onSuccess={complete} onOpenChange={() => {}} />,
+            <TagForm base="/api/v1/organizations/test" tag={null} onSuccess={complete} onOpenChange={() => {}} />,
             async () => {
                 const name = document.getElementById('tag-name');
                 const icon = document.getElementById('tag-icon');

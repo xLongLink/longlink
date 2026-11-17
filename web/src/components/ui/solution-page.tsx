@@ -59,21 +59,18 @@ export function SolutionPage({
             const manifest = manifestSchema.parse(data);
 
             const tabs =
-                manifest.tabs ??
-                manifest.views
-                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
-                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
-
-            return {
-                ...manifest,
-                tabs: tabs.map((tab) => ({
+                manifest.tabs?.map((tab) => ({
                     route: tab.route,
                     label:
                         tab.label ??
                         viewLabel(manifest.views.find((view) => view.route === tab.route)?.path ?? tab.route),
                     icon: tab.icon
-                }))
-            };
+                })) ??
+                manifest.views
+                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
+                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
+
+            return { ...manifest, tabs };
         }
     });
 

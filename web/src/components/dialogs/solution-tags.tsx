@@ -27,9 +27,9 @@ export function SolutionTags({
     tags,
     solution,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
+    onOpenChange: (open: boolean) => void;
     base: string;
     tags: z.output<typeof schemas.zOrganizationTagResponse>[];
     solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
@@ -56,7 +56,7 @@ export function SolutionTags({
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title={`Tags for ${solution.name}`}
             footer={

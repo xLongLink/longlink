@@ -31,14 +31,13 @@ import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { Tabs, Tab } from '@/components/longlink/layout/tabs';
-import { documentationCategories } from '@/lib/documentation';
 import { SwitzerlandExample } from './views/switzerland-example';
-import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
+import { componentDocumentation, documentationCategories } from '@/platform/publications';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -54,8 +53,8 @@ const article = {
     toc: [
         { id: 'views', label: 'Views', level: 1 },
         ...documentationCategories
-            .filter((category) => category !== 'Runtime')
-            .map((category) => ({ id: category.toLowerCase().replace(/\W+/g, '-'), label: category, level: 2 }))
+            .filter(({ category }) => category !== 'Runtime')
+            .map(({ category, anchor }) => ({ id: anchor.slice(1), label: category, level: 2 }))
     ],
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
@@ -293,13 +292,10 @@ export default function Item({ params }) {
                     </CollapsibleContent>
                 </Collapsible>
                 {documentationCategories
-                    .filter((category) => category !== 'Runtime')
-                    .map((category) => (
+                    .filter(({ category }) => category !== 'Runtime')
+                    .map(({ category, anchor }) => (
                         <Stack key={category} gap={3}>
-                            <h2
-                                className="font-semibold tracking-tight text-3xl"
-                                id={category.toLowerCase().replace(/\W+/g, '-')}
-                            >
+                            <h2 className="font-semibold tracking-tight text-3xl" id={anchor.slice(1)}>
                                 {category}
                             </h2>
                             <Grid columns={3} gap={4}>

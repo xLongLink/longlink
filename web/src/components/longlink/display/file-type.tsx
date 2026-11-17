@@ -426,17 +426,6 @@ const FOLD_PATH = 'M14 2v5a1 1 0 0 0 1 1h5';
 const FLAP_PATH = 'M13.586 2a2 2 0 0 1 1.414.586l4.414 4.414A2 2 0 0 1 20 8.414V8h-5a1 1 0 0 1-1-1V2Z';
 
 /**
- * Lyra and Sera square every radius, so the page, its fold and the flap square
- * too: both shapes render, and a per-style variable shows one. Outside a style
- * the var() fallback keeps the rounded page.
- */
-const PAGE_PATH_SQUARE = 'M4 22V2h10l6 6v14Z';
-const FOLD_PATH_SQUARE = 'M14 2v6h6';
-const FLAP_PATH_SQUARE = 'M14 2l6 6h-6Z';
-const ROUND = '[display:var(--file-type-round,inline)]';
-const SQUARE = '[display:var(--file-type-square,none)]';
-
-/**
  * CSS variable architecture, all read from the root:
  *
  *   --file-type-size        box width and height, set by `size`
@@ -629,32 +618,11 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
                 strokeLinejoin="round"
                 aria-hidden="true"
                 focusable="false"
-                className={cn(
-                    'absolute inset-0 size-full overflow-visible [stroke-width:var(--file-type-stroke,max(1px,2.5cqw))] [--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_40%,transparent))] @max-[21px]:[--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_65%,transparent))]',
-                    '[--file-type-round:inline]',
-                    '[--file-type-square:none]'
-                )}
+                className="absolute inset-0 size-full overflow-visible [stroke-width:var(--file-type-stroke,max(1px,2.5cqw))] [--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_40%,transparent))] @max-[21px]:[--file-type-outline:var(--file-type-border,color-mix(in_oklab,var(--muted-foreground)_65%,transparent))]"
             >
-                <path {...STROKE} d={PAGE_PATH} className={cn(PAGE_CLASS[variant], ROUND)} />
-                <path
-                    {...STROKE}
-                    d={PAGE_PATH_SQUARE}
-                    strokeLinejoin="miter"
-                    className={cn(PAGE_CLASS[variant], SQUARE)}
-                />
-                {variant === 'solid' ? (
-                    <>
-                        <path d={FLAP_PATH} className={cn('fill-white/30 stroke-none', ROUND)} />
-                        <path d={FLAP_PATH_SQUARE} className={cn('fill-white/30 stroke-none', SQUARE)} />
-                    </>
-                ) : null}
-                <path {...STROKE} d={FOLD_PATH} className={cn(FOLD_CLASS[variant], ROUND)} />
-                <path
-                    {...STROKE}
-                    d={FOLD_PATH_SQUARE}
-                    strokeLinejoin="miter"
-                    className={cn(FOLD_CLASS[variant], SQUARE)}
-                />
+                <path {...STROKE} d={PAGE_PATH} className={PAGE_CLASS[variant]} />
+                {variant === 'solid' ? <path d={FLAP_PATH} className="fill-white/30 stroke-none" /> : null}
+                <path {...STROKE} d={FOLD_PATH} className={FOLD_CLASS[variant]} />
                 {glyphNode ? (
                     <g
                         data-slot="file-type-glyph"

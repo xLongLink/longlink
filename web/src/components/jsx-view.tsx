@@ -487,7 +487,6 @@ export function JsxView({
             />
             {filePreview?.type === 'file' && (
                 <FilePreview
-                    open
                     body={filePreview.body}
                     title={filePreview.title}
                     onOpenChange={() => setFilePreview(undefined)}
@@ -495,7 +494,6 @@ export function JsxView({
             )}
             {filePreview?.type === 'text' && (
                 <TextPreview
-                    open
                     text={filePreview.text}
                     title={filePreview.title}
                     onOpenChange={() => setFilePreview(undefined)}

@@ -116,6 +116,68 @@ describe('SolutionPage', () => {
         await vi.waitFor(() => expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy'));
     });
 
+    it('honors explicit tab order and labels while resolving unlabeled tabs from View filenames', async () => {
+        stubFetch((url) =>
+            url.endsWith('/views.json')
+                ? manifestResponse(
+                      [
+                          { path: 'home.jsx', route: '/home' },
+                          { path: 'purchase-orders.jsx', route: '/orders' },
+                          { path: 'settings.jsx', route: '/settings' }
+                      ],
+                      [{ route: '/settings', label: 'Preferences' }, { route: '/orders' }]
+                  )
+                : sourceResponse('export default function Page() { return <Text>Content</Text>; }')
+        );
+
+        const output = await renderPage('/');
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings');
+            expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy');
+        });
+        const links = Array.from(
+            output.querySelectorAll<HTMLAnchorElement>(
+                '[aria-label="Section navigation"] a:not([aria-label="LongLink home"])'
+            )
+        );
+        expect(links.map((link) => [link.getAttribute('href'), link.textContent])).toEqual([
+            ['/settings', 'Preferences'],
+            ['/orders', 'Purchase Orders']
+        ]);
+        await act(async () => links[1].click());
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/orders');
+            expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy');
+        });
+        expect(document.title).toBe('Purchase Orders | Solution');
+    });
+
+    it('does not infer navigation or redirect when the manifest explicitly disables tabs', async () => {
+        stubFetch((url) =>
+            url.endsWith('/views.json')
+                ? manifestResponse(
+                      [
+                          { path: 'index.jsx', route: '/' },
+                          { path: 'home.jsx', route: '/home' }
+                      ],
+                      []
+                  )
+                : sourceResponse('export default function Page() { return <Text>Content</Text>; }')
+        );
+
+        const output = await renderPage('/');
+        await vi.waitFor(async () => {
+            await act(async () => {});
+            expect(output.querySelector('iframe')?.srcdoc).toContain('Content-Security-Policy');
+        });
+        expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/');
+        expect(
+            output.querySelector('[aria-label="Section navigation"] a:not([aria-label="LongLink home"])')
+        ).toBeNull();
+    });
+
     it.each([undefined, 'compact'] as const)('restores %s view width after leaving a wide dashboard', async (width) => {
         stubFetch((url) =>
             url.endsWith('/views.json')
@@ -728,8 +790,11 @@ function stubFetch(
 }
 
 /** Creates a catalog pinned to the empty runtime assets supplied by the transport fixture. */
-function manifestResponse(views: readonly { path: string; route: string; width?: 'wide' | 'compact' }[]): Response {
-    return Response.json({ views, runtime: { version: createHash('sha256').update('\n').digest('hex') } });
+function manifestResponse(
+    views: readonly { path: string; route: string; width?: 'wide' | 'compact' }[],
+    tabs?: readonly { route: string; label?: string }[]
+): Response {
+    return Response.json({ views, tabs, runtime: { version: createHash('sha256').update('\n').digest('hex') } });
 }
 
 /** Creates a source fetch response. */

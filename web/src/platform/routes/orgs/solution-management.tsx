@@ -323,7 +323,6 @@ export default function SolutionManagement({
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
-                    open
                     key={selected.solution.id}
                     base={base}
                     tags={tags}

@@ -40,7 +40,20 @@ export function RadialBarChart<Row extends object>({
                 <recharts.PolarAngleAxis type="number" domain={[0, max]} tick={false} axisLine={false} />
                 <recharts.RadialBar dataKey="value" background isAnimationActive={false} />
                 {tooltip && (
-                    <ChartTooltip isAnimationActive={false} content={<ChartTooltipContent nameKey="id" hideLabel />} />
+                    <ChartTooltip
+                        isAnimationActive={false}
+                        content={({ active, payload }) => (
+                            <ChartTooltipContent
+                                active={active}
+                                payload={payload?.map((item) => ({
+                                    ...item,
+                                    name: (item.payload as { name: string }).name
+                                }))}
+                                nameKey="name"
+                                hideLabel
+                            />
+                        )}
+                    />
                 )}
                 {legend && (
                     <ChartLegend

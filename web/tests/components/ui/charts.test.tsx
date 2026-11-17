@@ -186,6 +186,45 @@ it('matches external segment legends to plotted order and clears them when data 
     });
 });
 
+it.each([PieChart, RadialBarChart])(
+    'resolves segment tooltip labels while navigating between values',
+    async (Chart) => {
+        await withMounted(
+            <div ref={(element) => measureCharts(element)}>
+                <Box height={280}>
+                    <Chart
+                        data={[
+                            { name: 'Partner', count: 60 },
+                            { name: 'Direct', count: 40 }
+                        ]}
+                        nameKey="name"
+                        valueKey="count"
+                        max={100}
+                        tooltip
+                    />
+                </Box>
+            </div>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('svg[role="application"]')).not.toBeNull());
+                const chart = output.querySelector<SVGSVGElement>('svg[role="application"]');
+
+                if (!chart) throw new Error('Expected keyboard-accessible segment chart');
+                const user = userEvent.setup();
+                await act(async () => chart.focus());
+                await vi.waitFor(() => {
+                    expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('Partner');
+                    expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('60');
+                });
+                await act(async () => user.keyboard('{ArrowRight}'));
+                await vi.waitFor(() => {
+                    expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('Direct');
+                    expect(output.querySelector('.recharts-tooltip-wrapper')?.textContent).toContain('40');
+                });
+            }
+        );
+    }
+);
+
 it('updates doughnut center content and value legends together, clearing stale totals when data disappears', async () => {
     function Preview() {
         const [rows, setRows] = useState([

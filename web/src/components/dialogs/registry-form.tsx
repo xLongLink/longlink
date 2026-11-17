@@ -12,10 +12,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/sh
 export function RegistryForm({
     base,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     base: string;
     onSuccess: () => Promise<void>;
@@ -34,7 +32,7 @@ export function RegistryForm({
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title="Connect a registry"
             footer={

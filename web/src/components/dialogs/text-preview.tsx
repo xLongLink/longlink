@@ -6,15 +6,14 @@ import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/cod
 export function TextPreview({
     text,
     title,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     text: string;
     title: string;
 }) {
     return (
-        <Dialog fullscreen {...dialogProps} title={title}>
+        <Dialog open fullscreen onOpenChange={onOpenChange} title={title}>
             <CodeBlock code={text} language={textLanguage(title) ?? 'plaintext'} showLineNumbers wrap variant="ghost">
                 <CodeBlockCopyButton />
             </CodeBlock>

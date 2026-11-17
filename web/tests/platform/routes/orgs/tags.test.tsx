@@ -43,7 +43,6 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
             await withMounted(
                 <>
                     <SolutionTags
-                        open
                         base={`/api/v1/organizations/${membership.organization.id}`}
                         tags={tags}
                         solution={{
