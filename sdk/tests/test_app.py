@@ -460,6 +460,13 @@ def test_endpoint_permissions_reject_requests_before_dependencies(monkeypatch: p
 
         effects.append("dependency")
 
+    @router.get("/items/{item_id}", response_model=int, dependencies=[Depends(business_dependency)])
+    async def read_item(item_id: int) -> int:
+        """Keep reads distinct from writes sharing the same route path."""
+
+        effects.append("read")
+        return item_id
+
     @router.post("/items/{item_id}", response_model=int, dependencies=[Depends(business_dependency)])
     async def update_item(item_id: int) -> int:
         """Record the requested business operation."""
@@ -471,9 +478,9 @@ def test_endpoint_permissions_reject_requests_before_dependencies(monkeypatch: p
     catalog = permissions.discover(app.permission_routes())
     user = User(id=UUID(int=2), name="Writer", email="writer@example.com")
     denied_access = permissions.Access(
-        catalog="0" * 64 if denial == "stale-catalog" else catalog.digest, endpoints=[0] if denial == "stale-catalog" else []
+        catalog="0" * 64 if denial == "stale-catalog" else catalog.digest, endpoints=[1] if denial == "stale-catalog" else []
     )
-    allowed_access = permissions.Access(catalog=catalog.digest, endpoints=[0])
+    allowed_access = permissions.Access(catalog=catalog.digest, endpoints=[1])
 
     # Act
     with TestClient(app) as client:
@@ -486,11 +493,16 @@ def test_endpoint_permissions_reject_requests_before_dependencies(monkeypatch: p
         assert effects == []
 
         # Act with the same identity and endpoint but a current, sufficient grant.
-        allowed = client.post("/api/items/7", headers={"x-longlink-identity": identity.create_identity_token(user, secret, allowed_access)})
+        headers = {"x-longlink-identity": identity.create_identity_token(user, secret, allowed_access)}
+        allowed = client.post("/api/items/7", headers=headers)
+
+        # A grant for this path's write must not authorize its separate read operation.
+        forbidden_read = client.get("/api/items/7", headers=headers)
 
     # Assert
     assert allowed.status_code == 200
     assert allowed.json() == 7
+    assert forbidden_read.status_code == 403
     assert effects == ["dependency", "handler"]
 
 

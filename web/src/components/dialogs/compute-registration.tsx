@@ -18,15 +18,7 @@ const registrationSchema = schemas.zComputeRegistryCreate.extend({
     kubeconfig: z.string().refine((value) => value.trim().length > 0)
 });
 
-export function ComputeRegistration({
-    onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onSuccess: () => Promise<void>;
-}) {
+export function ComputeRegistration({ onSuccess, onClose }: { onClose: () => void; onSuccess: () => Promise<void> }) {
     const formId = useId();
     const form = useForm({
         resolver: zodResolver(registrationSchema),
@@ -87,17 +79,12 @@ export function ComputeRegistration({
 
     return (
         <Dialog
-            {...dialogProps}
-            onOpenChange={onOpenChange}
+            open
+            onOpenChange={onClose}
             title="Register Compute"
             footer={
                 <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
+                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
                         Cancel
                     </Button>
                     <Button

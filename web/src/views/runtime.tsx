@@ -3,8 +3,8 @@ import * as React from 'react';
 import { transform } from 'sucrase';
 import * as components from './index';
 import { CircleX } from 'lucide-react';
+import { RequestContext } from './context';
 import { createRoot } from 'react-dom/client';
-import { ViewRequestContext } from './context';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
@@ -12,12 +12,7 @@ import { FileRequestContext } from '@/components/custom/preview';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
-import {
-    FormRequestContext,
-    LinkNavigationContext,
-    MenuNavigationContext,
-    DialogActivityContext
-} from '@/components/custom/contexts';
+import { LinkNavigationContext, MenuNavigationContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
     requestSchema,
     parametersSchema,
@@ -390,11 +385,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                     <MenuNavigationProvider>
                                         <FileRequestContext value={fileRequests}>
                                             <DialogActivityContext value={modalActivity}>
-                                                <FormRequestContext value={request}>
-                                                    <ViewRequestContext value={request}>
-                                                        <View params={params} />
-                                                    </ViewRequestContext>
-                                                </FormRequestContext>
+                                                <RequestContext value={request}>
+                                                    <View params={params} />
+                                                </RequestContext>
                                             </DialogActivityContext>
                                         </FileRequestContext>
                                     </MenuNavigationProvider>

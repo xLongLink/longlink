@@ -53,7 +53,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     setup_operation = await claim_operation()
     assert setup_operation is not None
     assert (setup_operation.kind, setup_operation.target_id) == (OperationKind.solution_deploy, solution.desired_revision_id)
-    assert await complete_operation(setup_operation.id) is True
+    assert await complete_operation(setup_operation) is True
 
     claimed = await claim_operation()
     assert claimed is not None
@@ -820,7 +820,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert deletion.kind == OperationKind.solution_delete
 
         # Finishing deletion leaves no obsolete work claimable.
-        await complete_operation(deletion.id)
+        await complete_operation(deletion)
         assert await claim_operation() is None
         assert [image for image, _, _ in calls] == ["ghcr.io/longlink/dashboard@sha256:test", "ghcr.io/longlink/dashboard@sha256:new"]
         async with session_scope() as session:
@@ -892,6 +892,59 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
     assert calls[-1][2] is False
+    assert await claim_operation() is None
+
+
+async def test_successful_rollout_cannot_publish_after_deletion(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep deletion authoritative when an in-flight rollout becomes ready."""
+
+    # Start valid deployment work with credentials already provisioned.
+    owner = users[0]
+    organization = await create_organization(owner)
+    solution = await create_solution(
+        organization,
+        runtime_secrets={
+            "LONGLINK_DATABASE_PASSWORD": "database-password",
+            "LONGLINK_DATABASE_USERNAME": "database-user",
+            "LONGLINK_STORAGE_PASSWORD": "storage-password",
+            "LONGLINK_STORAGE_USERNAME": "storage-user",
+            "LONGLINK_IDENTITY_SECRET": "stable",
+        },
+    )
+    operation = await claim_operation()
+    assert operation is not None
+
+    # Commit deletion at the external rollout boundary before reporting readiness.
+    async def apply(
+        _client: object, _organization: UUID, _solution: UUID, _image: str, _secrets: dict[str, str], **_kwargs: object
+    ) -> None:
+        """Finish rollout only after its Solution has been tombstoned."""
+
+        async with session_scope() as session:
+            await solutions.delete(session, solution.id, owner.id)
+            await session.commit()
+
+    monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations.solution_resources, "apply", apply)
+    await execute(operation)
+
+    # Neither the Solution nor its revision may publish the obsolete success.
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        assert current.deleted_at is not None
+        assert current.deployed_revision_id is None
+        assert current.status != Status.running
+        revision = await session.get(Revision, operation.target_id)
+        assert revision is not None
+        assert revision.deployed_at is None
+        assert not revision.failed
+
+    # Completing obsolete rollout work must leave deletion queued without redeployment.
+    deletion = await claim_operation()
+    assert deletion is not None
+    assert (deletion.kind, deletion.target_id) == (OperationKind.solution_delete, solution.id)
+    assert await complete_operation(deletion) is True
     assert await claim_operation() is None
 
 

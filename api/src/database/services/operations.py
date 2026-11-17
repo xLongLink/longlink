@@ -163,18 +163,17 @@ def _leased_operation_update(operation_id: UUID, now: datetime) -> Update:
     )
 
 
-async def complete(session: AsyncSession, operation_id: UUID) -> bool:
+async def complete(session: AsyncSession, operation: Operation) -> bool:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
     now = datetime.now(UTC)
     result = cast(
         CursorResult[tuple[object, ...]],
-        await session.execute(_leased_operation_update(operation_id, now).values(finished_at=now, lease_expires_at=None)),
+        await session.execute(_leased_operation_update(operation.id, now).values(finished_at=now, lease_expires_at=None)),
     )
     if result.rowcount != 1:
         return False
-    operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # A request can reuse this lease after its handler already skipped an outdated target.
     # Recheck desired state at completion so that request cannot disappear with the lease.
@@ -209,18 +208,18 @@ async def complete(session: AsyncSession, operation_id: UUID) -> bool:
     return True
 
 
-async def release(session: AsyncSession, operation_id: UUID) -> bool:
+async def release(session: AsyncSession, operation: Operation) -> bool:
     """Release one interrupted Operation for another worker to resume."""
 
     # Release only work still owned by this worker.
     now = datetime.now(UTC)
     result = cast(
-        CursorResult[tuple[object, ...]], await session.execute(_leased_operation_update(operation_id, now).values(lease_expires_at=None))
+        CursorResult[tuple[object, ...]], await session.execute(_leased_operation_update(operation.id, now).values(lease_expires_at=None))
     )
     return result.rowcount == 1
 
 
-async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> bool:
+async def fail(session: AsyncSession, operation: Operation, reason: str) -> bool:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
@@ -228,7 +227,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> bool:
     result = cast(
         CursorResult[tuple[object, ...]],
         await session.execute(
-            _leased_operation_update(operation_id, now).values(
+            _leased_operation_update(operation.id, now).values(
                 failed=(reason.strip() or "Operation failed")[:500], finished_at=now, lease_expires_at=None
             )
         ),
@@ -237,7 +236,6 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> bool:
     # Publish failure only when this worker completed the pending operation.
     if result.rowcount != 1:
         return False
-    operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # Expose failed creation on its target without changing deletion lifecycle state.
     if operation.kind == OperationKind.organization_create:

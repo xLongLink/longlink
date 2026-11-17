@@ -115,13 +115,12 @@ export default function Compute() {
             </Stack>
             {dialog?.kind === 'registration' && (
                 <ComputeRegistration
-                    open
                     onSuccess={async () => {
                         // Refresh the list before closing only this registration attempt.
                         await invalidate();
                         setDialog((current) => (current === dialog ? null : current));
                     }}
-                    onOpenChange={() => {
+                    onClose={() => {
                         // An obsolete registration cannot dismiss a replacement dialog selection.
                         setDialog((current) => (current === dialog ? null : current));
                     }}
