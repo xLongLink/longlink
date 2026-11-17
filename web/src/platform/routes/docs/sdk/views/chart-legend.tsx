@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
 import { ChartLegend } from '@/components/longlink';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Shows standalone legends for series and segment charts without chart context. */
 export function ChartLegendExample({ isCompact = false }: { isCompact?: boolean }) {
@@ -27,12 +26,9 @@ export function ChartLegendExample({ isCompact = false }: { isCompact?: boolean 
 
 /** Documents standalone legends beside the chart components. */
 export default function ChartLegendPage() {
-    const component = catalog.components.find((entry) => entry.name === 'ChartLegend');
-
     return (
         <ViewLayout
             name="ChartLegend"
-            properties={component?.properties ?? []}
             example={{
                 title: 'ChartLegend',
                 preview: <ChartLegendExample />,

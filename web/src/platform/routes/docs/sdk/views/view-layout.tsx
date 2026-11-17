@@ -12,7 +12,7 @@ import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/component
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
-type ViewProperty = { name: string; type: string; description?: string };
+type ViewProperty = { name: string; type: string };
 
 type ViewExample = { title: string; code: string; preview: ReactNode; language?: 'jsx' | 'tsx' };
 
@@ -72,7 +72,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
 /** Provides an example and property references for an independently authored View page. */
 export default function ViewLayout({
     name,
-    properties = [],
+    properties,
     example,
     children,
     toc
@@ -90,8 +90,9 @@ export default function ViewLayout({
     const runtime = component.category === 'Runtime';
 
     // Read published defaults without duplicating component configuration in each documentation page.
+    const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
     const defaults = new Map(
-        (viewCatalog.components.find((entry) => entry.name === name)?.properties ?? []).map((property) => [
+        (catalogComponent?.properties ?? []).map((property) => [
             property.name,
             'default' in property ? property.default : undefined
         ])
@@ -101,8 +102,8 @@ export default function ViewLayout({
     const groups = new Map<string, ViewProperty[]>();
 
     if (!runtime) {
-        // Group the page's authored properties by component.
-        for (const property of properties) {
+        // Group authored overrides or published properties by component.
+        for (const property of properties ?? catalogComponent?.properties ?? []) {
             const separator = property.name.indexOf('.');
             const group = separator < 0 ? name : property.name.slice(0, separator);
 

@@ -9,14 +9,10 @@ export default function EmptyPage() {
         <ViewLayout
             name="Empty"
             properties={[
-                {
-                    name: 'icon',
-                    type: 'IconName | URL string',
-                    description: 'Optional Lucide icon name or an HTTP(S) or root-relative image URL.'
-                },
-                { name: 'title', type: 'ReactNode', description: 'Empty-state title.' },
-                { name: 'description', type: 'ReactNode', description: 'Optional empty-state description.' },
-                { name: 'children', type: 'ReactNode', description: 'Optional actions below the description.' }
+                { name: 'icon', type: 'IconName | URL string' },
+                { name: 'title', type: 'ReactNode' },
+                { name: 'description', type: 'ReactNode' },
+                { name: 'children', type: 'ReactNode' }
             ]}
             example={{
                 title: 'Project actions',

@@ -1,7 +1,6 @@
 import ViewLayout from './view-layout';
 import { useMemo, useState } from 'react';
 import { useTable, type ColumnDef } from '@/components/longlink/hooks/use-table';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import {
     Box,
     Button,
@@ -33,12 +32,9 @@ const columns: ColumnDef<DataGridFeatures, (typeof files)[number]>[] = [
 
 /** Documents Frame composition using the SDK's searchable table layout. */
 export default function FramePage() {
-    const component = catalog.components.find((entry) => entry.name === 'Frame');
-
     return (
         <ViewLayout
             name="Frame"
-            properties={component?.properties ?? []}
             example={{
                 title: 'Files',
                 preview: <FrameExample />,

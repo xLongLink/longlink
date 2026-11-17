@@ -1,16 +1,12 @@
 import ViewLayout from './view-layout';
 import { MapExample } from './map-example';
 import { switzerlandAttribution } from './switzerland';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents detailed canton boundaries from supplied GeoJSON. */
 export default function GeoJSONMapPage() {
-    const component = catalog.components.find((entry) => entry.name === 'GeoJSONMap');
-
     return (
         <ViewLayout
             name="GeoJSONMap"
-            properties={component?.properties ?? []}
             example={{
                 title: 'Swiss cantons',
                 preview: <MapExample name="GeoJSONMap" />,

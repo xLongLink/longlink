@@ -1,10 +1,8 @@
 import ViewLayout from './view-layout';
 import { MapExample, type MapName } from './map-example';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents the props-based map elements with parent-controlled sizing. */
 export default function MapDocumentation({ name }: { name: Exclude<MapName, 'GeoJSONMap'> }) {
-    const component = catalog.components.find((entry) => entry.name === name);
     const dataType = name === 'RouteMap' ? 'MapRoute[]' : name === 'ArcMap' ? 'MapArc[]' : 'MapMarker[]';
     const data =
         name === 'StreetMap'
@@ -25,7 +23,6 @@ export default function MapDocumentation({ name }: { name: Exclude<MapName, 'Geo
     return (
         <ViewLayout
             name={name}
-            properties={component?.properties ?? []}
             example={{
                 title: name,
                 preview: <MapExample name={name} />,

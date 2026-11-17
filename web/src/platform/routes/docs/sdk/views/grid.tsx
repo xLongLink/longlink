@@ -11,30 +11,13 @@ export default function GridPage() {
         <ViewLayout
             name="Grid"
             properties={[
-                { name: 'children', type: 'ReactNode', description: 'Grid content.' },
-                {
-                    name: 'columns',
-                    type: 'number',
-                    description:
-                        'Number of equal-width columns. Automatically uses one column at viewport widths of 768px or less.'
-                },
-                { name: 'gap', type: 'number', description: 'Spacing between all items.' },
-                {
-                    name: 'align',
-                    type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Vertical alignment of items.'
-                },
-                {
-                    name: 'justify',
-                    type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Horizontal alignment of items.'
-                },
-                { name: 'GridItem.children', type: 'ReactNode', description: 'Content rendered inside the grid item.' },
-                {
-                    name: 'GridItem.columns',
-                    type: 'number | "full"',
-                    description: 'Number of columns to occupy, or full to span the entire grid.'
-                }
+                { name: 'children', type: 'ReactNode' },
+                { name: 'columns', type: 'number' },
+                { name: 'gap', type: 'number' },
+                { name: 'align', type: '"start" | "center" | "end" | "stretch"' },
+                { name: 'justify', type: '"start" | "center" | "end" | "stretch"' },
+                { name: 'GridItem.children', type: 'ReactNode' },
+                { name: 'GridItem.columns', type: 'number | "full"' }
             ]}
             example={{
                 title: 'Grid',

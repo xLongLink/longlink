@@ -14,7 +14,7 @@ export function FileViewer({
     title: string;
 }) {
     // Give replacement files independent requests and object-URL lifetimes.
-    return <FileContent key={`${src}\0${title}`} src={src} title={title} />;
+    return <FileContent key={src} src={src} title={title} />;
 }
 
 /** Owns the request and rendering lifetime of one inline attachment. */

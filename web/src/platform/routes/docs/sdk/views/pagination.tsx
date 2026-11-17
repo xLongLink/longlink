@@ -8,23 +8,11 @@ export default function PaginationPage() {
         <ViewLayout
             name="Pagination"
             properties={[
-                { name: 'page', type: 'number', description: 'Current page number, starting at 1.' },
-                {
-                    name: 'pageSize',
-                    type: 'number',
-                    description: 'Items per page. Coerced to a positive integer; non-finite values fall back to 10.'
-                },
-                {
-                    name: 'totalItems',
-                    type: 'number',
-                    description: 'Total item count. Empty or non-finite totals render no pagination.'
-                },
-                {
-                    name: 'onPageChange',
-                    type: '(page: number) => void',
-                    description: 'Receives the selected page number. Data loading and slicing remain in the View.'
-                },
-                { name: 'label', type: 'string', description: 'Accessible navigation label. Defaults to Pagination.' }
+                { name: 'page', type: 'number' },
+                { name: 'pageSize', type: 'number' },
+                { name: 'totalItems', type: 'number' },
+                { name: 'onPageChange', type: '(page: number) => void' },
+                { name: 'label', type: 'string' }
             ]}
             example={{
                 title: 'Controlled pagination',

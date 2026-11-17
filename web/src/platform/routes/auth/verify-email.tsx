@@ -153,29 +153,15 @@ export default function VerifyEmail() {
                 <Separator />
                 <form noValidate action={() => form.handleSubmit(handleComplete)()}>
                     <div className="flex flex-col gap-2">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm font-medium">Name</span>
-                            <TextField
-                                control={form.control}
-                                name="name"
-                                autoComplete="name"
-                                labelHidden
-                                required
-                                label="Name"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm font-medium">Password</span>
-                            <TextField
-                                control={form.control}
-                                name="password"
-                                autoComplete="new-password"
-                                labelHidden
-                                required
-                                label="Password"
-                                type="password"
-                            />
-                        </div>
+                        <TextField control={form.control} name="name" autoComplete="name" required label="Name" />
+                        <TextField
+                            control={form.control}
+                            name="password"
+                            autoComplete="new-password"
+                            required
+                            label="Password"
+                            type="password"
+                        />
                         <Button className="w-full" type="submit">
                             Create account
                         </Button>

@@ -1,16 +1,12 @@
 import ViewLayout from './view-layout';
 import { switzerlandAttribution } from './switzerland';
 import { SwitzerlandExample } from './switzerland-example';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 
 /** Documents native mapcn composition with a local Switzerland boundary. */
 export default function MapcnDocumentation({ name }: { name: 'Map' | 'MapGeoJSON' | 'MapControls' }) {
-    const component = catalog.components.find((entry) => entry.name === name);
-
     return (
         <ViewLayout
             name={name}
-            properties={component?.properties ?? []}
             example={{
                 title: 'Swiss cantons',
                 preview: <SwitzerlandExample />,

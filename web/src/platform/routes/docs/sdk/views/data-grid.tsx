@@ -1,15 +1,11 @@
-import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Box } from '@/components/longlink/layout/box';
 import { Frame } from '@/components/longlink/layout/frame';
-import catalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
 import {
     useTable,
     dataGridFeatures,
     type DataGridFeatures,
-    type ColumnDef,
-    type RowSelectionState,
-    type SortingState
+    type ColumnDef
 } from '@/components/longlink/hooks/use-table';
 import {
     DataGrid,
@@ -43,12 +39,9 @@ const columns: ColumnDef<DataGridFeatures, (typeof files)[number]>[] = [
 
 /** Documents the LongLink grid and its table-state companion components. */
 export default function DataGridPage() {
-    const component = catalog.components.find((entry) => entry.name === 'DataGrid');
-
     return (
         <ViewLayout
             name="DataGrid"
-            properties={component?.properties ?? []}
             example={{
                 title: 'Sorting, selection, and pagination',
                 preview: <DataGridExample />,
@@ -79,19 +72,13 @@ const columns = [
 ];
 
 function Example() {
-  const [sorting, setSorting] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 });
   const table = useTable({
     features: dataGridFeatures,
     data: files,
     columns,
     getRowId: (file) => file.id,
     enableRowSelection: true,
-    state: { sorting, rowSelection, pagination },
-    onSortingChange: setSorting,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
+    initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
   });
 
   return (
@@ -124,19 +111,13 @@ function Example() {
 
 /** Keeps selection on stable file IDs while table sorting and pagination change. */
 export function DataGridExample() {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 });
     const table = useTable({
         features: dataGridFeatures,
         data: files,
         columns,
         getRowId: (file) => file.id,
         enableRowSelection: true,
-        state: { sorting, rowSelection, pagination },
-        onSortingChange: setSorting,
-        onRowSelectionChange: setRowSelection,
-        onPaginationChange: setPagination
+        initialState: { pagination: { pageIndex: 0, pageSize: 5 } }
     });
 
     return (

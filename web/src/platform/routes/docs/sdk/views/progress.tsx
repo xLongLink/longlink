@@ -7,19 +7,11 @@ export default function ProgressPage() {
         <ViewLayout
             name="Progress"
             properties={[
-                { name: 'value', type: 'number | null', description: 'Current value; null means indeterminate.' },
-                { name: 'max', type: 'number', description: 'Maximum value; defaults to 100.' },
-                {
-                    name: 'label',
-                    type: 'ReactNode',
-                    description: 'Custom text or JSX displayed on the left above the bar.'
-                },
-                { name: 'showValue', type: 'boolean', description: 'Shows the formatted value; defaults to false.' },
-                {
-                    name: 'valueText',
-                    type: 'ReactNode',
-                    description: 'Custom text or JSX displayed on the right instead of the percentage.'
-                }
+                { name: 'value', type: 'number | null' },
+                { name: 'max', type: 'number' },
+                { name: 'label', type: 'ReactNode' },
+                { name: 'showValue', type: 'boolean' },
+                { name: 'valueText', type: 'ReactNode' }
             ]}
             example={{
                 title: 'Progress',

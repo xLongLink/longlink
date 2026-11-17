@@ -8,8 +8,8 @@ export default function IconsPage() {
         <ViewLayout
             name="Icon"
             properties={[
-                { name: 'icon', type: 'IconName', description: 'Lucide kebab-case icon name.' },
-                { name: 'size', type: '"sm" | "md" | "lg"', description: 'Glyph size and optional tile size.' },
+                { name: 'icon', type: 'IconName' },
+                { name: 'size', type: '"sm" | "md" | "lg"' },
                 { name: 'tile', type: '"outline" | "elevated" | "soft" | "solid" | "frame"' },
                 { name: 'variant', type: '"primary" | "secondary" | "outline" | "destructive"' }
             ]}

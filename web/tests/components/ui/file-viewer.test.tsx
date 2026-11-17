@@ -37,6 +37,59 @@ it('displays an image immediately without custom preview or download actions', a
     }
 });
 
+it('updates the accessible title without reloading or replacing the displayed media', async () => {
+    const load = vi.fn(async () => new Blob(['image'], { type: 'image/png' }));
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    function Example() {
+        const [title, setTitle] = useState('Invoice');
+
+        return (
+            <>
+                <FileViewer src="/api/image" title={title} />
+                <button type="button" onClick={() => setTitle('Updated invoice')}>
+                    Rename
+                </button>
+            </>
+        );
+    }
+
+    try {
+        await withMounted(
+            <FileRequestContext
+                value={{
+                    load,
+                    preview: async () => {
+                        throw new Error('Native viewers must not open a host preview');
+                    },
+                    download: async () => undefined
+                }}
+            >
+                <Example />
+            </FileRequestContext>,
+            async (output) => {
+                const image = output.querySelector('img');
+
+                if (!image) throw new Error('Missing loaded image');
+
+                expect(image.getAttribute('src')).toBe('blob:image');
+                await act(async () => output.querySelector('button')?.click());
+                expect(output.querySelector('img')).toBe(image);
+                expect(image.alt).toBe('Updated invoice');
+                expect(output.querySelector('[aria-label="Updated invoice"]')).not.toBeNull();
+                expect(load).toHaveBeenCalledExactlyOnceWith('/api/image');
+                expect(create).toHaveBeenCalledTimes(1);
+                expect(revoke).not.toHaveBeenCalled();
+            }
+        );
+        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:image');
+    } finally {
+        create.mockRestore();
+        revoke.mockRestore();
+    }
+});
+
 it('ignores a pending response after replacing the file and releases the displayed URL', async () => {
     let finish: (value: Blob) => void = () => undefined;
 

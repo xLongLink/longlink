@@ -10,61 +10,20 @@ export default function StackPage() {
         <ViewLayout
             name="Stack"
             properties={[
-                { name: 'children', type: 'ReactNode', description: 'Stack content.' },
-                { name: 'gap', type: 'number', description: 'Spacing between items using the shared spacing scale.' },
-                { name: 'padding', type: 'number', description: 'Inner padding using the spacing scale.' },
-                {
-                    name: 'paddingInline',
-                    type: 'number',
-                    description: 'Horizontal padding, overriding padding on the inline axis.'
-                },
-                {
-                    name: 'paddingBlock',
-                    type: 'number',
-                    description: 'Vertical padding, overriding padding on the block axis.'
-                },
-                {
-                    name: 'background',
-                    type: '"muted"',
-                    description: 'Optional muted surface background; omitted stacks remain transparent.'
-                },
-                {
-                    name: 'direction',
-                    type: '"horizontal" | "vertical"',
-                    description: 'Horizontal or vertical layout direction.'
-                },
-                {
-                    name: 'justify',
-                    type: '"start" | "center" | "end" | "between" | "around" | "evenly"',
-                    description: 'Main-axis alignment.'
-                },
-                {
-                    name: 'align',
-                    type: '"start" | "center" | "end" | "stretch"',
-                    description: 'Cross-axis alignment alias. Mirrors CSS align-items.'
-                },
-                { name: 'wrap', type: '"nowrap" | "wrap" | "wrap-reverse"', description: 'Flex wrap behavior.' },
-                {
-                    name: 'StackItem.children',
-                    type: 'ReactNode',
-                    description: 'Content rendered inside the stack item.'
-                },
-                {
-                    name: 'StackItem.size',
-                    type: '"fill" | "static"',
-                    description: 'Fill items grow into available space; static items keep their intrinsic size.'
-                },
-                {
-                    name: 'StackItem.isScrollable',
-                    type: 'boolean',
-                    description: 'Scroll overflowing content within a size-constrained stack item.'
-                },
-                {
-                    name: 'StackItem.crossAlignSelf',
-                    type: '"start" | "center" | "end" | "stretch"',
-                    description:
-                        "Overrides this item's cross-axis alignment; omitted values inherit the parent alignment."
-                }
+                { name: 'children', type: 'ReactNode' },
+                { name: 'gap', type: 'number' },
+                { name: 'padding', type: 'number' },
+                { name: 'paddingInline', type: 'number' },
+                { name: 'paddingBlock', type: 'number' },
+                { name: 'background', type: '"muted"' },
+                { name: 'direction', type: '"horizontal" | "vertical"' },
+                { name: 'justify', type: '"start" | "center" | "end" | "between" | "around" | "evenly"' },
+                { name: 'align', type: '"start" | "center" | "end" | "stretch"' },
+                { name: 'wrap', type: '"nowrap" | "wrap" | "wrap-reverse"' },
+                { name: 'StackItem.children', type: 'ReactNode' },
+                { name: 'StackItem.size', type: '"fill" | "static"' },
+                { name: 'StackItem.isScrollable', type: 'boolean' },
+                { name: 'StackItem.crossAlignSelf', type: '"start" | "center" | "end" | "stretch"' }
             ]}
             example={{
                 title: 'Stack',

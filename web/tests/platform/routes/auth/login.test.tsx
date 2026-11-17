@@ -125,11 +125,22 @@ it.each([
                 async (output) => {
                     // Submit valid form values with an incorrect password.
                     const events = userEvent.setup();
+                    const email = output.querySelector<HTMLInputElement>('input[name="email"]');
                     const password = output.querySelector<HTMLInputElement>('input[name="password"]');
                     const submit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
 
-                    if (!password || !submit) throw new Error('Expected the sign-in form');
+                    if (!email || !password || !submit) throw new Error('Expected the sign-in form');
                     const anonymousReads = identityReads;
+
+                    const emailLabel = [...output.querySelectorAll('label')].find(
+                        (label) => label.htmlFor === email.id
+                    );
+
+                    if (!emailLabel) throw new Error('Expected the email label');
+                    expect(emailLabel.classList.contains('sr-only')).toBe(false);
+                    await act(async () => events.click(emailLabel));
+                    expect(document.activeElement).toBe(email);
+                    expect(attempts).toEqual([]);
 
                     await act(async () => {
                         await events.type(password, 'Wrong-password-123');
