@@ -71,7 +71,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         await act(async () => events.click(submit));
         expect(document.activeElement).toBe(submit);
         expect(submit.getAttribute('aria-disabled')).toBe('true');
-        expect(submit.getAttribute('aria-label')).toBe('Delete');
+        expect(submit.textContent).toBe('Delete');
         await act(async () => events.keyboard('{Escape}'));
         expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
         expect(document.activeElement).toBe(submit);

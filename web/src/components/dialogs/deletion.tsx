@@ -1,7 +1,6 @@
 import { X } from 'lucide-react';
 import { useRef, useTransition } from 'react';
 import { Button } from '@/components/shadcn/button';
-import { PendingButton } from '@/components/custom/pending-button';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -33,10 +32,12 @@ export function DeletionDialog({
     );
 
     const deleteButton = (
-        <PendingButton
-            label="Delete"
+        <Button
+            type="button"
             variant="destructive"
-            pending={isDeleting}
+            disabled={isDeleting}
+            focusableWhenDisabled
+            aria-busy={isDeleting || undefined}
             onClick={() => {
                 // Deduplicate same-tick clicks before the transition's pending state renders.
                 if (deletionInFlight.current) return;
@@ -51,7 +52,9 @@ export function DeletionDialog({
                     }
                 });
             }}
-        />
+        >
+            Delete
+        </Button>
     );
 
     // Preserve alert semantics and cancellation focus while adding explicit header dismissal.

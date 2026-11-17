@@ -2,7 +2,6 @@ import { CircleX } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
-import { PendingButton } from '@/components/custom/pending-button';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
@@ -147,12 +146,16 @@ function ConfirmationDialog({
                         >
                             {options.cancelLabel ?? 'Cancel'}
                         </Button>
-                        <PendingButton
-                            label={options.actionLabel}
+                        <Button
+                            type="button"
                             variant={options.actionVariant === 'destructive' ? 'destructive' : 'primary'}
-                            pending={isPending}
+                            disabled={isPending}
+                            focusableWhenDisabled
+                            aria-busy={isPending || undefined}
                             onClick={onAction}
-                        />
+                        >
+                            {options.actionLabel}
+                        </Button>
                         <span role="status" className="sr-only">
                             {isPending ? 'Loading' : ''}
                         </span>
