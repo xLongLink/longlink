@@ -1,5 +1,4 @@
 import { cn } from 'cn';
-import { spacing } from '@/components/custom/layout';
 import { createElement, useCallback, useState, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
 
 type StackProps = Omit<HTMLAttributes<HTMLElement>, 'style'> & {
@@ -55,9 +54,9 @@ export function Stack({
                 className
             ),
             style: {
-                gap: gap === undefined ? undefined : spacing(gap),
-                paddingInline: paddingInline === undefined ? undefined : spacing(paddingInline),
-                paddingBlock: paddingBlock === undefined ? undefined : spacing(paddingBlock),
+                gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
+                paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
+                paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
                 flexWrap: wrap
             }
         },

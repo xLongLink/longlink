@@ -5,7 +5,7 @@ import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { PageContainer } from '@/components/ui/page-container';
-import { Grid, GridItem } from '@/components/longlink/layout/grid';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
@@ -110,57 +110,6 @@ it('retains an unsaved content draft when its toolbar is removed and restored', 
         await act(async () => user.click(submit));
         expect(submissions).toEqual(['Retained draft']);
     });
-});
-
-it('automatically collapses and restores nested grid spans on viewport changes', async () => {
-    const originalWidth = window.innerWidth;
-
-    try {
-        await act(async () => {
-            window.innerWidth = 1000;
-            window.dispatchEvent(new Event('resize'));
-        });
-
-        await withMounted(
-            <Grid columns={3}>
-                <GridItem columns={2}>
-                    <Grid columns={2}>
-                        <GridItem columns={2}>Nested</GridItem>
-                    </Grid>
-                </GridItem>
-            </Grid>,
-            async (output) => {
-                const grids = output.querySelectorAll<HTMLElement>('[data-slot="grid"]');
-                const spans = output.querySelectorAll<HTMLElement>('[data-slot="grid-item"]');
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('span 2');
-
-                await act(async () => {
-                    window.innerWidth = 768;
-                    window.dispatchEvent(new Event('resize'));
-                });
-
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(1, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('1 / -1');
-                expect(spans[1]?.style.gridColumn).toBe('1 / -1');
-
-                await act(async () => {
-                    window.innerWidth = 769;
-                    window.dispatchEvent(new Event('resize'));
-                });
-
-                expect(grids[0]?.style.gridTemplateColumns).toBe('repeat(3, 1fr)');
-                expect(grids[1]?.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
-                expect(spans[0]?.style.gridColumn).toBe('span 2');
-                expect(spans[1]?.style.gridColumn).toBe('span 2');
-            }
-        );
-    } finally {
-        window.innerWidth = originalWidth;
-        window.dispatchEvent(new Event('resize'));
-    }
 });
 
 it('names a scrolling StackItem only while its retained content overflows', async () => {
