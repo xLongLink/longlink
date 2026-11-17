@@ -4696,30 +4696,6 @@
               "dark"
             ],
             "title": "Theme"
-          },
-          "accent": {
-            "type": "string",
-            "enum": [
-              "neutral",
-              "red",
-              "orange",
-              "amber",
-              "yellow",
-              "lime",
-              "green",
-              "emerald",
-              "teal",
-              "cyan",
-              "sky",
-              "blue",
-              "indigo",
-              "violet",
-              "purple",
-              "fuchsia",
-              "pink",
-              "rose"
-            ],
-            "title": "Accent"
           }
         },
         "type": "object",
@@ -4729,8 +4705,7 @@
           "email",
           "avatar",
           "administrator",
-          "theme",
-          "accent"
+          "theme"
         ],
         "title": "CurrentUser",
         "description": "Include personal preferences only in the account's own profile."
@@ -6534,37 +6509,6 @@
               }
             ],
             "title": "Theme"
-          },
-          "accent": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "neutral",
-                  "red",
-                  "orange",
-                  "amber",
-                  "yellow",
-                  "lime",
-                  "green",
-                  "emerald",
-                  "teal",
-                  "cyan",
-                  "sky",
-                  "blue",
-                  "indigo",
-                  "violet",
-                  "purple",
-                  "fuchsia",
-                  "pink",
-                  "rose"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Accent"
           }
         },
         "type": "object",

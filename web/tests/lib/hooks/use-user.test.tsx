@@ -16,8 +16,7 @@ const user = zCurrentUser.parse({
     email: 'owner@example.com',
     avatar: 'owner.svg',
     administrator: false,
-    theme: 'system',
-    accent: 'neutral'
+    theme: 'system'
 });
 
 const newerUser = zCurrentUser.parse({
@@ -25,8 +24,7 @@ const newerUser = zCurrentUser.parse({
     name: 'Refreshed Owner',
     email: 'refreshed@example.com',
     avatar: 'refreshed.svg',
-    theme: 'light',
-    accent: 'green'
+    theme: 'light'
 });
 
 /** Holds the HTTP boundary open until a test releases the response. */
@@ -56,7 +54,7 @@ function AccountControls() {
             <button name="profile" onClick={() => profile.mutate({ name: 'Updated Owner' })}>
                 Save name
             </button>
-            <button name="appearance" onClick={() => appearance.mutate({ theme: 'dark', accent: 'violet' })}>
+            <button name="appearance" onClick={() => appearance.mutate({ theme: 'dark' })}>
                 Save appearance
             </button>
             <output aria-label="Appearance status">
@@ -85,8 +83,8 @@ it('serializes independent account controls and publishes canonical responses be
     const requests: Request[] = [];
     const snapshots: unknown[] = [];
     const canonicalName = { ...user, name: 'Canonical Owner', avatar: 'canonical.svg' };
-    const preview = { ...canonicalName, theme: 'dark', accent: 'violet' };
-    const canonicalAppearance = { ...canonicalName, theme: 'light', accent: 'indigo' };
+    const preview = { ...canonicalName, theme: 'dark' };
+    const canonicalAppearance = { ...canonicalName, theme: 'light' };
 
     const unsubscribe = client.getQueryCache().subscribe((event) => {
         if (event.type === 'updated' && event.action.type === 'success') snapshots.push(event.query.state.data);
@@ -132,7 +130,7 @@ it('serializes independent account controls and publishes canonical responses be
                 await vi.waitFor(() => expect(requests).toHaveLength(2));
 
                 // Assert
-                expect(await requests[1]?.clone().json()).toEqual({ theme: 'dark', accent: 'violet' });
+                expect(await requests[1]?.clone().json()).toEqual({ theme: 'dark' });
                 expect(snapshots).toEqual([canonicalName, preview]);
                 expect(client.getQueryData(userKey)).toEqual(preview);
                 await vi.waitFor(() =>
@@ -207,7 +205,7 @@ it.each([
                 await vi.waitFor(() => expect(requests).toHaveLength(1));
 
                 // Assert
-                const preview = { ...user, theme: 'dark', accent: 'violet' };
+                const preview = { ...user, theme: 'dark' };
                 expect(client.getQueryData(userKey)).toEqual(preview);
                 await vi.waitFor(() =>
                     expect(output.querySelector('[aria-label="Account"]')?.textContent).toBe(JSON.stringify(preview))

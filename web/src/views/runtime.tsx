@@ -415,7 +415,6 @@ function initialize(event: MessageEvent<unknown>): void {
     /** Updates document appearance without reconciling or remounting the authored View. */
     function renderAppearance(appearance: Appearance) {
         document.documentElement.dataset.themeScope = 'stone';
-        document.documentElement.dataset.accent = appearance.accent;
 
         // An absent override lets color-scheme and dark utilities follow the live system preference.
         if (appearance.theme === 'system') delete document.documentElement.dataset.theme;

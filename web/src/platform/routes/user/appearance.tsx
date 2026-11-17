@@ -1,9 +1,6 @@
-import { Circle, Check } from 'lucide-react';
-import { accentColors } from '@/lib/appearance';
 import { useUpdateUser } from '@/lib/hooks/use-user';
+import { CardContent } from '@/components/shadcn/card';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { Button } from '@/components/longlink/action/button';
-import { Card, CardContent } from '@/components/shadcn/card';
 import { InteractiveCard } from '@/components/custom/interactive-card';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
@@ -50,46 +47,9 @@ export default function AppearanceSettings() {
                     ))}
                 </div>
             </div>
-            <div className="flex flex-col gap-3">
-                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
-                    Appearance
-                </h4>
-                <Card size="sm">
-                    <CardContent className="flex flex-col gap-2" role="group" aria-label="Accent color">
-                        <span>Accent color</span>
-                        <div className="flex flex-wrap gap-2">
-                            {accentColors.map((accent) => (
-                                <Button
-                                    key={accent}
-                                    type="button"
-                                    variant="outline"
-                                    aria-pressed={appearance.accent === accent}
-                                    disabled={userUpdate.isPending}
-                                    onClick={() => {
-                                        if (!userUpdate.isPending && appearance.accent !== accent)
-                                            userUpdate.mutate({ accent });
-                                    }}
-                                >
-                                    {appearance.accent === accent ? (
-                                        <Check size={16} data-accent-swatch={accent} aria-hidden="true" />
-                                    ) : (
-                                        <Circle
-                                            size={16}
-                                            data-accent-swatch={accent}
-                                            fill="currentColor"
-                                            aria-hidden="true"
-                                        />
-                                    )}
-                                    {accent.charAt(0).toUpperCase() + accent.slice(1)}
-                                </Button>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
             {userUpdate.isPending && (
                 <span role="status" className="text-xs text-muted-foreground">
-                    Saving appearance…
+                    Saving theme…
                 </span>
             )}
         </div>

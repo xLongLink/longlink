@@ -43,7 +43,7 @@ async function withInvoices(
         flushSync(() => {
             root.render(
                 <MemoryRouter>
-                    <AppearanceProvider preference={{ theme: 'dark', accent: 'neutral' }}>
+                    <AppearanceProvider preference={{ theme: 'dark' }}>
                         <QueryClientProvider client={client}>
                             <ApiErrorContext value={(error) => errors.push(error)}>
                                 <Invoices base={base} canManage={canManage} />

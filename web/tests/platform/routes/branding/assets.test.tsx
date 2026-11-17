@@ -43,7 +43,7 @@ it('keeps both preview modes isolated while document and account appearance chan
         const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
         return (
-            <AppearanceContext value={{ theme, accent: 'neutral' }}>
+            <AppearanceContext value={{ theme }}>
                 <Wordmark />
                 <Assets />
                 <button

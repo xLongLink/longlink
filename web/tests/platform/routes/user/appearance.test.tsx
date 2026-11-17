@@ -9,8 +9,8 @@ import userEvent from '@testing-library/user-event';
 import Appearance from '@/platform/routes/user/appearance';
 import { AccountAppearanceProvider } from '@/components/appearance';
 
-it('saves appearance by keyboard without submitting a form or allowing duplicate writes', async () => {
-    // Keep the profile write pending while the real account observer previews the new accent.
+it('saves the theme by keyboard without submitting a form or allowing duplicate writes', async () => {
+    // Arrange
     const requests: Request[] = [];
     const errors: unknown[] = [];
     let release: (response: Response) => void = () => undefined;
@@ -20,14 +20,14 @@ it('saves appearance by keyboard without submitting a form or allowing duplicate
     });
 
     const submitted = vi.fn();
-    const savedUser = { ...user, accent: 'green' };
+    const savedUser = { ...user, theme: 'light' };
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
 
         if (new URL(request.url).pathname !== '/api/v1/me') throw new Error(`Unexpected request: ${request.url}`);
 
-        if (request.method === 'GET') return Response.json({ ...user, accent: 'neutral' });
+        if (request.method === 'GET') return Response.json({ ...user, theme: 'system' });
 
         if (request.method !== 'PATCH') throw new Error(`Unexpected method: ${request.method}`);
         requests.push(request);
@@ -50,61 +50,37 @@ it('saves appearance by keyboard without submitting a form or allowing duplicate
                 </AccountAppearanceProvider>
             </ApiErrorContext>,
             async (output) => {
-                // Activate the migrated control through its real keyboard behavior.
+                // Act
                 const keyboard = userEvent.setup();
+                const dark = output.querySelector<HTMLInputElement>('input[aria-label="Dark"]');
+                const light = output.querySelector<HTMLInputElement>('input[aria-label="Light"]');
 
-                const blue = Array.from(output.querySelectorAll<HTMLButtonElement>('button')).find(
-                    (button) => button.textContent === 'Blue'
-                );
-
-                if (!blue) throw new Error('Expected the blue accent control');
+                if (!dark || !light) throw new Error('Expected the theme selections');
                 await act(async () => {
-                    blue.focus();
+                    dark.focus();
                     await keyboard.keyboard('{Enter}');
                 });
                 await vi.waitFor(() => expect(requests).toHaveLength(1));
-                await vi.waitFor(() => expect(blue.disabled).toBe(true));
+                await vi.waitFor(() => expect(dark.getAttribute('aria-disabled')).toBe('true'));
 
-                // Pending controls cannot enqueue another write or accidentally submit their surrounding form.
-                expect(await requests[0]?.clone().json()).toEqual({ accent: 'blue' });
-                expect(blue.getAttribute('aria-pressed')).toBe('true');
-                expect(document.documentElement.dataset.accent).toBe('blue');
-
-                const dark = output.querySelector<HTMLInputElement>('input[aria-label="Dark"]');
-
-                if (!dark) throw new Error('Expected the dark theme selection');
+                // Assert
+                expect(await requests[0]?.clone().json()).toEqual({ theme: 'dark' });
+                expect(dark.checked).toBe(true);
+                expect(document.documentElement.dataset.theme).toBe('dark');
                 await act(async () => {
                     dark.focus();
                     await keyboard.keyboard('{Enter} ');
                     dark.click();
+                    light.click();
                 });
-                expect(dark.getAttribute('aria-disabled')).toBe('true');
-                await act(async () => blue.click());
                 expect(requests).toHaveLength(1);
                 expect(submitted).not.toHaveBeenCalled();
 
-                // The server's canonical preference replaces the preview and re-enables controls.
                 await act(async () => release(Response.json(savedUser)));
-                await vi.waitFor(() => expect(blue.disabled).toBe(false));
-
-                const green = Array.from(output.querySelectorAll<HTMLButtonElement>('button')).find(
-                    (button) => button.textContent === 'Green'
-                );
-
-                expect(green?.getAttribute('aria-pressed')).toBe('true');
-                expect(blue.getAttribute('aria-pressed')).toBe('false');
-                expect(document.documentElement.dataset.accent).toBe('green');
-
-                // The theme card submits its preference, then accepts the server's canonical selection.
-                await act(async () => {
-                    dark.focus();
-                    await keyboard.keyboard('{Enter}');
-                });
-                await vi.waitFor(() => expect(requests).toHaveLength(2));
-                expect(await requests[1]?.clone().json()).toEqual({ theme: 'dark' });
                 await vi.waitFor(() => expect(dark.getAttribute('aria-disabled')).toBeNull());
                 expect(dark.checked).toBe(false);
-                expect(output.querySelector<HTMLInputElement>('input[aria-label="System"]')?.checked).toBe(true);
+                expect(light.checked).toBe(true);
+                expect(document.documentElement.dataset.theme).toBe('light');
                 expect(submitted).not.toHaveBeenCalled();
                 expect(errors).toEqual([]);
             },

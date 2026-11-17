@@ -14,8 +14,7 @@ export const user = zCurrentUser.parse({
     email: 'owner@example.com',
     avatar: '',
     administrator: false,
-    theme: 'system',
-    accent: 'neutral'
+    theme: 'system'
 });
 
 export const membership = zUserOrganizationMembership.parse({

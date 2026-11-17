@@ -51,7 +51,7 @@ export function CachedAppearanceProvider({ children }: { children: ReactNode }) 
 
 /** Applies personal appearance once its owner has resolved the preference. */
 export function AppearanceProvider({ children, preference }: { children: ReactNode; preference?: Appearance }) {
-    useDocumentAppearance(preference?.theme, preference?.accent);
+    useDocumentAppearance(preference?.theme);
 
     return <AppearanceContext value={preference ?? defaultAppearance}>{children}</AppearanceContext>;
 }
@@ -73,11 +73,11 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
     const isAnonymous = !user && (user === null || (error instanceof ApiError && error.status === 401));
 
     // Derive previews and saved preferences directly from the authoritative user query.
-    const preference = user ? { theme: user.theme, accent: user.accent } : isAnonymous ? defaultAppearance : undefined;
+    const preference = user ? { theme: user.theme } : isAnonymous ? defaultAppearance : undefined;
 
     const cachedPreference = preference && JSON.stringify(preference);
 
-    // Never carry one account's cached colors into an anonymous or different account session.
+    // Never carry one account's cached theme into an anonymous or different account session.
     useEffect(() => {
         if (isAnonymous) {
             clearAppearanceCache();

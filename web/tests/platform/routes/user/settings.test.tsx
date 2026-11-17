@@ -120,7 +120,7 @@ function AccountChanges() {
         <>
             <button
                 type="button"
-                onClick={() => client.setQueryData(['api', '/api/v1/me'], { ...user, theme: 'dark', accent: 'blue' })}
+                onClick={() => client.setQueryData(['api', '/api/v1/me'], { ...user, theme: 'dark' })}
             >
                 Update appearance
             </button>
