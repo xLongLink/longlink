@@ -165,7 +165,7 @@ it('refreshes current membership and account permissions after self-demotion', a
 
     try {
         await withOrganizationSettings(access, accessMembers, async (output) => {
-            expect(output.querySelector('thead')?.textContent).toContain('Actions');
+            expect(output.querySelector('table button[aria-haspopup="menu"]')).not.toBeNull();
             expect(output.querySelector('output[aria-label="Account organization role"]')?.textContent).toBe('admin');
 
             // Act
@@ -183,8 +183,7 @@ it('refreshes current membership and account permissions after self-demotion', a
             await vi.waitFor(() =>
                 expect(output.querySelector('output[aria-label="Account organization role"]')?.textContent).toBe('read')
             );
-            await vi.waitFor(() => expect(output.querySelector('thead')?.textContent).not.toContain('Actions'));
-            expect(output.querySelector('table button[aria-haspopup="menu"]')).toBeNull();
+            await vi.waitFor(() => expect(output.querySelector('table button[aria-haspopup="menu"]')).toBeNull());
             await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
             expect(requests).toEqual(
                 expect.arrayContaining([

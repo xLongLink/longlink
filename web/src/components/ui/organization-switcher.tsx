@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
+import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
     DropdownMenu,
@@ -20,7 +20,6 @@ export type OrganizationIdentity = { id: string; name?: string };
 
 /** Switches Organizations from the sidebar account row. */
 export function OrganizationSwitcher({ organization }: { organization: OrganizationIdentity }) {
-    const { isMobile } = useSidebar();
     const [isOpen, setIsOpen] = useState(false);
 
     // Fetch memberships only when the switcher opens, without suspending the page header.
@@ -56,7 +55,7 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
                 />
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                side={isMobile ? 'bottom' : 'right'}
+                side="top"
                 align="start"
                 sideOffset={4}
                 className="min-w-56"

@@ -7,7 +7,7 @@ import { clearAppearanceCache } from '@/lib/appearance';
 import { useErrorBoundary } from 'react-error-boundary';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
+import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -22,7 +22,6 @@ import {
 /** Renders a user profile menu with authentication and navigation actions. */
 export function ProfileMenu() {
     const user = useAuthenticatedUser();
-    const { isMobile } = useSidebar();
     const [isOpen, setIsOpen] = useState(false);
     const [pending, setPending] = useState(false);
     const [error, setError] = useState('');
@@ -84,13 +83,7 @@ export function ProfileMenu() {
                     size={16}
                 />
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-                className="min-w-56"
-                side={isMobile ? 'bottom' : 'right'}
-                align="end"
-                sideOffset={4}
-                aria-label={user.name}
-            >
+            <DropdownMenuContent className="min-w-56" side="top" align="end" sideOffset={4} aria-label={user.name}>
                 <DropdownMenuGroup>
                     <DropdownMenuLabel className="flex min-w-0 items-center gap-2">{identity}</DropdownMenuLabel>
                 </DropdownMenuGroup>

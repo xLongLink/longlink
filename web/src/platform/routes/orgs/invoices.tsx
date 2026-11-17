@@ -5,18 +5,20 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
     return (
-        <Stack gap={4}>
-            <Stack gap={0} justify="end" className="min-h-8">
-                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                    Invoices
-                </h2>
+        <Stack gap={0}>
+            <Stack gap={4}>
+                <Stack gap={0} justify="end" className="min-h-8">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                        Invoices
+                    </h2>
+                </Stack>
+                <Separator />
             </Stack>
-            <Separator />
             {canManage ? (
                 <ApiBoundary fallback={<span className="text-muted-foreground">Loading invoices…</span>}>
                     <InvoiceTable base={base} />
@@ -34,15 +36,6 @@ function InvoiceTable({ base }: { base: string }) {
 
     return (
         <Table wrap>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead align="end">Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Document</TableHead>
-                </TableRow>
-            </TableHeader>
             <TableBody>
                 {invoices.map((row) => {
                     const currency = new Intl.NumberFormat(undefined, {
