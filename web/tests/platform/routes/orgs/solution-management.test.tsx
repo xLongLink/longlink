@@ -74,9 +74,11 @@ it('joins repeated log refreshes, retains logs after failure, and recovers befor
                     button.click();
                     button.click();
                 });
-                expect(requests).toBe(2);
-                expect(button.disabled).toBe(true);
-                expect(button.getAttribute('aria-busy')).toBe('true');
+                await vi.waitFor(() => {
+                    expect(requests).toBe(2);
+                    expect(button.disabled).toBe(true);
+                    expect(button.getAttribute('aria-busy')).toBe('true');
+                });
 
                 await act(async () => finishRefresh?.(Response.json({ detail: 'Logs unavailable' }, { status: 503 })));
                 await vi.waitFor(() => {

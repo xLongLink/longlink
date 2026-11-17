@@ -547,7 +547,7 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
                 );
                 expect(email.value).toBe(invitation.email);
                 expect(submit.disabled).toBe(false);
-                expect(output.querySelector('table')?.textContent).toContain(invitation.email);
+                await vi.waitFor(() => expect(output.querySelector('table')?.textContent).toContain(invitation.email));
 
                 // Act
                 await act(async () => events.click(submit));
