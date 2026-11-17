@@ -7,9 +7,9 @@ import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 

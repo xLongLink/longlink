@@ -128,7 +128,7 @@ describe('SolutionPage', () => {
 
         const output = await renderPage('/dashboard');
         await vi.waitFor(() =>
-            expect(output.querySelector<HTMLElement>('.platform-page-container')?.style.maxWidth).toBe('none')
+            expect(output.querySelector('.platform-page-container')?.classList.contains('max-w-none')).toBe(true)
         );
 
         const settings = output.querySelector<HTMLAnchorElement>(
@@ -141,7 +141,9 @@ describe('SolutionPage', () => {
         await vi.waitFor(() =>
             expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/settings')
         );
-        expect(output.querySelector<HTMLElement>('.platform-page-container')?.style.maxWidth).toBe('1000px');
+        const container = output.querySelector('.platform-page-container');
+        expect(container?.classList.contains('max-w-[1000px]')).toBe(true);
+        expect(container?.classList.contains('max-w-none')).toBe(false);
     });
 
     it('rejects an external manifest view path before fetching the view', async () => {

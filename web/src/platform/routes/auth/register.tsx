@@ -8,10 +8,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {

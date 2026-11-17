@@ -1,17 +1,17 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
 export default function Invoices({ base, canManage }: { base: string; canManage: boolean }) {
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+            <Stack gap={0} justify="end" className="min-h-8">
                 <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Invoices
                 </h2>

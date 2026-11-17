@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { Mail, CircleCheck } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {

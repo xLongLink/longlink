@@ -5102,7 +5102,8 @@ function Frame$1({ title, description, action, footer, padding, children, ...pro
     footer?: React$1.ReactNode;
     padding?: "default" | "none";
 }): React$1.JSX.Element;
-type StackLayoutProps = {
+type StackProps = Omit<React$1.HTMLAttributes<HTMLElement>, "style"> & {
+    as?: "div" | "main" | "section" | "aside" | "figure" | "footer";
     direction?: "horizontal" | "vertical";
     justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
     align?: "start" | "center" | "end" | "stretch";
@@ -5111,13 +5112,9 @@ type StackLayoutProps = {
     padding?: number;
     paddingInline?: number;
     paddingBlock?: number;
-    width?: React$1.CSSProperties["width"];
-    height?: React$1.CSSProperties["height"];
-    maxWidth?: React$1.CSSProperties["maxWidth"];
-    minHeight?: React$1.CSSProperties["minHeight"];
     background?: "muted";
 };
-function Stack(props: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & Pick<StackLayoutProps, "direction" | "justify" | "align" | "wrap" | "gap" | "padding" | "paddingInline" | "paddingBlock" | "background">): React$1.JSX.Element;
+function Stack({ as: Component, direction, justify, align, wrap, gap, padding, paddingInline, paddingBlock, background, className, children, ...props }: StackProps): React$1.ReactElement;
 function StackItem(props: {
     children?: React$1.ReactNode;
     size?: "static" | "fill";
@@ -38355,7 +38352,7 @@ const DataGridColumnHeader$1: <Data extends object, Value>(props: PublicProps<Pa
 const DataGridPagination$1: PublicComponent<typeof DataGridPagination>;
 const DataGridScrollArea$1: PublicComponent<typeof DataGridScrollArea>;
 const Box$1: PublicComponent<typeof Box>;
-const Stack$1: PublicComponent<typeof Stack>;
+const Stack$1: (props: Omit<PublicProps<Parameters<typeof Stack>[0]>, "as">) => React$1.ReactNode;
 const StackItem$1: PublicComponent<typeof StackItem>;
 const Grid$1: PublicComponent<typeof Grid>;
 const GridItem$1: PublicComponent<typeof GridItem>;

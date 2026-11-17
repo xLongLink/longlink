@@ -3,13 +3,13 @@ import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { useAdminSelection } from './use-selection';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { AdminSearch } from '@/components/custom/admin-search';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -46,7 +46,7 @@ export default function Solutions() {
                         {solutions.items.map((row) => (
                             <TableRow key={row.id}>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <Stack direction="horizontal" gap={1} align="center">
                                             <Link href={`/orgs/${row.organization.id}/solutions/${row.id}`}>
                                                 {row.name}
@@ -71,14 +71,14 @@ export default function Solutions() {
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar shape="rounded" name={row.organization.name} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
                                             <span className="text-xs text-muted-foreground">Organization</span>
                                         </Stack>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>
                                             {row.image_desired.replace(
                                                 /@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/,

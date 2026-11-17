@@ -4,10 +4,10 @@ import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
@@ -28,7 +28,7 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
 
     return (
         <Stack gap={4}>
-            <Stack direction="horizontal" justify="between" align="end" wrap="wrap" minHeight="calc(var(--spacing)*8)">
+            <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
                 <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     Payment Methods
                 </h2>

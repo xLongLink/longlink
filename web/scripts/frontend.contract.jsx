@@ -450,6 +450,10 @@ const _paginationChildren = <Pagination page={1} totalItems={50} pageSize={10} o
 
 // @ts-expect-error Views select supported variants instead of overriding component classes.
 const _buttonClasses = <Button className="bg-red-500" />;
+// @ts-expect-error Platform styling overrides are not part of the View Stack API.
+const _stackClasses = <Stack className="hidden" />;
+// @ts-expect-error View container sizing remains owned by Box.
+const _stackWidth = <Stack width={320} />;
 // @ts-expect-error Authored inline styling is excluded from View components.
 const _inputStyle = <Input style={{ color: 'red' }} />;
 // @ts-expect-error Option values are strings, not arbitrary objects.

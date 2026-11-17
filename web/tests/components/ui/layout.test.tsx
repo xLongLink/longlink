@@ -15,7 +15,7 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
             <PageContainer>
                 <h1>Default page</h1>
             </PageContainer>
-            <PageContainer height="100%" minHeight={0} maxWidth={720} gap={8} padding={2} paddingInline={0}>
+            <PageContainer className="h-full min-h-0 max-w-[720px]" gap={8} padding={2} paddingInline={0}>
                 <h2>Sized page</h2>
             </PageContainer>
         </>
@@ -25,12 +25,14 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
     const sized = output.querySelector('h2')?.parentElement;
 
     if (!plain || !sized) throw new Error('Expected page containers');
-    expect(plain.style.gap).toBe('');
+    expect(plain.style.gap).toBe('calc(var(--spacing) * 0)');
     expect(plain.style.paddingInline).toBe('');
     expect(plain.style.paddingBlock).toBe('');
-    expect(sized.style.height).toBe('100%');
-    expect(Number.parseFloat(sized.style.minHeight)).toBe(0);
-    expect(sized.style.maxWidth).toBe('720px');
+    expect(plain.classList.contains('max-w-[1000px]')).toBe(true);
+    expect(sized.classList.contains('h-full')).toBe(true);
+    expect(sized.classList.contains('min-h-0')).toBe(true);
+    expect(sized.classList.contains('max-w-[720px]')).toBe(true);
+    expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
     expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
     expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');

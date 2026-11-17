@@ -6,6 +6,7 @@ import * as menu from './layout/menu';
 import * as tabs from './layout/tabs';
 import * as icon from './display/icon';
 import * as text from './display/text';
+import type { ReactNode } from 'react';
 import * as frame from './layout/frame';
 import * as stack from './layout/stack';
 import * as badge from './display/badge';
@@ -28,7 +29,7 @@ import type { PublicComponent, PublicProps } from './props';
 import * as filters from '@/components/reui/filters/filters';
 
 export const Box: PublicComponent<typeof box.Box> = box.Box;
-export const Stack: PublicComponent<typeof stack.Stack> = stack.Stack;
+export const Stack: (props: Omit<PublicProps<Parameters<typeof stack.Stack>[0]>, 'as'>) => ReactNode = stack.Stack;
 export const StackItem: PublicComponent<typeof stack.StackItem> = stack.StackItem;
 export const Grid: PublicComponent<typeof grid.Grid> = grid.Grid;
 export const GridItem: PublicComponent<typeof grid.GridItem> = grid.GridItem;

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Link } from '@/components/longlink/action/link';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {
@@ -52,7 +52,7 @@ export function LinkExample() {
 
     // Keep navigation separate from the action that opens the dialog.
     return (
-        <Stack>
+        <Stack gap={0}>
             <Link href="/docs/sdk/views">Docs</Link>
             <Link onClick={() => setIsOpen(true)}>Document details</Link>
             <Dialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>

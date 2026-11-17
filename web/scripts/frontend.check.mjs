@@ -28,7 +28,7 @@ test('published component provenance matches the implementation exposed to Views
         const target = statement.moduleSpecifier.text;
         assert.match(
             target,
-            /^(?:@\/components\/longlink|@\/components\/custom\/confirmation|@\/lib\/hooks\/use-submit|react|react-hook-form|zod|@hookform\/resolvers\/zod|\.\/hooks\/(?:use-api|use-form))$/
+            /^(?:@\/components\/longlink(?:\/hooks\/use-confirm)?|@\/lib\/hooks\/use-submit|react|react-hook-form|zod|@hookform\/resolvers\/zod|\.\/hooks\/(?:use-api|use-form))$/
         );
         if (target.startsWith('./hooks/') && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
             for (const specifier of statement.exportClause.elements) {

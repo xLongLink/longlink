@@ -183,12 +183,7 @@ export function SolutionPage({
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>
-            <PageContainer
-                height="100%"
-                minHeight={0}
-                padding={2}
-                maxWidth={activeView?.width === 'wide' ? 'none' : undefined}
-            >
+            <PageContainer padding={2} className={`h-full min-h-0${activeView?.width === 'wide' ? ' max-w-none' : ''}`}>
                 {content}
             </PageContainer>
         </Platform>

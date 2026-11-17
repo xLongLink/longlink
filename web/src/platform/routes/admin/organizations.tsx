@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
 import { useAdminSelection } from './use-selection';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -10,7 +11,6 @@ import { AdminSearch } from '@/components/custom/admin-search';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -47,7 +47,7 @@ export default function Organizations() {
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar shape="rounded" name={row.name} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <Link href={`/orgs/${row.id}`}>{row.name}</Link>
                                                 {row.status !== 'running' && (

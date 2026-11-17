@@ -2,10 +2,10 @@ import { Circle } from 'lucide-react';
 import { Card } from '@/components/shadcn/card';
 import { useState, type ReactNode } from 'react';
 import { Switch } from '@/components/shadcn/switch';
+import { Stack } from '@/components/longlink/layout/stack';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { documentationLastUpdated } from '@/lib/documentation';
 import { componentDocumentation } from '@/platform/publications';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import viewCatalog from '../../../../../../../sdk/longlink/.static/jsx/components.json';
@@ -46,6 +46,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     data-code={showCode || undefined}
                 >
                     <Stack
+                        gap={0}
                         className={showCode ? 'hidden' : 'my-auto shrink-0 [&_:is(h1,h2,h3,h4,h5,h6)]:mt-0!'}
                         align="center"
                         aria-label={`${example.title} preview`}

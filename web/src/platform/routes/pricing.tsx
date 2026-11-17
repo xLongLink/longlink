@@ -2,11 +2,11 @@ import { Page } from '@/components/ui/page';
 import { Box } from '@/components/longlink/layout/box';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { buttonVariants } from '@/components/longlink/action/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 // Schema defaults come from the same constants used to calculate monthly invoices.
 const rates = schemas.zOrganizationUsage
@@ -43,7 +43,7 @@ export default function Pricing() {
         >
             <main>
                 <section className="p-6">
-                    <Stack className="mx-auto" width="100%" maxWidth={1000} gap={10} align="center">
+                    <Stack className="mx-auto w-full max-w-[1000px]" gap={10} align="center">
                         <Stack gap={3} align="center">
                             <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Pricing</h1>
                             <p className="text-muted-foreground">Billed per Organization</p>

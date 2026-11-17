@@ -6,8 +6,8 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */

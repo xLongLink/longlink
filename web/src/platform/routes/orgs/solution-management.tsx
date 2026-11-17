@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
@@ -12,7 +13,6 @@ import { NativeLink as Link } from '@/components/custom/native-link';
 import DeploymentReview from '@/components/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
@@ -88,20 +88,21 @@ export default function SolutionManagement({
             <Stack
                 gap={onboarding ? 8 : 4}
                 justify={onboarding ? 'center' : undefined}
-                minHeight={
+                className={
                     onboarding
-                        ? 'calc(100dvh - var(--_app-shell-header-height, 0px) - var(--platform-toolbar-height, 0px) - var(--spacing) * 8)'
+                        ? 'min-h-[calc(100dvh-var(--\\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-var(--spacing)*8)]'
                         : undefined
                 }
             >
                 {presentation === 'settings' ? (
                     <>
                         <Stack
+                            gap={0}
                             direction="horizontal"
                             justify="between"
                             align="end"
                             wrap="wrap"
-                            minHeight="calc(var(--spacing)*8)"
+                            className="min-h-8"
                         >
                             <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                                 Solutions
@@ -115,7 +116,14 @@ export default function SolutionManagement({
                         <Separator />
                     </>
                 ) : solutions.length > 0 ? (
-                    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
+                    <Stack
+                        gap={0}
+                        direction="horizontal"
+                        justify="between"
+                        align="center"
+                        wrap="wrap"
+                        className="min-h-12"
+                    >
                         <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
                         {canMaintain && <Button onClick={openCreate}>New Solution</Button>}
                     </Stack>

@@ -24,6 +24,7 @@ import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
 import { ChartLegendExample } from './views/chart-legend';
 import { Icon } from '@/components/longlink/display/icon';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
@@ -32,7 +33,6 @@ import { documentationCategories } from '@/lib/documentation';
 import { SwitzerlandExample } from './views/switzerland-example';
 import { componentDocumentation } from '@/platform/publications';
 import { Currency } from '@/components/longlink/display/currency';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
@@ -152,7 +152,7 @@ const previews = new Map(
         ),
         // Keep article section spacing out of the centered heading thumbnail.
         Heading: (
-            <Stack className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
+            <Stack gap={0} className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
                 <ViewHeading level={1}>Heading</ViewHeading>
             </Stack>
         ),
@@ -317,9 +317,7 @@ export default function Item({ params }) {
                                                     className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
                                                 >
                                                     <Stack
-                                                        className={`min-w-0 [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
-                                                        width="100%"
-                                                        maxWidth="100%"
+                                                        className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
                                                         align={
                                                             component.category === 'Form' &&
                                                             !['Checkbox', 'RadioGroup', 'Switch'].includes(

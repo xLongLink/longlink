@@ -1,10 +1,10 @@
 import { CircleX } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
-import { PendingButton } from './pending-button';
 import { Button } from '@/components/shadcn/button';
 import { Alert, AlertDescription } from '@/components/reui/alert';
-import { ControlSizeContext, DialogActivityContext } from './contexts';
+import { PendingButton } from '@/components/custom/pending-button';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { ControlSizeContext, DialogActivityContext } from '@/components/custom/contexts';
 import {
     AlertDialog,
     AlertDialogContent,

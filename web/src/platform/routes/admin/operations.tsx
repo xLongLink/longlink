@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { AdminSearch } from '@/components/custom/admin-search';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -54,7 +54,7 @@ export default function Operations() {
                         {operations.items.map((row) => (
                             <TableRow key={row.id}>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>{kinds[row.kind]}</span>
                                         <span className="text-xs text-muted-foreground">
                                             {statuses[row.status]}
@@ -63,7 +63,7 @@ export default function Operations() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>{row.resource_name ?? 'Resource unavailable'}</span>
                                         <span className="text-xs text-muted-foreground">
                                             {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}

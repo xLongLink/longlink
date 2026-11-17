@@ -4,9 +4,9 @@ import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 export function SolutionLogsDialog({
@@ -34,7 +34,7 @@ function SolutionLogs({ solutionId, onClose }: { solutionId: string; onClose: ()
     const [pending, startRefresh] = useTransition();
 
     return (
-        <Stack gap={3} height="100%">
+        <Stack gap={3} className="h-full">
             <div className="min-h-0 min-w-0 grow">
                 <CodeBlock code={logs.join('\n')} showLineNumbers wrap className="h-full">
                     <CodeBlockCopyButton />

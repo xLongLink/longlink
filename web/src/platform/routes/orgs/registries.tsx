@@ -3,11 +3,11 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
@@ -34,13 +34,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
     return (
         <>
             <Stack gap={4}>
-                <Stack
-                    direction="horizontal"
-                    justify="between"
-                    align="end"
-                    wrap="wrap"
-                    minHeight="calc(var(--spacing)*8)"
-                >
+                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Private registries
                     </h2>

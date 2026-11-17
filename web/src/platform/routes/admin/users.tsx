@@ -1,10 +1,10 @@
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { AdminSearch } from '@/components/custom/admin-search';
 import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
@@ -33,7 +33,7 @@ export default function Users() {
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar name={row.name} src={row.avatar} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.name}</span>
                                                 <span className="text-xs text-muted-foreground">
@@ -45,7 +45,7 @@ export default function Users() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>
                                             Created: <Timestamp value={row.created_at} format="date_time" />
                                         </span>

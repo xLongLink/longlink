@@ -3,9 +3,9 @@ import { Page } from '@/components/ui/page';
 import { Box } from '@/components/longlink/layout/box';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { buttonVariants } from '@/components/longlink/action/button';
 import { NativeNavigationLink } from '@/components/custom/native-link';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 
 /** Lists articles about LongLink and building process-specific applications. */
 export default function Blog() {
@@ -14,8 +14,8 @@ export default function Blog() {
         <Page description="Ideas behind LongLink and building process-specific applications." title="Blog | LongLink">
             <main>
                 <section className="p-6">
-                    <Stack className="mx-auto" maxWidth={1000} width="100%" gap={10} align="center">
-                        <Stack className="text-center" gap={3} align="center" width="100%">
+                    <Stack className="mx-auto w-full max-w-[1000px]" gap={10} align="center">
+                        <Stack className="w-full text-center" gap={3} align="center">
                             <h1 className="text-5xl font-semibold text-balance text-center tracking-wide">Blog</h1>
                             <p className="text-muted-foreground text-pretty text-lg sm:text-xl">
                                 Ideas, stories, and updates from LongLink
@@ -35,7 +35,7 @@ export default function Blog() {
                                         <p className="text-muted-foreground text-pretty text-center">
                                             The idea behind LongLink
                                         </p>
-                                        <Stack className="mt-auto pt-8" align="center">
+                                        <Stack gap={0} className="mt-auto pt-8" align="center">
                                             <NativeNavigationLink
                                                 href="/blog/why-longlink/"
                                                 className={buttonVariants()}

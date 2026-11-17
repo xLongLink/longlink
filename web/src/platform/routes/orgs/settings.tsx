@@ -15,13 +15,13 @@ import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
@@ -174,7 +174,7 @@ function GeneralSection({
 
     return (
         <Stack gap={4}>
-            <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+            <Stack gap={0} justify="end" className="min-h-8">
                 <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                     General
                 </h2>
@@ -183,7 +183,7 @@ function GeneralSection({
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
-                    <Stack className="text-red-600 dark:text-red-400">
+                    <Stack gap={0} className="text-red-600 dark:text-red-400">
                         <h4 aria-level={3} className="font-semibold tracking-tight text-xl text-inherit">
                             Danger zone
                         </h4>
@@ -254,7 +254,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
     return (
         <>
             <Stack gap={4}>
-                <Stack justify="end" minHeight="calc(var(--spacing)*8)">
+                <Stack gap={0} justify="end" className="min-h-8">
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Members
                     </h2>
@@ -273,7 +273,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                 <TableCell>
                                     <Stack direction="horizontal" gap={3} align="center">
                                         <Avatar name={row.user.name} src={row.user.avatar} />
-                                        <Stack align="start">
+                                        <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.user.name}</span>
                                                 <span className="text-xs text-muted-foreground">{row.role}</span>
@@ -431,13 +431,7 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     return (
         <>
             <Stack gap={4}>
-                <Stack
-                    direction="horizontal"
-                    justify="between"
-                    align="end"
-                    wrap="wrap"
-                    minHeight="calc(var(--spacing)*8)"
-                >
+                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
                     <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
                         Invitations
                     </h2>

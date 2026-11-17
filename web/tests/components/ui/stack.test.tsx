@@ -1,23 +1,15 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { renderStatic } from '../../render';
-import { NativeStack } from '@/components/custom/native-stack';
+import { Stack } from '@/components/longlink/layout/stack';
 
-it('preserves native spacing defaults, zero overrides, and pixel sizing during Stack migration', () => {
+it('preserves semantic elements, default spacing, and zero overrides after consolidating Stack', () => {
     const output = renderStatic(
         <>
-            <NativeStack className="p-6">Default</NativeStack>
-            <NativeStack
-                as="section"
-                gap={0}
-                padding={4}
-                paddingInline={0}
-                width={320}
-                minHeight="100vh"
-                style={{ width: 640 }}
-            >
+            <Stack className="p-6">Default</Stack>
+            <Stack as="section" gap={0} padding={4} paddingInline={0}>
                 Sized
-            </NativeStack>
+            </Stack>
         </>
     );
 
@@ -27,11 +19,10 @@ it('preserves native spacing defaults, zero overrides, and pixel sizing during S
     if (!plain || !sized) throw new Error('Expected native layout containers');
 
     expect(plain.style.gap).toBe('');
+    expect(plain.classList.contains('gap-3')).toBe(true);
     expect(plain.style.paddingInline).toBe('');
     expect(plain.style.paddingBlock).toBe('');
     expect(sized.style.gap).toBe('calc(var(--spacing) * 0)');
     expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 4)');
-    expect(sized.style.width).toBe('640px');
-    expect(sized.style.minHeight).toBe('100vh');
 });

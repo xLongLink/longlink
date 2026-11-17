@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useAdminList } from './use-list';
 import { useApi } from '@/lib/hooks/use-api';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { AdminSearch } from '@/components/custom/admin-search';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { ComputeMetadata } from '@/components/dialogs/compute-metadata';
 import { ComputeRegistration } from '@/components/dialogs/compute-registration';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -35,7 +35,7 @@ export default function Compute() {
     return (
         <Stack gap={2}>
             <title>Compute | LongLink</title>
-            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+            <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
                 <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
                 <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
@@ -57,7 +57,7 @@ export default function Compute() {
                         {computes.items.map((row) => (
                             <TableRow key={row.id}>
                                 <TableCell>
-                                    <Stack align="start">
+                                    <Stack gap={0} align="start">
                                         <span>{row.name}</span>
                                         <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
                                     </Stack>
