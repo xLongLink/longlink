@@ -4,15 +4,15 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { act, type ContextType } from 'react';
 import { ReportedError } from '@/lib/reported';
+import { RequestContext } from '@/views/context';
 import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
 import userEvent from '@testing-library/user-event';
 import { Input } from '@/components/longlink/form/input';
-import { FormRequestContext } from '@/components/custom/contexts';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi
-        .fn<NonNullable<ContextType<typeof FormRequestContext>>>()
+        .fn<NonNullable<ContextType<typeof RequestContext>>>()
         .mockRejectedValueOnce(new ReportedError('Unavailable'))
         .mockResolvedValue({ id: 8 });
     const onSuccess = vi.fn();
@@ -41,9 +41,9 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     }
 
     await withMounted(
-        <FormRequestContext value={request}>
+        <RequestContext value={request}>
             <Example />
-        </FormRequestContext>,
+        </RequestContext>,
         async (output) => {
             const input = output.querySelector('input');
             const button = output.querySelector('button');
@@ -57,7 +57,7 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
             await act(async () => user.type(input, ' Draft '));
             await act(async () => user.click(button));
             expect(request).toHaveBeenCalledTimes(1);
-            expect(request.mock.calls[0]?.[1].form).toEqual([['title', 'Draft']]);
+            expect(request.mock.calls[0]?.[1]?.form).toEqual([['title', 'Draft']]);
             expect(onSuccess).not.toHaveBeenCalled();
             expect(form.getAttribute('data-success')).toBe('false');
             expect(form.getAttribute('aria-busy')).toBe('false');
@@ -96,7 +96,7 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
     const callback = new Promise<void>((resolve) => {
         completeCallback = resolve;
     });
-    const request = vi.fn<NonNullable<ContextType<typeof FormRequestContext>>>(() => response);
+    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>>(() => response);
     const onSuccess = vi.fn(async (_data: ViewData) => {
         await callback;
     });
@@ -133,9 +133,9 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
     }
 
     await withMounted(
-        <FormRequestContext value={request}>
+        <RequestContext value={request}>
             <Example />
-        </FormRequestContext>,
+        </RequestContext>,
         async (output) => {
             const form = output.querySelector('form');
             const input = output.querySelector('input');
@@ -193,7 +193,7 @@ it.each([
     { name: 'nested arrays', value: [['design']] },
     { name: 'nonfinite values', value: Infinity }
 ])('rejects $name without queuing a write or leaving the form pending', async ({ value }) => {
-    const request = vi.fn<NonNullable<ContextType<typeof FormRequestContext>>>().mockResolvedValue(null);
+    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>>().mockResolvedValue(null);
     const onError = vi.fn();
 
     function Example() {
@@ -218,9 +218,9 @@ it.each([
     }
 
     await withMounted(
-        <FormRequestContext value={request}>
+        <RequestContext value={request}>
             <Example />
-        </FormRequestContext>,
+        </RequestContext>,
         async (output) => {
             const button = output.querySelector('button');
 

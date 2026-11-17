@@ -303,12 +303,7 @@ export default function SolutionManagement({
                 )}
             </Stack>
             {selected?.kind === 'create' && (
-                <CreateSolution
-                    open
-                    organizationId={organization.id}
-                    onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
-                />
+                <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onClose={closeSelected} />
             )}
             {selected?.kind === 'permissions' && (
                 <SolutionPermissionsDialog
@@ -320,22 +315,20 @@ export default function SolutionManagement({
             )}
             {selected?.kind === 'tags' && (
                 <SolutionTags
-                    open
                     key={selected.solution.id}
                     base={base}
                     tags={tags}
                     solution={selected.solution}
                     onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                 />
             )}
             {selected?.kind === 'update' && (
                 <DeploymentReview
-                    open
                     key={selected.item.id}
                     item={selected.item}
                     onSuccess={onSuccess}
-                    onOpenChange={closeSelected}
+                    onClose={closeSelected}
                 />
             )}
             {selected?.kind === 'logs' && (

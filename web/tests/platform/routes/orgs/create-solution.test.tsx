@@ -43,12 +43,11 @@ it('gates creation on inspection and validation, retaining configuration through
     try {
         await withMounted(
             <CreateSolution
-                open
                 organizationId="organization"
                 onSuccess={() => {
                     completions.push('created');
                 }}
-                onOpenChange={() => undefined}
+                onClose={() => undefined}
             />,
             async () => {
                 const events = userEvent.setup();

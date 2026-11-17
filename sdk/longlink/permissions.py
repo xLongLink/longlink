@@ -2,7 +2,7 @@ import re
 import hashlib
 from typing import Literal
 from pydantic import Field, BaseModel, ConfigDict, model_validator
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from fastapi.routing import RouteContext
 from starlette.types import Send, Scope, ASGIApp, Receive
 from starlette.responses import JSONResponse
@@ -106,12 +106,12 @@ def discover(routes: Sequence[RouteContext]) -> Catalog:
 class Guard:
     """Authorize the route FastAPI actually matched before dependencies execute."""
 
-    def __init__(self, app: ASGIApp, path: str, catalog: Catalog) -> None:
+    def __init__(self, app: ASGIApp, catalog: str, indices: Mapping[str, int]) -> None:
         """Capture this route's method indices and immutable catalog identity."""
 
         self.app = app
-        self.catalog = catalog.digest
-        self.indices = {endpoint.method: index for index, endpoint in enumerate(catalog.endpoints) if endpoint.path == path}
+        self.catalog = catalog
+        self.indices = indices
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Check endpoint grants after production identity admission; allow local development."""

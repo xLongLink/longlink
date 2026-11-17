@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
+import { RequestContext } from '@/views/context';
 import { Input } from '@/components/shadcn/input';
 import { withMounted } from '../../../../../render';
 import userEvent from '@testing-library/user-event';
-import { FormRequestContext } from '@/components/custom/contexts';
 import FormPreview from '@/platform/routes/docs/sdk/views/form-preview';
 
 it('keeps edited fields local when a preview form is submitted', async () => {
@@ -12,11 +12,11 @@ it('keeps edited fields local when a preview form is submitted', async () => {
     const request = vi.fn().mockResolvedValue({});
 
     await withMounted(
-        <FormRequestContext value={request}>
+        <RequestContext value={request}>
             <FormPreview>
                 <Input aria-label="Name" name="name" defaultValue="New order" />
             </FormPreview>
-        </FormRequestContext>,
+        </RequestContext>,
         async (output) => {
             const input = output.querySelector<HTMLInputElement>('input[name="name"]');
             const form = output.querySelector('form');

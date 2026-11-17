@@ -4,7 +4,7 @@ from typing import cast
 from datetime import UTC, datetime
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import select, update
+from sqlalchemy import update
 from src.kubernetes import databases as database_resources
 from src.kubernetes import namespace
 from src.kubernetes import solutions as solution_resources
@@ -142,15 +142,16 @@ async def deploy(revision_id: UUID) -> None:
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
-        result = await session.execute(select(col(Solution.deleted_at)).where(col(Solution.id) == solution.id).with_for_update())
-        current = result.one_or_none()
-        if current is None or current.deleted_at is not None:
-            return
-        await session.execute(
-            update(Solution)
-            .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
-            .values(status=Status.running, deployed_revision_id=revision.id)
+        result = cast(
+            CursorResult[tuple[object, ...]],
+            await session.execute(
+                update(Solution)
+                .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
+                .values(status=Status.running, deployed_revision_id=revision.id)
+            ),
         )
+        if result.rowcount != 1:
+            return
         await session.execute(update(Revision).where(col(Revision.id) == revision.id).values(deployed_at=datetime.now(UTC)))
         await session.commit()
 

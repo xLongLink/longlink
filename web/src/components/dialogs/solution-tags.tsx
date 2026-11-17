@@ -27,9 +27,9 @@ export function SolutionTags({
     tags,
     solution,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onClose
+}: {
+    onClose: () => void;
     base: string;
     tags: z.output<typeof schemas.zOrganizationTagResponse>[];
     solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'>;
@@ -56,17 +56,12 @@ export function SolutionTags({
 
     return (
         <Dialog
-            {...dialogProps}
-            onOpenChange={onOpenChange}
+            open
+            onOpenChange={onClose}
             title={`Tags for ${solution.name}`}
             footer={
                 <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
+                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
                         Cancel
                     </Button>
                     <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>

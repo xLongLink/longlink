@@ -1,15 +1,6 @@
 import { createContext } from 'react';
-import type { ViewData } from '@/views/protocol';
 
 export const ControlSizeContext = createContext<'sm' | 'md' | 'lg' | null>(null);
-
-export const FormRequestContext = createContext<
-    | ((
-          path: string,
-          options: { method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'; form: [string, string | Blob][] }
-      ) => Promise<ViewData>)
-    | null
->(null);
 
 export const DialogActivityContext = createContext<((open: boolean, fullscreen: boolean) => void) | null>(null);
 

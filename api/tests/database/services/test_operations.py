@@ -44,7 +44,7 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     claimed = await claim_operation()
     assert claimed is not None
     assert claimed.id == solution.id
-    completed = await complete_operation(claimed.id)
+    completed = await complete_operation(claimed)
     replacement = await queue(kind=OperationKind.solution_deploy, target_id=first_solution_id)
 
     assert completed is True
@@ -80,12 +80,12 @@ async def test_operations_service_claim_serializes_active_work() -> None:
     assert active_claim is not None
     assert await claim_operation() is None
 
-    await complete_operation(active_claim.id)
+    await complete_operation(active_claim)
     waiting_claim = await claim_operation()
     assert waiting_claim is not None
 
     # Completing the active claim releases its queued successor.
-    await complete_operation(waiting_claim.id)
+    await complete_operation(waiting_claim)
 
     assert waiting_claim.id == waiting.id
     assert await claim_operation() is None
@@ -131,8 +131,8 @@ async def test_operations_service_expired_leases_cannot_finish() -> None:
         assert row is not None
         row.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
         await session.commit()
-    expired_completion = await complete_operation(operation.id)
-    expired_failure = await fail_operation(operation.id)
+    expired_completion = await complete_operation(claimed)
+    expired_failure = await fail_operation(claimed)
     row = next(item for item in await fetch_operations() if item.id == operation.id)
 
     # Verify an expired worker cannot finish work it no longer owns.
@@ -151,7 +151,7 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     assert claimed is not None
 
     # Act
-    failed = await fail_operation(operation.id, "migration job failed" * 100)
+    failed = await fail_operation(claimed, "migration job failed" * 100)
 
     # Assert
     assert failed is True
@@ -187,7 +187,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     organization_claim = await claim_operation()
     assert organization_claim is not None
     assert organization_claim.id == organization_operation.id
-    assert await fail_operation(organization_operation.id, "organization creation failed") is True
+    assert await fail_operation(organization_claim, "organization creation failed") is True
 
     solution_operation = await queue(kind=OperationKind.solution_deploy, target_id=solution.desired_revision_id)
 
@@ -195,7 +195,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     solution_claim = await claim_operation()
     assert solution_claim is not None
     assert solution_claim.id == solution_operation.id
-    assert await fail_operation(solution_operation.id, "solution creation failed") is True
+    assert await fail_operation(solution_claim, "solution creation failed") is True
 
     # Act
     async with session_scope() as session:
@@ -238,7 +238,7 @@ async def test_operations_service_coalesces_claimed_work() -> None:
     assert follow_up.id == claimed.id
     assert follow_up.status == OperationStatus.active
     async with session_scope() as session:
-        assert await operations.release(session, claimed.id) is True
+        assert await operations.release(session, claimed) is True
 
         # Read the guarded update from persisted state rather than its boolean result.
         released = await session.get(Operation, claimed.id, populate_existing=True)
@@ -281,7 +281,7 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
     assert await claim_operation() is not None
 
     # Act
-    completed = await complete_operation(outdated.id)
+    completed = await complete_operation(outdated)
 
     # Assert
     assert completed is True
@@ -381,7 +381,7 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
 
         # Releasing work remains safe with multiple unfinished rows for the same target.
         async with session_factory() as session:
-            assert await operations.release(session, claimed[0].id) is True
+            assert await operations.release(session, claimed[0]) is True
 
             # Read the persisted lease state after the guarded transition.
             released = await session.get(Operation, claimed[0].id, populate_existing=True)
@@ -396,7 +396,7 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
         assert resumed is not None
         assert resumed.id == claimed[0].id
         async with session_factory() as session:
-            assert await operations.complete(session, resumed.id) is True
+            assert await operations.complete(session, resumed) is True
 
             # Read the persisted completion after the guarded transition.
             completed = await session.get(Operation, resumed.id, populate_existing=True)
@@ -411,7 +411,7 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(
         assert remaining is not None
         assert {completed.id, remaining.id} == {first.id, duplicate.id}
         async with session_factory() as session:
-            assert await operations.fail(session, remaining.id, "worker failed") is True
+            assert await operations.fail(session, remaining, "worker failed") is True
 
             # Read the persisted failure after the guarded transition.
             failed = await session.get(Operation, remaining.id, populate_existing=True)

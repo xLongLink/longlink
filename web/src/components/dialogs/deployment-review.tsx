@@ -12,7 +12,8 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeStack as Stack } from '@/components/custom/native-stack';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
-type DeploymentReviewProps = { open: boolean; onOpenChange: (open: boolean) => void } & {
+type DeploymentReviewProps = {
+    onClose: () => void;
     item: { id: string; name: string };
     onSuccess: () => void | Promise<void>;
 };
@@ -24,7 +25,7 @@ function imageDigest(image: string) {
 }
 
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
-export default function DeploymentReview({ item, onSuccess, onOpenChange, ...dialogProps }: DeploymentReviewProps) {
+export default function DeploymentReview({ item, onSuccess, onClose }: DeploymentReviewProps) {
     const formId = useId();
     // Scope inspection and drafts to one freshly opened review attempt.
     const [attemptId] = useState(() => crypto.randomUUID());
@@ -90,17 +91,12 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange, ...dia
     // Keep version review and environment edits in the same revision-fenced form.
     return (
         <Dialog
-            {...dialogProps}
-            onOpenChange={onOpenChange}
+            open
+            onOpenChange={onClose}
             title={`Update ${item.name}`}
             footer={
                 <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
+                    <Button type="button" variant="outline" disabled={form.formState.isSubmitting} onClick={onClose}>
                         Cancel
                     </Button>
                     {candidate ? (

@@ -40,8 +40,7 @@ export function Dialog({
 
     return (
         <dialog.Dialog
-            open={open}
-            defaultOpen={defaultOpen}
+            open={visible}
             disablePointerDismissal={!dismissible}
             onOpenChange={(nextOpen, details) => {
                 if (!nextOpen && !dismissible) {
@@ -50,7 +49,7 @@ export function Dialog({
                 }
 
                 onOpenChange?.(nextOpen, details);
-                if (!details.isCanceled) setUncontrolledOpen(nextOpen);
+                if (open === undefined && !details.isCanceled) setUncontrolledOpen(nextOpen);
             }}
         >
             {trigger && <dialog.DialogTrigger render={trigger} />}

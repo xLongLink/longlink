@@ -1,8 +1,8 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
+import { RequestContext } from '@/views/context';
 import type { ViewData } from '@/views/protocol';
 import { useCallback, useContext, useRef } from 'react';
-import { FormRequestContext } from '@/components/custom/contexts';
 
 export type SubmitOptions = {
     method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -17,7 +17,7 @@ export function useSubmit<T>(
 ): (data: T) => Promise<void>;
 /** Protects a write from duplicate activation without owning form state or validation. */
 export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>), options?: SubmitOptions) {
-    const request = useContext(FormRequestContext);
+    const request = useContext(RequestContext);
     const reportError = useContext(ApiErrorContext);
     const pending = useRef<Promise<void> | null>(null);
     const method = options?.method ?? 'POST';

@@ -14,9 +14,9 @@ import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 export default function CreateSolution({
     organizationId,
     onSuccess,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onClose
+}: {
+    onClose: () => void;
     organizationId: string;
     onSuccess: () => void | Promise<void>;
 }) {
@@ -115,12 +115,12 @@ export default function CreateSolution({
 
     return (
         <Dialog
-            {...dialogProps}
-            onOpenChange={onOpenChange}
+            open
+            onOpenChange={onClose}
             title="Create solution"
             footer={
                 <>
-                    <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
+                    <Button type="button" variant="outline" disabled={pending} onClick={onClose}>
                         Cancel
                     </Button>
                     {stage === 'configure' && (
