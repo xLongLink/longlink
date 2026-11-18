@@ -86,7 +86,7 @@ export default function Tasks() {
                                 {task.attachment}
                             </Link>
                         ) : (
-                            <Text className="text-muted-foreground">No attachment</Text>
+                            <Text tone="muted">No attachment</Text>
                         )}
                     </Stack>
                 )
@@ -101,7 +101,9 @@ export default function Tasks() {
                         <Avatar name={task.created_by.name} src={task.created_by.avatar} size="sm" />
                         <Stack gap={0}>
                             <Text>{task.created_by.name}</Text>
-                            <Text className="text-xs text-muted-foreground">{task.created_by.email}</Text>
+                            <Text size="xs" tone="muted">
+                                {task.created_by.email}
+                            </Text>
                         </Stack>
                     </Stack>
                 )

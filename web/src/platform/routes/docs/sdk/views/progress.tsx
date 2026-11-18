@@ -1,4 +1,5 @@
 import ViewLayout from './view-layout';
+import { Box } from '@/components/longlink/layout/box';
 import { Progress } from '@/components/longlink/display/progress';
 
 /** Documents Progress in LongLink Views. */
@@ -18,13 +19,13 @@ export default function ProgressPage() {
                 preview: <ProgressExample />,
                 code: `function Example() {
   return (
-    <div className="w-full max-w-sm">
+    <Box width="100%" maxWidth="24rem">
       <Progress
         value={60}
         label="Uploading files"
         valueText={<span><strong>60</strong> / 100 files</span>}
       />
-    </div>
+    </Box>
   );
 }`
             }}
@@ -35,7 +36,7 @@ export default function ProgressPage() {
 /** Renders labeled progress for the documentation catalog. */
 export function ProgressExample() {
     return (
-        <div className="w-full max-w-sm">
+        <Box width="100%" maxWidth="24rem">
             <Progress
                 value={60}
                 label="Uploading files"
@@ -45,6 +46,6 @@ export function ProgressExample() {
                     </span>
                 }
             />
-        </div>
+        </Box>
     );
 }

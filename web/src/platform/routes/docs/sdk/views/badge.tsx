@@ -1,4 +1,5 @@
 import ViewLayout from './view-layout';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 
 /** Documents Badge in LongLink Views. */
@@ -18,12 +19,12 @@ export default function BadgePage() {
                 preview: <BadgeExample />,
                 code: `function Example() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
+    <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={2}>
       <Badge variant="primary">primary</Badge>
       <Badge variant="secondary">secondary</Badge>
       <Badge variant="destructive">destructive</Badge>
       <Badge variant="outline">outline</Badge>
-    </div>
+    </Stack>
   );
 }`
             }}
@@ -35,11 +36,11 @@ export default function BadgePage() {
 export function BadgeExample() {
     // Show each variant at its default size in a wrapping row.
     return (
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={2}>
             <Badge variant="primary">primary</Badge>
             <Badge variant="secondary">secondary</Badge>
             <Badge variant="destructive">destructive</Badge>
             <Badge variant="outline">outline</Badge>
-        </div>
+        </Stack>
     );
 }

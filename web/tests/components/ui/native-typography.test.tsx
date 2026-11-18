@@ -8,7 +8,7 @@ import { Heading } from '@/components/longlink/display/heading';
 
 it('preserves heading targets with native document outline semantics', () => {
     const output = renderStatic(
-        <Heading id="account" level={4}>
+        <Heading id="account" level={4} size={2} align="end">
             Account
         </Heading>
     );

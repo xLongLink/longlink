@@ -1,5 +1,8 @@
 import ViewLayout from './view-layout';
+import { Box } from '@/components/longlink/layout/box';
+import { Grid } from '@/components/longlink/layout/grid';
 import { Icon } from '@/components/longlink/display/icon';
+import { Stack } from '@/components/longlink/layout/stack';
 
 /** Documents Icon in LongLink Views. */
 export default function IconsPage() {
@@ -24,27 +27,29 @@ export default function IconsPage() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
-        {icons.map((icon) => (
-          <div key={icon} className="flex items-center justify-center gap-4">
-            {['sm', 'md', 'lg'].map((size) => (
-              <Icon key={size} icon={icon} size={size} />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
+    <Stack align="center" gap={6}>
+      <Box width="100%">
+        <Grid columns={{ base: 2, sm: 3, xl: 4 }} gap={6} padding={4}>
+          {icons.map((icon) => (
+            <Stack key={icon} direction="horizontal" align="center" justify="center" gap={4}>
+              {['sm', 'md', 'lg'].map((size) => (
+                <Icon key={size} icon={icon} size={size} />
+              ))}
+            </Stack>
+          ))}
+        </Grid>
+      </Box>
+      <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
         {['outline', 'elevated', 'soft', 'solid', 'frame'].map((tile) => (
           <Icon key={tile} icon="sparkles" size="lg" tile={tile} />
         ))}
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
+      </Stack>
+      <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
         {['primary', 'secondary', 'outline', 'destructive'].map((variant) => (
           <Icon key={variant} icon="sparkles" size="lg" tile="soft" variant={variant} />
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }`
             }}
@@ -71,26 +76,28 @@ export function IconExample() {
 
     // Compare every supported size across a responsive grid of icons.
     return (
-        <div className="flex flex-col items-center gap-6">
-            <div className="grid w-full grid-cols-[repeat(2,max-content)] justify-center gap-6 p-4 sm:grid-cols-[repeat(3,max-content)] xl:grid-cols-[repeat(4,max-content)]">
-                {icons.map((icon) => (
-                    <div key={icon} className="flex items-center justify-center gap-4">
-                        {(['sm', 'md', 'lg'] as const).map((size) => (
-                            <Icon key={size} icon={icon} size={size} />
-                        ))}
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4">
+        <Stack align="center" gap={6}>
+            <Box width="100%">
+                <Grid columns={{ base: 2, sm: 3, xl: 4 }} gap={6} padding={4}>
+                    {icons.map((icon) => (
+                        <Stack key={icon} direction="horizontal" align="center" justify="center" gap={4}>
+                            {(['sm', 'md', 'lg'] as const).map((size) => (
+                                <Icon key={size} icon={icon} size={size} />
+                            ))}
+                        </Stack>
+                    ))}
+                </Grid>
+            </Box>
+            <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
                 {(['outline', 'elevated', 'soft', 'solid', 'frame'] as const).map((tile) => (
                     <Icon key={tile} icon="sparkles" size="lg" tile={tile} />
                 ))}
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4">
+            </Stack>
+            <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
                 {(['primary', 'secondary', 'outline', 'destructive'] as const).map((variant) => (
                     <Icon key={variant} icon="sparkles" size="lg" tile="soft" variant={variant} />
                 ))}
-            </div>
-        </div>
+            </Stack>
+        </Stack>
     );
 }

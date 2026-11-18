@@ -4692,13 +4692,21 @@ type Defaultize<P, D> = P extends any ? string extends keyof P ? P : Pick<P, Exc
 type ReactManagedAttributes<C, P> = C extends {
     defaultProps: infer D;
 } ? Defaultize<P, D> : P;
-function Box({ width, height, maxWidth, minHeight, center, background, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+function Box({ width, height, minWidth, maxWidth, minHeight, maxHeight, padding, paddingInline, paddingBlock, align, justify, overflow, center, background, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
     width?: React$1.CSSProperties["width"];
     height?: React$1.CSSProperties["height"];
+    minWidth?: React$1.CSSProperties["minWidth"];
     maxWidth?: React$1.CSSProperties["maxWidth"];
     minHeight?: React$1.CSSProperties["minHeight"];
+    maxHeight?: React$1.CSSProperties["maxHeight"];
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
+    align?: "start" | "center" | "end" | "stretch";
+    justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
+    overflow?: "visible" | "hidden" | "auto" | "scroll";
     center?: boolean;
-    background?: "none" | "primary" | "secondary" | "outline";
+    background?: "none" | "muted" | "primary" | "secondary" | "outline";
 }): React$1.JSX.Element;
 type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type" | "className"> & ({
     href: string;
@@ -4743,9 +4751,19 @@ function Card$1({ title, description, action, footer, padding, children, ...prop
     footer?: React$1.ReactNode;
     padding?: "default" | "none";
 }): React$1.JSX.Element;
-function Grid({ columns, gap, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
-    columns?: number;
+type GridColumns = number | {
+    base?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+};
+function Grid({ columns, gap, padding, paddingInline, paddingBlock, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+    columns?: GridColumns;
     gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
     align?: "start" | "center" | "end" | "stretch";
     justify?: "start" | "center" | "end" | "stretch";
 }): React$1.JSX.Element;
@@ -5070,7 +5088,7 @@ interface IconTileProps extends useRender.ComponentProps<"span"> {
 function IconTile({ className, variant, size, radius, render, ...props }: IconTileProps): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 const badgeVariants: (props?: ({
     variant?: "primary" | "secondary" | "outline" | "destructive" | null | undefined;
-    size?: "xs" | "sm" | "lg" | "xl" | "md" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "md" | "xl" | null | undefined;
     radius?: "sm" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
 interface BadgeProps extends Omit<useRender.ComponentProps<"span">, "className"> {
@@ -5087,8 +5105,13 @@ function Icon({ icon, size, tile, variant, ...props }: Omit<React$1.ComponentPro
 }): React$1.JSX.Element;
 interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "color"> {
     maxLines?: number;
+    size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl";
+    weight?: "normal" | "medium" | "semibold" | "bold";
+    tone?: "default" | "muted" | "destructive";
+    align?: "start" | "center" | "end";
+    tabularNums?: boolean;
 }
-function Text$1({ maxLines, className, style, ...props }: TextProps): React$1.JSX.Element;
+function Text$1({ maxLines, size, weight, tone, align, tabularNums, className, style, ...props }: TextProps): React$1.JSX.Element;
 const frameVariants: (props?: ({
     variant?: "default" | "ghost" | "inverse" | null | undefined;
     spacing?: "default" | "xs" | "sm" | "lg" | null | undefined;
@@ -5212,8 +5235,10 @@ function AvatarGroup({ className, ...props }: React$1.ComponentProps<"div">): Re
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 interface HeadingProps extends Omit<React$1.ComponentPropsWithoutRef<"h2">, "color"> {
     level?: HeadingLevel;
+    size?: HeadingLevel;
+    align?: "start" | "center" | "end";
 }
-function Heading({ level, className, ...props }: HeadingProps): React$1.JSX.Element;
+function Heading({ level, size, align, className, ...props }: HeadingProps): React$1.JSX.Element;
 type AlignedPlacement = `${Side}-${Alignment}`;
 type Alignment = "start" | "end";
 type Axis = "x" | "y";
@@ -7260,7 +7285,7 @@ const FILE_TYPE_CATEGORIES: readonly [
 type FileTypeExtensionName = keyof typeof FILE_TYPE_EXTENSIONS;
 type FileTypeName = FileTypeExtensionName | (typeof FILE_TYPE_CATEGORIES)[number];
 const fileTypeVariants: (props?: ({
-    size?: "xs" | "sm" | "lg" | "xl" | "md" | "mini" | null | undefined;
+    size?: "xs" | "sm" | "lg" | "md" | "xl" | "mini" | null | undefined;
 } & ClassProp) | undefined) => string;
 type FileTypeVariant = "outline" | "solid" | "light" | "mono";
 type FileTypeProps = Omit<React$1.ComponentProps<"span">, "children" | "className" | "style"> & {
@@ -35843,12 +35868,14 @@ namespace DialogRoot {
     type ChangeEventDetails = DialogRootChangeEventDetails;
 }
 function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
-function Dialog$1({ open, defaultOpen, onOpenChange, title, description, trigger, footer, children, fullscreen, dismissible }: Pick<React$1.ComponentProps<typeof Dialog>, "open" | "defaultOpen" | "onOpenChange"> & {
+function Dialog$1({ open, defaultOpen, onOpenChange, title, description, trigger, footer, children, width, height, fullscreen, dismissible }: Pick<React$1.ComponentProps<typeof Dialog>, "open" | "defaultOpen" | "onOpenChange"> & {
     title: string;
     description?: string;
     trigger?: React$1.ReactElement;
     footer?: React$1.ReactNode;
     children?: React$1.ReactNode;
+    width?: React$1.CSSProperties["width"];
+    height?: React$1.CSSProperties["height"];
     fullscreen?: boolean;
     dismissible?: boolean;
 }): React$1.JSX.Element;

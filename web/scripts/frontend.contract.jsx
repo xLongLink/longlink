@@ -78,6 +78,25 @@ const mapElements = (
     </Box>
 );
 const icon = <Icon icon="triangle-exclamation-point" size="sm" tile="soft" variant="destructive" />;
+const propDrivenLayout = (
+    <Box width="100%" minWidth={0} maxWidth={720} minHeight={120} maxHeight="80vh" padding={4} paddingInline={0} paddingBlock={2} align="center" justify="between" overflow="auto" background="muted">
+        <Grid columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 6 }} gap={4} padding={2} paddingInline={0} paddingBlock={3}>
+            <Heading level={2} size={4} align="start">Shipments</Heading>
+            <Text size="sm" weight="medium" tone="muted" align="end" tabularNums maxLines={2}>Awaiting dispatch</Text>
+        </Grid>
+        <Dialog title="Edit shipment" width={640} height="auto" trigger={<Button>Edit</Button>} />
+    </Box>
+);
+// @ts-expect-error Layout remains prop-driven rather than exposing utility classes.
+const customBoxClasses = <Box className="p-4" />;
+// @ts-expect-error Grid styling remains internal even with breakpoint configuration.
+const customGridStyle = <Grid style={{ padding: 4 }} />;
+// @ts-expect-error Text styling is configured through semantic props.
+const customTextClasses = <Text className="text-xs" />;
+// @ts-expect-error Heading size does not expose arbitrary utility classes.
+const customHeadingClasses = <Heading className="text-xl" />;
+// @ts-expect-error Portaled dialog layout is configured through width and height.
+const customDialogStyle = <Dialog title="Edit" style={{ width: 640 }} />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
 const menuComposition = (
     <Menu gap={2.5} sections={[{

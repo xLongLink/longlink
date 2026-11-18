@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
 import { Input } from '@/components/longlink/form/input';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 
@@ -15,6 +16,8 @@ export function DialogExample({ fullscreen = false }: { fullscreen?: boolean }) 
             title="Order details"
             description="Review this order before continuing."
             fullscreen={fullscreen}
+            width={640}
+            height="auto"
             trigger={<Button variant="outline">{fullscreen ? 'Open fullscreen' : 'Open dialog'}</Button>}
             footer={
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -35,10 +38,10 @@ export default function DialogPage() {
             example={{
                 title: 'Dialog',
                 preview: (
-                    <div className="flex flex-wrap gap-2">
+                    <Stack direction="horizontal" wrap="wrap" gap={2}>
                         <DialogExample />
                         <DialogExample fullscreen />
-                    </div>
+                    </Stack>
                 ),
                 code: `function Example() {
   const [open, setOpen] = useState(false);
@@ -49,6 +52,8 @@ export default function DialogPage() {
       onOpenChange={setOpen}
       title="Order details"
       description="Review this order before continuing."
+      width={640}
+      height="auto"
       trigger={<Button variant="outline">Open dialog</Button>}
       footer={<Button type="button" variant="outline" onClick={() => setOpen(false)}>Done</Button>}
     >

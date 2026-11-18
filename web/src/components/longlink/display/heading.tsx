@@ -16,17 +16,24 @@ const headingClasses = {
 
 interface HeadingProps extends Omit<ComponentPropsWithoutRef<'h2'>, 'color'> {
     level?: HeadingLevel;
+    size?: HeadingLevel;
+    align?: 'start' | 'center' | 'end';
 }
 
-/** Uses one level for heading typography and native document semantics. */
-export function Heading({ level = 2, className, ...props }: HeadingProps) {
+/** Preserves native heading semantics independently of optional typography sizing. */
+export function Heading({ level = 2, size = level, align, className, ...props }: HeadingProps) {
     const Component = headings[level];
 
     return (
         <Component
             data-slot="heading"
             {...props}
-            className={cn('font-semibold tracking-tight', headingClasses[level], className)}
+            className={cn(
+                'font-semibold tracking-tight',
+                headingClasses[size],
+                align && { start: 'text-start', center: 'text-center', end: 'text-end' }[align],
+                className
+            )}
         />
     );
 }
