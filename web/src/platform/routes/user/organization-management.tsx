@@ -6,6 +6,7 @@ import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
+import { Empty } from '@/components/longlink/display/empty';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
@@ -247,4 +248,3 @@ export default function OrganizationManagement({ presentation }: { presentation:
         </>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

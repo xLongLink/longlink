@@ -36,16 +36,10 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
     const section = location.hash === '#organizations' ? 'organizations' : 'account';
 
     /** Saves the validated account name and refreshes the profile. */
-    async function saveAccount() {
+    function saveAccount() {
         if (userUpdate.isPending || !name.trim() || name.trim() === user.name) return;
 
-        // Cache the authoritative profile returned by a successful save.
-        try {
-            const updatedUser = await userUpdate.mutateAsync({ name: name.trim() });
-            setName(updatedUser.name);
-        } catch {
-            // The mutation reports the error; keep the draft available for retry.
-        }
+        userUpdate.mutate({ name: name.trim() }, { onSuccess: (updatedUser) => setName(updatedUser.name) });
     }
 
     // Keep account editing independent of organization loading and failures.
@@ -108,7 +102,7 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                         aria-required
                                         readOnly={userUpdate.isPending}
                                         onChange={(event) => setName(event.target.value)}
-                                        onBlur={() => void saveAccount()}
+                                        onBlur={saveAccount}
                                     />
                                 </Field>
                             </div>

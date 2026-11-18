@@ -1,6 +1,6 @@
 import type { z } from 'zod';
+import { useId } from 'react';
 import { api } from '@/lib/api';
-import { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
@@ -28,8 +28,6 @@ function imageDigest(image: string) {
 /** Owns fresh inspection, the deployment draft, and submission for one review attempt. */
 export default function DeploymentReview({ item, onSuccess, onOpenChange }: DeploymentReviewProps) {
     const formId = useId();
-    // Scope inspection and drafts to one freshly opened review attempt.
-    const [attemptId] = useState(() => crypto.randomUUID());
 
     const form = useForm<{ envs: Record<string, { value?: string; removed?: boolean }> }>({
         defaultValues: { envs: {} }
@@ -45,7 +43,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
         isPending,
         refetch
     } = useQuery({
-        queryKey: ['api', path, attemptId],
+        queryKey: ['api', path, formId],
         queryFn: ({ signal }) => api(path, { signal }).json(schemas.zSolutionUpdateCheck),
         gcTime: 0,
         staleTime: Infinity,

@@ -6,6 +6,7 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
@@ -91,4 +92,3 @@ function RegisteredCards({ base }: { base: string }) {
         </Table>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

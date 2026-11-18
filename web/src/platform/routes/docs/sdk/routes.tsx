@@ -1,4 +1,5 @@
 import { Stack } from '@/components/longlink/layout/stack';
+import { InlineCode } from '@/components/shadcn/inline-code';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import {
@@ -145,5 +146,3 @@ raise HTTPException(status_code=404, detail="Project not found")`}
         </DocumentationArticle>
     );
 }
-
-import { InlineCode } from '@/components/shadcn/inline-code';

@@ -5,6 +5,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Empty } from '@/components/longlink/display/empty';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
@@ -360,4 +361,3 @@ export default function SolutionManagement({
         </>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';
