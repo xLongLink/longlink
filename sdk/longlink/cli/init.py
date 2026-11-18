@@ -57,7 +57,6 @@ def init_command(
         raise errors.Error(f"Target is not a directory: {target}")
     if target.exists():
         for scaffold in scaffolds:
-
             # Reject every collision before copying any scaffold content.
             for source in scaffold.rglob("*"):
                 destination = target / source.relative_to(scaffold)
@@ -82,3 +81,19 @@ def init_command(
     # Stamp the generated instructions with the installed SDK version.
     agents = target / "AGENTS.md"
     agents.write_text(agents.read_text(encoding="utf-8").replace("<version>", importlib.metadata.version("longlink")), encoding="utf-8")
+
+    if ci_provider == Provider.GITHUB:
+        try:
+            import git
+        except ImportError as error:
+            raise errors.Error(f"Unable to initialize Git repository: {error}") from error
+
+        try:
+            try:
+                with git.Repo(target, search_parent_directories=True):
+                    pass
+            except git.InvalidGitRepositoryError:
+                with git.Repo.init(target, initial_branch="main"):
+                    pass
+        except (git.GitError, OSError) as error:
+            raise errors.Error(f"Unable to initialize Git repository: {error}") from error
