@@ -86,7 +86,7 @@ export default function SolutionManagement({
     return (
         <>
             <Stack
-                gap={onboarding ? 8 : 4}
+                gap={presentation === 'settings' ? 0 : onboarding ? 8 : 4}
                 justify={onboarding ? 'center' : undefined}
                 className={
                     onboarding
@@ -95,7 +95,7 @@ export default function SolutionManagement({
                 }
             >
                 {presentation === 'settings' ? (
-                    <>
+                    <Stack gap={4}>
                         <Stack
                             gap={0}
                             direction="horizontal"
@@ -114,7 +114,7 @@ export default function SolutionManagement({
                             )}
                         </Stack>
                         <Separator />
-                    </>
+                    </Stack>
                 ) : solutions.length > 0 ? (
                     <Stack
                         gap={0}
@@ -164,23 +164,23 @@ export default function SolutionManagement({
                         </Stack>
                     </Stack>
                 ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
-                    <p className="text-muted-foreground">No Solutions in this category.</p>
+                    <Stack justify="center" className="min-h-64">
+                        <Empty role="status" icon="boxes" title="No solutions in this tab" />
+                    </Stack>
                 ) : (
                     <Table wrap>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Solution</TableHead>
-                                {presentation === 'settings' && <TableHead align="end">Version</TableHead>}
-                                {presentation === 'settings' && canMaintain && (
-                                    <TableHead align="end">Actions</TableHead>
-                                )}
-                            </TableRow>
-                        </TableHeader>
+                        {presentation === 'overview' && (
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Solution</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                        )}
                         <TableBody>
                             {visibleSolutions.map((row) => (
                                 <TableRow key={row.id}>
                                     <TableCell>
-                                        <Stack gap={presentation === 'overview' ? 0 : undefined}>
+                                        <Stack gap={0} align="start">
                                             {presentation === 'overview' ? (
                                                 <Stack direction="horizontal" gap={1} align="center">
                                                     <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>

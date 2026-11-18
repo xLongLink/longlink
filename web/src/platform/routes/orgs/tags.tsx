@@ -4,13 +4,14 @@ import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
 import { TagForm } from '@/components/dialogs/tag-form';
+import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -43,24 +44,21 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
     // Keep category editing separate from Solution deployments and assignments.
     return (
         <>
-            <Stack gap={3}>
-                <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
-                    <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
-                        Tabs
-                    </h4>
-                    {canMaintain && (
-                        <Button size="sm" onClick={() => setAction({ kind: 'create' })}>
-                            New tab
-                        </Button>
-                    )}
+            <Stack gap={0}>
+                <Stack gap={3}>
+                    <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
+                        <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
+                            Tabs
+                        </h4>
+                        {canMaintain && (
+                            <Button size="sm" onClick={() => setAction({ kind: 'create' })}>
+                                New tab
+                            </Button>
+                        )}
+                    </Stack>
+                    <Separator />
                 </Stack>
                 <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Tab</TableHead>
-                            {canMaintain && <TableHead align="end">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
                     <TableBody>
                         {tags.map((row) => {
                             const Icon = tabs.icons[row.icon].component;

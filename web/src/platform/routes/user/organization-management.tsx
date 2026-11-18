@@ -54,7 +54,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
     return (
         <>
             <Stack
-                gap={onboarding ? 8 : 4}
+                gap={presentation === 'settings' ? 0 : onboarding ? 8 : 4}
                 justify={onboarding ? 'center' : undefined}
                 className={
                     onboarding
@@ -63,7 +63,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 }
             >
                 {presentation === 'settings' ? (
-                    <>
+                    <Stack gap={4}>
                         <Stack
                             gap={0}
                             direction="horizontal"
@@ -80,7 +80,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             </Button>
                         </Stack>
                         <Separator />
-                    </>
+                    </Stack>
                 ) : !onboarding ? (
                     <Stack
                         gap={0}
@@ -125,19 +125,21 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     </Stack>
                 ) : (
                     <Table wrap>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                {invitations.length > 0 && <TableHead align="end"></TableHead>}
-                            </TableRow>
-                        </TableHeader>
+                        {presentation === 'overview' && (
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    {invitations.length > 0 && <TableHead align="end"></TableHead>}
+                                </TableRow>
+                            </TableHeader>
+                        )}
                         <TableBody>
                             {rows.map((row) => (
                                 <TableRow key={row.kind === 'invitation' ? row.id : row.organization.id}>
                                     <TableCell>
                                         <Stack direction="horizontal" gap={3} align="center">
                                             <Avatar shape="rounded" name={row.organization.name} />
-                                            <Stack align="start" gap={presentation === 'overview' ? 0 : undefined}>
+                                            <Stack align="start" gap={0}>
                                                 {row.kind === 'invitation' ? (
                                                     <span>{row.organization.name}</span>
                                                 ) : presentation === 'settings' ? (

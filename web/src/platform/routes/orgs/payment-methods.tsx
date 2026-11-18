@@ -8,7 +8,7 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
@@ -27,26 +27,28 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
     );
 
     return (
-        <Stack gap={4}>
-            <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                    Payment Methods
-                </h2>
-                {usage.stripe_enabled && canManage && (
-                    <Button
-                        size="sm"
-                        disabled={pending}
-                        aria-busy={pending || undefined}
-                        onClick={() => startRegistration(registerCard)}
-                    >
-                        Add card
-                    </Button>
-                )}
-                <span role="status" className="sr-only">
-                    {pending ? 'Loading' : ''}
-                </span>
+        <Stack gap={0}>
+            <Stack gap={4}>
+                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
+                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                        Payment Methods
+                    </h2>
+                    {usage.stripe_enabled && canManage && (
+                        <Button
+                            size="sm"
+                            disabled={pending}
+                            aria-busy={pending || undefined}
+                            onClick={() => startRegistration(registerCard)}
+                        >
+                            Add card
+                        </Button>
+                    )}
+                    <span role="status" className="sr-only">
+                        {pending ? 'Loading' : ''}
+                    </span>
+                </Stack>
+                <Separator />
             </Stack>
-            <Separator />
             {!usage.stripe_enabled ? (
                 <p className="text-muted-foreground">Card registration is not enabled on this deployment.</p>
             ) : canManage ? (
@@ -66,13 +68,6 @@ function RegisteredCards({ base }: { base: string }) {
 
     return (
         <Table wrap>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Card</TableHead>
-                    <TableHead>Expires</TableHead>
-                    <TableHead>Status</TableHead>
-                </TableRow>
-            </TableHeader>
             <TableBody>
                 {cards.map((row) => (
                     <TableRow key={row.id}>

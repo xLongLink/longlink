@@ -8,7 +8,7 @@ import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;
 
@@ -33,31 +33,26 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
     // Retain the settings shell's 260px navigation and show dense, edge-to-edge rows.
     return (
         <>
-            <Stack gap={4}>
-                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                        Private registries
-                    </h2>
-                    {canMaintain && (
-                        <Button
-                            size="sm"
-                            onClick={() =>
-                                setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
-                            }
-                        >
-                            Add registry
-                        </Button>
-                    )}
+            <Stack gap={0}>
+                <Stack gap={4}>
+                    <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
+                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                            Private registries
+                        </h2>
+                        {canMaintain && (
+                            <Button
+                                size="sm"
+                                onClick={() =>
+                                    setAction((current) => (current?.kind === 'create' ? current : { kind: 'create' }))
+                                }
+                            >
+                                Add registry
+                            </Button>
+                        )}
+                    </Stack>
+                    <Separator />
                 </Stack>
-                <Separator />
                 <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Registry</TableHead>
-                            <TableHead>Username</TableHead>
-                            {canMaintain && <TableHead align="end">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
                     <TableBody>
                         {connections.map((row) => (
                             <TableRow key={row.id}>

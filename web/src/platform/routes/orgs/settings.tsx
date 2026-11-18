@@ -24,8 +24,8 @@ import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -252,20 +252,16 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 
     return (
         <>
-            <Stack gap={4}>
-                <Stack gap={0} justify="end" className="min-h-8">
-                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                        Members
-                    </h2>
+            <Stack gap={0}>
+                <Stack gap={4}>
+                    <Stack gap={0} justify="end" className="min-h-8">
+                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                            Members
+                        </h2>
+                    </Stack>
+                    <Separator />
                 </Stack>
-                <Separator />
                 <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>User</TableHead>
-                            {canAdminister && <TableHead align="end">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
                     <TableBody>
                         {members.map((row) => (
                             <TableRow key={row.user.id}>
@@ -425,26 +421,21 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
 
     return (
         <>
-            <Stack gap={4}>
-                <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                        Invitations
-                    </h2>
-                    {canMaintain && (
-                        <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
-                            Invite
-                        </Button>
-                    )}
+            <Stack gap={0}>
+                <Stack gap={4}>
+                    <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
+                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                            Invitations
+                        </h2>
+                        {canMaintain && (
+                            <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
+                                Invite
+                            </Button>
+                        )}
+                    </Stack>
+                    <Separator />
                 </Stack>
-                <Separator />
                 <Table wrap>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Role</TableHead>
-                            {canMaintain && <TableHead align="end">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
                     <TableBody>
                         {invitations.map((row) => (
                             <TableRow key={row.id}>
