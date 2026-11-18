@@ -1,12 +1,12 @@
 import { cn } from 'cn';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
-import { resolveNavigationUrl } from '@/lib/url';
 import { Spinner } from '@/components/shadcn/spinner';
+import { FileRequestContext } from '@/components/custom/preview';
 import { LinkNavigationContext } from '@/components/custom/contexts';
 import { buttonVariants } from '@/components/longlink/action/button';
-import { FileRequestContext, useDownload } from '@/components/custom/preview';
-import { useContext, useRef, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
+import { resolveExternalUrl, resolveNavigationUrl } from '@/lib/url';
+import { useContext, useRef, useState, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
 
 type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type' | 'className'> &
     (
@@ -46,19 +46,7 @@ export function NavigationLink({ href, target, rel, download, onClick, ...props 
     let destination = navigation ? internalHref || undefined : href;
 
     // Native external navigation accepts only the same HTTP(S) destinations as the host bridge.
-    if (
-        navigation &&
-        href &&
-        !internalHref &&
-        (URL.canParse(href.trim()) || href.trim().startsWith('//')) &&
-        URL.canParse(href.trim(), document.baseURI)
-    ) {
-        const url = new URL(href.trim(), document.baseURI);
-
-        if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password) {
-            destination = url.href;
-        }
-    }
+    if (navigation && href && !internalHref) destination = resolveExternalUrl(document.baseURI, href);
 
     // External destinations leave the frame; internal modifier-clicks retain browser defaults.
     return (
@@ -146,8 +134,8 @@ function ActionLink({
     children,
     ...props
 }: ActionLinkProps) {
-    const attachment = useDownload();
     const files = useContext(FileRequestContext);
+    const [downloadError, setDownloadError] = useState<string>();
     const actionInFlight = useRef(false);
     const [isPending, startTransition] = useTransition();
     const blocked = disabled || isPending;
@@ -180,7 +168,17 @@ function ActionLink({
                             if (!files) throw new Error('Previews require the Solution runtime');
                             await files.preview(href, preview);
                         } else if (download !== undefined) {
-                            await attachment.download(href, download);
+                            setDownloadError(undefined);
+
+                            try {
+                                if (!files) throw new Error('Downloads require the Solution runtime');
+                                const filename = download.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
+                                await files.download(href, filename);
+                            } catch (failure) {
+                                if (!(failure instanceof ReportedError)) {
+                                    setDownloadError(failure instanceof Error ? failure.message : 'Download failed');
+                                }
+                            }
                         }
                     }
                 } catch (error) {
@@ -231,7 +229,7 @@ function ActionLink({
                 )}
                 {children}
             </button>
-            {attachment.error && <span role="alert">{attachment.error}</span>}
+            {downloadError && <span role="alert">{downloadError}</span>}
         </>
     );
 }

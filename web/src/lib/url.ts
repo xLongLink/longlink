@@ -1,5 +1,15 @@
 export const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
+/** Resolves external HTTP(S) navigation without embedded credentials. */
+export function resolveExternalUrl(baseUrl: string, path: string): string | undefined {
+    const value = path.trim();
+
+    if (!(URL.canParse(value) || value.startsWith('//')) || !URL.canParse(value, baseUrl)) return undefined;
+    const url = new URL(value, baseUrl);
+
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password) return url.href;
+}
+
 /** Returns whether a URL can be safely fetched relative to a solution base URL. */
 function isSolutionRelativeUrl(path: string): boolean {
     // Block Windows separators before URL parsing.

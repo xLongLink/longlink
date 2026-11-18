@@ -131,7 +131,6 @@ export default function Organizations() {
             </Stack>
             {metadata && (
                 <OrganizationMetadata
-                    open
                     metadata={metadata}
                     onOpenChange={() => setDialog(null)}
                     onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}

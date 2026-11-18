@@ -644,6 +644,8 @@ it('does not dismiss a reopened invitation dialog when an earlier submission com
                 await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
                 await act(async () => open.click());
                 expect(document.querySelector('[role="dialog"]')?.textContent).toContain('Invite user');
+                expect(document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]')?.value).toBe('');
+                expect(document.querySelector<HTMLFieldSetElement>('[role="dialog"] fieldset')?.disabled).toBe(false);
 
                 await act(async () => finishInvitation(new Response(null, { status: 204 })));
 

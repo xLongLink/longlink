@@ -7,14 +7,16 @@ import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 export function SolutionMetadata({
     metadata,
     onDelete,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
     metadata: z.output<typeof schemas.zSolutionResponse>;
     onDelete: () => void;
+    onOpenChange: (open: boolean) => void;
 }) {
     return (
         <Dialog
-            {...dialogProps}
+            open
+            onOpenChange={onOpenChange}
             title="Solution metadata"
             footer={
                 <Button type="button" variant="destructive" onClick={onDelete}>

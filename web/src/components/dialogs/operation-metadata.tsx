@@ -5,12 +5,13 @@ import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 export function OperationMetadata({
     metadata,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
     metadata: z.output<typeof schemas.zOperationResponse>;
+    onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog {...dialogProps} title="Operation metadata">
+        <Dialog open onOpenChange={onOpenChange} title="Operation metadata">
             <Stack gap={2}>
                 <span>
                     <b>Operation</b> {metadata.kind}

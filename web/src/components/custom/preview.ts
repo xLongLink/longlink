@@ -1,4 +1,3 @@
-import { ReportedError } from '@/lib/reported';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 // Only the isolated runtime supplies scoped file capabilities.
@@ -7,30 +6,6 @@ export const FileRequestContext = createContext<{
     preview: (path: string, title: string) => Promise<void>;
     download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
-
-/** Shares filename handling and local failures without duplicating host notifications. */
-export function useDownload() {
-    const files = useContext(FileRequestContext);
-    const [error, setError] = useState<string>();
-
-    /** Downloads an attachment through the scoped host capability. */
-    async function download(path: string, name: string) {
-        setError(undefined);
-
-        // Normalize display names before crossing the runtime capability boundary.
-        try {
-            if (!files) throw new Error('Downloads require the Solution runtime');
-            const filename = name.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
-            await files.download(path, filename);
-        } catch (failure) {
-            if (!(failure instanceof ReportedError)) {
-                setError(failure instanceof Error ? failure.message : 'Download failed');
-            }
-        }
-    }
-
-    return { download, error };
-}
 
 type PreviewState = { status: 'loading' } | { status: 'unavailable' } | { status: 'ready'; url: string };
 
@@ -52,12 +27,13 @@ export function usePreview(src: string): PreviewState {
         /** Accepts image bytes and ignores responses after closing. */
         async function load() {
             try {
-                const value = await request?.(src);
+                if (!request) throw new Error('Image preview unavailable');
+                const value = await request(src);
 
                 if (!active) return;
 
                 // Reject non-image responses without exposing their contents in the View.
-                if (!(value instanceof Blob) || !value.type.startsWith('image/')) {
+                if (!value.type.startsWith('image/')) {
                     setPreview({ status: 'unavailable' });
 
                     return;

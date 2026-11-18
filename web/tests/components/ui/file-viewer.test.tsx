@@ -5,6 +5,31 @@ import { withMounted } from '../../render';
 import { FileRequestContext } from '@/components/custom/preview';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
 
+it.each(['missing', 'rejected'] as const)('reports a %s file capability without remaining pending', async (result) => {
+    // Arrange
+    const files = {
+        load: async () => {
+            throw new Error('File request denied');
+        },
+        preview: async () => undefined,
+        download: async () => undefined
+    };
+
+    // Act
+    await withMounted(
+        <FileRequestContext value={result === 'missing' ? null : files}>
+            <FileViewer src="/api/report" title="Report" />
+        </FileRequestContext>,
+        async (output) => {
+            // Assert
+            expect(output.querySelector('[role="status"]')?.textContent).toBe(
+                result === 'missing' ? 'File preview unavailable' : 'File request denied'
+            );
+            expect(output.querySelector('[role="progressbar"], img, iframe, object, embed')).toBeNull();
+        }
+    );
+});
+
 it('displays an image immediately without custom preview or download actions', async () => {
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});

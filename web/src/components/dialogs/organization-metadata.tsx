@@ -7,14 +7,16 @@ import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 export function OrganizationMetadata({
     metadata,
     onDelete,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
     metadata: z.output<typeof schemas.zOrganizationIdentity>;
     onDelete: () => void;
+    onOpenChange: (open: boolean) => void;
 }) {
     return (
         <Dialog
-            {...dialogProps}
+            open
+            onOpenChange={onOpenChange}
             title="Organization metadata"
             footer={
                 <Button type="button" variant="destructive" onClick={onDelete}>

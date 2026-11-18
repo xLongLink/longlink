@@ -109,14 +109,14 @@ it('opens validated external destinations outside the frame without an opener', 
     expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
 });
 
-it('uses the scoped download capability rather than native navigation', async () => {
+it('uses the scoped download capability with a sanitized filename rather than native navigation', async () => {
     const navigate = vi.fn();
     const download = vi.fn(async () => {});
 
     await withMounted(
         <FileRequestContext value={{ load: vi.fn(), preview: vi.fn(), download }}>
             <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                <Link href="/invoice.pdf" download="invoice.pdf">
+                <Link href="/invoice.pdf" download={'invoices/2026\\invoice\u0000.pdf'}>
                     Invoice
                 </Link>
             </LinkNavigationContext>
@@ -128,7 +128,7 @@ it('uses the scoped download capability rather than native navigation', async ()
             expect(control.hasAttribute('download')).toBe(false);
             expect(output.querySelector('a')).toBeNull();
             await act(async () => control.click());
-            expect(download).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'invoice.pdf');
+            expect(download).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'invoices_2026_invoice_.pdf');
             expect(navigate).not.toHaveBeenCalled();
         }
     );
@@ -259,7 +259,7 @@ it('guards repeated downloads until the callback and scoped host download finish
     });
 
     const action = vi.fn(() => pending);
-    const download = vi.fn(async () => {});
+    const download = vi.fn(async () => {}).mockRejectedValueOnce(new Error('Download unavailable'));
     const navigate = vi.fn();
 
     try {
@@ -298,10 +298,12 @@ it('guards repeated downloads until the callback and scoped host download finish
                     await pending;
                 });
                 expect(download).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'invoice.pdf');
+                expect(output.querySelector('[role="alert"]')?.textContent).toBe('Download unavailable');
                 expect(navigate).not.toHaveBeenCalled();
                 expect(output.querySelector('button')?.hasAttribute('aria-busy')).toBe(false);
                 await act(async () => output.querySelector('button')?.click());
                 expect(download).toHaveBeenCalledTimes(2);
+                expect(output.querySelector('[role="alert"]')).toBeNull();
             }
         );
     } finally {

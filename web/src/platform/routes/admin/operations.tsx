@@ -123,7 +123,7 @@ export default function Operations() {
                     />
                 </footer>
             </Stack>
-            {metadata && <OperationMetadata open metadata={metadata} onOpenChange={() => setMetadataId(null)} />}
+            {metadata && <OperationMetadata metadata={metadata} onOpenChange={() => setMetadataId(null)} />}
         </Stack>
     );
 }

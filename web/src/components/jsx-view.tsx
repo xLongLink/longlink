@@ -4,7 +4,6 @@ import * as host from '@/views/host';
 import { useApiError } from '@/lib/errors';
 import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
-import { resolveNavigationUrl } from '@/lib/url';
 import { useQuery } from '@tanstack/react-query';
 import type { Appearance } from '@/lib/appearance';
 import type { ViewRuntime } from '@/views/manifest';
@@ -14,6 +13,7 @@ import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
 import { FilePreview } from '@/components/dialogs/file-preview';
 import { TextPreview } from '@/components/dialogs/text-preview';
+import { resolveExternalUrl, resolveNavigationUrl } from '@/lib/url';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { commandSchema, parametersSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
 
@@ -334,19 +334,11 @@ export function JsxView({
             if (command.type === 'navigate') {
                 try {
                     // Open web destinations only during user activation, without exposing the host to the new page.
-                    const path = command.path.trim();
+                    const externalUrl = resolveExternalUrl(window.location.origin, command.path);
 
-                    if (URL.canParse(path) || path.startsWith('//')) {
-                        const url = new URL(path, window.location.origin);
-
-                        if (
-                            (url.protocol === 'https:' || url.protocol === 'http:') &&
-                            !url.username &&
-                            !url.password &&
-                            navigator.userActivation.isActive
-                        ) {
-                            window.open(url.href, '_blank', 'noopener,noreferrer');
-                        }
+                    if (externalUrl) {
+                        if (navigator.userActivation.isActive)
+                            window.open(externalUrl, '_blank', 'noopener,noreferrer');
 
                         return;
                     }

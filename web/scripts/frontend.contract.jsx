@@ -99,7 +99,7 @@ const _frameClasses = <Frame className="hidden" />;
 // @ts-expect-error Frame owns its sections.
 const _frameHeader = <Frame header={{ title: 'Files' }} />;
 // @ts-expect-error Card uses flat header props.
-const _cardHeader = <Card header={{ title: 'Files' }} />;
+const _cardHeaderObject = <Card header={{ title: 'Files' }} />;
 // @ts-expect-error Tab styling is owned by the component.
 const _tabStyle = <Tab value="one" label="One" style={{ display: 'none' }} />;
 // @ts-expect-error Tabs owns its focus behavior.
@@ -513,7 +513,7 @@ const _cardClasses = <Card className="hidden" />;
 // @ts-expect-error Card styling is owned by the component.
 const _cardStyle = <Card style={{ display: 'none' }} />;
 // @ts-expect-error Card owns its content sections.
-const _cardHeader = <CardHeader>Settings</CardHeader>;
+const _removedCardHeader = <CardHeader>Settings</CardHeader>;
 // @ts-expect-error Card includes surface interactions without a separate component.
 const _interactiveCard = <InteractiveCard onClick={() => {}} />;
 // @ts-expect-error Text no longer provides truncation tooltips.

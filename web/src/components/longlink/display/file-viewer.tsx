@@ -29,9 +29,8 @@ function FileContent({ src, title }: { src: string; title: string }) {
         /** Ignore responses from replaced or unmounted file requests. */
         async function load() {
             try {
-                const body = await request?.(src);
-
-                if (!(body instanceof Blob)) throw new Error('File preview unavailable');
+                if (!request) throw new Error('File preview unavailable');
+                const body = await request(src);
 
                 if (active) setPreview(body);
             } catch (cause) {

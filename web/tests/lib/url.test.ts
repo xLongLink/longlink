@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
+import { resolveExternalUrl, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
+
+describe('resolveExternalUrl', () => {
+    it.each([
+        ['https://platform.example', ' https://docs.example/help ', 'https://docs.example/help'],
+        ['https://platform.example', 'http://docs.example/help', 'http://docs.example/help'],
+        ['https://platform.example', '//docs.example/help', 'https://docs.example/help'],
+        ['http://platform.example', '//docs.example/help', 'http://docs.example/help']
+    ])('resolves external navigation %s + %s', (base, path, expected) => {
+        // Act and assert
+        expect(resolveExternalUrl(base, path)).toBe(expected);
+    });
+
+    it.each([
+        '/orders',
+        'orders',
+        'javascript:alert(1)',
+        'data:text/html,unsafe',
+        'https://user@example.com/private',
+        'https://:password@example.com/private',
+        '//user:password@example.com/private',
+        '//['
+    ])('withholds unsupported external destination %s', (path) => {
+        // Act and assert
+        expect(resolveExternalUrl('https://platform.example', path)).toBeUndefined();
+    });
+});
 
 describe('resolveNavigationUrl', () => {
     it('omits empty destinations', () => {

@@ -6,8 +6,8 @@ import { ApiBoundary } from '@/components/api';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
 import { PageContainer } from '@/components/ui/page-container';
+import { Outlet, useLocation, useOutletContext } from 'react-router';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
-import { Outlet, useParams, useLocation, useOutletContext } from 'react-router';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { zOrganizationTagResponse, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -18,11 +18,10 @@ export type OrganizationContext = z.output<typeof zUserOrganizationMembership> &
 
 /** Renders shared category navigation around organization pages. */
 export default function OrganizationLayout() {
-    const { organization = '' } = useParams();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
     const [tags] = useApi(`/api/v1/organizations/${membership.organization.id}/tags`, zOrganizationTagResponse.array());
     const location = useLocation();
-    const base = `/orgs/${organization}`;
+    const base = `/orgs/${membership.organization.id}`;
 
     // Category links share a pathname, so resolve selection from the query as well.
     const requestedTag = new URLSearchParams(location.search).get('tag');

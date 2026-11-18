@@ -17,10 +17,8 @@ const organizationSchema = zOrganizationCreate.extend({
 /** Notifies the parent after a successful organization creation request. */
 export default function CreateOrganization({
     onSuccess,
-    onOpenChange,
-    ...dialogProps
+    onOpenChange
 }: {
-    open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: () => Promise<void>;
 }) {
@@ -41,7 +39,7 @@ export default function CreateOrganization({
     // Keep the form in the shared dialog body and its actions in the fixed footer.
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title="New organization"
             footer={
