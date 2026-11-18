@@ -7,14 +7,16 @@ import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 export function ComputeMetadata({
     metadata,
     onDelete,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
     metadata: z.output<typeof schemas.zComputeRegistryResponse>;
     onDelete: () => void;
+    onOpenChange: (open: boolean) => void;
 }) {
     return (
         <Dialog
-            {...dialogProps}
+            open
+            onOpenChange={onOpenChange}
             title="Compute metadata"
             footer={
                 <Button type="button" variant="destructive" onClick={onDelete}>

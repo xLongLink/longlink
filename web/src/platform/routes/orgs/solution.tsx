@@ -16,7 +16,7 @@ import { zUserOrganizationMembership, zOrganizationSolutionSummary } from '@/lib
 
 /** Renders one proxy-backed organization solution after membership resolves. */
 export default function OrganizationSolution() {
-    const { organization = '', solution = '' } = useParams();
+    const { solution = '' } = useParams();
     const membership = useOutletContext<z.output<typeof zUserOrganizationMembership>>();
 
     // Fetch accessible solutions after membership resolves and poll pending deployments.
@@ -93,7 +93,7 @@ export default function OrganizationSolution() {
             breadcrumb={breadcrumb}
             sidebarHeader={<OrganizationSwitcher organization={membership.organization} />}
             formatTitle={(title) => `${title ?? solutionAccess.name} | LongLink`}
-            navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
+            navigationBaseUrl={`/orgs/${membership.organization.id}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
         />
     );

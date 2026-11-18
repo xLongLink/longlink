@@ -1,46 +1,62 @@
 import { z } from 'zod';
 import { useId } from 'react';
+import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
-import type * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
 
 export function InviteMember({
+    base,
     canInviteAdmin,
-    onSubmit,
-    onOpenChange,
-    ...dialogProps
-}: { open: boolean; onOpenChange: (open: boolean) => void } & {
+    onOpenChange
+}: {
+    base: string;
+    onOpenChange: (open: boolean) => void;
     canInviteAdmin: boolean;
-    onSubmit: (data: z.output<typeof schemas.zOrganizationInvitationCreate>) => Promise<void>;
 }) {
     const formId = useId();
+    const client = useQueryClient();
     const roleSchema = z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain']);
     const roles = roleSchema.options.map((value) => ({
         value,
         icon: { read: EyeOff, write: ArrowUp, maintain: Wrench, admin: CheckCheck }[value]
     }));
 
-    const schema = z.object({ email: z.email(), role: roleSchema });
+    const schema = schemas.zOrganizationInvitationCreate.extend({
+        email: z.string().trim().pipe(schemas.zOrganizationInvitationCreate.shape.email),
+        role: roleSchema
+    });
 
     const form = useForm<z.input<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: { email: '', role: 'write' }
     });
 
-    const submit = useSubmit(onSubmit, {
+    async function inviteMember(data: z.output<typeof schema>) {
+        try {
+            await api.post(`${base}/invitations`, { json: data });
+            onOpenChange(false);
+        } finally {
+            // Failed email delivery can still persist the invitation.
+            await client.invalidateQueries({ queryKey: ['api', `${base}/invitations`], exact: true });
+        }
+    }
+
+    const submit = useSubmit(inviteMember, {
         onError: () => form.setError('root', { message: 'Could not send the invitation. Please try again.' })
     });
 
     return (
         <Dialog
-            {...dialogProps}
+            open
             onOpenChange={onOpenChange}
             title="Invite user"
             footer={

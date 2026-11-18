@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
@@ -406,19 +405,6 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
         setInvitationAttempt((current) => (current === invitationAttempt ? null : current));
     }
 
-    /** Sends the validated invitation and refreshes organization access. */
-    async function inviteMember(data: z.output<typeof schemas.zOrganizationInvitationCreate>) {
-        // Keep the dialog open on failure, but refresh either way because a failed email still saves the invitation.
-        try {
-            await api.post(`${base}/invitations`, {
-                json: schemas.zOrganizationInvitationCreate.parse({ role: data.role, email: data.email.trim() })
-            });
-            closeInvitation();
-        } finally {
-            await invalidateInvitations();
-        }
-    }
-
     return (
         <>
             <Stack gap={0}>
@@ -470,12 +456,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
             <span role="status" className="sr-only">
                 {revoking ? 'Loading' : ''}
             </span>
-            <InviteMember
-                open={invitationAttempt !== null}
-                canInviteAdmin={canInviteAdmin}
-                onOpenChange={closeInvitation}
-                onSubmit={inviteMember}
-            />
+            {invitationAttempt !== null && (
+                <InviteMember base={base} canInviteAdmin={canInviteAdmin} onOpenChange={closeInvitation} />
+            )}
         </>
     );
 }

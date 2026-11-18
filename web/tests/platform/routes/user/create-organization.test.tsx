@@ -21,7 +21,7 @@ it('validates and retries organization creation through the fixed footer without
     });
 
     try {
-        await withMounted(<CreateOrganization open onOpenChange={() => undefined} onSuccess={complete} />, async () => {
+        await withMounted(<CreateOrganization onOpenChange={() => undefined} onSuccess={complete} />, async () => {
             const dialog = document.querySelector('[role="dialog"]');
 
             // Assert

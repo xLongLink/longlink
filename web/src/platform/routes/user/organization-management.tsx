@@ -211,7 +211,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
             </Stack>
             {selected?.type === 'create' && (
                 <CreateOrganization
-                    open
                     onOpenChange={closeSelected}
                     onSuccess={async () => {
                         // Refresh memberships before closing only this creation attempt.

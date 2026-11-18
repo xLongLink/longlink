@@ -116,6 +116,65 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                         '/proxy/views/entry.js',
                         '/proxy/views/stale.js'
                     ]);
+
+                    const commands: unknown = ports[0];
+                    if (!(commands instanceof workers.MessagePort)) throw new Error('Expected command transport');
+                    const activation = Object.getOwnPropertyDescriptor(navigator, 'userActivation');
+                    let isActive = false;
+                    Object.defineProperty(navigator, 'userActivation', {
+                        configurable: true,
+                        value: {
+                            get isActive() {
+                                return isActive;
+                            }
+                        }
+                    });
+                    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+                    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+                        const request = input instanceof Request ? input : new Request(input);
+                        if (new URL(request.url).pathname !== '/proxy/navigation-check') {
+                            throw new Error(`Unexpected request: ${request.url}`);
+                        }
+                        return new Response(null, { status: 204 });
+                    });
+
+                    try {
+                        // A following request acknowledges that the preceding navigation commands were processed.
+                        const inactiveReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+                        await act(async () => {
+                            commands.postMessage({ type: 'navigate', path: 'https://docs.example/inactive' });
+                            commands.postMessage({ type: 'request', id: 10, path: 'navigation-check', method: 'GET' });
+                            await expect(inactiveReply).resolves.toEqual({ id: 10, ok: true, data: null });
+                        });
+                        expect(open).not.toHaveBeenCalled();
+
+                        isActive = true;
+                        const activeReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
+                        await act(async () => {
+                            for (const path of [
+                                'javascript:alert(1)',
+                                'data:text/html,unsafe',
+                                'https://user:password@example.com/private',
+                                '//user@example.com/private',
+                                '//[',
+                                '//docs.example/help'
+                            ]) {
+                                commands.postMessage({ type: 'navigate', path });
+                            }
+                            commands.postMessage({ type: 'request', id: 11, path: 'navigation-check', method: 'GET' });
+                            await expect(activeReply).resolves.toEqual({ id: 11, ok: true, data: null });
+                        });
+                        expect(open).toHaveBeenCalledExactlyOnceWith(
+                            `${window.location.protocol}//docs.example/help`,
+                            '_blank',
+                            'noopener,noreferrer'
+                        );
+                    } finally {
+                        open.mockRestore();
+                        fetch.mockRestore();
+                        if (activation) Object.defineProperty(navigator, 'userActivation', activation);
+                        else Reflect.deleteProperty(navigator, 'userActivation');
+                    }
                 } finally {
                     transfer.mockRestore();
                 }

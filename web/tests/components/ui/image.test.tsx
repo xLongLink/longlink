@@ -83,8 +83,8 @@ it('releases owned previews on source changes and ignores late responses', async
     }
 });
 
-it.each(['rejected', 'non-image'] as const)(
-    'keeps a %s scoped response unavailable without exposing its source',
+it.each(['rejected', 'non-image', 'missing'] as const)(
+    'keeps a %s scoped preview unavailable without exposing its source',
     async (result) => {
         // A URL-looking path still belongs to the host capability, not the browser network.
         const requests: string[] = [];
@@ -103,11 +103,11 @@ it.each(['rejected', 'non-image'] as const)(
         };
 
         await withMounted(
-            <FileRequestContext value={files}>
+            <FileRequestContext value={result === 'missing' ? null : files}>
                 <Image src="https://untrusted.example/photo.png" alt="Photo" />
             </FileRequestContext>,
             async (output) => {
-                expect(requests).toEqual(['https://untrusted.example/photo.png']);
+                expect(requests).toEqual(result === 'missing' ? [] : ['https://untrusted.example/photo.png']);
                 expect(output.querySelector('img')).toBeNull();
                 expect(output.querySelector('script')).toBeNull();
                 expect(output.textContent).not.toContain('private attachment');

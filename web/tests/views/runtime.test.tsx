@@ -151,6 +151,35 @@ it('rejects an unfinished authored request with View closed on pagehide before i
     }
 }, 10_000);
 
+it('rejects non-Blob binary replies before they reach file renderers', async () => {
+    // Arrange
+    const create = vi.spyOn(URL, 'createObjectURL');
+    const runtime = await initializeRuntime(`export default function View() {
+        return <><Image src="/api/photo" alt="Photo" /><FileViewer src="/api/report" title="Report" /></>;
+    }`);
+    const requests: string[] = [];
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+        if (command.type !== 'request') return;
+        requests.push(command.path);
+        runtime.send({ id: command.id, ok: true, data: { type: 'image/png', size: 5 } });
+    };
+
+    try {
+        // Act and assert
+        await vi.waitFor(() => {
+            expect(requests).toEqual(expect.arrayContaining(['/api/photo', '/api/report']));
+            expect(runtime.mount.textContent).toContain('Photo unavailable');
+            expect(runtime.mount.querySelector('[aria-label="Report"] [role="status"]')).not.toBeNull();
+        });
+        expect(create).not.toHaveBeenCalled();
+        expect(runtime.mount.querySelector('img, iframe, object, embed')).toBeNull();
+    } finally {
+        runtime.close();
+        create.mockRestore();
+    }
+});
+
 it('renders file bytes inside the View and releases them with authored effects on pagehide', async () => {
     // Observe real unmount cleanup without keeping the authored tree alive.
     const cleaned = vi.fn();
