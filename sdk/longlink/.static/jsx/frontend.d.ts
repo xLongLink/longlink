@@ -35928,7 +35928,7 @@ type ArrayPathInternal<T, TraversedTypes = T, D extends number = 9> = [
 type ArrayPath<T> = T extends unknown ? ArrayPathInternal<T> : never;
 type FieldArrayPath<TFieldValues extends FieldValues> = ArrayPath<TFieldValues>;
 type PathValue<T, P extends Path<T> | ArrayPath<T>> = PathValueImpl<T, P>;
-type PathValueImpl<T, P extends string> = T extends unknown ? P extends `${infer K}.${infer R}` ? K extends keyof T ? undefined extends T[K] ? PathValueImpl<T[K], R> | undefined : PathValueImpl<T[K], R> : K extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? PathValueImpl<V, R> : never : never : P extends keyof T ? T[P] : P extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? V : T extends undefined ? undefined : never : never : never;
+type PathValueImpl<T, P extends string> = T extends unknown ? P extends `${infer K}.${infer R}` ? K extends keyof T ? undefined extends T[K] ? PathValueImpl<T[K], R> | undefined : PathValueImpl<T[K], R> : K extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? PathValueImpl<V, R> | (TupleKeys<T> extends never ? Extract<V, undefined> : never) : never : never : P extends keyof T ? T[P] : P extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? V : T extends undefined ? undefined : never : never : never;
 type FieldPathValue<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = PathValue<TFieldValues, TFieldPath>;
 type FieldArrayPathValue<TFieldValues extends FieldValues, TFieldArrayPath extends FieldArrayPath<TFieldValues>> = PathValue<TFieldValues, TFieldArrayPath>;
 type FieldPathValues<TFieldValues extends FieldValues, TPath extends FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[]> = {} & {
@@ -36355,7 +36355,9 @@ type GlobalError = Partial<{
 }>;
 type FieldErrors<T extends FieldValues = FieldValues> = Partial<FieldErrorsImpl<DeepRequired<T>>> & {
     root?: Record<string, GlobalError> & GlobalError;
-    form?: Record<string, GlobalError> & GlobalError;
+    form?: GlobalError & (string extends keyof T ? unknown : {
+        [K in keyof T]?: GlobalError;
+    });
 };
 type FieldPathError<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = TFieldPath extends FieldPath<TFieldValues> ? TFieldPath extends `${string}.root` ? GlobalError : DeepRequired<NonNullable<FieldPathValue<TFieldValues, TFieldPath>>> extends infer TFieldValue ? IsAny$1<TFieldValue> extends true ? FieldError : NonNullable<FieldErrorsImpl<{
     value: TFieldValue;
