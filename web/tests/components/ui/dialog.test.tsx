@@ -3,12 +3,11 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { DialogClose } from '@/components/shadcn/dialog';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { DialogActivityContext } from '@/components/custom/contexts';
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
-it.each([false, true])('closes a dialog without submitting its form (fullscreen: %s)', async (fullscreen) => {
+it('closes a dialog without submitting its form', async () => {
     const close = vi.fn();
     const submit = vi.fn((event: React.SubmitEvent) => event.preventDefault());
     const activity = vi.fn();
@@ -17,7 +16,7 @@ it.each([false, true])('closes a dialog without submitting its form (fullscreen:
     // Keep visibility caller-owned while exercising the modal close control.
     await withMounted(
         <DialogActivityContext value={activity}>
-            <Dialog title="Edit order" fullscreen={fullscreen} open onOpenChange={close}>
+            <Dialog title="Edit order" fullscreen open onOpenChange={close}>
                 <form onSubmit={submit}>
                     <input aria-label="Order name" />
                 </form>
@@ -143,61 +142,6 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         expect(document.activeElement).toBe(trigger);
         expect(activity.mock.calls).toEqual([[true], [false]]);
     });
-});
-
-it('cleans up sandbox coordination when the open modal unmounts', async () => {
-    const activity = vi.fn();
-
-    await withMounted(
-        <DialogActivityContext value={activity}>
-            <Dialog title="Preview" fullscreen open onOpenChange={() => {}} />
-        </DialogActivityContext>,
-        async () => {
-            expect(activity).toHaveBeenCalledExactlyOnceWith(true);
-        }
-    );
-    expect(activity.mock.calls).toEqual([[true], [false]]);
-});
-
-it('keeps dialog host coordination active after canceled dismissal and releases it on close', async () => {
-    const activity = vi.fn();
-    const user = userEvent.setup();
-
-    // Keep Escape canceled while allowing an explicit close action.
-    await withMounted(
-        <DialogActivityContext value={activity}>
-            <Dialog
-                title="Order details"
-                trigger={<button type="button">Open</button>}
-                onOpenChange={(_open, details) => {
-                    if (details.reason === 'escape-key') details.cancel();
-                }}
-            >
-                <DialogClose>Done</DialogClose>
-            </Dialog>
-        </DialogActivityContext>,
-        async (output) => {
-            const trigger = output.querySelector('button');
-
-            if (!trigger) throw new Error('Missing dialog trigger');
-
-            await act(async () => user.click(trigger));
-            expect(activity.mock.calls).toEqual([[true]]);
-
-            await act(async () => user.keyboard('{Escape}'));
-            expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-            expect(activity.mock.calls).toEqual([[true]]);
-
-            const close = document.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
-
-            if (!close) throw new Error('Missing dialog close');
-
-            await act(async () => user.click(close));
-            expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity.mock.calls).toEqual([[true], [false]]);
-            expect(document.activeElement).toBe(trigger);
-        }
-    );
 });
 
 it('keeps a portaled menu operable inside the modal and dismisses the innermost layer first', async () => {

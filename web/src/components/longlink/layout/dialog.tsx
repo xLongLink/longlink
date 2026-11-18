@@ -54,7 +54,6 @@ export function Dialog({
         >
             {trigger && <dialog.DialogTrigger render={trigger} />}
             <dialog.DialogContent
-                data-fullscreen={fullscreen || undefined}
                 showCloseButton={dismissible}
                 className="flex min-h-0 max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden! p-0"
                 style={{
