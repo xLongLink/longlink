@@ -26,10 +26,15 @@ export function buildBreadcrumbs(pathname: string, labels?: Record<string, strin
     // Apply the shared trailing-slash convention to each cumulative path.
     const segments = pathname.split('/').filter(Boolean);
 
-    return segments.map((segment, index) => ({
-        label: labels?.[segment] ?? startCase(decodePathSegment(segment)),
-        href: `/${segments.slice(0, index + 1).join('/')}/`
-    }));
+    return segments.map((segment, index) => {
+        const decoded = decodePathSegment(segment);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded);
+
+        return {
+            label: labels?.[segment] ?? (isUuid ? decoded : startCase(decoded)),
+            href: `/${segments.slice(0, index + 1).join('/')}/`
+        };
+    });
 }
 
 /** Renders breadcrumb items derived from the current URL path. */
