@@ -47,7 +47,7 @@
         "es-toolkit": "^1.53.2",
         "isbot": "^5",
         "ky": "^2.2.0",
-        "lucide-react": "^1.72.0",
+        "lucide-react": "^1.73.0",
         "maplibre-gl": "^6",
         "pdfjs-dist": "^6.5.438",
         "react": "^19.3.1",
