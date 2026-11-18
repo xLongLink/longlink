@@ -54,7 +54,7 @@
         "react-day-picker": "10.0.2",
         "react-dom": "^19.3.1",
         "react-error-boundary": "^6.1.6",
-        "react-hook-form": "^7.91.0",
+        "react-hook-form": "^7.92.0",
         "react-router": "8.5.1",
         "recharts": "3.10.1",
         "shiki": "4.6.0",
