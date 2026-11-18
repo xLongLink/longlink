@@ -1,8 +1,8 @@
 import ViewLayout from './view-layout';
 import { useLocation, useNavigate } from 'react-router';
+import { Menu } from '@/components/longlink/layout/menu';
 import { Stack } from '@/components/longlink/layout/stack';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { Menu, MenuSection, MenuSubSection, MenuItem } from '@/components/longlink/layout/menu';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {
@@ -11,17 +11,13 @@ export default function MenuPage() {
         <ViewLayout
             name="Menu"
             properties={[
-                { name: 'children', type: 'ReactNode' },
+                { name: 'sections', type: '{ title: string; isHeaderHidden?: boolean; entries: MenuEntry[] }[]' },
                 { name: 'gap', type: 'number' },
-                { name: 'MenuSection.children', type: 'ReactNode' },
-                { name: 'MenuSection.isHeaderHidden', type: 'boolean' },
-                { name: 'MenuSection.title', type: 'string' },
-                { name: 'MenuItem.children', type: 'ReactNode' },
-                { name: 'MenuItem.icon', type: 'IconName' },
-                { name: 'MenuItem.label', type: 'string' },
-                { name: 'MenuSubSection.children', type: 'ReactNode' },
-                { name: 'MenuSubSection.icon', type: 'IconName' },
-                { name: 'MenuSubSection.label', type: 'string' }
+                {
+                    name: 'MenuEntry',
+                    type: "({ kind: 'item' } & MenuItem) | { kind: 'subsection'; label: string; icon?: IconName; items: MenuItem[] }"
+                },
+                { name: 'MenuItem', type: '{ label: string; icon?: IconName; content?: ReactNode }' }
             ]}
             example={{
                 title: 'Menu',
@@ -29,29 +25,30 @@ export default function MenuPage() {
                 code: `function Example() {
   return (
     <Stack padding={4}>
-      <Menu>
-        <MenuSection title="Settings">
-          <MenuItem label="Profile" icon="user-round">
-            <Text>Profile settings</Text>
-          </MenuItem>
-          <MenuSubSection label="Workflow" icon="wrench">
-            <MenuItem label="Automation" icon="refresh-cw">
-              <Text>Automation settings</Text>
-            </MenuItem>
-            <MenuItem label="Schedule" icon="calendar">
-              <Text>Schedule settings</Text>
-            </MenuItem>
-          </MenuSubSection>
-          <MenuSubSection label="Workspace" icon="building-complex">
-            <MenuItem label="Members" icon="users">
-              <Text>Workspace members</Text>
-            </MenuItem>
-            <MenuItem label="Data" icon="database">
-              <Text>Workspace data</Text>
-            </MenuItem>
-          </MenuSubSection>
-        </MenuSection>
-      </Menu>
+      <Menu sections={[{
+        title: 'Settings',
+        entries: [
+          { kind: 'item', label: 'Profile', icon: 'user-round', content: <Text>Profile settings</Text> },
+          {
+            kind: 'subsection',
+            label: 'Workflow',
+            icon: 'wrench',
+            items: [
+              { label: 'Automation', icon: 'refresh-cw', content: <Text>Automation settings</Text> },
+              { label: 'Schedule', icon: 'calendar', content: <Text>Schedule settings</Text> }
+            ]
+          },
+          {
+            kind: 'subsection',
+            label: 'Workspace',
+            icon: 'building-complex',
+            items: [
+              { label: 'Members', icon: 'users', content: <Text>Workspace members</Text> },
+              { label: 'Data', icon: 'database', content: <Text>Workspace data</Text> }
+            ]
+          }
+        ]
+      }]} />
     </Stack>
   );
 }`
@@ -76,29 +73,43 @@ function MenuExample() {
             }}
         >
             <Stack gap={0} padding={4}>
-                <Menu>
-                    <MenuSection title="Settings">
-                        <MenuItem label="Profile" icon="user-round">
-                            <span>Profile settings</span>
-                        </MenuItem>
-                        <MenuSubSection label="Workflow" icon="wrench">
-                            <MenuItem label="Automation" icon="refresh-cw">
-                                <span>Automation settings</span>
-                            </MenuItem>
-                            <MenuItem label="Schedule" icon="calendar">
-                                <span>Schedule settings</span>
-                            </MenuItem>
-                        </MenuSubSection>
-                        <MenuSubSection label="Workspace" icon="building-complex">
-                            <MenuItem label="Members" icon="users">
-                                <span>Workspace members</span>
-                            </MenuItem>
-                            <MenuItem label="Data" icon="database">
-                                <span>Workspace data</span>
-                            </MenuItem>
-                        </MenuSubSection>
-                    </MenuSection>
-                </Menu>
+                <Menu
+                    sections={[
+                        {
+                            title: 'Settings',
+                            entries: [
+                                {
+                                    kind: 'item',
+                                    label: 'Profile',
+                                    icon: 'user-round',
+                                    content: <span>Profile settings</span>
+                                },
+                                {
+                                    kind: 'subsection',
+                                    label: 'Workflow',
+                                    icon: 'wrench',
+                                    items: [
+                                        {
+                                            label: 'Automation',
+                                            icon: 'refresh-cw',
+                                            content: <span>Automation settings</span>
+                                        },
+                                        { label: 'Schedule', icon: 'calendar', content: <span>Schedule settings</span> }
+                                    ]
+                                },
+                                {
+                                    kind: 'subsection',
+                                    label: 'Workspace',
+                                    icon: 'building-complex',
+                                    items: [
+                                        { label: 'Members', icon: 'users', content: <span>Workspace members</span> },
+                                        { label: 'Data', icon: 'database', content: <span>Workspace data</span> }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]}
+                />
             </Stack>
         </MenuNavigationContext>
     );

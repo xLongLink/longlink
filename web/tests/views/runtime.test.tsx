@@ -356,15 +356,16 @@ it('bounds request failures and retries the failed query instead of leaving its 
     }
 });
 
-it('keeps a draft in a retained authored Tab while selecting another panel', async () => {
+it('keeps a draft in a retained authored tab while selecting another panel', async () => {
     const runtime = await initializeRuntime(`export default function View() {
-        return <Tabs aria-label="Order">
-            <Tab value="restricted" label="Restricted" disabled>Restricted details</Tab>
-            <Tab value="details" label="Details" keepMounted>
-                <input aria-label="Order draft" defaultValue="Draft" />
-            </Tab>
-            <Tab value="history" label="History">Order history</Tab>
-        </Tabs>;
+        return <Tabs aria-label="Order" items={[
+            { value: 'restricted', label: 'Restricted', disabled: true, content: 'Restricted details' },
+            {
+                value: 'details', label: 'Details', keepMounted: true,
+                content: <input aria-label="Order draft" defaultValue="Draft" />
+            },
+            { value: 'history', label: 'History', content: 'Order history' }
+        ]} />;
     }`);
 
     try {

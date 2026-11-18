@@ -148,6 +148,11 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
                     if (!dialog || !(picker instanceof HTMLInputElement)) throw new Error('Expected the tag editor');
 
                     expect(picker.closest('[data-slot="combobox-chips"]')?.textContent).toContain('Purchases');
+                    if (edit === 'unknown') {
+                        expect(picker.closest('[data-slot="combobox-chips"]')?.textContent).toContain(
+                            '00000000-0000-4000-8000-000000000099'
+                        );
+                    }
 
                     // Edit through the real picker so the controlled selection reaches the write.
                     if (edit === 'changed' || edit === 'unknown') {
@@ -170,6 +175,8 @@ it.each(['unchanged', 'changed', 'cleared', 'cancel', 'unknown'] as const)(
                         if (!clear) throw new Error('Expected the clear selection action');
 
                         await act(async () => clear.click());
+                        expect(picker.placeholder).toBe('Select tags');
+                        expect(dialog.querySelector('[data-slot="combobox-chip"]')).toBeNull();
                     }
 
                     expect(writes).toEqual([]);

@@ -27,11 +27,9 @@ import {
     DropdownMenuTrigger
 } from '@/components/shadcn/dropdown-menu';
 
-type Solution = z.output<typeof schemas.zOrganizationSolutionSummary>;
-
 type SolutionAction =
     | { kind: 'create' }
-    | { kind: 'tags'; solution: Solution }
+    | { kind: 'tags'; solution: Pick<z.output<typeof schemas.zOrganizationSolutionSummary>, 'id' | 'name' | 'tag_ids'> }
     | { kind: 'update'; item: { id: string; name: string } }
     | { kind: 'logs'; id: string }
     | { kind: 'permissions'; id: string }
@@ -239,7 +237,16 @@ export default function SolutionManagement({
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuItem
-                                                        onClick={() => setSelected({ kind: 'tags', solution: row })}
+                                                        onClick={() =>
+                                                            setSelected({
+                                                                kind: 'tags',
+                                                                solution: {
+                                                                    id: row.id,
+                                                                    name: row.name,
+                                                                    tag_ids: row.tag_ids
+                                                                }
+                                                            })
+                                                        }
                                                     >
                                                         <Tags aria-hidden="true" />
                                                         Tags

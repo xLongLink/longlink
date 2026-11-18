@@ -4752,27 +4752,28 @@ function Grid({ columns, gap, align, justify, children, ...props }: Omit<React$1
 function GridItem({ columns, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
     columns?: number | "full";
 }): React$1.JSX.Element;
-type MenuSectionProps = {
-    children?: React$1.ReactNode;
+type MenuSection = {
+    entries: readonly MenuEntry[];
     isHeaderHidden?: boolean;
     title: string;
 };
-type MenuItemProps = {
-    children?: React$1.ReactNode;
+type MenuItem = {
+    content?: React$1.ReactNode;
     icon?: IconName;
     label: string;
 };
-function Menu({ children, gap }: {
-    children?: React$1.ReactNode;
+type MenuEntry = (MenuItem & {
+    kind: "item";
+}) | {
+    kind: "subsection";
+    label: string;
+    icon?: IconName;
+    items: readonly MenuItem[];
+};
+function Menu({ sections, gap }: {
+    sections: readonly MenuSection[];
     gap?: number;
 }): React$1.JSX.Element;
-function MenuSection(_props: MenuSectionProps): null;
-function MenuItem(_props: MenuItemProps): null;
-function MenuSubSection(_props: {
-    children?: React$1.ReactNode;
-    icon?: IconName;
-    label: string;
-}): null;
 const none: "none";
 const triggerPress: "trigger-press";
 const triggerHover: "trigger-hover";
@@ -5014,19 +5015,19 @@ const tabsListVariants: (props?: ({
     variant?: "line" | "default" | null | undefined;
 } & ClassProp) | undefined) => string;
 function TabsList$1({ className, variant, ...props }: Tabs.List.Props & VariantProps<typeof tabsListVariants>): React$1.JSX.Element;
-type TabProps = {
+type TabItem = {
     value: string;
     label: React$1.ReactNode;
-    children?: React$1.ReactNode;
+    content?: React$1.ReactNode;
     disabled?: boolean;
     keepMounted?: boolean;
 };
-function Tabs$2({ children, defaultValue, variant, onValueChange, ...props }: Omit<React$1.ComponentProps<typeof Tabs$1>, "className" | "style" | "value" | "defaultValue" | "onValueChange" | "orientation"> & Pick<React$1.ComponentProps<typeof TabsList$1>, "variant"> & {
+function Tabs$2({ items, defaultValue, variant, onValueChange, ...props }: Omit<React$1.ComponentProps<typeof Tabs$1>, "children" | "className" | "style" | "value" | "defaultValue" | "onValueChange" | "orientation"> & Pick<React$1.ComponentProps<typeof TabsList$1>, "variant"> & {
+    items: readonly TabItem[];
     value?: string;
     defaultValue?: string;
     onValueChange?: (value: string) => void;
 }): React$1.JSX.Element;
-function Tab(_props: TabProps): null;
 type StateAttributesMapping<State> = {
     [Property in keyof State]?: (state: State[Property]) => Record<string, string> | null;
 };
@@ -6230,12 +6231,12 @@ namespace MenuGroupLabel {
     type Props = MenuGroupLabelProps;
     type State = MenuGroupLabelState;
 }
-const MenuItem$1: React$1.ForwardRefExoticComponent<Omit<MenuItemProps$1, "ref"> & React$1.RefAttributes<HTMLElement>>;
+const MenuItem$1: React$1.ForwardRefExoticComponent<Omit<MenuItemProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 interface MenuItemState {
     disabled: boolean;
     highlighted: boolean;
 }
-interface MenuItemProps$1 extends NonNativeButtonProps, BaseUIComponentProps<"div", MenuItemState> {
+interface MenuItemProps extends NonNativeButtonProps, BaseUIComponentProps<"div", MenuItemState> {
     onClick?: BaseUIComponentProps<"div", MenuItemState>["onClick"] | undefined;
     disabled?: boolean | undefined;
     label?: string | undefined;
@@ -6244,7 +6245,7 @@ interface MenuItemProps$1 extends NonNativeButtonProps, BaseUIComponentProps<"di
 }
 namespace MenuItem$1 {
     type State = MenuItemState;
-    type Props = MenuItemProps$1;
+    type Props = MenuItemProps;
 }
 const MenuLinkItem: React$1.ForwardRefExoticComponent<Omit<MenuLinkItemProps, "ref"> & React$1.RefAttributes<Element>>;
 interface MenuLinkItemState {
@@ -38393,12 +38394,8 @@ const TableCaption$1: PublicComponent<typeof TableCaption>;
 const Timestamp$1: PublicComponent<typeof Timestamp>;
 const Progress$2: PublicComponent<typeof Progress$1>;
 const Tabs$3: PublicComponent<typeof Tabs$2>;
-const Tab$1: PublicComponent<typeof Tab>;
 const Empty$1: PublicComponent<typeof Empty>;
 const Menu$1: PublicComponent<typeof Menu>;
-const MenuSection$1: PublicComponent<typeof MenuSection>;
-const MenuItem$2: PublicComponent<typeof MenuItem>;
-const MenuSubSection$1: PublicComponent<typeof MenuSubSection>;
 const Icon$1: PublicComponent<typeof Icon>;
 const Link$1: PublicComponent<typeof Link>;
 const Currency$1: PublicComponent<typeof Currency>;
@@ -42285,7 +42282,7 @@ namespace iso {
 namespace z {
     export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor };
 }
-export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, MapControls$1 as MapControls, MapGeoJSON$1 as MapGeoJSON, MapViewport$1 as MapViewport, Menu$1 as Menu, MenuItem$2 as MenuItem, MenuSection$1 as MenuSection, MenuSubSection$1 as MenuSubSection, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Tab$1 as Tab, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, ViewMap$1 as Map, dataGridFeatures$1 as dataGridFeatures, z, };
+export { Avatar$2 as Avatar, AvatarGroup$1 as AvatarGroup, Badge$1 as Badge, Box$1 as Box, Button$3 as Button, ButtonGroup$1 as ButtonGroup, ButtonGroupSeparator$1 as ButtonGroupSeparator, ButtonGroupText$1 as ButtonGroupText, Card$2 as Card, Checkbox$2 as Checkbox, Currency$1 as Currency, DataGrid$1 as DataGrid, DataGridColumnHeader$1 as DataGridColumnHeader, DataGridColumnMeta$1 as DataGridColumnMeta, DataGridContainer$1 as DataGridContainer, DataGridFeatures$1 as DataGridFeatures, DataGridPagination$1 as DataGridPagination, DataGridProps$1 as DataGridProps, DataGridScrollArea$1 as DataGridScrollArea, DataGridTableRowSelectAll$1 as DataGridTableRowSelectAll, Dialog$1 as Dialog, DropdownCheckboxItem$1 as DropdownCheckboxItem, DropdownContent$1 as DropdownContent, DropdownGroup$1 as DropdownGroup, DropdownItem$1 as DropdownItem, DropdownLabel$1 as DropdownLabel, DropdownRadioGroup$1 as DropdownRadioGroup, DropdownRadioItem$1 as DropdownRadioItem, DropdownSeparator$1 as DropdownSeparator, DropdownShortcut$1 as DropdownShortcut, DropdownSubContent$1 as DropdownSubContent, DropdownSubTrigger$1 as DropdownSubTrigger, DropdownTrigger$1 as DropdownTrigger, Empty$1 as Empty, FileType$1 as FileType, FileViewer$1 as FileViewer, Filters$1 as Filters, Frame$2 as Frame, Grid$1 as Grid, GridItem$1 as GridItem, Heading$1 as Heading, Icon$1 as Icon, Image$2 as Image, Input$1 as Input, Link$1 as Link, MapControls$1 as MapControls, MapGeoJSON$1 as MapGeoJSON, MapViewport$1 as MapViewport, Menu$1 as Menu, Progress$2 as Progress, RadioGroup$1 as RadioGroup, Separator$2 as Separator, Stack$1 as Stack, StackItem$1 as StackItem, Switch$2 as Switch, Table$2 as Table, TableBody$1 as TableBody, TableCaption$1 as TableCaption, TableCell$1 as TableCell, TableFooter$1 as TableFooter, TableHead$1 as TableHead, TableHeader$1 as TableHeader, TableRow$1 as TableRow, Tabs$3 as Tabs, Text$2 as Text, Textarea$1 as Textarea, Timestamp$1 as Timestamp, ViewMap$1 as Map, dataGridFeatures$1 as dataGridFeatures, z, };
 }
 
 declare const ArcMap: typeof NativeFrontend.ArcMap;
@@ -42364,9 +42361,6 @@ import MapRoute = NativeFrontend.MapRoute;
 import MapViewport = NativeFrontend.MapViewport;
 declare const MarkerMap: typeof NativeFrontend.MarkerMap;
 declare const Menu: typeof NativeFrontend.Menu;
-declare const MenuItem: typeof NativeFrontend.MenuItem;
-declare const MenuSection: typeof NativeFrontend.MenuSection;
-declare const MenuSubSection: typeof NativeFrontend.MenuSubSection;
 declare const Pagination: typeof NativeFrontend.Pagination;
 declare const PieChart: typeof NativeFrontend.PieChart;
 declare const Progress: typeof NativeFrontend.Progress;
@@ -42386,7 +42380,6 @@ declare const Stack: typeof NativeFrontend.Stack;
 declare const StackItem: typeof NativeFrontend.StackItem;
 declare const StreetMap: typeof NativeFrontend.StreetMap;
 declare const Switch: typeof NativeFrontend.Switch;
-declare const Tab: typeof NativeFrontend.Tab;
 declare const Table: typeof NativeFrontend.Table;
 declare const TableBody: typeof NativeFrontend.TableBody;
 declare const TableCaption: typeof NativeFrontend.TableCaption;

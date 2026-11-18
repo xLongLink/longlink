@@ -18,79 +18,101 @@ export default function ProjectSettings() {
                     This can be used for organizing settings into navigable sections.
                 </Text>
             </Stack>
-            <Menu>
-                <MenuSection title="Projects">
-                    <MenuItem label="General" icon="settings">
-                        <Box maxWidth={640}>
-                            <Stack gap={4}>
-                                <Heading level={2}>General</Heading>
-                                <Button onClick={() => setIsFullscreenOpen(true)}>Open fullscreen settings</Button>
-                                <Input
-                                    id="company-name"
-                                    label="Company name"
-                                    value={company}
-                                    onChange={(event) => setCompany(event.currentTarget.value)}
-                                />
-                                <Select
-                                    id="default-currency"
-                                    label="Default currency"
-                                    options={[
-                                        { value: 'CHF', label: 'CHF' },
-                                        { value: 'EUR', label: 'EUR' },
-                                        { value: 'USD', label: 'USD' }
-                                    ]}
-                                    value={currency}
-                                    onValueChange={(value) => {
-                                        if (value !== null) setCurrency(value);
-                                    }}
-                                />
-                            </Stack>
-                        </Box>
-                    </MenuItem>
-                    <MenuItem label="Approvals" icon="circle-check">
-                        <Box maxWidth={640}>
-                            <Stack gap={4}>
-                                <Heading level={2}>Approvals</Heading>
-                                <Switch
-                                    id="approval-required"
-                                    label="Require project approval"
-                                    checked={approvalRequired}
-                                    onCheckedChange={setApprovalRequired}
-                                />
-                                <Input
-                                    id="approval-threshold"
-                                    label={`Approval threshold (${currency})`}
-                                    type="number"
-                                    value={approvalThreshold}
-                                    onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
-                                    min={0}
-                                    step="any"
-                                    disabled={!approvalRequired}
-                                />
-                            </Stack>
-                        </Box>
-                    </MenuItem>
-                    <MenuItem label="Notifications" icon="bell">
-                        <Box maxWidth={640}>
-                            <Stack gap={4}>
-                                <Heading level={2}>Notifications</Heading>
-                                <Switch
-                                    id="pending-notifications"
-                                    label="Project awaiting approval"
-                                    checked={pendingNotifications}
-                                    onCheckedChange={setPendingNotifications}
-                                />
-                                <Switch
-                                    id="approved-notifications"
-                                    label="Project approved"
-                                    checked={approvedNotifications}
-                                    onCheckedChange={setApprovedNotifications}
-                                />
-                            </Stack>
-                        </Box>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
+            <Menu
+                sections={[
+                    {
+                        title: 'Projects',
+                        entries: [
+                            {
+                                kind: 'item',
+                                label: 'General',
+                                icon: 'settings',
+                                content: (
+                                    <Box maxWidth={640}>
+                                        <Stack gap={4}>
+                                            <Heading level={2}>General</Heading>
+                                            <Button onClick={() => setIsFullscreenOpen(true)}>
+                                                Open fullscreen settings
+                                            </Button>
+                                            <Input
+                                                id="company-name"
+                                                label="Company name"
+                                                value={company}
+                                                onChange={(event) => setCompany(event.currentTarget.value)}
+                                            />
+                                            <Select
+                                                id="default-currency"
+                                                label="Default currency"
+                                                options={[
+                                                    { value: 'CHF', label: 'CHF' },
+                                                    { value: 'EUR', label: 'EUR' },
+                                                    { value: 'USD', label: 'USD' }
+                                                ]}
+                                                value={currency}
+                                                onValueChange={(value) => {
+                                                    if (value !== null) setCurrency(value);
+                                                }}
+                                            />
+                                        </Stack>
+                                    </Box>
+                                )
+                            },
+                            {
+                                kind: 'item',
+                                label: 'Approvals',
+                                icon: 'circle-check',
+                                content: (
+                                    <Box maxWidth={640}>
+                                        <Stack gap={4}>
+                                            <Heading level={2}>Approvals</Heading>
+                                            <Switch
+                                                id="approval-required"
+                                                label="Require project approval"
+                                                checked={approvalRequired}
+                                                onCheckedChange={setApprovalRequired}
+                                            />
+                                            <Input
+                                                id="approval-threshold"
+                                                label={`Approval threshold (${currency})`}
+                                                type="number"
+                                                value={approvalThreshold}
+                                                onChange={(event) => setApprovalThreshold(event.currentTarget.value)}
+                                                min={0}
+                                                step="any"
+                                                disabled={!approvalRequired}
+                                            />
+                                        </Stack>
+                                    </Box>
+                                )
+                            },
+                            {
+                                kind: 'item',
+                                label: 'Notifications',
+                                icon: 'bell',
+                                content: (
+                                    <Box maxWidth={640}>
+                                        <Stack gap={4}>
+                                            <Heading level={2}>Notifications</Heading>
+                                            <Switch
+                                                id="pending-notifications"
+                                                label="Project awaiting approval"
+                                                checked={pendingNotifications}
+                                                onCheckedChange={setPendingNotifications}
+                                            />
+                                            <Switch
+                                                id="approved-notifications"
+                                                label="Project approved"
+                                                checked={approvedNotifications}
+                                                onCheckedChange={setApprovedNotifications}
+                                            />
+                                        </Stack>
+                                    </Box>
+                                )
+                            }
+                        ]
+                    }
+                ]}
+            />
             <Dialog
                 fullscreen
                 open={isFullscreenOpen}

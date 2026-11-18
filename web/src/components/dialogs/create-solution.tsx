@@ -4,11 +4,11 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
+import { useEffect, useId, useRef, useState, useTransition } from 'react';
 
 /** Owns image inspection and configuration for one creation attempt. */
 export default function CreateSolution({
@@ -26,7 +26,7 @@ export default function CreateSolution({
         source: string;
         metadata: z.output<typeof schemas.zLongLinkMetadata>;
     }>();
-    const [inspecting, setInspecting] = useState(false);
+    const [inspecting, startInspection] = useTransition();
     const request = useRef<AbortController | null>(null);
 
     // Cancel an unfinished inspection when the dialog's attempt ends.
@@ -36,8 +36,8 @@ export default function CreateSolution({
         .extend({
             image: z.string().trim().min(1),
             name: z.string().trim().pipe(schemas.zSolutionCreate.shape.name),
-            description: z.string().max(255),
-            envs: z.record(z.string(), z.string())
+            description: schemas.zSolutionCreate.shape.description.unwrap().unwrap(),
+            envs: schemas.zSolutionCreate.shape.envs.unwrap()
         })
         .superRefine((values, context) => {
             for (const environment of inspection?.metadata.environments ?? []) {
@@ -59,7 +59,6 @@ export default function CreateSolution({
     // Validate only the image before fetching the configuration it defines.
     const inspect = useSubmit(
         async () => {
-            setInspecting(true);
             form.clearErrors('root');
 
             try {
@@ -88,8 +87,6 @@ export default function CreateSolution({
                 setStage('configure');
             } catch (error) {
                 if (!request.current?.signal.aborted) throw error;
-            } finally {
-                setInspecting(false);
             }
         },
         { onError: () => form.setError('root', { message: 'Could not inspect the image. Please try again.' }) }
@@ -148,7 +145,9 @@ export default function CreateSolution({
                 onSubmit={(event) => {
                     if (stage === 'image') {
                         event.preventDefault();
-                        void inspect(undefined);
+                        startInspection(async () => {
+                            await inspect(undefined);
+                        });
                     } else {
                         void form.handleSubmit(submit)(event);
                     }

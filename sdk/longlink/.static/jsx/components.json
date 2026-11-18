@@ -1351,9 +1351,9 @@
             "keywords": ["navigation", "sidebar", "sections"],
             "properties": [
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "MenuSection elements defining navigation and content."
+                    "name": "sections",
+                    "type": "readonly MenuSection[]",
+                    "description": "Sections containing navigation entries and their content."
                 },
                 {
                     "name": "gap",
@@ -1362,53 +1362,53 @@
                     "default": 3
                 },
                 {
-                    "name": "MenuSection.children",
-                    "type": "ReactNode",
-                    "description": "MenuItem elements or nested MenuSubSection groups."
+                    "name": "sections[].entries",
+                    "type": "readonly MenuEntry[]",
+                    "description": "Item records with kind: item, or collapsible groups with kind: subsection and an items array."
                 },
                 {
-                    "name": "MenuSection.isHeaderHidden",
+                    "name": "sections[].isHeaderHidden",
                     "type": "boolean",
                     "description": "Hides the section heading; visible by default."
                 },
                 {
-                    "name": "MenuSection.title",
+                    "name": "sections[].title",
                     "type": "string",
                     "description": "Section heading displayed in the navigation."
                 },
                 {
-                    "name": "MenuItem.children",
+                    "name": "item.content",
                     "type": "ReactNode",
                     "description": "Content mounted beside the navigation while this item is selected."
                 },
                 {
-                    "name": "MenuItem.icon",
+                    "name": "item.icon",
                     "type": "IconName",
                     "description": "Optional Lucide icon name displayed beside the label."
                 },
                 {
-                    "name": "MenuItem.label",
+                    "name": "item.label",
                     "type": "string",
                     "description": "Navigation label; its lowercase, hyphenated form identifies the item's URL fragment."
                 },
                 {
-                    "name": "MenuSubSection.children",
-                    "type": "ReactNode",
-                    "description": "MenuItem elements nested inside this collapsible group."
+                    "name": "subsection.items",
+                    "type": "readonly MenuItem[]",
+                    "description": "Item records nested inside this collapsible group."
                 },
                 {
-                    "name": "MenuSubSection.icon",
+                    "name": "subsection.icon",
                     "type": "IconName",
                     "description": "Optional Lucide icon name displayed beside the group label."
                 },
                 {
-                    "name": "MenuSubSection.label",
+                    "name": "subsection.label",
                     "type": "string",
                     "description": "Label displayed on the collapsible navigation group."
                 }
             ],
             "source": "custom",
-            "justification": "Coordinates Solution side navigation, section selection, and persistent section content."
+            "justification": "Coordinates Solution side navigation and mounts the selected item's content."
         },
         {
             "name": "Pagination",
@@ -1807,18 +1807,18 @@
             "name": "Tabs",
             "category": "Layouts",
             "introduction": "Switches between related content panels.",
-            "guidance": "Compose Tabs with Tab children. Each Tab supplies a stable string value, a label, and its panel content. The first enabled Tab is selected when defaultValue is omitted.",
+            "guidance": "Pass tab records through items. Each item supplies a stable string value, a label, and its panel content. The first enabled item is selected when defaultValue is omitted.",
             "keywords": ["tabs", "panels", "sections"],
             "properties": [
                 {
-                    "name": "children",
-                    "type": "ReactNode",
-                    "description": "Tab definitions containing labels and panel content."
+                    "name": "items",
+                    "type": "readonly TabItem[]",
+                    "description": "Tab records containing values, labels, and panel content."
                 },
                 {
                     "name": "defaultValue",
                     "type": "string",
-                    "description": "Initial uncontrolled selection; defaults to the first enabled Tab value."
+                    "description": "Initial uncontrolled selection; defaults to the first enabled item's value."
                 },
                 {
                     "name": "onValueChange",
@@ -1832,23 +1832,27 @@
                     "description": "Tab list appearance.",
                     "default": "default"
                 },
-                { "name": "Tab.disabled", "type": "boolean", "description": "Whether the tab is disabled." },
+                { "name": "items[].disabled", "type": "boolean", "description": "Whether the tab is disabled." },
                 {
-                    "name": "Tab.value",
+                    "name": "items[].value",
                     "type": "string",
                     "description": "Stable selection value associating the tab with its panel."
                 },
-                { "name": "Tab.label", "type": "ReactNode", "description": "Visible tab label." },
-                { "name": "Tab.children", "type": "ReactNode", "description": "Panel content mounted when selected." },
+                { "name": "items[].label", "type": "ReactNode", "description": "Visible tab label." },
                 {
-                    "name": "Tab.keepMounted",
+                    "name": "items[].content",
+                    "type": "ReactNode",
+                    "description": "Panel content mounted when selected."
+                },
+                {
+                    "name": "items[].keepMounted",
                     "type": "boolean",
                     "description": "Keeps an inactive panel in the DOM.",
                     "default": false
                 }
             ],
             "source": "custom",
-            "justification": "Owns tab and panel composition through Tabs and Tab while retaining native selection, keyboard behavior, and fixed styling.",
+            "justification": "Builds tabs and panels from item records while retaining native selection, keyboard behavior, and fixed styling.",
             "reference": "https://ui.shadcn.com/docs/components/tabs"
         },
         {

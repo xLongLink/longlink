@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
+import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import CreateSolution from '@/components/dialogs/create-solution';
 
@@ -146,6 +147,83 @@ it('gates creation on inspection and validation, retaining configuration through
         );
     } finally {
         resolveInspection(Response.json(metadata));
+        transport.mockRestore();
+    }
+});
+
+it('reports failed inspection and allows retrying the same image without losing the draft', async () => {
+    // Arrange
+    const image = 'ghcr.io/xlonglink/sample:latest';
+    const responses: Array<(response: Response) => void> = [];
+    const reportError = vi.fn();
+    const onSuccess = vi.fn();
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+
+        if (request.method !== 'GET' || new URL(request.url).pathname !== '/api/v1/organizations/organization/image') {
+            throw new Error(`Unexpected request: ${request.method} ${request.url}`);
+        }
+
+        expect(new URL(request.url).searchParams.get('image')).toBe(image);
+        return await new Promise<Response>((resolve) => responses.push(resolve));
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <CreateSolution organizationId="organization" onSuccess={onSuccess} onOpenChange={() => undefined} />
+            </ApiErrorContext>,
+            async () => {
+                const events = userEvent.setup();
+                const dialog = document.querySelector('[role="dialog"]');
+                const input = dialog?.querySelector<HTMLInputElement>('input[name="image"]');
+                const inspect = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+                if (!dialog || !input || !inspect) throw new Error('Expected inspection controls');
+
+                // Act
+                await act(async () => events.type(input, image));
+                await act(async () => {
+                    inspect.click();
+                    inspect.click();
+                });
+                await vi.waitFor(() => expect(responses).toHaveLength(1));
+                const fail = responses[0];
+
+                if (!fail) throw new Error('Expected pending inspection');
+
+                await act(async () => fail(Response.json({ environments: 'invalid' })));
+
+                // Assert
+                await vi.waitFor(() => expect(reportError).toHaveBeenCalledOnce());
+                expect(dialog.textContent).toContain('Could not inspect the image. Please try again.');
+                expect(input.value).toBe(image);
+                expect(inspect.disabled).toBe(false);
+                expect(dialog.querySelector('input[name="name"]')).toBeNull();
+                expect(onSuccess).not.toHaveBeenCalled();
+
+                // Act
+                await act(async () => events.click(inspect));
+                await vi.waitFor(() => expect(responses).toHaveLength(2));
+                expect(dialog.textContent).not.toContain('Could not inspect the image.');
+                expect(inspect.disabled).toBe(true);
+                const succeed = responses[1];
+
+                if (!succeed) throw new Error('Expected inspection retry');
+
+                await act(async () => succeed(Response.json({ image, description: 'Inspected draft' })));
+
+                // Assert
+                await vi.waitFor(() => expect(dialog.querySelector('input[name="name"]')).not.toBeNull());
+                expect(dialog.querySelector<HTMLInputElement>('input[name="description"]')?.value).toBe(
+                    'Inspected draft'
+                );
+                expect(reportError).toHaveBeenCalledOnce();
+                expect(onSuccess).not.toHaveBeenCalled();
+            }
+        );
+    } finally {
+        for (const resolve of responses) resolve(Response.json({ image }));
         transport.mockRestore();
     }
 });

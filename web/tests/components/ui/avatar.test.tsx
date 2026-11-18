@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
+import * as dicebear from '@dicebear/core';
 import { act, useRef, useState } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -79,6 +80,50 @@ it('uses the name for stable artwork and updates it when the name changes', asyn
 
         expect(output.querySelector('img')?.getAttribute('src')).toBe(ink);
     });
+});
+
+it('defers artwork until image failure and uses the latest name and shape', async () => {
+    // Arrange
+    const primary = 'https://images.example/avatar.png';
+    const expected = renderStatic(<Avatar name="ACME Ink" shape="rounded" />)
+        .querySelector('img')
+        ?.getAttribute('src');
+    const serialize = vi.spyOn(dicebear.Avatar.prototype, 'toDataUri');
+
+    function Owner() {
+        const [updated, setUpdated] = useState(false);
+
+        return (
+            <>
+                <Avatar
+                    src={primary}
+                    name={updated ? 'ACME Ink' : 'ACME Studio'}
+                    shape={updated ? 'rounded' : 'circle'}
+                />
+                <button onClick={() => setUpdated(true)}>Update profile</button>
+            </>
+        );
+    }
+
+    try {
+        await withMounted(<Owner />, async (output) => {
+            // Act
+            await act(async () => output.querySelector('button')?.click());
+
+            // Assert
+            expect(output.querySelector('img')?.getAttribute('src')).toBe(primary);
+            expect(serialize).not.toHaveBeenCalled();
+
+            // Act
+            await act(async () => output.querySelector('img')?.dispatchEvent(new Event('error')));
+
+            // Assert
+            expect(serialize).toHaveBeenCalledOnce();
+            expect(output.querySelector('img')?.getAttribute('src')).toBe(expected);
+        });
+    } finally {
+        serialize.mockRestore();
+    }
 });
 
 it('retains geometry, generated artwork choice, and named versus decorative semantics', () => {

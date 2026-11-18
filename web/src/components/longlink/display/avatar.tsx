@@ -31,19 +31,18 @@ export function Avatar({ className, src, name, size = 'md', children, shape = 'c
     // Select fallback artwork from the shape.
     const style = shape === 'rounded' ? wavesStyle : glyphsStyle;
 
-    // Keep generated artwork stable for each name and style.
-    const seed = name?.trim() || 'avatar';
-    const fallbackSrc = useMemo(() => {
-        const avatar = new dicebear.Avatar(style, { seed });
-
-        return avatar.toDataUri();
-    }, [style, seed]);
-
     // Failed sources do not prevent a new URL or artwork style from loading.
     const [erroredSrc, setErroredSrc] = useState<string>();
     const primarySrc = src?.trim() || undefined;
 
-    const imageSrc = primarySrc && primarySrc !== erroredSrc ? primarySrc : fallbackSrc;
+    // Keep generated artwork stable for each name and style.
+    const seed = name?.trim() || 'avatar';
+    const imageSrc = useMemo(() => {
+        if (primarySrc && primarySrc !== erroredSrc) return primarySrc;
+        const avatar = new dicebear.Avatar(style, { seed });
+
+        return avatar.toDataUri();
+    }, [primarySrc, erroredSrc, style, seed]);
 
     const accessibleName = name?.trim() || undefined;
     const labelled = Boolean(accessibleName || props['aria-label'] || props['aria-labelledby']);
