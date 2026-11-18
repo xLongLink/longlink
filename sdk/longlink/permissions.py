@@ -1,13 +1,16 @@
 import re
 import hashlib
-from typing import Literal
+from typing import Literal, get_args
 from pydantic import Field, BaseModel, ConfigDict, model_validator
-from collections.abc import Mapping, Sequence
+from contextlib import ExitStack, contextmanager
+from collections.abc import Mapping, Sequence, Generator
 from fastapi.routing import RouteContext
 from starlette.types import Send, Scope, ASGIApp, Receive
 from starlette.responses import JSONResponse
 
-METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
+Method = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+
+METHODS = frozenset(get_args(Method))
 ROLE_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,63}")
 
 
@@ -20,7 +23,7 @@ class Endpoint(BaseModel):
     key: str = Field(max_length=520)
     path: str = Field(max_length=512, pattern=r"^/")
     roles: list[str] = Field(max_length=64)
-    method: Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+    method: Method
     summary: str = Field(default="", max_length=256)
 
     @model_validator(mode="after")
@@ -101,6 +104,28 @@ def discover(routes: Sequence[RouteContext]) -> Catalog:
             endpoints.append(endpoint)
     endpoints.sort(key=lambda endpoint: endpoint.key)
     return Catalog(endpoints=endpoints)
+
+
+@contextmanager
+def guarded(routes: Sequence[RouteContext], catalog: Catalog) -> Generator[None]:
+    """Install catalog-bound guards and restore handlers when their lifetime ends."""
+
+    # Compile grants against the same catalog identity and endpoint order.
+    digest = catalog.digest
+    indices: dict[str, dict[str, int]] = {}
+    for index, endpoint in enumerate(catalog.endpoints):
+        indices.setdefault(endpoint.path, {})[endpoint.method] = index
+
+    # Restore installed handlers even when a later installation fails.
+    with ExitStack() as stack:
+        for route in routes:
+            # FastAPI owns a separate executable handler for each included-router context.
+            target = route._route_context or route.original_route
+            original = getattr(target, "app")
+            guard = Guard(original, digest, indices.get(route.path or "", {}))
+            setattr(target, "app", guard)
+            stack.callback(setattr, target, "app", original)
+        yield
 
 
 class Guard:

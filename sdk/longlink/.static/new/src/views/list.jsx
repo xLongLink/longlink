@@ -1,15 +1,15 @@
 const files = [
-    { type: 'png', filename: 'example.png' },
-    { type: 'jpg', filename: 'garden.jpg' },
-    { type: 'gif', filename: 'example.gif' },
-    { type: 'webp', filename: 'example.webp' },
-    { type: 'pdf', filename: 'example.pdf' },
-    { type: 'txt', filename: 'example.txt' },
-    { type: 'py', filename: 'example.py' },
-    { type: 'json', filename: 'example.json' },
-    { type: 'tsx', filename: 'example.tsx' },
-    { type: 'yaml', filename: 'example.yaml' }
-];
+    'example.png',
+    'garden.jpg',
+    'example.gif',
+    'example.webp',
+    'example.pdf',
+    'example.txt',
+    'example.py',
+    'example.json',
+    'example.tsx',
+    'example.yaml'
+].map((filename) => ({ filename, type: filename.split('.').at(-1) }));
 
 /** Lists bundled file types with on-demand preview dialogs. */
 export default function List() {

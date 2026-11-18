@@ -32,15 +32,20 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     # Act
     client = SolutionTestClient(app)
     with client:
+        objects = app.state.longlink.storage
+        assert isinstance(objects, Filesystem)
+        backend = objects.filesystem.fs
+        directory = objects.filesystem.path
         user_response = client.get("/api/me")
         assert client.portal is not None
-        client.portal.call(app.state.longlink.storage.write, "report.txt", b"report")
-        assert client.portal.call(app.state.longlink.storage.exists, "report.txt")
+        client.portal.call(objects.write, "report.txt", b"report")
+        assert client.portal.call(objects.exists, "report.txt")
 
     # Assert
     assert user_response.status_code == 200
     assert user_response.json() == "Testing user"
     assert len(disposed) == 1
+    assert not backend.exists(directory)
     assert not Path("dev.db").exists()
 
     # Testing writes must not create files on the development filesystem.

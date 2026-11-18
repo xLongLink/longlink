@@ -1,6 +1,6 @@
 import re
 from typing import Self, Literal
-from pydantic import Field, BaseModel, JsonValue, model_validator
+from pydantic import Field, BaseModel, JsonValue, ValidationError, model_validator
 from rapidfuzz import fuzz
 from longlink.cli import errors
 from collections.abc import Sequence
@@ -75,13 +75,32 @@ class Catalog(BaseModel):
     patterns: list[Pattern]
     components: list[Component]
 
+    @model_validator(mode="after")
+    def validate_references(self) -> Self:
+        """Require unambiguous components and complete catalog references."""
+
+        names = {component.name for component in self.components}
+        if len({name.casefold() for name in names}) != len(self.components):
+            raise ValueError("Component names must be unique case-insensitively")
+        for component in self.components:
+            if component.category not in self.groups:
+                raise ValueError(f"Component {component.name} references unknown group: {component.category}")
+        for pattern in self.patterns:
+            for name in pattern.components:
+                if name not in names:
+                    raise ValueError(f"Pattern {pattern.name} references unknown component: {name}")
+        return self
+
 
 def catalog() -> Catalog:
     """Read and validate the packaged catalog shared with the website."""
 
     # Validate generated documentation at the file boundary.
-    source = (ROOT / ".static" / "jsx" / "components.json").read_text(encoding="utf-8")
-    return Catalog.model_validate_json(source)
+    try:
+        source = (ROOT / ".static" / "jsx" / "components.json").read_text(encoding="utf-8")
+        return Catalog.model_validate_json(source)
+    except (OSError, ValidationError) as error:
+        raise errors.Error(f"Unable to load documentation catalog: {error}") from error
 
 
 def score(query: str, name: str, keywords: list[str], description: str) -> float:

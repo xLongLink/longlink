@@ -15,13 +15,19 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
     try:
         module = importlib.import_module(module_name)
     except Exception as error:
+        # Missing dependencies are import failures, not missing configured modules.
+        if (
+            isinstance(error, ModuleNotFoundError)
+            and error.name
+            and (module_name == error.name or module_name.startswith(f"{error.name}."))
+        ):
+            raise ValueError(f"Environment model not found: {module_name}") from error
         raise ValueError(f"Unable to import environment model {environment_import}: {error}") from error
 
     # Require a Pydantic model before reading its validated field metadata.
     environment_model = getattr(module, class_name, None)
     if environment_model is None:
-        envs_path = root.joinpath(*module_name.split(".")).with_suffix(".py")
-        raise ValueError(f"Environment model must define {class_name}: {envs_path}")
+        raise ValueError(f"Environment model must define {class_name}: {module_name}")
     if not isinstance(environment_model, type) or not issubclass(environment_model, BaseModel):
         raise ValueError(f"Environment model must be a Pydantic model: {environment_import}")
 
@@ -30,7 +36,9 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
     environments: list[dict[str, object]] = []
     for field_name, field in environment_model.model_fields.items():
         env_entry: dict[str, object] = {
-            "name": field.validation_alias if isinstance(field.validation_alias, str) and field.validation_alias else f"{prefix}{field_name}",
+            "name": field.validation_alias
+            if isinstance(field.validation_alias, str) and field.validation_alias
+            else f"{prefix}{field_name}",
             "required": field.is_required(),
         }
 
@@ -42,14 +50,12 @@ def read_model(root: Path, environment_import: str) -> list[dict[str, object]]:
 
 
 if __name__ == "__main__":
-
     # Return metadata or an expected validation error through a file, leaving output streams intact.
     root = Path(sys.argv[1])
     result_path = Path(sys.argv[3])
     try:
         result: list[dict[str, object]] | str = read_model(root, sys.argv[2])
     except ValueError as error:
-
         # Expected model errors share the file transport with successful metadata.
         result = str(error)
     result_path.write_text(json.dumps(result), encoding="utf-8")

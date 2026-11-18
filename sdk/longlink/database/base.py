@@ -116,11 +116,9 @@ class Database:
                         # Keep the isolated test client's default identity available.
                         users = SQLModel.metadata.tables["users"]
                         await conn.execute(
-                            sqlite.insert(users)
-                            .values(
+                            users.insert().values(
                                 id=LOCAL_USER_ID, name="Testing user", email="local@example.com", avatar="", updated_at=datetime.now(UTC)
                             )
-                            .on_conflict_do_nothing(index_elements=[users.c.id])
                         )
 
                 # Failed or cancelled initialization must dispose the unpublished engine.
