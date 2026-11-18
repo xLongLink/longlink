@@ -159,12 +159,70 @@ def test_read_env_spec_emits_supported_environment_metadata(tmp_path: Path) -> N
     ]
 
 
+@pytest.mark.parametrize("module_name", ["settings", "settings.environments"])
+def test_read_env_spec_reads_package_exported_model(tmp_path: Path, module_name: str) -> None:
+    """Inspect models exported by packages rather than only Python module files."""
+
+    # Arrange
+    package = tmp_path / "settings"
+    package.mkdir()
+    package.joinpath("__init__.py").write_text("", encoding="utf-8")
+    if module_name == "settings.environments":
+        package = package / "environments"
+        package.mkdir()
+    package.joinpath("model.py").write_text("from pydantic import BaseModel\nclass Env(BaseModel):\n    TOKEN: str\n", encoding="utf-8")
+    package.joinpath("__init__.py").write_text("from .model import Env\n", encoding="utf-8")
+    config = {"tool": {"longlink": {"environments": f"{module_name}:Env"}}}
+
+    # Act
+    metadata = build.read_env_spec(tmp_path, config)
+
+    # Assert
+    assert metadata == [{"name": "TOKEN", "required": True}]
+
+
+@pytest.mark.parametrize("module_name", ["missing_settings", "missing_settings.envs", "settings.missing"])
+def test_read_env_spec_reports_missing_configured_module(tmp_path: Path, module_name: str) -> None:
+    """Report missing modules and parent packages through the CLI error boundary."""
+
+    # Arrange
+    package = tmp_path / "settings"
+    package.mkdir()
+    package.joinpath("__init__.py").write_text("", encoding="utf-8")
+    config = {"tool": {"longlink": {"environments": f"{module_name}:Env"}}}
+
+    # Act
+    with pytest.raises(errors.Error) as failure:
+        build.read_env_spec(tmp_path, config)
+
+    # Assert
+    assert str(failure.value) == f"Environment model not found: {module_name}"
+
+
+@pytest.mark.parametrize("dependency", ["longlink_missing_dependency", "settings.missing"])
+def test_read_env_spec_reports_missing_transitive_dependency(tmp_path: Path, dependency: str) -> None:
+    """Do not misdiagnose an importable model whose own dependency is missing."""
+
+    # Arrange
+    package = tmp_path / "settings"
+    package.mkdir()
+    package.joinpath("__init__.py").write_text("", encoding="utf-8")
+    package.joinpath("envs.py").write_text(f"import {dependency}\n", encoding="utf-8")
+    config = {"tool": {"longlink": {"environments": "settings.envs:Env"}}}
+
+    # Act
+    with pytest.raises(errors.Error) as failure:
+        build.read_env_spec(tmp_path, config)
+
+    # Assert
+    assert str(failure.value) == f"Unable to import environment model settings.envs:Env: No module named '{dependency}'"
+
+
 @pytest.mark.parametrize(
     ("project_config", "module_path", "module_source", "message"),
     [
         pytest.param("", None, None, r"\[tool\.longlink\]\.environments", id="missing-config"),
         pytest.param('[tool.longlink]\nenvironments = "invalid"\n', None, None, r"\[tool\.longlink\]\.environments", id="invalid-import"),
-        pytest.param('[tool.longlink]\nenvironments = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
         pytest.param(
             '[tool.longlink]\nenvironments = "src.envs:Settings"\n',
             "src/envs.py",

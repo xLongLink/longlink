@@ -1,5 +1,4 @@
 import fsspec
-import weakref
 from uuid import uuid4
 from pathlib import Path, PurePosixPath
 from longlink.storage import tls
@@ -10,13 +9,6 @@ from fsspec.implementations.dirfs import DirFileSystem
 from fsspec.implementations.memory import MemoryFileSystem
 
 __all__ = ["File", "Storage", "MissingFileError", "create_storage"]
-
-
-def _remove_memory_directory(filesystem: MemoryFileSystem, directory: str) -> None:
-    """Release only the namespace owned by a collected testing filesystem."""
-
-    if filesystem.exists(directory):
-        filesystem.rm(directory, recursive=True)
 
 
 def create_storage(settings: Envs) -> Storage:
@@ -63,8 +55,7 @@ def create_storage(settings: Envs) -> Storage:
         if scope is not None:
             root /= scope
         filesystem = DirFileSystem(path=root.as_posix(), fs=backend, skip_instance_cache=True)
-        weakref.finalize(filesystem, _remove_memory_directory, backend, directory)
-        return Filesystem(filesystem)
+        return Filesystem(filesystem, memory_directory=directory)
 
     # Mirror the production bucket and prefix beneath the development directory.
     root = Path.cwd() / ".storage"

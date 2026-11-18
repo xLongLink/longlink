@@ -1,17 +1,91 @@
 {
     "metrics": [
-        { "label": "Models in the directory", "value": "24", "change": "+13.6%", "icon": "models", "trend": [9, 10, 10, 12, 14, 13, 15, 18, 20, 19, 20, 22, 25, 23, 27, 24] },
-        { "label": "Community reviews", "value": "8,136", "change": "+14.9%", "icon": "reviews", "trend": [42, 39, 48, 43, 56, 51, 60, 57, 65, 72, 66, 79, 76, 85, 80, 91] },
-        { "label": "Messages this month", "value": "15.6M", "change": "-7.4%", "icon": "messages", "trend": [96, 74, 74, 56, 66, 39, 39, 39, 45, 53, 68, 56, 56, 45, 65, 51] },
-        { "label": "Model providers", "value": "7", "change": "+11.1%", "icon": "providers", "trend": [5, 5, 4, 6, 6, 3, 3, 2, 2, 3, 4, 3, 5, 3, 2, 7] }
+        {
+            "label": "Models in the directory",
+            "value": "24",
+            "change": "+13.6%",
+            "icon": "sparkles",
+            "trend": [9, 10, 10, 12, 14, 13, 15, 18, 20, 19, 20, 22, 25, 23, 27, 24]
+        },
+        {
+            "label": "Community reviews",
+            "value": "8,136",
+            "change": "+14.9%",
+            "icon": "message-square",
+            "trend": [42, 39, 48, 43, 56, 51, 60, 57, 65, 72, 66, 79, 76, 85, 80, 91]
+        },
+        {
+            "label": "Messages this month",
+            "value": "15.6M",
+            "change": "-7.4%",
+            "icon": "activity",
+            "trend": [96, 74, 74, 56, 66, 39, 39, 39, 45, 53, 68, 56, 56, 45, 65, 51]
+        },
+        {
+            "label": "Model providers",
+            "value": "7",
+            "change": "+11.1%",
+            "icon": "globe",
+            "trend": [5, 5, 4, 6, 6, 3, 3, 2, 2, 3, 4, 3, 5, 3, 2, 7]
+        }
     ],
     "geographySummary": { "countries": 47, "messages": 15600000 },
     "countries": [
-        { "id": "840", "name": "United States", "flag": "🇺🇸", "messages": 4617600, "people": 1260, "model": "GPT 5.1", "share": 29.6, "center": [-98, 38], "zoom": 1.5 },
-        { "id": "682", "name": "Saudi Arabia", "flag": "🇸🇦", "messages": 2230800, "people": 340, "model": "Claude Sonnet 4.5", "share": 14.3, "center": [45, 24], "zoom": 3 },
-        { "id": "276", "name": "Germany", "flag": "🇩🇪", "messages": 1560000, "people": 270, "model": "Gemini 3", "share": 10, "center": [10, 51], "zoom": 4 },
-        { "id": "250", "name": "France", "flag": "🇫🇷", "messages": 1045200, "people": 212, "model": "Claude Sonnet 4.5", "share": 6.7, "center": [2, 47], "zoom": 4 },
-        { "id": "642", "name": "Romania", "flag": "🇷🇴", "messages": 858000, "people": 156, "model": "GPT 5.1", "share": 5.5, "center": [25, 46], "zoom": 4 }
+        {
+            "id": "840",
+            "name": "United States",
+            "flag": "🇺🇸",
+            "messages": 4617600,
+            "people": 1260,
+            "model": "GPT 5.1",
+            "share": 29.6,
+            "center": [-98, 38],
+            "zoom": 1.5
+        },
+        {
+            "id": "682",
+            "name": "Saudi Arabia",
+            "flag": "🇸🇦",
+            "messages": 2230800,
+            "people": 340,
+            "model": "Claude Sonnet 4.5",
+            "share": 14.3,
+            "center": [45, 24],
+            "zoom": 3
+        },
+        {
+            "id": "276",
+            "name": "Germany",
+            "flag": "🇩🇪",
+            "messages": 1560000,
+            "people": 270,
+            "model": "Gemini 3",
+            "share": 10,
+            "center": [10, 51],
+            "zoom": 4
+        },
+        {
+            "id": "250",
+            "name": "France",
+            "flag": "🇫🇷",
+            "messages": 1045200,
+            "people": 212,
+            "model": "Claude Sonnet 4.5",
+            "share": 6.7,
+            "center": [2, 47],
+            "zoom": 4
+        },
+        {
+            "id": "642",
+            "name": "Romania",
+            "flag": "🇷🇴",
+            "messages": 858000,
+            "people": 156,
+            "model": "GPT 5.1",
+            "share": 5.5,
+            "center": [25, 46],
+            "zoom": 4
+        }
     ],
     "providers": [
         { "name": "Anthropic", "value": 32.4 },

@@ -1,4 +1,5 @@
 import anyio
+import weakref
 from io import BytesIO
 from s3fs import S3FileSystem
 from anyio import Lock, CancelScope, to_thread
@@ -18,10 +19,17 @@ if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
 
 
+def _remove_memory_directory(filesystem: MemoryFileSystem, directory: str) -> None:
+    """Release only the namespace owned by a testing filesystem."""
+
+    if filesystem.exists(directory):
+        filesystem.rm(directory, recursive=True)
+
+
 class Filesystem:
     """Expose scoped fsspec filesystems through the SDK's async storage contract."""
 
-    def __init__(self, filesystem: DirFileSystem, certificate: str | None = None) -> None:
+    def __init__(self, filesystem: DirFileSystem, certificate: str | None = None, *, memory_directory: str | None = None) -> None:
         """Retain one filesystem and adapt synchronous backends without blocking routes."""
 
         self.filesystem = filesystem
@@ -29,6 +37,9 @@ class Filesystem:
         self._certificate = certificate
         self._lock = Lock()
         self._stack: AsyncExitStack | None = None
+        self._memory_directory = memory_directory
+        if memory_directory is not None:
+            weakref.finalize(filesystem, _remove_memory_directory, filesystem.fs, memory_directory)
 
     async def _connect(self) -> None:
         """Initialize the S3 session once and own its certificate until shutdown."""
@@ -129,10 +140,12 @@ class Filesystem:
             pass
 
     async def close(self) -> None:
-        """Close the S3 session before removing its temporary certificate."""
+        """Release the S3 session or the owned testing namespace."""
 
         with CancelScope(shield=True):
             async with self._lock:
                 if self._stack is not None:
                     await self._stack.aclose()
                     self._stack = None
+                if self._memory_directory is not None:
+                    _remove_memory_directory(self.filesystem.fs, self._memory_directory)

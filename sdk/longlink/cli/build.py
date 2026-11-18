@@ -109,11 +109,6 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[Envi
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
         raise errors.Error("[tool.longlink].environments must be a module:Class import string")
 
-    # Resolve the configured environment module before importing Solution code.
-    envs_path = root.joinpath(*module_parts).with_suffix(".py")
-    if not envs_path.is_file():
-        raise errors.Error(f"Environment model not found: {envs_path}")
-
     # Validate the child response before using it as image metadata or a CLI error.
     adapter = TypeAdapter(list[EnvironmentEntry] | str)
     try:

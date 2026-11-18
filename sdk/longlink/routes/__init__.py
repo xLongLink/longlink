@@ -1,5 +1,6 @@
 from fastapi import Request, APIRouter
 from sqlalchemy import text
+from dataclasses import replace
 from longlink.views import ViewManifest
 
 
@@ -25,15 +26,10 @@ def router(manifest: ViewManifest) -> APIRouter:
         return {"ok": True}
 
     @routes.get("/views.json", response_model=ViewManifest, response_model_exclude_none=True)
-    async def get_views() -> dict[str, object]:
+    async def get_views() -> ViewManifest:
         """Return the registered SDK runtime views."""
 
         # View handlers are registered from the SDK views directory during app startup.
-        return {
-            "views": manifest.views,
-            "runtime": manifest.runtime,
-            "tabs": manifest.resolved_tabs(),
-            "development": manifest.development,
-        }
+        return replace(manifest, tabs=manifest.resolved_tabs())
 
     return routes

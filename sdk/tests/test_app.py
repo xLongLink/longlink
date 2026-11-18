@@ -80,6 +80,16 @@ async def test_startup_disposes_initialized_database_when_mcp_construction_fails
     # Arrange
     monkeypatch.setenv("LONGLINK_ENV", "testing")
     app = LongLink()
+
+    @app.get("/api/value", response_model=int)
+    async def value() -> int:
+        """Provide a business handler whose guard must be restored after failure."""
+
+        return 42
+
+    route = app.permission_routes()[0]
+    target = route._route_context or route.original_route
+    original_handler = getattr(target, "app")
     disposed: list[Engine] = []
     async with app.state.longlink.database.session() as session:
         event.listen(session.get_bind(), "engine_disposed", disposed.append)
@@ -89,6 +99,7 @@ async def test_startup_disposes_initialized_database_when_mcp_construction_fails
     def fail_construction(**_kwargs: object) -> None:
         """Fail only the MCP construction boundary after real database initialization."""
 
+        assert isinstance(getattr(target, "app"), permissions.Guard)
         raise failure
 
     monkeypatch.setattr(longlink_app.FastMCP, "from_openapi", fail_construction)
@@ -102,6 +113,7 @@ async def test_startup_disposes_initialized_database_when_mcp_construction_fails
     assert raised.value is failure
     assert len(disposed) == 1
     assert app.routes == original_routes
+    assert getattr(target, "app") is original_handler
 
 
 def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -709,6 +721,17 @@ def test_mcp_can_restart_without_duplicate_routes_or_stale_sessions(monkeypatch:
 
         return 42
 
+    route = app.permission_routes()[0]
+    target = route._route_context or route.original_route
+    original_handler = getattr(target, "app")
+
+    async def verify_shutdown_guard() -> None:
+        """Keep endpoint authorization installed until runtime shutdown finishes."""
+
+        assert isinstance(getattr(target, "app"), permissions.Guard)
+
+    app.router.on_shutdown.append(verify_shutdown_guard)
+
     # A new lifespan gets a new transport and the newly completed route catalog.
     client = TestClient(app)
     with client:
@@ -727,6 +750,7 @@ def test_mcp_can_restart_without_duplicate_routes_or_stale_sessions(monkeypatch:
     assert {tool["name"] for tool in discovery.json()["result"]["tools"]} == {"value"}
     assert stale.status_code == 404
     assert disposed == [first_engine, second_engine]
+    assert getattr(target, "app") is original_handler
 
 
 @pytest.mark.usefixtures("solution_source")

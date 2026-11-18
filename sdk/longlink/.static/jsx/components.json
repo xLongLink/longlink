@@ -1949,9 +1949,9 @@
             "name": "Editing form",
             "description": "Collect intent through named fields and persist changes through a validated Solution route.",
             "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
-            "components": ["Form", "Input", "Select", "Functions"],
+            "components": ["FormProvider", "Input", "Select", "Hooks"],
             "steps": [
-                "Inspect Form's submission contract and initialize fields from the record being edited.",
+                "Use the documented useForm hook with an action endpoint and explicit defaults from the record being edited; use FormProvider when descendants need form context.",
                 "Choose field components that match the server schema and use documented names and value contracts.",
                 "Submit to a Solution route that validates input and enforces authorization; display its documented success or error state."
             ]

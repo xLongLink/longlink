@@ -121,12 +121,16 @@ async def test_memory_storage_readers_have_independent_cursors() -> None:
         assert await second.read() == b"def"
 
 
-async def test_memory_storage_releases_only_its_owned_namespace() -> None:
+@pytest.mark.parametrize("close_before_write", [False, True])
+async def test_memory_storage_releases_only_its_owned_namespace(close_before_write: bool) -> None:
     """Remove collected test files without clearing another runtime's shared fsspec store."""
 
     # Arrange
     first = cast(Filesystem, storage.create_storage(Envs(ENV="testing")))
     second = storage.create_storage(Envs(ENV="testing"))
+    if close_before_write:
+        await first.write("previous-report", b"previous lifetime")
+        await first.close()
     await first.write("report", b"first")
     await second.write("report", b"second")
     backend = first.filesystem.fs
@@ -142,6 +146,38 @@ async def test_memory_storage_releases_only_its_owned_namespace() -> None:
     assert not backend.exists(directory)
     async with second.open("report") as reader:
         assert await reader.read() == b"second"
+
+
+async def test_memory_storage_close_releases_only_its_owned_namespace() -> None:
+    """Release retained testing storage on close without disturbing another runtime."""
+
+    # Arrange
+    first = cast(Filesystem, storage.create_storage(Envs(ENV="testing")))
+    second = storage.create_storage(Envs(ENV="testing"))
+    await first.write("report", b"first")
+    await second.write("report", b"second")
+    backend = first.filesystem.fs
+    directory = first.filesystem.path
+
+    # Act
+    await first.close()
+    await first.close()
+
+    # Assert
+    assert not backend.exists(directory)
+    assert not await first.exists("report")
+    async with second.open("report") as reader:
+        assert await reader.read() == b"second"
+
+    # Reusing the retained storage must not bypass later shutdown cleanup.
+    await first.write("report", b"reopened")
+    async with first.open("report") as reader:
+        assert await reader.read() == b"reopened"
+    await first.close()
+    assert not backend.exists(directory)
+    async with second.open("report") as reader:
+        assert await reader.read() == b"second"
+    await second.close()
 
 
 @pytest.mark.parametrize("backend", ["memory", "local"])

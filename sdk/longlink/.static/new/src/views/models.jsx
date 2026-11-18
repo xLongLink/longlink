@@ -22,7 +22,6 @@ export default function Models() {
     const selectedCountry = countries[countryIndex];
     const usage = analytics.usage.slice(-Number(period));
     const latest = usage.at(-1);
-    const metricIcons = { models: 'sparkles', reviews: 'message-square', messages: 'activity', providers: 'globe' };
     const providerCount = analytics.providers.reduce((sum, provider) => sum + (provider.providerCount ?? 1), 0);
     const topShare = [...analytics.providers]
         .sort((left, right) => right.value - left.value)
@@ -63,12 +62,7 @@ export default function Models() {
                                 <Card key={metric.label} size="sm" padding="none">
                                     <Stack gap={3}>
                                         <Stack direction="horizontal" align="center" gap={3} padding={3}>
-                                            <Icon
-                                                icon={metricIcons[metric.icon]}
-                                                size="lg"
-                                                tile="soft"
-                                                variant="primary"
-                                            />
+                                            <Icon icon={metric.icon} size="lg" tile="soft" variant="primary" />
                                             <Stack gap={1}>
                                                 <Text className="text-[13px] text-muted-foreground">
                                                     {metric.label}
