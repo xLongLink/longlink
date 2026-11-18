@@ -2,8 +2,9 @@ import type { z } from 'zod';
 import * as forms from 'react-hook-form';
 import * as multipart from '../multipart';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useRef, type BaseSyntheticEvent } from 'react';
+import { RequestContext } from '@/components/custom/contexts';
 import { useSubmit, type SubmitOptions } from '@/lib/hooks/use-submit';
+import { useCallback, useContext, type BaseSyntheticEvent } from 'react';
 import type { FieldValues, UseFormProps, UseFormReturn } from 'react-hook-form';
 
 /** Validates editing values and optionally submits parsed output through the scoped multipart transport. */
@@ -13,37 +14,33 @@ export function useForm<Input extends FieldValues, Context = unknown, Output ext
 ): UseFormReturn<Input, Context, Output> & { submit: (event?: BaseSyntheticEvent) => Promise<void> } {
     const { action, method, onSuccess, onError, ...formOptions } = options ?? {};
     const form = forms.useForm<Input, Context, Output>({ ...formOptions, resolver: zodResolver(schema) });
-    const send = useSubmit(action ?? '', { method, onSuccess });
-    const pending = useRef<Promise<void> | null>(null);
+    const request = useContext(RequestContext)?.request;
+    const send = useSubmit(
+        form.handleSubmit(async (values) => {
+            if (!action) throw new Error('Form submissions require an action.');
+            if (!request) throw new Error('Scoped submissions require the Solution runtime');
+            if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method ?? 'POST'))
+                throw new Error('Unsupported write method');
 
-    // Guard the whole validation and submission lifecycle, including repeated events and async callbacks.
+            const data = multipart.encode(values);
+            const result = await request(action, { method: method ?? 'POST', form: [...data.entries()] });
+            await onSuccess?.(result);
+        }),
+        {
+            onError: async (error) => {
+                form.setError('root', { type: 'submit', message: error.message || 'Submission failed' });
+                await onError?.(error);
+            }
+        }
+    );
+
     const submit = useCallback(
         (event?: BaseSyntheticEvent) => {
             event?.preventDefault();
             event?.persist();
-            if (pending.current) return pending.current;
-
-            const submission = Promise.resolve()
-                .then(() =>
-                    form.handleSubmit(async (values) => {
-                        try {
-                            if (!action) throw new Error('Form submissions require an action.');
-                            await send(multipart.encode(values));
-                        } catch (cause) {
-                            const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
-                            form.setError('root', { type: 'submit', message: error.message || 'Submission failed' });
-                            await onError?.(error);
-                        }
-                    })(event)
-                )
-                .finally(() => {
-                    pending.current = null;
-                });
-
-            pending.current = submission;
-            return submission;
+            return send(event);
         },
-        [action, form, onError, send]
+        [send]
     );
 
     return { ...form, submit };

@@ -52,6 +52,27 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
     return base.origin === RELATIVE_URL_ORIGIN ? `${url.pathname}${url.search}${url.hash}` : url.toString();
 }
 
+/** Resolves a capability URL without proxy-prefix traversal or ambiguous decoding. */
+export function requestUrl(base: string, path: string): string {
+    if (/%(?:[01][0-9a-f]|7f|25|2e|2f|5c)|[\s\\]|\p{Cc}/iu.test(path.split(/[?#]/, 1)[0])) {
+        throw new Error('Request path must remain within the Solution');
+    }
+
+    return resolveRequestUrl(base, path);
+}
+
+/** Admits sandbox navigation while preserving the established route canonicalization. */
+export function resolveScopedNavigationUrl(baseUrl: string, path: string): string {
+    if (!path) return '';
+
+    try {
+        requestUrl(baseUrl, path);
+        return resolveNavigationUrl(baseUrl, path);
+    } catch {
+        return '';
+    }
+}
+
 /** Resolves a solution navigation URL or omits invalid destinations. */
 export function resolveNavigationUrl(baseUrl: string, path: string): string {
     const value = path.trim();

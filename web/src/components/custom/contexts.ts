@@ -1,13 +1,10 @@
 import { createContext } from 'react';
-import type { ViewData } from '@/views/protocol';
+import type { ViewData, RequestOptions } from '@/views/protocol';
 
-export const RequestContext = createContext<
-    | ((
-          path: string,
-          options?: { method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'; form: [string, string | Blob][] }
-      ) => Promise<ViewData>)
-    | null
->(null);
+export const RequestContext = createContext<{
+    request: (path: string, options?: Pick<RequestOptions, 'method' | 'form' | 'binary'>) => Promise<ViewData>;
+    download: (path: string, filename: string) => Promise<void>;
+} | null>(null);
 
 export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
 

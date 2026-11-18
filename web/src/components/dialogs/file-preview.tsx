@@ -1,7 +1,7 @@
 import { NativeFile } from '@/components/custom/native-file';
 import { Dialog } from '@/components/longlink/layout/dialog';
 
-/** Displays host-fetched documents and media with the shared file renderer. */
+/** Displays documents and media with the shared file renderer. */
 export function FilePreview({
     body,
     title,
@@ -14,7 +14,7 @@ export function FilePreview({
     return (
         <Dialog open fullscreen onOpenChange={onOpenChange} title={title}>
             <div className="h-full min-h-0">
-                <NativeFile body={body} title={title} />
+                <NativeFile body={body} title={title} highlight />
             </div>
         </Dialog>
     );

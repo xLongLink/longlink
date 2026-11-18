@@ -1,30 +1,20 @@
 import type { FieldProps } from './fields';
 import * as field from '@/components/shadcn/field';
-import { useEffect, useRef, useState, Fragment, type ReactNode } from 'react';
+import { useEffect, useRef, useState, Fragment, type ReactNode, type Ref } from 'react';
 
-/** Owns consistent field layout while the caller owns validation and form state. */
-export function FieldFrame({
-    id,
-    label,
-    description,
-    error,
-    disabled,
-    form,
-    horizontal = false,
-    group = false,
-    children
-}: Pick<FieldProps, 'label' | 'description' | 'error'> & {
+type FieldLayoutProps = Pick<FieldProps, 'label' | 'description' | 'error'> & {
     id: string;
     disabled?: boolean;
-    form?: string;
     horizontal?: boolean;
     group?: boolean;
     children: ReactNode;
-}) {
+};
+
+/** Restores composite control state after an uncanceled form reset. */
+export function FieldFrame({ form, children, ...props }: FieldLayoutProps & { form?: string }) {
     const root = useRef<HTMLDivElement | null>(null);
     const [reset, setReset] = useState(0);
 
-    // Restore primitive state as well as DOM carriers after an uncanceled native reset.
     useEffect(() => {
         const owner = root.current?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
             'input, textarea, select'
@@ -46,6 +36,25 @@ export function FieldFrame({
         };
     }, [form]);
 
+    return (
+        <FieldLayout {...props} ref={root}>
+            <Fragment key={reset}>{children}</Fragment>
+        </FieldLayout>
+    );
+}
+
+/** Owns field presentation without changing the control's lifecycle. */
+export function FieldLayout({
+    id,
+    label,
+    description,
+    error,
+    disabled,
+    ref,
+    horizontal = false,
+    group = false,
+    children
+}: FieldLayoutProps & { ref?: Ref<HTMLDivElement> }) {
     const feedback = (
         <>
             {description && <field.FieldDescription id={`${id}-description`}>{description}</field.FieldDescription>}
@@ -70,30 +79,28 @@ export function FieldFrame({
 
     return (
         <field.Field
-            ref={root}
+            ref={ref}
             orientation={horizontal ? 'horizontal' : 'vertical'}
             data-disabled={disabled}
             data-invalid={!!error}
         >
-            <Fragment key={reset}>
-                {horizontal ? (
-                    <>
-                        {children}
-                        {(heading || description || error) && (
-                            <field.FieldContent>
-                                {heading}
-                                {feedback}
-                            </field.FieldContent>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        {heading}
-                        {children}
-                        {feedback}
-                    </>
-                )}
-            </Fragment>
+            {horizontal ? (
+                <>
+                    {children}
+                    {(heading || description || error) && (
+                        <field.FieldContent>
+                            {heading}
+                            {feedback}
+                        </field.FieldContent>
+                    )}
+                </>
+            ) : (
+                <>
+                    {heading}
+                    {children}
+                    {feedback}
+                </>
+            )}
         </field.Field>
     );
 }

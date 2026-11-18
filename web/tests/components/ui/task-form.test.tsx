@@ -34,15 +34,18 @@ it('validates the shipped task form, retains the file and draft on failure, and 
 
     await withMounted(
         <RequestContext
-            value={async (path, options) => {
-                if (!options) throw new Error('Expected a write request');
-                expect(path).toBe('/api/tasks');
-                expect(options.method).toBe('POST');
-                writes.push(options.form);
+            value={{
+                request: async (path, options) => {
+                    if (!options?.form) throw new Error('Expected a write request');
+                    expect(path).toBe('/api/tasks');
+                    expect(options.method).toBe('POST');
+                    writes.push(options.form);
 
-                if (writes.length === 1) throw new ReportedError('Unavailable');
+                    if (writes.length === 1) throw new ReportedError('Unavailable');
 
-                return null;
+                    return null;
+                },
+                download: async () => {}
             }}
         >
             <Tasks />

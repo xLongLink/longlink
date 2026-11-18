@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveExternalUrl, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
+import { resolveExternalUrl, resolveNavigationUrl, resolveScopedNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 describe('resolveExternalUrl', () => {
     it.each([
@@ -99,5 +99,30 @@ describe('resolveRequestUrl', () => {
         expect(resolveRequestUrl('/api/solutions/123/proxy', '/items?filter=%2Factive')).toBe(
             '/api/solutions/123/proxy/items?filter=%2Factive'
         );
+    });
+});
+
+describe('resolveScopedNavigationUrl', () => {
+    it.each([
+        ['invoices//recent/', '/solutions/orders/invoices/recent'],
+        ['invoices/../recent', '/solutions/orders/recent'],
+        ['../orders/recent', '/solutions/orders/orders/recent'],
+        ['?filter=%2Factive', '/solutions/orders?filter=%2Factive'],
+        ['#details', '/solutions/orders#details']
+    ])('preserves admitted route canonicalization for %s', (path, expected) => {
+        // Act and assert
+        expect(resolveScopedNavigationUrl('/solutions/orders', path)).toBe(expected);
+    });
+
+    it.each([
+        '../users',
+        '/%252e%252e/users',
+        '/items%2f..%2fusers',
+        '/items%5cusers',
+        '/items%0ausers',
+        '/items with spaces'
+    ])('withholds unsafe scoped route %s', (path) => {
+        // Act and assert
+        expect(resolveScopedNavigationUrl('/solutions/orders', path)).toBe('');
     });
 });
