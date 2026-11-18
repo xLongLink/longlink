@@ -17,6 +17,7 @@ dependencies = [
     "fastapi>=0.141.1",
     "fastmcp>=4.0.11,<5",
     "fsspec>=2026.4.0",
+    "gitpython>=3.1.46",
     "httpx2>=2.9.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",

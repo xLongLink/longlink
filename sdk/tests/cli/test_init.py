@@ -1,21 +1,24 @@
+import git
 import runpy
 import pytest
 import sqlite3
+import subprocess
 from pathlib import Path
 from contextlib import chdir, closing
 from longlink.cli.main import main
 from longlink.database import migrations as database_migrations
 
 
-def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path) -> None:
+@pytest.mark.parametrize("folder", [".", "sample-solution"])
+def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path, folder: str) -> None:
     """Copy the project scaffold with requested GitHub workflows and package name."""
 
     with chdir(tmp_path):
         # Act
-        main(["init", "--folder", "sample-solution", "--ci", "github", "--name", "sample"])
+        main(["init", "--folder", folder, "--ci", "github", "--name", "sample"])
 
         # Assert
-        target = Path.cwd() / "sample-solution"
+        target = Path.cwd() / folder
         for path in [
             "src/models",
             "src/views",
@@ -36,6 +39,65 @@ def test_init_copies_github_project_scaffold_with_custom_name(tmp_path: Path) ->
         assert 'environments = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
         assert "*.db\n" in (target / ".gitignore").read_text(encoding="utf-8")
+        branch = subprocess.run(["git", "symbolic-ref", "--short", "HEAD"], cwd=target, capture_output=True, text=True, check=True)
+        assert branch.stdout.strip() == "main"
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_init_preserves_existing_repository(tmp_path: Path, nested: bool) -> None:
+    """Reuse an existing repository without changing its branch or creating a nested repository."""
+
+    # Arrange
+    subprocess.run(["git", "init", "--initial-branch=existing"], cwd=tmp_path, capture_output=True, check=True)
+    target = tmp_path / "sample-solution" if nested else tmp_path
+
+    # Act
+    main(["init", "--folder", str(target), "--ci", "github"])
+
+    # Assert
+    repository = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=target, capture_output=True, text=True, check=True)
+    branch = subprocess.run(["git", "symbolic-ref", "--short", "HEAD"], cwd=target, capture_output=True, text=True, check=True)
+    assert Path(repository.stdout.strip()) == tmp_path
+    assert branch.stdout.strip() == "existing"
+    if nested:
+        assert not (target / ".git").exists()
+
+
+def test_init_reports_missing_git(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Render a missing Git executable as a CLI error."""
+
+    # Arrange
+    monkeypatch.setenv("PATH", str(tmp_path))
+
+    # Act
+    with pytest.raises(SystemExit) as failure:
+        main(["init", "--folder", str(tmp_path / "sample-solution"), "--ci", "github"])
+
+    # Assert
+    assert failure.value.code == 1
+    assert "Unable to initialize Git repository" in capsys.readouterr().err
+
+
+def test_init_reports_git_initialization_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Render a failed Git initialization as a CLI error."""
+
+    # Arrange
+    def initialize(*args: object, **kwargs: object) -> git.Repo:
+        raise git.GitCommandError(["git", "init"], 128, stderr="permission denied")
+
+    monkeypatch.setattr(git.Repo, "init", initialize)
+
+    # Act
+    with pytest.raises(SystemExit) as failure:
+        main(["init", "--folder", str(tmp_path / "sample-solution"), "--ci", "github"])
+
+    # Assert
+    assert failure.value.code == 1
+    error = capsys.readouterr().err
+    assert "Unable to initialize Git repository" in error
+    assert "permission denied" in error
 
 
 def test_init_refuses_conflicting_folder(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -88,6 +150,7 @@ def test_initialized_project_applies_bundled_migration_through_deployment_entryp
         # Default initialization uses the folder name and omits provider-specific automation.
         assert 'name = "sample-solution"' in (target / "pyproject.toml").read_text(encoding="utf-8")
         assert not (target / ".github").exists()
+        assert not (target / ".git").exists()
 
         # Act
         with chdir(target):
