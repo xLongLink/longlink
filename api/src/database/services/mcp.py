@@ -106,7 +106,7 @@ async def _permitted_solution(session: AsyncSession, user: User, solution_id: UU
     if solution is None or solution.deleted_at is not None:
         raise HTTPException(status_code=403, detail="Access required")
     await organizations.require_membership(session, user.id, solution.organization_id)
-    await permissions.runtime_access(session, solution, user.id)
+    await permissions.runtime_role(session, solution, user.id)
     return solution
 
 

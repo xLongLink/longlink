@@ -9,7 +9,7 @@ from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-from src.database.models.permissions import SolutionMemberAccess
+from src.database.models.permissions import PermissionCatalog, SolutionMemberAccess
 
 
 @pytest_asyncio.fixture
@@ -144,3 +144,31 @@ async def test_administrator_can_assign_declared_role_and_explicitly_disable_mem
         disabled_access = await session.get(SolutionMemberAccess, (member.id, solution.id))
         assert disabled_access is not None
         assert disabled_access.role is None
+
+
+@pytest.mark.parametrize("missing", ["revision", "catalog"])
+async def test_member_access_requires_a_deployed_catalog(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], permission_solution: tuple[Solution, User, User], missing: str
+) -> None:
+    """Reject saved-role reads until a deployed permission catalog exists."""
+
+    # Arrange
+    solution, member, _foreign_owner = permission_solution
+    async with session_scope() as session:
+        session.add(SolutionMemberAccess(user_id=member.id, solution_id=solution.id, organization_id=solution.organization_id, role="read"))
+        if missing == "revision":
+            persisted = await session.get(Solution, solution.id)
+            assert persisted is not None
+            persisted.deployed_revision_id = None
+        else:
+            catalog = await session.get(PermissionCatalog, solution.deployed_revision_id)
+            assert catalog is not None
+            await session.delete(catalog)
+        await session.commit()
+
+    # Act
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/members/{member.id}/access")
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Rebuild and deploy the Solution to load endpoint permissions"}

@@ -216,9 +216,7 @@ async def ready(organization_id: UUID) -> bool:
                         size_mib=organization.database_size_mib,
                     )
 
-                # Existing infrastructure must be ready before using PostgreSQL.
-                else:
-                    await database_resources.wait_ready(cluster, organization_id)
+                await database_resources.wait_ready(cluster, organization_id)
                 async with database_resources.connection(organization, cluster) as database:
                     if organization.status != Status.running:
                         await lease.check()

@@ -730,7 +730,7 @@ async def test_solution_proxy_allows_organization_read_members(
     client = clients[1]
 
     # Role changes must produce current, ordered grants without changing Organization membership.
-    for role, expected in (("read", [0]), ("write", [0, 2]), ("approver", [1])):
+    for role, expected in (("read", [0]), ("write", [0, 2]), ("approver", [1]), ("removed-role", [])):
         async with session_scope() as session:
             assignment = await session.get(SolutionMemberAccess, (user.id, solution.id))
             assert assignment is not None
