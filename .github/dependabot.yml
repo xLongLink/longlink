@@ -6,6 +6,13 @@ updates:
           interval: 'weekly'
       cooldown:
           default-days: 3
+      groups:
+          github-actions:
+              patterns:
+                  - '*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
 
     - package-ecosystem: 'uv'
       directories:
@@ -22,6 +29,40 @@ updates:
                   - 'botocore'
                   - 's3fs'
                   - 'fsspec'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          python-testing:
+              patterns:
+                  - 'pytest'
+                  - 'pytest-asyncio'
+                  - 'pytest-cov'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          python-database:
+              patterns:
+                  - 'sqlalchemy'
+                  - 'sqlalchemy-utils'
+                  - 'sqlmodel'
+                  - 'alembic'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          python-validation:
+              patterns:
+                  - 'pydantic'
+                  - 'pydantic-settings'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          python-build:
+              patterns:
+                  - 'setuptools'
+                  - 'setuptools-scm'
+              update-types:
+                  - 'minor'
+                  - 'patch'
 
     - package-ecosystem: 'bun'
       directory: '/web'
@@ -34,10 +75,11 @@ updates:
               patterns:
                   - 'react'
                   - 'react-dom'
-          react-types:
-              patterns:
                   - '@types/react'
                   - '@types/react-dom'
+              update-types:
+                  - 'minor'
+                  - 'patch'
           react-security:
               applies-to: security-updates
               patterns:
@@ -47,16 +89,44 @@ updates:
               patterns:
                   - 'react-router'
                   - '@react-router/dev'
+              update-types:
+                  - 'minor'
+                  - 'patch'
           tailwind:
               patterns:
                   - 'tailwindcss'
                   - '@tailwindcss/vite'
+              update-types:
+                  - 'minor'
+                  - 'patch'
           vite-plus:
               patterns:
                   - 'vite'
                   - 'vite-plus'
                   - 'vitest'
                   - '@voidzero-dev/vite-plus-core'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          drag-and-drop:
+              patterns:
+                  - '@dnd-kit/*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          avatars:
+              patterns:
+                  - '@dicebear/*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
+          forms:
+              patterns:
+                  - 'react-hook-form'
+                  - '@hookform/resolvers'
+              update-types:
+                  - 'minor'
+                  - 'patch'
 
     - package-ecosystem: 'docker'
       directories:
