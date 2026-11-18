@@ -501,7 +501,7 @@ describe('SolutionPage', () => {
     });
 
     it.each(['overlay', 'inset'])(
-        'keeps the live View in place through fullscreen open, close, and unmount with %s scrollbars',
+        'keeps the live View in place through modal open, close, and unmount with %s scrollbars',
         async (scrollbars) => {
             stubFetch((url) =>
                 url.endsWith('/views.json')
@@ -551,7 +551,7 @@ describe('SolutionPage', () => {
 
                 // Happy DOM lacks native top-layer promotion; keep the real mounted frame and document.
                 Object.assign(frame, { showPopover: () => undefined, hidePopover: () => undefined });
-                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await act(async () => port.postMessage({ type: 'modal', open: true }));
                 await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
                 expect(frame.getAttribute('popover')).toBe('manual');
                 expect(sibling.inert).toBe(true);
@@ -564,7 +564,7 @@ describe('SolutionPage', () => {
                 expect(frame.srcdoc).toBe(source);
 
                 // Closing the sandbox modal must not restart the View or leave host scrolling disabled.
-                await act(async () => port.postMessage({ type: 'modal', depth: 0, fullscreen: false }));
+                await act(async () => port.postMessage({ type: 'modal', open: false }));
                 await vi.waitFor(() => {
                     expect(body.style.cssText).toBe(initialBody);
                     expect(html.style.cssText).toBe(initialHtml);
@@ -580,7 +580,7 @@ describe('SolutionPage', () => {
                 expect(html.scrollLeft).toBe(24);
 
                 // A second opening followed by route teardown must release the same document ownership.
-                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await act(async () => port.postMessage({ type: 'modal', open: true }));
                 await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
                 await act(async () => root?.unmount());
                 root = undefined;
@@ -634,7 +634,7 @@ describe('SolutionPage', () => {
 
                 // Happy DOM does not implement top-layer promotion.
                 Object.assign(frame, { showPopover: () => undefined, hidePopover: () => undefined });
-                await act(async () => port.postMessage({ type: 'modal', depth: 1, fullscreen: true }));
+                await act(async () => port.postMessage({ type: 'modal', open: true }));
                 await vi.waitFor(() => expect(body.style.overflowY).toBe('hidden'));
                 await act(async () =>
                     dialogRoot.render(

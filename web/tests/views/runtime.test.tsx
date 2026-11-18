@@ -777,7 +777,8 @@ it('controls an owned Dialog with public Buttons inside an authored View', async
     }
 });
 
-it('updates scrolled viewport geometry through the admitted port and releases nested fullscreen state', async () => {
+it('keeps the host modal active until the last nested dialog closes', async () => {
+    // Arrange
     const runtime = await initializeRuntime(`export default function View() {
         return <div style={{height: 6000}}>
             <Dialog title="Order details" defaultOpen>
@@ -786,44 +787,38 @@ it('updates scrolled viewport geometry through the admitted port and releases ne
         </div>;
     }`);
 
+    const modal = vi.fn();
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+
+        if (command.type === 'modal') modal(command.open);
+    };
+
     try {
+        // Act
         await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
         const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
 
         if (!dialog) throw new Error('Missing standard dialog');
-        const root = document.documentElement;
-        expect(root.hasAttribute('data-view-runtime')).toBe(true);
-        runtime.channel.port2.postMessage({ type: 'viewport', top: 1200, bottom: 4200, height: 600 });
-        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1200px'));
-        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('600px');
-
-        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
-        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
-        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+        await vi.waitFor(() => expect(modal).toHaveBeenCalledExactlyOnceWith(true));
         const trigger = dialog.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
 
         if (!trigger) throw new Error('Missing fullscreen trigger');
         const user = userEvent.setup();
         await user.click(trigger);
         await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2));
-        expect(root.hasAttribute('data-view-fullscreen')).toBe(true);
-        runtime.channel.port2.postMessage({ type: 'viewport', top: 0, bottom: 0, height: 900 });
-        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('0px'));
-        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('900px');
         await user.keyboard('{Escape}');
         await vi.waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1));
-        expect(root.hasAttribute('data-view-fullscreen')).toBe(false);
-        runtime.channel.port2.postMessage({ type: 'viewport', top: 1800, bottom: 3800, height: 400 });
-        await vi.waitFor(() => expect(root.style.getPropertyValue('--view-viewport-top')).toBe('1800px'));
-        expect(root.style.getPropertyValue('--view-viewport-height')).toBe('400px');
+
+        // Assert
         expect(document.activeElement).toBe(trigger);
+        expect(modal.mock.calls).toEqual([[true]]);
+        await user.keyboard('{Escape}');
+        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+        await vi.waitFor(() => expect(modal.mock.calls).toEqual([[true], [false]]));
     } finally {
         runtime.close();
     }
-
-    expect(document.documentElement.hasAttribute('data-view-runtime')).toBe(false);
-    expect(document.documentElement.hasAttribute('data-view-fullscreen')).toBe(false);
-    expect(document.documentElement.style.getPropertyValue('--view-viewport-top')).toBe('');
 });
 
 it('keeps evaluation diagnostics bounded and inert in the same Solution View region', async () => {

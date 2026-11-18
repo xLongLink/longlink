@@ -46,9 +46,7 @@ function DialogContent({
             <DialogPrimitive.Popup
                 data-slot="dialog-content"
                 className={cn(
-                    'fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-                    '[html[data-view-runtime]:not([data-view-fullscreen])_&]:top-[calc(var(--view-viewport-top,0px)+var(--view-viewport-height,100dvh)/2)] [html[data-view-runtime]:not([data-view-fullscreen])_&]:max-h-[max(0px,calc(var(--view-viewport-height,100dvh)-2rem))] [html[data-view-runtime]_&]:overflow-y-auto',
-                    '[html[data-view-runtime][data-view-fullscreen]_&]:top-[50dvh] [html[data-view-runtime][data-view-fullscreen]_&]:max-h-[calc(100dvh-2rem)]',
+                    'fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:zoom-out-95',
                     className
                 )}
                 {...props}
@@ -72,12 +70,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
     return <div data-slot="dialog-header" className={cn('flex flex-col gap-2', className)} {...props} />;
 }
 
-function DialogFooter({
-    className,
-    showCloseButton = false,
-    children,
-    ...props
-}: React.ComponentProps<'div'> & { showCloseButton?: boolean }) {
+function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="dialog-footer"
@@ -86,12 +79,7 @@ function DialogFooter({
                 className
             )}
             {...props}
-        >
-            {children}
-            {showCloseButton && (
-                <DialogPrimitive.Close render={<Button variant="outline" />}>Close</DialogPrimitive.Close>
-            )}
-        </div>
+        />
     );
 }
 

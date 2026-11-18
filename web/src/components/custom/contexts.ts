@@ -9,7 +9,7 @@ export const RequestContext = createContext<
     | null
 >(null);
 
-export const DialogActivityContext = createContext<((open: boolean, fullscreen: boolean) => void) | null>(null);
+export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);
 
 // The sandbox supplies a host navigation capability; native previews use ordinary links.
 export const LinkNavigationContext = createContext<{

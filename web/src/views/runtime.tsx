@@ -21,7 +21,6 @@ import {
     requestSchema,
     parametersSchema,
     REQUEST_TIMEOUT,
-    MAX_MODAL_DEPTH,
     type RequestCommand,
     type DownloadCommand,
     type PreviewCommand,
@@ -30,9 +29,7 @@ import {
     type ViewReply,
     type ViewData,
     appearanceMessageSchema,
-    type AppearanceMessage,
-    viewportMessageSchema,
-    type ViewportMessage
+    type AppearanceMessage
 } from './protocol';
 import '../index.css';
 
@@ -130,7 +127,6 @@ function initialize(event: MessageEvent<unknown>): void {
     // Scope requests and cache state to this admitted sandbox's lifetime.
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const lifetime = new AbortController();
-    document.documentElement.setAttribute('data-view-runtime', '');
 
     const pending = new Map<
         number,
@@ -222,19 +218,7 @@ function initialize(event: MessageEvent<unknown>): void {
         port.postMessage({ type: 'navigate', path, newTab });
     }
 
-    port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage | ViewportMessage>) => {
-        // Host viewport geometry keeps native dialogs inside the visible portion of long Views.
-        if ('type' in reply.data && reply.data.type === 'viewport') {
-            const viewport = viewportMessageSchema.safeParse(reply.data);
-
-            if (viewport.success) {
-                document.documentElement.style.setProperty('--view-viewport-top', `${viewport.data.top}px`);
-                document.documentElement.style.setProperty('--view-viewport-height', `${viewport.data.height}px`);
-            }
-
-            return;
-        }
-
+    port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage>) => {
         // Appearance updates are separate from replies to pending Solution operations.
         if ('type' in reply.data) {
             const appearance = appearanceMessageSchema.safeParse(reply.data);
@@ -261,19 +245,15 @@ function initialize(event: MessageEvent<unknown>): void {
 
     const root = createRoot(mount);
     let modalDepth = 0;
-    let fullscreenDepth = 0;
 
-    /** Report bounded modal nesting without granting the sandbox control over host geometry or styles. */
-    function modalActivity(open: boolean, fullscreen: boolean): void {
+    /** Report modal presence without granting the sandbox control over host geometry or styles. */
+    function modalActivity(open: boolean): void {
         if (lifetime.signal.aborted) return;
+        const wasOpen = modalDepth > 0;
         modalDepth += open ? 1 : -1;
+        const isOpen = modalDepth > 0;
 
-        if (fullscreen) fullscreenDepth += open ? 1 : -1;
-        document.documentElement.toggleAttribute('data-view-fullscreen', fullscreenDepth > 0);
-
-        const command = { type: 'modal', depth: Math.min(MAX_MODAL_DEPTH, Math.max(0, modalDepth)) };
-
-        port.postMessage(fullscreenDepth > 0 ? { ...command, fullscreen: true } : command);
+        if (wasOpen !== isOpen) port.postMessage({ type: 'modal', open: isOpen });
     }
 
     // Report natural content height, including async data and wrapping, over the private channel.
@@ -290,16 +270,9 @@ function initialize(event: MessageEvent<unknown>): void {
     window.addEventListener(
         'pagehide',
         () => {
-            port.postMessage({ type: 'modal', depth: 0 });
+            port.postMessage({ type: 'modal', open: false });
             lifetime.abort();
             observer.disconnect();
-            document.documentElement.removeAttribute('data-view-runtime');
-            document.documentElement.removeAttribute('data-view-fullscreen');
-
-            for (const property of ['--view-viewport-top', '--view-viewport-height']) {
-                document.documentElement.style.removeProperty(property);
-            }
-
             for (const waiter of pending.values()) {
                 clearTimeout(waiter.timer);
                 waiter.reject(new Error('View closed'));

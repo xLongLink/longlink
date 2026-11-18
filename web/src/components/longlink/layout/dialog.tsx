@@ -33,10 +33,10 @@ export function Dialog({
     // Keep host coordination tied to accepted visibility changes and the modal's lifetime.
     useEffect(() => {
         if (!visible || !activity) return;
-        activity(true, fullscreen);
+        activity(true);
 
-        return () => activity(false, fullscreen);
-    }, [visible, activity, fullscreen]);
+        return () => activity(false);
+    }, [visible, activity]);
 
     return (
         <dialog.Dialog
@@ -54,15 +54,12 @@ export function Dialog({
         >
             {trigger && <dialog.DialogTrigger render={trigger} />}
             <dialog.DialogContent
-                data-fullscreen={fullscreen || undefined}
                 showCloseButton={dismissible}
                 className="flex min-h-0 max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden! p-0"
                 style={{
                     width: fullscreen ? '95dvw' : 960,
                     maxWidth: 'calc(100dvw - var(--spacing) * 8)',
-                    height: fullscreen
-                        ? '95dvh'
-                        : 'min(560px, calc(var(--view-viewport-height, 100dvh) - var(--spacing) * 40))'
+                    height: fullscreen ? '95dvh' : 'min(560px, calc(100dvh - var(--spacing) * 40))'
                 }}
             >
                 <dialog.DialogHeader className={cn('shrink-0 p-4', hasBody && 'pb-0', dismissible && 'pr-12')}>
