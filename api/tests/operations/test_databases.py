@@ -6,6 +6,7 @@ from conftest import DatabasePostgres
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
 from src.operations import databases
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -55,6 +56,49 @@ async def test_owned_rejects_missing_row() -> None:
 
     # Assert
     assert result is False
+
+
+@pytest.mark.usefixtures("database_runtime")
+@pytest.mark.parametrize("status", [Status.creating, Status.running])
+async def test_ready_verifies_readiness_before_opening_postgres(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, status: Status
+) -> None:
+    """Require ready infrastructure before SQL access on both provisioning paths."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = status
+        await session.commit()
+    verified = False
+
+    async def wait_ready(_client: object, _organization: UUID) -> None:
+        """Complete the external readiness check before SQL construction."""
+
+        nonlocal verified
+        verified = True
+
+    class Database(DatabasePostgres):
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            """Reject SQL access before infrastructure readiness."""
+
+            assert verified
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(databases.database_resources, "wait_ready", wait_ready)
+    monkeypatch.setattr(databases.database_resources.postgres, "Postgres", Database)
+
+    # Act
+    result = await databases.ready(organization.id)
+
+    # Assert
+    assert result is True
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_state == DatabaseState.available
 
 
 @pytest.mark.usefixtures("database_runtime")

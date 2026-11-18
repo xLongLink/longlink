@@ -59,7 +59,8 @@ async def proxy_solution_request(
         raise HTTPException(
             status_code=503, detail="Solution is not ready yet. Please try again shortly.", headers={"cache-control": "no-store"}
         )
-    access = await permissions.runtime_access(session, solution, user.id)
+    definition, role = await permissions.runtime_role(session, solution, user.id)
+    access = definition.access(role)
     await session.commit()
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")

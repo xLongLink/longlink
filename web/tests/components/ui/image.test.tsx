@@ -27,6 +27,37 @@ it('forwards native image attributes without allowing alternate network sources'
     expect(output.querySelector('img')?.getAttribute('srcset')).toBeNull();
 });
 
+it.each(['data:image/png;base64,AA==', 'blob:caller-owned'])(
+    'renders inline image %s without requesting host capability',
+    async (src) => {
+        // Arrange
+        const requests: string[] = [];
+        const files = {
+            load: async (path: string) => {
+                requests.push(path);
+
+                return new Blob();
+            },
+            preview: async () => {
+                throw new Error('Inline images must not open a host preview');
+            },
+            download: async () => undefined
+        };
+
+        // Act
+        await withMounted(
+            <FileRequestContext value={files}>
+                <Image src={src} alt="Photo" />
+            </FileRequestContext>,
+            async (output) => {
+                // Assert
+                expect(output.querySelector('img')?.getAttribute('src')).toBe(src);
+                expect(requests).toEqual([]);
+            }
+        );
+    }
+);
+
 it('releases owned previews on source changes and ignores late responses', async () => {
     // Hold host responses independently so stale requests cannot overwrite the current photo.
     const pending = new Map<string, (blob: Blob) => void>();

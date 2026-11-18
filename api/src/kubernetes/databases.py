@@ -17,7 +17,7 @@ ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, pl
 
 
 async def apply(client: "Kubernetes", organization_id: UUID, password: str, storage_class: str, *, size_mib: int = 100) -> None:
-    """Create the database boundary and wait for a writable PostgreSQL cluster."""
+    """Create the database boundary and submit the PostgreSQL cluster."""
 
     # Render the isolated database boundary before accessing Kubernetes.
     database_namespace = namespace.database(organization_id)
@@ -52,9 +52,7 @@ async def apply(client: "Kubernetes", organization_id: UUID, password: str, stor
     await utils.apply(secret)
     cluster = ClusterResource(cluster_document, api=api)
 
-    # Publish the cluster before waiting for database readiness.
     await utils.apply(cluster)
-    await wait_ready(client, organization_id)
 
 
 async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int) -> None:

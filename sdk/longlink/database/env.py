@@ -12,14 +12,14 @@ settings = Envs()
 version_table_schema = settings.DATABASE_SCHEMA if settings.ENV == "production" else None
 
 
-def _run_migrations(connection: Connection | None = None, *, url: str | None = None, literal_binds: bool = False) -> None:
+def _run_migrations(connection: Connection | None = None) -> None:
     """Configure and run Solution migrations in either Alembic execution mode."""
 
     # Keep online and offline schema comparison behavior aligned.
     context.configure(
         connection=connection,
-        url=url,
-        literal_binds=literal_binds,
+        url=str(database_url(settings)) if connection is None else None,
+        literal_binds=connection is None,
         target_metadata=SQLModel.metadata,
         compare_type=True,
         render_as_batch=True,
@@ -47,7 +47,7 @@ async def run_migrations_online() -> None:
 
 # Use Alembic's offline path when the migration context requests it.
 if context.is_offline_mode():
-    _run_migrations(url=str(database_url(settings)), literal_binds=True)
+    _run_migrations()
 
 # Otherwise run migrations through the configured async engine.
 else:
