@@ -1,9 +1,10 @@
 import { ApiError } from '@/lib/api';
+import { requestUrl } from '@/lib/url';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { REQUEST_TIMEOUT } from '@/views/protocol';
+import { load, request, requestError } from '@/views/host';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { load, requestUrl, requestError } from '@/views/host';
 
 afterEach(() => {
     // Restore the HTTP transport after each response-loading test.
@@ -51,8 +52,13 @@ describe('Solution response loading', () => {
         );
         const controller = new AbortController();
 
-        const body = await load('https://solution.example/attachment.png', { signal: controller.signal });
+        const body = await request(
+            'https://solution.example/',
+            { type: 'request', id: 0, path: 'attachment.png', method: 'GET', binary: true },
+            controller.signal
+        );
 
+        if (!(body instanceof Blob)) throw new Error('Expected binary response');
         expect(body.type).toBe(expected);
         expect(new Uint8Array(await body.arrayBuffer())).toEqual(bytes);
     });

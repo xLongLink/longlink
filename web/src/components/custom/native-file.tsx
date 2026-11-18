@@ -1,12 +1,17 @@
 import { PdfFile } from './pdf-file';
-import { previewKind } from '@/lib/files';
 import { useEffect, useRef, useState } from 'react';
+import { Spinner } from '@/components/shadcn/spinner';
+import { previewKind, textLanguage } from '@/lib/files';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
 /** Displays admitted media and inert document content without nested frames. */
-export function NativeFile({ body, title }: { body: Blob; title: string }) {
+export function NativeFile({ body, title, highlight = false }: { body: Blob; title: string; highlight?: boolean }) {
     const container = useRef<HTMLDivElement>(null);
     const media = body.type.split(';', 1)[0].toLowerCase();
-    const kind = previewKind(media);
+    const kind =
+        highlight && media !== 'application/pdf' && textLanguage(title, media) !== undefined
+            ? 'text'
+            : previewKind(media);
 
     // Never grant HTML, SVG, or unknown binary bytes a host-origin document.
     useEffect(() => {
@@ -26,6 +31,7 @@ export function NativeFile({ body, title }: { body: Blob; title: string }) {
 
     // Use browser controls rather than a custom attachment toolbar.
     if (kind === undefined) return <span role="status">Preview unavailable for this file type.</span>;
+    if (kind === 'text') return <TextFile body={body} title={title} highlight={highlight} />;
 
     // PDF parsing and text rendering remain in the same document as the caller.
     return (
@@ -36,38 +42,43 @@ export function NativeFile({ body, title }: { body: Blob; title: string }) {
                 <audio controls preload="metadata" aria-label={title} className="w-full" />
             ) : kind === 'video' ? (
                 <video controls preload="metadata" aria-label={title} className="size-full" />
-            ) : kind === 'pdf' ? (
-                <PdfFile body={body} title={title} />
             ) : (
-                <TextFile body={body} />
+                <PdfFile body={body} title={title} />
             )}
         </div>
     );
 }
 
 /** Treats source documents as text rather than navigable or executable markup. */
-function TextFile({ body }: { body: Blob }) {
-    const [text, setText] = useState<string | Error>();
+function TextFile({ body, title, highlight }: { body: Blob; title: string; highlight: boolean }) {
+    const [result, setResult] = useState<{ body: Blob; text: string | Error }>();
+    const text = result?.body === body ? result.text : undefined;
 
     // Ignore decoded content after replacing or closing the document.
     useEffect(() => {
         let cancelled = false;
         async function load() {
             try {
-                const text = await body.text();
-                if (!cancelled) setText(text);
+                const bytes = await body.arrayBuffer();
+                const text = new TextDecoder('utf-8', { fatal: highlight }).decode(bytes);
+                if (!cancelled) setResult({ body, text });
             } catch {
-                if (!cancelled) setText(new Error('Unable to display this file.'));
+                if (!cancelled) setResult({ body, text: new Error('Unable to display this file.') });
             }
         }
         void load();
         return () => {
             cancelled = true;
         };
-    }, [body]);
+    }, [body, highlight]);
 
-    return text instanceof Error ? (
-        <span role="status">{text.message}</span>
+    if (text instanceof Error) return <span role="status">{text.message}</span>;
+    if (text === undefined) return <Spinner role="progressbar" aria-label={`Loading ${title}`} />;
+
+    return highlight ? (
+        <CodeBlock code={text} language={textLanguage(title) ?? 'plaintext'} showLineNumbers wrap variant="ghost">
+            <CodeBlockCopyButton />
+        </CodeBlock>
     ) : (
         <pre className="size-full overflow-auto p-3 text-sm whitespace-pre-wrap wrap-anywhere">{text}</pre>
     );

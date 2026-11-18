@@ -45,12 +45,15 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
 
         await withMounted(
             <RequestContext
-                value={async (path, options) => {
-                    if (!options) throw new Error('Expected a write request');
-                    submissions.push([path, options.method, options.form]);
-                    expect(completed).toBe(false);
+                value={{
+                    request: async (path, options) => {
+                        if (!options?.form || !options.method) throw new Error('Expected a write request');
+                        submissions.push([path, options.method, options.form]);
+                        expect(completed).toBe(false);
 
-                    return null;
+                        return null;
+                    },
+                    download: async () => {}
                 }}
             >
                 <Example />

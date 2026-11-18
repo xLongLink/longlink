@@ -1,8 +1,10 @@
 import { cn } from 'cn';
+import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/shadcn/skeleton';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
+import { RequestContext } from '@/components/custom/contexts';
 import { AspectRatio } from '@/components/shadcn/aspect-ratio';
-import { FileRequestContext } from '@/components/custom/preview';
-import { useContext, useEffect, useState, type ComponentProps } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentProps } from 'react';
 
 type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {
     /** Scoped Solution image path, or an image data/blob URL. */
@@ -17,78 +19,69 @@ type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {
     dangerouslySetInnerHTML?: never;
 };
 
-type PreviewState = { status: 'loading' } | { status: 'unavailable' } | { status: 'ready'; url: string };
-
 /** Resolves images through the isolated runtime's scoped file capability. */
 export function Image(props: ImageProps) {
-    // Give each source its own loading state and object-URL lifecycle.
-    return <ImageContent key={props.src} {...props} />;
+    return props.src.startsWith('data:image/') || props.src.startsWith('blob:') ? (
+        <ImageContent key={props.src} {...props} />
+    ) : (
+        <ScopedImage key={props.src} {...props} />
+    );
 }
 
-/** Owns one scoped image request and releases its blob URL when unmounted. */
+function ScopedImage(props: ImageProps) {
+    const request = useContext(RequestContext)?.request;
+    const { data, isError } = useQuery({
+        queryKey: ['api', props.src, 'binary', 'image'],
+        queryFn: async () => {
+            if (!request) throw new Error('Image preview unavailable');
+            const body = await request(props.src, { binary: true });
+            if (!(body instanceof Blob) || !body.type.startsWith('image/'))
+                throw new Error('Image preview unavailable');
+            return body;
+        },
+        retry: false,
+        gcTime: 0,
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false
+    });
+    return <ImageContent {...props} src={undefined} body={data} unavailable={isError} />;
+}
+
 function ImageContent({
     src,
     alt,
     ratio,
     className,
     onError,
+    ref,
+    body,
+    unavailable = false,
     srcSet: _srcSet,
     srcset: _srcset,
     children: _children,
     dangerouslySetInnerHTML: _html,
     ...props
-}: ImageProps) {
-    const request = useContext(FileRequestContext)?.load;
-    const inline = src.startsWith('data:image/') || src.startsWith('blob:');
-    const [preview, setPreview] = useState<PreviewState>(() =>
-        inline ? { status: 'ready', url: src } : { status: 'loading' }
-    );
+}: Omit<ImageProps, 'src'> & { src?: string; body?: Blob; unavailable?: boolean }) {
+    const image = useRef<HTMLImageElement>(null);
+    const mergedRef = useMergedRefs(image, ref);
+    const [broken, setBroken] = useState<Blob | string>();
 
-    // Keep each scoped request and its object URL within this mounted preview's lifetime.
     useEffect(() => {
-        if (inline) return;
+        const element = image.current;
+        if (!body || !element) return;
+        const url = URL.createObjectURL(body);
+        element.src = url;
 
-        let active = true;
-        let objectUrl: string | undefined;
-
-        /** Accepts image bytes and ignores responses after closing. */
-        async function load() {
-            try {
-                if (!request) throw new Error('Image preview unavailable');
-                const value = await request(src);
-
-                if (!active) return;
-
-                // Reject non-image responses without exposing their contents in the View.
-                if (!value.type.startsWith('image/')) {
-                    setPreview({ status: 'unavailable' });
-
-                    return;
-                }
-
-                // oxlint-disable-next-line react/immutability -- Effect-local cleanup; oxc-project/oxc#28401.
-                objectUrl = URL.createObjectURL(value);
-                setPreview({ status: 'ready', url: objectUrl });
-            } catch {
-                if (active) setPreview({ status: 'unavailable' });
-            }
-        }
-
-        void load();
-
-        // Ignore late responses and release only URLs owned by this mounted preview.
         return () => {
-            active = false;
-
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            element.removeAttribute('src');
+            URL.revokeObjectURL(url);
         };
-    }, [inline, request, src]);
+    }, [body]);
 
     // Keep framing opt-in and prevent native source overrides from bypassing the host.
     const content =
-        preview.status === 'loading' ? (
-            <Skeleton className={ratio === undefined ? 'h-24 w-full' : 'size-full'} aria-hidden="true" />
-        ) : preview.status !== 'ready' ? (
+        unavailable || (broken !== undefined && broken === (body ?? src)) ? (
             <div
                 className="flex size-full items-center justify-center text-sm text-muted-foreground"
                 role="status"
@@ -96,14 +89,17 @@ function ImageContent({
             >
                 Photo unavailable
             </div>
+        ) : src === undefined && body === undefined ? (
+            <Skeleton className={ratio === undefined ? 'h-24 w-full' : 'size-full'} aria-hidden="true" />
         ) : (
             <img
                 {...props}
-                src={preview.url}
+                ref={mergedRef}
+                src={src}
                 alt={alt}
                 className={cn(ratio === undefined ? 'h-auto max-w-full' : 'size-full object-cover', className)}
                 onError={(event) => {
-                    setPreview({ status: 'unavailable' });
+                    setBroken(body ?? src);
                     onError?.(event);
                 }}
             />

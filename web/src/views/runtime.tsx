@@ -7,7 +7,6 @@ import { createRoot } from 'react-dom/client';
 import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
-import { FileRequestContext } from '@/components/custom/preview';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
@@ -22,10 +21,9 @@ import {
     parametersSchema,
     REQUEST_TIMEOUT,
     type RequestCommand,
+    type RequestOptions,
     type DownloadCommand,
-    type PreviewCommand,
     downloadSchema,
-    previewSchema,
     type ViewReply,
     type ViewData,
     appearanceMessageSchema,
@@ -136,10 +134,7 @@ function initialize(event: MessageEvent<unknown>): void {
     let sequence = 0;
 
     /** Requests a scoped Solution operation and refreshes cached data after successful writes. */
-    async function request(
-        path: string,
-        options: Omit<RequestCommand, 'type' | 'id' | 'path' | 'method'> & { method?: RequestCommand['method'] } = {}
-    ): Promise<ViewData> {
+    async function request(path: string, options: RequestOptions = {}): Promise<ViewData> {
         const id = sequence++;
         const command = requestSchema.parse({ ...options, type: 'request', id, path, method: options.method ?? 'GET' });
 
@@ -165,7 +160,7 @@ function initialize(event: MessageEvent<unknown>): void {
     }
 
     /** Owns the deadline and channel transfer for each scoped operation. */
-    function exchange(command: RequestCommand | DownloadCommand | PreviewCommand): Promise<ViewData> {
+    function exchange(command: RequestCommand | DownloadCommand): Promise<ViewData> {
         const { id } = command;
 
         return new Promise<ViewData>((resolve, reject) => {
@@ -189,29 +184,13 @@ function initialize(event: MessageEvent<unknown>): void {
         });
     }
 
-    /** Loads inert file bytes inside the sandbox. */
-    async function loadFile(path: string): Promise<Blob> {
-        // Binary previews must remain inert file data rather than arbitrary response objects.
-        const data = await request(path, { binary: true });
-
-        return z.instanceof(Blob).parse(data);
-    }
-
-    /** Opens a document preview owned by the host. */
-    async function requestPreview(path: string, title: string): Promise<void> {
-        const command = previewSchema.parse({ type: 'preview', id: sequence++, path, title: title.slice(0, 256) });
-        const data = await exchange(command);
-        z.null().parse(data);
-    }
-
     /** Asks the host to save an attachment without opening a document inside the sandbox. */
     async function download(path: string, filename: string): Promise<void> {
         const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename });
         await exchange(command);
     }
 
-    // Supply file previews and downloads without exposing the general request API to file components.
-    const fileRequests = { load: loadFile, preview: requestPreview, download };
+    const requests = { request, download };
 
     /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
     function navigate(path: string, newTab = false): void {
@@ -356,13 +335,11 @@ function initialize(event: MessageEvent<unknown>): void {
                             >
                                 <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
                                     <MenuNavigationProvider>
-                                        <FileRequestContext value={fileRequests}>
-                                            <DialogActivityContext value={modalActivity}>
-                                                <RequestContext value={request}>
-                                                    <View params={params} />
-                                                </RequestContext>
-                                            </DialogActivityContext>
-                                        </FileRequestContext>
+                                        <DialogActivityContext value={modalActivity}>
+                                            <RequestContext value={requests}>
+                                                <View params={params} />
+                                            </RequestContext>
+                                        </DialogActivityContext>
                                     </MenuNavigationProvider>
                                 </LinkNavigationContext>
                             </React.Suspense>

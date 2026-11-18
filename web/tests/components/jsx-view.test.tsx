@@ -283,8 +283,8 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
     }
 });
 
-it('keeps PDFs binary despite a text filename and previews recognized text as inert content', async () => {
-    // Replace HTTP only so MIME classification and the authenticated preview capability remain real.
+it('returns binary file replies without opening a host preview', async () => {
+    // Arrange
     const script = '/* Preview bootstrap */';
     const version = createHash('sha256').update(`${script}\n`).digest('hex');
     const text = '<script>window.previewExecuted = true</script><img src=x onerror="alert(1)">';
@@ -340,37 +340,23 @@ it('keeps PDFs binary despite a text filename and previews recognized text as in
                     }
                     const commands = ports[0];
 
-                    // Invalid UTF-8 must reach the PDF renderer instead of failing text decoding.
+                    // Act
                     const pdfReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
 
                     await act(async () => {
-                        commands.postMessage({ id: 0, type: 'preview', path: 'report', title: 'report.txt' });
-                        await expect(pdfReply).resolves.toEqual({ id: 0, ok: true, data: null });
+                        commands.postMessage({ id: 0, type: 'request', path: 'report', method: 'GET', binary: true });
+                        await expect(pdfReply).resolves.toEqual({ id: 0, ok: true, data: { type: 'application/pdf' } });
                     });
-                    await vi.waitFor(async () => {
-                        await act(async () => {});
-                        expect(document.querySelector('[role="dialog"]')?.textContent).toContain('report.txt');
-                        expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
-                            'Unable to display this PDF.'
-                        );
-                    });
+                    // Assert
+                    expect(document.querySelector('[role="dialog"]')).toBeNull();
 
-                    // Switching previews must retain literal markup without introducing executable DOM.
                     const textReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
 
                     await act(async () => {
-                        commands.postMessage({ id: 1, type: 'preview', path: 'source', title: 'source.html' });
-                        await expect(textReply).resolves.toEqual({ id: 1, ok: true, data: null });
+                        commands.postMessage({ id: 1, type: 'request', path: 'source', method: 'GET', binary: true });
+                        await expect(textReply).resolves.toEqual({ id: 1, ok: true, data: { type: 'text/html' } });
                     });
-                    await vi.waitFor(async () => {
-                        await act(async () => {});
-                        const dialog = document.querySelector('[role="dialog"]');
-
-                        expect(dialog?.textContent).toContain('source.html');
-                        expect(dialog?.textContent).toContain(text);
-                        expect(dialog?.querySelector('script, img, iframe, object, embed')).toBeNull();
-                        expect(dialog?.textContent).not.toContain('Unable to display this PDF.');
-                    });
+                    expect(document.querySelector('[role="dialog"]')).toBeNull();
                     expect(reportError).not.toHaveBeenCalled();
                 } finally {
                     transfer.mockRestore();

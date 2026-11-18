@@ -17,7 +17,7 @@ export function useSubmit<T>(
 ): (data: T) => Promise<void>;
 /** Protects a write from duplicate activation without owning form state or validation. */
 export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>), options?: SubmitOptions) {
-    const request = useContext(RequestContext);
+    const request = useContext(RequestContext)?.request;
     const reportError = useContext(ApiErrorContext);
     const pending = useRef<Promise<void> | null>(null);
     const method = options?.method ?? 'POST';

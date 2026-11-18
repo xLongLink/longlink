@@ -4,7 +4,50 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Controller, useForm } from 'react-hook-form';
-import { Select, Slider, Combobox, RadioGroup } from '@/components/longlink';
+import { Input, Select, Slider, Textarea, Combobox, RadioGroup } from '@/components/longlink';
+
+it.each([Input, Textarea])('resets native values without replacing the focused control or ref', async (Control) => {
+    // Arrange
+    const ref = vi.fn();
+    await withMounted(
+        <form>
+            <Control name="title" label="Title" defaultValue="Original" ref={ref} />
+        </form>,
+        async (output) => {
+            const form = output.querySelector('form');
+            const control = output.querySelector<HTMLInputElement | HTMLTextAreaElement>('[name="title"]');
+
+            if (!form || !control) throw new Error('Expected a native field');
+            const user = userEvent.setup();
+            await act(async () => user.clear(control));
+            await act(async () => user.type(control, 'Edited'));
+            ref.mockClear();
+
+            // Act
+            form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+            await act(async () => {
+                // happy-dom's form.reset() ignores cancellation.
+                form.dispatchEvent(new Event('reset', { bubbles: true, cancelable: true }));
+            });
+
+            // Assert
+            expect(control.value).toBe('Edited');
+            expect(output.querySelector('[name="title"]')).toBe(control);
+            expect(document.activeElement).toBe(control);
+            expect(ref).not.toHaveBeenCalled();
+
+            // Act
+            await act(async () => form.reset());
+
+            // Assert
+            expect(control.value).toBe('Original');
+            expect(new FormData(form).get('title')).toBe('Original');
+            expect(output.querySelector('[name="title"]')).toBe(control);
+            expect(document.activeElement).toBe(control);
+            expect(ref).not.toHaveBeenCalled();
+        }
+    );
+});
 
 it.each([Select, Combobox, RadioGroup])(
     'focuses the owned control when form validation rejects an empty selection',

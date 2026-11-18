@@ -1,9 +1,9 @@
-// @vitest-environment happy-dom
-import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+// @vitest-environment happy-dom
+import { act, createRef, useState } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { Image } from '@/components/longlink/display/image';
-import { FileRequestContext } from '@/components/custom/preview';
+import { RequestContext } from '@/components/custom/contexts';
 
 it('forwards native image attributes without allowing alternate network sources', () => {
     // Arrange
@@ -33,22 +33,19 @@ it.each(['data:image/png;base64,AA==', 'blob:caller-owned'])(
         // Arrange
         const requests: string[] = [];
         const files = {
-            load: async (path: string) => {
+            request: async (path: string) => {
                 requests.push(path);
 
                 return new Blob();
-            },
-            preview: async () => {
-                throw new Error('Inline images must not open a host preview');
             },
             download: async () => undefined
         };
 
         // Act
         await withMounted(
-            <FileRequestContext value={files}>
+            <RequestContext value={files}>
                 <Image src={src} alt="Photo" />
-            </FileRequestContext>,
+            </RequestContext>,
             async (output) => {
                 // Assert
                 expect(output.querySelector('img')?.getAttribute('src')).toBe(src);
@@ -63,10 +60,7 @@ it('releases owned previews on source changes and ignores late responses', async
     const pending = new Map<string, (blob: Blob) => void>();
 
     const files = {
-        load: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
-        preview: async () => {
-            throw new Error('Images must not open a host preview');
-        },
+        request: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
         download: async () => undefined
     };
 
@@ -77,7 +71,7 @@ it('releases owned previews on source changes and ignores late responses', async
         const [src, setSrc] = useState('/first');
 
         return (
-            <FileRequestContext value={files}>
+            <RequestContext value={files}>
                 <button type="button" onClick={() => setSrc('/pending')}>
                     Pending
                 </button>
@@ -85,7 +79,7 @@ it('releases owned previews on source changes and ignores late responses', async
                     Last
                 </button>
                 <Image src={src} alt="Shipment photo" />
-            </FileRequestContext>
+            </RequestContext>
         );
     }
 
@@ -93,7 +87,10 @@ it('releases owned previews on source changes and ignores late responses', async
         await withMounted(<Photo />, async (output) => {
             expect(output.querySelector('img')).toBeNull();
             await act(async () => pending.get('/first')?.(new Blob(['first'], { type: 'image/png' })));
-            expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:first');
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:first');
+            });
 
             await act(async () => output.querySelectorAll('button')[0]?.click());
             expect(output.querySelector('img')).toBeNull();
@@ -101,6 +98,10 @@ it('releases owned previews on source changes and ignores late responses', async
 
             await act(async () => output.querySelectorAll('button')[1]?.click());
             await act(async () => pending.get('/last')?.(new Blob(['last'], { type: 'image/png' })));
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:last');
+            });
             await act(async () => pending.get('/pending')?.(new Blob(['stale'], { type: 'image/png' })));
 
             expect(create).toHaveBeenCalledTimes(2);
@@ -121,23 +122,24 @@ it.each(['rejected', 'non-image', 'missing'] as const)(
         const requests: string[] = [];
 
         const files = {
-            load: async (path: string) => {
+            request: async (path: string) => {
                 requests.push(path);
                 if (result === 'rejected') throw new Error('Denied');
 
                 return new Blob(['<script>private attachment</script>'], { type: 'text/html' });
             },
-            preview: async () => {
-                throw new Error('Images must not open a host preview');
-            },
             download: async () => undefined
         };
 
         await withMounted(
-            <FileRequestContext value={result === 'missing' ? null : files}>
+            <RequestContext value={result === 'missing' ? null : files}>
                 <Image src="https://untrusted.example/photo.png" alt="Photo" />
-            </FileRequestContext>,
+            </RequestContext>,
             async (output) => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.textContent).toContain('Photo unavailable');
+                });
                 expect(requests).toEqual(result === 'missing' ? [] : ['https://untrusted.example/photo.png']);
                 expect(output.querySelector('img')).toBeNull();
                 expect(output.querySelector('script')).toBeNull();
@@ -191,31 +193,32 @@ it('recovers from an inline decode failure on source change without revoking cal
 
 it('releases a scoped preview after a decode failure and reports the original image error', async () => {
     // A failed decode must still notify callers and release the host-owned URL on unmount.
-    const files = {
-        load: async () => new Blob(['broken'], { type: 'image/png' }),
-        preview: async () => {
-            throw new Error('Images must not open a host preview');
-        },
-        download: async () => undefined
-    };
+    const files = { request: async () => new Blob(['broken'], { type: 'image/png' }), download: async () => undefined };
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:broken-scoped');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const onError = vi.fn();
+    const imageRef = createRef<HTMLImageElement>();
 
     try {
         await withMounted(
-            <FileRequestContext value={files}>
-                <Image src="/photo" alt="Shipment photo" ratio={1} onError={onError} />
-            </FileRequestContext>,
+            <RequestContext value={files}>
+                <Image src="/photo" alt="Shipment photo" ratio={1} onError={onError} ref={imageRef} />
+            </RequestContext>,
             async (output) => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('img')).not.toBeNull();
+                });
                 const image = output.querySelector('img');
 
                 if (!image) throw new Error('Missing scoped image');
+                expect(imageRef.current).toBe(image);
 
                 await act(async () => image.dispatchEvent(new Event('error')));
                 expect(onError.mock.calls[0]?.[0].target).toBe(image);
                 expect(output.querySelector('img')).toBeNull();
+                expect(imageRef.current).toBeNull();
                 expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe(
                     'Shipment photo: Photo unavailable'
                 );
