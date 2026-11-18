@@ -71,7 +71,7 @@ jobs:
                   python-version: '3.14.6'
 
             - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@v1.15.0
+              uses: voidzero-dev/setup-vp@v1.22.0
               with:
                   cache: true
                   node-version-file: package.json

@@ -24,7 +24,7 @@ workflows:
         - 'docker/login-action@v4.8.0'
         - 'docker/setup-buildx-action@v4.4.1'
         - 'softprops/action-gh-release@v3.0.4'
-        - 'voidzero-dev/setup-vp@v1.15.0'
+        - 'voidzero-dev/setup-vp@v1.22.0'
     '.github/workflows/sync-sample.yml':
         - 'actions/checkout@v7.0.1'
         - 'astral-sh/setup-uv@v10.3.3'
@@ -36,7 +36,7 @@ workflows:
         - 'docker/build-push-action@v7.4.0'
         - 'docker/setup-buildx-action@v4.4.1'
         - 'dorny/paths-filter@v4.0.3'
-        - 'voidzero-dev/setup-vp@v1.15.0'
+        - 'voidzero-dev/setup-vp@v1.22.0'
     '.github/workflows/trivy.yml':
         - 'actions/checkout@v7.0.1'
         - 'azure/setup-helm@v5.1.0'
@@ -104,8 +104,8 @@ dependencies:
         commit: 'sha1-8a0cd651e5b2365bd640854a3fa5dfc70e4875f3'
         owner_id: 2242
         repo_id: 204253808
-    'voidzero-dev/setup-vp@v1.15.0':
-        ref: 'v1.15.0'
-        commit: 'sha1-250f29ce396baf5e8f24498e17c0dfdebabc26eb'
+    'voidzero-dev/setup-vp@v1.22.0':
+        ref: 'v1.22.0'
+        commit: 'sha1-cab1ab9eaff52d4857875f4f2c016e36af8f2c76'
         owner_id: 149750581
         repo_id: 1133264797
