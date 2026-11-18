@@ -14,9 +14,7 @@ export default function ProjectSettings() {
         <Stack gap={4} paddingInline={8} paddingBlock={2}>
             <Stack gap={0}>
                 <Heading level={1}>Example Settings View</Heading>
-                <Text className="text-muted-foreground">
-                    This can be used for organizing settings into navigable sections.
-                </Text>
+                <Text tone="muted">This can be used for organizing settings into navigable sections.</Text>
             </Stack>
             <Menu
                 sections={[

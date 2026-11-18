@@ -7,16 +7,12 @@ export default function TextPage() {
     return (
         <ViewLayout
             name="Text"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'maxLines', type: 'number' }
-            ]}
             example={{
                 title: 'Text',
                 preview: <TextExample />,
                 code: `function Example() {
   return (
-    <Text>
+    <Text size="sm" tone="muted">
       Normal <b>bold</b> and <i>italic</i>
     </Text>
   );
@@ -30,7 +26,7 @@ export default function TextPage() {
 export function TextExample() {
     // Show normal text alongside bold and italic emphasis.
     return (
-        <Text>
+        <Text size="sm" tone="muted">
             Normal <b>bold</b> and <i>italic</i>
         </Text>
     );

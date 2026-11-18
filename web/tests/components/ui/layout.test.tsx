@@ -3,6 +3,7 @@ import { it, expect } from 'vitest';
 import { act, useState } from 'react';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
+import { Box } from '@/components/longlink/layout/box';
 import { renderStatic, withMounted } from '../../render';
 import { Grid } from '@/components/longlink/layout/grid';
 import { PageContainer } from '@/components/ui/page-container';
@@ -60,6 +61,53 @@ it.each([Stack, Grid])('forwards native container events alongside layout props'
             expect(resets).toBe(1);
         }
     );
+});
+
+it.each([Box, Grid])('updates padding overrides without remounting an editable child', async (Layout) => {
+    // Arrange
+    const user = userEvent.setup();
+
+    function Preview() {
+        const [compact, setCompact] = useState(false);
+
+        return (
+            <>
+                <button type="button" onClick={() => setCompact((value) => !value)}>
+                    Toggle spacing
+                </button>
+                <Layout padding={4} paddingInline={compact ? 0 : undefined} paddingBlock={compact ? 2 : undefined}>
+                    <input aria-label="Draft" defaultValue="Retained" />
+                </Layout>
+            </>
+        );
+    }
+
+    await withMounted(<Preview />, async (output) => {
+        const input = output.querySelector('input');
+        const toggle = output.querySelector('button');
+        const layout = input?.parentElement;
+
+        if (!input || !toggle || !layout) throw new Error('Expected an editable preview');
+        await act(async () => user.type(input, ' draft'));
+
+        // Act
+        await act(async () => user.click(toggle));
+
+        // Assert
+        expect(output.querySelector('input')).toBe(input);
+        expect(input.value).toBe('Retained draft');
+        expect(layout.style.paddingInline).toBe('calc(var(--spacing) * 0)');
+        expect(layout.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
+        expect(layout.hasAttribute('padding')).toBe(false);
+
+        // Act
+        await act(async () => user.click(toggle));
+
+        // Assert
+        expect(layout.style.paddingInline).toBe('calc(var(--spacing) * 4)');
+        expect(layout.style.paddingBlock).toBe('calc(var(--spacing) * 4)');
+        expect(input.value).toBe('Retained draft');
+    });
 });
 
 it('retains an unsaved content draft when its toolbar is removed and restored', async () => {

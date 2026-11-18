@@ -23,10 +23,10 @@ export default function List() {
             header: ({ column }) => <DataGridColumnHeader column={column} title="File" />,
             cell: ({ row }) => (
                 <Link href={`/assets/${row.original.filename}`} preview={row.original.filename}>
-                    <Text className="inline-flex items-center gap-2">
+                    <Stack direction="horizontal" align="center" gap={2}>
                         <FileType type={row.original.type} size="xs" aria-hidden="true" />
                         {row.original.filename}
-                    </Text>
+                    </Stack>
                 </Link>
             )
         },

@@ -74,7 +74,9 @@ it('updates and clears truncation without replacing the text element', async () 
 
         return (
             <>
-                <Text maxLines={maxLines}>Long publication details</Text>
+                <Text maxLines={maxLines} size="sm" tone="muted" weight="medium" align="end">
+                    Long publication details
+                </Text>
                 <button onClick={() => setMaxLines(maxLines === 1 ? 2 : 0)}>Expand details</button>
             </>
         );

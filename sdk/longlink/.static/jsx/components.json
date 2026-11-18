@@ -816,14 +816,34 @@
             "name": "Box",
             "category": "Layouts",
             "introduction": "Controls container dimensions, semantic backgrounds, and optional content centering.",
-            "guidance": "Use Box around Stack or Grid to control sizing. Set center to center children horizontally and vertically within the available space. Numeric dimensions are pixels; strings are CSS sizes. Omitted backgrounds remain transparent. Native div attributes and events are supported without refs or styling overrides.",
+            "guidance": "Use Box around Stack or Grid to control sizing. Set center to center children on both axes, or use align and justify independently; explicit alignment overrides center on that axis. Numeric dimensions are pixels; strings are CSS sizes. Padding uses theme spacing units, like Stack. Inline and block padding override padding, including zero. Omitted backgrounds remain transparent. Native div attributes and events are supported without refs or styling overrides.",
             "keywords": ["container", "width", "height", "background", "sizing"],
             "properties": [
                 { "name": "children", "type": "ReactNode" },
                 { "name": "width", "type": "string | number", "description": "Container width." },
                 { "name": "height", "type": "string | number", "description": "Container height." },
+                { "name": "minWidth", "type": "string | number", "description": "Minimum container width." },
                 { "name": "maxWidth", "type": "string | number", "description": "Maximum container width." },
                 { "name": "minHeight", "type": "string | number", "description": "Minimum container height." },
+                { "name": "maxHeight", "type": "string | number", "description": "Maximum container height." },
+                { "name": "padding", "type": "number", "description": "Padding in theme spacing units." },
+                { "name": "paddingInline", "type": "number", "description": "Overrides horizontal padding." },
+                { "name": "paddingBlock", "type": "number", "description": "Overrides vertical padding." },
+                {
+                    "name": "align",
+                    "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
+                    "description": "Vertical content alignment; enables a horizontal flex container."
+                },
+                {
+                    "name": "justify",
+                    "type": "\"start\" | \"center\" | \"end\" | \"between\" | \"around\" | \"evenly\"",
+                    "description": "Horizontal content distribution; enables a horizontal flex container."
+                },
+                {
+                    "name": "overflow",
+                    "type": "\"visible\" | \"hidden\" | \"auto\" | \"scroll\"",
+                    "description": "Overflow behavior within the configured dimensions."
+                },
                 {
                     "name": "center",
                     "type": "boolean",
@@ -832,7 +852,7 @@
                 },
                 {
                     "name": "background",
-                    "type": "\"none\" | \"primary\" | \"secondary\" | \"outline\"",
+                    "type": "\"none\" | \"muted\" | \"primary\" | \"secondary\" | \"outline\"",
                     "description": "Surface style with matching foreground text. None is transparent and inherits text color; outline adds a theme border.",
                     "default": "none"
                 }
@@ -985,7 +1005,7 @@
             "source": "custom",
             "reference": "https://ui.shadcn.com/docs/components/base/dialog",
             "justification": "Owns modal composition, responsive sizing, body scrolling, and dismissal while Base UI retains focus management and isolated View host coordination.",
-            "guidance": "Supply a required title, optional description and footer, and body content as children. Use trigger for an internally connected button or control open from an external action. Set fullscreen=true for the expanded layout; Dialog owns dimensions because it is portaled. Set dismissible=false during noninterruptible work and close through controlled open state when complete. Validation, submission, and pending state remain caller-owned. Use useConfirm for destructive confirmations.",
+            "guidance": "Supply a required title, optional description and footer, and body content as children. Use trigger for an internally connected button or control open from an external action. Configure width and height directly because the dialog is portaled; use height=\"auto\" for content-sized dialogs. Fullscreen takes precedence over width and height. Viewport constraints and body scrolling remain component-owned. Set dismissible=false during noninterruptible work and close through controlled open state when complete. Validation, submission, and pending state remain caller-owned. Use useConfirm for destructive confirmations.",
             "introduction": "A props-based modal with centered or fullscreen sizing and internally composed accessible chrome.",
             "properties": [
                 { "name": "open", "type": "boolean", "description": "Controlled visibility." },
@@ -1005,6 +1025,18 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Default is 960px wide and up to 560px high, constrained to the available viewport. Fullscreen uses 95% of the viewport with an outer inset and expands the isolated View host."
+                },
+                {
+                    "name": "width",
+                    "type": "string | number",
+                    "default": 960,
+                    "description": "Dialog width, constrained to the viewport. Ignored when fullscreen."
+                },
+                {
+                    "name": "height",
+                    "type": "string | number",
+                    "default": "min(560px, calc(100dvh - var(--spacing) * 40))",
+                    "description": "Dialog height; use auto to fit content. Ignored when fullscreen."
                 },
                 { "name": "title", "type": "string", "description": "Required visible and accessible dialog title." },
                 { "name": "description", "type": "string", "description": "Optional accessible supporting text." },
@@ -1169,17 +1201,20 @@
         {
             "name": "Grid",
             "category": "Layouts",
-            "introduction": "Arranges View content into equal-width columns, automatically collapsing to one column on mobile.",
-            "guidance": "Accepts native div attributes and events. Configure layout through the supported layout props; component styling is fixed.",
+            "introduction": "Arranges View content into equal-width columns with configurable responsive layouts.",
+            "guidance": "A numeric columns value keeps one column through 768px. Use an object for explicit responsive counts: base, sm (640px), md (768px), lg (1024px), and xl (1280px); omitted breakpoints inherit the preceding count. Padding uses theme spacing units, like Stack, with inline and block overrides. GridItem spans apply above 768px and remain full-width at 768px or less. Accepts native div attributes and events without styling overrides.",
             "keywords": ["columns", "layout", "dashboard"],
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Grid content." },
                 {
                     "name": "columns",
-                    "type": "number",
-                    "description": "Number of equal-width columns. Automatically uses one column at viewport widths of 768px or less."
+                    "type": "number | { base?: number; sm?: number; md?: number; lg?: number; xl?: number }",
+                    "description": "Equal-width column count, optionally specified by breakpoint. Numeric values retain one column at 768px or less."
                 },
                 { "name": "gap", "type": "number", "description": "Spacing between all items.", "default": 3 },
+                { "name": "padding", "type": "number", "description": "Padding in theme spacing units." },
+                { "name": "paddingInline", "type": "number", "description": "Overrides horizontal padding." },
+                { "name": "paddingBlock", "type": "number", "description": "Overrides vertical padding." },
                 {
                     "name": "align",
                     "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
@@ -1210,7 +1245,7 @@
             "name": "Heading",
             "category": "Display",
             "introduction": "Displays a semantic HTML heading with standard Tailwind typography.",
-            "guidance": "Accepts native heading attributes and events. Typography follows the installed component styling.",
+            "guidance": "Use level for the document outline and size for an independent typography level; size defaults to level. Set align for text alignment. Accepts native heading attributes and events without styling overrides.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Heading content." },
                 {
@@ -1218,7 +1253,13 @@
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
                     "description": "Heading level from h1 to h6.",
                     "default": 2
-                }
+                },
+                {
+                    "name": "size",
+                    "type": "1 | 2 | 3 | 4 | 5 | 6",
+                    "description": "Typography level, defaulting to level without changing heading semantics."
+                },
+                { "name": "align", "type": "\"start\" | \"center\" | \"end\"", "description": "Text alignment." }
             ],
             "source": "custom",
             "justification": "Maps a numeric heading level to matching semantic HTML and typography; no Heading primitive exists in shadcn/ui or ReUI."
@@ -1858,10 +1899,35 @@
         {
             "name": "Text",
             "category": "Display",
-            "introduction": "Adds optional line truncation to a span. Use Heading for titles.",
-            "guidance": "Inherits surrounding typography. Native HTML attributes, ARIA and data attributes, and event handlers are forwarded to the rendered element; component styling is fixed. Use ordinary HTML for text that does not need truncation.",
+            "introduction": "Displays text with configurable typography, semantic tone, alignment, and optional truncation. Use Heading for titles.",
+            "guidance": "Inherits surrounding typography unless size, weight, tone, or align is supplied. Use tone=\"muted\" for supporting text and tone=\"destructive\" for errors. Native HTML attributes, ARIA and data attributes, and event handlers are forwarded without styling overrides.",
             "properties": [
                 { "name": "children", "type": "ReactNode", "description": "Text content." },
+                {
+                    "name": "size",
+                    "type": "\"xs\" | \"sm\" | \"base\" | \"lg\" | \"xl\" | \"2xl\"",
+                    "description": "Typography size; omitted values inherit."
+                },
+                {
+                    "name": "weight",
+                    "type": "\"normal\" | \"medium\" | \"semibold\" | \"bold\"",
+                    "description": "Font weight; omitted values inherit."
+                },
+                {
+                    "name": "tone",
+                    "type": "\"default\" | \"muted\" | \"destructive\"",
+                    "description": "Semantic text color; omitted values inherit."
+                },
+                {
+                    "name": "align",
+                    "type": "\"start\" | \"center\" | \"end\"",
+                    "description": "Text alignment; renders the span as a block so alignment uses the available width."
+                },
+                {
+                    "name": "tabularNums",
+                    "type": "boolean",
+                    "description": "Uses equal-width numerals for aligned metrics."
+                },
                 {
                     "name": "maxLines",
                     "type": "number",
@@ -1870,7 +1936,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Provides line-count-based truncation on a span; no Text primitive exists in shadcn/ui or ReUI."
+            "justification": "Provides prop-driven typography and line-count-based truncation on a span; no Text primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "Timestamp",

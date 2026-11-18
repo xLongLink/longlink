@@ -1,4 +1,5 @@
 import ViewLayout from './view-layout';
+import { Stack } from '@/components/longlink/layout/stack';
 import { FileType } from '@/components/longlink/display/file-type';
 
 /** Documents FileType in LongLink Views. */
@@ -20,14 +21,14 @@ export default function FileTypePage() {
                 preview: <FileTypeExample />,
                 code: `function Example() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4">
+    <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
       <FileType type="pdf" />
       <FileType type="docx" variant="solid" />
       <FileType type="xlsx" variant="light" />
       <FileType type="zip" variant="mono" />
       <FileType type="image" />
       <FileType type="folder" />
-    </div>
+    </Stack>
   );
 }`
             }}
@@ -39,13 +40,13 @@ export default function FileTypePage() {
 export function FileTypeExample() {
     // Keep mixed file types in a wrapping row at their native size.
     return (
-        <div className="flex flex-wrap items-center justify-center gap-4">
+        <Stack direction="horizontal" wrap="wrap" align="center" justify="center" gap={4}>
             <FileType type="pdf" />
             <FileType type="docx" variant="solid" />
             <FileType type="xlsx" variant="light" />
             <FileType type="zip" variant="mono" />
             <FileType type="image" />
             <FileType type="folder" />
-        </div>
+        </Stack>
     );
 }

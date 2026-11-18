@@ -1,6 +1,7 @@
 import ViewLayout from './view-layout';
 import { Box } from '@/components/longlink/layout/box';
 import { Icon } from '@/components/longlink/display/icon';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Documents Table in LongLink Views. */
@@ -38,10 +39,10 @@ export default function TablePage() {
           {projects.map((project) => (
             <TableRow key={project.name}>
               <TableCell>
-                <span className="flex items-center gap-2">
+                <Stack direction="horizontal" align="center" gap={2}>
                   <Icon icon={project.icon} size="sm" />
                   {project.name}
-                </span>
+                </Stack>
               </TableCell>
               <TableCell>{project.status}</TableCell>
             </TableRow>
@@ -78,10 +79,10 @@ export function TableExample() {
                     {projects.map((project) => (
                         <TableRow key={project.name}>
                             <TableCell>
-                                <span className="flex items-center gap-2">
+                                <Stack direction="horizontal" align="center" gap={2}>
                                     <Icon icon={project.icon} size="sm" />
                                     {project.name}
-                                </span>
+                                </Stack>
                             </TableCell>
                             <TableCell>{project.status}</TableCell>
                         </TableRow>

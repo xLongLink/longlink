@@ -1,4 +1,5 @@
 import ViewLayout from './view-layout';
+import { Box } from '@/components/longlink/layout/box';
 import { Image } from '@/components/longlink/display/image';
 import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyline.jpg?inline';
 
@@ -16,15 +17,15 @@ export default function ImagePage() {
             example={{
                 title: 'Card photo',
                 preview: (
-                    <div className="w-4/5">
+                    <Box width="80%">
                         <Image src={photo} alt="Skyline office towers" ratio={16 / 9} />
-                    </div>
+                    </Box>
                 ),
                 code: `function Example() {
   return (
-    <div className="w-4/5">
+    <Box width="80%">
       <Image src="/assets/skyline.jpg" alt="Skyline office towers" ratio={16 / 9} />
-    </div>
+    </Box>
   );
 }`
             }}

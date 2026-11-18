@@ -8,10 +8,6 @@ export default function HeadingPage() {
     return (
         <ViewLayout
             name="Heading"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'level', type: '1 | 2 | 3 | 4 | 5 | 6' }
-            ]}
             example={{
                 title: 'Heading',
                 preview: <HeadingExample />,

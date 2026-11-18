@@ -64,11 +64,11 @@ export default function Models() {
                                         <Stack direction="horizontal" align="center" gap={3} padding={3}>
                                             <Icon icon={metric.icon} size="lg" tile="soft" variant="primary" />
                                             <Stack gap={1}>
-                                                <Text className="text-[13px] text-muted-foreground">
+                                                <Text size="sm" tone="muted">
                                                     {metric.label}
                                                 </Text>
                                                 <Stack direction="horizontal" align="center" wrap="wrap" gap={2}>
-                                                    <Text className="text-xl font-medium tabular-nums">
+                                                    <Text size="xl" weight="medium" tabularNums>
                                                         {metric.value}
                                                     </Text>
                                                     <Badge variant={changeVariant}>{metric.change}</Badge>
@@ -277,10 +277,12 @@ export default function Models() {
                                                 aria-label="Provider shares"
                                                 center={
                                                     <Stack align="center" gap={0}>
-                                                        <Text className="text-2xl font-medium tabular-nums">
+                                                        <Text size="2xl" weight="medium" tabularNums>
                                                             {compactNumber.format(analytics.geographySummary.messages)}
                                                         </Text>
-                                                        <Text className="text-xs text-muted-foreground">Messages</Text>
+                                                        <Text size="xs" tone="muted">
+                                                            Messages
+                                                        </Text>
                                                     </Stack>
                                                 }
                                             />

@@ -1,31 +1,60 @@
+import { cn } from 'cn';
 import type { CSSProperties, ComponentPropsWithoutRef } from 'react';
 
-/** Arranges equal-width columns, automatically collapsing to one column on mobile. */
+type GridColumns = number | { base?: number; sm?: number; md?: number; lg?: number; xl?: number };
+
+/** Arranges equal-width columns with optional breakpoint-specific column counts. */
 export function Grid({
     columns,
     gap,
+    padding,
+    paddingInline = padding,
+    paddingBlock = padding,
     align,
     justify,
     children,
     ...props
 }: Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style'> & {
     /** Number of equal-width columns. */
-    columns?: number;
+    columns?: GridColumns;
     gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
     align?: 'start' | 'center' | 'end' | 'stretch';
     justify?: 'start' | 'center' | 'end' | 'stretch';
 }) {
-    // Keep configured tracks above the mobile breakpoint without a viewport subscription.
+    const tracks = typeof columns === 'number' ? { md: columns } : columns;
+
+    // Preserve numeric layouts' mobile breakpoint while explicit counts use the theme breakpoints.
     return (
         <div
             data-slot="grid"
             {...props}
-            className="grid grid-cols-1 gap-3 [@media(width>768px)]:grid-cols-(--grid-columns)"
+            className={cn(
+                'grid min-w-0 gap-3',
+                typeof columns === 'object'
+                    ? 'grid-cols-(--grid-columns-base) sm:grid-cols-(--grid-columns-sm) md:grid-cols-(--grid-columns-md) lg:grid-cols-(--grid-columns-lg) xl:grid-cols-(--grid-columns-xl)'
+                    : 'grid-cols-1 [@media(width>768px)]:grid-cols-(--grid-columns-md)'
+            )}
             style={
                 {
-                    '--grid-columns':
-                        columns !== undefined && columns > 0 ? `repeat(${columns}, 1fr)` : 'repeat(1, 1fr)',
+                    '--grid-columns-base': `repeat(${Math.max(1, tracks?.base ?? 1)}, minmax(0, 1fr))`,
+                    '--grid-columns-sm': tracks?.sm
+                        ? `repeat(${Math.max(1, tracks.sm)}, minmax(0, 1fr))`
+                        : 'var(--grid-columns-base)',
+                    '--grid-columns-md': tracks?.md
+                        ? `repeat(${Math.max(1, tracks.md)}, minmax(0, 1fr))`
+                        : 'var(--grid-columns-sm)',
+                    '--grid-columns-lg': tracks?.lg
+                        ? `repeat(${Math.max(1, tracks.lg)}, minmax(0, 1fr))`
+                        : 'var(--grid-columns-md)',
+                    '--grid-columns-xl': tracks?.xl
+                        ? `repeat(${Math.max(1, tracks.xl)}, minmax(0, 1fr))`
+                        : 'var(--grid-columns-lg)',
                     gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
+                    paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
+                    paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
                     alignItems: align,
                     justifyItems: justify
                 } as CSSProperties
