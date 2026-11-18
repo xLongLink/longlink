@@ -3,6 +3,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useDeferredValue, useRef, useState } from 'react';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
@@ -181,4 +182,3 @@ export default function Solutions() {
         </Stack>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

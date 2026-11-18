@@ -14,6 +14,7 @@ import SolutionManagement from './solution-management';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Empty } from '@/components/longlink/display/empty';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
@@ -462,4 +463,3 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
         </>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

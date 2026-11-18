@@ -1,3 +1,4 @@
+import { Plug } from 'lucide-react';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRef, useTransition } from 'react';
@@ -80,4 +81,3 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
         </>
     );
 }
-import { Plug } from 'lucide-react';

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { RegistryForm } from '@/components/dialogs/registry-form';
@@ -101,4 +102,3 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
         </>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

@@ -6,6 +6,7 @@ import { useApiError } from '@/lib/errors';
 import { TagForm } from '@/components/dialogs/tag-form';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -171,4 +172,3 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
         </>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

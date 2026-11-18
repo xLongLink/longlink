@@ -6,6 +6,7 @@ import { ApiBoundary } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -211,4 +212,3 @@ function MemberPermissions({
         </Stack>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';

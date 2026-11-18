@@ -3,6 +3,7 @@ import { ApiBoundary } from '@/components/api';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
+import { Empty } from '@/components/longlink/display/empty';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { NativeLink as Link } from '@/components/custom/native-link';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
@@ -86,4 +87,3 @@ function InvoiceTable({ base }: { base: string }) {
         </Table>
     );
 }
-import { Empty } from '@/components/longlink/display/empty';
