@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { Appearance } from '@/lib/appearance';
 import type { ViewRuntime } from '@/views/manifest';
-import { ViewBackdrop } from '@/components/view-backdrop';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
@@ -50,21 +49,20 @@ export function JsxView({
     const navigate = useNavigate();
     const reportError = useApiError();
     const [height, setHeight] = useState(1);
-    const [frameBounds, setFrameBounds] = useState<DOMRect>();
-    const [modal, setModal] = useState({ depth: 0, fullscreen: false });
+    const [modalOpen, setModalOpen] = useState(false);
 
     const [filePreview, setFilePreview] = useState<
         { title: string } & ({ type: 'file'; body: Blob } | { type: 'text'; text: string })
     >();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
-    useScrollLock(modal.fullscreen);
+    useScrollLock(modalOpen);
 
     // Promote the existing frame without reparenting it, which would reload its document and lose View state.
     useLayoutEffect(() => {
         const element = frame.current;
 
-        if (!modal.fullscreen || !element) return;
+        if (!modalOpen || !element) return;
         element.showPopover();
         const siblings = new Map<HTMLElement, boolean>();
 
@@ -99,7 +97,7 @@ export function JsxView({
                 if (root.style.overscrollBehaviorY === 'none') root.style.overscrollBehaviorY = value;
             }
         };
-    }, [modal.fullscreen]);
+    }, [modalOpen]);
 
     const [bootstrapState, setBootstrapState] = useState<
         | { status: 'preparing' }
@@ -164,30 +162,6 @@ export function JsxView({
         const modules = new Map<string, Promise<string>>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 
-        /** Sends host-measured visible bounds without giving the sandbox control of page geometry. */
-        function measureViewport(): void {
-            const element = frame.current;
-
-            if (!element || appearancePort.current !== channel.port1) return;
-            const bounds = element.getBoundingClientRect();
-
-            if (bounds.height === 0) return;
-            setFrameBounds(bounds);
-            const viewport = window.visualViewport;
-            const viewportTop = viewport?.offsetTop ?? 0;
-            const viewportHeight = viewport?.height ?? window.innerHeight;
-            const top = Math.max(0, Math.min(bounds.height, viewportTop - bounds.top));
-            const bottom = Math.max(0, Math.min(bounds.height - top, bounds.bottom - viewportTop - viewportHeight));
-            channel.port1.postMessage({ type: 'viewport', top, bottom, height: bounds.height - top - bottom });
-        }
-
-        // Track page-owned scrolling and resizing while the sandbox retains native modal ownership.
-        const viewportObserver = new ResizeObserver(measureViewport);
-        window.addEventListener('resize', measureViewport, { signal: controller.signal });
-        window.addEventListener('scroll', measureViewport, { capture: true, signal: controller.signal });
-        window.visualViewport?.addEventListener('resize', measureViewport, { signal: controller.signal });
-        window.visualViewport?.addEventListener('scroll', measureViewport, { signal: controller.signal });
-
         /** Reports safe Solution failures once in the page and returns them to the requesting View. */
         function rejectRequest(
             command: { id: number; type: 'request' | 'download' | 'preview' | 'icon' },
@@ -205,11 +179,10 @@ export function JsxView({
         /** Revokes the attempt's capabilities and startup deadline on failure or unmount. */
         function dispose(): void {
             controller.abort();
-            setModal({ depth: 0, fullscreen: false });
+            setModalOpen(false);
             setFilePreview(undefined);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
-            viewportObserver.disconnect();
 
             if (appearancePort.current === channel.port1) appearancePort.current = null;
             channel.port1.close();
@@ -252,9 +225,6 @@ export function JsxView({
                 );
                 appearancePort.current = channel.port1;
 
-                if (frame.current) viewportObserver.observe(frame.current);
-                viewportObserver.observe(document.body);
-                measureViewport();
                 clearTimeout(handshakeTimer);
             } catch (error) {
                 fail('transfer', error instanceof Error ? error.name : 'Error');
@@ -326,7 +296,7 @@ export function JsxView({
 
             // Keep modal content sandboxed; only the host can promote its frame over Platform navigation.
             if (command.type === 'modal') {
-                setModal({ depth: command.depth, fullscreen: command.depth > 0 && command.fullscreen === true });
+                setModalOpen(command.open);
 
                 return;
             }
@@ -460,9 +430,6 @@ export function JsxView({
             className="relative flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-calc(var(--spacing)*2)*4)] flex-col"
             style={{ height }}
         >
-            {modal.depth > 0 && !modal.fullscreen && frameBounds && (
-                <ViewBackdrop bounds={frameBounds} depth={modal.depth} />
-            )}
             <iframe
                 ref={frame}
                 title="Solution View"
@@ -470,9 +437,9 @@ export function JsxView({
                 sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                 referrerPolicy="no-referrer"
                 srcDoc={bootstrapState.document}
-                popover={modal.fullscreen ? 'manual' : undefined}
+                popover={modalOpen ? 'manual' : undefined}
                 className={
-                    modal.fullscreen
+                    modalOpen
                         ? 'fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-transparent p-0'
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }

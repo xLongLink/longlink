@@ -8,7 +8,7 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 import { DialogActivityContext } from '@/components/custom/contexts';
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
-it.each([false, true])('closes a dialog without submitting its form (fullscreen host: %s)', async (fullscreen) => {
+it.each([false, true])('closes a dialog without submitting its form (fullscreen: %s)', async (fullscreen) => {
     const close = vi.fn();
     const submit = vi.fn((event: React.SubmitEvent) => event.preventDefault());
     const activity = vi.fn();
@@ -32,10 +32,10 @@ it.each([false, true])('closes a dialog without submitting its form (fullscreen 
             expect(close).toHaveBeenCalledTimes(1);
             expect(close.mock.calls[0]?.[0]).toBe(false);
             expect(submit).not.toHaveBeenCalled();
-            expect(activity).toHaveBeenCalledExactlyOnceWith(true, fullscreen);
+            expect(activity).toHaveBeenCalledExactlyOnceWith(true);
         }
     );
-    expect(activity).toHaveBeenLastCalledWith(false, fullscreen);
+    expect(activity).toHaveBeenLastCalledWith(false);
 });
 
 it('conditionally unmounts an open dialog without changing caller-owned state', async () => {
@@ -141,14 +141,11 @@ it('traps keyboard focus, ignores backdrop presses, and restores focus after Esc
         await act(async () => events.keyboard('{Escape}'));
         expect(document.querySelector('[role="dialog"]')).toBeNull();
         expect(document.activeElement).toBe(trigger);
-        expect(activity.mock.calls).toEqual([
-            [true, false],
-            [false, false]
-        ]);
+        expect(activity.mock.calls).toEqual([[true], [false]]);
     });
 });
 
-it('cleans up sandbox fullscreen coordination when the open modal unmounts', async () => {
+it('cleans up sandbox coordination when the open modal unmounts', async () => {
     const activity = vi.fn();
 
     await withMounted(
@@ -156,13 +153,10 @@ it('cleans up sandbox fullscreen coordination when the open modal unmounts', asy
             <Dialog title="Preview" fullscreen open onOpenChange={() => {}} />
         </DialogActivityContext>,
         async () => {
-            expect(activity).toHaveBeenCalledExactlyOnceWith(true, true);
+            expect(activity).toHaveBeenCalledExactlyOnceWith(true);
         }
     );
-    expect(activity.mock.calls).toEqual([
-        [true, true],
-        [false, true]
-    ]);
+    expect(activity.mock.calls).toEqual([[true], [false]]);
 });
 
 it('keeps dialog host coordination active after canceled dismissal and releases it on close', async () => {
@@ -188,11 +182,11 @@ it('keeps dialog host coordination active after canceled dismissal and releases 
             if (!trigger) throw new Error('Missing dialog trigger');
 
             await act(async () => user.click(trigger));
-            expect(activity.mock.calls).toEqual([[true, false]]);
+            expect(activity.mock.calls).toEqual([[true]]);
 
             await act(async () => user.keyboard('{Escape}'));
             expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-            expect(activity.mock.calls).toEqual([[true, false]]);
+            expect(activity.mock.calls).toEqual([[true]]);
 
             const close = document.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
 
@@ -200,10 +194,7 @@ it('keeps dialog host coordination active after canceled dismissal and releases 
 
             await act(async () => user.click(close));
             expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity.mock.calls).toEqual([
-                [true, false],
-                [false, false]
-            ]);
+            expect(activity.mock.calls).toEqual([[true], [false]]);
             expect(document.activeElement).toBe(trigger);
         }
     );
@@ -271,23 +262,16 @@ it('releases only the dismissed nested dialog host capability and restores focus
             if (!trigger) throw new Error('Missing nested dialog trigger');
             await act(async () => user.click(trigger));
             expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2);
-            expect(activity.mock.calls).toEqual([
-                [true, false],
-                [true, true]
-            ]);
+            expect(activity.mock.calls).toEqual([[true], [true]]);
 
             await act(async () => user.keyboard('{Escape}'));
             expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
-            expect(activity.mock.calls).toEqual([
-                [true, false],
-                [true, true],
-                [false, true]
-            ]);
+            expect(activity.mock.calls).toEqual([[true], [true], [false]]);
             expect(document.activeElement).toBe(trigger);
 
             await act(async () => user.keyboard('{Escape}'));
             expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity).toHaveBeenLastCalledWith(false, false);
+            expect(activity).toHaveBeenLastCalledWith(false);
         }
     );
 });

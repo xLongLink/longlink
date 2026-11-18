@@ -97,11 +97,11 @@ function ConfirmationDialog({
     const activity = use(DialogActivityContext);
     const cancel = useRef<HTMLButtonElement>(null);
 
-    // Extend the sandbox backdrop for exactly the rendered modal's lifetime.
+    // Coordinate the sandbox frame for exactly the rendered modal's lifetime.
     useEffect(() => {
-        activity?.(true, false);
+        activity?.(true);
 
-        return () => activity?.(false, false);
+        return () => activity?.(false);
     }, [activity]);
 
     // Keep focus on the least destructive action and block dismissal during the request.
@@ -114,10 +114,7 @@ function ConfirmationDialog({
         >
             <AlertDialogContent
                 className="overflow-auto"
-                style={{
-                    top: 'calc(var(--view-viewport-top, 0px) + var(--view-viewport-height, 100dvh) / 2)',
-                    maxHeight: 'calc(var(--view-viewport-height, 100dvh) - var(--spacing) * 20)'
-                }}
+                style={{ maxHeight: 'calc(100dvh - var(--spacing) * 20)' }}
                 initialFocus={cancel}
                 aria-busy={isPending || undefined}
                 onClick={(event) => event.stopPropagation()}

@@ -65,7 +65,7 @@ it.each([false, true])(
             expect(document.getElementById(modal.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
                 'Update the order reference.'
             );
-            expect(activity).toHaveBeenLastCalledWith(true, fullscreen);
+            expect(activity).toHaveBeenLastCalledWith(true);
             const firstInput = modal.querySelector('input');
             expect(document.activeElement).toBe(firstInput);
             await act(async () => user.tab({ shift: true }));
@@ -87,7 +87,7 @@ it.each([false, true])(
             expect(saved).toHaveLength(1);
             expect(saved[0]?.get('reference')).toBe('PO-904');
             expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity).toHaveBeenLastCalledWith(false, fullscreen);
+            expect(activity).toHaveBeenLastCalledWith(false);
             expect(opened).toHaveBeenCalledTimes(2);
         });
     }
@@ -134,13 +134,13 @@ it('blocks user dismissal during pending work but permits a caller-controlled su
         await act(async () => user.click(backdrop));
         expect(document.querySelector('[role="dialog"]')).toBe(modal);
         expect(changes).toEqual([true]);
-        expect(activity.mock.calls).toEqual([[true, false]]);
+        expect(activity.mock.calls).toEqual([[true]]);
         const finish = modal.querySelector('[data-slot="dialog-footer"] button');
 
         if (!finish) throw new Error('Expected the completion action');
         await act(async () => user.click(finish));
         expect(document.querySelector('[role="dialog"]')).toBeNull();
-        expect(activity).toHaveBeenLastCalledWith(false, false);
+        expect(activity).toHaveBeenLastCalledWith(false);
         expect(document.activeElement).toBe(trigger);
     });
 });
@@ -173,13 +173,13 @@ it('retains an uncontrolled draft and host activity when the caller cancels Esca
             await act(async () => user.keyboard('{Escape}'));
             expect(document.querySelector('input[name="draft"]')).toBe(input);
             expect(input.value).toBe('Initial edit');
-            expect(activity.mock.calls).toEqual([[true, false]]);
+            expect(activity.mock.calls).toEqual([[true]]);
             const close = document.querySelector('[data-slot="dialog-close"]');
 
             if (!close) throw new Error('Expected explicit close');
             await act(async () => user.click(close));
             expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity).toHaveBeenLastCalledWith(false, false);
+            expect(activity).toHaveBeenLastCalledWith(false);
             expect(document.activeElement).toBe(trigger);
             await act(async () => user.click(trigger));
             const backdrop = document.querySelector('[data-slot="dialog-overlay"]');
@@ -187,7 +187,7 @@ it('retains an uncontrolled draft and host activity when the caller cancels Esca
             if (!backdrop) throw new Error('Expected the reopened backdrop');
             await act(async () => user.click(backdrop));
             expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(activity).toHaveBeenLastCalledWith(false, false);
+            expect(activity).toHaveBeenLastCalledWith(false);
         }
     );
 });
