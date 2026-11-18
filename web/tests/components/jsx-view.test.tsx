@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { ApiErrorContext } from '@/lib/errors';
 import * as workers from 'node:worker_threads';
 import { JsxView } from '@/components/jsx-view';
+import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../render';
 
 it.each([
@@ -284,6 +285,8 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
 });
 
 it('keeps PDFs binary despite a text filename and previews recognized text as inert content', async () => {
+    // Arrange
+    const user = userEvent.setup();
     // Replace HTTP only so MIME classification and the authenticated preview capability remain real.
     const script = '/* Preview bootstrap */';
     const version = createHash('sha256').update(`${script}\n`).digest('hex');
@@ -339,6 +342,7 @@ it('keeps PDFs binary despite a text filename and previews recognized text as in
                         throw new Error('Expected isolated preview transport');
                     }
                     const commands = ports[0];
+                    frame.focus();
 
                     // Invalid UTF-8 must reach the PDF renderer instead of failing text decoding.
                     const pdfReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
@@ -354,6 +358,11 @@ it('keeps PDFs binary despite a text filename and previews recognized text as in
                             'Unable to display this PDF.'
                         );
                     });
+                    const previewDialog = document.querySelector('[role="dialog"]');
+                    const close = previewDialog?.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
+
+                    if (!close) throw new Error('Expected preview dismissal control');
+                    close.focus();
 
                     // Switching previews must retain literal markup without introducing executable DOM.
                     const textReply = new Promise<unknown>((resolve) => commands.once('message', resolve));
@@ -366,10 +375,26 @@ it('keeps PDFs binary despite a text filename and previews recognized text as in
                         await act(async () => {});
                         const dialog = document.querySelector('[role="dialog"]');
 
+                        expect(dialog).toBe(previewDialog);
                         expect(dialog?.textContent).toContain('source.html');
                         expect(dialog?.textContent).toContain(text);
                         expect(dialog?.querySelector('script, img, iframe, object, embed')).toBeNull();
                         expect(dialog?.textContent).not.toContain('Unable to display this PDF.');
+                        expect(document.activeElement).toBe(close);
+                    });
+                    const copy = previewDialog?.querySelector<HTMLButtonElement>('button[aria-label="Copy code"]');
+
+                    if (!copy) throw new Error('Expected text preview copy control');
+                    await act(async () => {
+                        await user.click(copy);
+                    });
+                    expect(await navigator.clipboard.readText()).toBe(text);
+                    await act(async () => {
+                        await user.keyboard('{Escape}');
+                    });
+                    await vi.waitFor(() => {
+                        expect(document.querySelector('[role="dialog"]')).toBeNull();
+                        expect(document.activeElement).toBe(frame);
                     });
                     expect(reportError).not.toHaveBeenCalled();
                 } finally {

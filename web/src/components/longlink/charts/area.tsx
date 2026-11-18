@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import * as data from './data';
+import { renderAxes } from './axes';
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
 import type { CartesianChartProps, ChartCurve } from './types';
@@ -46,22 +47,7 @@ export function AreaChart<Row extends object>({
                         ))}
                     </defs>
                 )}
-                {axes && <recharts.CartesianGrid vertical={false} />}
-                <recharts.XAxis
-                    dataKey="category"
-                    hide={!axes}
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={8}
-                    tickFormatter={xTickFormatter}
-                />
-                <recharts.YAxis
-                    hide={!axes}
-                    axisLine={false}
-                    tickLine={false}
-                    width={48}
-                    tickFormatter={yTickFormatter}
-                />
+                {renderAxes({ axes, xTickFormatter, yTickFormatter })}
                 {series.map((item, index) => (
                     <recharts.Area
                         key={item.key}

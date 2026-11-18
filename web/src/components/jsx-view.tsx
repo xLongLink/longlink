@@ -10,10 +10,9 @@ import type { ViewRuntime } from '@/views/manifest';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
-import { FilePreview } from '@/components/dialogs/file-preview';
-import { TextPreview } from '@/components/dialogs/text-preview';
 import { resolveExternalUrl, resolveNavigationUrl } from '@/lib/url';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { PreviewDialog, type Preview } from '@/components/dialogs/preview';
 import { commandSchema, parametersSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
@@ -51,9 +50,7 @@ export function JsxView({
     const [height, setHeight] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
 
-    const [filePreview, setFilePreview] = useState<
-        { title: string } & ({ type: 'file'; body: Blob } | { type: 'text'; text: string })
-    >();
+    const [filePreview, setFilePreview] = useState<Preview>();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
     useScrollLock(modalOpen);
@@ -452,20 +449,7 @@ export function JsxView({
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }
             />
-            {filePreview?.type === 'file' && (
-                <FilePreview
-                    body={filePreview.body}
-                    title={filePreview.title}
-                    onOpenChange={() => setFilePreview(undefined)}
-                />
-            )}
-            {filePreview?.type === 'text' && (
-                <TextPreview
-                    text={filePreview.text}
-                    title={filePreview.title}
-                    onOpenChange={() => setFilePreview(undefined)}
-                />
-            )}
+            {filePreview && <PreviewDialog preview={filePreview} onOpenChange={() => setFilePreview(undefined)} />}
         </div>
     );
 }

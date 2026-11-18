@@ -156,38 +156,28 @@ export function ArticleFooter({
         <footer className="flex flex-col gap-3 pt-8 pb-30">
             {isCollectionPage ? (
                 <nav aria-label="Article page navigation" className="flex w-full items-center justify-between gap-3">
-                    {previousPage === undefined ? (
-                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowLeft">
-                            <ArrowLeft aria-hidden size={16} />
-                            Previous
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="secondary"
-                            render={<RouterLink to={`${previousPage}/`} />}
-                            nativeButton={false}
-                            aria-keyshortcuts="ArrowLeft"
-                        >
-                            <ArrowLeft aria-hidden size={16} />
-                            Previous
-                        </Button>
-                    )}
-                    {nextPage === undefined ? (
-                        <Button type="button" variant="secondary" disabled aria-keyshortcuts="ArrowRight">
-                            Next
-                            <ArrowRight aria-hidden size={16} />
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="secondary"
-                            render={<RouterLink to={`${nextPage}/`} />}
-                            nativeButton={false}
-                            aria-keyshortcuts="ArrowRight"
-                        >
-                            Next
-                            <ArrowRight aria-hidden size={16} />
-                        </Button>
-                    )}
+                    <Button
+                        type={previousPage === undefined ? 'button' : undefined}
+                        variant="secondary"
+                        disabled={previousPage === undefined}
+                        render={previousPage === undefined ? undefined : <RouterLink to={`${previousPage}/`} />}
+                        nativeButton={previousPage === undefined}
+                        aria-keyshortcuts="ArrowLeft"
+                    >
+                        <ArrowLeft aria-hidden size={16} />
+                        Previous
+                    </Button>
+                    <Button
+                        type={nextPage === undefined ? 'button' : undefined}
+                        variant="secondary"
+                        disabled={nextPage === undefined}
+                        render={nextPage === undefined ? undefined : <RouterLink to={`${nextPage}/`} />}
+                        nativeButton={nextPage === undefined}
+                        aria-keyshortcuts="ArrowRight"
+                    >
+                        Next
+                        <ArrowRight aria-hidden size={16} />
+                    </Button>
                 </nav>
             ) : null}
             <Separator />

@@ -7,13 +7,6 @@ export default function ProgressPage() {
     return (
         <ViewLayout
             name="Progress"
-            properties={[
-                { name: 'value', type: 'number | null' },
-                { name: 'max', type: 'number' },
-                { name: 'label', type: 'ReactNode' },
-                { name: 'showValue', type: 'boolean' },
-                { name: 'valueText', type: 'ReactNode' }
-            ]}
             example={{
                 title: 'Progress',
                 preview: <ProgressExample />,

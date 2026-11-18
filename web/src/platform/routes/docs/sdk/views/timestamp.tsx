@@ -7,13 +7,6 @@ export default function TimestampPage() {
     return (
         <ViewLayout
             name="Timestamp"
-            properties={[
-                { name: 'value', type: 'string | number' },
-                {
-                    name: 'format',
-                    type: '"date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time"'
-                }
-            ]}
             example={{
                 title: 'Timestamp',
                 preview: <TimestampExample />,

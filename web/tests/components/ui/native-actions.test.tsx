@@ -5,11 +5,10 @@ import { it, expect, vi } from 'vitest';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
-import { MemberAccess } from '@/components/dialogs/member-access';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
-import { InvitationResponse } from '@/components/dialogs/invitation-response';
 import { NativeLink, NativeNavigationLink } from '@/components/custom/native-link';
+import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
 
 /** Exposes actual router state after clicks without replacing navigation. */
 function Location() {
@@ -37,9 +36,9 @@ it('ignores class overrides supplied outside the typed LongLink Button API', () 
     expect(button?.classList.contains('bg-primary')).toBe(true);
 });
 
-it.each(['remove', 'role', 'accept', 'decline'] as const)(
-    'deduplicates %s confirmation, reports failure, and allows retry',
-    async (kind) => {
+it.each([false, true])(
+    'deduplicates confirmation with destructive=%s, reports failure, and allows retry',
+    async (destructive) => {
         let reject: (cause: Error) => void = () => {};
 
         const pending = new Promise<void>((_, fail) => {
@@ -50,8 +49,7 @@ it.each(['remove', 'role', 'accept', 'decline'] as const)(
         const notify = vi.fn();
         const close = vi.fn();
         const dismiss = vi.fn();
-        const destructive = kind === 'remove' || kind === 'decline';
-        const actionLabel = { remove: 'Remove member', role: 'Confirm', accept: 'Accept', decline: 'Decline' }[kind];
+        const actionLabel = 'Confirm';
 
         const confirm = async () => {
             await action();
@@ -60,20 +58,14 @@ it.each(['remove', 'role', 'accept', 'decline'] as const)(
 
         await withMounted(
             <ApiErrorContext value={createErrorReporter(notify)}>
-                {kind === 'remove' || kind === 'role' ? (
-                    <MemberAccess
-                        name="Reader"
-                        action={kind === 'remove' ? { kind: 'remove' } : { kind: 'role', role: 'Admin' }}
-                        onOpenChange={dismiss}
-                        onConfirm={confirm}
-                    />
-                ) : (
-                    <InvitationResponse
-                        invitation={{ type: kind, name: 'Team' }}
-                        onOpenChange={dismiss}
-                        onConfirm={confirm}
-                    />
-                )}
+                <MembershipConfirmation
+                    destructive={destructive}
+                    title="Confirm membership change"
+                    description="Apply this membership change?"
+                    actionLabel={actionLabel}
+                    onOpenChange={dismiss}
+                    onConfirm={confirm}
+                />
             </ApiErrorContext>,
             async () => {
                 const button = Array.from(

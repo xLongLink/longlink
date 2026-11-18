@@ -8,12 +8,6 @@ export default function BadgePage() {
     return (
         <ViewLayout
             name="Badge"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'size', type: '"xs" | "sm" | "md" | "lg" | "xl"' },
-                { name: 'radius', type: '"sm" | "full"' },
-                { name: 'variant', type: '"primary" | "secondary" | "destructive" | "outline"' }
-            ]}
             example={{
                 title: 'Badge variants',
                 preview: <BadgeExample />,

@@ -29,17 +29,7 @@ export const geographySchema = z.object({
 
 /** Rejects nonfinite or out-of-range geographic coordinates before rendering. */
 export function coordinateError(coordinates: readonly MapCoordinate[]): string | undefined {
-    if (
-        coordinates.some(
-            ([longitude, latitude]) =>
-                !Number.isFinite(longitude) ||
-                !Number.isFinite(latitude) ||
-                longitude < -180 ||
-                longitude > 180 ||
-                latitude < -90 ||
-                latitude > 90
-        )
-    )
+    if (coordinates.some(([longitude, latitude]) => !coordinate.safeParse([longitude, latitude]).success))
         return 'Map coordinates must contain a valid longitude and latitude.';
 }
 

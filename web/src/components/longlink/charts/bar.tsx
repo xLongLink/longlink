@@ -1,4 +1,5 @@
 import * as data from './data';
+import { renderAxes } from './axes';
 import { ChartFrame } from './frame';
 import * as recharts from 'recharts';
 import type { CartesianChartProps } from './types';
@@ -32,22 +33,7 @@ export function BarChart<Row extends object>({
                 accessibilityLayer
                 margin={{ top: padding, right: padding, left: padding, bottom: padding }}
             >
-                {axes && <recharts.CartesianGrid vertical={false} />}
-                <recharts.XAxis
-                    dataKey="category"
-                    hide={!axes}
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={8}
-                    tickFormatter={xTickFormatter}
-                />
-                <recharts.YAxis
-                    hide={!axes}
-                    axisLine={false}
-                    tickLine={false}
-                    width={48}
-                    tickFormatter={yTickFormatter}
-                />
+                {renderAxes({ axes, xTickFormatter, yTickFormatter })}
                 {series.map((item, index) => (
                     <recharts.Bar
                         key={item.key}

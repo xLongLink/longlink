@@ -9,10 +9,6 @@ export default function FileViewerPage() {
     return (
         <ViewLayout
             name="FileViewer"
-            properties={[
-                { name: 'src', type: 'string' },
-                { name: 'title', type: 'string' }
-            ]}
             example={{
                 title: 'FileViewer',
                 preview: <FileViewerExample />,

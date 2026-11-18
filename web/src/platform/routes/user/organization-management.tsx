@@ -14,7 +14,7 @@ import { NativeNavigationLink } from '@/components/custom/native-link';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Button, buttonVariants } from '@/components/longlink/action/button';
-import { InvitationResponse } from '@/components/dialogs/invitation-response';
+import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
@@ -221,8 +221,15 @@ export default function OrganizationManagement({ presentation }: { presentation:
                 />
             )}
             {selected && selected.type !== 'create' && (
-                <InvitationResponse
-                    invitation={selected}
+                <MembershipConfirmation
+                    destructive={selected.type === 'decline'}
+                    title={selected.type === 'accept' ? 'Accept invitation' : 'Decline invitation'}
+                    description={
+                        selected.type === 'accept'
+                            ? `Accept the invitation to join ${selected.name}?`
+                            : `Decline the invitation to ${selected.name}? You will need a new invitation to join.`
+                    }
+                    actionLabel={selected.type === 'accept' ? 'Accept' : 'Decline'}
                     onOpenChange={closeSelected}
                     onConfirm={async () => {
                         // Apply only the confirmed invitation action and report server failures.

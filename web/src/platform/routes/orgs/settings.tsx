@@ -1,16 +1,17 @@
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
-import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
+import { useState, useTransition } from 'react';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
+import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
@@ -18,11 +19,10 @@ import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
-import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
+import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
@@ -334,9 +334,15 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                 </Table>
             </Stack>
             {canManageSelectedMember && member && (
-                <MemberAccess
-                    name={selectedMember.user.name}
-                    action={member.action}
+                <MembershipConfirmation
+                    destructive={member.action.kind === 'remove'}
+                    title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
+                    description={
+                        member.action.kind === 'remove'
+                            ? `Remove ${selectedMember.user.name} from this organization? Access is revoked immediately.`
+                            : `Change ${selectedMember.user.name} to ${member.action.role}?`
+                    }
+                    actionLabel={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
                     onOpenChange={() => setMember(null)}
                     onConfirm={async () => {
                         // Update access on the server before refreshing the member list.
@@ -392,14 +398,14 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     );
 
     // Serialize revocation until the refreshed list is available.
-    const { mutateAsync, isPending: revoking } = useMutation({
-        networkMode: 'always',
-        mutationFn: async (id: string) => {
+    const [revoking, startTransition] = useTransition();
+    const revokeInvitation = useSubmit(
+        async (id: string) => {
             await api.delete(`${base}/invitations/${id}`);
             await invalidateInvitations();
-        }
-    });
-    const revokeInvitation = useSubmit(mutateAsync, { onError: () => {} });
+        },
+        { onError: () => {} }
+    );
 
     /** Closes only the invitation attempt that owns this callback. */
     function closeInvitation() {
@@ -437,7 +443,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                             disabled={revoking}
                                             aria-busy={revoking || undefined}
                                             onClick={() => {
-                                                void revokeInvitation(row.id);
+                                                startTransition(async () => {
+                                                    await revokeInvitation(row.id);
+                                                });
                                             }}
                                         >
                                             Revoke
