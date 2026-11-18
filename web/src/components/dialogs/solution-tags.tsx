@@ -18,7 +18,6 @@ import {
     ComboboxEmpty,
     ComboboxItem,
     ComboboxList,
-    ComboboxValue,
     useComboboxAnchor
 } from '@/components/shadcn/combobox';
 
@@ -100,29 +99,23 @@ export function SolutionTags({
                                     disabled={form.formState.isSubmitting}
                                 >
                                     <ComboboxChips ref={anchor}>
-                                        <ComboboxValue>
-                                            {(ids: string[]) => (
-                                                <>
-                                                    {ids.map((id) => {
-                                                        const name = tagsById.get(id)?.name ?? id;
+                                        {field.value.map((id) => {
+                                            const name = tagsById.get(id)?.name ?? id;
 
-                                                        return (
-                                                            <ComboboxChip key={id} aria-label={name}>
-                                                                {name}
-                                                            </ComboboxChip>
-                                                        );
-                                                    })}
-                                                    <ComboboxChipsInput
-                                                        ref={field.ref}
-                                                        id="solution-tags"
-                                                        onBlur={field.onBlur}
-                                                        placeholder={ids.length ? undefined : 'Select tags'}
-                                                        aria-invalid={fieldState.invalid}
-                                                        disabled={form.formState.isSubmitting}
-                                                    />
-                                                </>
-                                            )}
-                                        </ComboboxValue>
+                                            return (
+                                                <ComboboxChip key={id} aria-label={name}>
+                                                    {name}
+                                                </ComboboxChip>
+                                            );
+                                        })}
+                                        <ComboboxChipsInput
+                                            ref={field.ref}
+                                            id="solution-tags"
+                                            onBlur={field.onBlur}
+                                            placeholder={field.value.length ? undefined : 'Select tags'}
+                                            aria-invalid={fieldState.invalid}
+                                            disabled={form.formState.isSubmitting}
+                                        />
                                     </ComboboxChips>
                                     <ComboboxContent anchor={anchor}>
                                         <ComboboxEmpty>

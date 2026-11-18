@@ -6,9 +6,10 @@ import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import PaymentMethods from '@/platform/routes/orgs/payment-methods';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-it('creates one checkout during rapid activation and permits retry after a failed registration', async () => {
+it('attempts checkout offline, guards rapid activation, and permits retry after a failed registration', async () => {
+    // Arrange
     const base = '/api/v1/organizations/00000000-0000-4000-8000-000000000002';
     const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnMount: false } } });
     const reportError = vi.fn();
@@ -18,6 +19,7 @@ it('creates one checkout during rapid activation and permits retry after a faile
     });
     const requests: string[] = [];
     const destination = 'https://checkout.stripe.com/c/setup_123';
+    const wasOnline = onlineManager.isOnline();
 
     // Keep the real checkout transport and submission lifecycle behind a controlled HTTP response.
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
@@ -54,12 +56,15 @@ it('creates one checkout during rapid activation and permits retry after a faile
                 if (!register) throw new Error('Expected card registration');
 
                 // Same-tick activations must not create multiple hosted checkout sessions.
+                // Act
                 await act(async () => {
+                    onlineManager.setOnline(false);
                     register.click();
                     register.click();
                 });
+                // Assert
                 await vi.waitFor(() => expect(requests).toHaveLength(1));
-                expect(register.disabled).toBe(true);
+                await vi.waitFor(() => expect(register.disabled).toBe(true));
                 expect(navigate).not.toHaveBeenCalled();
 
                 // A failed checkout must report once, release the guard, and leave registration usable.
@@ -75,6 +80,7 @@ it('creates one checkout during rapid activation and permits retry after a faile
             }
         );
     } finally {
+        onlineManager.setOnline(wasOnline);
         finish(Response.json({ detail: 'Checkout unavailable' }, { status: 503 }));
         transport.mockRestore();
         navigate.mockRestore();

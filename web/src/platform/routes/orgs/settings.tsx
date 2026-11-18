@@ -1,17 +1,16 @@
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
+import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
 import { useApi } from '@/lib/hooks/use-api';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
-import { useState, useTransition } from 'react';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
-import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
@@ -21,6 +20,7 @@ import { DeletionDialog } from '@/components/dialogs/deletion';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { MemberAccess } from '@/components/dialogs/member-access';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
 import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
@@ -382,7 +382,6 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 /** Owns invitation drafts and actions only while their section is active. */
 function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
     const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
-    const [revoking, startRevocation] = useTransition();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
 
@@ -393,13 +392,14 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
     );
 
     // Serialize revocation until the refreshed list is available.
-    const revokeInvitation = useSubmit(
-        async (id: string) => {
+    const { mutateAsync, isPending: revoking } = useMutation({
+        networkMode: 'always',
+        mutationFn: async (id: string) => {
             await api.delete(`${base}/invitations/${id}`);
             await invalidateInvitations();
-        },
-        { onError: () => {} }
-    );
+        }
+    });
+    const revokeInvitation = useSubmit(mutateAsync, { onError: () => {} });
 
     /** Closes only the invitation attempt that owns this callback. */
     function closeInvitation() {
@@ -436,7 +436,9 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                                             variant="destructive"
                                             disabled={revoking}
                                             aria-busy={revoking || undefined}
-                                            onClick={() => startRevocation(() => revokeInvitation(row.id))}
+                                            onClick={() => {
+                                                void revokeInvitation(row.id);
+                                            }}
                                         >
                                             Revoke
                                         </Button>

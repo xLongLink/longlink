@@ -8,6 +8,104 @@ import * as workers from 'node:worker_threads';
 import { JsxView } from '@/components/jsx-view';
 import { renderStatic, withMounted } from '../render';
 
+it.each([
+    { chunked: false, failTransfer: false },
+    { chunked: true, failTransfer: false },
+    { chunked: false, failTransfer: true },
+    { chunked: true, failTransfer: true }
+])(
+    'revokes allocated capabilities for chunked=$chunked, failed transfer=$failTransfer',
+    async ({ chunked, failTransfer }) => {
+        // Arrange
+        const script = '/* Capability lifecycle bootstrap */';
+        const modules = chunked ? { 'entry.js': 'a'.repeat(64) } : undefined;
+        const version = createHash('sha256')
+            .update(`${script}\n${modules ? `\n${JSON.stringify(modules)}` : ''}`)
+            .digest('hex');
+        const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
+            if (url.includes('/views/runtime.js?')) return new Blob([script]);
+            if (url.includes('/views/runtime.css?')) return new Blob(['']);
+            throw new Error('Unexpected asset request');
+        });
+        const NativeMessageChannel = globalThis.MessageChannel;
+        const channels: MessageChannel[] = [];
+        const closed: ReturnType<typeof vi.spyOn>[] = [];
+        const messageChannel = vi.spyOn(globalThis, 'MessageChannel').mockImplementation(
+            class extends NativeMessageChannel {
+                constructor() {
+                    super();
+                    channels.push(this);
+                    closed.push(vi.spyOn(this.port1, 'close'), vi.spyOn(this.port2, 'close'));
+                }
+            }
+        );
+
+        try {
+            await withMounted(
+                <ApiErrorContext value={() => undefined}>
+                    <JsxView
+                        source=""
+                        params={{}}
+                        requestBaseUrl="/proxy/"
+                        navigationBaseUrl="/"
+                        runtime={{ version, modules }}
+                    />
+                </ApiErrorContext>,
+                async (mounted) => {
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        expect(mounted.querySelector('iframe')).not.toBeNull();
+                    });
+                    const frame = mounted.querySelector('iframe');
+                    const contentWindow = frame?.contentWindow;
+
+                    if (!frame || !contentWindow) throw new Error('Expected prepared sandbox');
+                    const session = /__VIEW_SESSION__=("[^"]+");/.exec(frame.srcdoc)?.[1];
+
+                    if (!session) throw new Error('Expected bootstrap session');
+                    const transfer = vi.spyOn(contentWindow, 'postMessage').mockImplementation(() => {
+                        if (failTransfer) throw new Error('Capability transfer failed');
+                    });
+
+                    try {
+                        // Act
+                        await act(async () => {
+                            window.dispatchEvent(
+                                new MessageEvent('message', {
+                                    source: contentWindow,
+                                    origin: 'null',
+                                    data: JSON.parse(session) as unknown
+                                })
+                            );
+                        });
+
+                        // Assert
+                        expect(channels).toHaveLength(chunked ? 2 : 1);
+                        const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
+                        expect(calls[0]?.[2]).toEqual(channels.map((channel) => channel.port2));
+
+                        if (failTransfer) {
+                            expect(mounted.querySelector('iframe')).toBeNull();
+                            expect(mounted.textContent).toContain('Unable to load this View');
+                            for (const close of closed) expect(close).toHaveBeenCalled();
+                        } else {
+                            for (const close of closed) expect(close).not.toHaveBeenCalled();
+                        }
+                    } finally {
+                        transfer.mockRestore();
+                    }
+                }
+            );
+
+            for (const close of closed) expect(close).toHaveBeenCalled();
+        } finally {
+            messageChannel.mockRestore();
+            load.mockRestore();
+            for (const close of closed) close.mockRestore();
+        }
+    }
+);
+
 it('keeps execution isolated and transfers only verified Solution modules', async () => {
     // Act
     const output = renderStatic(

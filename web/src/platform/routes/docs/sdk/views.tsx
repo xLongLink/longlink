@@ -23,6 +23,7 @@ import { PaginationExample } from './views/pagination';
 import { Box } from '@/components/longlink/layout/box';
 import { RadioGroupExample } from './views/radio-group';
 import { Grid } from '@/components/longlink/layout/grid';
+import { Tabs } from '@/components/longlink/layout/tabs';
 import { ChartLegendExample } from './views/chart-legend';
 import { MapControlsPreview } from './views/map-controls';
 import { Icon } from '@/components/longlink/display/icon';
@@ -30,7 +31,6 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
-import { Tabs, Tab } from '@/components/longlink/layout/tabs';
 import { SwitzerlandExample } from './views/switzerland-example';
 import { Currency } from '@/components/longlink/display/currency';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
@@ -216,10 +216,13 @@ const previews = new Map(
         Table: <TableExample />,
         // Keep the thumbnail focused on the tab strip rather than its panel content.
         Tabs: (
-            <Tabs defaultValue="overview">
-                <Tab value="overview" label="Overview" />
-                <Tab value="activity" label="Activity" />
-            </Tabs>
+            <Tabs
+                defaultValue="overview"
+                items={[
+                    { value: 'overview', label: 'Overview' },
+                    { value: 'activity', label: 'Activity' }
+                ]}
+            />
         ),
         Text: <TextExample />,
         Textarea: <TextareaExample />,

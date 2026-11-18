@@ -1,10 +1,10 @@
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
+import { Menu } from '@/components/longlink/layout/menu';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { Menu, MenuSection, MenuItem, MenuSubSection } from '@/components/longlink/layout/menu';
 
 it('mounts only selected content and responds to both user selection and an external fragment change', async () => {
     const loaded: string[] = [];
@@ -43,16 +43,17 @@ it('mounts only selected content and responds to both user selection and an exte
                 <button type="button" onClick={() => setHash('#unknown')}>
                     Unknown fragment
                 </button>
-                <Menu>
-                    <MenuSection title="Workspace">
-                        <MenuItem label="Orders">
-                            <Orders />
-                        </MenuItem>
-                        <MenuItem label="Archive">
-                            <Archive />
-                        </MenuItem>
-                    </MenuSection>
-                </Menu>
+                <Menu
+                    sections={[
+                        {
+                            title: 'Workspace',
+                            entries: [
+                                { kind: 'item', label: 'Orders', content: <Orders /> },
+                                { kind: 'item', label: 'Archive', content: <Archive /> }
+                            ]
+                        }
+                    ]}
+                />
             </MenuNavigationContext>
         );
     }
@@ -86,16 +87,23 @@ it('retains an entered draft and expanded navigation while the viewport crosses 
         window.innerWidth = 1000;
         await withMounted(
             <MenuNavigationContext value={{ hash: '', select: () => {} }}>
-                <Menu>
-                    <MenuSection title="Workspace" isHeaderHidden>
-                        <MenuItem label="Orders">
-                            <input aria-label="Order draft" />
-                        </MenuItem>
-                        <MenuSubSection label="Advanced" icon="database">
-                            <MenuItem label="Billing">Billing settings</MenuItem>
-                        </MenuSubSection>
-                    </MenuSection>
-                </Menu>
+                <Menu
+                    sections={[
+                        {
+                            title: 'Workspace',
+                            isHeaderHidden: true,
+                            entries: [
+                                { kind: 'item', label: 'Orders', content: <input aria-label="Order draft" /> },
+                                {
+                                    kind: 'subsection',
+                                    label: 'Advanced',
+                                    icon: 'database',
+                                    items: [{ label: 'Billing', content: 'Billing settings' }]
+                                }
+                            ]
+                        }
+                    ]}
+                />
             </MenuNavigationContext>,
             async (output) => {
                 const input = output.querySelector<HTMLInputElement>('input');
@@ -133,13 +141,20 @@ it('supports keyboard disclosure without submitting and leaves modified or cance
     await withMounted(
         <form onSubmit={submit}>
             <MenuNavigationContext value={{ hash: '#billing', select }}>
-                <Menu>
-                    <MenuSection title="Workspace">
-                        <MenuSubSection label="Advanced">
-                            <MenuItem label="Billing">Billing settings</MenuItem>
-                        </MenuSubSection>
-                    </MenuSection>
-                </Menu>
+                <Menu
+                    sections={[
+                        {
+                            title: 'Workspace',
+                            entries: [
+                                {
+                                    kind: 'subsection',
+                                    label: 'Advanced',
+                                    items: [{ label: 'Billing', content: 'Billing settings' }]
+                                }
+                            ]
+                        }
+                    ]}
+                />
             </MenuNavigationContext>
         </form>,
         async (output) => {
@@ -167,6 +182,41 @@ it('supports keyboard disclosure without submitting and leaves modified or cance
             expect(select).not.toHaveBeenCalled();
             await act(async () => user.click(link));
             expect(select).toHaveBeenCalledExactlyOnceWith('billing');
+        }
+    );
+});
+
+it('preserves punctuation-derived fragments when selecting nested items', async () => {
+    const select = vi.fn();
+
+    await withMounted(
+        <MenuNavigationContext value={{ hash: '#tax-fees-2026', select }}>
+            <Menu
+                sections={[
+                    {
+                        title: 'Workspace',
+                        entries: [
+                            {
+                                kind: 'subsection',
+                                label: 'Finance',
+                                items: [{ label: '  Tax & fees (2026)!  ', content: <p>Tax settings</p> }]
+                            },
+                            { kind: 'item', label: 'Later', content: <p>Later settings</p> }
+                        ]
+                    }
+                ]}
+            />
+        </MenuNavigationContext>,
+        async (output) => {
+            const link = output.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+
+            if (!link) throw new Error('Expected the tax navigation');
+            expect(link.getAttribute('href')).toBe('#tax-fees-2026');
+            expect(output.querySelector('p')?.textContent).toBe('Tax settings');
+            await act(async () => {
+                link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            });
+            expect(select).toHaveBeenCalledExactlyOnceWith('tax-fees-2026');
         }
     );
 });

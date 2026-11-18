@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useTransition } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { useMutation } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
@@ -14,18 +14,18 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 /** Owns card registration and saved-card reads only while Payment Methods is active. */
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage] = useApi(`${base}/usage`, schemas.zOrganizationUsage);
-    const [pending, startRegistration] = useTransition();
 
     /** Opens owner-authorized Stripe card registration without an immediate payment. */
-    const registerCard = useSubmit<void>(
-        async () => {
+    const { mutateAsync, isPending: pending } = useMutation({
+        networkMode: 'always',
+        mutationFn: async () => {
             const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
 
             // Redirect only after validating the API's hosted URL.
             window.location.assign(response.url);
-        },
-        { onError: () => {} }
-    );
+        }
+    });
+    const registerCard = useSubmit(mutateAsync, { onError: () => {} });
 
     return (
         <Stack gap={0}>
@@ -39,7 +39,9 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                             size="sm"
                             disabled={pending}
                             aria-busy={pending || undefined}
-                            onClick={() => startRegistration(registerCard)}
+                            onClick={() => {
+                                void registerCard();
+                            }}
                         >
                             Add card
                         </Button>

@@ -169,8 +169,8 @@ it('prevents duplicate decisions while pending and permits retry after a reporte
                     deny.click();
                 });
                 await vi.waitFor(() => expect(decisions).toHaveLength(1));
+                await vi.waitFor(() => expect(form.getAttribute('aria-busy')).toBe('true'));
                 expect(await decisions[0]?.clone().json()).toEqual({ approve: true });
-                expect(form.getAttribute('aria-busy')).toBe('true');
                 expect(fieldset.disabled).toBe(true);
                 expect(navigation).not.toHaveBeenCalled();
 
@@ -180,10 +180,12 @@ it('prevents duplicate decisions while pending and permits retry after a reporte
                 if (!fail) throw new Error('Expected the pending decision');
 
                 await act(async () => fail(Response.json({ url: 42 })));
-                await vi.waitFor(() => expect(reportError).toHaveBeenCalledOnce());
-                expect(output.querySelector('[role="alert"]')?.textContent).toBe(
-                    'Could not submit the decision. Please try again.'
+                await vi.waitFor(() =>
+                    expect(output.querySelector('[role="alert"]')?.textContent).toBe(
+                        'Could not submit the decision. Please try again.'
+                    )
                 );
+                expect(reportError).toHaveBeenCalledOnce();
                 expect(navigation).not.toHaveBeenCalled();
                 expect(form.getAttribute('aria-busy')).toBe('false');
                 expect(fieldset.disabled).toBe(false);
@@ -191,9 +193,9 @@ it('prevents duplicate decisions while pending and permits retry after a reporte
                 // Retry with the other decision and clear the previous error while pending.
                 await act(async () => deny.click());
                 await vi.waitFor(() => expect(decisions).toHaveLength(2));
+                await vi.waitFor(() => expect(form.getAttribute('aria-busy')).toBe('true'));
                 expect(await decisions[1]?.clone().json()).toEqual({ approve: false });
                 expect(output.querySelector('[role="alert"]')).toBeNull();
-                expect(form.getAttribute('aria-busy')).toBe('true');
 
                 const succeed = responses[1];
 

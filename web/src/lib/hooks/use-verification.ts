@@ -21,24 +21,20 @@ export function useVerification<T>(token: string, verify: (request: Verification
         try {
             const outcome = await verify({ signal: nextController.signal, token: verificationToken });
 
-            if (controller.current === nextController && outcome !== undefined) setVerification(outcome);
+            if (!nextController.signal.aborted && outcome !== undefined) setVerification(outcome);
         } catch (cause) {
-            if (controller.current === nextController) showBoundary(cause);
+            if (!nextController.signal.aborted) showBoundary(cause);
         }
     }
 
     const startInitialVerification = useEffectEvent(startVerification);
 
-    // Exchange the current token and fence callbacks before canceling work on cleanup.
+    // Exchange the current token and cancel work on cleanup.
     useEffect(() => {
         // oxlint-disable-next-line react/set-state-in-effect -- Starting a server credential exchange must clear the previous admission result.
         void startInitialVerification(token);
 
-        return () => {
-            const currentController = controller.current;
-            controller.current = null;
-            currentController?.abort();
-        };
+        return () => controller.current?.abort();
     }, [token]);
 
     return { verification, startVerification };

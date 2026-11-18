@@ -15,7 +15,7 @@ import { renderPlatform, membership, user } from '../../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import OrganizationAccess from '@/platform/layouts/organization-access';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 type OrganizationMemberAccessResponse = z.output<typeof schemas.zOrganizationMemberAccessResponse>;
 
@@ -383,7 +383,7 @@ it.each(['admin', 'owner'] as const)('leaves revoked organization access after s
     }
 });
 
-it('serializes rapid invitation revocations across rows until the refreshed list returns, then allows another revoke', async () => {
+it('attempts revocation offline and serializes rapid revocations until refresh completes, then permits another', async () => {
     // Arrange
     const invitations = schemas.zOrganizationInvitationResponse.array().parse([
         {
@@ -400,6 +400,7 @@ it('serializes rapid invitation revocations across rows until the refreshed list
         }
     ]);
     const requests: string[] = [];
+    const wasOnline = onlineManager.isOnline();
     let finishDeletion: (response: Response) => void = () => undefined;
     let finishRefresh: (response: Response) => void = () => undefined;
     const pendingDeletion = new Promise<Response>((resolve) => {
@@ -441,18 +442,24 @@ it('serializes rapid invitation revocations across rows until the refreshed list
                 const buttons = Array.from(output.querySelectorAll<HTMLButtonElement>('tbody button'));
 
                 // Activate different rows before React can disable either control.
+                // Act
                 await act(async () => {
+                    onlineManager.setOnline(false);
                     buttons[0].click();
                     buttons[1].click();
                     buttons[0].click();
                 });
+                // Assert
                 expect(requests).toEqual([`DELETE ${base}/invitations/${invitations[0].id}`]);
-                expect(buttons.every((button) => button.disabled)).toBe(true);
+                await vi.waitFor(() => expect(buttons.every((button) => button.disabled)).toBe(true));
                 await act(async () => buttons[1].click());
                 expect(requests).toHaveLength(1);
 
                 // The delete response must not release pending state while the list is stale.
-                await act(async () => finishDeletion(new Response(null, { status: 204 })));
+                await act(async () => {
+                    onlineManager.setOnline(true);
+                    finishDeletion(new Response(null, { status: 204 }));
+                });
                 await vi.waitFor(() => expect(requests).toContain(`GET ${base}/invitations`));
                 expect(output.querySelector('tbody')?.textContent).toContain(invitations[0].email);
                 expect(buttons.every((button) => button.disabled)).toBe(true);
@@ -479,6 +486,7 @@ it('serializes rapid invitation revocations across rows until the refreshed list
             'invitations'
         );
     } finally {
+        onlineManager.setOnline(wasOnline);
         finishDeletion(new Response(null, { status: 204 }));
         finishRefresh(Response.json([invitations[1]]));
         transport.mockRestore();

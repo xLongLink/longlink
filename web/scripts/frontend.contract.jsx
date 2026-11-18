@@ -79,41 +79,50 @@ const mapElements = (
 );
 const icon = <Icon icon="triangle-exclamation-point" size="sm" tile="soft" variant="destructive" />;
 const fileType = <FileType type="pdf" variant="solid" size="md" icon={icon} label={null} aria-label="Invoice PDF" />;
-const menuItem = <MenuItem icon="refresh-cw" label="Automation" />;
 const menuComposition = (
-    <Menu gap={2.5}>
-        <MenuSection title="Settings" isHeaderHidden>
-            {menuItem}
-            <MenuSubSection label="Workspace" icon="users">
-                <MenuItem label="Members"><Text>Members</Text></MenuItem>
-            </MenuSubSection>
-        </MenuSection>
-    </Menu>
+    <Menu gap={2.5} sections={[{
+        title: 'Settings',
+        isHeaderHidden: true,
+        entries: [
+            { kind: 'item', icon: 'refresh-cw', label: 'Automation' },
+            { kind: 'subsection', label: 'Workspace', icon: 'users', items: [{ label: 'Members', content: <Text>Members</Text> }] }
+        ]
+    }]} />
 );
 // @ts-expect-error Menu styling is owned by the component.
-const _menuClasses = <Menu className="hidden" />;
+const _menuClasses = <Menu sections={[]} className="hidden" />;
+// @ts-expect-error Menu panels are defined by sections, not children.
+const _menuChildren = <Menu sections={[]}>Content</Menu>;
+// @ts-expect-error Menu entries must identify items or subsections.
+const _menuInvalidEntry = <Menu sections={[{ title: 'Settings', entries: [{ kind: 'group', label: 'Members' }] }]} />;
+// @ts-expect-error Nested menu items require a navigation label.
+const _menuMissingLabel = <Menu sections={[{ title: 'Settings', entries: [{ kind: 'subsection', label: 'Workspace', items: [{ content: <Text>Members</Text> }] }] }]} />;
 // @ts-expect-error Tabs styling is owned by the component.
-const _tabsClasses = <Tabs className="hidden" />;
+const _tabsClasses = <Tabs items={[]} className="hidden" />;
 // @ts-expect-error Frame styling is owned by the component.
 const _frameClasses = <Frame className="hidden" />;
 // @ts-expect-error Frame owns its sections.
 const _frameHeader = <Frame header={{ title: 'Files' }} />;
 // @ts-expect-error Card uses flat header props.
 const _cardHeaderObject = <Card header={{ title: 'Files' }} />;
-// @ts-expect-error Tab styling is owned by the component.
-const _tabStyle = <Tab value="one" label="One" style={{ display: 'none' }} />;
+// @ts-expect-error Tab item styling is owned by the component.
+const _tabStyle = <Tabs items={[{ value: 'one', label: 'One', style: { display: 'none' } }]} />;
 // @ts-expect-error Tabs owns its focus behavior.
-const _tabsActivateOnFocus = <Tabs activateOnFocus />;
+const _tabsActivateOnFocus = <Tabs items={[]} activateOnFocus />;
 // @ts-expect-error Tabs owns its focus behavior.
-const _tabsLoopFocus = <Tabs loopFocus={false} />;
+const _tabsLoopFocus = <Tabs items={[]} loopFocus={false} />;
 // @ts-expect-error Tab values must be strings.
-const _tabNumericValue = <Tab value={1} label="One" />;
+const _tabNumericValue = <Tabs items={[{ value: 1, label: 'One' }]} />;
 // @ts-expect-error Tabs values must be strings.
-const _tabsNumericValue = <Tabs value={1} />;
+const _tabsNumericValue = <Tabs items={[]} value={1} />;
 // @ts-expect-error Tabs default values must be strings.
-const _tabsNumericDefault = <Tabs defaultValue={1} />;
+const _tabsNumericDefault = <Tabs items={[]} defaultValue={1} />;
 // @ts-expect-error Tabs always uses horizontal orientation.
-const _tabsOrientation = <Tabs orientation="vertical" />;
+const _tabsOrientation = <Tabs items={[]} orientation="vertical" />;
+// @ts-expect-error Tab marker composition has been removed.
+const _removedTab = <Tab value="one" label="One" />;
+// @ts-expect-error Tabs panels are defined by items, not children.
+const _tabsChildren = <Tabs items={[]}>Content</Tabs>;
 // @ts-expect-error LongLink aliases are not Lucide names.
 const legacyIcon = <Icon icon="close" size="sm" />;
 // @ts-expect-error Icon names do not accept a provider prefix.
@@ -310,9 +319,7 @@ const nativeComposition = (
                 </Button>
             </ButtonGroup>
             <FileViewer src="/attachment" title="Attachment" />
-            <Tabs value={selected} variant="line" onValueChange={(value) => setSelected(String(value))}>
-                <Tab value="one" label="One">Content</Tab>
-            </Tabs>
+            <Tabs value={selected} variant="line" onValueChange={setSelected} items={[{ value: 'one', label: 'One', content: 'Content' }]} />
             <Slider
                 defaultValue={[10, 20]}
                 onValueChange={(value, details) => {

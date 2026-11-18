@@ -1,20 +1,17 @@
 import { api } from '@/lib/api';
 import { AuthLayout } from './auth-layout';
-import { useState, useTransition } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reuses browser login before asking for explicit, resource-specific MCP access. */
 export default function McpAuthorization() {
     const [params] = useSearchParams();
-    const [pending, startDecision] = useTransition();
-    const [submitError, setSubmitError] = useState<string | null>(null);
     const { data: user, isLoading: loadingUser } = useCurrentUser();
     const query = params.toString();
 
@@ -29,25 +26,22 @@ export default function McpAuthorization() {
         retry: false
     });
 
-    /** Posts an explicit decision; the server validates permissions and the callback again. */
-    async function decide(data: FormData) {
-        setSubmitError(null);
+    const decision = useMutation({
+        networkMode: 'always',
+        mutationFn: async (data: FormData) => {
+            const choice = data.get('decision');
 
-        const decision = data.get('decision');
+            if (choice !== 'allow' && choice !== 'deny') throw new Error('An explicit consent decision is required');
 
-        if (decision !== 'allow' && decision !== 'deny') throw new Error('An explicit consent decision is required');
+            // Preserve the validated request parameters and redirect contract.
+            const result = await api
+                .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: choice === 'allow' } })
+                .json(zAuthorizationRedirect);
 
-        // Preserve the validated request parameters and redirect contract.
-        const result = await api
-            .post('/api/v1/mcp/consent', { json: { ...Object.fromEntries(params), approve: decision === 'allow' } })
-            .json(zAuthorizationRedirect);
-
-        window.location.assign(result.url);
-    }
-
-    const submit = useSubmit(decide, {
-        onError: () => setSubmitError('Could not submit the decision. Please try again.')
+            window.location.assign(result.url);
+        }
     });
+    const submit = useSubmit(decision.mutateAsync, { onError: () => undefined });
 
     // Preserve only this first-party approval route across password or provider login.
     if (loadingUser) return <title>Authorize MCP | LongLink</title>;
@@ -67,13 +61,11 @@ export default function McpAuthorization() {
                     onSubmit={(event) => {
                         event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-                        startDecision(async () => {
-                            await submit(data);
-                        });
+                        void submit(data);
                     }}
-                    aria-busy={pending}
+                    aria-busy={decision.isPending}
                 >
-                    <fieldset disabled={pending} className="contents">
+                    <fieldset disabled={decision.isPending} className="contents">
                         <Stack gap={4}>
                             <Stack gap={2}>
                                 <p>
@@ -109,7 +101,9 @@ export default function McpAuthorization() {
                             </Button>
                         </Stack>
                     </fieldset>
-                    <FieldError>{submitError}</FieldError>
+                    <FieldError>
+                        {decision.isError ? 'Could not submit the decision. Please try again.' : null}
+                    </FieldError>
                 </form>
             ) : null}
         </AuthLayout>

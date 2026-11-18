@@ -1,24 +1,23 @@
 import { cn } from 'cn';
 import { ChevronDown } from 'lucide-react';
+import { useContext, type ReactNode } from 'react';
 import type { IconName } from 'lucide-react/dynamic';
 import { Icon } from '@/components/longlink/display/icon';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { MenuNavigationContext } from '@/components/custom/contexts';
-import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 
-type MenuSectionProps = {
-    /** MenuItem elements or nested MenuSubSection groups. */
-    children?: ReactNode;
+type MenuSection = {
+    entries: readonly MenuEntry[];
     /** Hides the section heading; visible by default. */
     isHeaderHidden?: boolean;
     /** Section heading displayed in the navigation. */
     title: string;
 };
 
-type MenuItemProps = {
+type MenuItem = {
     /** Content mounted beside the navigation while this item is selected. */
-    children?: ReactNode;
+    content?: ReactNode;
     /** Optional Lucide icon name displayed beside the label. */
     icon?: IconName;
     /** Navigation label; its lowercase, hyphenated form identifies the item's URL fragment. */
@@ -26,30 +25,25 @@ type MenuItemProps = {
 };
 
 type MenuEntry =
-    | { kind: 'item'; item: ReactElement<MenuItemProps> }
-    | { kind: 'subsection'; group: ReactElement<MenuItemProps>; items: ReactElement<MenuItemProps>[] };
+    | (MenuItem & { kind: 'item' })
+    | { kind: 'subsection'; label: string; icon?: IconName; items: readonly MenuItem[] };
 
 /** Derives each item's navigation fragment from its label. */
-function menuItemId(item: ReactElement<MenuItemProps>): string {
-    return item.props.label
+function menuItemId(item: MenuItem): string {
+    return item.label
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 }
 
-/** Identifies a content-owning MenuItem without rendering its children. */
-function isMenuItem(child: ReactNode): child is ReactElement<MenuItemProps> {
-    return isValidElement(child) && child.type === MenuItem;
-}
-
 /** Renders section navigation beside content, or above it at View widths of 768px and below. */
 export function Menu({
-    children,
+    sections,
     gap
 }: {
-    /** MenuSection elements defining navigation and content. */
-    children?: ReactNode;
+    /** Sections defining navigation and selected content. */
+    sections: readonly MenuSection[];
     gap?: number;
 }) {
     const navigation = useContext(MenuNavigationContext);
@@ -58,38 +52,16 @@ export function Menu({
     if (navigation === null) throw new Error('Menu requires MenuNavigationContext');
     const { hash, select } = navigation;
 
-    // Read the JSX sections and groups without mounting inactive content.
-    const sections = Children.toArray(children)
-        .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)
-        .map((section) => ({
-            section,
-            entries: Children.toArray(section.props.children).flatMap<MenuEntry>((child) => {
-                if (isMenuItem(child)) return [{ kind: 'item', item: child }];
-
-                if (isValidElement<MenuItemProps>(child) && child.type === MenuSubSection) {
-                    return [
-                        {
-                            kind: 'subsection',
-                            group: child,
-                            items: Children.toArray(child.props.children).filter(isMenuItem)
-                        }
-                    ];
-                }
-
-                return [];
-            })
-        }));
-
     // Resolve selectable items in navigation order.
     const items = sections.flatMap(({ entries }) =>
-        entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry.item]))
+        entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry]))
     );
 
     // Preserve first-item fallback when no item matches the current fragment.
     const activeItem = items.find((item) => `#${menuItemId(item)}` === hash) ?? items[0];
 
     /** Renders direct and nested items with the same navigation and selection behavior. */
-    function renderItem(item: ReactElement<MenuItemProps>) {
+    function renderItem(item: MenuItem) {
         const id = menuItemId(item);
 
         // Preserve normal link semantics while routing ordinary clicks through the runtime API.
@@ -116,8 +88,8 @@ export function Menu({
                     select(id);
                 }}
             >
-                {item.props.icon && <Icon icon={item.props.icon} size="sm" />}
-                <span className="min-w-0 flex-1 truncate">{item.props.label}</span>
+                {item.icon && <Icon icon={item.icon} size="sm" />}
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
             </a>
         );
     }
@@ -132,20 +104,20 @@ export function Menu({
                 className="box-border min-w-0 bg-inherit ps-2 pe-6 pb-2 font-sans max-[768px]:pe-2"
                 aria-label="Settings navigation"
             >
-                {sections.map(({ entries, section }) => (
-                    <div role="group" aria-label={section.props.title} className="-mx-2 pb-1" key={section.props.title}>
+                {sections.map(({ entries, title, isHeaderHidden }) => (
+                    <div role="group" aria-label={title} className="-mx-2 pb-1" key={title}>
                         <div
                             className={cn(
                                 'truncate pb-1 pe-2 text-xs font-medium text-muted-foreground',
-                                section.props.isHeaderHidden && 'sr-only'
+                                isHeaderHidden && 'sr-only'
                             )}
                         >
-                            {section.props.title}
+                            {title}
                         </div>
                         <div className="flex min-w-0 flex-col gap-0.5">
                             {entries.map((entry) => {
                                 if (entry.kind === 'subsection') {
-                                    const { icon, label } = entry.group.props;
+                                    const { icon, label } = entry;
 
                                     return (
                                         <Collapsible defaultOpen={false} key={label}>
@@ -177,35 +149,13 @@ export function Menu({
                                     );
                                 }
 
-                                return renderItem(entry.item);
+                                return renderItem(entry);
                             })}
                         </div>
                     </div>
                 ))}
             </nav>
-            <div className="flex min-w-0 flex-col">{activeItem?.props.children}</div>
+            <div className="flex min-w-0 flex-col">{activeItem?.content}</div>
         </div>
     );
-}
-
-/** Defines a Menu section without mounting its content separately. */
-export function MenuSection(_props: MenuSectionProps) {
-    return null;
-}
-
-/** Defines a selectable item and its associated content. */
-export function MenuItem(_props: MenuItemProps) {
-    return null;
-}
-
-/** Defines a collapsible group of MenuItems. */
-export function MenuSubSection(_props: {
-    /** MenuItem elements nested inside this collapsible group. */
-    children?: ReactNode;
-    /** Optional Lucide icon name displayed beside the group label. */
-    icon?: IconName;
-    /** Label displayed on the collapsible navigation group. */
-    label: string;
-}) {
-    return null;
 }

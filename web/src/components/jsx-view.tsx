@@ -158,10 +158,9 @@ export function JsxView({
         const { script, styles } = kernel;
         const controller = new AbortController();
         const channel = new MessageChannel();
-        const assets = new MessageChannel();
+        const assets = runtime.modules ? new MessageChannel() : undefined;
         const session = crypto.randomUUID();
         const pending = new Set<number>();
-        const modules = new Map<string, Promise<string>>();
         let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 
         /** Sends host-measured visible bounds without giving the sandbox control of page geometry. */
@@ -214,8 +213,8 @@ export function JsxView({
             if (appearancePort.current === channel.port1) appearancePort.current = null;
             channel.port1.close();
             channel.port2.close();
-            assets.port1.close();
-            assets.port2.close();
+            assets?.port1.close();
+            assets?.port2.close();
         }
 
         /** Reports startup failure only while this attempt still owns the mounted frame. */
@@ -248,7 +247,7 @@ export function JsxView({
                         appearance: currentAppearance.current
                     },
                     '*',
-                    runtime.modules ? [channel.port2, assets.port2] : [channel.port2]
+                    assets ? [channel.port2, assets.port2] : [channel.port2]
                 );
                 appearancePort.current = channel.port1;
 
@@ -265,51 +264,60 @@ export function JsxView({
         window.addEventListener('message', ready);
 
         // Serve only manifest-listed JavaScript from this Solution, never host imports or caller-selected URLs.
-        assets.port1.onmessage = async (event: MessageEvent<unknown>) => {
-            if (controller.signal.aborted) return;
-            const parsed = moduleRequestSchema.safeParse(event.data);
+        if (assets && runtime.modules) {
+            const manifest = runtime.modules;
+            const modules = new Map<string, Promise<string>>();
 
-            if (!parsed.success) {
-                fail('assets');
+            assets.port1.onmessage = async (event: MessageEvent<unknown>) => {
+                if (controller.signal.aborted) return;
+                const parsed = moduleRequestSchema.safeParse(event.data);
 
-                return;
-            }
+                if (!parsed.success) {
+                    fail('assets');
 
-            const { id, path } = parsed.data;
-
-            try {
-                if (!runtime.modules || !Object.hasOwn(runtime.modules, path)) {
-                    throw new Error('Module is not part of the Solution runtime');
+                    return;
                 }
 
-                const expectedVersion = runtime.modules[path];
-                let source = modules.get(path);
+                const { id, path } = parsed.data;
 
-                if (!source) {
-                    source = (async () => {
-                        const url = new URL(host.requestUrl(requestBaseUrl, `views/${path}`), window.location.origin);
-                        url.searchParams.set('v', runtime.version);
-                        const body = await host.load(url.href, { signal: controller.signal });
-                        const bytes = await body.arrayBuffer();
-                        const digest = await crypto.subtle.digest('SHA-256', bytes);
-                        const version = Array.from(new Uint8Array(digest), (byte) =>
-                            byte.toString(16).padStart(2, '0')
-                        ).join('');
+                try {
+                    if (!Object.hasOwn(manifest, path)) {
+                        throw new Error('Module is not part of the Solution runtime');
+                    }
 
-                        if (version !== expectedVersion) throw new Error('Solution module integrity mismatch');
+                    const expectedVersion = manifest[path];
+                    let source = modules.get(path);
 
-                        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-                    })();
-                    modules.set(path, source);
+                    if (!source) {
+                        source = (async () => {
+                            const url = new URL(
+                                host.requestUrl(requestBaseUrl, `views/${path}`),
+                                window.location.origin
+                            );
+                            url.searchParams.set('v', runtime.version);
+                            const body = await host.load(url.href, { signal: controller.signal });
+                            const bytes = await body.arrayBuffer();
+                            const digest = await crypto.subtle.digest('SHA-256', bytes);
+                            const version = Array.from(new Uint8Array(digest), (byte) =>
+                                byte.toString(16).padStart(2, '0')
+                            ).join('');
+
+                            if (version !== expectedVersion) throw new Error('Solution module integrity mismatch');
+
+                            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                        })();
+                        modules.set(path, source);
+                    }
+
+                    const text = await source;
+
+                    if (!controller.signal.aborted) assets.port1.postMessage({ id, source: text });
+                } catch {
+                    if (!controller.signal.aborted)
+                        assets.port1.postMessage({ id, error: 'Solution module unavailable' });
                 }
-
-                const text = await source;
-
-                if (!controller.signal.aborted) assets.port1.postMessage({ id, source: text });
-            } catch {
-                if (!controller.signal.aborted) assets.port1.postMessage({ id, error: 'Solution module unavailable' });
-            }
-        };
+            };
+        }
 
         channel.port1.onmessage = async (event: MessageEvent<unknown>) => {
             const parsed = commandSchema.safeParse(event.data);
