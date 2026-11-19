@@ -5,8 +5,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { Link, MemoryRouter } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
-import { PublicArticle } from '@/components/layouts/article';
-import { ArticleOutline } from '@/components/layouts/article-outline';
+import { ArticleBody, PublicArticle } from '@/components/layouts/article';
 
 const article = {
     title: 'Reading',
@@ -87,14 +86,13 @@ it.each(['last', 'caf%C3%A9%20section', 'café section'])(
         const items = [...article.toc, { id: 'café section', label: 'Encoded section', level: 2 }];
 
         const content = (
-            <>
-                <ArticleOutline items={items} />
+            <ArticleBody article={{ ...article, toc: items }} className="">
                 {items.map((item) => (
                     <h2 key={item.id} id={item.id}>
                         {item.label}
                     </h2>
                 ))}
-            </>
+            </ArticleBody>
         );
 
         const markup = renderToString(<MemoryRouter initialEntries={['/blog/reading/']}>{content}</MemoryRouter>);
