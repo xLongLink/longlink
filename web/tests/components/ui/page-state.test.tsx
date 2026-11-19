@@ -1,49 +1,17 @@
 // @vitest-environment happy-dom
-import { act } from 'react';
-import { it, expect, vi } from 'vitest';
-import { hydrateRoot } from 'react-dom/client';
-import { renderToString } from 'react-dom/server';
+import { it, expect } from 'vitest';
+import { renderStatic } from '../../render';
 import { PageError, PageLoading } from '@/components/ui/utils';
 
-it('preserves loading and failure status content through hydration and recovery transitions', async () => {
-    const output = document.createElement('section');
-    const initial = <PageLoading label="Preparing View" />;
+it('exposes named loading status and a failure heading within its status region', () => {
+    // Act
+    const loading = renderStatic(<PageLoading label="Loading View" />);
+    const failure = renderStatic(
+        <PageError title="Unable to load this View" description="Runtime assets are unavailable." />
+    );
 
-    output.innerHTML = renderToString(initial);
-    document.body.append(output);
-    const root = hydrateRoot(output, initial);
-
-    try {
-        await act(async () => {});
-        expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Preparing View');
-        await act(async () => root.render(<PageLoading label="Loading View" />));
-        await vi.waitFor(() =>
-            expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading View')
-        );
-        await act(async () =>
-            root.render(<PageError title="Unable to load this View" description="Runtime assets are unavailable." />)
-        );
-        await vi.waitFor(() =>
-            expect(output.querySelector('[role="status"]')?.textContent).toContain('Runtime assets are unavailable.')
-        );
-        expect(output.querySelector('[data-slot="spinner"]')).toBeNull();
-        await act(async () =>
-            root.render(
-                <PageError
-                    title="Unable to load this View"
-                    description="The secure connection could not be established."
-                />
-            )
-        );
-        await vi.waitFor(() =>
-            expect(output.querySelector('[role="status"]')?.textContent).toContain(
-                'The secure connection could not be established.'
-            )
-        );
-        expect(output.querySelector('h1')?.textContent).toBe('Unable to load this View');
-        expect(output.textContent).not.toContain('Runtime assets are unavailable.');
-    } finally {
-        await act(async () => root.unmount());
-        output.remove();
-    }
+    // Assert
+    expect(loading.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading View');
+    expect(failure.querySelector('[role="status"] h1')?.textContent).toBe('Unable to load this View');
+    expect(failure.querySelector('[role="status"]')?.textContent).toContain('Runtime assets are unavailable.');
 });

@@ -37,25 +37,6 @@ afterEach(() => {
     window.scrollTo(initialScroll);
 });
 
-it('opens the mobile drawer and exposes its expanded state', async () => {
-    // Arrange
-    await withMounted(<Navbar />, async (output) => {
-        const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
-
-        if (!open) throw new Error('Expected the navigation toggle');
-
-        expect(open.getAttribute('aria-expanded')).toBe('false');
-        expect(document.querySelector('[role="dialog"]')).toBeNull();
-
-        // Act
-        await act(async () => open.click());
-
-        // Assert
-        expect(open.getAttribute('aria-expanded')).toBe('true');
-        expect(document.querySelector('[role="dialog"] nav[aria-label="Public pages"]')).not.toBeNull();
-    });
-});
-
 it.each([
     { href: '/docs/', label: 'Documentation' },
     { href: '/login/', label: 'Sign In' }
@@ -107,8 +88,11 @@ it('dismisses with Escape and restores focus so keyboard users can reopen naviga
         const open = output.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]');
 
         if (!open) throw new Error('Expected navigation toggle');
+        expect(open.getAttribute('aria-expanded')).toBe('false');
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
         await act(async () => user.click(open));
-        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(open.getAttribute('aria-expanded')).toBe('true');
+        expect(document.querySelector('[role="dialog"] nav[aria-label="Public pages"]')).not.toBeNull();
 
         await act(async () => user.keyboard('{Escape}'));
         await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());

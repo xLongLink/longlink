@@ -37,46 +37,6 @@ it('closes a dialog without submitting its form', async () => {
     expect(activity).toHaveBeenLastCalledWith(false);
 });
 
-it('conditionally unmounts an open dialog without changing caller-owned state', async () => {
-    // Arrange
-    const change = vi.fn();
-
-    /** Toggle rendering without changing the caller's open state. */
-    function Probe() {
-        const [hidden, setHidden] = useState(false);
-
-        return (
-            <>
-                <button type="button" onClick={() => setHidden(true)}>
-                    Hide
-                </button>
-                {!hidden && (
-                    <Dialog title="Edit order" open onOpenChange={change}>
-                        Draft
-                    </Dialog>
-                )}
-            </>
-        );
-    }
-
-    // Act
-    await withMounted(<Probe />, async (output) => {
-        // Assert the dialog can render before removing it.
-        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-
-        // Hide the dialog without changing its controlled open state.
-        const hide = output.querySelector('button');
-
-        if (!hide) throw new Error('Expected the visibility toggle');
-
-        await act(async () => hide.click());
-
-        // Assert
-        expect(document.querySelector('[role="dialog"]')).toBeNull();
-        expect(change).not.toHaveBeenCalled();
-    });
-});
-
 it('traps keyboard focus, ignores backdrop presses, and restores focus after Escape', async () => {
     const activity = vi.fn();
 

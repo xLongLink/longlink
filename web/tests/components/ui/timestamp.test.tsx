@@ -68,9 +68,11 @@ it.each([
     expect(formatRelativeTimestamp(new Date(1_800_000_000_000 + seconds * 1000), 1_800_000_000_000)).toBe(expected);
 });
 
-it('exposes copyable full-date details on keyboard focus without becoming a button or tooltip', async () => {
+it('copies through the keyboard, announces success, resets feedback, and never submits the surrounding form', async () => {
+    // user-event supplies the clipboard boundary; focus, Tab, Enter, and the copy operation remain real.
+    const user = userEvent.setup();
+    const submitted = vi.fn();
     const date = new Date(Date.now() - 120_000);
-
     const fullOptions: Intl.DateTimeFormatOptions = {
         calendar: 'gregory',
         year: 'numeric',
@@ -81,34 +83,6 @@ it('exposes copyable full-date details on keyboard focus without becoming a butt
         second: '2-digit',
         timeZoneName: 'short'
     };
-
-    await withMounted(<Timestamp value={date.toISOString()} format="relative" />, async (output) => {
-        const time = output.querySelector('time');
-        expect(time?.textContent).toBe('2 minutes ago');
-        expect(time?.getAttribute('tabindex')).toBe('0');
-        expect(time?.getAttribute('aria-label')).toBe(
-            new Intl.DateTimeFormat('en', { ...fullOptions, timeZoneName: 'long' }).format(date)
-        );
-
-        await act(async () => time?.focus());
-        await vi.waitFor(() => {
-            expect(document.querySelector('[role="dialog"] dd span')?.textContent).toBe(
-                new Intl.DateTimeFormat('en', fullOptions).format(date)
-            );
-        });
-        expect(time?.getAttribute('aria-controls')).toBe(document.querySelector('[role="dialog"]')?.id);
-        expect(time?.hasAttribute('role')).toBe(false);
-        expect(time?.hasAttribute('aria-haspopup')).toBe(false);
-        expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Timestamp details');
-        expect(document.querySelector('[role="tooltip"]')).toBeNull();
-    });
-});
-
-it('copies through the keyboard, announces success, resets feedback, and never submits the surrounding form', async () => {
-    // user-event supplies the clipboard boundary; focus, Tab, Enter, and the copy operation remain real.
-    const user = userEvent.setup();
-    const submitted = vi.fn();
-    const date = new Date(Date.now() - 120_000);
 
     await withMounted(
         <form
@@ -122,10 +96,23 @@ it('copies through the keyboard, announces success, resets feedback, and never s
         </form>,
         async (output) => {
             const time = output.querySelector('time');
+            expect(time?.textContent).toBe('2 minutes ago');
+            expect(time?.getAttribute('tabindex')).toBe('0');
+            expect(time?.getAttribute('aria-label')).toBe(
+                new Intl.DateTimeFormat('en', { ...fullOptions, timeZoneName: 'long' }).format(date)
+            );
             await act(async () => await user.tab());
             expect(document.activeElement).toBe(time);
 
             await vi.waitFor(() => expect(document.querySelector('[role="dialog"] button')).not.toBeNull());
+            expect(document.querySelector('[role="dialog"] dd span')?.textContent).toBe(
+                new Intl.DateTimeFormat('en', fullOptions).format(date)
+            );
+            expect(time?.getAttribute('aria-controls')).toBe(document.querySelector('[role="dialog"]')?.id);
+            expect(time?.hasAttribute('role')).toBe(false);
+            expect(time?.hasAttribute('aria-haspopup')).toBe(false);
+            expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Timestamp details');
+            expect(document.querySelector('[role="tooltip"]')).toBeNull();
             await act(async () => await user.tab());
             const copyButton = document.querySelector('[role="dialog"] button');
             expect(document.activeElement).toBe(copyButton);

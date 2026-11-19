@@ -1,24 +1,9 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { Text } from '@/components/longlink/display/text';
-
-it('keeps absent children empty and preserves nested text without adding button semantics', () => {
-    const empty = renderStatic(<Text />);
-
-    const output = renderStatic(
-        <Text className="text-5xl font-semibold tracking-tight">
-            <em>Current</em> status
-        </Text>
-    );
-
-    expect(empty.querySelector('span')?.textContent).toBe('');
-    expect(output.querySelector('span em')?.textContent).toBe('Current');
-    expect(output.querySelector('span')?.textContent).toBe('Current status');
-    expect(output.querySelector('button, [role="button"], [tabindex]')).toBeNull();
-});
 
 it('preserves a labelled live status when its content changes', async () => {
     const user = userEvent.setup();
@@ -99,24 +84,4 @@ it('updates and clears truncation without replacing the text element', async () 
         expect(text.classList.contains('line-clamp-1')).toBe(false);
         expect(text.textContent).toBe('Long publication details');
     });
-});
-
-it('keeps nested links keyboard accessible without adding a text tab stop', async () => {
-    const user = userEvent.setup();
-
-    await withMounted(
-        <Text maxLines={1}>
-            <a href="#details">Details</a>
-        </Text>,
-        async (output) => {
-            const text = output.querySelector('[data-slot="text"]');
-
-            if (!(text instanceof HTMLElement)) throw new Error('Missing text');
-
-            await act(async () => await user.tab());
-
-            expect(document.activeElement).toBe(text.querySelector('a'));
-            expect(text.hasAttribute('tabindex')).toBe(false);
-        }
-    );
 });

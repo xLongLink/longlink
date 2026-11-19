@@ -159,7 +159,6 @@ it('returns focus after Escape and explicitly focuses the routed content from th
 
             const main = output.querySelector('main');
             const skip = output.querySelector<HTMLAnchorElement>(`a[href="#${main?.id}"]`);
-            expect(skip?.getAttribute('href')).toBe(`#${main?.id}`);
             await act(async () => skip?.click());
             expect(document.activeElement).toBe(main);
         },

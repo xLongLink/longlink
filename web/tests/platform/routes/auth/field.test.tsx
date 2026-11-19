@@ -31,52 +31,58 @@ function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload
     );
 }
 
-it.each([false, true])(
-    'recovers invalid auth input with labelHidden=%s without losing accessible field text',
-    async (labelHidden) => {
-        const submissions: EmailPayload[] = [];
+it.each([false, true])('associates the email label with labelHidden=%s', async (labelHidden) => {
+    await withMounted(<EmailForm labelHidden={labelHidden} onSubmit={() => {}} />, async (output) => {
+        const email = output.querySelector<HTMLInputElement>('input[name="email"]');
+        const label = output.querySelector('label');
 
-        await withMounted(
-            <EmailForm labelHidden={labelHidden} onSubmit={(payload) => submissions.push(payload)} />,
-            async (output) => {
-                const events = userEvent.setup();
-                const email = output.querySelector<HTMLInputElement>('input[name="email"]');
-                const submit = output.querySelector('button');
+        if (!email || !label) throw new Error('Missing email field');
 
-                if (!email || !submit) throw new Error('Missing email form');
+        expect(label.htmlFor).toBe(email.id);
+        expect(label.textContent).toBe('Email');
+        expect(label.classList.contains('sr-only')).toBe(labelHidden);
+        expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')).toBe(label);
+    });
+});
 
-                expect(output.querySelector('label')?.htmlFor).toBe(email.id);
-                expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Email');
-                expect(email.required).toBe(true);
-                expect(email.getAttribute('aria-required')).toBe('true');
+it('recovers invalid auth input without losing accessible field text', async () => {
+    const submissions: EmailPayload[] = [];
 
-                await act(async () => events.click(submit));
-                expect(document.activeElement).toBe(email);
-                expect(email.getAttribute('aria-invalid')).toBe('true');
-                const descriptionIds = email.getAttribute('aria-describedby')?.split(' ');
+    await withMounted(<EmailForm labelHidden onSubmit={(payload) => submissions.push(payload)} />, async (output) => {
+        const events = userEvent.setup();
+        const email = output.querySelector<HTMLInputElement>('input[name="email"]');
+        const submit = output.querySelector('button');
 
-                if (!descriptionIds) throw new Error('Missing validation description');
-                expect(descriptionIds.map((id) => document.getElementById(id)?.textContent)).toEqual([
-                    'Use an address you can access.',
-                    'Work address',
-                    'Email is required'
-                ]);
-                expect(submissions).toEqual([]);
+        if (!email || !submit) throw new Error('Missing email form');
 
-                await act(async () => {
-                    await events.type(email, 'owner@example.com');
-                    await events.click(submit);
-                });
-                expect(submissions).toEqual([{ email: 'owner@example.com' }]);
-                expect(email.getAttribute('aria-invalid')).not.toBe('true');
-                expect(output.querySelector('[role="alert"]')).toBeNull();
-                expect(
-                    email
-                        .getAttribute('aria-describedby')
-                        ?.split(' ')
-                        .map((id) => document.getElementById(id)?.textContent)
-                ).toEqual(['Use an address you can access.', 'Work address']);
-            }
-        );
-    }
-);
+        expect(email.required).toBe(true);
+        expect(email.getAttribute('aria-required')).toBe('true');
+
+        await act(async () => events.click(submit));
+        expect(document.activeElement).toBe(email);
+        expect(email.getAttribute('aria-invalid')).toBe('true');
+        const descriptionIds = email.getAttribute('aria-describedby')?.split(' ');
+
+        if (!descriptionIds) throw new Error('Missing validation description');
+        expect(descriptionIds.map((id) => document.getElementById(id)?.textContent)).toEqual([
+            'Use an address you can access.',
+            'Work address',
+            'Email is required'
+        ]);
+        expect(submissions).toEqual([]);
+
+        await act(async () => {
+            await events.type(email, 'owner@example.com');
+            await events.click(submit);
+        });
+        expect(submissions).toEqual([{ email: 'owner@example.com' }]);
+        expect(email.getAttribute('aria-invalid')).not.toBe('true');
+        expect(output.querySelector('[role="alert"]')).toBeNull();
+        expect(
+            email
+                .getAttribute('aria-describedby')
+                ?.split(' ')
+                .map((id) => document.getElementById(id)?.textContent)
+        ).toEqual(['Use an address you can access.', 'Work address']);
+    });
+});

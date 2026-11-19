@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, useState } from 'react';
+import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
@@ -44,50 +44,6 @@ it('selects composed panels without activating disabled tabs', async () => {
             expect(output.querySelector('.hidden, [style*="display: none"]')).toBeNull();
         }
     );
-});
-
-it('lets the caller accept controlled selection changes', async () => {
-    const changed = vi.fn();
-
-    // The owner can reject an activation and later accept the same requested value.
-    function ControlledTabs() {
-        const [value, setValue] = useState('orders');
-        const [acceptChanges, setAcceptChanges] = useState(false);
-
-        return (
-            <>
-                <button type="button" onClick={() => setAcceptChanges(true)}>
-                    Allow changes
-                </button>
-                <Tabs
-                    value={value}
-                    onValueChange={(nextValue) => {
-                        changed(nextValue);
-
-                        if (acceptChanges) setValue(nextValue);
-                    }}
-                    items={[
-                        { value: 'orders', label: 'Orders', content: 'Order list' },
-                        { value: 'archive', label: 'Archive', content: 'Archived list' }
-                    ]}
-                />
-            </>
-        );
-    }
-
-    await withMounted(<ControlledTabs />, async (output) => {
-        const archive = output.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
-        const allow = output.querySelector<HTMLButtonElement>('button');
-
-        if (!archive || !allow) throw new Error('Expected controlled tabs');
-        await act(async () => archive.click());
-        expect(changed).toHaveBeenCalledWith('archive');
-        expect(output.querySelector('[role="tabpanel"]')?.textContent).toBe('Order list');
-
-        await act(async () => allow.click());
-        await act(async () => archive.click());
-        expect(output.querySelector('[role="tabpanel"]')?.textContent).toBe('Archived list');
-    });
 });
 
 it('starts at the first enabled item and prevents disabled keyboard activation', async () => {

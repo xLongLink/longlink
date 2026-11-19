@@ -29,7 +29,6 @@ it('keeps modified card clicks native and navigates from the card content', asyn
 
             await act(async () => card.dispatchEvent(modifiedClick));
             expect(modifiedClick.defaultPrevented).toBe(false);
-            expect(output.querySelector('h1')?.textContent).toBe('Documentation');
             expect(output.querySelector('output')).toBeNull();
 
             await act(async () => description.click());

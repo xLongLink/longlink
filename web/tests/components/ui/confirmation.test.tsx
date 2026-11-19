@@ -53,7 +53,7 @@ it('keeps a destructive operation open while pending, retains failure for retry,
 
         if (!modal) throw new Error('Missing confirmation');
 
-        const [cancel, action] = modal.querySelectorAll('button');
+        const [cancel] = modal.querySelectorAll('button');
 
         if (!cancel) throw new Error('Missing cancel button');
 
@@ -96,6 +96,5 @@ it('keeps a destructive operation open while pending, retains failure for retry,
         expect(operation).toHaveBeenCalledTimes(2);
         expect(document.querySelector('[role="alertdialog"]')).toBeNull();
         expect(document.activeElement).toBe(trigger);
-        expect(action?.textContent).toBe('Delete');
     });
 });

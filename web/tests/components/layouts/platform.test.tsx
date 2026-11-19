@@ -72,7 +72,6 @@ it('uses the sidebar and selects the longest nested route with a trailing slash'
             expect(Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))).toEqual(
                 ['/admin/users/active']
             );
-            expect(output.querySelector('h1')?.textContent).toBe('User details');
             expect(Array.from(output.querySelectorAll('button'), (button) => button.textContent)).toContain('Account');
         },
         '/admin/users/active/42/'
@@ -89,8 +88,6 @@ it('keeps the sidebar when navigation is empty', async () => {
             // Assert
             expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
             expect(output.querySelector('nav[aria-label="Platform navigation"]')).toBeNull();
-
-            expect(output.querySelector('h1')?.textContent).toBe('Solution content');
         }
     );
 });

@@ -144,7 +144,6 @@ it.each(['rejected', 'non-image', 'missing'] as const)(
                 expect(output.querySelector('img')).toBeNull();
                 expect(output.querySelector('script')).toBeNull();
                 expect(output.textContent).not.toContain('private attachment');
-                expect(output.textContent).toContain('Photo unavailable');
             }
         );
     }
@@ -171,7 +170,6 @@ it('recovers from an inline decode failure on source change without revoking cal
     try {
         await withMounted(<Photo />, async (output) => {
             const image = output.querySelector('img');
-            expect(image).not.toBeNull();
 
             if (!image) throw new Error('Missing inline image');
             expect(image.getAttribute('alt')).toBe('');

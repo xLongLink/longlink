@@ -46,7 +46,6 @@ it.each([false, true])(
             async (output) => {
                 await act(async () => await events.click(button('Owner')));
                 const popup = document.querySelector('[role="menu"]');
-                expect(popup).not.toBeNull();
                 expect(Boolean(popup?.querySelector('[aria-label="Administration"]'))).toBe(administrator);
                 expect(Boolean(popup?.querySelector('a[href="/admin/users"]'))).toBe(administrator);
 

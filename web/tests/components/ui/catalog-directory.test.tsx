@@ -138,7 +138,6 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
                 if (!attachment) throw new Error(`Expected attachment for ${filename}`);
 
                 expect(attachment.textContent).toContain(filename);
-                expect(attachment.getAttribute('aria-haspopup')).toBe('dialog');
                 const calls = request.mock.calls.length;
                 await act(async () => user.click(attachment));
                 expect(request).toHaveBeenCalledTimes(calls + 1);

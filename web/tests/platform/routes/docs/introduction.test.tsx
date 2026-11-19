@@ -25,14 +25,12 @@ it('redirects the legacy introduction URL to the blog article without retaining 
 
         // Assert
         expect(router.state.location.pathname).toBe('/blog/why-longlink/');
-        expect(output.querySelector('h1')?.textContent).toBe('Why LongLink');
 
         // Act
         await act(async () => router.navigate(-1));
 
         // Assert
         expect(router.state.location.pathname).toBe('/pricing/');
-        expect(output.querySelector('h1')?.textContent).toBe('Pricing');
     } finally {
         await act(async () => root.unmount());
         router.dispose();

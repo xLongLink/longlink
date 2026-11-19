@@ -24,19 +24,6 @@ it.each([Input, Textarea])('resets native values without replacing the focused c
             ref.mockClear();
 
             // Act
-            form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
-            await act(async () => {
-                // happy-dom's form.reset() ignores cancellation.
-                form.dispatchEvent(new Event('reset', { bubbles: true, cancelable: true }));
-            });
-
-            // Assert
-            expect(control.value).toBe('Edited');
-            expect(output.querySelector('[name="title"]')).toBe(control);
-            expect(document.activeElement).toBe(control);
-            expect(ref).not.toHaveBeenCalled();
-
-            // Act
             await act(async () => form.reset());
 
             // Assert

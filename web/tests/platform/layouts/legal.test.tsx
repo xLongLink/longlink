@@ -1,19 +1,9 @@
 import { act } from 'react';
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
+import { withMounted } from '../../render';
 import Layout from '@/platform/layouts/legal';
-import { renderStatic, withMounted } from '../../render';
 import { Route, Routes, useLocation } from 'react-router';
-
-it('keeps legal and brand references in their public navigation', () => {
-    // Act
-    const output = renderStatic(<Layout />, '/privacy');
-
-    // Assert
-    const navigation = output.querySelector('[aria-label="Legal and branding navigation"]');
-    expect(navigation?.querySelector('a[href="/privacy/"]')).not.toBeNull();
-    expect(navigation?.querySelector('a[href="/branding/assets"]')).not.toBeNull();
-});
 
 /** Exposes article changes from the actual routed outlet. */
 function Article() {

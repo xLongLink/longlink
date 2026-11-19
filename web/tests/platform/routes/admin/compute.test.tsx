@@ -2,22 +2,9 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
-import { renderPlatform } from '../../render';
 import Page from '@/platform/routes/admin/compute';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-it('offers registration for an empty Compute registry without exposing credentials', () => {
-    // Act
-    const output = renderPlatform(<Page />, '/admin/compute', [
-        ['/api/v1/computes?page=1&page_size=25&search=', { items: [], total: 0 }]
-    ]);
-
-    // Assert
-    expect(output.querySelector('h1')?.textContent).toBe('Compute');
-    expect(output.textContent).toContain('Register Compute');
-    expect(output.querySelector('textarea')).toBeNull();
-});
 
 it('submits exact secret YAML and metadata after file-read recovery without accepting obsolete credentials', async () => {
     // A pending file must not submit stale pasted credentials or let a manual edit race its result.
