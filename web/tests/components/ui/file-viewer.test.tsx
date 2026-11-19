@@ -2,8 +2,8 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
+import { RequestContext } from '@/views/contexts';
 import userEvent from '@testing-library/user-event';
-import { RequestContext } from '@/components/custom/contexts';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 it.each(['missing', 'rejected'] as const)('reports a %s file capability without remaining pending', async (result) => {

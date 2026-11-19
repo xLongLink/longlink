@@ -5,7 +5,7 @@ import { it, expect } from 'vitest';
 import * as components from '@/views';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { MenuNavigationContext } from '@/components/custom/contexts';
+import { MenuNavigationContext } from '@/views/contexts';
 import source from '../../../../sdk/longlink/.static/new/src/views/settings.jsx?raw';
 
 const code = transform(source, {

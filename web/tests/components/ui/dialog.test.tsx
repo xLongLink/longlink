@@ -3,8 +3,8 @@ import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
+import { DialogActivityContext } from '@/views/contexts';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { DialogActivityContext } from '@/components/custom/contexts';
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
 it('closes a dialog without submitting its form', async () => {

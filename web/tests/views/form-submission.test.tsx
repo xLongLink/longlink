@@ -7,9 +7,9 @@ import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
+import { RequestContext } from '@/views/contexts';
 import userEvent from '@testing-library/user-event';
 import { Input } from '@/components/longlink/form/input';
-import { RequestContext } from '@/components/custom/contexts';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi
@@ -30,6 +30,7 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
                 noValidate
                 onSubmit={(event) => {
                     void form.submit(event);
+                    expect(event.defaultPrevented).toBe(true);
                 }}
                 data-success={form.formState.isSubmitSuccessful}
                 aria-busy={form.formState.isSubmitting}

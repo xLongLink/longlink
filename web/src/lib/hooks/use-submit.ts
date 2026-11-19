@@ -1,8 +1,8 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import type { ViewData } from '@/views/protocol';
+import { RequestContext } from '@/views/contexts';
 import { useCallback, useContext, useRef } from 'react';
-import { RequestContext } from '@/components/custom/contexts';
 
 export type SubmitOptions = {
     method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';

@@ -10,12 +10,7 @@ import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
-import {
-    RequestContext,
-    LinkNavigationContext,
-    MenuNavigationContext,
-    DialogActivityContext
-} from '@/components/custom/contexts';
+import { RequestContext, LinkNavigationContext, MenuNavigationContext, DialogActivityContext } from './contexts';
 import {
     requestSchema,
     parametersSchema,
@@ -193,9 +188,9 @@ function initialize(event: MessageEvent<unknown>): void {
 
     const requests = { request, download };
 
-    /** Requests scoped Solution navigation or opens an HTTP(S) URL in a new tab during user activation. */
-    function navigate(path: string, newTab = false): void {
-        port.postMessage({ type: 'navigate', path, newTab });
+    /** Requests scoped Solution navigation. */
+    function navigate(path: string): void {
+        port.postMessage({ type: 'navigate', path });
     }
 
     port.onmessage = (reply: MessageEvent<ViewReply | AppearanceMessage>) => {

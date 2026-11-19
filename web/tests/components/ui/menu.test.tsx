@@ -2,9 +2,9 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Menu } from '@/components/longlink/layout/menu';
+import { MenuNavigationContext } from '@/views/contexts';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
-import { MenuNavigationContext } from '@/components/custom/contexts';
 
 it('mounts only selected content and responds to both user selection and an external fragment change', async () => {
     const loaded: string[] = [];
