@@ -1814,7 +1814,7 @@
             "name": "Table",
             "category": "Display",
             "introduction": "Displays semantic tables with fixed styling, optional text wrapping, and cell alignment.",
-            "guidance": "Compose TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, and TableCaption. Use ReUI DataGrid for sorting, selection, and pagination.",
+            "guidance": "Compose TableHeader (thead), TableBody (tbody), and TableFooter (tfoot) with TableRow (tr) children. Use TableHead (th) for headers, TableCell (td) for data, and TableCaption (caption) for the table description. Each part accepts its native HTML attributes, events, and ref, excluding styling overrides and dangerouslySetInnerHTML. Set scope on header cells and colSpan or rowSpan for spanning cells. Use ReUI DataGrid for sorting, selection, and pagination.",
             "properties": [
                 {
                     "name": "children",
@@ -1828,16 +1828,66 @@
                     "default": false
                 },
                 {
+                    "name": "TableHeader.children",
+                    "type": "ReactNode",
+                    "description": "Header rows rendered inside thead."
+                },
+                {
+                    "name": "TableBody.children",
+                    "type": "ReactNode",
+                    "description": "Data rows rendered inside tbody."
+                },
+                {
+                    "name": "TableFooter.children",
+                    "type": "ReactNode",
+                    "description": "Summary rows rendered inside tfoot."
+                },
+                {
+                    "name": "TableRow.children",
+                    "type": "ReactNode",
+                    "description": "Header or data cells rendered inside tr."
+                },
+                {
+                    "name": "TableHead.children",
+                    "type": "ReactNode",
+                    "description": "Header cell content."
+                },
+                {
+                    "name": "TableHead.scope",
+                    "type": "\"col\" | \"row\" | \"colgroup\" | \"rowgroup\"",
+                    "description": "Identifies the cells described by this header."
+                },
+                {
                     "name": "TableHead.align",
                     "type": "\"start\" | \"center\" | \"end\"",
                     "description": "Header text alignment.",
                     "default": "start"
                 },
                 {
+                    "name": "TableCell.children",
+                    "type": "ReactNode",
+                    "description": "Data cell content."
+                },
+                {
                     "name": "TableCell.align",
                     "type": "\"start\" | \"center\" | \"end\"",
                     "description": "Cell text alignment.",
                     "default": "start"
+                },
+                {
+                    "name": "TableHead.colSpan / rowSpan",
+                    "type": "number",
+                    "description": "Native header cell column or row span."
+                },
+                {
+                    "name": "TableCell.colSpan / rowSpan",
+                    "type": "number",
+                    "description": "Native data cell column or row span."
+                },
+                {
+                    "name": "TableCaption.children",
+                    "type": "ReactNode",
+                    "description": "Accessible table description, displayed below the table."
                 }
             ],
             "source": "custom",
@@ -1963,14 +2013,32 @@
             "name": "ButtonGroup",
             "category": "Action",
             "introduction": "Native shadcn ButtonGroup composition with HTML div attributes.",
-            "guidance": "Compose Button children with explicit size and disabled props. Use aria-label to name the group.",
+            "guidance": "Compose Button children with explicit size and disabled props. Use aria-label to name the group. ButtonGroupText adds a non-interactive label or value; its render prop can replace the default div. ButtonGroupSeparator divides controls: use its default vertical orientation in horizontal groups, or horizontal in vertical groups. All parts accept native attributes and refs without styling overrides or dangerouslySetInnerHTML.",
             "properties": [
                 {
                     "name": "orientation",
                     "type": "\"horizontal\" | \"vertical\"",
-                    "description": "Connected control layout."
+                    "description": "Connected control layout.",
+                    "default": "horizontal"
                 },
-                { "name": "aria-label", "type": "string", "description": "Accessible group label." }
+                { "name": "aria-label", "type": "string", "description": "Accessible group label." },
+                { "name": "children", "type": "ReactNode", "description": "Connected controls and companion parts." },
+                {
+                    "name": "ButtonGroupText.children",
+                    "type": "ReactNode",
+                    "description": "Non-interactive label or value displayed alongside controls."
+                },
+                {
+                    "name": "ButtonGroupText.render",
+                    "type": "ReactElement | ((props, state) => ReactElement)",
+                    "description": "Replaces the default div while preserving the component's props."
+                },
+                {
+                    "name": "ButtonGroupSeparator.orientation",
+                    "type": "\"horizontal\" | \"vertical\"",
+                    "default": "vertical",
+                    "description": "Divider direction, perpendicular to the group layout."
+                }
             ],
             "source": "shadcn",
             "reference": "https://ui.shadcn.com/docs/components/button-group"

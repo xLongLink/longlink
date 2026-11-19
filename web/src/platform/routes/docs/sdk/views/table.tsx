@@ -2,7 +2,16 @@ import ViewLayout from './view-layout';
 import { Box } from '@/components/longlink/layout/box';
 import { Icon } from '@/components/longlink/display/icon';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableFooter,
+    TableRow,
+    TableHead,
+    TableCell,
+    TableCaption
+} from '@/components/longlink';
 
 /** Documents Table in LongLink Views. */
 export default function TablePage() {
@@ -10,12 +19,6 @@ export default function TablePage() {
     return (
         <ViewLayout
             name="Table"
-            properties={[
-                { name: 'children', type: 'ReactNode' },
-                { name: 'wrap', type: 'boolean' },
-                { name: 'TableHead.align', type: '"start" | "center" | "end"' },
-                { name: 'TableCell.align', type: '"start" | "center" | "end"' }
-            ]}
             example={{
                 title: 'Projects',
                 preview: <TableExample />,
@@ -29,10 +32,11 @@ export default function TablePage() {
   return (
     <Box width="80%">
       <Table aria-label="Projects">
+        <TableCaption>Current projects and their status</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Project</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead scope="col">Project</TableHead>
+            <TableHead scope="col">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -48,6 +52,11 @@ export default function TablePage() {
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={2}>{projects.length} projects</TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </Box>
   );
@@ -69,10 +78,11 @@ export function TableExample() {
     return (
         <Box width="80%">
             <Table aria-label="Projects">
+                <TableCaption>Current projects and their status</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead scope="col">Project</TableHead>
+                        <TableHead scope="col">Status</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -88,6 +98,11 @@ export function TableExample() {
                         </TableRow>
                     ))}
                 </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={2}>{projects.length} projects</TableCell>
+                    </TableRow>
+                </TableFooter>
             </Table>
         </Box>
     );

@@ -49,7 +49,9 @@ it('keeps authored companion references in separate tables without merging publi
             name="Button"
             properties={[
                 { name: 'size', type: 'AuthoredButtonSize' },
-                { name: 'ButtonGroup.children', type: 'ReactNode' }
+                { name: 'ButtonGroup.children', type: 'ReactNode' },
+                { name: 'ButtonGroup.orientation', type: '"horizontal" | "vertical"' },
+                { name: 'ButtonGroupSeparator.orientation', type: '"horizontal" | "vertical"' }
             ]}
         />,
         async (output) => {
@@ -59,13 +61,15 @@ it('keeps authored companion references in separate tables without merging publi
             await act(async () => user.click(propertiesTab));
             expect(Array.from(output.querySelectorAll('h3'), (heading) => heading.textContent)).toEqual([
                 'Button',
-                'ButtonGroup'
+                'ButtonGroup',
+                'ButtonGroupSeparator'
             ]);
             const tables = output.querySelectorAll('table');
 
             expect(Array.from(tables, (table) => table.getAttribute('aria-label'))).toEqual([
                 'Button properties',
-                'ButtonGroup properties'
+                'ButtonGroup properties',
+                'ButtonGroupSeparator properties'
             ]);
             expect(
                 Array.from(output.querySelectorAll('tbody tr'), (row) =>
@@ -73,7 +77,9 @@ it('keeps authored companion references in separate tables without merging publi
                 )
             ).toEqual([
                 ['size', 'AuthoredButtonSize', '"default"'],
-                ['children', 'ReactNode', '-']
+                ['children', 'ReactNode', '-'],
+                ['orientation', '"horizontal" | "vertical"', '"horizontal"'],
+                ['orientation', '"horizontal" | "vertical"', '"vertical"']
             ]);
         }
     );
