@@ -1,6 +1,6 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 const article = {
     description: 'The values behind the LongLink brand.',
@@ -22,7 +22,7 @@ export default function Values() {
                 <blockquote className="m-0 border-s-2 border-orange-600 ps-4 wrap-break-word text-orange-600 dark:border-orange-400 dark:text-orange-400">
                     <Stack gap={0}>
                         <span>Beta notice: This page is being built.</span>
-                        <Link href={article.editUrl} isExternalLink className="underline text-inherit">
+                        <Link href={article.editUrl} isExternalLink>
                             Edit on GitHub
                         </Link>
                     </Stack>

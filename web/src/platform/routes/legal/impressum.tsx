@@ -1,7 +1,7 @@
 import { legalPaths } from '@/platform/publications';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 const article = {
     description: 'Read the LongLink legal notice and company information.',
@@ -39,10 +39,7 @@ export default function Impressum() {
                         Contact
                     </h2>
                     <p>
-                        Email:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
+                        Email: <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>
                     </p>
                 </Stack>
             </Stack>

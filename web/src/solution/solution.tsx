@@ -1,7 +1,7 @@
 import { DevelopmentProfile } from '@/solution/profile';
+import { Link } from '@/components/longlink/action/link';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { SolutionPage } from '@/components/ui/solution-page';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 /** Replaces the root SPA fallback metadata after the Solution route hydrates. */
 export const meta = () => [];

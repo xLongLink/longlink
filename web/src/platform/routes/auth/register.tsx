@@ -7,11 +7,11 @@ import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNotification } from '@/lib/notifications';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
 import { emailPayloadSchema, type EmailPayload } from './validation';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -60,10 +60,7 @@ export default function Register() {
                     </Stack>
                 </form>
                 <FieldSeparator>
-                    Already have an account?{' '}
-                    <Link href={`/login${signInSearch}`} className="font-medium">
-                        Sign In
-                    </Link>
+                    Already have an account? <Link href={`/login${signInSearch}`}>Sign In</Link>
                 </FieldSeparator>
             </Stack>
         </AuthLayout>

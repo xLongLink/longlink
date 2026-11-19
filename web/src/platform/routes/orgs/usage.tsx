@@ -1,13 +1,13 @@
 import { ExternalLink } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Button } from '@/components/longlink/action/button';
 import { Progress } from '@/components/longlink/display/progress';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
 
 /** Shows the Organization's usage against free allowances or card-enabled capacity. */
 export default function Usage({ base }: { base: string }) {
@@ -34,14 +34,10 @@ export default function Usage({ base }: { base: string }) {
                             {usage.has_payment_method ? 'Provisioned capacity' : 'Free tier limits'}
                         </span>
                     </Stack>
-                    <NativeNavigationLink
-                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
-                        href="/pricing/"
-                        target="_blank"
-                    >
+                    <Link variant="outline" size="sm" href="/pricing/" target="_blank">
                         See prices
                         <ExternalLink className="size-4" aria-hidden="true" />
-                    </NativeNavigationLink>
+                    </Link>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                     <Progress

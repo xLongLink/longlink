@@ -1,7 +1,7 @@
 import { legalPaths } from '@/platform/publications';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 const article = {
     description: 'Read the LongLink privacy policy.',
@@ -47,11 +47,7 @@ export default function Privacy() {
                     </p>
                     <p>
                         The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent
-                        to{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        .
+                        to <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>.
                     </p>
                     <p>
                         "Service" means our website, hosted platform, and related support, including the SDK and runtime
@@ -351,12 +347,9 @@ export default function Privacy() {
                         consent where we rely on it.
                     </p>
                     <p>
-                        Send requests to{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        . We may verify your identity before responding. We generally respond within 30 days. Access is
-                        normally free, subject to fees or exceptions permitted by law.
+                        Send requests to <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>. We may verify
+                        your identity before responding. We generally respond within 30 days. Access is normally free,
+                        subject to fees or exceptions permitted by law.
                     </p>
                     <p>
                         You may lodge a complaint with the Federal Data Protection and Information Commissioner (FDPIC)
@@ -383,14 +376,8 @@ export default function Privacy() {
                     <p>LongLink SAGL, UID CHE-150.642.313.</p>
                     <p>
                         Privacy enquiries and data-rights requests:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        . Security, technical, and account support:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        .
+                        <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>. Security, technical, and account
+                        support: <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>.
                     </p>
                 </Stack>
             </Stack>

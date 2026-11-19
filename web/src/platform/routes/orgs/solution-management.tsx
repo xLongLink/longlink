@@ -3,20 +3,19 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
+import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import CreateSolution from '@/components/dialogs/create-solution';
 import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import DeploymentReview from '@/components/dialogs/deployment-review';
 import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
 import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -146,14 +145,10 @@ export default function SolutionManagement({
                             <p className="text-muted-foreground text-center">Bring your business processes to life</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <NativeNavigationLink
-                                className={buttonVariants({ variant: 'outline' })}
-                                href="/docs/"
-                                target="_blank"
-                            >
+                            <Link variant="outline" href="/docs/" target="_blank">
                                 Read the docs
                                 <ExternalLink className="size-4" aria-hidden="true" />
-                            </NativeNavigationLink>
+                            </Link>
                             {canMaintain && (
                                 <Button onClick={openCreate}>
                                     <Plus className="size-4" aria-hidden="true" />

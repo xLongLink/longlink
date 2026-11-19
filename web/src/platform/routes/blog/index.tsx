@@ -1,11 +1,10 @@
 import { BookOpen } from 'lucide-react';
 import { Page } from '@/components/ui/page';
 import { Box } from '@/components/longlink/layout/box';
+import { Link } from '@/components/longlink/action/link';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
-import { buttonVariants } from '@/components/longlink/action/button';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 
 /** Lists articles about LongLink and building process-specific applications. */
 export default function Blog() {
@@ -36,12 +35,9 @@ export default function Blog() {
                                             The idea behind LongLink
                                         </p>
                                         <Stack gap={0} className="mt-auto pt-8" align="center">
-                                            <NativeNavigationLink
-                                                href="/blog/why-longlink/"
-                                                className={buttonVariants()}
-                                            >
+                                            <Link href="/blog/why-longlink/" variant="primary">
                                                 Read article
-                                            </NativeNavigationLink>
+                                            </Link>
                                         </Stack>
                                     </Stack>
                                 </div>

@@ -1,6 +1,6 @@
 import { cn } from 'cn';
 import * as card from '@/components/shadcn/card';
-import { NavigationLink } from '@/components/longlink/action/link';
+import { Link } from '@/components/longlink/action/link';
 import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode, SyntheticEvent } from 'react';
 
 function preventActivation(event: SyntheticEvent) {
@@ -187,10 +187,11 @@ export function Card({
                     onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : mode === 'link' ? (
-                <NavigationLink
-                    className="sr-only"
+                <Link
+                    visuallyHidden
                     data-slot="card-control"
-                    href={blocked ? undefined : href}
+                    href={href ?? ''}
+                    disabled={blocked}
                     target={blocked ? undefined : target}
                     role="link"
                     tabIndex={0}

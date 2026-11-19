@@ -1,6 +1,6 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { InlineCode } from '@/components/shadcn/inline-code';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import {
     CodeBlock,
@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </h1>
                 <p>
                     Implement your application logic using standard{' '}
-                    <Link href="https://fastapi.tiangolo.com/tutorial/" className="underline" isExternalLink>
+                    <Link href="https://fastapi.tiangolo.com/tutorial/" isExternalLink>
                         FastAPI routes
                     </Link>
                     . LongLink provides the current user and common services such as the database and storage through{' '}

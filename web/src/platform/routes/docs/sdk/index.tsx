@@ -1,6 +1,6 @@
 import { MoveRight } from 'lucide-react';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shadcn/tabs';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -47,15 +47,15 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <p>
                     Build dedicated tools with established Python libraries: use{' '}
-                    <Link href="https://github.com/fastapi/fastapi" className="underline" isExternalLink>
+                    <Link href="https://github.com/fastapi/fastapi" isExternalLink>
                         FastAPI
                     </Link>{' '}
                     for routes,{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" className="underline" isExternalLink>
+                    <Link href="https://sqlmodel.tiangolo.com/" isExternalLink>
                         SQLModel
                     </Link>{' '}
                     for data, and{' '}
-                    <Link href="https://docs.pydantic.dev/latest/" className="underline" isExternalLink>
+                    <Link href="https://docs.pydantic.dev/latest/" isExternalLink>
                         Pydantic
                     </Link>{' '}
                     for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
@@ -88,7 +88,7 @@ export default function DocsArticleRoute() {
                 </CodeBlock>
                 <p>
                     Open{' '}
-                    <Link href="http://127.0.0.1:1707" className="underline" isExternalLink>
+                    <Link href="http://127.0.0.1:1707" isExternalLink>
                         http://127.0.0.1:1707
                     </Link>{' '}
                     to preview your Solution.

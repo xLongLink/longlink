@@ -1,9 +1,12 @@
 import { cn } from 'cn';
+import { ArrowUpRight } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Spinner } from '@/components/shadcn/spinner';
+import type { VariantProps } from 'class-variance-authority';
 import { FilePreview } from '@/components/dialogs/file-preview';
 import { buttonVariants } from '@/components/longlink/action/button';
+import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import { RequestContext, LinkNavigationContext } from '@/components/custom/contexts';
 import { useContext, useRef, useState, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
@@ -30,97 +33,121 @@ type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type' 
           }
     );
 
-type LinkProps =
+type LinkProps = (
     | (Omit<ComponentPropsWithRef<'a'>, 'download' | 'className'> & {
           href: string;
           preview?: never;
-          download?: never;
+          download?: string | boolean;
           disabled?: boolean;
+          isExternalLink?: boolean;
       })
-    | ActionLinkProps;
-
-/** Preserves native link gestures while routing ordinary internal clicks through the host. */
-export function NavigationLink({ href, target, rel, download, onClick, ...props }: ComponentPropsWithRef<'a'>) {
-    const navigation = useContext(LinkNavigationContext);
-    const internalHref = navigation && href ? resolveScopedNavigationUrl(navigation.baseUrl, href) : '';
-    let destination = navigation ? internalHref || undefined : href;
-
-    // Native external navigation accepts only the same HTTP(S) destinations as the host bridge.
-    if (navigation && href && !internalHref) destination = resolveExternalUrl(document.baseURI, href);
-
-    // External destinations leave the frame; internal modifier-clicks retain browser defaults.
-    return (
-        <a
-            {...props}
-            href={destination}
-            download={navigation ? undefined : download}
-            target={navigation && !internalHref ? '_blank' : target}
-            rel={
-                navigation || target === '_blank'
-                    ? [...new Set(`${rel ?? ''} noopener noreferrer`.trim().split(/\s+/))].join(' ')
-                    : rel
-            }
-            onClick={(event) => {
-                onClick?.(event);
-
-                if (event.defaultPrevented) return;
-
-                if (!destination) {
-                    event.preventDefault();
-
-                    return;
-                }
-
-                if (
-                    navigation &&
-                    href &&
-                    internalHref &&
-                    (!target || target === '_self') &&
-                    event.button === 0 &&
-                    !event.altKey &&
-                    !event.ctrlKey &&
-                    !event.metaKey &&
-                    !event.shiftKey
-                ) {
-                    event.preventDefault();
-                    navigation.navigate(href);
-                }
-            }}
-        />
-    );
-}
+    | ActionLinkProps
+) &
+    VariantProps<typeof buttonVariants> & { fullWidth?: boolean; visuallyHidden?: boolean };
 
 /** Renders navigation as an anchor and file or callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
-    if (props.preview !== undefined || props.download !== undefined || props.href === undefined) {
-        return <ActionLink {...props} />;
+    const requests = useContext(RequestContext);
+    const navigationContext = useContext(LinkNavigationContext);
+    const router = useInRouterContext();
+    const {
+        variant = 'link',
+        size = variant === 'link' ? null : 'default',
+        fullWidth,
+        visuallyHidden,
+        ...link
+    } = props;
+    const className = cn(
+        buttonVariants({ variant, size }),
+        'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
+        fullWidth && 'w-full',
+        visuallyHidden && 'sr-only'
+    );
+
+    if (
+        link.preview !== undefined ||
+        link.href === undefined ||
+        (typeof link.download === 'string' && (requests || navigationContext))
+    ) {
+        return <ActionLink {...(link as ActionLinkProps)} className={className} />;
     }
 
-    const { disabled, onClick, ...navigation } = props;
+    const {
+        disabled,
+        onClick,
+        children,
+        isExternalLink = false,
+        href: suppliedHref,
+        target: suppliedTarget,
+        rel,
+        download,
+        ...anchor
+    } = link as Extract<LinkProps, { isExternalLink?: boolean }>;
+    const href = disabled ? undefined : suppliedHref;
+    const target = isExternalLink ? '_blank' : suppliedTarget;
+    const external = href !== undefined && /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href.trim());
+    const internalHref = navigationContext && href ? resolveScopedNavigationUrl(navigationContext.baseUrl, href) : '';
+    let destination = navigationContext ? internalHref || undefined : href;
 
-    // Disabled navigation remains focusable without exposing an active destination.
-    return (
-        <NavigationLink
-            {...navigation}
-            href={disabled ? undefined : navigation.href}
-            aria-disabled={disabled || undefined}
-            tabIndex={disabled ? 0 : navigation.tabIndex}
-            onClick={(event) => {
-                if (disabled) {
-                    event.preventDefault();
-                    event.stopPropagation();
+    if (navigationContext && href && !internalHref) destination = resolveExternalUrl(document.baseURI, href);
 
-                    return;
-                }
+    const anchorProps = {
+        ...anchor,
+        target: navigationContext && !internalHref ? '_blank' : target,
+        rel:
+            navigationContext || target === '_blank'
+                ? [...new Set(`${rel ?? ''} noopener noreferrer`.trim().split(/\s+/))].join(' ')
+                : rel,
+        'aria-disabled': disabled || undefined,
+        tabIndex: disabled ? 0 : anchor.tabIndex,
+        className,
+        onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+            if (disabled) {
+                event.preventDefault();
+                event.stopPropagation();
 
-                onClick?.(event);
-            }}
-            className={cn(
-                buttonVariants({ variant: 'link', size: null }),
-                'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
-            )}
-        />
-    );
+                return;
+            }
+
+            onClick?.(event);
+
+            if (event.defaultPrevented) return;
+
+            if (!destination) {
+                event.preventDefault();
+
+                return;
+            }
+
+            if (
+                navigationContext &&
+                href &&
+                internalHref &&
+                (!target || target === '_self') &&
+                event.button === 0 &&
+                !event.altKey &&
+                !event.ctrlKey &&
+                !event.metaKey &&
+                !event.shiftKey
+            ) {
+                event.preventDefault();
+                navigationContext.navigate(href);
+            }
+        },
+        children: (
+            <>
+                {children}
+                {isExternalLink && <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0" />}
+                {isExternalLink && <span className="sr-only">(opens in new tab)</span>}
+            </>
+        )
+    };
+
+    if (!navigationContext && router && href !== undefined && !external && download === undefined) {
+        return <RouterLink {...anchorProps} to={href} />;
+    }
+
+    return <a {...anchorProps} href={destination} download={navigationContext ? undefined : download} />;
 }
 
 /** Owns async action state without changing the button or its focus during pending work. */
@@ -132,8 +159,9 @@ function ActionLink({
     onClick,
     onKeyDown,
     children,
+    className,
     ...props
-}: ActionLinkProps) {
+}: ActionLinkProps & { className: string }) {
     const requests = useContext(RequestContext);
     const [filePreview, setFilePreview] = useState<Blob>();
     const [downloadError, setDownloadError] = useState<string>();
@@ -214,10 +242,7 @@ function ActionLink({
 
                     onKeyDown?.(event);
                 }}
-                className={cn(
-                    buttonVariants({ variant: 'link', size: null }),
-                    'gap-1.5 align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50'
-                )}
+                className={cn(className, 'gap-1.5')}
             >
                 {isPending && (
                     <span role="status" aria-label="Loading" className="inline-flex align-middle">

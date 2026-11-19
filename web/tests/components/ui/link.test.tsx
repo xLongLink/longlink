@@ -148,9 +148,11 @@ it.each([false, true])(
 
         await withMounted(
             file ? (
-                <Link href="/invoice.pdf" download="invoice.pdf" disabled onClick={action}>
-                    Unavailable
-                </Link>
+                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+                    <Link href="/invoice.pdf" download="invoice.pdf" disabled onClick={action}>
+                        Unavailable
+                    </Link>
+                </LinkNavigationContext>
             ) : (
                 <Link disabled onClick={action}>
                     Unavailable
@@ -584,11 +586,13 @@ it.each([false, true])('recovers from an already-reported action failure (async:
     });
 });
 
-it('reports a missing download capability instead of navigating or claiming success', async () => {
+it('reports a missing scoped download capability instead of navigating or claiming success', async () => {
     await withMounted(
-        <Link href="/invoice.pdf" download="invoice.pdf">
-            Download
-        </Link>,
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+            <Link href="/invoice.pdf" download="invoice.pdf">
+                Download
+            </Link>
+        </LinkNavigationContext>,
         async (output) => {
             await act(async () => output.querySelector('button')?.click());
             expect(output.querySelector('[role="alert"]')?.textContent).toBe('Downloads require the Solution runtime');

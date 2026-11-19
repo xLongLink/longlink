@@ -5,16 +5,15 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
+import { Button } from '@/components/shadcn/button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { Button, buttonVariants } from '@/components/shadcn/button';
-import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 import { zEmailPayload } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
@@ -112,9 +111,9 @@ export default function VerifyEmail() {
             <AuthLayout title="Verify your email" description="Request a new registration link to continue.">
                 {pageMetadata}
                 <Stack gap={3}>
-                    <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                    <Link href={recoveryRegisterHref} variant="primary">
                         Request a new registration link
-                    </NativeNavigationLink>
+                    </Link>
                 </Stack>
             </AuthLayout>
         );
@@ -137,9 +136,9 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}
-                <NativeNavigationLink href={recoveryRegisterHref} className={buttonVariants()}>
+                <Link href={recoveryRegisterHref} variant="primary">
                     Request a new registration link
-                </NativeNavigationLink>
+                </Link>
             </AuthLayout>
         );
     }
@@ -171,14 +170,7 @@ export default function VerifyEmail() {
                 <Separator />
                 <p className="text-xs text-center text-muted-foreground">
                     By continuing, you agree to our <br />
-                    <Link href="/terms/" className="underline">
-                        Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link href="/privacy/" className="underline">
-                        Privacy Policy
-                    </Link>
-                    .
+                    <Link href="/terms/">Terms of Service</Link> and <Link href="/privacy/">Privacy Policy</Link>.
                 </p>
             </Stack>
         </AuthLayout>

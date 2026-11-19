@@ -1,11 +1,11 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
@@ -48,7 +48,7 @@ function InvoiceTable({ base }: { base: string }) {
                         <TableRow key={row.id}>
                             <TableCell>
                                 {row.hosted_invoice_url ? (
-                                    <Link href={row.hosted_invoice_url} className="underline" isExternalLink>
+                                    <Link href={row.hosted_invoice_url} isExternalLink>
                                         {row.number ?? row.id}
                                     </Link>
                                 ) : (
@@ -68,7 +68,7 @@ function InvoiceTable({ base }: { base: string }) {
                             </TableCell>
                             <TableCell>
                                 {row.has_pdf ? (
-                                    <Link href={`${base}/invoices/${row.id}/pdf`} className="underline" isExternalLink>
+                                    <Link href={`${base}/invoices/${row.id}/pdf`} isExternalLink>
                                         PDF
                                     </Link>
                                 ) : null}
