@@ -136,40 +136,43 @@ for (const { name, Page, item } of [
                     </ApiProvider>
                 </AuthenticatedUserContext>,
                 async (output) => {
-                    for (const attempt of [1, 2]) {
-                        await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
-                        const metadata = [...output.querySelectorAll('button')].find(
-                            (button) => button.textContent === 'Metadata'
-                        );
+                    // Arrange
+                    await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
+                    const metadata = [...output.querySelectorAll('button')].find(
+                        (button) => button.textContent === 'Metadata'
+                    );
 
-                        if (!metadata) throw new Error('Expected metadata action');
-                        await act(async () => actor.click(metadata));
-                        const begin = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
-                            (button) => button.textContent === 'Delete'
-                        );
+                    if (!metadata) throw new Error('Expected metadata action');
+                    await act(async () => actor.click(metadata));
+                    const begin = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
+                        (button) => button.textContent === 'Delete'
+                    );
 
-                        if (!begin) throw new Error('Expected metadata deletion action');
-                        await act(async () => actor.click(begin));
-                        expect(document.querySelector('[role="alertdialog"]')?.textContent).toContain(item.name);
-                        const confirm = [
-                            ...document.querySelectorAll<HTMLButtonElement>('[role="alertdialog"] button')
-                        ].find((button) => button.textContent === 'Delete');
+                    if (!begin) throw new Error('Expected metadata deletion action');
+                    await act(async () => actor.click(begin));
+                    const dialog = document.querySelector('[role="alertdialog"]');
+                    const confirm = [...(dialog?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+                        (button) => button.textContent === 'Delete'
+                    );
 
-                        if (!confirm) throw new Error('Expected deletion confirmation');
-                        await act(async () => actor.click(confirm));
+                    if (!confirm) throw new Error('Expected deletion confirmation');
 
-                        if (attempt === 1) {
-                            await vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page.'));
-                            expect(present).toBe(true);
-                            const retry = [...output.querySelectorAll('button')].find(
-                                (button) => button.textContent === 'Retry'
-                            );
+                    // Act
+                    await act(async () => actor.click(confirm));
 
-                            if (!retry) throw new Error('Expected error recovery action');
-                            await act(async () => actor.click(retry));
-                        }
-                    }
+                    // Assert
+                    await vi.waitFor(() =>
+                        expect(dialog?.querySelector('[role="alert"]')?.textContent).toContain('Deletion unavailable')
+                    );
+                    expect(document.querySelector('[role="alertdialog"]')).toBe(dialog);
+                    expect(dialog?.textContent).toContain(item.name);
+                    expect(output.querySelector('tbody')?.textContent).toContain(item.name);
+                    expect(present).toBe(true);
 
+                    // Act
+                    await act(async () => actor.click(confirm));
+
+                    // Assert
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).not.toContain(item.name));
                     await vi.waitFor(() => expect(document.querySelector('[role="alertdialog"]')).toBeNull());
                     expect(present).toBe(false);

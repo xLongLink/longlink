@@ -1,4 +1,3 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
@@ -6,19 +5,16 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
-import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { RegistryForm } from '@/platform/routes/orgs/dialogs/registry-form';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
-
-type Registry = z.output<typeof schemas.zRegistryResponse>;
-
-type RegistryAction = { kind: 'create' } | { kind: 'delete'; connection: Registry };
 
 /** Lists organization-owned registry connections without loading credentials. */
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
-    const [action, setAction] = useState<RegistryAction | null>(null);
+    const [action, setAction] = useState<{ kind: 'create' } | null>(null);
+    const confirmation = useConfirm();
 
     function closeAction() {
         // Leave replacement dialogs open when an older operation finishes.
@@ -64,7 +60,18 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                                         <Button
                                             size="sm"
                                             variant="destructive"
-                                            onClick={() => setAction({ kind: 'delete', connection: row })}
+                                            onClick={() =>
+                                                confirmation.show({
+                                                    title: 'Delete registry',
+                                                    description: `Delete ${row.username} (${row.host})? Connections used by retained Solution revisions cannot be deleted.`,
+                                                    actionLabel: 'Delete',
+                                                    actionVariant: 'destructive',
+                                                    onAction: async () => {
+                                                        await api.delete(`${base}/registries/${row.id}`);
+                                                        await invalidate();
+                                                    }
+                                                })
+                                            }
                                         >
                                             Delete
                                         </Button>
@@ -82,23 +89,8 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     </TableBody>
                 </Table>
             </Stack>
-            {action?.kind === 'create' && <RegistryForm base={base} onSuccess={onSuccess} onOpenChange={closeAction} />}
-            <DeletionDialog
-                confirmation={
-                    action?.kind === 'delete'
-                        ? {
-                              title: 'Delete registry',
-                              description: `Delete ${action.connection.username} (${action.connection.host})? Connections used by retained Solution revisions cannot be deleted.`,
-                              onDelete: async () => {
-                                  // Remove the connection only after server dependency checks succeed.
-                                  await api.delete(`${base}/registries/${action.connection.id}`);
-                                  await onSuccess();
-                              }
-                          }
-                        : null
-                }
-                onClose={closeAction}
-            />
+            {action && <RegistryForm base={base} onSuccess={onSuccess} onOpenChange={closeAction} />}
+            {confirmation.element}
         </>
     );
 }

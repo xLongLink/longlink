@@ -7,10 +7,10 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
-import { DeletionDialog } from '@/components/dialogs/deletion';
 import { TagForm } from '@/platform/routes/orgs/dialogs/tag-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash } from 'lucide-react';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 import {
@@ -22,12 +22,13 @@ import {
 
 type Tag = z.output<typeof schemas.zOrganizationTagResponse>;
 
-type TagAction = { kind: 'create' } | { kind: 'edit' | 'delete'; tag: Tag };
+type TagAction = { kind: 'create' } | { kind: 'edit'; tag: Tag };
 
 /** Lists and manages the shared tags used as top-level Organization tabs. */
 export default function TabsSection({ base, tags, canMaintain }: { base: string; tags: Tag[]; canMaintain: boolean }) {
     const queryClient = useQueryClient();
     const [action, setAction] = useState<TagAction | null>(null);
+    const confirmation = useConfirm();
     const reportError = useApiError();
 
     // Keep moves pending until the shared navigation and table rows refresh.
@@ -111,7 +112,27 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         variant="destructive"
-                                                        onClick={() => setAction({ kind: 'delete', tag: row })}
+                                                        onClick={() =>
+                                                            confirmation.show({
+                                                                title: 'Delete tab',
+                                                                description: `Delete tab ${row.name}? Solutions will not be deleted and will keep their other tags.`,
+                                                                actionLabel: 'Delete',
+                                                                actionVariant: 'destructive',
+                                                                onAction: async () => {
+                                                                    await api.delete(`${base}/tags/${row.id}`);
+                                                                    await Promise.all([
+                                                                        queryClient.invalidateQueries({
+                                                                            queryKey: ['api', `${base}/tags`],
+                                                                            exact: true
+                                                                        }),
+                                                                        queryClient.invalidateQueries({
+                                                                            queryKey: ['api', `${base}/solutions`],
+                                                                            exact: true
+                                                                        })
+                                                                    ]);
+                                                                }
+                                                            })
+                                                        }
                                                     >
                                                         <Trash aria-hidden="true" />
                                                         Delete
@@ -133,7 +154,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     </TableBody>
                 </Table>
             </Stack>
-            {action && action.kind !== 'delete' && (
+            {action && (
                 <TagForm
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
@@ -146,29 +167,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     }}
                 />
             )}
-            <DeletionDialog
-                confirmation={
-                    action?.kind === 'delete'
-                        ? {
-                              title: 'Delete tab',
-                              description: `Delete tab ${action.tag.name}? Solutions will not be deleted and will keep their other tags.`,
-                              onDelete: async () => {
-                                  // Cascading assignments disappear with the tag, never the Solutions.
-                                  await api.delete(`${base}/tags/${action.tag.id}`);
-                                  await Promise.all([
-                                      queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true }),
-                                      queryClient.invalidateQueries({
-                                          queryKey: ['api', `${base}/solutions`],
-                                          exact: true
-                                      })
-                                  ]);
-                                  setAction((current) => (current === action ? null : current));
-                              }
-                          }
-                        : null
-                }
-                onClose={() => setAction(null)}
-            />
+            {confirmation.element}
         </>
     );
 }

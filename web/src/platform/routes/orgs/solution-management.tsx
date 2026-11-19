@@ -9,8 +9,8 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
-import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import CreateSolution from '@/platform/routes/orgs/dialogs/create-solution';
 import { SolutionTags } from '@/platform/routes/orgs/dialogs/solution-tags';
@@ -33,8 +33,7 @@ type SolutionAction =
     | { kind: 'update'; item: { id: string; name: string } }
     | { kind: 'logs'; id: string }
     | { kind: 'permissions'; id: string }
-    | { kind: 'mcp'; id: string }
-    | { kind: 'delete'; item: { id: string; name: string } };
+    | { kind: 'mcp'; id: string };
 
 /** Owns Solution loading and dialogs for the overview and active settings section. */
 export default function SolutionManagement({
@@ -51,6 +50,7 @@ export default function SolutionManagement({
 
     // Own one dialog action; captured identity prevents old completions from closing its replacement.
     const [selected, setSelected] = useState<SolutionAction | null>(null);
+    const confirmation = useConfirm();
     const base = `/api/v1/organizations/${organization.id}`;
 
     // Keep solution refreshes scoped to the section's resource.
@@ -180,9 +180,15 @@ export default function SolutionManagement({
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() =>
-                                                            setSelected({
-                                                                kind: 'delete',
-                                                                item: { id: row.id, name: row.name }
+                                                            confirmation.show({
+                                                                title: 'Delete solution',
+                                                                description: `Delete solution ${row.name}?`,
+                                                                actionLabel: 'Delete',
+                                                                actionVariant: 'destructive',
+                                                                onAction: async () => {
+                                                                    await api.delete(`/api/v1/solutions/${row.id}`);
+                                                                    await invalidateSolutions();
+                                                                }
                                                             })
                                                         }
                                                     >
@@ -237,22 +243,7 @@ export default function SolutionManagement({
             {selected?.kind === 'logs' && <SolutionLogsDialog solutionId={selected.id} onOpenChange={closeSelected} />}
             {/* Offer direct MCP connection details and the selected Solution's credential-free package. */}
             {selected?.kind === 'mcp' && <SolutionMcpDialog solutionId={selected.id} onOpenChange={closeSelected} />}
-            <DeletionDialog
-                confirmation={
-                    selected?.kind === 'delete'
-                        ? {
-                              title: 'Delete solution',
-                              description: `Delete solution ${selected.item.name}?`,
-                              onDelete: async () => {
-                                  // Refresh Solutions only after the delete request succeeds.
-                                  await api.delete(`/api/v1/solutions/${selected.item.id}`);
-                                  await onSuccess();
-                              }
-                          }
-                        : null
-                }
-                onClose={closeSelected}
-            />
+            {confirmation.element}
         </>
     );
 }
