@@ -187,6 +187,76 @@ it('shows existing solutions without creation or row actions to readers', async 
     });
 });
 
+it('opens row tags with the existing assignment and saves edits before closing', async () => {
+    // Arrange
+    const events = userEvent.setup();
+    const tagId = '00000000-0000-4000-8000-000000000005';
+    const base = `/api/v1/organizations/${membership.organization.id}`;
+    const writes: unknown[] = [];
+    let tagIds = [tagId];
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && path === `${base}/solutions`) {
+            return Response.json([{ ...solution, tag_ids: tagIds }]);
+        }
+        if (request.method === 'PATCH' && path === `${base}/solutions/${solution.id}/tags`) {
+            writes.push(await request.json());
+            tagIds = [];
+            return new Response(null, { status: 204 });
+        }
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiProvider>
+                <Suspense fallback={<p>Loading solutions</p>}>
+                    <Management
+                        membership={{ ...membership, tags: [], activeTag: undefined }}
+                        presentation="settings"
+                    />
+                </Suspense>
+            </ApiProvider>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('tbody tr')?.textContent).toContain(solution.name));
+                const trigger = output.querySelector<HTMLButtonElement>('tbody tr button[aria-haspopup="menu"]');
+                if (!trigger) throw new Error('Missing Solution actions');
+
+                // Act
+                await act(async () => events.click(trigger));
+                const tags = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+                    (item) => item.textContent?.trim() === 'Tags'
+                );
+                if (!tags) throw new Error('Missing Tags action');
+                await act(async () => events.click(tags));
+
+                // Assert
+                const dialog = document.querySelector('[role="dialog"]');
+                expect(dialog?.textContent).toContain(`Tags for ${solution.name}`);
+                expect(dialog?.querySelector('[data-slot="combobox-chip"]')?.textContent).toContain(tagId);
+
+                const clear = dialog?.querySelector<HTMLButtonElement>('button[data-slot="combobox-chip-remove"]');
+                const save = Array.from(dialog?.querySelectorAll('button') ?? []).find(
+                    (button) => button.textContent === 'Save'
+                );
+                if (!clear || !save) throw new Error('Missing tag editing controls');
+
+                // Act
+                await act(async () => events.click(clear));
+                await act(async () => events.click(save));
+
+                // Assert
+                await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                expect(writes).toEqual([{ tag_ids: [] }]);
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
+
 it('confirms the canonical MCP URL copy only after the clipboard succeeds and closes its dialog', async () => {
     const events = userEvent.setup();
     let finishCopy: (() => void) | undefined;

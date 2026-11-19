@@ -10,10 +10,23 @@ import { TagForm } from '@/components/dialogs/tag-form';
 import { InviteMember } from '@/components/dialogs/invite-member';
 import { zOrganizationInvitationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
-function Invitations() {
-    const [invitations] = useApi('/api/v1/organizations/test/invitations', zOrganizationInvitationResponse.array());
+function Invitations({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {
+    const [invitations, invalidateInvitations] = useApi(
+        '/api/v1/organizations/test/invitations',
+        zOrganizationInvitationResponse.array()
+    );
 
-    return <output>{invitations.length}</output>;
+    return (
+        <>
+            <output>{invitations.length}</output>
+            <InviteMember
+                base="/api/v1/organizations/test"
+                canInviteAdmin
+                onSettled={invalidateInvitations}
+                onOpenChange={onOpenChange}
+            />
+        </>
+    );
 }
 
 it.each([false, true])('submits the selected invitation role with admin access=%s', async (canInviteAdmin) => {
@@ -35,7 +48,12 @@ it.each([false, true])('submits the selected invitation role with admin access=%
 
     try {
         await withMounted(
-            <InviteMember base="/api/v1/organizations/test" canInviteAdmin={canInviteAdmin} onOpenChange={complete} />,
+            <InviteMember
+                base="/api/v1/organizations/test"
+                canInviteAdmin={canInviteAdmin}
+                onSettled={async () => {}}
+                onOpenChange={complete}
+            />,
             async () => {
                 const email = document.getElementById('invite-email');
                 const role = document.getElementById('invite-role');
@@ -103,8 +121,7 @@ it('refreshes invitations after failed delivery and preserves the draft for retr
     try {
         await withMounted(
             <ApiErrorContext value={reportError}>
-                <Invitations />
-                <InviteMember base="/api/v1/organizations/test" canInviteAdmin onOpenChange={complete} />
+                <Invitations onOpenChange={complete} />
             </ApiErrorContext>,
             async (output) => {
                 await vi.waitFor(() => expect(output.querySelector('output')?.textContent).toBe('0'));

@@ -238,7 +238,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
 
     const [member, setMember] = useState<{
         id: string;
-        action: { kind: 'role'; role: string } | { kind: 'remove' };
+        action: { kind: 'role'; role: permissions.AssignableRole } | { kind: 'remove' };
     } | null>(null);
 
     // Load and invalidate members independently of pending invitations.
@@ -294,7 +294,7 @@ function MembersSection({ base, role }: { base: string; role: OrganizationContex
                                                     }
                                                 />
                                                 <DropdownMenuContent align="end">
-                                                    {['read', 'write', 'maintain', 'admin'].map((role) =>
+                                                    {permissions.assignableRoleSchema.options.map((role) =>
                                                         role === row.role ? null : (
                                                             <DropdownMenuItem
                                                                 key={role}
@@ -468,7 +468,12 @@ function InvitationsSection({ base, role }: { base: string; role: OrganizationCo
                 {revoking ? 'Loading' : ''}
             </span>
             {invitationAttempt !== null && (
-                <InviteMember base={base} canInviteAdmin={canInviteAdmin} onOpenChange={closeInvitation} />
+                <InviteMember
+                    base={base}
+                    canInviteAdmin={canInviteAdmin}
+                    onSettled={invalidateInvitations}
+                    onOpenChange={closeInvitation}
+                />
             )}
         </>
     );

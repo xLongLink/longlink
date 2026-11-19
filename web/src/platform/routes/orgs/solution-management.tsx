@@ -232,16 +232,7 @@ export default function SolutionManagement({
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuItem
-                                                        onClick={() =>
-                                                            setSelected({
-                                                                kind: 'tags',
-                                                                solution: {
-                                                                    id: row.id,
-                                                                    name: row.name,
-                                                                    tag_ids: row.tag_ids
-                                                                }
-                                                            })
-                                                        }
+                                                        onClick={() => setSelected({ kind: 'tags', solution: row })}
                                                     >
                                                         <Tags aria-hidden="true" />
                                                         Tags

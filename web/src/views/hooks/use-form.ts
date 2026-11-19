@@ -1,10 +1,10 @@
 import type { z } from 'zod';
 import * as forms from 'react-hook-form';
 import * as multipart from '../multipart';
-import { RequestContext } from '@/views/contexts';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useSubmit, type SubmitOptions } from '@/lib/hooks/use-submit';
-import { useCallback, useContext, type BaseSyntheticEvent } from 'react';
+import { useCallback, type BaseSyntheticEvent } from 'react';
+import { useScopedWrite, type SubmitOptions } from './use-submit';
 import type { FieldValues, UseFormProps, UseFormReturn } from 'react-hook-form';
 
 /** Validates editing values and optionally submits parsed output through the scoped multipart transport. */
@@ -14,17 +14,11 @@ export function useForm<Input extends FieldValues, Context = unknown, Output ext
 ): UseFormReturn<Input, Context, Output> & { submit: (event?: BaseSyntheticEvent) => Promise<void> } {
     const { action, method, onSuccess, onError, ...formOptions } = options ?? {};
     const form = forms.useForm<Input, Context, Output>({ ...formOptions, resolver: zodResolver(schema) });
-    const request = useContext(RequestContext)?.request;
+    const write = useScopedWrite({ method, onSuccess });
     const send = useSubmit(
         form.handleSubmit(async (values) => {
             if (!action) throw new Error('Form submissions require an action.');
-            if (!request) throw new Error('Scoped submissions require the Solution runtime');
-            if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method ?? 'POST'))
-                throw new Error('Unsupported write method');
-
-            const data = multipart.encode(values);
-            const result = await request(action, { method: method ?? 'POST', form: data });
-            await onSuccess?.(result);
+            await write(action, multipart.encode(values));
         }),
         {
             onError: async (error) => {

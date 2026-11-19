@@ -1,27 +1,16 @@
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
-import type { ViewData } from '@/views/protocol';
-import { RequestContext } from '@/views/contexts';
 import { useCallback, useContext, useRef } from 'react';
 
-export type SubmitOptions = {
-    method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-    onSuccess?: (data: ViewData) => void | Promise<void>;
-    onError?: (error: Error) => void | Promise<void>;
-};
+export type SubmitOptions = { onError?: (error: Error) => void | Promise<void> };
 
-export function useSubmit(path: string, options?: SubmitOptions): (data: FormData) => Promise<void>;
+/** Protects a callback from duplicate activation until its work and error handling finish. */
 export function useSubmit<T>(
     action: (data: T) => void | Promise<void>,
-    options?: Pick<SubmitOptions, 'onError'>
-): (data: T) => Promise<void>;
-/** Protects a write from duplicate activation without owning form state or validation. */
-export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>), options?: SubmitOptions) {
-    const request = useContext(RequestContext)?.request;
+    options?: SubmitOptions
+): (data: T) => Promise<void> {
     const reportError = useContext(ApiErrorContext);
     const pending = useRef<Promise<void> | null>(null);
-    const method = options?.method ?? 'POST';
-    const onSuccess = options?.onSuccess;
     const onError = options?.onError;
 
     // React Hook Form owns pending UI; the synchronous guard also covers rapid repeated submits.
@@ -31,19 +20,7 @@ export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>
 
             const submission = Promise.resolve().then(async () => {
                 try {
-                    if (typeof action === 'function') {
-                        await action(data);
-                    } else {
-                        if (!request) throw new Error('Scoped submissions require the Solution runtime');
-
-                        if (!(data instanceof FormData)) throw new Error('Scoped submissions require FormData');
-
-                        if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method))
-                            throw new Error('Unsupported write method');
-
-                        const result = await request(action, { method, form: [...data.entries()] });
-                        await onSuccess?.(result);
-                    }
+                    await action(data);
                 } catch (cause) {
                     const error = cause instanceof Error ? cause : new Error('Submission failed', { cause });
 
@@ -60,6 +37,6 @@ export function useSubmit<T>(action: string | ((data: T) => void | Promise<void>
 
             return submission;
         },
-        [action, method, onSuccess, onError, reportError, request]
+        [action, onError, reportError]
     );
 }

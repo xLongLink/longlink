@@ -55,22 +55,7 @@ export function SolutionPage({
             const body = await host.load(viewsUrl, { signal });
             const data: unknown = JSON.parse(await body.text());
 
-            // Normalize legacy catalogs and explicit tabs before rendering navigation.
-            const manifest = manifestSchema.parse(data);
-
-            const tabs =
-                manifest.tabs?.map((tab) => ({
-                    route: tab.route,
-                    label:
-                        tab.label ??
-                        viewLabel(manifest.views.find((view) => view.route === tab.route)?.path ?? tab.route),
-                    icon: tab.icon
-                })) ??
-                manifest.views
-                    .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
-                    .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
-
-            return { ...manifest, tabs };
+            return manifestSchema.parse(data);
         }
     });
 
@@ -82,7 +67,15 @@ export function SolutionPage({
     )?.[0];
 
     // Let nested and dynamic detail Views share their parent tab.
-    const navigationTabs = manifest?.tabs ?? EMPTY_VIEWS;
+    const navigationTabs =
+        manifest?.tabs?.map((tab) => ({
+            route: tab.route,
+            label: tab.label ?? viewLabel(views.find((view) => view.route === tab.route)?.path ?? tab.route),
+            icon: tab.icon
+        })) ??
+        views
+            .filter((view) => view.route !== '/' && !view.route.includes('/', 1) && !view.route.includes('/:'))
+            .map((view) => ({ route: view.route, label: viewLabel(view.path), icon: undefined }));
     const activeView = routePath || navigationTabs.length === 0 ? match?.route.view : undefined;
 
     const activeViewTitle = activeView

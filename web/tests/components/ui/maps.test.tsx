@@ -4,6 +4,7 @@ import * as React from 'react';
 import { transform } from 'sucrase';
 import * as components from '@/views';
 import { withMounted } from '../../render';
+import * as mapcn from '@/components/mapcn/map';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
@@ -20,6 +21,7 @@ type Source = {
 type Listener = (event?: unknown) => void;
 type Engine = {
     removed: boolean;
+    styles: unknown[];
     layers: Map<string, Layer>;
     sources: Map<string, Source>;
     listeners: Map<string, Set<Listener>>;
@@ -35,6 +37,7 @@ vi.mock('maplibre-gl', () => ({
     Map: class implements Engine {
         painter = {};
         removed = false;
+        styles: unknown[];
         layers = new Map<string, Layer>();
         sources = new Map<string, Source>();
         listeners = new Map<string, Set<Listener>>();
@@ -42,13 +45,14 @@ vi.mock('maplibre-gl', () => ({
         center: [number, number];
         zoom: number;
 
-        constructor(options: { center: [number, number]; zoom: number }) {
+        constructor(options: { center: [number, number]; zoom: number; style: unknown }) {
             if (engines.failNext) {
                 engines.failNext = false;
                 throw new Error('WebGL initialization failed');
             }
             this.center = options.center;
             this.zoom = options.zoom;
+            this.styles = [options.style];
             engines.maps.push(this);
         }
         on(event: string, layer: string | Listener, callback?: Listener) {
@@ -113,7 +117,8 @@ vi.mock('maplibre-gl', () => ({
         }
         stop() {}
         setProjection() {}
-        setStyle() {
+        setStyle(style: unknown) {
+            this.styles.push(style);
             this.fire('style.load');
         }
         remove() {
@@ -218,6 +223,126 @@ function opacity(map: Engine, id: string) {
     if (typeof value !== 'number') throw new Error('Expected numeric country opacity');
     return value;
 }
+
+function ThemeSelectionMap({ initialTheme }: { initialTheme?: 'light' | 'dark' }) {
+    const [theme, setTheme] = React.useState(initialTheme);
+    const [selected, setSelected] = React.useState('12');
+
+    return (
+        <>
+            <button type="button" onClick={() => setTheme(undefined)}>
+                Detect theme
+            </button>
+            <mapcn.Map theme={theme} styles={{ light: 'light-style', dark: 'dark-style' }} center={[0, 0]} zoom={2}>
+                <mapcn.MapGeoJSON
+                    data={geography}
+                    interactive
+                    onClick={({ feature }) => setSelected(String(feature.id))}
+                    fillPaint={{ 'fill-opacity': ['case', ['==', ['to-string', ['id']], selected], 1, 0.2] }}
+                />
+            </mapcn.Map>
+        </>
+    );
+}
+
+it.each(['light', 'dark'] as const)(
+    'falls back from document themes to the %s system theme without recreating the map or losing selection',
+    async (systemTheme) => {
+        // Arrange
+        const root = document.documentElement;
+        const originalClass = root.className;
+        const originalTheme = root.getAttribute('data-theme');
+        const documentTheme = systemTheme === 'light' ? 'dark' : 'light';
+        const preference = window.matchMedia('(prefers-color-scheme: dark)');
+        const matches = vi.spyOn(preference, 'matches', 'get').mockReturnValue(systemTheme === 'dark');
+        const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
+
+        try {
+            await withMounted(<ThemeSelectionMap />, async () => {
+                await act(async () => {
+                    root.className = documentTheme;
+                    root.dataset.theme = systemTheme;
+                });
+                const map = await loadMap();
+                const layer = selectionLayer(map);
+                const feature = geography.features.find((feature) => feature.id === 'east');
+                if (!feature) throw new Error('Expected East boundary');
+                await act(async () =>
+                    map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } })
+                );
+                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
+                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+
+                // Act: class wins over data-theme; removing it reveals data-theme.
+                await act(async () => root.removeAttribute('class'));
+                expect(map.styles.at(-1)).toBe(`${systemTheme}-style`);
+                await act(async () => {
+                    root.dataset.theme = documentTheme;
+                });
+                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
+                await act(async () => root.removeAttribute('data-theme'));
+
+                // Assert
+                expect(map.styles.at(-1)).toBe(`${systemTheme}-style`);
+                expect(engines.maps).toEqual([map]);
+                expect(map.removed).toBe(false);
+                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+
+                // Act: system changes still apply after explicit themes are removed.
+                await act(async () => {
+                    matches.mockReturnValue(documentTheme === 'dark');
+                    preference.dispatchEvent(new Event('change'));
+                });
+                expect(map.styles.at(-1)).toBe(`${documentTheme}-style`);
+                expect(opacity(map, 'east')).toBeGreaterThan(opacity(map, '12'));
+            });
+        } finally {
+            matches.mockRestore();
+            matchMedia.mockRestore();
+            root.className = originalClass;
+            if (originalTheme === null) root.removeAttribute('data-theme');
+            else root.setAttribute('data-theme', originalTheme);
+        }
+    }
+);
+
+it.each(['light', 'dark'] as const)(
+    'keeps the %s theme prop authoritative and reads the current theme when it is removed',
+    async (theme) => {
+        // Arrange
+        const root = document.documentElement;
+        const originalClass = root.className;
+        const originalTheme = root.getAttribute('data-theme');
+        const detectedTheme = theme === 'light' ? 'dark' : 'light';
+        const user = userEvent.setup();
+
+        try {
+            await withMounted(<ThemeSelectionMap initialTheme={theme} />, async (output) => {
+                const map = await loadMap();
+                expect(map.styles).toEqual([`${theme}-style`]);
+
+                // Act
+                await act(async () => {
+                    root.className = detectedTheme;
+                    root.dataset.theme = detectedTheme;
+                });
+                expect(map.styles).toEqual([`${theme}-style`]);
+                const detect = output.querySelector('button');
+                if (!detect) throw new Error('Expected theme detection control');
+                await act(async () => user.click(detect));
+
+                // Assert
+                expect(map.styles.at(-1)).toBe(`${detectedTheme}-style`);
+                expect(engines.maps).toEqual([map]);
+                expect(map.removed).toBe(false);
+            });
+        } finally {
+            root.className = originalClass;
+            if (originalTheme === null) root.removeAttribute('data-theme');
+            else root.setAttribute('data-theme', originalTheme);
+        }
+    }
+);
 
 it('coordinates the composed starter country panel and recovers its map without losing selection', async () => {
     const analytics = {

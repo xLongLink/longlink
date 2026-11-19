@@ -18,6 +18,57 @@ it('keeps unresolved organization reads behind their loading boundary', () => {
     expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading organization');
 });
 
+it('uses the solution loading boundary for nested solution routes', () => {
+    // Act
+    const output = renderPlatform(
+        <Layout />,
+        `/orgs/${membership.organization.id}/solutions/solution/nested`,
+        [],
+        '/orgs/:organization/solutions/:solution/*'
+    );
+
+    // Assert
+    expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading solution');
+});
+
+it.each([
+    { status: 403, title: 'Unable to load solution' },
+    { status: 404, title: "We can't find that page" }
+])('blocks nested solution content when membership returns $status', async ({ status, title }) => {
+    // Arrange
+    const errors: unknown[] = [];
+    const transport = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ detail: 'Denied' }, { status }));
+
+    try {
+        // Act
+        await withMounted(
+            <ApiErrorContext value={(error) => errors.push(error)}>
+                <AuthenticatedUserContext value={user}>
+                    <Routes>
+                        <Route element={<Layout />}>
+                            <Route
+                                path="/orgs/:organization/solutions/:solution/*"
+                                element={<h1>Protected solution content</h1>}
+                            />
+                        </Route>
+                    </Routes>
+                </AuthenticatedUserContext>
+            </ApiErrorContext>,
+            async (output) => {
+                // Assert
+                await vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe(title));
+                expect(output.textContent).not.toContain('Protected solution content');
+                expect(output.textContent).not.toContain("We couldn't load this organization.");
+                expect(errors).toHaveLength(1);
+                expect(errors[0]).toMatchObject({ status });
+            },
+            `/orgs/${membership.organization.id}/solutions/solution/nested`
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});
+
 it.each([
     { status: 403, title: 'Unable to load organization', description: "We couldn't load this organization." },
     { status: 404, title: "We can't find that page", description: "This page doesn't exist or isn't available." }

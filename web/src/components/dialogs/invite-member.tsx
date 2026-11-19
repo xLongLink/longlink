@@ -4,9 +4,9 @@ import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
+import * as permissions from '@/platform/permissions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
@@ -16,15 +16,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export function InviteMember({
     base,
     canInviteAdmin,
+    onSettled,
     onOpenChange
 }: {
     base: string;
     onOpenChange: (open: boolean) => void;
     canInviteAdmin: boolean;
+    onSettled: () => Promise<void>;
 }) {
     const formId = useId();
-    const client = useQueryClient();
-    const roleSchema = z.enum(canInviteAdmin ? ['read', 'write', 'maintain', 'admin'] : ['read', 'write', 'maintain']);
+    const roleSchema = canInviteAdmin
+        ? permissions.assignableRoleSchema
+        : permissions.assignableRoleSchema.exclude(['admin']);
     const roles = roleSchema.options.map((value) => ({
         value,
         icon: { read: EyeOff, write: ArrowUp, maintain: Wrench, admin: CheckCheck }[value]
@@ -46,7 +49,7 @@ export function InviteMember({
             onOpenChange(false);
         } finally {
             // Failed email delivery can still persist the invitation.
-            await client.invalidateQueries({ queryKey: ['api', `${base}/invitations`], exact: true });
+            await onSettled();
         }
     }
 

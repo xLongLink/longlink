@@ -5,4 +5,4 @@ export { useApi } from './hooks/use-api';
 export { useConfirm } from '@/components/longlink/hooks/use-confirm';
 export { useForm } from './hooks/use-form';
 export { useFormContext } from 'react-hook-form';
-export { useSubmit } from '@/lib/hooks/use-submit';
+export { useSubmit } from './hooks/use-submit';

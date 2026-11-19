@@ -329,13 +329,8 @@ export interface FilterValueDisplayContext<V = unknown, O = unknown> {
 export interface FilterIndex<V = unknown, O = unknown> {
     /** Every field by its joined path, `"name.first"`. */
     byPath: Map<string, FilterField<V, O>>;
-    /** Child fields by parent path. Root fields are keyed by `FILTER_ROOT_KEY`. */
-    childrenOf: Map<string, FilterField<V, O>[]>;
-    /** Parent path by path. Empty string for a root field. */
-    parentOf: Map<string, string>;
-    /** Every field in stable, depth-first order. Deep search walks it, and the
-     * builder seeds a new row from the FIRST pickable entry, so order is load
-     * bearing, not incidental. */
+    /** Every field in stable, depth-first order. The builder seeds a new row
+     * from the FIRST pickable entry, so order is load bearing, not incidental. */
     all: { field: FilterField<V, O>; path: string[] }[];
     /** Top level fields, in input order. */
     roots: FilterField<V, O>[];
