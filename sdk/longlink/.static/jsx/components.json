@@ -1353,8 +1353,8 @@
             "category": "Action",
             "source": "custom",
             "justification": "Coordinates scoped navigation, file capabilities, and async actions while preserving native anchor or button semantics.",
-            "introduction": "Link for navigation, scoped file preview or download, and callback actions.",
-            "guidance": "Use href for navigation, add preview or download for scoped files, or omit href for an onClick action. Actions render as buttons with async loading and duplicate-click protection.",
+            "introduction": "Link for navigation, file preview or download, and callback actions.",
+            "guidance": "Use href for navigation, add preview or a download filename for scoped files, or omit href for an onClick action. Scoped file and callback actions render as buttons with async loading and duplicate-click protection. Outside the Solution runtime, downloads use native anchors. Choose styling props instead of className or style.",
             "properties": [
                 {
                     "name": "href",
@@ -1364,7 +1364,7 @@
                 {
                     "name": "...props",
                     "type": "native anchor or button props",
-                    "description": "Navigation forwards anchor props and ref; file and callback actions forward button props and ref."
+                    "description": "Navigation accepts anchor props; preview and callback actions accept button props. Downloads accept shared HTML props, target, and rel. Refs point to the rendered anchor or button. className and style are excluded."
                 },
                 {
                     "name": "onClick",
@@ -1378,10 +1378,33 @@
                 },
                 {
                     "name": "download",
-                    "type": "string",
-                    "description": "Downloads a scoped Solution attachment with this filename instead of navigating. An empty string uses attachment."
+                    "type": "string | boolean",
+                    "description": "Use a filename string for scoped Solution downloads; an empty string uses attachment. Outside the Solution runtime, strings name native downloads and boolean true enables the native download attribute."
                 },
                 { "name": "disabled", "type": "boolean", "description": "Disables navigation or the action." },
+                {
+                    "name": "isExternalLink",
+                    "type": "boolean",
+                    "description": "Opens navigation links in a new tab with an external-link indicator. Also supported for native downloads; not available for previews or callback actions.",
+                    "default": false
+                },
+                {
+                    "name": "variant",
+                    "type": "\"link\" | \"primary\" | \"outline\" | \"secondary\" | \"ghost\" | \"destructive\" | null",
+                    "description": "Link or button presentation.",
+                    "default": "link"
+                },
+                {
+                    "name": "size",
+                    "type": "\"default\" | \"xs\" | \"sm\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null",
+                    "description": "Defaults to null for the link variant and default for other variants."
+                },
+                {
+                    "name": "fullWidth",
+                    "type": "boolean",
+                    "description": "Fills the available width.",
+                    "default": false
+                },
                 { "name": "children", "type": "ReactNode", "description": "Link content" }
             ]
         },

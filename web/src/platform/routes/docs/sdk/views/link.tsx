@@ -10,15 +10,6 @@ export default function LinkPage() {
     return (
         <ViewLayout
             name="Link"
-            properties={[
-                { name: 'href', type: 'string' },
-                { name: 'preview', type: 'string' },
-                { name: 'download', type: 'string' },
-                { name: 'disabled', type: 'boolean' },
-                { name: 'onClick', type: '(event: MouseEvent) => void | Promise<void>' },
-                { name: 'children', type: 'ReactNode' },
-                { name: '...props', type: 'Native anchor or button props' }
-            ]}
             example={{
                 title: 'Link',
                 preview: <LinkExample />,

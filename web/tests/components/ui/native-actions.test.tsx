@@ -115,16 +115,10 @@ it.each([false, true])(
     }
 );
 
-it.each(['link', 'button'] as const)('preserves router and native gestures for a trusted %s link', async (kind) => {
+it('preserves router and native gestures for a trusted link', async () => {
     await withMounted(
         <>
-            {kind === 'link' ? (
-                <Link href="/orders?filter=open">Orders</Link>
-            ) : (
-                <Link href="/orders?filter=open" variant="primary">
-                    Orders
-                </Link>
-            )}
+            <Link href="/orders?filter=open">Orders</Link>
             <Location />
         </>,
         async (output) => {

@@ -4858,31 +4858,41 @@ const buttonVariants: (props?: ({
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
-type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type" | "className"> & ({
+type LinkElementProps<Props extends React$1.DOMAttributes<HTMLElement>, OtherProps> = Omit<Props, "href" | "download" | "onClick" | "type" | "className" | "style"> & {
+    onClick?: (...args: Parameters<NonNullable<Props["onClick"]>>) => unknown;
+} & {
+    [Key in Exclude<keyof OtherProps, keyof Props | "href" | "download" | "disabled">]?: never;
+};
+type NavigationProps = LinkElementProps<React$1.AnchorHTMLAttributes<HTMLAnchorElement>, React$1.ButtonHTMLAttributes<HTMLButtonElement>> & {
+    href: string;
+    preview?: never;
+    download?: boolean;
+    disabled?: boolean;
+    isExternalLink?: boolean;
+};
+type ButtonLinkProps = LinkElementProps<React$1.ButtonHTMLAttributes<HTMLButtonElement>, React$1.AnchorHTMLAttributes<HTMLAnchorElement>>;
+type PreviewProps = ButtonLinkProps & {
     href: string;
     preview: string;
     download?: never;
-    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-} | {
+    isExternalLink?: never;
+};
+type DownloadProps = LinkElementProps<React$1.HTMLAttributes<HTMLElement> & Pick<React$1.AnchorHTMLAttributes<HTMLElement>, "target" | "rel">, React$1.AnchorHTMLAttributes<HTMLElement> & React$1.ButtonHTMLAttributes<HTMLElement>> & {
     href: string;
     download: string;
     preview?: never;
-    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-} | {
+    disabled?: boolean;
+    isExternalLink?: boolean;
+};
+type CallbackProps = ButtonLinkProps & Required<Pick<ButtonLinkProps, "onClick">> & {
     href?: never;
     preview?: never;
     download?: never;
-    onClick: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-});
-type LinkProps = ((Omit<React$1.ComponentPropsWithRef<"a">, "download" | "className"> & {
-    href: string;
-    preview?: never;
-    download?: string | boolean;
-    disabled?: boolean;
-    isExternalLink?: boolean;
-}) | ActionLinkProps) & VariantProps<typeof buttonVariants> & {
+    isExternalLink?: never;
+};
+type LinkProps = (NavigationProps | PreviewProps | DownloadProps | CallbackProps) & VariantProps<typeof buttonVariants> & {
+    ref?: React$1.Ref<HTMLElement>;
     fullWidth?: boolean;
-    visuallyHidden?: boolean;
 };
 function Link(props: LinkProps): React$1.JSX.Element;
 function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {

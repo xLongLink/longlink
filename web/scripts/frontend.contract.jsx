@@ -470,6 +470,18 @@ const _conflictingLinkActions = <Link href="/api/report" preview="report.pdf" do
 const _missingFilePath = <Link preview="report.pdf">Preview</Link>;
 // @ts-expect-error A link requires a destination or an action.
 const _missingLinkAction = <Link>Report</Link>;
+// @ts-expect-error Navigation anchors do not accept button form actions.
+const _linkFormAction = <Link href="/orders" formAction="/submit">Orders</Link>;
+// @ts-expect-error Callback buttons do not accept anchor targets.
+const _linkActionTarget = <Link onClick={() => {}} target="_blank">Run</Link>;
+// @ts-expect-error Preview buttons do not expose external navigation.
+const _linkPreviewExternal = <Link href="/report" preview="report.pdf" isExternalLink>Report</Link>;
+// @ts-expect-error Callback buttons do not expose external navigation.
+const _linkCallbackExternal = <Link onClick={() => {}} isExternalLink>Run</Link>;
+// @ts-expect-error Link presentation is owned internally.
+const _linkStyle = <Link href="/orders" style={{ display: 'none' }}>Orders</Link>;
+// @ts-expect-error Callback presentation is owned internally.
+const _linkActionStyle = <Link onClick={() => {}} style={{ display: 'none' }}>Run</Link>;
 // @ts-expect-error Pagination owns its controls instead of accepting anchor composition.
 const _paginationChildren = <Pagination page={1} totalItems={50} pageSize={10} onPageChange={() => {}}><a href="?page=1">1</a></Pagination>;
 

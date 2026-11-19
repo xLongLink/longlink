@@ -129,6 +129,7 @@ export function Card({
                     'relative cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
                 mode && isDisabled && 'cursor-default opacity-50',
                 mode === 'selection' && isSelected && 'outline-2 -outline-offset-2 outline-ring',
+                mode && '[&>[data-slot=card-control]]:sr-only',
                 padding === 'none' && 'py-0'
             )}
             style={undefined}
@@ -156,7 +157,6 @@ export function Card({
         >
             {mode === 'selection' ? (
                 <input
-                    className="sr-only"
                     data-slot="card-control"
                     type="checkbox"
                     aria-label={label}
@@ -178,7 +178,6 @@ export function Card({
                 />
             ) : mode === 'action' ? (
                 <button
-                    className="sr-only"
                     data-slot="card-control"
                     type="button"
                     aria-label={label}
@@ -188,16 +187,11 @@ export function Card({
                 />
             ) : mode === 'link' ? (
                 <Link
-                    visuallyHidden
                     data-slot="card-control"
                     href={href ?? ''}
                     disabled={blocked}
-                    target={blocked ? undefined : target}
-                    role="link"
-                    tabIndex={0}
+                    target={target}
                     aria-label={label}
-                    aria-disabled={isDisabled || undefined}
-                    onClick={blocked ? preventActivation : undefined}
                     onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : null}

@@ -9,41 +9,58 @@ import { buttonVariants } from '@/components/longlink/action/button';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import { RequestContext, LinkNavigationContext } from '@/components/custom/contexts';
-import { useContext, useRef, useState, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
+import {
+    useContext,
+    useRef,
+    useState,
+    useCallback,
+    useTransition,
+    type Ref,
+    type RefCallback,
+    type ContextType,
+    type DOMAttributes,
+    type MouseEvent,
+    type HTMLAttributes,
+    type AnchorHTMLAttributes,
+    type ButtonHTMLAttributes
+} from 'react';
 
-type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type' | 'className'> &
-    (
-        | {
-              href: string;
-              preview: string;
-              download?: never;
-              onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-          }
-        | {
-              href: string;
-              download: string;
-              preview?: never;
-              onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-          }
-        | {
-              href?: never;
-              preview?: never;
-              download?: never;
-              onClick: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-          }
-    );
+type LinkElementProps<Props extends DOMAttributes<HTMLElement>, OtherProps> = Omit<
+    Props,
+    'href' | 'download' | 'onClick' | 'type' | 'className' | 'style'
+> & { onClick?: (...args: Parameters<NonNullable<Props['onClick']>>) => unknown } & {
+    [Key in Exclude<keyof OtherProps, keyof Props | 'href' | 'download' | 'disabled'>]?: never;
+};
 
-type LinkProps = (
-    | (Omit<ComponentPropsWithRef<'a'>, 'download' | 'className'> & {
-          href: string;
-          preview?: never;
-          download?: string | boolean;
-          disabled?: boolean;
-          isExternalLink?: boolean;
-      })
-    | ActionLinkProps
-) &
-    VariantProps<typeof buttonVariants> & { fullWidth?: boolean; visuallyHidden?: boolean };
+type NavigationProps = LinkElementProps<
+    AnchorHTMLAttributes<HTMLAnchorElement>,
+    ButtonHTMLAttributes<HTMLButtonElement>
+> & { href: string; preview?: never; download?: boolean; disabled?: boolean; isExternalLink?: boolean };
+
+type ButtonLinkProps = LinkElementProps<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    AnchorHTMLAttributes<HTMLAnchorElement>
+>;
+
+type PreviewProps = ButtonLinkProps & { href: string; preview: string; download?: never; isExternalLink?: never };
+
+type DownloadProps = LinkElementProps<
+    HTMLAttributes<HTMLElement> & Pick<AnchorHTMLAttributes<HTMLElement>, 'target' | 'rel'>,
+    AnchorHTMLAttributes<HTMLElement> & ButtonHTMLAttributes<HTMLElement>
+> & { href: string; download: string; preview?: never; disabled?: boolean; isExternalLink?: boolean };
+
+type CallbackProps = ButtonLinkProps &
+    Required<Pick<ButtonLinkProps, 'onClick'>> & {
+        href?: never;
+        preview?: never;
+        download?: never;
+        isExternalLink?: never;
+    };
+
+type ActionLinkProps = (PreviewProps | DownloadProps | CallbackProps) & { ref?: RefCallback<HTMLElement> };
+
+type LinkProps = (NavigationProps | PreviewProps | DownloadProps | CallbackProps) &
+    VariantProps<typeof buttonVariants> & { ref?: Ref<HTMLElement>; fullWidth?: boolean };
 
 /** Renders navigation as an anchor and file or callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
@@ -53,15 +70,22 @@ export function Link(props: LinkProps) {
     const {
         variant = 'link',
         size = variant === 'link' ? null : 'default',
+        ref,
         fullWidth,
-        visuallyHidden,
+        isExternalLink = false,
         ...link
     } = props;
+    const elementRef = useCallback(
+        (element: HTMLElement | null) => {
+            if (typeof ref === 'function') return ref(element);
+            if (ref) ref.current = element;
+        },
+        [ref]
+    );
     const className = cn(
         buttonVariants({ variant, size }),
         'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
-        fullWidth && 'w-full',
-        visuallyHidden && 'sr-only'
+        fullWidth && 'w-full'
     );
 
     if (
@@ -69,20 +93,10 @@ export function Link(props: LinkProps) {
         link.href === undefined ||
         (typeof link.download === 'string' && (requests || navigationContext))
     ) {
-        return <ActionLink {...(link as ActionLinkProps)} className={className} />;
+        return <ActionLink {...link} ref={elementRef} className={className} requests={requests} />;
     }
 
-    const {
-        disabled,
-        onClick,
-        children,
-        isExternalLink = false,
-        href: suppliedHref,
-        target: suppliedTarget,
-        rel,
-        download,
-        ...anchor
-    } = link as Extract<LinkProps, { isExternalLink?: boolean }>;
+    const { disabled, onClick, children, href: suppliedHref, target: suppliedTarget, rel, download, ...anchor } = link;
     const href = disabled ? undefined : suppliedHref;
     const target = isExternalLink ? '_blank' : suppliedTarget;
     const external = href !== undefined && /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href.trim());
@@ -93,6 +107,8 @@ export function Link(props: LinkProps) {
 
     const anchorProps = {
         ...anchor,
+        ref: elementRef,
+        style: undefined,
         target: navigationContext && !internalHref ? '_blank' : target,
         rel:
             navigationContext || target === '_blank'
@@ -160,9 +176,9 @@ function ActionLink({
     onKeyDown,
     children,
     className,
+    requests,
     ...props
-}: ActionLinkProps & { className: string }) {
-    const requests = useContext(RequestContext);
+}: ActionLinkProps & { className: string; requests: ContextType<typeof RequestContext> }) {
     const [filePreview, setFilePreview] = useState<Blob>();
     const [downloadError, setDownloadError] = useState<string>();
     const actionInFlight = useRef(false);
@@ -180,7 +196,7 @@ function ActionLink({
 
         actionInFlight.current = true;
 
-        let result: void | Promise<void>;
+        let result: unknown;
 
         try {
             result = onClick?.(event);
@@ -203,7 +219,7 @@ function ActionLink({
                     const body = await requests.request(href, { binary: true });
                     if (!(body instanceof Blob)) throw new Error('File preview unavailable');
                     setFilePreview(body);
-                } else if (download !== undefined) {
+                } else {
                     setDownloadError(undefined);
 
                     try {
@@ -229,6 +245,7 @@ function ActionLink({
             <button
                 {...props}
                 type="button"
+                style={undefined}
                 aria-disabled={blocked || undefined}
                 aria-busy={isPending || undefined}
                 aria-haspopup={preview !== undefined ? 'dialog' : props['aria-haspopup']}
