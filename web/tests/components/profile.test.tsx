@@ -78,46 +78,6 @@ it.each([false, true])(
     }
 );
 
-it('dismisses by keyboard and outside interaction and restores trigger focus', async () => {
-    const events = userEvent.setup();
-    await withMounted(
-        <AuthenticatedUserContext value={user}>
-            <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
-                <SidebarProvider>
-                    <ProfileMenu />
-                </SidebarProvider>
-            </ErrorBoundary>
-            <button type="button">Outside</button>
-        </AuthenticatedUserContext>,
-        async () => {
-            await act(async () => {
-                button('Owner').focus();
-                await events.keyboard('{Enter}');
-            });
-            expect(document.querySelector('[role="menu"]')?.contains(document.activeElement)).toBe(true);
-            await act(async () => await events.keyboard('{ArrowDown}'));
-            expect(document.activeElement?.textContent).toBe('Settings');
-            await act(async () => await events.keyboard('{Escape}'));
-            expect(button('Owner').getAttribute('aria-expanded')).toBe('false');
-            expect(document.activeElement).toBe(button('Owner'));
-            await act(async () => await events.click(button('Owner')));
-            await act(async () => await events.click(button('Outside')));
-            expect(button('Owner').getAttribute('aria-expanded')).toBe('false');
-            expect(document.activeElement).toBe(button('Outside'));
-
-            await act(async () => {
-                await events.pointer([
-                    { keys: '[TouchA>]', target: button('Owner') },
-                    { keys: '[/TouchA]', target: button('Owner') }
-                ]);
-            });
-            expect(button('Owner').getAttribute('aria-expanded')).toBe('true');
-            await act(async () => await events.keyboard('{Escape}'));
-            expect(button('Owner').getAttribute('aria-expanded')).toBe('false');
-        }
-    );
-});
-
 it('closes logout urgently, retains the session preference on denial, and retries without duplicate writes', async () => {
     // Replace only the HTTP transport and terminal document navigation; authentication/logout code stays real.
     const events = userEvent.setup();

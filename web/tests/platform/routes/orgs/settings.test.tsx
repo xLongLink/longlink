@@ -8,10 +8,10 @@ import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
+import { membership, user } from '../../render';
 import userEvent from '@testing-library/user-event';
 import Settings from '@/platform/routes/orgs/settings';
 import Organization from '@/platform/layouts/organization';
-import { renderPlatform, membership, user } from '../../render';
 import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import OrganizationAccess from '@/platform/layouts/organization-access';
@@ -111,21 +111,43 @@ async function chooseMemberAction(output: HTMLElement, name: string, label: stri
     await act(async () => action.click());
 }
 
-it('renders General without loading inactive billing or registry resources', () => {
-    // Act
-    const output = renderPlatform(
-        <Settings />,
-        `/orgs/${membership.organization.id}/settings`,
-        [],
-        '/orgs/:organization/settings',
-        { ...membership, tags: [], activeTag: undefined }
-    );
+it('falls back to General for unknown sections and loads registries only after navigation', async () => {
+    // Arrange
+    const requests: string[] = [];
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+        requests.push(path);
 
-    // Assert
-    expect(output.textContent).toContain('Acme');
-    expect(output.textContent).toContain('General');
-    expect(output.textContent).toContain('Tabs');
-    expect(output.querySelector('table')).not.toBeNull();
+        if (path === `${base}/registries`) return Response.json([]);
+        throw new Error(`Unexpected request: ${path}`);
+    });
+
+    try {
+        await withOrganizationSettings(
+            membership,
+            members,
+            async (output) => {
+                const general = output.querySelector<HTMLAnchorElement>('a[href$="#general"]');
+                const registries = output.querySelector<HTMLAnchorElement>('a[href$="#private-registries"]');
+                if (!general || !registries) throw new Error('Expected settings navigation');
+
+                expect(general.getAttribute('aria-current')).toBe('location');
+                expect(output.querySelector('h2')?.textContent).toBe('General');
+                expect(requests).toEqual([]);
+
+                // Act
+                await act(async () => registries.click());
+
+                // Assert
+                await vi.waitFor(() => expect(output.querySelector('h2')?.textContent).toBe('Private registries'));
+                expect(registries.getAttribute('aria-current')).toBe('location');
+                expect(requests).toEqual([`${base}/registries`]);
+            },
+            'unknown'
+        );
+    } finally {
+        transport.mockRestore();
+    }
 });
 
 it('refreshes current membership and account permissions after self-demotion', async () => {

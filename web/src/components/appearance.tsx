@@ -5,14 +5,22 @@ import { CurrentUserContext } from '@/lib/hooks/use-user';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { currentUserKey, currentUserPath } from '@/lib/react-query';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
-import { appearanceSchema, clearAppearanceCache, defaultAppearance, type Appearance } from '@/lib/appearance';
+import {
+    appearanceSchema,
+    appearanceCacheKey,
+    clearAppearanceCache,
+    defaultAppearance,
+    uncachedAppearancePath,
+    type Appearance
+} from '@/lib/appearance';
 
 /** Observes optional startup data without sharing state between documents. */
 function subscribeToCache(notify: () => void) {
     const refresh = (event: StorageEvent) => {
-        if (event.key === 'longlink:appearance') notify();
+        if (event.key === appearanceCacheKey) notify();
     };
 
     window.addEventListener('storage', refresh);
@@ -22,10 +30,10 @@ function subscribeToCache(notify: () => void) {
 
 /** Reads cached preferences without requiring browser storage. */
 function readCache() {
-    if (/^\/(login|register|auth)(\/|$)/.test(window.location.pathname)) return null;
+    if (uncachedAppearancePath.test(window.location.pathname)) return null;
 
     try {
-        return localStorage.getItem('longlink:appearance');
+        return localStorage.getItem(appearanceCacheKey);
     } catch {
         return null;
     }
@@ -60,8 +68,8 @@ export function AppearanceProvider({ children, preference }: { children: ReactNo
 export function AccountAppearanceProvider({ children }: { children: ReactNode }) {
     // Keep one identity observer for both appearance and route access decisions.
     const currentUser = useQuery<z.output<typeof zCurrentUser> | null>({
-        queryKey: ['api', '/api/v1/me'],
-        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
+        queryKey: currentUserKey,
+        queryFn: ({ signal }) => api(currentUserPath, { signal }).json(zCurrentUser),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false
@@ -89,8 +97,8 @@ export function AccountAppearanceProvider({ children }: { children: ReactNode })
         if (!accountId || !cachedPreference || isSaving) return;
 
         try {
-            if (localStorage.getItem('longlink:appearance') !== cachedPreference)
-                localStorage.setItem('longlink:appearance', cachedPreference);
+            if (localStorage.getItem(appearanceCacheKey) !== cachedPreference)
+                localStorage.setItem(appearanceCacheKey, cachedPreference);
         } catch {
             // Saving to the account does not depend on browser storage.
         }
