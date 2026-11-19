@@ -69,6 +69,7 @@ UI/COMPONENTS:
 - ShadcnUI reference: https://ui.shadcn.com/llms.txt.
 
 VIEWS 
+> Views components follows prop-driven component philosophy: configure layout, alignment, spacing, and styling through component props rather than utility classes or custom CSS. Exposed components do not accept `className` or `style`; preserve their default styling.
 - One file, one view
 - LongLink exposes shared UI components for `.jsx` Views to use directly.
 - Components are expored with parameters so that the views do not have to apply classNames
