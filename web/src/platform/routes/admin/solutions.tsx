@@ -6,11 +6,11 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { useDeferredValue, useRef, useState } from 'react';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { SolutionMetadata } from '@/components/dialogs/solution-metadata';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -156,11 +156,53 @@ export default function Solutions() {
                 </footer>
             </Stack>
             {metadata && (
-                <SolutionMetadata
-                    metadata={metadata}
-                    onClose={() => setDialog(null)}
-                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
-                />
+                <Dialog
+                    open
+                    onOpenChange={(open) => {
+                        if (!open) setDialog(null);
+                    }}
+                    title="Solution metadata"
+                    footer={
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() =>
+                                setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
+                            }
+                        >
+                            Delete
+                        </Button>
+                    }
+                >
+                    <Stack gap={2}>
+                        <span>
+                            <b>Status</b> {metadata.status}
+                        </span>
+                        <span>
+                            <b>Organization</b> {metadata.organization.name}
+                        </span>
+                        <span>
+                            <b>Desired image</b> {metadata.image_desired}
+                        </span>
+                        <span>
+                            <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
+                        </span>
+                        <span>
+                            <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
+                        </span>
+                        <span>
+                            <b>ID</b> {metadata.id}
+                        </span>
+                        {metadata.description && (
+                            <span>
+                                <b>Description</b> {metadata.description}
+                            </span>
+                        )}
+                        <span>
+                            <b>Created</b> {metadata.created_at}
+                        </span>
+                    </Stack>
+                </Dialog>
             )}
             <DeletionDialog
                 confirmation={
