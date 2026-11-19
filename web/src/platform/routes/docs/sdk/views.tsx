@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { TextExample } from './views/text';
 import { FrameExample } from './views/frame';
 import { InputExample } from './views/input';
@@ -48,13 +49,13 @@ import {
     CodeBlockTitle
 } from '@/components/reui/code-block/code-block';
 
+const categories = documentationCategories.filter(({ category }) => category !== 'Runtime');
+
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
     toc: [
         { id: 'views', label: 'Views', level: 1 },
-        ...documentationCategories
-            .filter(({ category }) => category !== 'Runtime')
-            .map(({ category, anchor }) => ({ id: anchor.slice(1), label: category, level: 2 }))
+        ...categories.map(({ category, anchor }) => ({ id: anchor.slice(1), label: category, level: 2 }))
     ],
     lastUpdated: '2026-10-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/jsx/frontend.d.ts',
@@ -62,173 +63,171 @@ const article = {
 };
 
 // Reuse page-owned examples as inert catalog artwork, without a shared preview implementation.
-const previews = new Map(
-    Object.entries({
-        AreaChart: <ChartExample name="AreaChart" height={160} isCompact />,
-        BarChart: <ChartExample name="BarChart" height={160} isCompact />,
-        LineChart: <ChartExample name="LineChart" height={160} isCompact />,
-        PieChart: <ChartExample name="PieChart" height={160} isCompact />,
-        RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
-        RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
-        Sankey: <ChartExample name="Sankey" height={160} isCompact />,
-        ChartLegend: <ChartLegendExample isCompact />,
-        Map: <WorldMapExample height={160} isCompact />,
-        MapGeoJSON: <SwitzerlandExample height={160} isCompact />,
-        MapControls: <MapControlsPreview />,
-        StreetMap: <MapExample name="StreetMap" height={160} isCompact />,
-        MarkerMap: <MapExample name="MarkerMap" height={160} isCompact />,
-        RouteMap: <MapExample name="RouteMap" height={160} isCompact />,
-        ClusterMap: <MapExample name="ClusterMap" height={160} isCompact />,
-        ArcMap: <MapExample name="ArcMap" height={160} isCompact />,
-        Avatar: (
-            <AvatarGroup className="items-center">
-                <Avatar name="Ada Lovelace" shape="circle" size="sm" />
-                <Avatar name="Ada Lovelace" shape="circle" size="md" />
-                <Avatar name="Ada Lovelace" shape="circle" size="lg" />
-            </AvatarGroup>
-        ),
-        FileType: <FileTypeExample />,
-        Badge: (
-            <div className="flex flex-wrap items-center justify-center gap-2">
-                <Badge variant="primary">primary</Badge>
-                <Badge variant="secondary">secondary</Badge>
-                <Badge variant="destructive">destructive</Badge>
-                <Badge variant="outline">outline</Badge>
-            </div>
-        ),
-        Button: <Button>Button</Button>,
-        Box: <Box width={160} maxWidth="100%" height={96} background="outline" />,
-        Card: <LongLinkCard>Order summary</LongLinkCard>,
-        Checkbox: <CheckboxExample />,
-        Currency: <Currency value={1275.5} currency="CHF" />,
-        DataGrid: <DataGridExample />,
-        Dialog: (
-            <Card size="sm" className="w-full">
-                <CardHeader>
-                    <CardTitle>Order details</CardTitle>
-                    <CardDescription>Review this order.</CardDescription>
-                </CardHeader>
-                <CardFooter className="justify-end gap-2">
-                    <Button size="xs" variant="outline">
-                        Cancel
-                    </Button>
-                    <Button size="xs">Continue</Button>
-                </CardFooter>
-            </Card>
-        ),
-        Dropdown: <DropdownExample />,
-        Pagination: <PaginationExample />,
-        Empty: <Empty icon="folder-code" title="No projects" />,
-        FileViewer: (
-            <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">
-                <CardHeader>
-                    <FileText className="size-6 text-neutral-500" aria-hidden="true" />
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2" aria-hidden="true">
-                    <div className="h-1 w-full bg-neutral-200" />
-                    <div className="h-1 w-full bg-neutral-200" />
-                    <div className="h-1 w-4/5 bg-neutral-200" />
-                    <div className="mt-2 h-1 w-full bg-neutral-200" />
-                    <div className="h-1 w-3/5 bg-neutral-200" />
-                </CardContent>
-            </Card>
-        ),
-        Frame: <FrameExample />,
-        Grid: (
-            <Grid columns={2} gap={2}>
-                <Badge variant="outline" size="xl">
-                    Grid 1
-                </Badge>
-                <Badge variant="outline" size="xl">
-                    Grid 2
-                </Badge>
-                <Badge variant="outline" size="xl">
-                    Grid 3
-                </Badge>
-                <Badge variant="outline" size="xl">
-                    Grid 4
-                </Badge>
-            </Grid>
-        ),
-        // Keep article section spacing out of the centered heading thumbnail.
-        Heading: (
-            <Stack gap={0} className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
-                <ViewHeading level={1}>Heading</ViewHeading>
-            </Stack>
-        ),
-        Icon: (
-            <div className="flex items-center gap-4">
-                <Icon icon="info" size="md" />
-                <Icon icon="check" size="md" />
-                <Icon icon="clock" size="md" tile="soft" />
-            </div>
-        ),
-        Image: (
-            <Card className="aspect-[4/3] w-2/5 items-center justify-center" role="img" aria-label="Image preview">
-                <ImageIcon className="size-10 text-muted-foreground" aria-hidden="true" />
-            </Card>
-        ),
-        Input: <InputExample />,
-        Link: <span className="underline">Link</span>,
-        // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
-        Menu: (
-            <nav aria-label="Settings" className="flex w-full flex-col gap-0.5">
-                <Button
-                    nativeButton={false}
-                    render={<a href="#profile" />}
-                    variant="secondary"
-                    size="sm"
-                    className="w-full justify-start"
-                    aria-current="location"
-                >
-                    Profile
+const previews: Record<string, ReactNode> = {
+    AreaChart: <ChartExample name="AreaChart" height={160} isCompact />,
+    BarChart: <ChartExample name="BarChart" height={160} isCompact />,
+    LineChart: <ChartExample name="LineChart" height={160} isCompact />,
+    PieChart: <ChartExample name="PieChart" height={160} isCompact />,
+    RadarChart: <ChartExample name="RadarChart" height={160} isCompact />,
+    RadialBarChart: <ChartExample name="RadialBarChart" height={160} isCompact />,
+    Sankey: <ChartExample name="Sankey" height={160} isCompact />,
+    ChartLegend: <ChartLegendExample isCompact />,
+    Map: <WorldMapExample height={160} isCompact />,
+    MapGeoJSON: <SwitzerlandExample height={160} isCompact />,
+    MapControls: <MapControlsPreview />,
+    StreetMap: <MapExample name="StreetMap" height={160} isCompact />,
+    MarkerMap: <MapExample name="MarkerMap" height={160} isCompact />,
+    RouteMap: <MapExample name="RouteMap" height={160} isCompact />,
+    ClusterMap: <MapExample name="ClusterMap" height={160} isCompact />,
+    ArcMap: <MapExample name="ArcMap" height={160} isCompact />,
+    Avatar: (
+        <AvatarGroup className="items-center">
+            <Avatar name="Ada Lovelace" shape="circle" size="sm" />
+            <Avatar name="Ada Lovelace" shape="circle" size="md" />
+            <Avatar name="Ada Lovelace" shape="circle" size="lg" />
+        </AvatarGroup>
+    ),
+    FileType: <FileTypeExample />,
+    Badge: (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+            <Badge variant="primary">primary</Badge>
+            <Badge variant="secondary">secondary</Badge>
+            <Badge variant="destructive">destructive</Badge>
+            <Badge variant="outline">outline</Badge>
+        </div>
+    ),
+    Button: <Button>Button</Button>,
+    Box: <Box width={160} maxWidth="100%" height={96} background="outline" />,
+    Card: <LongLinkCard>Order summary</LongLinkCard>,
+    Checkbox: <CheckboxExample />,
+    Currency: <Currency value={1275.5} currency="CHF" />,
+    DataGrid: <DataGridExample />,
+    Dialog: (
+        <Card size="sm" className="w-full">
+            <CardHeader>
+                <CardTitle>Order details</CardTitle>
+                <CardDescription>Review this order.</CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-end gap-2">
+                <Button size="xs" variant="outline">
+                    Cancel
                 </Button>
-                <Button
-                    nativeButton={false}
-                    render={<a href="#workflow" />}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                >
-                    Workflow
-                </Button>
-            </nav>
-        ),
-        Progress: <ProgressExample />,
-        RadioGroup: <RadioGroupExample />,
-        Select: <SelectExample />,
-        Combobox: <ComboboxExample />,
-        Slider: <SliderExample />,
-        Stack: (
-            <Stack direction="horizontal" gap={2}>
-                <Badge variant="outline" size="xl">
-                    Cell 1
-                </Badge>
-                <Badge variant="outline" size="xl">
-                    Cell 2
-                </Badge>
-                <Badge variant="outline" size="xl">
-                    Cell 3
-                </Badge>
-            </Stack>
-        ),
-        Switch: <SwitchExample />,
-        Table: <TableExample />,
-        // Keep the thumbnail focused on the tab strip rather than its panel content.
-        Tabs: (
-            <Tabs
-                defaultValue="overview"
-                items={[
-                    { value: 'overview', label: 'Overview' },
-                    { value: 'activity', label: 'Activity' }
-                ]}
-            />
-        ),
-        Text: <TextExample />,
-        Textarea: <TextareaExample />,
-        Timestamp: <TimestampExample />
-    })
-);
+                <Button size="xs">Continue</Button>
+            </CardFooter>
+        </Card>
+    ),
+    Dropdown: <DropdownExample />,
+    Pagination: <PaginationExample />,
+    Empty: <Empty icon="folder-code" title="No projects" />,
+    FileViewer: (
+        <Card className="aspect-[3/4] w-2/5 bg-white text-black" aria-label="PDF document preview">
+            <CardHeader>
+                <FileText className="size-6 text-neutral-500" aria-hidden="true" />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2" aria-hidden="true">
+                <div className="h-1 w-full bg-neutral-200" />
+                <div className="h-1 w-full bg-neutral-200" />
+                <div className="h-1 w-4/5 bg-neutral-200" />
+                <div className="mt-2 h-1 w-full bg-neutral-200" />
+                <div className="h-1 w-3/5 bg-neutral-200" />
+            </CardContent>
+        </Card>
+    ),
+    Frame: <FrameExample />,
+    Grid: (
+        <Grid columns={2} gap={2}>
+            <Badge variant="outline" size="xl">
+                Grid 1
+            </Badge>
+            <Badge variant="outline" size="xl">
+                Grid 2
+            </Badge>
+            <Badge variant="outline" size="xl">
+                Grid 3
+            </Badge>
+            <Badge variant="outline" size="xl">
+                Grid 4
+            </Badge>
+        </Grid>
+    ),
+    // Keep article section spacing out of the centered heading thumbnail.
+    Heading: (
+        <Stack gap={0} className="[&_:is(h1,h2,h3,h4,h5,h6)]:mt-0">
+            <ViewHeading level={1}>Heading</ViewHeading>
+        </Stack>
+    ),
+    Icon: (
+        <div className="flex items-center gap-4">
+            <Icon icon="info" size="md" />
+            <Icon icon="check" size="md" />
+            <Icon icon="clock" size="md" tile="soft" />
+        </div>
+    ),
+    Image: (
+        <Card className="aspect-[4/3] w-2/5 items-center justify-center" role="img" aria-label="Image preview">
+            <ImageIcon className="size-10 text-muted-foreground" aria-hidden="true" />
+        </Card>
+    ),
+    Input: <InputExample />,
+    Link: <span className="underline">Link</span>,
+    // Show only the navigation in the thumbnail; the full Menu has a fixed-width sidebar and content panel.
+    Menu: (
+        <nav aria-label="Settings" className="flex w-full flex-col gap-0.5">
+            <Button
+                nativeButton={false}
+                render={<a href="#profile" />}
+                variant="secondary"
+                size="sm"
+                className="w-full justify-start"
+                aria-current="location"
+            >
+                Profile
+            </Button>
+            <Button
+                nativeButton={false}
+                render={<a href="#workflow" />}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+            >
+                Workflow
+            </Button>
+        </nav>
+    ),
+    Progress: <ProgressExample />,
+    RadioGroup: <RadioGroupExample />,
+    Select: <SelectExample />,
+    Combobox: <ComboboxExample />,
+    Slider: <SliderExample />,
+    Stack: (
+        <Stack direction="horizontal" gap={2}>
+            <Badge variant="outline" size="xl">
+                Cell 1
+            </Badge>
+            <Badge variant="outline" size="xl">
+                Cell 2
+            </Badge>
+            <Badge variant="outline" size="xl">
+                Cell 3
+            </Badge>
+        </Stack>
+    ),
+    Switch: <SwitchExample />,
+    Table: <TableExample />,
+    // Keep the thumbnail focused on the tab strip rather than its panel content.
+    Tabs: (
+        <Tabs
+            defaultValue="overview"
+            items={[
+                { value: 'overview', label: 'Overview' },
+                { value: 'activity', label: 'Activity' }
+            ]}
+        />
+    ),
+    Text: <TextExample />,
+    Textarea: <TextareaExample />,
+    Timestamp: <TimestampExample />
+};
 
 /** Renders the native JSX catalog generated from the shared editor declarations. */
 export default function DocsArticleRoute() {
@@ -294,72 +293,68 @@ export default function Item({ params }) {
                         </Table>
                     </CollapsibleContent>
                 </Collapsible>
-                {documentationCategories
-                    .filter(({ category }) => category !== 'Runtime')
-                    .map(({ category, anchor }) => (
-                        <Stack key={category} gap={3}>
-                            <h2 className="font-semibold tracking-tight text-3xl" id={anchor.slice(1)}>
-                                {category}
-                            </h2>
-                            <Grid columns={3} gap={4}>
-                                {componentDocumentation
-                                    .filter((component) => component.category === category)
-                                    .map((component) => (
-                                        <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                            <Card
-                                                aria-hidden="true"
-                                                inert
-                                                size="sm"
-                                                className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
+                {categories.map(({ category, anchor }) => (
+                    <Stack key={category} gap={3}>
+                        <h2 className="font-semibold tracking-tight text-3xl" id={anchor.slice(1)}>
+                            {category}
+                        </h2>
+                        <Grid columns={3} gap={4}>
+                            {componentDocumentation
+                                .filter((component) => component.category === category)
+                                .map((component) => (
+                                    <Stack key={component.slug} className="relative min-w-0" gap={2}>
+                                        <Card
+                                            aria-hidden="true"
+                                            inert
+                                            size="sm"
+                                            className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
+                                        >
+                                            {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
+                                            <div
+                                                className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
                                             >
-                                                {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                                <div
-                                                    className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
+                                                <Stack
+                                                    className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
+                                                    align={
+                                                        component.category === 'Form' &&
+                                                        !['Checkbox', 'RadioGroup', 'Switch'].includes(component.name)
+                                                            ? 'stretch'
+                                                            : 'center'
+                                                    }
+                                                    gap={0}
                                                 >
-                                                    <Stack
-                                                        className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
-                                                        align={
-                                                            component.category === 'Form' &&
-                                                            !['Checkbox', 'RadioGroup', 'Switch'].includes(
-                                                                component.name
-                                                            )
-                                                                ? 'stretch'
-                                                                : 'center'
-                                                        }
-                                                        gap={0}
-                                                    >
-                                                        {component.category === 'Hooks' ? (
-                                                            <Stack align="center" gap={2}>
-                                                                {(component.name === 'ReactHooks'
-                                                                    ? ['useState', 'useEffect', 'useMemo', 'useRef']
-                                                                    : [component.name]
-                                                                ).map((name) => (
-                                                                    <InlineCode key={name}>{`${name}()`}</InlineCode>
-                                                                ))}
-                                                            </Stack>
-                                                        ) : (
-                                                            (previews.get(component.name) ?? (
-                                                                <InlineCode>{`<${component.name} />`}</InlineCode>
-                                                            ))
-                                                        )}
-                                                    </Stack>
-                                                </div>
-                                            </Card>
-                                            <span className="text-xs text-muted-foreground">
-                                                {component.category === 'Action' || component.category === 'Form'
-                                                    ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                    : component.label}
-                                            </span>
-                                            <RouterLink
-                                                aria-label={`Open ${component.label} documentation`}
-                                                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                                                to={`/docs/sdk/views/${component.slug}/`}
-                                            />
-                                        </Stack>
-                                    ))}
-                            </Grid>
-                        </Stack>
-                    ))}
+                                                    {component.category === 'Hooks' ? (
+                                                        <Stack align="center" gap={2}>
+                                                            {(component.name === 'ReactHooks'
+                                                                ? ['useState', 'useEffect', 'useMemo', 'useRef']
+                                                                : [component.name]
+                                                            ).map((name) => (
+                                                                <InlineCode key={name}>{`${name}()`}</InlineCode>
+                                                            ))}
+                                                        </Stack>
+                                                    ) : (
+                                                        (previews[component.name] ?? (
+                                                            <InlineCode>{`<${component.name} />`}</InlineCode>
+                                                        ))
+                                                    )}
+                                                </Stack>
+                                            </div>
+                                        </Card>
+                                        <span className="text-xs text-muted-foreground">
+                                            {component.category === 'Action' || component.category === 'Form'
+                                                ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                                : component.label}
+                                        </span>
+                                        <RouterLink
+                                            aria-label={`Open ${component.label} documentation`}
+                                            className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                            to={`/docs/sdk/views/${component.slug}/`}
+                                        />
+                                    </Stack>
+                                ))}
+                        </Grid>
+                    </Stack>
+                ))}
             </Stack>
         </DocumentationArticle>
     );

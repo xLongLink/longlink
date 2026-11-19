@@ -180,7 +180,7 @@ export function SolutionPage({
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>
-            <PageContainer padding={2} className={`h-full min-h-0${activeView?.width === 'wide' ? ' max-w-none' : ''}`}>
+            <PageContainer className={`h-full min-h-0${activeView?.width === 'wide' ? ' max-w-none' : ''}`}>
                 {content}
             </PageContainer>
         </Platform>

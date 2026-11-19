@@ -136,7 +136,7 @@ export default function Compute() {
             {metadata && (
                 <ComputeMetadata
                     metadata={metadata}
-                    onOpenChange={() => setDialog(null)}
+                    onClose={() => setDialog(null)}
                     onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
                 />
             )}

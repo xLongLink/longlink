@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useApiError } from '@/lib/errors';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Separator } from '@/components/shadcn/separator';
@@ -27,7 +26,6 @@ export default function OrganizationManagement({ presentation }: { presentation:
         { type: 'create' } | { type: 'accept' | 'decline'; id: string; name: string } | null
     >(null);
 
-    const reportError = useApiError();
     const client = useQueryClient();
 
     // Start independent account reads together, retaining their separate cache entries.
@@ -232,15 +230,13 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     actionLabel={selected.type === 'accept' ? 'Accept' : 'Decline'}
                     onOpenChange={closeSelected}
                     onConfirm={async () => {
-                        // Apply only the confirmed invitation action and report server failures.
+                        // Apply only the confirmed invitation action.
                         try {
                             if (selected.type === 'accept') {
                                 await api.post(`/api/v1/me/invitations/${selected.id}/accept`);
                             } else {
                                 await api.delete(`/api/v1/me/invitations/${selected.id}`);
                             }
-                        } catch (failure) {
-                            reportError(failure);
                         } finally {
                             // Refresh even when the invitation expired or was revoked before confirmation.
                             await Promise.all([

@@ -97,12 +97,12 @@ export const componentDocumentation = [
     { name: 'LineChart', category: 'Charts', icon: ChartLine },
     { name: 'PieChart', category: 'Charts', icon: ChartPie },
     { name: 'RadarChart', category: 'Charts', icon: ChartRadar },
-    { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge },
-    { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined },
+    { name: 'RadialBarChart', category: 'Charts', icon: CircleGauge, slug: 'radial-chart' },
+    { name: 'Sankey', category: 'Charts', icon: ChartNoAxesCombined, slug: 'sankey-chart' },
     { name: 'ChartLegend', category: 'Charts', icon: ListFilter },
     { name: 'Map', category: 'Maps', icon: Map },
     { name: 'MapControls', category: 'Maps', icon: Settings2 },
-    { name: 'MapGeoJSON', category: 'Maps', icon: Globe },
+    { name: 'MapGeoJSON', category: 'Maps', icon: Globe, slug: 'map-geojson' },
     { name: 'StreetMap', category: 'Maps', icon: Map },
     { name: 'MarkerMap', category: 'Maps', icon: Map },
     { name: 'RouteMap', category: 'Maps', icon: Waypoints },
@@ -111,7 +111,7 @@ export const componentDocumentation = [
     { name: 'Avatar', category: 'Display', icon: Users },
     { name: 'Badge', category: 'Display', icon: Badge },
     { name: 'Box', category: 'Layouts', icon: Box },
-    { name: 'Button', category: 'Action', icon: MousePointer2 },
+    { name: 'Button', category: 'Action', icon: MousePointer2, label: 'Buttons', slug: 'buttons' },
     { name: 'Card', category: 'Layouts', icon: PanelTop },
     { name: 'Checkbox', category: 'Form', icon: CheckSquare },
     { name: 'Currency', category: 'Display', icon: CreditCard },
@@ -133,8 +133,8 @@ export const componentDocumentation = [
     { name: 'useSubmit', category: 'Hooks', icon: Waypoints },
     { name: 'useConfirm', category: 'Hooks', icon: ShieldCheck },
     { name: 'useTable', category: 'Hooks', icon: Table2 },
-    { name: 'ReactHooks', category: 'Hooks', icon: FileCode2 },
-    { name: 'Icon', category: 'Display', icon: Gem },
+    { name: 'ReactHooks', category: 'Hooks', icon: FileCode2, label: 'React hooks' },
+    { name: 'Icon', category: 'Display', icon: Gem, label: 'Icons', slug: 'icons' },
     { name: 'Image', category: 'Display', icon: Image },
     { name: 'Input', category: 'Form', icon: TextCursorInput },
     { name: 'Link', category: 'Action', icon: Globe },
@@ -153,29 +153,13 @@ export const componentDocumentation = [
     { name: 'Timestamp', category: 'Display', icon: CalendarClock }
 ].map((component) => ({
     ...component,
-    label:
-        component.name === 'ReactHooks'
-            ? 'React hooks'
-            : component.name === 'Button'
-              ? 'Buttons'
-              : component.name === 'Icon'
-                ? 'Icons'
-                : component.name,
+    label: component.label ?? component.name,
     slug:
-        component.name === 'MapGeoJSON'
-            ? 'map-geojson'
-            : component.name === 'RadialBarChart'
-              ? 'radial-chart'
-              : component.name === 'Sankey'
-                ? 'sankey-chart'
-                : component.name === 'Button'
-                  ? 'buttons'
-                  : component.name === 'Icon'
-                    ? 'icons'
-                    : component.name
-                          .replace(/([a-z])([A-Z])/g, '$1-$2')
-                          .replace(/\s+/g, '-')
-                          .toLowerCase()
+        component.slug ??
+        component.name
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/\s+/g, '-')
+            .toLowerCase()
 }));
 
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [

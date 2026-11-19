@@ -1,8 +1,8 @@
-import { api } from '@/lib/api';
 import { useState } from 'react';
 import { ChevronsUpDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
+import { apiQueryOptions } from '@/lib/react-query';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
@@ -29,10 +29,9 @@ export function OrganizationSwitcher({ organization }: { organization: Organizat
         isPending,
         refetch
     } = useQuery({
-        queryKey: ['api', '/api/v1/me/organizations'],
-        queryFn: ({ signal }) => api('/api/v1/me/organizations', { signal }).json(zUserOrganizationMembership.array()),
+        ...apiQueryOptions('/api/v1/me/organizations', zUserOrganizationMembership.array()),
         enabled: isOpen,
-        retry: false
+        staleTime: 60_000
     });
 
     const name =

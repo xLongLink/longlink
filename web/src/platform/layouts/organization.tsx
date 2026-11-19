@@ -54,7 +54,7 @@ export default function OrganizationLayout() {
                 { href: `${base}/settings`, icon: <Settings2 aria-hidden="true" size={16} />, label: 'Settings' }
             ]}
         >
-            <PageContainer gap={8} padding={2}>
+            <PageContainer gap={8}>
                 <ApiBoundary>
                     <Outlet context={{ ...membership, tags, activeTag } satisfies OrganizationContext} />
                 </ApiBoundary>

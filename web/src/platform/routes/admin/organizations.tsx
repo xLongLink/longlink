@@ -133,7 +133,7 @@ export default function Organizations() {
             {metadata && (
                 <OrganizationMetadata
                     metadata={metadata}
-                    onOpenChange={() => setDialog(null)}
+                    onClose={() => setDialog(null)}
                     onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
                 />
             )}
