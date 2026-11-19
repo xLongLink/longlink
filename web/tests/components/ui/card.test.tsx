@@ -2,11 +2,9 @@
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { CardContent } from '@/components/shadcn/card';
 import { renderStatic, withMounted } from '../../render';
 import { Card } from '@/components/longlink/layout/card';
 import { LinkNavigationContext } from '@/components/custom/contexts';
-import { InteractiveCard } from '@/components/custom/interactive-card';
 
 it('owns section layout and ignores injected styling', () => {
     const overrides = { className: 'hidden', style: { display: 'none' } };
@@ -64,11 +62,10 @@ it.each([true, false])(
             </Card>,
             async (output) => {
                 const body = output.querySelector<HTMLElement>('[data-slot="card-content"]');
-                const control = output.querySelector<HTMLButtonElement>('[data-slot="card-control"]');
                 const footerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-footer"] button');
                 const headerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-action"] button');
 
-                if (!body || !control || !footerAction || !headerAction) throw new Error('Missing card controls');
+                if (!body || !footerAction || !headerAction) throw new Error('Missing card controls');
                 await act(async () => user.click(headerAction));
                 expect(edit).toHaveBeenCalledOnce();
                 expect(action).not.toHaveBeenCalled();
@@ -78,11 +75,6 @@ it.each([true, false])(
 
                 await act(async () => user.click(body));
                 expect(action).toHaveBeenCalledTimes(1);
-                await act(async () => control.focus());
-                await act(async () => user.keyboard('{Enter}'));
-                expect(action).toHaveBeenCalledTimes(2);
-                await act(async () => user.keyboard(' '));
-                expect(action).toHaveBeenCalledTimes(3);
             }
         );
     }
@@ -108,7 +100,7 @@ it('gives selection priority over actions and navigation and leaves nested contr
         const [selected, setSelected] = useState(false);
 
         return (
-            <InteractiveCard
+            <Card
                 label="Order"
                 isSelected={selected}
                 href="/orders"
@@ -118,11 +110,11 @@ it('gives selection priority over actions and navigation and leaves nested contr
                     setSelected(next);
                 }}
             >
-                <CardContent>
-                    <p>Order contents</p>
-                    <button onClick={nested}>Remove</button>
-                </CardContent>
-            </InteractiveCard>
+                <p>Order contents</p>
+                <button type="button" onClick={nested}>
+                    Remove
+                </button>
+            </Card>
         );
     }
 
@@ -161,9 +153,9 @@ it('gives selection priority over actions and navigation and leaves nested contr
 it('gives an action priority over href with native button keyboard activation', async () => {
     const action = vi.fn();
     await withMounted(
-        <InteractiveCard label="Open order" href="/orders" onClick={action}>
+        <Card label="Open order" href="/orders" onClick={action}>
             <p>Order</p>
-        </InteractiveCard>,
+        </Card>,
         async (output) => {
             const user = userEvent.setup();
             const button = output.querySelector('button');
@@ -191,20 +183,27 @@ it('keeps disabled primary controls focusable without live destinations or activ
     const navigate = vi.fn();
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-            <InteractiveCard label="Action" isDisabled onClick={action}>
+            <Card label="Action" isDisabled onClick={action}>
                 <p>Action</p>
                 <button onClick={nested}>Nested</button>
-            </InteractiveCard>
-            <InteractiveCard label="Selection" isDisabled onChange={changed}>
+            </Card>
+            <Card label="Selection" isDisabled onChange={changed}>
                 <p>Selection</p>
-            </InteractiveCard>
-            <InteractiveCard label="Link" isDisabled href="/orders">
+            </Card>
+            <Card label="Link" isDisabled href="/orders">
                 <p>Link</p>
-            </InteractiveCard>
+            </Card>
         </LinkNavigationContext>,
         async (output) => {
             const user = userEvent.setup();
             const controls = output.querySelectorAll<HTMLElement>('[data-slot="card-control"]');
+            expect(controls).toHaveLength(3);
+            const texts = output.querySelectorAll('p');
+            expect(texts).toHaveLength(3);
+            const nestedButton = output.querySelector<HTMLButtonElement>('button:not([data-slot="card-control"])');
+            const link = output.querySelector('a');
+
+            if (!nestedButton || !link) throw new Error('Expected nested button and disabled link');
 
             for (const control of controls) {
                 control.focus();
@@ -216,10 +215,10 @@ it('keeps disabled primary controls focusable without live destinations or activ
             }
 
             await act(async () => {
-                for (const text of output.querySelectorAll('p')) text.click();
-                output.querySelector<HTMLButtonElement>('button:not([data-slot="card-control"])')?.click();
+                for (const text of texts) text.click();
+                nestedButton.click();
             });
-            expect(output.querySelector('a')?.hasAttribute('href')).toBe(false);
+            expect(link.hasAttribute('href')).toBe(false);
             expect(action).not.toHaveBeenCalled();
             expect(changed).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
@@ -233,12 +232,12 @@ it('routes plain surface clicks through the validated primary link without steal
     const nested = vi.fn((event: React.MouseEvent) => event.preventDefault());
     await withMounted(
         <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-            <InteractiveCard href="/orders">
+            <Card href="/orders">
                 <p>Order</p>
                 <a href="/other" onClick={nested}>
                     Other
                 </a>
-            </InteractiveCard>
+            </Card>
         </LinkNavigationContext>,
         async (output) => {
             await act(async () => {
@@ -262,30 +261,31 @@ it('forwards modifier and middle gestures using the resolved destination and rej
     try {
         await withMounted(
             <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
-                <InteractiveCard href="/orders">
+                <Card href="/orders">
                     <p>Order</p>
-                </InteractiveCard>
-                <InteractiveCard href="javascript:alert(1)">
+                </Card>
+                <Card href="javascript:alert(1)">
                     <p>Unsafe</p>
-                </InteractiveCard>
+                </Card>
             </LinkNavigationContext>,
             async (output) => {
-                const cards = output.querySelectorAll<HTMLElement>('[data-slot="card"]');
-                const anchor = cards[0]?.querySelector('a');
+                const [card, unsafeCard] = output.querySelectorAll<HTMLElement>('[data-slot="card"]');
 
-                if (!anchor) throw new Error('Expected primary link');
+                if (!card || !unsafeCard) throw new Error('Expected safe and unsafe link cards');
+                const anchor = card.querySelector('a');
+                const unsafeAnchor = unsafeCard.querySelector('a');
+
+                if (!anchor || !unsafeAnchor) throw new Error('Expected primary links');
                 const gestures: boolean[] = [];
                 anchor.addEventListener('click', (event) => {
                     gestures.push(event.ctrlKey);
                     event.preventDefault();
                 });
                 await act(async () => {
-                    cards[0]?.dispatchEvent(
-                        new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true })
-                    );
-                    cards[0]?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
-                    cards[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                    cards[1]?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
+                    card.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+                    card.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
+                    unsafeCard.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                    unsafeCard.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
                 });
                 expect(gestures).toEqual([true]);
                 expect(open).toHaveBeenCalledExactlyOnceWith(
@@ -294,7 +294,7 @@ it('forwards modifier and middle gestures using the resolved destination and rej
                     'noopener,noreferrer'
                 );
                 expect(navigate).not.toHaveBeenCalled();
-                expect(cards[1]?.querySelector('a')?.hasAttribute('href')).toBe(false);
+                expect(unsafeAnchor.hasAttribute('href')).toBe(false);
             }
         );
     } finally {
@@ -306,22 +306,26 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
     const action = vi.fn();
     await withMounted(
         <>
-            <InteractiveCard onClick={action}>
+            <Card onClick={action}>
                 <p>Select this text</p>
-            </InteractiveCard>
-            <InteractiveCard inert aria-hidden="true" onClick={action}>
+            </Card>
+            <Card inert aria-hidden="true" onClick={action}>
                 <p>Inert</p>
-            </InteractiveCard>
+            </Card>
         </>,
         async (output) => {
             const text = output.querySelector('p');
+            const inertText = output.querySelector<HTMLElement>('[inert] p');
+            const inertCard = output.querySelector('[inert]');
 
-            if (!text) throw new Error('Expected selectable content');
+            if (!text || !inertText || !inertCard) throw new Error('Expected selectable and inert content');
             const selection = document.getSelection();
-            selection?.removeAllRanges();
+
+            if (!selection) throw new Error('Expected text selection support');
+            selection.removeAllRanges();
             const range = document.createRange();
             range.selectNodeContents(text);
-            selection?.addRange(range);
+            selection.addRange(range);
 
             try {
                 await act(async () => {
@@ -329,14 +333,14 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
                 });
                 expect(action).not.toHaveBeenCalled();
             } finally {
-                selection?.removeAllRanges();
+                selection.removeAllRanges();
             }
 
             await act(async () => {
-                output.querySelector<HTMLElement>('[inert] p')?.click();
+                inertText.click();
             });
             expect(action).not.toHaveBeenCalled();
-            expect(output.querySelector('[inert]')?.getAttribute('aria-hidden')).toBe('true');
+            expect(inertCard.getAttribute('aria-hidden')).toBe('true');
             await act(async () => {
                 text.click();
             });
@@ -351,9 +355,9 @@ it('lets native mouse handlers cancel middle-button navigation from composed con
 
     try {
         await withMounted(
-            <InteractiveCard href="https://example.com/orders" size="sm" onMouseUp={mouseUp}>
-                <CardContent>Order</CardContent>
-            </InteractiveCard>,
+            <Card href="https://example.com/orders" size="sm" onMouseUp={mouseUp}>
+                Order
+            </Card>,
             async (output) => {
                 const content = output.querySelector('[data-slot="card-content"]');
 

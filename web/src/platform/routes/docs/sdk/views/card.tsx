@@ -19,23 +19,6 @@ export default function CardPage() {
     return (
         <ViewLayout
             name="Card"
-            properties={[
-                { name: 'title', type: 'ReactNode' },
-                { name: 'description', type: 'ReactNode' },
-                { name: 'action', type: 'ReactNode' },
-                { name: 'children', type: 'ReactNode' },
-                { name: 'footer', type: 'ReactNode' },
-                { name: 'size', type: '"default" | "sm"' },
-                { name: 'padding', type: '"default" | "none"' },
-                { name: 'label', type: 'string' },
-                { name: 'onClick', type: '(event: MouseEvent<HTMLElement>) => void' },
-                { name: 'href', type: 'string' },
-                { name: 'target', type: 'string' },
-                { name: 'isDisabled', type: 'boolean' },
-                { name: 'isSelected', type: 'boolean' },
-                { name: 'onChange', type: '(isSelected: boolean) => void' },
-                { name: 'inert', type: 'boolean' }
-            ]}
             example={{
                 title: 'Card',
                 preview: <CardExample />,
