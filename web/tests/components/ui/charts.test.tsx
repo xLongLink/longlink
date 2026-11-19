@@ -141,6 +141,67 @@ it('keeps a compact plot edge-to-edge and adds or removes chart controls only wh
     });
 });
 
+it.each([
+    { name: 'BarChart', Chart: BarChart },
+    { name: 'LineChart', Chart: LineChart },
+    { name: 'AreaChart', Chart: AreaChart }
+])('toggles $name axes with the supplied category and value formatters', async ({ Chart }) => {
+    // Arrange
+    function Preview() {
+        const [axes, setAxes] = useState(false);
+
+        return (
+            <div ref={(element) => measureCharts(element)}>
+                <button type="button" onClick={() => setAxes((value) => !value)}>
+                    Toggle axes
+                </button>
+                <Box height={280}>
+                    <Chart
+                        data={[
+                            { month: 'Jan', requests: 10 },
+                            { month: 'Feb', requests: 20 }
+                        ]}
+                        xKey="month"
+                        series={[{ key: 'requests' }]}
+                        axes={axes}
+                        xTickFormatter={(value) => `Month ${value}`}
+                        yTickFormatter={(value) => `${value} requests`}
+                    />
+                </Box>
+            </div>
+        );
+    }
+
+    await withMounted(<Preview />, async (output) => {
+        const user = userEvent.setup();
+        const toggle = output.querySelector('button');
+
+        if (!toggle) throw new Error('Expected axis toggle');
+        expect(output.querySelector('.recharts-cartesian-axis-tick')).toBeNull();
+
+        // Act
+        await act(async () => user.click(toggle));
+
+        // Assert
+        await vi.waitFor(() => {
+            expect(output.querySelector('.recharts-cartesian-grid')).not.toBeNull();
+            const labels = Array.from(
+                output.querySelectorAll('.recharts-cartesian-axis-tick-value'),
+                (tick) => tick.textContent
+            ).join(' ');
+            expect(labels).toContain('Month Jan');
+            expect(labels).toContain('requests');
+        });
+
+        // Act
+        await act(async () => user.click(toggle));
+
+        // Assert
+        expect(output.querySelector('.recharts-cartesian-grid')).toBeNull();
+        expect(output.querySelector('.recharts-cartesian-axis-tick')).toBeNull();
+    });
+});
+
 it('matches external segment legends to plotted order and clears them when data is removed', async () => {
     function Preview() {
         const [rows, setRows] = useState(

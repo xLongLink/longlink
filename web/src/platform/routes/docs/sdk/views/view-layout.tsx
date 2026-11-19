@@ -14,7 +14,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 type ViewProperty = { name: string; type: string };
 
-type ViewExample = { title: string; code: string; preview: ReactNode; language?: 'jsx' | 'tsx' };
+type ViewExample = { title: string; code: string; preview: ReactNode };
 
 /** Keeps an example's showcase mounted while switching between preview and code. */
 function ExampleWindow({ example }: { example: ViewExample }) {
@@ -56,7 +56,7 @@ function ExampleWindow({ example }: { example: ViewExample }) {
                     {showCode && (
                         <CodeBlock
                             code={example.code}
-                            language={example.language ?? 'jsx'}
+                            language="jsx"
                             variant="ghost"
                             showLineNumbers
                             className="h-full min-h-0 [&_[data-slot=code-block-viewport]]:h-full"

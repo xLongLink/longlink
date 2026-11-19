@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
+import { useTransition } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { useMutation } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
@@ -15,17 +15,18 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 export default function PaymentMethods({ base, canManage }: { base: string; canManage: boolean }) {
     const [usage] = useApi(`${base}/usage`, schemas.zOrganizationUsage);
 
+    const [pending, startTransition] = useTransition();
+
     /** Opens owner-authorized Stripe card registration without an immediate payment. */
-    const { mutateAsync, isPending: pending } = useMutation({
-        networkMode: 'always',
-        mutationFn: async () => {
+    const registerCard = useSubmit<void>(
+        async () => {
             const response = await api.post(`${base}/cards/checkout`).json(schemas.zPaymentRedirect);
 
             // Redirect only after validating the API's hosted URL.
             window.location.assign(response.url);
-        }
-    });
-    const registerCard = useSubmit(mutateAsync, { onError: () => {} });
+        },
+        { onError: () => {} }
+    );
 
     return (
         <Stack gap={0}>
@@ -40,7 +41,9 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                             disabled={pending}
                             aria-busy={pending || undefined}
                             onClick={() => {
-                                void registerCard();
+                                startTransition(async () => {
+                                    await registerCard();
+                                });
                             }}
                         >
                             Add card

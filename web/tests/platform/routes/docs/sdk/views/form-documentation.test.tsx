@@ -5,17 +5,20 @@ import { Input } from '@/components/shadcn/input';
 import { withMounted } from '../../../../../render';
 import userEvent from '@testing-library/user-event';
 import { RequestContext } from '@/components/custom/contexts';
-import FormPreview from '@/platform/routes/docs/sdk/views/form-preview';
+import FormDocumentation from '@/platform/routes/docs/sdk/views/form-documentation';
 
 it('keeps edited fields local when a preview form is submitted', async () => {
+    // Arrange
     const user = userEvent.setup();
     const request = vi.fn().mockResolvedValue({});
 
     await withMounted(
         <RequestContext value={{ request, download: vi.fn() }}>
-            <FormPreview>
-                <Input aria-label="Name" name="name" defaultValue="New order" />
-            </FormPreview>
+            <FormDocumentation
+                name="Input"
+                preview={<Input aria-label="Name" name="name" defaultValue="New order" />}
+                code='<Input name="name" defaultValue="New order" />'
+            />
         </RequestContext>,
         async (output) => {
             const input = output.querySelector<HTMLInputElement>('input[name="name"]');
@@ -23,6 +26,7 @@ it('keeps edited fields local when a preview form is submitted', async () => {
 
             if (!input || !form) throw new Error('Expected editable preview form');
 
+            // Act
             await act(async () => user.clear(input));
             await act(async () => user.type(input, 'Replacement order'));
             const submission = new Event('submit', { bubbles: true, cancelable: true });
@@ -31,6 +35,7 @@ it('keeps edited fields local when a preview form is submitted', async () => {
                 form.dispatchEvent(submission);
             });
 
+            // Assert
             expect(submission.defaultPrevented).toBe(true);
             expect(request).not.toHaveBeenCalled();
             expect(input.value).toBe('Replacement order');

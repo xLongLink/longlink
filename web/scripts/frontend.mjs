@@ -91,8 +91,7 @@ const normalized = ts.transform(ts.createSourceFile('native.d.ts', bundle, ts.Sc
 ]);
 const generated = normalized.transformed[0];
 const exports = new Set();
-const typeExports = new Set();
-const namespaceExports = new Set();
+const aliasExports = new Set();
 const namespaceNames = new Set(generated.statements.filter(ts.isModuleDeclaration).map((node) => node.name.text));
 const typeNames = new Set(
     generated.statements
@@ -143,11 +142,11 @@ const statements = generated.statements.filter((node) => {
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
             for (const specifier of node.exportClause.elements) {
                 exports.add(specifier.name.text);
-                if (namespaceNames.has((specifier.propertyName ?? specifier.name).text)) {
-                    namespaceExports.add(specifier.name.text);
-                }
-                if (typeNames.has((specifier.propertyName ?? specifier.name).text)) {
-                    typeExports.add(specifier.name.text);
+                if (
+                    namespaceNames.has((specifier.propertyName ?? specifier.name).text) ||
+                    typeNames.has((specifier.propertyName ?? specifier.name).text)
+                ) {
+                    aliasExports.add(specifier.name.text);
                 }
             }
         }
@@ -155,7 +154,7 @@ const statements = generated.statements.filter((node) => {
     }
     if (node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) && node.name) {
         exports.add(node.name.text);
-        if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) typeExports.add(node.name.text);
+        if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) aliasExports.add(node.name.text);
     }
     if (
         ts.isVariableStatement(node) &&
@@ -180,7 +179,7 @@ const names = [...exports].filter((name) => name !== 'FrontendElement').sort();
 const aliases = names
     .filter((name) => name !== 'Image' && name !== 'Text' && name !== 'Map')
     .map((name) =>
-        namespaceExports.has(name) || typeExports.has(name)
+        aliasExports.has(name)
             ? `import ${name} = NativeFrontend.${name};`
             : `declare const ${name}: typeof NativeFrontend.${name};`
     )

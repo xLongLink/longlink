@@ -8,14 +8,6 @@ export default function FileTypePage() {
     return (
         <ViewLayout
             name="FileType"
-            properties={[
-                { name: 'type', type: 'string' },
-                { name: 'variant', type: '"outline" | "solid" | "light" | "mono"' },
-                { name: 'size', type: '"mini" | "xs" | "sm" | "md" | "lg" | "xl"' },
-                { name: 'label', type: 'ReactNode' },
-                { name: 'glyph', type: 'boolean' },
-                { name: 'icon', type: 'ReactNode' }
-            ]}
             example={{
                 title: 'File types',
                 preview: <FileTypeExample />,

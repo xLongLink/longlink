@@ -7,13 +7,6 @@ export default function PaginationPage() {
     return (
         <ViewLayout
             name="Pagination"
-            properties={[
-                { name: 'page', type: 'number' },
-                { name: 'pageSize', type: 'number' },
-                { name: 'totalItems', type: 'number' },
-                { name: 'onPageChange', type: '(page: number) => void' },
-                { name: 'label', type: 'string' }
-            ]}
             example={{
                 title: 'Controlled pagination',
                 preview: <PaginationExample />,
