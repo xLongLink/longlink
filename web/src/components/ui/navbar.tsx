@@ -8,7 +8,7 @@ import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/shadcn/sheet';
 
 const publicLinks = [
-    { href: '/blog/', label: 'Blog' },
+    { href: '/explore/', label: 'Explore' },
     { href: '/docs/', label: 'Documentation' },
     { href: '/pricing/', label: 'Pricing' }
 ];

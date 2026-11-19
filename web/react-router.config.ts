@@ -21,8 +21,8 @@ const publicPagePaths = [
     '/',
     '/login',
     '/pricing',
-    '/blog',
-    '/blog/why-longlink',
+    '/explore',
+    '/explore/catalog',
     ...legalPaths,
     ...brandingPaths,
     ...documentationPaths

@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
+import { Code2, ServerCog } from 'lucide-react';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Code2, Lightbulb, ServerCog } from 'lucide-react';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 
 const cardClassName =
@@ -35,18 +35,7 @@ export default function DocsIndex() {
                     <h2 className="font-semibold tracking-tight text-3xl" id="start-here">
                         Start here
                     </h2>
-                    <Grid columns={3} gap={0}>
-                        <Link className={cardClassName} to="/docs/introduction/" aria-label="Explore LongLink">
-                            <Stack className="flex-1" gap={6} justify="between">
-                                <Lightbulb aria-hidden="true" className="text-muted-foreground" size={24} />
-                                <Stack gap={3}>
-                                    <span className="font-bold">Explore LongLink</span>
-                                    <p className="text-muted-foreground text-pretty">
-                                        Learn the core concepts and discover what you can build.
-                                    </p>
-                                </Stack>
-                            </Stack>
-                        </Link>
+                    <Grid columns={2} gap={0}>
                         <Link className={cardClassName} to="/docs/sdk/" aria-label="Build a Solution">
                             <Stack className="flex-1" gap={6} justify="between">
                                 <Code2 aria-hidden="true" className="text-muted-foreground" size={24} />

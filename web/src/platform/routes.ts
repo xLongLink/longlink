@@ -6,12 +6,16 @@ export default [
         file: './layouts/page.tsx',
         children: [
             { index: true, file: './routes/index.tsx' },
-            { path: 'pricing', file: './routes/pricing.tsx' },
-            { path: 'blog', file: './routes/blog/index.tsx' },
-            { path: 'blog/why-longlink', file: './routes/blog/why-long-link.tsx' }
+            { path: 'pricing', file: './routes/pricing.tsx' }
         ]
     },
-    { path: 'docs/introduction', file: './routes/docs/introduction.tsx' },
+    {
+        file: './layouts/explore.tsx',
+        children: [
+            { path: 'explore', file: './routes/explore.tsx', id: 'explore-solutions' },
+            { path: 'explore/catalog', file: './routes/explore.tsx', id: 'explore-catalog' }
+        ]
+    },
     {
         file: './layouts/documentation.tsx',
         children: [

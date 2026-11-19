@@ -54,7 +54,7 @@ export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
                         aria-label="Footer navigation"
                     >
                         <RouterLink to="/docs/">Documentation</RouterLink>
-                        <RouterLink to="/blog/">Blog</RouterLink>
+                        <RouterLink to="/explore/">Explore</RouterLink>
                         <RouterLink to="/pricing/">Pricing</RouterLink>
                         <RouterLink to="/login/">Sign In</RouterLink>
                     </nav>

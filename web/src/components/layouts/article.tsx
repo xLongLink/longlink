@@ -9,9 +9,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
 const articleRouteLabels = {
-    blog: 'Blog',
     billing: 'Billing',
-    'why-longlink': 'Why LongLink',
     assets: 'Brand assets',
     values: 'Values',
     comunication: 'Communication'
