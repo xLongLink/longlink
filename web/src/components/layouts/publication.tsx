@@ -20,7 +20,7 @@ export default function Publication({
     const mainRef = useRef<HTMLElement>(null);
 
     return (
-        <section className="flex min-h-dvh flex-col">
+        <section className="flex min-h-dvh flex-col bg-background [--background:light-dark(#fff,var(--card))] [--surface:var(--background)]">
             <Navbar maxWidth={1272} navigation={navigation} />
             <section
                 className={`relative mx-auto flex min-h-0 w-full max-w-[1320px] flex-1 flex-col overflow-clip bg-background ${className}`}
