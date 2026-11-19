@@ -122,8 +122,8 @@ async def test_memory_storage_readers_have_independent_cursors() -> None:
 
 
 @pytest.mark.parametrize("close_before_write", [False, True])
-async def test_memory_storage_releases_only_its_owned_namespace(close_before_write: bool) -> None:
-    """Remove collected test files without clearing another runtime's shared fsspec store."""
+async def test_memory_storage_releases_its_backend_on_collection(close_before_write: bool) -> None:
+    """Collect a testing store without disturbing another runtime's files."""
 
     # Arrange
     first = cast(Filesystem, storage.create_storage(Envs(ENV="testing")))
@@ -133,9 +133,7 @@ async def test_memory_storage_releases_only_its_owned_namespace(close_before_wri
         await first.close()
     await first.write("report", b"first")
     await second.write("report", b"second")
-    backend = first.filesystem.fs
-    directory = first.filesystem.path
-    reference = weakref.ref(first.filesystem)
+    reference = weakref.ref(first.filesystem.fs)
 
     # Act
     del first
@@ -143,12 +141,11 @@ async def test_memory_storage_releases_only_its_owned_namespace(close_before_wri
 
     # Assert
     assert reference() is None
-    assert not backend.exists(directory)
     async with second.open("report") as reader:
         assert await reader.read() == b"second"
 
 
-async def test_memory_storage_close_releases_only_its_owned_namespace() -> None:
+async def test_memory_storage_close_releases_only_its_owned_store() -> None:
     """Release retained testing storage on close without disturbing another runtime."""
 
     # Arrange
@@ -156,15 +153,12 @@ async def test_memory_storage_close_releases_only_its_owned_namespace() -> None:
     second = storage.create_storage(Envs(ENV="testing"))
     await first.write("report", b"first")
     await second.write("report", b"second")
-    backend = first.filesystem.fs
-    directory = first.filesystem.path
 
     # Act
     await first.close()
     await first.close()
 
     # Assert
-    assert not backend.exists(directory)
     assert not await first.exists("report")
     async with second.open("report") as reader:
         assert await reader.read() == b"second"
@@ -174,7 +168,7 @@ async def test_memory_storage_close_releases_only_its_owned_namespace() -> None:
     async with first.open("report") as reader:
         assert await reader.read() == b"reopened"
     await first.close()
-    assert not backend.exists(directory)
+    assert not await first.exists("report")
     async with second.open("report") as reader:
         assert await reader.read() == b"second"
     await second.close()

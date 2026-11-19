@@ -1,6 +1,8 @@
+import os
 import re
 import shutil
 import cyclopts
+import subprocess
 import importlib.metadata
 from enum import StrEnum
 from typing import Annotated
@@ -83,17 +85,18 @@ def init_command(
     agents.write_text(agents.read_text(encoding="utf-8").replace("<version>", importlib.metadata.version("longlink")), encoding="utf-8")
 
     if ci_provider == Provider.GITHUB:
+        git = shutil.which("git")
+        if git is None:
+            raise errors.Error("Unable to initialize Git repository: Git is required")
         try:
-            import git
-        except ImportError as error:
-            raise errors.Error(f"Unable to initialize Git repository: {error}") from error
-
-        try:
-            try:
-                with git.Repo(target, search_parent_directories=True):
-                    pass
-            except git.InvalidGitRepositoryError:
-                with git.Repo.init(target, initial_branch="main"):
-                    pass
-        except (git.GitError, OSError) as error:
+            repository = subprocess.run(
+                [git, "rev-parse", "--git-dir"], cwd=target, capture_output=True, text=True, env=os.environ | {"LC_ALL": "C"}
+            )
+            if repository.returncode and repository.stderr.startswith("fatal: not a git repository (or any"):
+                subprocess.run([git, "init", "--initial-branch=main"], cwd=target, capture_output=True, text=True, check=True)
+            else:
+                repository.check_returncode()
+        except subprocess.CalledProcessError as error:
+            raise errors.Error(f"Unable to initialize Git repository: {error.stderr.strip() or error}") from error
+        except OSError as error:
             raise errors.Error(f"Unable to initialize Git repository: {error}") from error

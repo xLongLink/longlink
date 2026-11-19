@@ -22,6 +22,7 @@ from src.database.models.users import User
 from src.database.services.users import PASSWORD_HASH
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 IDENTITY_CATALOG = Catalog(
     endpoints=[Endpoint(key="GET /api/identity", path="/api/identity", method="GET", roles=["read", "write"], summary="current_identity")]
@@ -193,20 +194,28 @@ async def test_mcp_expired_code_cannot_be_exchanged(
     assert response.json()["error"] == "invalid_grant"
 
 
-@pytest.mark.parametrize("invalidation", ["membership", "password", "deleted-account"])
+@pytest.mark.parametrize("invalidation", ["membership", "password", "deleted-account", "deleted-organization", "deleted-solution"])
 async def test_mcp_code_exchange_rechecks_identity_and_membership(
     client: httpx2.AsyncClient,
     users: tuple[User, User, User],
     authorization: tuple[Solution, dict[str, str], dict[str, str]],
     invalidation: str,
 ) -> None:
-    """Reject previous consent after membership, password, or account invalidation without issuing access."""
+    """Reject previous consent after access is revoked without issuing a token."""
 
     # Arrange
     solution, _, exchange = authorization
     async with session_scope() as session:
         if invalidation == "membership":
             await session.execute(delete(UserOrganization).where(UserOrganization.user_id == users[0].id))
+        elif invalidation == "deleted-organization":
+            organization = await session.get(Organization, solution.organization_id)
+            assert organization is not None
+            organization.deleted_at = datetime.now(UTC)
+        elif invalidation == "deleted-solution":
+            current = await session.get(Solution, solution.id)
+            assert current is not None
+            current.deleted_at = datetime.now(UTC)
         else:
             user = await session.get(User, users[0].id)
             assert user is not None
@@ -227,6 +236,31 @@ async def test_mcp_code_exchange_rechecks_identity_and_membership(
     async with session_scope() as session:
         tokens = await session.scalars(select(MCPToken).where(MCPToken.user_id == users[0].id, MCPToken.solution_id == solution.id))
         assert tokens.all() == []
+
+
+async def test_mcp_consent_rejects_membership_in_another_organization(
+    clients: tuple[httpx2.AsyncClient, httpx2.AsyncClient, httpx2.AsyncClient],
+    users: tuple[User, User, User],
+    authorization_request: tuple[Solution, dict[str, str]],
+) -> None:
+    """Keep another Organization's member from reading consent or approving access."""
+
+    # Arrange
+    _, request = authorization_request
+    await create_organization(users[1])
+
+    # Act
+    consent = await clients[1].get("/api/v1/mcp/consent", params=request)
+    approval = await clients[1].post("/api/v1/mcp/consent", json={**request, "approve": True})
+
+    # Assert
+    assert consent.status_code == 403
+    assert consent.json()["detail"] == "Access required"
+    assert approval.status_code == 403
+    assert approval.json()["detail"] == "Access required"
+    async with session_scope() as session:
+        code = await session.scalar(select(MCPCode))
+        assert code is None
 
 
 async def test_mcp_concurrent_code_exchange_issues_only_one_token(

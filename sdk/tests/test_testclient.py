@@ -1,3 +1,4 @@
+import anyio
 import pytest
 from pathlib import Path
 from longlink import Context
@@ -34,8 +35,6 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     with client:
         objects = app.state.longlink.storage
         assert isinstance(objects, Filesystem)
-        backend = objects.filesystem.fs
-        directory = objects.filesystem.path
         user_response = client.get("/api/me")
         assert client.portal is not None
         client.portal.call(objects.write, "report.txt", b"report")
@@ -45,7 +44,7 @@ def test_solution_test_client_replaces_development_services_with_testing_service
     assert user_response.status_code == 200
     assert user_response.json() == "Testing user"
     assert len(disposed) == 1
-    assert not backend.exists(directory)
+    assert not anyio.run(objects.exists, "report.txt")
     assert not Path("dev.db").exists()
 
     # Testing writes must not create files on the development filesystem.
