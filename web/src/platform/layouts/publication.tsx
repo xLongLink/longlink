@@ -3,7 +3,7 @@ import { Footer } from '@/components/ui/footer';
 import { Navbar } from '@/components/ui/navbar';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { useId, useRef, type ReactElement, type ReactNode } from 'react';
-import { PublicationNavigation } from '@/platform/layouts/mobile-publication-navigation';
+import { MobilePublicationNavigation } from './mobile-publication-navigation';
 
 /** Shares public publication chrome while leaving sidebar content with its caller. */
 export default function Publication({
@@ -12,7 +12,7 @@ export default function Publication({
     className = ''
 }: {
     navigation?: ReactNode;
-    sideNav: ReactElement;
+    sideNav?: ReactElement;
     className?: string;
 }) {
     const isMobile = useMediaQuery('(width < 1024px)');
@@ -32,9 +32,9 @@ export default function Publication({
                 >
                     Skip to content
                 </a>
-                {isMobile && <PublicationNavigation>{sideNav}</PublicationNavigation>}
+                {sideNav && isMobile && <MobilePublicationNavigation>{sideNav}</MobilePublicationNavigation>}
                 <section className="flex min-h-0 min-w-0 flex-1">
-                    {!isMobile && (
+                    {sideNav && !isMobile && (
                         <aside className="publication-sidebar sticky top-0 flex h-dvh flex-none flex-col overflow-clip bg-inherit">
                             <section className="flex-1 overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {sideNav}

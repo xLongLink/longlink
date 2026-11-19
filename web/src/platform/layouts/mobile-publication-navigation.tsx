@@ -4,7 +4,7 @@ import { Dialog } from '@base-ui/react/dialog';
 import { useState, type ReactNode } from 'react';
 
 /** Owns a mobile navigation session until routing changes or the layout unmounts it. */
-export function PublicationNavigation({ children }: { children: ReactNode }) {
+export function MobilePublicationNavigation({ children }: { children: ReactNode }) {
     const { key } = useLocation();
     const [openedLocationKey, setOpenedLocationKey] = useState<string | null>(null);
 

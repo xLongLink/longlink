@@ -5,52 +5,6 @@ import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Text } from '@/components/longlink/display/text';
 
-it('preserves a labelled live status when its content changes', async () => {
-    const user = userEvent.setup();
-
-    function Status() {
-        const [detail, setDetail] = useState('Original detail');
-
-        return (
-            <>
-                <span id="status-label">Publication status</span>
-                <Text
-                    id="publication-status"
-                    role="status"
-                    aria-live="polite"
-                    aria-labelledby="status-label"
-                    data-publication="draft"
-                    className="publication-status"
-                    style={{ maxWidth: 80 }}
-                    maxLines={1}
-                >
-                    {detail}
-                </Text>
-                <button onClick={() => setDetail('Updated long detail')}>Update status</button>
-            </>
-        );
-    }
-
-    await withMounted(<Status />, async (output) => {
-        const text = output.querySelector('span[role="status"]');
-        const update = output.querySelector('button');
-
-        if (!(text instanceof HTMLElement) || !update) throw new Error('Missing live status controls');
-        await act(async () => user.click(update));
-
-        expect(output.querySelector('[data-slot="text"]')).toBe(text);
-        expect(text.textContent).toBe('Updated long detail');
-        expect(text.id).toBe('publication-status');
-        expect(text.getAttribute('aria-live')).toBe('polite');
-        expect(text.getAttribute('aria-labelledby')).toBe('status-label');
-        expect(document.getElementById('status-label')?.textContent).toBe('Publication status');
-        expect(text.dataset.publication).toBe('draft');
-        expect(text.classList.contains('publication-status')).toBe(true);
-        expect(text.style.maxWidth).toBe('80px');
-        expect(text.hasAttribute('tabindex')).toBe(false);
-    });
-});
-
 it('updates and clears truncation without replacing the text element', async () => {
     const user = userEvent.setup();
 

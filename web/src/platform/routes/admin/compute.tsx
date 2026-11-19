@@ -1,25 +1,21 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
-import { Info, Search, X } from 'lucide-react';
+import { useListControls } from './use-list-controls';
 import { Stack } from '@/components/longlink/layout/stack';
-import { useDeferredValue, useRef, useState } from 'react';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { Field, FieldLabel } from '@/components/shadcn/field';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { ComputeRegistration } from '@/platform/routes/admin/dialogs/compute-registration';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists registered Compute infrastructure and manages registration and removal. */
 export default function Compute() {
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
-    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
-    const searchInput = useRef<HTMLInputElement>(null);
+    const { suffix, searchField, pagination } = useListControls('compute', 'Search by name or endpoint');
 
     const [dialog, setDialog] = useState<{ kind: 'registration' } | { kind: 'metadata'; id: string } | null>(null);
     const confirmation = useConfirm();
@@ -39,36 +35,7 @@ export default function Compute() {
                 <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
                 <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
-            <Field>
-                <FieldLabel htmlFor="search-compute">Search compute</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-compute"
-                        placeholder="Search by name or endpoint"
-                        value={filters.search}
-                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {filters.search !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search compute"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    setFilters({ search: '', page: 1 });
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            {searchField}
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>
@@ -108,12 +75,7 @@ export default function Compute() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination
-                        page={filters.page}
-                        pageSize={25}
-                        onPageChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={computes.total}
-                    />
+                    <Pagination {...pagination} totalItems={computes.total} />
                 </footer>
             </Stack>
             {dialog?.kind === 'registration' && (

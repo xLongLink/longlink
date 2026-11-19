@@ -1,11 +1,12 @@
+import Publication from './publication';
 import { useLocation } from 'react-router';
-import Publication from '@/components/layouts/publication';
+import { PublicationNavigation } from './publication-navigation';
 import { legalPages, brandingPages } from '@/platform/publications';
-import {
-    PublicationNavigation,
-    PublicationNavigationItem,
-    PublicationNavigationSection
-} from './publication-navigation';
+
+const sections = [
+    { title: 'Legal', pages: legalPages },
+    { title: 'Branding', pages: brandingPages, trailingSlash: false }
+];
 
 /** Renders legal and branding pages with the public article layout. */
 export default function Legal() {
@@ -16,23 +17,11 @@ export default function Legal() {
         <Publication
             className="[&_.publication-sidebar]:h-fit! [&_.publication-sidebar]:max-h-dvh"
             sideNav={
-                <PublicationNavigation label="Legal and branding navigation">
-                    <PublicationNavigationSection title="Legal">
-                        {legalPages.map((page) => (
-                            <PublicationNavigationItem key={page.path} page={page} pagePath={pagePath} />
-                        ))}
-                    </PublicationNavigationSection>
-                    <PublicationNavigationSection title="Branding">
-                        {brandingPages.map((page) => (
-                            <PublicationNavigationItem
-                                key={page.path}
-                                page={page}
-                                pagePath={pagePath}
-                                trailingSlash={false}
-                            />
-                        ))}
-                    </PublicationNavigationSection>
-                </PublicationNavigation>
+                <PublicationNavigation
+                    label="Legal and branding navigation"
+                    sections={sections}
+                    currentPath={pagePath}
+                />
             }
         />
     );

@@ -1,70 +1,36 @@
 import { api } from '@/lib/api';
+import { Info } from 'lucide-react';
+import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
-import { Info, Search, X } from 'lucide-react';
+import { useListControls } from './use-list-controls';
 import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
-import { useDeferredValue, useRef, useState } from 'react';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 /** Lists Solutions and manages administrator metadata and deletion dialogs. */
 export default function Solutions() {
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
-    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
-    const searchInput = useRef<HTMLInputElement>(null);
-    const [dialog, setDialog] = useState<{ kind: 'metadata'; id: string } | null>(null);
+    const { suffix, searchField, pagination } = useListControls(
+        'solutions',
+        'Search by name, description, or organization'
+    );
     const confirmation = useConfirm();
 
     const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
-    // Forget missing metadata.
-    const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
-
-    if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
+    const [metadata, selectMetadata] = useMetadata(solutions.items);
 
     return (
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Solutions</h1>
-            <Field>
-                <FieldLabel htmlFor="search-solutions">Search solutions</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-solutions"
-                        placeholder="Search by name, description, or organization"
-                        value={filters.search}
-                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {filters.search !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search solutions"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    setFilters({ search: '', page: 1 });
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            {searchField}
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>
@@ -124,11 +90,7 @@ export default function Solutions() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => setDialog({ kind: 'metadata', id: row.id })}
-                                    >
+                                    <Button size="sm" variant="ghost" onClick={() => selectMetadata(row.id)}>
                                         <Info aria-hidden="true" />
                                         Metadata
                                     </Button>
@@ -145,19 +107,14 @@ export default function Solutions() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination
-                        page={filters.page}
-                        pageSize={25}
-                        onPageChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={solutions.total}
-                    />
+                    <Pagination {...pagination} totalItems={solutions.total} />
                 </footer>
             </Stack>
             {metadata && (
                 <Dialog
                     open
                     onOpenChange={(open) => {
-                        if (!open) setDialog(null);
+                        if (!open) selectMetadata(null);
                     }}
                     title="Solution metadata"
                     footer={
@@ -165,7 +122,7 @@ export default function Solutions() {
                             type="button"
                             variant="destructive"
                             onClick={() => {
-                                setDialog(null);
+                                selectMetadata(null);
                                 confirmation.show({
                                     title: 'Delete solution',
                                     description: `Delete solution ${metadata.name}?`,

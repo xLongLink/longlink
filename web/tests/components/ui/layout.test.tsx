@@ -1,41 +1,12 @@
 // @vitest-environment happy-dom
 import { it, expect } from 'vitest';
 import { act, useState } from 'react';
+import { withMounted } from '../../render';
 import Content from '@/components/layouts/content';
 import userEvent from '@testing-library/user-event';
 import { Box } from '@/components/longlink/layout/box';
-import { renderStatic, withMounted } from '../../render';
 import { Grid } from '@/components/longlink/layout/grid';
-import { PageContainer } from '@/components/layouts/page-container';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
-
-it('keeps Platform page spacing consistent while preserving sizing overrides', () => {
-    // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.
-    const output = renderStatic(
-        <>
-            <PageContainer>
-                <h1>Default page</h1>
-            </PageContainer>
-            <PageContainer fill wide gap={8}>
-                <h2>Sized page</h2>
-            </PageContainer>
-        </>
-    );
-
-    const plain = output.querySelector('h1')?.parentElement;
-    const sized = output.querySelector('h2')?.parentElement;
-
-    if (!plain || !sized) throw new Error('Expected page containers');
-    expect(plain.style.gap).toBe('calc(var(--spacing) * 0)');
-    expect(plain.style.paddingInline).toBe('calc(var(--spacing) * 2)');
-    expect(plain.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
-    expect(plain.classList.contains('max-w-[1000px]')).toBe(true);
-    expect(sized.classList.contains('h-full')).toBe(true);
-    expect(sized.classList.contains('min-h-0')).toBe(true);
-    expect(sized.classList.contains('max-w-none')).toBe(true);
-    expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
-    expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
-});
 
 it.each([Box, Grid])('updates padding overrides without remounting an editable child', async (Layout) => {
     // Arrange

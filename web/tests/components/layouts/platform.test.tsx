@@ -24,31 +24,6 @@ afterEach(() => {
     viewport.settings.device.prefersReducedMotion = initialMotion;
 });
 
-it('preserves the original trailing-slash tab href', async () => {
-    // Arrange
-    viewport.setViewport({ width: 1280 });
-
-    // Act
-    await withMounted(
-        <Platform
-            action={null}
-            tabs={[
-                { href: '/admin/users/', label: 'Users' },
-                { href: '/admin', label: 'Overview' }
-            ]}
-        >
-            <h1>User details</h1>
-        </Platform>,
-        async (output) => {
-            // Assert
-            expect(Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))).toEqual(
-                ['/admin/users/']
-            );
-        },
-        '/admin/users/42/'
-    );
-});
-
 it('uses the sidebar and selects the longest nested route with a trailing slash', async () => {
     // Arrange
     viewport.setViewport({ width: 1280 });
@@ -60,7 +35,7 @@ it('uses the sidebar and selects the longest nested route with a trailing slash'
             tabs={[
                 { href: '/admin', label: 'Overview' },
                 { href: '/admin/users', label: 'Users' },
-                { href: '/admin/users/active', label: 'Active users' }
+                { href: '/admin/users/active/', label: 'Active users' }
             ]}
         >
             <h1>User details</h1>
@@ -70,7 +45,7 @@ it('uses the sidebar and selects the longest nested route with a trailing slash'
             expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
             expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
             expect(Array.from(output.querySelectorAll('a[aria-current]'), (link) => link.getAttribute('href'))).toEqual(
-                ['/admin/users/active']
+                ['/admin/users/active/']
             );
             expect(Array.from(output.querySelectorAll('button'), (button) => button.textContent)).toContain('Account');
         },

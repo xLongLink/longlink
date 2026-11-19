@@ -65,7 +65,7 @@ export default function OrganizationSolution() {
         );
 
         return (
-            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
+            <Platform action={action} breadcrumb={breadcrumb}>
                 <title>{`${solutionAccess.name} | LongLink`}</title>
                 <div
                     className={`flex min-h-[calc(100vh-14rem)] w-full justify-center p-6 ${solutionAccess.status === 'failed' ? 'items-stretch' : 'items-center'}`}

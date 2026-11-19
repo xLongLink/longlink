@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { spacing } from './spacing';
 import type { CSSProperties, ComponentPropsWithoutRef } from 'react';
 
 type GridColumns = number | { base?: number; sm?: number; md?: number; lg?: number; xl?: number };
@@ -52,9 +53,9 @@ export function Grid({
                     '--grid-columns-xl': tracks?.xl
                         ? `repeat(${Math.max(1, tracks.xl)}, minmax(0, 1fr))`
                         : 'var(--grid-columns-lg)',
-                    gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
-                    paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
-                    paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
+                    gap: spacing(gap),
+                    paddingInline: spacing(paddingInline),
+                    paddingBlock: spacing(paddingBlock),
                     alignItems: align,
                     justifyItems: justify
                 } as CSSProperties

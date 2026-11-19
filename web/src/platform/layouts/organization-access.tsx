@@ -79,7 +79,6 @@ function OrganizationFallback({
             action={<ProfileMenu />}
             breadcrumb={<OrganizationBreadcrumb organization={{ id: organization }} />}
             sidebarHeader={sidebarHeader}
-            tabs={[]}
         >
             <PageContainer gap={8}>{children}</PageContainer>
         </Platform>

@@ -1,7 +1,7 @@
+import Publication from './publication';
 import { useLocation } from 'react-router';
 import { Page } from '@/components/ui/page';
-import Publication from '@/components/layouts/publication';
-import { PublicationNavigation, PublicationSectionLinks } from './publication-navigation';
+import { PublicationSectionLinks } from './publication-navigation';
 
 const groups = [
     { path: '/explore', label: 'Solutions' },
@@ -18,7 +18,6 @@ export default function Explore() {
                 navigation={
                     <PublicationSectionLinks groups={groups} activePath={activePath} label="Explore sections" />
                 }
-                sideNav={<PublicationNavigation label="Explore navigation">{null}</PublicationNavigation>}
             />
         </Page>
     );

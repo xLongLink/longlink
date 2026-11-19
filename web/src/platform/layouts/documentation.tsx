@@ -1,12 +1,7 @@
+import Publication from './publication';
 import { useLocation } from 'react-router';
-import Publication from '@/components/layouts/publication';
 import { documentationNavigation } from '@/platform/publications';
-import {
-    PublicationNavigation,
-    PublicationNavigationItem,
-    PublicationNavigationSection,
-    PublicationSectionLinks
-} from './publication-navigation';
+import { PublicationNavigation, PublicationSectionLinks } from './publication-navigation';
 
 /** Renders documentation with section navigation, article, and outline columns. */
 export default function Documentation() {
@@ -23,33 +18,11 @@ export default function Documentation() {
         <Publication
             navigation={<PublicationSectionLinks groups={documentationNavigation} activePath={activeGroup.path} />}
             sideNav={
-                <PublicationNavigation label="Documentation navigation">
-                    {activeGroup.sections.map((section) => (
-                        <PublicationNavigationSection key={section.title} title={section.title}>
-                            {section.pages.map((page) =>
-                                page.children?.length ? (
-                                    <PublicationNavigationSection key={page.path} title={page.label}>
-                                        {page.children.map((child) => (
-                                            <PublicationNavigationItem
-                                                key={child.path}
-                                                page={child}
-                                                pagePath={pagePath}
-                                                hash={hash}
-                                            />
-                                        ))}
-                                    </PublicationNavigationSection>
-                                ) : (
-                                    <PublicationNavigationItem
-                                        key={page.path}
-                                        page={page}
-                                        pagePath={pagePath}
-                                        hash={hash}
-                                    />
-                                )
-                            )}
-                        </PublicationNavigationSection>
-                    ))}
-                </PublicationNavigation>
+                <PublicationNavigation
+                    label="Documentation navigation"
+                    sections={activeGroup.sections}
+                    currentPath={`${pagePath}${hash}`}
+                />
             }
         />
     );

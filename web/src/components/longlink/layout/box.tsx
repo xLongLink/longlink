@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { spacing } from './spacing';
 import type { ComponentPropsWithoutRef, CSSProperties } from 'react';
 
 /** Owns container sizing, semantic surfaces, and optional content centering. */
@@ -56,8 +57,8 @@ export function Box({
                 maxWidth,
                 minHeight,
                 maxHeight,
-                paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
-                paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
+                paddingInline: spacing(paddingInline),
+                paddingBlock: spacing(paddingBlock),
                 alignItems: align ?? (center ? 'center' : undefined),
                 justifyContent:
                     justify === 'between'
