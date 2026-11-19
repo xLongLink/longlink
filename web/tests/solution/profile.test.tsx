@@ -45,7 +45,7 @@ it('installs the initial request persona before passive requests and reloads onl
 
                 if (!trigger) throw new Error('Missing development trigger');
                 await act(async () => await events.click(trigger));
-                const popup = document.querySelector('[role="dialog"]');
+                const popup = document.querySelector('[role="menu"]');
                 expect(popup?.querySelector('a[href="/user/settings"]')).toBeNull();
                 expect(popup?.textContent).not.toContain('Sign out');
                 const docs = popup?.querySelector('a');
@@ -54,19 +54,11 @@ it('installs the initial request persona before passive requests and reloads onl
                 expect(docs?.relList.contains('noopener')).toBe(true);
 
                 if (!docs) throw new Error('Missing documentation link');
-                const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
-                await act(async () => {
-                    docs.focus();
-                    docs.dispatchEvent(space);
-                    docs.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true, cancelable: true }));
-                });
-                expect(space.defaultPrevented).toBe(false);
-                expect(document.querySelector('[role="dialog"]')).toBe(popup);
                 await act(async () => await events.click(docs));
-                expect(document.querySelector('[role="dialog"]')).toBeNull();
+                expect(document.querySelector('[role="menu"]')).toBeNull();
                 await act(async () => await events.click(trigger));
-                const readUser = document.querySelector<HTMLButtonElement>(
-                    '[role="dialog"] button[aria-pressed="false"]'
+                const readUser = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find((item) =>
+                    item.textContent?.includes('read@example.com')
                 );
 
                 if (!readUser) throw new Error('Missing read persona');

@@ -1,16 +1,20 @@
 import { useLayoutEffect, useState } from 'react';
-import { Separator } from '@/components/shadcn/separator';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { Button, buttonVariants } from '@/components/shadcn/button';
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
+import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
-import { SidebarMenuButton, useSidebar } from '@/components/shadcn/sidebar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover';
 import { developmentUsers, getDevelopmentUser, setDevelopmentUser } from '@/solution/development';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/shadcn/dropdown-menu';
 
 /** Switches local request identity without exposing production account controls. */
 export function DevelopmentProfile() {
-    const { isMobile } = useSidebar();
     const [profile] = useState(getDevelopmentUser);
     const { user } = profile;
 
@@ -20,36 +24,26 @@ export function DevelopmentProfile() {
     }, [profile]);
 
     return (
-        <Popover modal="trap-focus">
-            <PopoverTrigger type="button" render={<SidebarMenuButton size="lg" />} aria-label={user.name}>
+        <DropdownMenu>
+            <DropdownMenuTrigger type="button" render={<SidebarMenuButton size="lg" />} aria-label={user.name}>
                 <Avatar name={user.name} size="sm" />
-                <span className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
-                    <span className="truncate text-sm leading-4">{user.name}</span>
-                    <span className="truncate text-xs leading-4 text-muted-foreground">{user.email}</span>
+                <span className="flex min-w-0 flex-1 flex-col text-start leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate text-sm font-medium">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                 </span>
                 <ChevronsUpDown
                     aria-hidden="true"
                     className="text-muted-foreground group-data-[collapsible=icon]:hidden"
                     size={16}
                 />
-            </PopoverTrigger>
-            <PopoverContent
-                className="max-h-(--available-height) max-w-(--available-width) overflow-y-auto"
-                side={isMobile ? 'bottom' : 'right'}
-                align="end"
-                sideOffset={4}
-                aria-label="Development user"
-            >
-                <section className="flex flex-col gap-1" aria-label="Development users">
-                    <p className="text-xs font-medium text-muted-foreground">Development users</p>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end" aria-label="Development user">
+                <DropdownMenuGroup aria-label="Development users">
+                    <DropdownMenuLabel>Development users</DropdownMenuLabel>
                     {developmentUsers.map((candidate) => (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="lg"
-                            className="w-full min-w-0 justify-start text-start font-normal aria-pressed:bg-muted dark:aria-pressed:bg-muted/50"
+                        <DropdownMenuItem
                             key={candidate.user.id}
-                            aria-pressed={candidate.role === profile.role}
+                            aria-current={candidate.role === profile.role ? 'true' : undefined}
                             onClick={() => {
                                 setDevelopmentUser(candidate);
 
@@ -58,47 +52,22 @@ export function DevelopmentProfile() {
                             }}
                         >
                             <Avatar name={candidate.user.name} size="sm" />
-                            <span className="flex min-w-0 flex-1 flex-col">
-                                <span className="truncate text-sm leading-4">{candidate.user.name}</span>
-                                <span className="truncate text-xs leading-4 text-muted-foreground">
-                                    {candidate.user.email}
-                                </span>
+                            <span className="flex min-w-0 flex-1 flex-col text-start leading-tight">
+                                <span className="truncate text-sm font-medium">{candidate.user.name}</span>
+                                <span className="truncate text-xs text-muted-foreground">{candidate.user.email}</span>
                             </span>
-                        </Button>
+                        </DropdownMenuItem>
                     ))}
-                </section>
-                <Separator />
-                <PopoverPrimitive.Close
-                    nativeButton={false}
-                    render={(props) => (
-                        <a
-                            {...props}
-                            href="https://www.longlink.dev/docs/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            role={undefined}
-                            onKeyDown={undefined}
-                            onKeyUp={undefined}
-                        />
-                    )}
-                    className={buttonVariants({
-                        variant: 'ghost',
-                        size: 'lg',
-                        className: 'w-full justify-start font-normal'
-                    })}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                    render={<a href="https://www.longlink.dev/docs/" target="_blank" rel="noopener noreferrer" />}
                 >
                     <BookOpen aria-hidden="true" className="text-muted-foreground" size={16} />
                     Documentation
                     <ExternalLink aria-hidden="true" className="ms-auto text-muted-foreground" size={12} />
-                </PopoverPrimitive.Close>
-                <PopoverPrimitive.Close
-                    type="button"
-                    render={<Button variant="ghost" />}
-                    className="sr-only focus:not-sr-only"
-                >
-                    Close development user menu
-                </PopoverPrimitive.Close>
-            </PopoverContent>
-        </Popover>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
