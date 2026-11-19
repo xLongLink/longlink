@@ -5,15 +5,13 @@ import { Python } from '@/components/svg/python';
 import { Fastapi } from '@/components/svg/fastapi';
 import { ReactDark } from '@/components/svg/react-dark';
 import { Foundation } from '@/components/ui/foundation';
+import { Link } from '@/components/longlink/action/link';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Kubernetes } from '@/components/svg/kubernetes';
 import { Postgresql } from '@/components/svg/postgresql';
 import { Typescript } from '@/components/svg/typescript';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Tailwindcss } from '@/components/svg/tailwindcss';
-import { NativeLink as Link } from '@/components/custom/native-link';
-import { buttonVariants } from '@/components/longlink/action/button';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
@@ -62,11 +60,7 @@ export default function Home() {
                             </p>
                             <p className="text-xs text-white/80">
                                 Currently in testing Beta.{' '}
-                                <Link
-                                    href="https://github.com/xLongLink/longlink"
-                                    isExternalLink
-                                    className="underline text-inherit"
-                                >
+                                <Link href="https://github.com/xLongLink/longlink" isExternalLink>
                                     Star LongLink on GitHub.
                                 </Link>
                             </p>
@@ -118,20 +112,14 @@ export default function Home() {
                                 <p className="text-muted-foreground text-balance">Using open-source technologies</p>
                             </Stack>
                             <Grid columns={2} gap={3}>
-                                <NativeNavigationLink
-                                    className={buttonVariants({ variant: 'outline', className: 'w-full' })}
-                                    href="mailto:info@longlink.dev"
-                                >
+                                <Link variant="outline" fullWidth href="mailto:info@longlink.dev">
                                     Contact Us
                                     <Mail aria-hidden="true" size={16} />
-                                </NativeNavigationLink>
-                                <NativeNavigationLink
-                                    className={buttonVariants({ className: 'w-full' })}
-                                    href="/login/"
-                                >
+                                </Link>
+                                <Link variant="primary" fullWidth href="/login/">
                                     Get Started
                                     <ArrowRight aria-hidden="true" size={16} />
-                                </NativeNavigationLink>
+                                </Link>
                             </Grid>
                         </Stack>
                     </div>

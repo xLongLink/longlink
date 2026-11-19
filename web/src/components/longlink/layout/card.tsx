@@ -1,6 +1,6 @@
 import { cn } from 'cn';
 import * as card from '@/components/shadcn/card';
-import { NavigationLink } from '@/components/longlink/action/link';
+import { Link } from '@/components/longlink/action/link';
 import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode, SyntheticEvent } from 'react';
 
 function preventActivation(event: SyntheticEvent) {
@@ -129,6 +129,7 @@ export function Card({
                     'relative cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
                 mode && isDisabled && 'cursor-default opacity-50',
                 mode === 'selection' && isSelected && 'outline-2 -outline-offset-2 outline-ring',
+                mode && '[&>[data-slot=card-control]]:sr-only',
                 padding === 'none' && 'py-0'
             )}
             style={undefined}
@@ -156,7 +157,6 @@ export function Card({
         >
             {mode === 'selection' ? (
                 <input
-                    className="sr-only"
                     data-slot="card-control"
                     type="checkbox"
                     aria-label={label}
@@ -178,7 +178,6 @@ export function Card({
                 />
             ) : mode === 'action' ? (
                 <button
-                    className="sr-only"
                     data-slot="card-control"
                     type="button"
                     aria-label={label}
@@ -187,16 +186,12 @@ export function Card({
                     onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : mode === 'link' ? (
-                <NavigationLink
-                    className="sr-only"
+                <Link
                     data-slot="card-control"
-                    href={blocked ? undefined : href}
-                    target={blocked ? undefined : target}
-                    role="link"
-                    tabIndex={0}
+                    href={href ?? ''}
+                    disabled={blocked}
+                    target={target}
                     aria-label={label}
-                    aria-disabled={isDisabled || undefined}
-                    onClick={blocked ? preventActivation : undefined}
                     onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : null}

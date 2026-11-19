@@ -2,17 +2,16 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
+import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
@@ -108,14 +107,10 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             <p className="text-muted-foreground text-center">A place for your workflows and data</p>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <NativeNavigationLink
-                                className={buttonVariants({ variant: 'outline' })}
-                                href="/docs/"
-                                target="_blank"
-                            >
+                            <Link variant="outline" href="/docs/" target="_blank">
                                 Read the docs
                                 <ExternalLink className="size-4" aria-hidden="true" />
-                            </NativeNavigationLink>
+                            </Link>
                             <Button onClick={() => setSelected({ type: 'create' })}>
                                 <Plus className="size-4" aria-hidden="true" />
                                 Create organization

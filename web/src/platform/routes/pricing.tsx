@@ -1,12 +1,11 @@
 import { Page } from '@/components/ui/page';
 import { Box } from '@/components/longlink/layout/box';
+import { Link } from '@/components/longlink/action/link';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Database, HardDrive, UsersRound } from 'lucide-react';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { buttonVariants } from '@/components/longlink/action/button';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 
 // Schema defaults come from the same constants used to calculate monthly invoices.
 const rates = schemas.zOrganizationUsage
@@ -90,9 +89,9 @@ export default function Pricing() {
                                 })}
                             </Grid>
                         </Box>
-                        <NativeNavigationLink href="/user/organizations/" className={buttonVariants()}>
+                        <Link href="/user/organizations/" variant="primary">
                             Get started
-                        </NativeNavigationLink>
+                        </Link>
                         <p className="text-xs text-center text-muted-foreground">
                             LongLink is currently in beta. Pricing, limits, and included usage may change.
                         </p>

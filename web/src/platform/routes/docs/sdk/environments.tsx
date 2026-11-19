@@ -1,5 +1,5 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -23,7 +23,7 @@ export default function DocsArticleRoute() {
                 </h1>
                 <p>
                     Use{' '}
-                    <Link href="https://github.com/pydantic/pydantic-settings" className="underline" isExternalLink>
+                    <Link href="https://github.com/pydantic/pydantic-settings" isExternalLink>
                         Pydantic Settings
                     </Link>{' '}
                     to define project configuration as typed, validated Python. Extend Environments with the values your

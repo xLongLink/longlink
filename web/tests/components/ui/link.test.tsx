@@ -7,8 +7,8 @@ import { renderStatic, withMounted } from '../../render';
 import { Link } from '@/components/longlink/action/link';
 import { RequestContext, LinkNavigationContext, DialogActivityContext } from '@/components/custom/contexts';
 
-it.each(['navigation', 'action'] as const)('ignores injected class overrides on a %s link', (kind) => {
-    const overrides = { className: 'hidden' };
+it.each(['navigation', 'action'] as const)('ignores injected presentation overrides on a %s link', (kind) => {
+    const overrides = { className: 'hidden', style: { display: 'none' } };
     const output = renderStatic(
         kind === 'navigation' ? (
             <Link {...overrides} href="/orders">
@@ -21,7 +21,9 @@ it.each(['navigation', 'action'] as const)('ignores injected class overrides on 
         )
     );
 
-    expect(output.querySelector('a, button')?.classList.contains('hidden')).toBe(false);
+    const control = output.querySelector('a, button');
+    expect(control?.classList.contains('hidden')).toBe(false);
+    expect(control?.hasAttribute('style')).toBe(false);
 });
 
 it('keeps a Solution-relative destination on the rendered link', () => {
@@ -148,9 +150,11 @@ it.each([false, true])(
 
         await withMounted(
             file ? (
-                <Link href="/invoice.pdf" download="invoice.pdf" disabled onClick={action}>
-                    Unavailable
-                </Link>
+                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+                    <Link href="/invoice.pdf" download="invoice.pdf" disabled onClick={action}>
+                        Unavailable
+                    </Link>
+                </LinkNavigationContext>
             ) : (
                 <Link disabled onClick={action}>
                     Unavailable
@@ -354,6 +358,47 @@ it('commits callback state updates before the returned promise settles', async (
     } finally {
         release();
     }
+});
+
+it.each([false, true])('forwards the rendered download element to its ref and handler (scoped: %s)', async (scoped) => {
+    // Arrange
+    const ref = createRef<HTMLElement>();
+    const download = vi.fn(async () => {});
+    let activated: HTMLElement | undefined;
+
+    await withMounted(
+        <RequestContext value={scoped ? { request: vi.fn(), download } : null}>
+            <Link
+                ref={ref}
+                href="/invoice.pdf"
+                download="invoice.pdf"
+                onClick={(event) => {
+                    activated = event.currentTarget;
+                    event.preventDefault();
+                }}
+            >
+                Download
+            </Link>
+        </RequestContext>,
+        async (output) => {
+            const control = output.querySelector<HTMLElement>('a, button');
+
+            if (!control) throw new Error('Expected download control');
+
+            // Act
+            ref.current?.focus();
+            await act(async () => control.click());
+
+            // Assert
+            expect(control.tagName).toBe(scoped ? 'BUTTON' : 'A');
+            expect(ref.current).toBe(control);
+            expect(activated).toBe(control);
+            expect(document.activeElement).toBe(control);
+            expect(download).not.toHaveBeenCalled();
+        }
+    );
+
+    expect(ref.current).toBeNull();
 });
 
 it('preserves native anchor props and ref without wrapping caller-owned content', async () => {
@@ -584,11 +629,13 @@ it.each([false, true])('recovers from an already-reported action failure (async:
     });
 });
 
-it('reports a missing download capability instead of navigating or claiming success', async () => {
+it('reports a missing scoped download capability instead of navigating or claiming success', async () => {
     await withMounted(
-        <Link href="/invoice.pdf" download="invoice.pdf">
-            Download
-        </Link>,
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+            <Link href="/invoice.pdf" download="invoice.pdf">
+                Download
+            </Link>
+        </LinkNavigationContext>,
         async (output) => {
             await act(async () => output.querySelector('button')?.click());
             expect(output.querySelector('[role="alert"]')?.textContent).toBe('Downloads require the Solution runtime');

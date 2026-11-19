@@ -5,9 +5,9 @@ import { it, expect, vi } from 'vitest';
 import { useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
+import { Link } from '@/components/longlink/action/link';
+import { Button } from '@/components/longlink/action/button';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
-import { NativeLink, NativeNavigationLink } from '@/components/custom/native-link';
 import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
 
 /** Exposes actual router state after clicks without replacing navigation. */
@@ -115,16 +115,10 @@ it.each([false, true])(
     }
 );
 
-it.each(['link', 'button'] as const)('preserves router and native gestures for a trusted %s link', async (kind) => {
+it('preserves router and native gestures for a trusted link', async () => {
     await withMounted(
         <>
-            {kind === 'link' ? (
-                <NativeLink href="/orders?filter=open">Orders</NativeLink>
-            ) : (
-                <NativeNavigationLink href="/orders?filter=open" className={buttonVariants()}>
-                    Orders
-                </NativeNavigationLink>
-            )}
+            <Link href="/orders?filter=open">Orders</Link>
             <Location />
         </>,
         async (output) => {
@@ -179,21 +173,21 @@ it.each(['link', 'button'] as const)('preserves router and native gestures for a
 it('leaves external, mailto, downloads and new-tab destinations to native navigation', async () => {
     await withMounted(
         <>
-            <NativeLink href="https://example.com/docs" isExternalLink rel="author">
+            <Link href="https://example.com/docs" isExternalLink rel="author">
                 Docs
-            </NativeLink>
-            <NativeNavigationLink href="mailto:info@longlink.dev" className={buttonVariants()}>
+            </Link>
+            <Link href="mailto:info@longlink.dev" variant="primary">
                 Email
-            </NativeNavigationLink>
-            <NativeLink href="/report.pdf" download="report.pdf">
+            </Link>
+            <Link href="/report.pdf" download="report.pdf">
                 Report
-            </NativeLink>
-            <NativeNavigationLink href="/api/archive" download className={buttonVariants()}>
+            </Link>
+            <Link href="/api/archive" download variant="primary">
                 Archive
-            </NativeNavigationLink>
-            <NativeNavigationLink href="/pricing" target="_blank" className={buttonVariants()}>
+            </Link>
+            <Link href="/pricing" target="_blank" variant="primary">
                 Pricing
-            </NativeNavigationLink>
+            </Link>
             <Location />
         </>,
         async (output) => {

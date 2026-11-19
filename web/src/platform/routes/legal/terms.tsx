@@ -1,7 +1,7 @@
 import { legalPaths } from '@/platform/publications';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { PublicArticle } from '@/components/layouts/article';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 const article = {
     description: 'Read the LongLink terms of service.',
@@ -45,11 +45,7 @@ export default function Terms() {
                     </h2>
                     <p>
                         LongLink is operated by LongLink SAGL ("LongLink", "we", "us" or "our"), UID CHE-150.642.313.
-                        Contact:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        .
+                        Contact: <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>.
                     </p>
                     <p>
                         These Terms apply when you create an account or use our hosted platform, including connecting
@@ -126,10 +122,8 @@ export default function Terms() {
                     </p>
                     <p>
                         Use reasonable access controls and notify{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>{' '}
-                        promptly if you suspect unauthorized access or a credential compromise.
+                        <Link href="mailto:info@longlink.dev">info@longlink.dev</Link> promptly if you suspect
+                        unauthorized access or a credential compromise.
                     </p>
                     <p>
                         You are responsible for configuring and updating your Solutions, protecting secrets, controlling
@@ -186,10 +180,7 @@ export default function Terms() {
                         We do not routinely monitor Customer Content. We may investigate and restrict or remove content,
                         access, or resources where reasonably necessary to address suspected abuse, security risks, or
                         legal violations. We handle personal data as described in our{' '}
-                        <Link href="/privacy/" className="underline">
-                            Privacy Policy
-                        </Link>
-                        .
+                        <Link href="/privacy/">Privacy Policy</Link>.
                     </p>
                 </Stack>
 
@@ -254,11 +245,7 @@ export default function Terms() {
                     </p>
                     <p>
                         We act as controller for account, organization, billing, support, security, and operational
-                        data, as explained in our{' '}
-                        <Link href="/privacy/" className="underline">
-                            Privacy Policy
-                        </Link>
-                        .
+                        data, as explained in our <Link href="/privacy/">Privacy Policy</Link>.
                     </p>
                 </Stack>
 
@@ -404,15 +391,9 @@ export default function Terms() {
                         16. Contact
                     </h2>
                     <p>
-                        Legal enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        . General, technical, account, and billing enquiries:{' '}
-                        <Link href="mailto:info@longlink.dev" className="underline">
-                            info@longlink.dev
-                        </Link>
-                        .
+                        Legal enquiries: <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>. General,
+                        technical, account, and billing enquiries:{' '}
+                        <Link href="mailto:info@longlink.dev">info@longlink.dev</Link>.
                     </p>
                     <p>LongLink SAGL, UID CHE-150.642.313.</p>
                 </Stack>

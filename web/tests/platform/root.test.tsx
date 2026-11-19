@@ -3,8 +3,8 @@ import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import PlatformRoot from '@/platform/root';
+import { Link } from '@/components/longlink/action/link';
 import { Route, Routes, useLocation } from 'react-router';
-import { NativeLink as Link } from '@/components/custom/native-link';
 
 it('uses native links for client-side navigation under the Platform root', async () => {
     // Arrange

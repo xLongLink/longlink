@@ -1,6 +1,6 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { InlineCode } from '@/components/shadcn/inline-code';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -25,11 +25,11 @@ export default function DocsArticleRoute() {
                 </h1>
                 <p>
                     Use <InlineCode>ctx.storage</InlineCode> to read and write files asynchronously through a normalized{' '}
-                    <Link href="https://github.com/fsspec/filesystem_spec" className="underline" isExternalLink>
+                    <Link href="https://github.com/fsspec/filesystem_spec" isExternalLink>
                         fsspec
                     </Link>{' '}
                     filesystem. Production uses{' '}
-                    <Link href="https://github.com/fsspec/s3fs" className="underline" isExternalLink>
+                    <Link href="https://github.com/fsspec/s3fs" isExternalLink>
                         s3fs
                     </Link>{' '}
                     with native async S3 I/O through aiobotocore. Synchronous local and memory filesystems are adapted

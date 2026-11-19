@@ -1,6 +1,6 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { InlineCode } from '@/components/shadcn/inline-code';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -26,7 +26,7 @@ export default function DocsArticleRoute() {
                 </h1>
                 <p>
                     Define your data with standard{' '}
-                    <Link href="https://sqlmodel.tiangolo.com/" className="underline" isExternalLink>
+                    <Link href="https://sqlmodel.tiangolo.com/" isExternalLink>
                         SQLModel
                     </Link>{' '}
                     models. The database session and connection are already available through{' '}

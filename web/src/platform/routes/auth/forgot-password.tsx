@@ -3,13 +3,12 @@ import { TextField } from './field';
 import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { Mail, CircleCheck } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
-import { Button, buttonVariants } from '@/components/shadcn/button';
 import { emailPayloadSchema, type EmailPayload } from './validation';
-import { NativeLink as Link } from '@/components/custom/native-link';
-import { NativeNavigationLink } from '@/components/custom/native-link';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
@@ -24,9 +23,7 @@ export default function ForgotPassword() {
         >
             <title>Reset Your Password | LongLink</title>
             <FieldSeparator>
-                <Link href="/login" className="font-medium">
-                    Back to sign in
-                </Link>
+                <Link href="/login">Back to sign in</Link>
             </FieldSeparator>
             {form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
@@ -43,9 +40,9 @@ export default function ForgotPassword() {
                             {confirmation}
                         </p>
                     </div>
-                    <NativeNavigationLink href="/login" className={buttonVariants()}>
+                    <Link href="/login" variant="primary">
                         Back to sign in
-                    </NativeNavigationLink>
+                    </Link>
                 </Stack>
             ) : (
                 <form
@@ -74,10 +71,7 @@ export default function ForgotPassword() {
                 </form>
             )}
             <FieldSeparator>
-                Troubles?{' '}
-                <Link href="mailto:info@longlink.dev" className="font-medium">
-                    Contact US
-                </Link>
+                Troubles? <Link href="mailto:info@longlink.dev">Contact US</Link>
             </FieldSeparator>
         </AuthLayout>
     );

@@ -6,11 +6,11 @@ import { AuthLayout } from './auth-layout';
 import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Button } from '@/components/longlink/action/button';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { NativeNavigationLink } from '@/components/custom/native-link';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
@@ -77,9 +77,9 @@ export default function ResetPassword() {
             >
                 {pageMetadata}
                 <Separator />
-                <NativeNavigationLink href="/auth/forgot-password" className={buttonVariants()}>
+                <Link href="/auth/forgot-password" variant="primary">
                     Request another reset link
-                </NativeNavigationLink>
+                </Link>
             </AuthLayout>
         );
     }
@@ -107,9 +107,9 @@ export default function ResetPassword() {
                             {confirmation}
                         </p>
                     </div>
-                    <NativeNavigationLink href="/login" className={buttonVariants()}>
+                    <Link href="/login" variant="primary">
                         Back to sign in
-                    </NativeNavigationLink>
+                    </Link>
                 </Stack>
             ) : (
                 <form

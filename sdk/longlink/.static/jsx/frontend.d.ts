@@ -4708,88 +4708,22 @@ function Box({ width, height, minWidth, maxWidth, minHeight, maxHeight, padding,
     center?: boolean;
     background?: "none" | "muted" | "primary" | "secondary" | "outline";
 }): React$1.JSX.Element;
-type ActionLinkProps = Omit<React$1.ComponentPropsWithRef<"button">, "onClick" | "type" | "className"> & ({
-    href: string;
-    preview: string;
-    download?: never;
-    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
+type ClassDictionary = Record<string, any>;
+type ClassArray = ClassValue[];
+type ClassValue$1 = ClassValue;
+type ClassProp = {
+    class: ClassValue$1;
+    className?: never;
 } | {
-    href: string;
-    download: string;
-    preview?: never;
-    onClick?: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+    class?: never;
+    className: ClassValue$1;
 } | {
-    href?: never;
-    preview?: never;
-    download?: never;
-    onClick: (event: React$1.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-});
-type LinkProps = (Omit<React$1.ComponentPropsWithRef<"a">, "download" | "className"> & {
-    href: string;
-    preview?: never;
-    download?: never;
-    disabled?: boolean;
-}) | ActionLinkProps;
-function Link(props: LinkProps): React$1.JSX.Element;
-function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
-    size?: "default" | "sm";
-}): React$1.JSX.Element;
-type CardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" | "onChange" | "className" | "style" | "title"> & {
-    title?: React$1.ReactNode;
-    description?: React$1.ReactNode;
-    action?: React$1.ReactNode;
-    footer?: React$1.ReactNode;
-    padding?: "default" | "none";
-    label?: string;
-    onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
-    href?: string;
-    target?: string;
-    isDisabled?: boolean;
-    isSelected?: boolean;
-    onChange?: (isSelected: boolean) => void;
+    class?: never;
+    className?: never;
 };
-function Card$1({ title, description, action, footer, padding, label, onClick, href, target, isDisabled, isSelected, onChange, children, onMouseUp, inert, ...props }: CardProps): React$1.JSX.Element;
-type GridColumns = number | {
-    base?: number;
-    sm?: number;
-    md?: number;
-    lg?: number;
-    xl?: number;
-};
-function Grid({ columns, gap, padding, paddingInline, paddingBlock, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
-    columns?: GridColumns;
-    gap?: number;
-    padding?: number;
-    paddingInline?: number;
-    paddingBlock?: number;
-    align?: "start" | "center" | "end" | "stretch";
-    justify?: "start" | "center" | "end" | "stretch";
-}): React$1.JSX.Element;
-function GridItem({ columns, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
-    columns?: number | "full";
-}): React$1.JSX.Element;
-type MenuSection = {
-    entries: readonly MenuEntry[];
-    isHeaderHidden?: boolean;
-    title: string;
-};
-type MenuItem = {
-    content?: React$1.ReactNode;
-    icon?: IconName;
-    label: string;
-};
-type MenuEntry = (MenuItem & {
-    kind: "item";
-}) | {
-    kind: "subsection";
-    label: string;
-    icon?: IconName;
-    items: readonly MenuItem[];
-};
-function Menu({ sections, gap }: {
-    sections: readonly MenuSection[];
-    gap?: number;
-}): React$1.JSX.Element;
+type OmitUndefined<T> = T extends undefined ? never : T;
+type VariantProps<Component extends (...args: any) => any> = Omit<OmitUndefined<Parameters<Component>[0]>, "class" | "className">;
 const none: "none";
 const triggerPress: "trigger-press";
 const triggerHover: "trigger-hover";
@@ -4907,6 +4841,119 @@ interface NonNativeButtonProps {
     nativeButton?: boolean | undefined;
 }
 type Orientation = "horizontal" | "vertical";
+const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
+interface ButtonState {
+    disabled: boolean;
+}
+interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
+    focusableWhenDisabled?: boolean | undefined;
+}
+namespace Button {
+    type State = ButtonState;
+    type Props = ButtonProps;
+}
+const buttonVariants: (props?: ({
+    variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+} & ClassProp) | undefined) => string;
+function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
+function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
+type LinkElementProps<Props extends React$1.DOMAttributes<HTMLElement>, OtherProps> = Omit<Props, "href" | "download" | "onClick" | "type" | "className" | "style"> & {
+    onClick?: (...args: Parameters<NonNullable<Props["onClick"]>>) => unknown;
+} & {
+    [Key in Exclude<keyof OtherProps, keyof Props | "href" | "download" | "disabled">]?: never;
+};
+type NavigationProps = LinkElementProps<React$1.AnchorHTMLAttributes<HTMLAnchorElement>, React$1.ButtonHTMLAttributes<HTMLButtonElement>> & {
+    href: string;
+    preview?: never;
+    download?: boolean;
+    disabled?: boolean;
+    isExternalLink?: boolean;
+};
+type ButtonLinkProps = LinkElementProps<React$1.ButtonHTMLAttributes<HTMLButtonElement>, React$1.AnchorHTMLAttributes<HTMLAnchorElement>>;
+type PreviewProps = ButtonLinkProps & {
+    href: string;
+    preview: string;
+    download?: never;
+    isExternalLink?: never;
+};
+type DownloadProps = LinkElementProps<React$1.HTMLAttributes<HTMLElement> & Pick<React$1.AnchorHTMLAttributes<HTMLElement>, "target" | "rel">, React$1.AnchorHTMLAttributes<HTMLElement> & React$1.ButtonHTMLAttributes<HTMLElement>> & {
+    href: string;
+    download: string;
+    preview?: never;
+    disabled?: boolean;
+    isExternalLink?: boolean;
+};
+type CallbackProps = ButtonLinkProps & Required<Pick<ButtonLinkProps, "onClick">> & {
+    href?: never;
+    preview?: never;
+    download?: never;
+    isExternalLink?: never;
+};
+type LinkProps = (NavigationProps | PreviewProps | DownloadProps | CallbackProps) & VariantProps<typeof buttonVariants> & {
+    ref?: React$1.Ref<HTMLElement>;
+    fullWidth?: boolean;
+};
+function Link(props: LinkProps): React$1.JSX.Element;
+function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
+    size?: "default" | "sm";
+}): React$1.JSX.Element;
+type CardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" | "onChange" | "className" | "style" | "title"> & {
+    title?: React$1.ReactNode;
+    description?: React$1.ReactNode;
+    action?: React$1.ReactNode;
+    footer?: React$1.ReactNode;
+    padding?: "default" | "none";
+    label?: string;
+    onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
+    href?: string;
+    target?: string;
+    isDisabled?: boolean;
+    isSelected?: boolean;
+    onChange?: (isSelected: boolean) => void;
+};
+function Card$1({ title, description, action, footer, padding, label, onClick, href, target, isDisabled, isSelected, onChange, children, onMouseUp, inert, ...props }: CardProps): React$1.JSX.Element;
+type GridColumns = number | {
+    base?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+};
+function Grid({ columns, gap, padding, paddingInline, paddingBlock, align, justify, children, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+    columns?: GridColumns;
+    gap?: number;
+    padding?: number;
+    paddingInline?: number;
+    paddingBlock?: number;
+    align?: "start" | "center" | "end" | "stretch";
+    justify?: "start" | "center" | "end" | "stretch";
+}): React$1.JSX.Element;
+function GridItem({ columns, ...props }: Omit<React$1.ComponentPropsWithoutRef<"div">, "className" | "style"> & {
+    columns?: number | "full";
+}): React$1.JSX.Element;
+type MenuSection = {
+    entries: readonly MenuEntry[];
+    isHeaderHidden?: boolean;
+    title: string;
+};
+type MenuItem = {
+    content?: React$1.ReactNode;
+    icon?: IconName;
+    label: string;
+};
+type MenuEntry = (MenuItem & {
+    kind: "item";
+}) | {
+    kind: "subsection";
+    label: string;
+    icon?: IconName;
+    items: readonly MenuItem[];
+};
+function Menu({ sections, gap }: {
+    sections: readonly MenuSection[];
+    gap?: number;
+}): React$1.JSX.Element;
 const TabsTab: React$1.ForwardRefExoticComponent<Omit<TabsTabProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
 type TabsTabValue = any | null;
 type TabsTabActivationDirection = "left" | "right" | "up" | "down" | "none";
@@ -5010,22 +5057,6 @@ namespace TabsList {
     type State = TabsListState;
     type Props = TabsListProps;
 }
-type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
-type ClassDictionary = Record<string, any>;
-type ClassArray = ClassValue[];
-type ClassValue$1 = ClassValue;
-type ClassProp = {
-    class: ClassValue$1;
-    className?: never;
-} | {
-    class?: never;
-    className: ClassValue$1;
-} | {
-    class?: never;
-    className?: never;
-};
-type OmitUndefined<T> = T extends undefined ? never : T;
-type VariantProps<Component extends (...args: any) => any> = Omit<OmitUndefined<Parameters<Component>[0]>, "class" | "className">;
 function Tabs$1({ className, orientation, ...props }: Tabs.Root.Props): React$1.JSX.Element;
 const tabsListVariants: (props?: ({
     variant?: "line" | "default" | null | undefined;
@@ -5172,23 +5203,6 @@ function TableCell({ align, ...props }: Omit<React$1.ComponentProps<"td">, "alig
     align?: "start" | "center" | "end";
 }): React$1.JSX.Element;
 function TableCaption(props: Omit<React$1.ComponentProps<"caption">, "className" | "style">): React$1.JSX.Element;
-const Button: React$1.ForwardRefExoticComponent<Omit<ButtonProps, "ref"> & React$1.RefAttributes<HTMLElement>>;
-interface ButtonState {
-    disabled: boolean;
-}
-interface ButtonProps extends NativeButtonProps, BaseUIComponentProps<"button", ButtonState> {
-    focusableWhenDisabled?: boolean | undefined;
-}
-namespace Button {
-    type State = ButtonState;
-    type Props = ButtonProps;
-}
-const buttonVariants: (props?: ({
-    variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
-} & ClassProp) | undefined) => string;
-function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
-function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
 const AvatarRoot: React$1.ForwardRefExoticComponent<Omit<AvatarRootProps, "ref"> & React$1.RefAttributes<HTMLSpanElement>>;
 type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error";
 interface AvatarRootState {

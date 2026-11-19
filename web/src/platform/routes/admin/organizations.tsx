@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/hooks/use-api';
 import { Info, Search, X } from 'lucide-react';
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useDeferredValue, useRef, useState } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
@@ -9,7 +10,6 @@ import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';

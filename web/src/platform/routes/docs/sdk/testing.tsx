@@ -1,5 +1,5 @@
+import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
-import { NativeLink as Link } from '@/components/custom/native-link';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
 import { CodeBlock, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
 
@@ -23,7 +23,7 @@ export default function DocsArticleRoute() {
                 </h1>
                 <p>
                     Test your application with standard{' '}
-                    <Link href="https://docs.pytest.org/en/stable/" className="underline" isExternalLink>
+                    <Link href="https://docs.pytest.org/en/stable/" isExternalLink>
                         pytest
                     </Link>{' '}
                     workflows. Use <InlineCode>TestClient</InlineCode> to run the application with isolated in-memory
