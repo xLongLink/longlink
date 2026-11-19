@@ -67,6 +67,7 @@ export default function Tasks() {
     // Load persisted tasks and keep the dialog's open state local to this View.
     const [tasks] = useApi('/api/tasks');
     const [isOpen, setIsOpen] = useState(false);
+    const [preview, setPreview] = useState(null);
     const table = useTable({
         features: dataGridFeatures,
         manualPagination: true,
@@ -82,7 +83,7 @@ export default function Tasks() {
                     <Stack gap={0}>
                         <Text>{task.title}</Text>
                         {task.attachment ? (
-                            <Link href={`/api/tasks/${task.id}/attachment`} preview={task.attachment}>
+                            <Link onClick={() => setPreview(task)} aria-haspopup="dialog">
                                 {task.attachment}
                             </Link>
                         ) : (
@@ -130,6 +131,11 @@ export default function Tasks() {
             <Dialog title="Add task" open={isOpen} onOpenChange={setIsOpen}>
                 {isOpen && <TaskForm onSuccess={() => setIsOpen(false)} onCancel={() => setIsOpen(false)} />}
             </Dialog>
+            {preview !== null && (
+                <Dialog open fullscreen title={preview.attachment} onOpenChange={() => setPreview(null)}>
+                    <FileViewer src={`/api/tasks/${preview.id}/attachment`} title={preview.attachment} />
+                </Dialog>
+            )}
         </Stack>
     );
 }

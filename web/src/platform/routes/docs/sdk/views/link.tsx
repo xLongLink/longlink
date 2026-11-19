@@ -19,16 +19,15 @@ export default function LinkPage() {
   return (
     <Stack>
       <Link href="/orders">Orders</Link>
-      <Link href="/api/documents/sample" preview="sample-document.txt">
+      <Link onClick={() => download("/api/documents/sample", "sample-document.txt")}>
         sample-document.txt
       </Link>
-      <Link href="/api/documents/sample" download="sample-document.txt">
-        sample-document.txt
-      </Link>
-      <Link onClick={() => setIsOpen(true)}>Document details</Link>
-      <Dialog title="Document details" open={isOpen} onOpenChange={setIsOpen}>
-          <Text>Document details opened without navigation.</Text>
-      </Dialog>
+      <Link onClick={() => setIsOpen(true)} aria-haspopup="dialog">Preview document</Link>
+      {isOpen && (
+        <Dialog title="sample-document.txt" open onOpenChange={setIsOpen}>
+          <FileViewer src="/api/documents/sample" title="sample-document.txt" />
+        </Dialog>
+      )}
     </Stack>
   );
 }`

@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Spinner } from '@/components/shadcn/spinner';
-import { NativeFile } from '@/components/custom/native-file';
 import { RequestContext } from '@/components/custom/contexts';
+import { FilePreview } from '@/components/longlink/display/file-preview';
 
 /** Displays supported attachments inside the View using scoped file requests. */
 export function FileViewer({
@@ -34,7 +34,7 @@ export function FileViewer({
     return (
         <div className="flex h-96 w-full min-w-0 items-center justify-center" aria-label={title}>
             {data ? (
-                <NativeFile key={src} body={data} title={title} />
+                <FilePreview key={src} body={data} title={title} />
             ) : isError ? (
                 <span role="status">{error instanceof Error ? error.message : 'File preview failed'}</span>
             ) : (

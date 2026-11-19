@@ -777,7 +777,7 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     const runtime = await initializeRuntime(`export default function View() {
         return <>
             <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
-            <Link href="/api/report" download="report.pdf">Download report</Link>
+            <Link onClick={() => download("/api/report", "reports/report.pdf")}>Download report</Link>
         </>;
     }`);
 
@@ -812,7 +812,7 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
         expect(downloads).not.toHaveBeenCalled();
         expect(report.hasAttribute('download')).toBe(false);
         await user.click(report);
-        await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'report.pdf'));
+        await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'reports_report.pdf'));
         expect(navigation).toHaveBeenCalledTimes(1);
     } finally {
         runtime.close();

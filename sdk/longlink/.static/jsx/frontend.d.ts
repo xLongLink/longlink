@@ -99,6 +99,13 @@ declare function useRef<T>(initial: T): { current: T };
 declare function navigate(path: string): void;
 
 /**
+ * Saves a scoped Solution attachment through the host using a sanitized filename.
+ * @category Runtime
+ * @group Functions
+ */
+declare function download(path: string, filename: string): Promise<void>;
+
+/**
  * Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.
  * @category Runtime
  * @group Functions
@@ -4854,7 +4861,7 @@ namespace Button {
 }
 const buttonVariants: (props?: ({
     variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
-    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+    size?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;
@@ -4865,32 +4872,17 @@ type LinkElementProps<Props extends React$1.DOMAttributes<HTMLElement>, OtherPro
 };
 type NavigationProps = LinkElementProps<React$1.AnchorHTMLAttributes<HTMLAnchorElement>, React$1.ButtonHTMLAttributes<HTMLButtonElement>> & {
     href: string;
-    preview?: never;
-    download?: boolean;
+    download?: string | boolean;
     disabled?: boolean;
     isExternalLink?: boolean;
 };
 type ButtonLinkProps = LinkElementProps<React$1.ButtonHTMLAttributes<HTMLButtonElement>, React$1.AnchorHTMLAttributes<HTMLAnchorElement>>;
-type PreviewProps = ButtonLinkProps & {
-    href: string;
-    preview: string;
-    download?: never;
-    isExternalLink?: never;
-};
-type DownloadProps = LinkElementProps<React$1.HTMLAttributes<HTMLElement> & Pick<React$1.AnchorHTMLAttributes<HTMLElement>, "target" | "rel">, React$1.AnchorHTMLAttributes<HTMLElement> & React$1.ButtonHTMLAttributes<HTMLElement>> & {
-    href: string;
-    download: string;
-    preview?: never;
-    disabled?: boolean;
-    isExternalLink?: boolean;
-};
 type CallbackProps = ButtonLinkProps & Required<Pick<ButtonLinkProps, "onClick">> & {
     href?: never;
-    preview?: never;
     download?: never;
     isExternalLink?: never;
 };
-type LinkProps = (NavigationProps | PreviewProps | DownloadProps | CallbackProps) & VariantProps<typeof buttonVariants> & {
+type LinkProps = (NavigationProps | CallbackProps) & VariantProps<typeof buttonVariants> & {
     ref?: React$1.Ref<HTMLElement>;
     fullWidth?: boolean;
 };
@@ -5105,7 +5097,7 @@ namespace useRender {
     type ReturnValue<Enabled extends boolean | undefined> = UseRenderReturnValue<Enabled>;
 }
 const iconTileVariants: (props?: ({
-    variant?: "outline" | "solid" | "frame" | "elevated" | "soft" | null | undefined;
+    variant?: "outline" | "frame" | "elevated" | "soft" | "solid" | null | undefined;
     size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;

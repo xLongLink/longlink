@@ -151,7 +151,7 @@ const configuredTable = (
     <DataGrid
         table={table}
         recordCount={records.length}
-        emptyMessage={<Link href="/api/export" download="shipments.csv">Export</Link>}
+        emptyMessage={<Link onClick={() => download("/api/export", "shipments.csv")}>Export</Link>}
     >
         <DataGridContainer>
             <DataGridScrollArea><DataGridTable /></DataGridScrollArea>
@@ -209,11 +209,11 @@ const nativeComposition = (
             >
                 <span>Orders</span>
             </Link>
-            <Link href="/api/report" download="report.pdf">
+            <Link onClick={() => download("/api/report", "report.pdf")}>
                 Download report
             </Link>
             <Link onClick={async (event) => { event.currentTarget.focus(); }}>Run action</Link>
-            <Link href="/api/report" preview="report.pdf">Preview</Link>
+            <Link onClick={() => {}}>Preview</Link>
             <ButtonGroup aria-label="Actions" orientation="vertical">
                 <Button>Save</Button>
                 <Button>Cancel</Button>
@@ -440,9 +440,9 @@ const _dialogTitle = <Dialog open />;
 const _dialogStyle = <Dialog title="Details" style={{ width: 900 }} />;
 // @ts-expect-error Fullscreen is a boolean, not a size name.
 const _dialogFullscreen = <Dialog title="Details" fullscreen="fullscreen" />;
-// @ts-expect-error A file action cannot preview and download simultaneously.
+// @ts-expect-error Link does not own file previews.
 const _conflictingLinkActions = <Link href="/api/report" preview="report.pdf" download="report.pdf">Report</Link>;
-// @ts-expect-error Scoped file actions require a path.
+// @ts-expect-error Preview is not a Link prop.
 const _missingFilePath = <Link preview="report.pdf">Preview</Link>;
 // @ts-expect-error A link requires a destination or an action.
 const _missingLinkAction = <Link>Report</Link>;
@@ -450,7 +450,7 @@ const _missingLinkAction = <Link>Report</Link>;
 const _linkFormAction = <Link href="/orders" formAction="/submit">Orders</Link>;
 // @ts-expect-error Callback buttons do not accept anchor targets.
 const _linkActionTarget = <Link onClick={() => {}} target="_blank">Run</Link>;
-// @ts-expect-error Preview buttons do not expose external navigation.
+// @ts-expect-error Preview is not a Link prop.
 const _linkPreviewExternal = <Link href="/report" preview="report.pdf" isExternalLink>Report</Link>;
 // @ts-expect-error Callback buttons do not expose external navigation.
 const _linkCallbackExternal = <Link onClick={() => {}} isExternalLink>Run</Link>;
