@@ -109,3 +109,121 @@ it('retains an explicit no-access draft after save failure and retries against t
         transport.mockRestore();
     }
 });
+
+it('retries only the outstanding member draft after a partially successful save', async () => {
+    // Arrange
+    const revision = '00000000-0000-4000-8000-000000000001';
+    const members = [
+        { id: '00000000-0000-4000-8000-000000000002', name: 'Alex' },
+        { id: '00000000-0000-4000-8000-000000000003', name: 'Blair' },
+        { id: '00000000-0000-4000-8000-000000000004', name: 'Casey' }
+    ];
+    const writes: { memberId: string; body: unknown }[] = [];
+    const savedRoles = new Map<string, string | null>(members.map(({ id }) => [id, 'read']));
+    const close = vi.fn();
+    const reportError = vi.fn();
+    const user = userEvent.setup();
+    let failed = false;
+
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
+        const path = new URL(request.url).pathname;
+
+        if (request.method === 'GET' && path === '/api/v1/solutions/orders/permissions') {
+            return Response.json({ roles: ['read', 'write'], revision_id: revision });
+        }
+
+        if (request.method === 'GET' && path === '/api/v1/organizations/acme/members') {
+            return Response.json(
+                members.map(({ id, name }) => ({
+                    user: { id, name, email: `${name.toLowerCase()}@example.com`, avatar: '' },
+                    role: 'read'
+                }))
+            );
+        }
+
+        const member = members.find(({ id }) => path === `/api/v1/solutions/orders/members/${id}/access`);
+        if (!member) throw new Error(`Unexpected request: ${request.method} ${path}`);
+
+        if (request.method === 'GET') {
+            return Response.json({ role: savedRoles.get(member.id), revision_id: revision });
+        }
+
+        if (request.method === 'PUT') {
+            const body: unknown = await request.json();
+            writes.push({ memberId: member.id, body });
+
+            if (member.id === members[1].id && !failed) {
+                failed = true;
+                return Response.json({ detail: 'Try again' }, { status: 409 });
+            }
+
+            savedRoles.set(member.id, member.id === members[0].id ? 'write' : null);
+            return new Response(null, { status: 204 });
+        }
+
+        throw new Error(`Unexpected request: ${request.method} ${path}`);
+    });
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={reportError}>
+                <Suspense fallback="Loading permissions">
+                    <SolutionPermissions organizationId="acme" solutionId="orders" onClose={close} />
+                </Suspense>
+            </ApiErrorContext>,
+            async (output) => {
+                await vi.waitFor(() =>
+                    expect(output.querySelectorAll('button[aria-haspopup="listbox"]').length).toBe(3)
+                );
+
+                // Act
+                for (const [name, role] of [
+                    ['Alex', 'write'],
+                    ['Blair', 'No access']
+                ]) {
+                    const trigger = output.querySelector<HTMLButtonElement>(`[aria-label="Role for ${name}"]`);
+                    if (!trigger) throw new Error(`Expected role control for ${name}`);
+                    await act(async () => user.click(trigger));
+
+                    const list = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
+                    const option = Array.from(list?.querySelectorAll<HTMLElement>('[role="option"]') ?? []).find(
+                        (item) => item.textContent === role
+                    );
+                    if (!option) throw new Error(`Expected role option ${role}`);
+                    await act(async () => user.click(option));
+                }
+
+                const save = Array.from(output.querySelectorAll('button')).find(
+                    (button) => button.textContent === 'Save'
+                );
+                if (!save) throw new Error('Expected save control');
+                await act(async () => user.click(save));
+
+                // Assert
+                await vi.waitFor(() => expect(reportError).toHaveBeenCalledOnce());
+                expect(close).not.toHaveBeenCalled();
+                expect(writes).toEqual([
+                    { memberId: members[0].id, body: { role: 'write', revision_id: revision } },
+                    { memberId: members[1].id, body: { role: null, revision_id: revision } }
+                ]);
+                expect(output.querySelector('[aria-label="Role for Alex"]')?.textContent).toBe('write');
+                expect(output.querySelector('[aria-label="Role for Blair"]')?.textContent).toBe('No access');
+                expect(output.querySelector('[aria-label="Role for Casey"]')?.textContent).toBe('read');
+
+                // Act
+                await act(async () => user.click(save));
+
+                // Assert
+                await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());
+                expect(writes).toEqual([
+                    { memberId: members[0].id, body: { role: 'write', revision_id: revision } },
+                    { memberId: members[1].id, body: { role: null, revision_id: revision } },
+                    { memberId: members[1].id, body: { role: null, revision_id: revision } }
+                ]);
+            }
+        );
+    } finally {
+        transport.mockRestore();
+    }
+});

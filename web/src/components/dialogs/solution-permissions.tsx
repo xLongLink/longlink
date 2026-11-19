@@ -94,28 +94,22 @@ function MemberPermissions({
         queries: members.map(({ user }) => apiQueryOptions(`${base}/members/${user.id}/access`, schemas.zMemberAccess))
     });
 
-    const rows = members.map(({ user }, index) => ({
-        ...user,
-        role: roles[user.id] ?? assignments[index].data.role ?? ''
-    }));
-
     // Acknowledge each saved assignment before proceeding so failed saves can be retried safely.
     const save = useMutation({
         retry: false,
         networkMode: 'always',
         mutationFn: async () => {
-            for (const member of rows) {
-                if (!(member.id in roles)) continue;
-                const path = `${base}/members/${member.id}/access`;
-                await api.put(path, {
-                    json: schemas.zAccessUpdate.parse({ role: member.role || null, revision_id: settings.revision_id })
-                });
+            for (const { user } of members) {
+                if (!(user.id in roles)) continue;
+                const role = roles[user.id] || null;
+                const path = `${base}/members/${user.id}/access`;
+                await api.put(path, { json: schemas.zAccessUpdate.parse({ role, revision_id: settings.revision_id }) });
                 client.setQueryData<z.output<typeof schemas.zMemberAccess>>(['api', path], (current) =>
-                    current ? { ...current, role: member.role || null } : current
+                    current ? { ...current, role } : current
                 );
                 setRoles((current) => {
                     const updated = { ...current };
-                    delete updated[member.id];
+                    delete updated[user.id];
 
                     return updated;
                 });
@@ -136,30 +130,30 @@ function MemberPermissions({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {rows.map((member) => (
-                        <TableRow key={member.id}>
+                    {members.map(({ user }, index) => (
+                        <TableRow key={user.id}>
                             <TableCell>
                                 <Stack direction="horizontal" gap={3} align="center">
-                                    <Avatar name={member.name} src={member.avatar} />
+                                    <Avatar name={user.name} src={user.avatar} />
                                     <Stack gap={0}>
-                                        <span>{member.name}</span>
-                                        <span className="text-xs text-muted-foreground">{member.email}</span>
+                                        <span>{user.name}</span>
+                                        <span className="text-xs text-muted-foreground">{user.email}</span>
                                     </Stack>
                                 </Stack>
                             </TableCell>
                             <TableCell>
                                 <Select
                                     disabled={save.isPending}
-                                    value={member.role}
+                                    value={roles[user.id] ?? assignments[index].data.role ?? ''}
                                     items={[
                                         { value: '', label: 'No access' },
                                         ...settings.roles.map((value) => ({ value, label: value }))
                                     ]}
                                     onValueChange={(role) =>
-                                        setRoles((current) => ({ ...current, [member.id]: role ?? '' }))
+                                        setRoles((current) => ({ ...current, [user.id]: role ?? '' }))
                                     }
                                 >
-                                    <SelectTrigger aria-label={`Role for ${member.name}`} className="w-full">
+                                    <SelectTrigger aria-label={`Role for ${user.name}`} className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -184,7 +178,7 @@ function MemberPermissions({
                             </TableCell>
                         </TableRow>
                     ))}
-                    {rows.length === 0 && (
+                    {members.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={2} align="center">
                                 <Empty role="status" title="No data" />

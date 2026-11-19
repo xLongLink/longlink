@@ -2,9 +2,9 @@ import { ApiError } from '@/lib/api';
 import type { ReactNode } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { Outlet, useParams } from 'react-router';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
-import { Outlet, useMatch, useParams } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageError, PageLoading } from '@/components/ui/utils';
@@ -14,8 +14,8 @@ import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod
 
 /** Resolves organization access before either organization or Solution pages mount. */
 export default function OrganizationAccess() {
-    const { organization = '' } = useParams();
-    const solutionRoute = useMatch('/orgs/:organization/solutions/:solution/*');
+    const { organization = '', solution } = useParams();
+    const solutionRoute = solution !== undefined;
 
     return (
         <ApiBoundary

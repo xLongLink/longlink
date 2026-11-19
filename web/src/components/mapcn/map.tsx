@@ -16,6 +16,7 @@ import {
     useMemo,
     useRef,
     useState,
+    useSyncExternalStore,
     type ReactNode
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -102,44 +103,24 @@ function getDocumentTheme(): Theme | null {
     return null;
 }
 
-// Get system preference
-function getSystemTheme(): Theme {
-    if (typeof window === 'undefined') return 'light';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function getThemeSnapshot(): Theme {
+    return getDocumentTheme() ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 }
 
-function useResolvedTheme(themeProp?: 'light' | 'dark'): Theme {
-    const [detectedTheme, setDetectedTheme] = useState<Theme>(() => getDocumentTheme() ?? getSystemTheme());
+function subscribeToTheme(notify: () => void) {
+    const observer = new MutationObserver(notify);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', notify);
 
-    useEffect(() => {
-        if (themeProp) return; // Skip detection if theme is provided via prop
+    return () => {
+        observer.disconnect();
+        mediaQuery.removeEventListener('change', notify);
+    };
+}
 
-        // Watch for document theme changes (e.g., next-themes toggling the class
-        // or the data-theme attribute).
-        const observer = new MutationObserver(() => {
-            const docTheme = getDocumentTheme();
-            if (docTheme) {
-                setDetectedTheme(docTheme);
-            }
-        });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-
-        // Also watch for system preference changes
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleSystemChange = (e: MediaQueryListEvent) => {
-            // Only use system preference if no document class is set
-            if (!getDocumentTheme()) {
-                setDetectedTheme(e.matches ? 'dark' : 'light');
-            }
-        };
-        mediaQuery.addEventListener('change', handleSystemChange);
-
-        return () => {
-            observer.disconnect();
-            mediaQuery.removeEventListener('change', handleSystemChange);
-        };
-    }, [themeProp]);
-
+function useResolvedTheme(themeProp?: Theme): Theme {
+    const detectedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, () => 'light' as const);
     return themeProp ?? detectedTheme;
 }
 

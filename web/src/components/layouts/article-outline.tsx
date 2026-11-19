@@ -5,7 +5,7 @@ export type ArticleOutlineItem = { id: string; label: string; level: number };
 
 /** Tracks the authored article headings in the page's viewport scroll root. */
 export function ArticleOutline({ items }: { items: readonly ArticleOutlineItem[] }) {
-    const { hash, key } = useLocation();
+    const { hash, pathname } = useLocation();
 
     // Delegate section tracking and fragment navigation to the shared primitive.
     return (
@@ -17,7 +17,7 @@ export function ArticleOutline({ items }: { items: readonly ArticleOutlineItem[]
                 On this page
             </h2>
             <nav aria-label="On this page">
-                <Scrollspy key={key} initialHash={hash} history="push">
+                <Scrollspy key={pathname} initialHash={hash} history="push">
                     <ul className="m-0 flex list-none flex-col gap-0.5 border-s-2 border-border p-0">
                         {items.map((item, index) => (
                             <li

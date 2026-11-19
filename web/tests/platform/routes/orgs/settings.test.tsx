@@ -504,6 +504,10 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
 
     let attempts = 0;
     const requests: string[] = [];
+    let finishRefresh: (response: Response) => void = () => undefined;
+    const pendingRefresh = new Promise<Response>((resolve) => {
+        finishRefresh = resolve;
+    });
 
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
@@ -519,7 +523,9 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
                 : new Response(null, { status: 204 });
         }
 
-        if (request.method === 'GET' && path === `${base}/invitations`) return Response.json([invitation]);
+        if (request.method === 'GET' && path === `${base}/invitations`) {
+            return attempts === 1 ? Response.json([invitation]) : pendingRefresh;
+        }
 
         throw new Error(`Unexpected request: ${request.method} ${path}`);
     });
@@ -561,18 +567,21 @@ it('retains a failed invitation draft, refreshes saved invitations, and retries 
 
                 // Assert
                 await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+                await vi.waitFor(() => expect(requests).toHaveLength(4));
                 expect(requests).toEqual([
                     `POST ${base}/invitations`,
                     `GET ${base}/invitations`,
                     `POST ${base}/invitations`,
                     `GET ${base}/invitations`
                 ]);
+                await act(async () => finishRefresh(Response.json([invitation])));
             },
             'invitations',
             '',
             [expect.any(Error)]
         );
     } finally {
+        finishRefresh(Response.json([invitation]));
         transport.mockRestore();
     }
 });

@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { act, StrictMode } from 'react';
 import { withMounted } from '../../render';
-import { MemoryRouter } from 'react-router';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
+import { Link, MemoryRouter } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
 import { PublicArticle } from '@/components/layouts/article';
 import { ArticleOutline } from '@/components/layouts/article-outline';
@@ -32,6 +32,41 @@ function ReadingArticle() {
 }
 
 afterEach(() => vi.restoreAllMocks());
+
+it('keeps the outline mounted for router fragments and resets it for another article', async () => {
+    // Arrange
+    await withMounted(
+        <>
+            <Link to="/blog/reading/#middle">Read middle</Link>
+            <Link to="/blog/another/#last">Read another article</Link>
+            <ReadingArticle />
+        </>,
+        async (output) => {
+            const outline = output.querySelector('[data-slot="scrollspy"]');
+            const fragmentLink = output.querySelector<HTMLAnchorElement>('a[href="/blog/reading/#middle"]');
+            const articleLink = output.querySelector<HTMLAnchorElement>('a[href="/blog/another/#last"]');
+
+            if (!outline || !fragmentLink || !articleLink) throw new Error('Missing article navigation');
+
+            // Act
+            await act(async () => fragmentLink.click());
+
+            // Assert
+            expect(output.querySelector('[data-slot="scrollspy"]')).toBe(outline);
+            expect(outline.querySelector('[aria-current="location"]')?.getAttribute('href')).toBe('#middle');
+
+            // Act
+            await act(async () => articleLink.click());
+
+            // Assert
+            expect(output.querySelector('[data-slot="scrollspy"]')).not.toBe(outline);
+            expect(
+                output.querySelector('nav[aria-label="On this page"] [aria-current="location"]')?.getAttribute('href')
+            ).toBe('#last');
+        },
+        '/blog/reading/#first'
+    );
+});
 
 type HistorySnapshot = { url: string; state: unknown };
 

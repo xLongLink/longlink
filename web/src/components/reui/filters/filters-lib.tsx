@@ -43,9 +43,6 @@ export const FILTER_FIELD_PICKER_CLASS = 'w-auto min-w-56 p-0';
 /*                                    Paths                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Root key for `childrenOf`; a control char cannot collide with a field id. */
-export const FILTER_ROOT_KEY = '\u0000root';
-
 /** Separator between path segments in the flat map keys. */
 const PATH_SEPARATOR = '\u0000';
 
@@ -55,11 +52,6 @@ export function joinFilterPath(path: readonly string[]): string {
 
 export function splitFilterPath(key: string): string[] {
     return key === '' ? [] : key.split(PATH_SEPARATOR);
-}
-
-/** The joined key of a path's parent, or `FILTER_ROOT_KEY` at the top level. */
-export function parentFilterKey(path: readonly string[]): string {
-    return path.length <= 1 ? FILTER_ROOT_KEY : joinFilterPath(path.slice(0, -1));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -132,20 +124,14 @@ export function computeFilterSchemaSignature<V, O>(fields: readonly FilterField<
 /*                                    Index                                   */
 /* -------------------------------------------------------------------------- */
 
-const EMPTY_INDEX: FilterIndex<never, never> = {
-    byPath: new Map(),
-    childrenOf: new Map(),
-    parentOf: new Map(),
-    all: [],
-    roots: [],
-    signature: ''
-};
+const EMPTY_INDEX: FilterIndex<never, never> = { byPath: new Map(), all: [], roots: [], signature: '' };
 
 /**
- * Normalizes a field schema into flat maps. When `previous`'s signature
- * matches, the PREVIOUS OBJECT is returned: an equal-but-new one would leave
- * every downstream memo missing exactly as often as before. Duplicate sibling
- * ids are ignored after the first, as the cascader does for node values, and
+ * Normalizes a field schema into a path map and traversal order. When
+ * `previous`'s signature matches, the PREVIOUS OBJECT is returned: an
+ * equal-but-new one would leave every downstream memo missing exactly as often
+ * as before. Duplicate sibling ids are ignored after the first, as the
+ * cascader does for node values, and
  * `findFilterSchemaIssues` reports them in development.
  */
 export function buildFilterIndex<V = unknown, O = unknown>(
@@ -161,13 +147,10 @@ export function buildFilterIndex<V = unknown, O = unknown>(
     }
 
     const byPath = new Map<string, FilterField<V, O>>();
-    const childrenOf = new Map<string, FilterField<V, O>[]>();
-    const parentOf = new Map<string, string>();
     const all: { field: FilterField<V, O>; path: string[] }[] = [];
     const roots: FilterField<V, O>[] = [];
 
-    const walk = (list: readonly FilterField<V, O>[], parentPath: string[], parentKey: string) => {
-        const accepted: FilterField<V, O>[] = [];
+    const walk = (list: readonly FilterField<V, O>[], parentPath: string[]) => {
         const seen = new Set<string>();
 
         for (const field of list) {
@@ -179,20 +162,16 @@ export function buildFilterIndex<V = unknown, O = unknown>(
             if (byPath.has(key)) continue;
 
             byPath.set(key, field);
-            parentOf.set(key, parentKey === FILTER_ROOT_KEY ? '' : parentKey);
             all.push({ field, path });
-            accepted.push(field);
+            if (parentPath.length === 0) roots.push(field);
 
-            if (field.fields?.length) walk(field.fields, path, key);
+            if (field.fields?.length) walk(field.fields, path);
         }
-
-        childrenOf.set(parentKey, accepted);
-        if (parentKey === FILTER_ROOT_KEY) roots.push(...accepted);
     };
 
-    walk(fields, [], FILTER_ROOT_KEY);
+    walk(fields, []);
 
-    return { byPath, childrenOf, parentOf, all, roots, signature };
+    return { byPath, all, roots, signature };
 }
 
 export function getFilterField<V, O>(index: FilterIndex<V, O>, path: readonly string[]): FilterField<V, O> | undefined {
@@ -210,31 +189,15 @@ export function getFilterFieldChain<V, O>(index: FilterIndex<V, O>, path: readon
     return chain;
 }
 
-/** Child fields of a path. Pass an empty path for the root level. */
-export function getFilterChildren<V, O>(index: FilterIndex<V, O>, path: readonly string[]): FilterField<V, O>[] {
-    const key = path.length === 0 ? FILTER_ROOT_KEY : joinFilterPath(path);
-    return index.childrenOf.get(key) ?? [];
-}
-
 export function isFilterBranch<V, O>(field: FilterField<V, O>): boolean {
     return Boolean(field.fields?.length);
-}
-
-/**
- * Whether a field DECLARES itself filterable on: leaves always, a branch only
- * with `selectable`. The shipped pickers ignore it, see `isFilterFieldPickable`.
- */
-export function isFilterFieldSelectable<V, O>(field: FilterField<V, O>): boolean {
-    if (field.disabled) return false;
-    return isFilterBranch(field) ? Boolean(field.selectable) : true;
 }
 
 /**
  * Whether the SHIPPED pickers may commit a field: leaves only. A row that both
  * drills in and commits cannot disambiguate a click - its chevron and child
  * count promise "opens a list", so the press that opened it also filtered on
- * the parent and dismissed the picker. `selectable` stays honoured by
- * `isFilterFieldSelectable` for a chrome that separates the two.
+ * the parent and dismissed the picker.
  */
 export function isFilterFieldPickable<V, O>(field: FilterField<V, O>): boolean {
     if (field.disabled) return false;
@@ -310,52 +273,6 @@ export function foldFilterText(text: string): string {
 
 export function normalizeFilterQuery(query: string): string {
     return foldFilterText(query.trim());
-}
-
-/** Whether a field matches a normalized query, by label or keywords. */
-export function matchesFilterQuery<V, O>(field: FilterField<V, O>, normalizedQuery: string): boolean {
-    if (normalizedQuery === '') return true;
-    if (foldFilterText(field.label).includes(normalizedQuery)) return true;
-    if (field.keywords) {
-        for (const keyword of field.keywords) {
-            if (foldFilterText(keyword).includes(normalizedQuery)) return true;
-        }
-    }
-    return false;
-}
-
-/**
- * Filters one level, preserving input order. Unused here like
- * `searchFilterDeep`: kept so a consumer's own picker need not re-implement the
- * fold and the keyword matching.
- */
-export function filterFilterLevel<V, O>(
-    fields: readonly FilterField<V, O>[],
-    normalizedQuery: string
-): FilterField<V, O>[] {
-    if (normalizedQuery === '') return fields as FilterField<V, O>[];
-    return fields.filter((field) => matchesFilterQuery(field, normalizedQuery));
-}
-
-/**
- * Searches every SELECTABLE field at any depth, because a result the user
- * cannot pick is a dead end. Unused here - the shipped picker is the cascader
- * and delegates deep search to it - but it keeps a consumer's own picker from
- * re-implementing the fold, the keyword matching and the selectable rule.
- */
-export function searchFilterDeep<V, O>(
-    index: FilterIndex<V, O>,
-    normalizedQuery: string,
-    limit = 200
-): { field: FilterField<V, O>; path: string[] }[] {
-    if (normalizedQuery === '') return [];
-    const results: { field: FilterField<V, O>; path: string[] }[] = [];
-    for (const entry of index.all) {
-        if (results.length >= limit) break;
-        if (!isFilterFieldSelectable(entry.field)) continue;
-        if (matchesFilterQuery(entry.field, normalizedQuery)) results.push(entry);
-    }
-    return results;
 }
 
 /** Filters an option list by a normalized query, by label or keywords. */
