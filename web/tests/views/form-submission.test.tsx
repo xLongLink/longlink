@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { act, type ContextType } from 'react';
+import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
@@ -12,7 +13,7 @@ import { RequestContext } from '@/components/custom/contexts';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi
-        .fn<NonNullable<ContextType<typeof RequestContext>>>()
+        .fn<NonNullable<ContextType<typeof RequestContext>>['request']>()
         .mockRejectedValueOnce(new ReportedError('Unavailable'))
         .mockResolvedValue({ id: 8 });
     const onSuccess = vi.fn();
@@ -41,7 +42,7 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     }
 
     await withMounted(
-        <RequestContext value={request}>
+        <RequestContext value={{ request, download: vi.fn() }}>
             <Example />
         </RequestContext>,
         async (output) => {
@@ -73,13 +74,21 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     );
 });
 
-it('encodes parsed multipart values and keeps duplicate writes blocked through the success callback', async () => {
+it('blocks duplicate validation and writes through the success callback while encoding parsed values', async () => {
     const files = [
         new File(['invoice'], 'invoice.txt', { type: 'text/plain' }),
         new File(['notes'], 'notes.txt', { type: 'text/plain' })
     ];
+    let completeValidation: () => void = () => {};
+    const validation = new Promise<void>((resolve) => {
+        completeValidation = resolve;
+    });
+    const validate = vi.fn(async () => {
+        await validation;
+        return true;
+    });
     const schema = z.object({
-        quantity: z.string().regex(/^\d+$/).transform(Number),
+        quantity: z.string().regex(/^\d+$/).transform(Number).refine(validate),
         enabled: z.boolean(),
         tags: z.array(z.string()),
         files: z.array(z.instanceof(File)),
@@ -96,7 +105,7 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
     const callback = new Promise<void>((resolve) => {
         completeCallback = resolve;
     });
-    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>>(() => response);
+    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>['request']>(() => response);
     const onSuccess = vi.fn(async (_data: ViewData) => {
         await callback;
     });
@@ -133,7 +142,7 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
     }
 
     await withMounted(
-        <RequestContext value={request}>
+        <RequestContext value={{ request, download: vi.fn() }}>
             <Example />
         </RequestContext>,
         async (output) => {
@@ -145,13 +154,21 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
             await act(async () => user.clear(input));
             await act(async () => user.type(input, '04'));
             await act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+                expect(form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))).toBe(false);
+                expect(form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))).toBe(false);
+            });
+            expect(validate).toHaveBeenCalledTimes(1);
+            expect(request).not.toHaveBeenCalled();
+            expect(form.getAttribute('aria-busy')).toBe('true');
+            await act(async () => {
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
             });
+            expect(validate).toHaveBeenCalledTimes(1);
+            await act(async () => completeValidation());
             expect(request).toHaveBeenCalledTimes(1);
             const [path, options] = request.mock.calls[0] ?? [];
 
-            if (!options) throw new Error('Expected scoped request');
+            if (!options?.form) throw new Error('Expected scoped request');
             expect(path).toBe('/api/tasks');
             expect(options.method).toBe('PATCH');
             const data = new FormData();
@@ -180,6 +197,7 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
             });
             expect(request).toHaveBeenCalledTimes(1);
+            expect(validate).toHaveBeenCalledTimes(1);
             await act(async () => completeCallback());
             expect(form.getAttribute('aria-busy')).toBe('false');
             expect(form.getAttribute('data-success')).toBe('true');
@@ -189,11 +207,79 @@ it('encodes parsed multipart values and keeps duplicate writes blocked through t
 });
 
 it.each([
+    { cause: new Error('Unavailable'), reports: 1 },
+    { cause: new ReportedError('Unavailable'), reports: 0 },
+    { cause: 'Unavailable', reports: 1 }
+])('preserves failed form state and permits retry when onError throws ($cause)', async ({ cause, reports }) => {
+    // Arrange
+    const request = vi
+        .fn<NonNullable<ContextType<typeof RequestContext>>['request']>()
+        .mockRejectedValueOnce(cause)
+        .mockResolvedValue(null);
+    const reportError = vi.fn();
+    const callbackError = new Error('Callback failed');
+    const onError = vi.fn(async (_error: Error) => {
+        throw callbackError;
+    });
+    let submit: (() => Promise<void>) | undefined;
+
+    function Example() {
+        const form = useForm(z.object({ title: z.string() }), {
+            action: '/api/tasks',
+            defaultValues: { title: 'Draft' },
+            onError
+        });
+        submit = form.submit;
+        return (
+            <form aria-busy={form.formState.isSubmitting} data-success={form.formState.isSubmitSuccessful}>
+                <Input {...form.register('title')} label="Title" />
+                {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
+            </form>
+        );
+    }
+
+    await withMounted(
+        <ApiErrorContext value={reportError}>
+            <RequestContext value={{ request, download: vi.fn() }}>
+                <Example />
+            </RequestContext>
+        </ApiErrorContext>,
+        async (output) => {
+            if (!submit) throw new Error('Expected form submission');
+
+            // Act
+            await act(async () => {
+                if (!submit) throw new Error('Expected form submission');
+                const submission = submit();
+                expect(submit()).toBe(submission);
+                await expect(submission).rejects.toBe(callbackError);
+            });
+
+            // Assert
+            expect(request).toHaveBeenCalledTimes(1);
+            expect(onError).toHaveBeenCalledExactlyOnceWith(expect.any(Error));
+            expect(reportError).toHaveBeenCalledTimes(reports);
+            const error = onError.mock.calls[0]?.[0];
+            expect(output.querySelector('[role="alert"]')?.textContent).toBe(error?.message);
+            expect(output.querySelector('form')?.getAttribute('aria-busy')).toBe('false');
+            expect(output.querySelector('form')?.getAttribute('data-success')).toBe('false');
+            expect(output.querySelector('input')?.value).toBe('Draft');
+
+            await act(async () => submit?.());
+            expect(request).toHaveBeenCalledTimes(2);
+            expect(onError).toHaveBeenCalledTimes(1);
+            expect(output.querySelector('form')?.getAttribute('data-success')).toBe('true');
+            expect(output.querySelector('[role="alert"]')).toBeNull();
+        }
+    );
+});
+
+it.each([
     { name: 'nested objects', value: { city: 'Bern' } },
     { name: 'nested arrays', value: [['design']] },
     { name: 'nonfinite values', value: Infinity }
 ])('rejects $name without queuing a write or leaving the form pending', async ({ value }) => {
-    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>>().mockResolvedValue(null);
+    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>['request']>().mockResolvedValue(null);
     const onError = vi.fn();
 
     function Example() {
@@ -218,7 +304,7 @@ it.each([
     }
 
     await withMounted(
-        <RequestContext value={request}>
+        <RequestContext value={{ request, download: vi.fn() }}>
             <Example />
         </RequestContext>,
         async (output) => {

@@ -151,6 +151,83 @@ it('rejects an unfinished authored request with View closed on pagehide before i
     }
 }, 10_000);
 
+it('shares scoped image bytes without colliding with JSON and refreshes them only after successful writes', async () => {
+    // Arrange
+    let version = 1;
+    let writes = 0;
+    let images = 0;
+    let reads = 0;
+    let urls = 0;
+    const create = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => `blob:photo-${++urls}`);
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const runtime = await initializeRuntime(`export default function View() {
+        const [data] = useApi('/api/photo');
+        return <>
+            <p>Version {data.version}</p>
+            <Image src="/api/photo" alt="First" />
+            <Image src="/api/photo" alt="Second" />
+            <Link onClick={async () => { await request('/api/photo', { method: 'POST' }); }}>Update</Link>
+        </>;
+    }`);
+    runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
+        const command = commandSchema.parse(event.data);
+        if (command.type !== 'request') return;
+        if (command.method === 'POST') {
+            writes++;
+            if (writes === 1) {
+                runtime.send({ id: command.id, ok: false, error: 'Write unavailable', notified: true });
+            } else {
+                version++;
+                runtime.send({ id: command.id, ok: true, data: null });
+            }
+        } else if (command.binary) {
+            images++;
+            runtime.send({ id: command.id, ok: true, data: new Blob([String(version)], { type: 'image/png' }) });
+        } else {
+            reads++;
+            runtime.send({ id: command.id, ok: true, data: { version } });
+        }
+    };
+
+    try {
+        await vi.waitFor(() => expect(runtime.mount.querySelectorAll('img')).toHaveLength(2));
+        expect(images).toBe(1);
+        expect(reads).toBe(1);
+        const before = [...runtime.mount.querySelectorAll('img')].map((image) => image.getAttribute('src'));
+        const update = runtime.mount.querySelector('button');
+        if (!update) throw new Error('Expected update action');
+        const user = userEvent.setup();
+
+        // Act
+        await user.click(update);
+        await vi.waitFor(() => {
+            expect(writes).toBe(1);
+            expect(update.hasAttribute('aria-busy')).toBe(false);
+        });
+
+        // Assert
+        expect(images).toBe(1);
+        expect(reads).toBe(1);
+        expect(runtime.mount.textContent).toContain('Version 1');
+        expect([...runtime.mount.querySelectorAll('img')].map((image) => image.getAttribute('src'))).toEqual(before);
+        await user.click(update);
+        await vi.waitFor(() => {
+            expect(images).toBe(2);
+            expect(reads).toBe(2);
+            expect(runtime.mount.textContent).toContain('Version 2');
+            expect(runtime.mount.querySelectorAll('img')).toHaveLength(2);
+            expect([...runtime.mount.querySelectorAll('img')].map((image) => image.getAttribute('src'))).not.toEqual(
+                before
+            );
+        });
+        expect(revoke.mock.calls.map(([url]) => url)).toEqual(expect.arrayContaining(before));
+    } finally {
+        runtime.close();
+        create.mockRestore();
+        revoke.mockRestore();
+    }
+});
+
 it('rejects non-Blob binary replies before they reach file renderers', async () => {
     // Arrange
     const create = vi.spyOn(URL, 'createObjectURL');

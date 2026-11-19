@@ -1,6 +1,5 @@
-import * as host from '@/views/host';
 import ViewLayout from './view-layout';
-import { FileRequestContext } from '@/components/custom/preview';
+import { RequestContext } from '@/components/custom/contexts';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 /** Documents inline file previews through the scoped Solution API. */
@@ -34,23 +33,15 @@ async function requestPreviewFile() {
 export function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
-        <FileRequestContext
+        <RequestContext
             value={{
-                load: requestPreviewFile,
-                preview: async () => {
-                    throw new Error('Host previews are unavailable in this documentation example');
-                },
-                download: async (_path, filename) => {
-                    // The native example can only download this fixed public documentation asset.
-                    await host.download(
-                        '/',
-                        { type: 'download', id: 0, path: '/files/sample.pdf', filename },
-                        new AbortController().signal
-                    );
+                request: requestPreviewFile,
+                download: async () => {
+                    throw new Error('Downloads are unavailable in this documentation example');
                 }
             }}
         >
             <FileViewer src="/api/reports/latest" title="report.pdf" />
-        </FileRequestContext>
+        </RequestContext>
     );
 }

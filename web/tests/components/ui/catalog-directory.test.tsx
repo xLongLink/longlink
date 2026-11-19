@@ -6,7 +6,7 @@ import * as components from '@/views';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { FileRequestContext } from '@/components/custom/preview';
+import { RequestContext } from '@/components/custom/contexts';
 import source from '../../../../sdk/longlink/.static/new/src/views/list.jsx?raw';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
 import geographyFixture from '../../../../sdk/longlink/.static/new/src/assets/world.json';
@@ -116,20 +116,16 @@ it('returns to the first page when a search narrows results from a later file pa
 
 it('wires filtered file rows to scoped previews with their own asset path and title without eager loading', async () => {
     const user = userEvent.setup();
-    const preview = vi.fn(async (_path: string, _title: string) => {});
-
-    const load = vi.fn(async () => {
-        throw new Error('Attachment links must not load file bytes');
-    });
+    const request = vi.fn(async (_path: string, _options?: { binary?: boolean }) => new Blob(['sample']));
 
     const download = vi.fn(async (_path: string, _filename: string) => {});
 
     await withMounted(
-        <FileRequestContext value={{ load, preview, download }}>
+        <RequestContext value={{ request, download }}>
             <List />
-        </FileRequestContext>,
+        </RequestContext>,
         async (output) => {
-            expect(preview).not.toHaveBeenCalled();
+            expect(request).not.toHaveBeenCalled();
             const search = output.querySelector<HTMLInputElement>('input[aria-label="Search files"]');
 
             if (!search) throw new Error('Expected file search');
@@ -143,13 +139,14 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
 
                 expect(attachment.textContent).toContain(filename);
                 expect(attachment.getAttribute('aria-haspopup')).toBe('dialog');
-                const calls = preview.mock.calls.length;
+                const calls = request.mock.calls.length;
                 await act(async () => user.click(attachment));
-                expect(preview).toHaveBeenCalledTimes(calls + 1);
-                expect(preview).toHaveBeenLastCalledWith(`/assets/${filename}`, filename);
+                expect(request).toHaveBeenCalledTimes(calls + 1);
+                expect(request).toHaveBeenLastCalledWith(`/assets/${filename}`, { binary: true });
+                expect(document.querySelector('[role="dialog"]')?.textContent).toContain(filename);
+                await act(async () => user.keyboard('{Escape}'));
             }
 
-            expect(load).not.toHaveBeenCalled();
             expect(download).not.toHaveBeenCalled();
         }
     );

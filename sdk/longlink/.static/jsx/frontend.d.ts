@@ -5076,7 +5076,7 @@ namespace useRender {
     type ReturnValue<Enabled extends boolean | undefined> = UseRenderReturnValue<Enabled>;
 }
 const iconTileVariants: (props?: ({
-    variant?: "outline" | "frame" | "elevated" | "soft" | "solid" | null | undefined;
+    variant?: "outline" | "solid" | "frame" | "elevated" | "soft" | null | undefined;
     size?: "default" | "xs" | "sm" | "lg" | "xl" | null | undefined;
     radius?: "default" | "full" | null | undefined;
 } & ClassProp) | undefined) => string;
@@ -5187,7 +5187,7 @@ namespace Button {
 }
 const buttonVariants: (props?: ({
     variant?: "link" | "primary" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined;
-    size?: "default" | "icon" | "xs" | "sm" | "lg" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
+    size?: "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined;
 } & ClassProp) | undefined) => string;
 function Button$1({ className, variant, size, ...props }: Button.Props & VariantProps<typeof buttonVariants>): React$1.JSX.Element;
 function Button$2(props: Omit<React$1.ComponentProps<typeof Button$1>, "className">): React$1.JSX.Element;

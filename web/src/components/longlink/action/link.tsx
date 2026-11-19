@@ -2,10 +2,10 @@ import { cn } from 'cn';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Spinner } from '@/components/shadcn/spinner';
-import { FileRequestContext } from '@/components/custom/preview';
-import { LinkNavigationContext } from '@/components/custom/contexts';
+import { FilePreview } from '@/components/dialogs/file-preview';
 import { buttonVariants } from '@/components/longlink/action/button';
-import { resolveExternalUrl, resolveNavigationUrl } from '@/lib/url';
+import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
+import { RequestContext, LinkNavigationContext } from '@/components/custom/contexts';
 import { useContext, useRef, useState, useTransition, type ComponentPropsWithRef, type MouseEvent } from 'react';
 
 type ActionLinkProps = Omit<ComponentPropsWithRef<'button'>, 'onClick' | 'type' | 'className'> &
@@ -42,7 +42,7 @@ type LinkProps =
 /** Preserves native link gestures while routing ordinary internal clicks through the host. */
 export function NavigationLink({ href, target, rel, download, onClick, ...props }: ComponentPropsWithRef<'a'>) {
     const navigation = useContext(LinkNavigationContext);
-    const internalHref = navigation && href ? resolveNavigationUrl(navigation.baseUrl, href) : '';
+    const internalHref = navigation && href ? resolveScopedNavigationUrl(navigation.baseUrl, href) : '';
     let destination = navigation ? internalHref || undefined : href;
 
     // Native external navigation accepts only the same HTTP(S) destinations as the host bridge.
@@ -134,7 +134,8 @@ function ActionLink({
     children,
     ...props
 }: ActionLinkProps) {
-    const files = useContext(FileRequestContext);
+    const requests = useContext(RequestContext);
+    const [filePreview, setFilePreview] = useState<Blob>();
     const [downloadError, setDownloadError] = useState<string>();
     const actionInFlight = useRef(false);
     const [isPending, startTransition] = useTransition();
@@ -151,52 +152,48 @@ function ActionLink({
 
         actionInFlight.current = true;
 
+        let result: void | Promise<void>;
+
         try {
-            const result = onClick?.(event);
-            const canceled = event.defaultPrevented;
-            event.preventDefault();
+            result = onClick?.(event);
+        } catch (error) {
+            result = Promise.reject(error);
+        }
 
-            // A caller can cancel the file operation while retaining its own action.
-            startTransition(async () => {
-                try {
-                    await result;
+        const canceled = event.defaultPrevented;
+        event.preventDefault();
 
-                    if (canceled) return;
+        // A caller can cancel the file operation while retaining its own action.
+        startTransition(async () => {
+            try {
+                await result;
 
-                    if (href !== undefined) {
-                        if (preview !== undefined) {
-                            if (!files) throw new Error('Previews require the Solution runtime');
-                            await files.preview(href, preview);
-                        } else if (download !== undefined) {
-                            setDownloadError(undefined);
+                if (canceled || href === undefined) return;
 
-                            try {
-                                if (!files) throw new Error('Downloads require the Solution runtime');
-                                const filename = download.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
-                                await files.download(href, filename);
-                            } catch (failure) {
-                                if (!(failure instanceof ReportedError)) {
-                                    setDownloadError(failure instanceof Error ? failure.message : 'Download failed');
-                                }
-                            }
+                if (preview !== undefined) {
+                    if (!requests) throw new Error('Previews require the Solution runtime');
+                    const body = await requests.request(href, { binary: true });
+                    if (!(body instanceof Blob)) throw new Error('File preview unavailable');
+                    setFilePreview(body);
+                } else if (download !== undefined) {
+                    setDownloadError(undefined);
+
+                    try {
+                        if (!requests) throw new Error('Downloads require the Solution runtime');
+                        const filename = download.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
+                        await requests.download(href, filename);
+                    } catch (failure) {
+                        if (!(failure instanceof ReportedError)) {
+                            setDownloadError(failure instanceof Error ? failure.message : 'Download failed');
                         }
                     }
-                } catch (error) {
-                    if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
-                } finally {
-                    actionInFlight.current = false;
                 }
-            });
-        } catch (error) {
-            event.preventDefault();
-            actionInFlight.current = false;
-
-            if (!(error instanceof ReportedError) && !isCanceledRequest(error)) {
-                startTransition(async () => {
-                    throw error;
-                });
+            } catch (error) {
+                if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
+            } finally {
+                actionInFlight.current = false;
             }
-        }
+        });
     }
 
     return (
@@ -230,6 +227,9 @@ function ActionLink({
                 {children}
             </button>
             {downloadError && <span role="alert">{downloadError}</span>}
+            {preview !== undefined && filePreview !== undefined && (
+                <FilePreview body={filePreview} title={preview} onOpenChange={() => setFilePreview(undefined)} />
+            )}
         </>
     );
 }

@@ -1,5 +1,5 @@
 import * as fields from './fields';
-import { FieldFrame } from './field';
+import { FieldLayout } from './field';
 import type { ComponentProps } from 'react';
 import * as textarea from '@/components/shadcn/textarea';
 
@@ -13,15 +13,8 @@ export function Textarea({
     const field = fields.useField({ ...props, label, description, error });
 
     return (
-        <FieldFrame
-            id={field.id}
-            label={label}
-            description={description}
-            error={error}
-            disabled={props.disabled}
-            form={props.form}
-        >
+        <FieldLayout id={field.id} label={label} description={description} error={error} disabled={props.disabled}>
             <textarea.Textarea {...props} {...field} className={undefined} style={undefined} />
-        </FieldFrame>
+        </FieldLayout>
     );
 }

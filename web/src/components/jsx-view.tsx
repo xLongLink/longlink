@@ -2,7 +2,6 @@ import { ApiError } from '@/lib/api';
 import * as icons from '@/lib/icons';
 import * as host from '@/views/host';
 import { useApiError } from '@/lib/errors';
-import { textLanguage } from '@/lib/files';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { Appearance } from '@/lib/appearance';
@@ -10,9 +9,8 @@ import type { ViewRuntime } from '@/views/manifest';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { PageError, PageLoading } from '@/components/ui/utils';
-import { resolveExternalUrl, resolveNavigationUrl } from '@/lib/url';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { PreviewDialog, type Preview } from '@/components/dialogs/preview';
+import { requestUrl, resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import { commandSchema, parametersSchema, iconDataSchema, moduleRequestSchema, type ViewData } from '@/views/protocol';
 
 const BOOTSTRAP_TIMEOUT_MS = 10_000;
@@ -49,8 +47,6 @@ export function JsxView({
     const reportError = useApiError();
     const [height, setHeight] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
-
-    const [filePreview, setFilePreview] = useState<Preview>();
 
     // Share scroll-lock ownership with native Base UI overlays covering the Platform.
     useScrollLock(modalOpen);
@@ -117,7 +113,7 @@ export function JsxView({
         queryFn: async ({ signal }) => {
             // Load the declared runtime only within its Solution proxy.
             const urls = ['views/runtime.js', 'views/runtime.css'].map((path) => {
-                const url = new URL(host.requestUrl(requestBaseUrl, path), window.location.origin);
+                const url = new URL(requestUrl(requestBaseUrl, path), window.location.origin);
                 url.searchParams.set('v', runtime.version);
 
                 return url.href;
@@ -160,7 +156,7 @@ export function JsxView({
 
         /** Reports safe Solution failures once in the page and returns them to the requesting View. */
         function rejectRequest(
-            command: { id: number; type: 'request' | 'download' | 'preview' | 'icon' },
+            command: { id: number; type: 'request' | 'download' | 'icon' },
             failure: ReturnType<typeof host.requestError>
         ): void {
             if (controller.signal.aborted) return;
@@ -176,7 +172,6 @@ export function JsxView({
         function dispose(): void {
             controller.abort();
             setModalOpen(false);
-            setFilePreview(undefined);
             clearTimeout(handshakeTimer);
             window.removeEventListener('message', ready);
 
@@ -257,10 +252,7 @@ export function JsxView({
 
                     if (!source) {
                         source = (async () => {
-                            const url = new URL(
-                                host.requestUrl(requestBaseUrl, `views/${path}`),
-                                window.location.origin
-                            );
+                            const url = new URL(requestUrl(requestBaseUrl, `views/${path}`), window.location.origin);
                             url.searchParams.set('v', runtime.version);
                             const body = await host.load(url.href, { signal: controller.signal });
                             const bytes = await body.arrayBuffer();
@@ -319,8 +311,7 @@ export function JsxView({
                     }
 
                     // Keep relative navigation scoped to the current Solution.
-                    host.requestUrl(navigationBaseUrl, command.path);
-                    const destination = resolveNavigationUrl(navigationBaseUrl, command.path);
+                    const destination = resolveScopedNavigationUrl(navigationBaseUrl, command.path);
 
                     if (!destination) return;
 
@@ -355,25 +346,6 @@ export function JsxView({
                     data = iconDataSchema.parse(icon);
                 } else if (command.type === 'download') {
                     data = await host.download(requestBaseUrl, command, controller.signal);
-                } else if (command.type === 'preview') {
-                    // Admit declared PDFs and recognized text files to host-owned previews.
-                    const body = await host.load(host.requestUrl(requestBaseUrl, command.path), {
-                        cache: 'no-cache',
-                        signal: controller.signal
-                    });
-
-                    controller.signal.throwIfAborted();
-
-                    if (body.type !== 'application/pdf' && textLanguage(command.title, body.type) !== undefined) {
-                        // Render text as inert content, never as a document in the host origin.
-                        const bytes = await body.arrayBuffer();
-                        const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-                        controller.signal.throwIfAborted();
-                        setFilePreview({ type: 'text', text, title: command.title });
-                    } else {
-                        setFilePreview({ type: 'file', body, title: command.title });
-                    }
-                    data = null;
                 } else {
                     data = await host.request(requestBaseUrl, command, controller.signal);
                 }
@@ -449,7 +421,6 @@ export function JsxView({
                         : 'block h-full w-full flex-1 shrink-0 border-0 bg-transparent'
                 }
             />
-            {filePreview && <PreviewDialog preview={filePreview} onOpenChange={() => setFilePreview(undefined)} />}
         </div>
     );
 }

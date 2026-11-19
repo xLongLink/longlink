@@ -1,18 +1,8 @@
 import type { Options } from 'ky';
+import { requestUrl } from '@/lib/url';
 import { api, ApiError } from '@/lib/api';
 import { previewKind } from '@/lib/files';
-import { resolveRequestUrl } from '@/lib/url';
 import { REQUEST_TIMEOUT, responseSchema, type ViewData, type RequestCommand, type DownloadCommand } from './protocol';
-
-/** Resolves a capability URL without permitting redirects or proxy-prefix traversal. */
-export function requestUrl(base: string, path: string): string {
-    // Reject ambiguous encoding before any proxy or backend gets an opportunity to decode it again.
-    if (/%(?:[01][0-9a-f]|7f|25|2e|2f|5c)|[\s\\]|\p{Cc}/iu.test(path.split(/[?#]/, 1)[0])) {
-        throw new Error('Request path must remain within the Solution');
-    }
-
-    return resolveRequestUrl(base, path);
-}
 
 /** Loads a response without redirects within the request lifetime. */
 export async function load(
@@ -27,15 +17,8 @@ export async function load(
         timeout: false
     });
 
-    // Preserve only supported media types before granting a binary response to the sandbox.
-    const media = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? '';
-
-    const type = previewKind(media) !== undefined ? media : 'application/octet-stream';
-
     // Read the complete response within the request lifetime.
-    const body = await response.blob();
-
-    return body.slice(0, body.size, type);
+    return response.blob();
 }
 
 /** Executes one validated request using only host-owned credentials and fixed options. */
@@ -59,7 +42,12 @@ export async function request(base: string, command: RequestCommand, signal: Abo
         signal
     });
 
-    if (command.binary) return body;
+    if (command.binary) {
+        const media = body.type.split(';', 1)[0].trim().toLowerCase();
+        const type = previewKind(media) !== undefined ? media : 'application/octet-stream';
+
+        return body.slice(0, body.size, type);
+    }
     const text = await body.text();
 
     // Validate the serialized response before sending it over the capability channel.
