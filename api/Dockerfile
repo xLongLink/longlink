@@ -2,7 +2,6 @@ FROM ghcr.io/voidzero-dev/vite-plus:1.7.0@sha256:dcdbe5282b3c2087fec3f5e38272b8e
 
 WORKDIR /repo/web
 COPY --chown=vp:vp web/package.json web/bun.lock ./
-COPY --chown=vp:vp web/patches/ ./patches/
 RUN vp install --frozen-lockfile
 COPY --chown=vp:vp web/ ./
 COPY --chown=vp:vp sdk/ /repo/sdk/
