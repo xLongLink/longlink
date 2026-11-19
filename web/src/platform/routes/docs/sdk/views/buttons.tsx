@@ -1,8 +1,8 @@
 import ViewLayout from './view-layout';
-import { ButtonGroup } from '@/components/longlink';
 import { Icon } from '@/components/longlink/display/icon';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
+import { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/longlink';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {
@@ -24,7 +24,10 @@ export default function ButtonsPage() {
                 { name: 'aria-label', type: 'string' },
                 { name: 'ButtonGroup.orientation', type: '"horizontal" | "vertical"' },
                 { name: 'ButtonGroup.aria-label', type: 'string' },
-                { name: 'ButtonGroup.children', type: 'ReactNode' }
+                { name: 'ButtonGroup.children', type: 'ReactNode' },
+                { name: 'ButtonGroupText.children', type: 'ReactNode' },
+                { name: 'ButtonGroupText.render', type: 'ReactElement | ((props, state) => ReactElement)' },
+                { name: 'ButtonGroupSeparator.orientation', type: '"horizontal" | "vertical"' }
             ]}
             example={{
                 title: 'Button',
@@ -64,7 +67,9 @@ export default function ButtonsPage() {
       </Stack>
       <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
         <ButtonGroup aria-label="Actions">
+          <ButtonGroupText>Changes</ButtonGroupText>
           <Button variant="outline">Save</Button>
+          <ButtonGroupSeparator />
           <Button variant="outline">Cancel</Button>
           <Button size="icon" aria-label="Add" variant="outline"><Icon icon="plus" size="md" /></Button>
         </ButtonGroup>
@@ -140,7 +145,9 @@ export function ButtonExample() {
             </Stack>
             <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
                 <ButtonGroup aria-label="Actions">
+                    <ButtonGroupText>Changes</ButtonGroupText>
                     <Button variant="outline">Save</Button>
+                    <ButtonGroupSeparator />
                     <Button variant="outline">Cancel</Button>
                     <Button size="icon" aria-label="Add" variant="outline">
                         <Icon icon="plus" size="md" />

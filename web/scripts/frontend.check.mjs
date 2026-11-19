@@ -22,6 +22,33 @@ test('published component provenance matches the implementation exposed to Views
         await readFile(new URL('../../sdk/longlink/.static/jsx/components.json', import.meta.url), 'utf8')
     );
 
+    for (const statement of program.getSourceFile(entry).statements) {
+        if (
+            (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
+            statement.moduleSpecifier &&
+            !(ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly) &&
+            !(ts.isExportDeclaration(statement) && statement.isTypeOnly)
+        ) {
+            assert.ok(
+                statement.moduleSpecifier.text.startsWith('./') &&
+                    path.resolve(path.dirname(entry), statement.moduleSpecifier.text).startsWith(`${path.dirname(entry)}/`),
+                'Public View components must be exported through a module in components/longlink.'
+            );
+        }
+    }
+
+    for (const name of exports.keys()) {
+        if (!/^(ButtonGroup|Table)/.test(name)) continue;
+        assert.ok(
+            catalog.components.some(
+                (component) =>
+                    component.name === name ||
+                    component.properties?.some((property) => property.name.startsWith(`${name}.`))
+            ),
+            `${name} needs a catalog entry or a companion reference.`
+        );
+    }
+
     // Keep runtime providers outside the authored component registry.
     for (const statement of source.statements) {
         assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);

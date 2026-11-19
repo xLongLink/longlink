@@ -33968,6 +33968,12 @@ type MapGeoJSONProps<P extends GeoJsonProperties = GeoJsonProperties> = {
     beforeId?: string;
 };
 function MapGeoJSON<P extends GeoJsonProperties = GeoJsonProperties>({ data, id: propId, promoteId, fillPaint, linePaint, fillHoverPaint, onClick, onHover, interactive, beforeId }: MapGeoJSONProps<P>): null;
+type StylingProp = "className" | "classNames" | "style" | "styles" | `${string}ClassName` | `${string}ClassNames` | `${string}Style` | `${string}Styles` | "components" | "dangerouslySetInnerHTML";
+type PublicProps<Props> = Props extends unknown ? Omit<Props, StylingProp> : never;
+type PublicComponent<Component extends React$1.ElementType> = (props: PublicProps<React$1.ComponentProps<Component>>) => React$1.ReactNode;
+const MapGeoJSON$1: PublicComponent<typeof MapGeoJSON>;
+const MapControls$1: PublicComponent<typeof MapControls>;
+function ViewMap(props: PublicProps<Omit<MapProps, "theme"> & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
 type TimestampFormat = "date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time";
 function Timestamp({ value, format, className, ...props }: Omit<React$1.ComponentPropsWithoutRef<"span">, "children"> & {
     value: number | string;
@@ -33984,271 +33990,10 @@ const buttonGroupVariants: (props?: ({
 function ButtonGroup({ className, orientation, ...props }: React$1.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>): React$1.JSX.Element;
 function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">): React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 function ButtonGroupSeparator({ className, orientation, ...props }: React$1.ComponentProps<typeof Separator$1>): React$1.JSX.Element;
-type StylingProp = "className" | "classNames" | "style" | "styles" | `${string}ClassName` | `${string}ClassNames` | `${string}Style` | `${string}Styles` | "components" | "dangerouslySetInnerHTML";
-type PublicProps<Props> = Props extends unknown ? Omit<Props, StylingProp> : never;
-type PublicComponent<Component extends React$1.ElementType> = (props: PublicProps<React$1.ComponentProps<Component>>) => React$1.ReactNode;
-type FilterCombinator = "and" | "or";
-interface FilterRule<V = unknown> {
-    id: string;
-    type: "rule";
-    path: string[];
-    operator: string;
-    value: V | undefined;
-    negated?: boolean;
-}
-interface FilterGroupNode<V = unknown> {
-    id: string;
-    type: "group";
-    combinator: FilterCombinator;
-    rules: FilterNode<V>[];
-}
-type FilterNode<V = unknown> = FilterRule<V> | FilterGroupNode<V>;
-type FilterQuery<V = unknown> = FilterGroupNode<V>;
-type FilterChangeReason = "add" | "update" | "remove" | "duplicate" | "negate" | "reorder" | "combinator" | "clear";
-interface FilterChangeDetails<V = unknown, O = unknown> {
-    reason: FilterChangeReason;
-    rule: FilterRule<V> | null;
-    field: FilterField<V, O> | null;
-}
-type FilterOperatorArity = "none" | "one" | "many" | "range";
-interface FilterOperator {
-    value: string;
-    label: string;
-    arity?: FilterOperatorArity;
-    inverse?: string;
-    hidden?: boolean;
-}
-type FilterValueType = "text" | "number" | "range" | "select" | "multiselect" | "boolean";
-interface FilterOption<O = unknown> {
-    value: string;
-    label: string;
-    icon?: React$1.ReactNode;
-    description?: string;
-    keywords?: string[];
-    disabled?: boolean;
-    exclusive?: boolean;
-    data?: O;
-}
-interface FilterLoadContext {
-    signal: AbortSignal;
-    cursor?: string;
-}
-interface FilterLoadResult<O = unknown> {
-    items: FilterOption<O>[];
-    nextCursor?: string;
-    hasMore?: boolean;
-}
-interface FilterField<V = unknown, O = unknown> {
-    id: string;
-    label: string;
-    icon?: React$1.ReactNode;
-    description?: string;
-    keywords?: string[];
-    count?: number;
-    fields?: FilterField<V, O>[];
-    selectable?: boolean;
-    disabled?: boolean;
-    type?: FilterValueType;
-    options?: FilterOption<O>[];
-    loadOptions?: (query: string, context: FilterLoadContext) => FilterOption<O>[] | Promise<FilterOption<O>[] | FilterLoadResult<O>>;
-    resolveValues?: (values: string[]) => FilterOption<O>[] | Promise<FilterOption<O>[]>;
-    operators?: FilterOperator[] | ((field: FilterField<V, O>) => FilterOperator[]);
-    defaultOperator?: string;
-    editor?: FilterEditorRef<V, O>;
-    renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
-    valueText?: (context: FilterValueDisplayContext<V, O>) => string;
-    placeholder?: string;
-    searchable?: boolean;
-    pinSelected?: boolean;
-    sortSelected?: "none" | "label" | "snapshot";
-    validate?: (context: FilterValidateContext<V, O>) => string | null | undefined | false;
-    className?: string;
-    column?: string;
-    data?: unknown;
-}
-type FilterEditorHost = "create" | "amend";
-interface FilterOptionsState<O = unknown> {
-    items: FilterOption<O>[];
-    loading: boolean;
-    error: boolean;
-    hasMore: boolean;
-    query: string;
-    setQuery: (query: string) => void;
-    loadMore: () => void;
-    retry: () => void;
-    resolve: (value: string) => FilterOption<O> | undefined;
-}
-interface FilterCommitOptions {
-    close?: boolean;
-}
-interface FilterEditorProps<V = unknown, O = unknown> {
-    field: FilterField<V, O>;
-    operator: FilterOperator;
-    value: V | undefined;
-    onValueChange: (value: V | undefined) => void;
-    host: FilterEditorHost;
-    autoFocusProps: {
-        ref: React$1.RefCallback<HTMLElement>;
-        autoFocus: boolean;
-    };
-    commit: (value?: V, options?: FilterCommitOptions) => void;
-    cancel: () => void;
-    back: () => void;
-    options: FilterOptionsState<O>;
-    labels: FilterLabels;
-}
-type FilterEditor<V = unknown, O = unknown> = React$1.ComponentType<FilterEditorProps<V, O>>;
-type AnyFilterEditor = React$1.ComponentType<FilterEditorProps<unknown, unknown>>;
-type FilterEditorRegistry = Record<string, AnyFilterEditor>;
-type FilterEditorRef<V = unknown, O = unknown> = string | FilterEditor<V, O> | FilterEditor<any, any>;
-interface FilterEmptyStateContext {
-    labels: FilterLabels;
-    readOnly: boolean;
-    mode: "popover" | "inline";
-    addFilter: () => void;
-    addGroup: () => void;
-}
-interface FilterValueDisplayContext<V = unknown, O = unknown> {
-    value: V | undefined;
-    values: unknown[];
-    field: FilterField<V, O>;
-    operator: FilterOperator;
-    options: FilterOption<O>[];
-    labels: FilterLabels;
-}
-type FilterDraftStep = "field" | "operator" | "value";
-interface FilterLabels {
-    addFilter: string;
-    advancedFilter: string;
-    showRecords: string;
-    builderEmpty: string;
-    builderEmptyHint: string;
-    addCondition: string;
-    addConditionGroup: string;
-    addToGroup: string;
-    removeGroup: string;
-    wrapInGroup: string;
-    ungroup: string;
-    moveToTopLevel: string;
-    moveToGroup: (position: number) => string;
-    reorder: string;
-    reorderHint: string;
-    groupAll: string;
-    groupAny: string;
-    groupPlaceholder: string;
-    rowLabel: (condition: string, depth: number) => string;
-    groupLabel: (description: string, depth: number) => string;
-    groupAnnouncement: (added: boolean) => string;
-    reorderAnnouncement: (label: string, position: number, total: number) => string;
-    moveAnnouncement: (label: string, destination: string, position: number, total: number) => string;
-    clearAll: string;
-    groupMenu: string;
-    searchFields: string;
-    searchOperators: string;
-    searchOptions: string;
-    back: string;
-    clear: string;
-    apply: string;
-    discard: string;
-    empty: string;
-    loading: string;
-    loadingMore: string;
-    loadMore: string;
-    error: string;
-    retry: string;
-    where: string;
-    and: string;
-    or: string;
-    combinator: string;
-    combinatorLabel: (word: string) => string;
-    duplicate: string;
-    negate: string;
-    convertToAdvanced: string;
-    remove: string;
-    chipMenu: (fieldLabel: string) => string;
-    filtersLabel: string;
-    filterLabel: (condition: string) => string;
-    readOnly: string;
-    pathSeparator: string;
-    valuePlaceholder: string;
-    selectPlaceholder: string;
-    noValue: string;
-    selectCondition: string;
-    incomplete: string;
-    branchAffordance: string;
-    exclusiveHint: string;
-    exclusiveAnnouncement: (label: string, cleared: number) => string;
-    itemCount: (count: number) => string;
-    fieldsLabel: string;
-    resultsAnnouncement: (count: number) => string;
-    actionsLabel: string;
-    stepAnnouncement: (step: FilterDraftStep, label: string) => string;
-    countAnnouncement: (count: number) => string;
-    valueCount: (count: number) => string;
-    valueDetail: (summary: string, values: string[]) => string;
-    valueRange: (from: string, to: string) => string;
-    rangeFrom: (fieldLabel: string) => string;
-    rangeTo: (fieldLabel: string) => string;
-    rangeSeparator: string;
-    negated: (operatorLabel: string) => string;
-    issueOperator: string;
-    issueValue: string;
-    issueRange: string;
-    issueRangeOrder: string;
-    issueEmptyGroup: string;
-    issueSummary: (count: number) => string;
-}
-interface FilterValidateContext<V = unknown, O = unknown> {
-    value: V | undefined;
-    values: unknown[];
-    field: FilterField<V, O>;
-    operator: FilterOperator;
-    arity: FilterOperatorArity;
-    rule: FilterRule<V>;
-    labels: FilterLabels;
-}
-type CascaderCollapse = "middle" | "start" | "none";
-type FilterPathCollapse = CascaderCollapse;
-type FilterOperatorLabels = Record<string, string>;
-export function createFilterQuery<V = unknown>(rules?: FilterNode<V>[], combinator?: FilterCombinator, id?: string): FilterQuery<V>;
-interface FilterCondition {
-    path: string[];
-    field: string;
-    operator: string;
-    values: unknown[];
-    negated: boolean;
-}
-export function flattenFilterConditions<V>(query: FilterQuery<V>): FilterCondition[];
-interface FiltersProps<V = unknown, O = unknown> {
-    fields: FilterField<V, O>[];
-    query?: FilterQuery<V>;
-    defaultQuery?: FilterQuery<V>;
-    onQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => void;
-    labels?: Partial<FilterLabels>;
-    operatorLabels?: FilterOperatorLabels;
-    editors?: FilterEditorRegistry;
-    variant?: "basic" | "advanced";
-    advancedMode?: "popover" | "inline";
-    advancedAlign?: "start" | "center" | "end";
-    reorderable?: boolean;
-    size?: "sm" | "default";
-    disabled?: boolean;
-    readOnly?: boolean;
-    onBeforeQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => boolean | void;
-    onConvertToAdvanced?: () => void;
-    menuClassName?: string;
-    fieldPickerClassName?: string;
-    pathCollapse?: FilterPathCollapse;
-    maxPathSegments?: number;
-    trigger?: React$1.ReactNode;
-    showClear?: boolean;
-    renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
-    renderChip?: (rule: FilterRule<V>) => React$1.ReactNode;
-    renderEmpty?: (context: FilterEmptyStateContext) => React$1.ReactNode;
-    className?: string;
-    children?: React$1.ReactNode;
-}
-function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
+const ButtonGroup$1: PublicComponent<typeof ButtonGroup>;
+const ButtonGroupText$1: PublicComponent<typeof ButtonGroupText>;
+const ButtonGroupSeparator$1: PublicComponent<typeof ButtonGroupSeparator>;
+const Separator$2: PublicComponent<typeof Separator$1>;
 const DialogBackdrop: React$1.ForwardRefExoticComponent<Omit<DialogBackdropProps, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 interface DialogBackdropProps extends BaseUIComponentProps<"div", DialogBackdropState> {
     forceRender?: boolean | undefined;
@@ -35886,7 +35631,6 @@ export function Pagination(props: {
     pageSize: number;
     label?: string;
 }): React$1.JSX.Element | null;
-function ViewMap(props: PublicProps<Omit<MapProps, "theme"> & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
 const EVENTS: {
     readonly BLUR: "blur";
     readonly FOCUS_OUT: "focusout";
@@ -36517,6 +36261,16 @@ function RadioGroup$1({ options, label, description, error, ref, ...props }: Fie
     options: readonly FormOption[];
     ref?: RadioGroup.Props<string>["inputRef"];
 }): React$1.JSX.Element;
+export type ChartConfig = Record<string, {
+    label?: React$1.ReactNode;
+    icon?: React$1.ComponentType;
+} & ({
+    color?: string;
+    theme?: never;
+} | {
+    color?: never;
+    theme: Record<"light" | "dark", string>;
+})>;
 type ChartKey<Row> = Extract<keyof Row, string>;
 type ChartValueKey<Row> = {
     [Key in keyof Row]-?: NonNullable<Row[Key]> extends number ? Key : never;
@@ -36657,16 +36411,6 @@ export function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
     curvature?: number;
     onSelect?: (arc: MapArc) => void;
 }): React$1.JSX.Element;
-export type ChartConfig = Record<string, {
-    label?: React$1.ReactNode;
-    icon?: React$1.ComponentType;
-} & ({
-    color?: string;
-    theme?: never;
-} | {
-    color?: never;
-    theme: Record<"light" | "dark", string>;
-})>;
 interface DataGridI18nLabels {
     sortAscending: string;
     sortDescending: string;
@@ -38377,6 +38121,269 @@ const DataGridTableRowSelectAll$1: PublicComponent<typeof DataGridTableRowSelect
 const DataGridColumnHeader$1: <Data extends object, Value>(props: PublicProps<Parameters<typeof DataGridColumnHeader<Data, Value>>[0]>) => ReturnType<typeof DataGridColumnHeader>;
 const DataGridPagination$1: PublicComponent<typeof DataGridPagination>;
 const DataGridScrollArea$1: PublicComponent<typeof DataGridScrollArea>;
+type FilterCombinator = "and" | "or";
+interface FilterRule<V = unknown> {
+    id: string;
+    type: "rule";
+    path: string[];
+    operator: string;
+    value: V | undefined;
+    negated?: boolean;
+}
+interface FilterGroupNode<V = unknown> {
+    id: string;
+    type: "group";
+    combinator: FilterCombinator;
+    rules: FilterNode<V>[];
+}
+type FilterNode<V = unknown> = FilterRule<V> | FilterGroupNode<V>;
+type FilterQuery<V = unknown> = FilterGroupNode<V>;
+type FilterChangeReason = "add" | "update" | "remove" | "duplicate" | "negate" | "reorder" | "combinator" | "clear";
+interface FilterChangeDetails<V = unknown, O = unknown> {
+    reason: FilterChangeReason;
+    rule: FilterRule<V> | null;
+    field: FilterField<V, O> | null;
+}
+type FilterOperatorArity = "none" | "one" | "many" | "range";
+interface FilterOperator {
+    value: string;
+    label: string;
+    arity?: FilterOperatorArity;
+    inverse?: string;
+    hidden?: boolean;
+}
+type FilterValueType = "text" | "number" | "range" | "select" | "multiselect" | "boolean";
+interface FilterOption<O = unknown> {
+    value: string;
+    label: string;
+    icon?: React$1.ReactNode;
+    description?: string;
+    keywords?: string[];
+    disabled?: boolean;
+    exclusive?: boolean;
+    data?: O;
+}
+interface FilterLoadContext {
+    signal: AbortSignal;
+    cursor?: string;
+}
+interface FilterLoadResult<O = unknown> {
+    items: FilterOption<O>[];
+    nextCursor?: string;
+    hasMore?: boolean;
+}
+interface FilterField<V = unknown, O = unknown> {
+    id: string;
+    label: string;
+    icon?: React$1.ReactNode;
+    description?: string;
+    keywords?: string[];
+    count?: number;
+    fields?: FilterField<V, O>[];
+    selectable?: boolean;
+    disabled?: boolean;
+    type?: FilterValueType;
+    options?: FilterOption<O>[];
+    loadOptions?: (query: string, context: FilterLoadContext) => FilterOption<O>[] | Promise<FilterOption<O>[] | FilterLoadResult<O>>;
+    resolveValues?: (values: string[]) => FilterOption<O>[] | Promise<FilterOption<O>[]>;
+    operators?: FilterOperator[] | ((field: FilterField<V, O>) => FilterOperator[]);
+    defaultOperator?: string;
+    editor?: FilterEditorRef<V, O>;
+    renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
+    valueText?: (context: FilterValueDisplayContext<V, O>) => string;
+    placeholder?: string;
+    searchable?: boolean;
+    pinSelected?: boolean;
+    sortSelected?: "none" | "label" | "snapshot";
+    validate?: (context: FilterValidateContext<V, O>) => string | null | undefined | false;
+    className?: string;
+    column?: string;
+    data?: unknown;
+}
+type FilterEditorHost = "create" | "amend";
+interface FilterOptionsState<O = unknown> {
+    items: FilterOption<O>[];
+    loading: boolean;
+    error: boolean;
+    hasMore: boolean;
+    query: string;
+    setQuery: (query: string) => void;
+    loadMore: () => void;
+    retry: () => void;
+    resolve: (value: string) => FilterOption<O> | undefined;
+}
+interface FilterCommitOptions {
+    close?: boolean;
+}
+interface FilterEditorProps<V = unknown, O = unknown> {
+    field: FilterField<V, O>;
+    operator: FilterOperator;
+    value: V | undefined;
+    onValueChange: (value: V | undefined) => void;
+    host: FilterEditorHost;
+    autoFocusProps: {
+        ref: React$1.RefCallback<HTMLElement>;
+        autoFocus: boolean;
+    };
+    commit: (value?: V, options?: FilterCommitOptions) => void;
+    cancel: () => void;
+    back: () => void;
+    options: FilterOptionsState<O>;
+    labels: FilterLabels;
+}
+type FilterEditor<V = unknown, O = unknown> = React$1.ComponentType<FilterEditorProps<V, O>>;
+type AnyFilterEditor = React$1.ComponentType<FilterEditorProps<unknown, unknown>>;
+type FilterEditorRegistry = Record<string, AnyFilterEditor>;
+type FilterEditorRef<V = unknown, O = unknown> = string | FilterEditor<V, O> | FilterEditor<any, any>;
+interface FilterEmptyStateContext {
+    labels: FilterLabels;
+    readOnly: boolean;
+    mode: "popover" | "inline";
+    addFilter: () => void;
+    addGroup: () => void;
+}
+interface FilterValueDisplayContext<V = unknown, O = unknown> {
+    value: V | undefined;
+    values: unknown[];
+    field: FilterField<V, O>;
+    operator: FilterOperator;
+    options: FilterOption<O>[];
+    labels: FilterLabels;
+}
+type FilterDraftStep = "field" | "operator" | "value";
+interface FilterLabels {
+    addFilter: string;
+    advancedFilter: string;
+    showRecords: string;
+    builderEmpty: string;
+    builderEmptyHint: string;
+    addCondition: string;
+    addConditionGroup: string;
+    addToGroup: string;
+    removeGroup: string;
+    wrapInGroup: string;
+    ungroup: string;
+    moveToTopLevel: string;
+    moveToGroup: (position: number) => string;
+    reorder: string;
+    reorderHint: string;
+    groupAll: string;
+    groupAny: string;
+    groupPlaceholder: string;
+    rowLabel: (condition: string, depth: number) => string;
+    groupLabel: (description: string, depth: number) => string;
+    groupAnnouncement: (added: boolean) => string;
+    reorderAnnouncement: (label: string, position: number, total: number) => string;
+    moveAnnouncement: (label: string, destination: string, position: number, total: number) => string;
+    clearAll: string;
+    groupMenu: string;
+    searchFields: string;
+    searchOperators: string;
+    searchOptions: string;
+    back: string;
+    clear: string;
+    apply: string;
+    discard: string;
+    empty: string;
+    loading: string;
+    loadingMore: string;
+    loadMore: string;
+    error: string;
+    retry: string;
+    where: string;
+    and: string;
+    or: string;
+    combinator: string;
+    combinatorLabel: (word: string) => string;
+    duplicate: string;
+    negate: string;
+    convertToAdvanced: string;
+    remove: string;
+    chipMenu: (fieldLabel: string) => string;
+    filtersLabel: string;
+    filterLabel: (condition: string) => string;
+    readOnly: string;
+    pathSeparator: string;
+    valuePlaceholder: string;
+    selectPlaceholder: string;
+    noValue: string;
+    selectCondition: string;
+    incomplete: string;
+    branchAffordance: string;
+    exclusiveHint: string;
+    exclusiveAnnouncement: (label: string, cleared: number) => string;
+    itemCount: (count: number) => string;
+    fieldsLabel: string;
+    resultsAnnouncement: (count: number) => string;
+    actionsLabel: string;
+    stepAnnouncement: (step: FilterDraftStep, label: string) => string;
+    countAnnouncement: (count: number) => string;
+    valueCount: (count: number) => string;
+    valueDetail: (summary: string, values: string[]) => string;
+    valueRange: (from: string, to: string) => string;
+    rangeFrom: (fieldLabel: string) => string;
+    rangeTo: (fieldLabel: string) => string;
+    rangeSeparator: string;
+    negated: (operatorLabel: string) => string;
+    issueOperator: string;
+    issueValue: string;
+    issueRange: string;
+    issueRangeOrder: string;
+    issueEmptyGroup: string;
+    issueSummary: (count: number) => string;
+}
+interface FilterValidateContext<V = unknown, O = unknown> {
+    value: V | undefined;
+    values: unknown[];
+    field: FilterField<V, O>;
+    operator: FilterOperator;
+    arity: FilterOperatorArity;
+    rule: FilterRule<V>;
+    labels: FilterLabels;
+}
+type CascaderCollapse = "middle" | "start" | "none";
+type FilterPathCollapse = CascaderCollapse;
+type FilterOperatorLabels = Record<string, string>;
+export function createFilterQuery<V = unknown>(rules?: FilterNode<V>[], combinator?: FilterCombinator, id?: string): FilterQuery<V>;
+interface FilterCondition {
+    path: string[];
+    field: string;
+    operator: string;
+    values: unknown[];
+    negated: boolean;
+}
+export function flattenFilterConditions<V>(query: FilterQuery<V>): FilterCondition[];
+interface FiltersProps<V = unknown, O = unknown> {
+    fields: FilterField<V, O>[];
+    query?: FilterQuery<V>;
+    defaultQuery?: FilterQuery<V>;
+    onQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => void;
+    labels?: Partial<FilterLabels>;
+    operatorLabels?: FilterOperatorLabels;
+    editors?: FilterEditorRegistry;
+    variant?: "basic" | "advanced";
+    advancedMode?: "popover" | "inline";
+    advancedAlign?: "start" | "center" | "end";
+    reorderable?: boolean;
+    size?: "sm" | "default";
+    disabled?: boolean;
+    readOnly?: boolean;
+    onBeforeQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => boolean | void;
+    onConvertToAdvanced?: () => void;
+    menuClassName?: string;
+    fieldPickerClassName?: string;
+    pathCollapse?: FilterPathCollapse;
+    maxPathSegments?: number;
+    trigger?: React$1.ReactNode;
+    showClear?: boolean;
+    renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
+    renderChip?: (rule: FilterRule<V>) => React$1.ReactNode;
+    renderEmpty?: (context: FilterEmptyStateContext) => React$1.ReactNode;
+    className?: string;
+    children?: React$1.ReactNode;
+}
+function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
+const Filters$1: <Value = unknown, Option = unknown>(props: PublicProps<Parameters<typeof Filters<Value, Option>>[0]>) => ReturnType<typeof Filters>;
 const Box$1: PublicComponent<typeof Box>;
 const Stack$1: (props: Omit<PublicProps<Parameters<typeof Stack>[0]>, "as">) => React$1.ReactNode;
 const StackItem$1: PublicComponent<typeof StackItem>;
@@ -38391,9 +38398,6 @@ const Badge$1: PublicComponent<typeof Badge>;
 const FileType$1: PublicComponent<typeof FileType>;
 const Card$2: PublicComponent<typeof Card$1>;
 const Button$3: PublicComponent<typeof Button$2>;
-const ButtonGroup$1: PublicComponent<typeof ButtonGroup>;
-const ButtonGroupText$1: PublicComponent<typeof ButtonGroupText>;
-const ButtonGroupSeparator$1: PublicComponent<typeof ButtonGroupSeparator>;
 export const Dropdown: PublicComponent<typeof DropdownMenu>;
 export const DropdownPortal: PublicComponent<typeof DropdownMenuPortal>;
 const DropdownTrigger$1: PublicComponent<typeof DropdownTrigger>;
@@ -38409,7 +38413,6 @@ const DropdownShortcut$1: PublicComponent<typeof DropdownShortcut>;
 export const DropdownSub: PublicComponent<typeof DropdownMenuSub>;
 const DropdownSubTrigger$1: PublicComponent<typeof DropdownSubTrigger>;
 const DropdownSubContent$1: PublicComponent<typeof DropdownSubContent>;
-const Separator$2: PublicComponent<typeof Separator$1>;
 const Table$2: PublicComponent<typeof Table>;
 const TableHeader$1: PublicComponent<typeof TableHeader>;
 const TableBody$1: PublicComponent<typeof TableBody>;
@@ -38428,10 +38431,7 @@ const Link$1: PublicComponent<typeof Link>;
 const Currency$1: PublicComponent<typeof Currency>;
 const FileViewer$1: PublicComponent<typeof FileViewer>;
 const ViewMap$1: PublicComponent<typeof ViewMap>;
-const MapGeoJSON$1: PublicComponent<typeof MapGeoJSON>;
-const MapControls$1: PublicComponent<typeof MapControls>;
 const Frame$2: PublicComponent<typeof Frame$1>;
-const Filters$1: <Value = unknown, Option = unknown>(props: PublicProps<Parameters<typeof Filters<Value, Option>>[0]>) => ReturnType<typeof Filters>;
 type Schema = ObjectSchema | ArraySchema | StringSchema | NumberSchema | IntegerSchema | BooleanSchema | NullSchema;
 type _JSONSchema = boolean | JSONSchema;
 type SchemaType = "object" | "array" | "string" | "number" | "boolean" | "null" | "integer";

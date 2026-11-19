@@ -93,10 +93,17 @@ export default function ViewLayout({
     // Read published defaults without duplicating component configuration in each documentation page.
     const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
     const defaults = new Map(
-        (catalogComponent?.properties ?? []).map((property) => [
-            property.name,
-            'default' in property ? property.default : undefined
-        ])
+        viewCatalog.components.flatMap((entry) =>
+            (entry.properties ?? []).map(
+                (property) =>
+                    [
+                        entry.name === name || property.name.includes('.')
+                            ? property.name
+                            : `${entry.name}.${property.name}`,
+                        'default' in property ? property.default : undefined
+                    ] as const
+            )
+        )
     );
 
     // Prepare property tables for the reference tab.
