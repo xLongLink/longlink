@@ -4,9 +4,9 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { useDeferredValue, useRef, useState } from 'react';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { OperationMetadata } from '@/components/dialogs/operation-metadata';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -124,7 +124,43 @@ export default function Operations() {
                     />
                 </footer>
             </Stack>
-            {metadata && <OperationMetadata metadata={metadata} onClose={() => setMetadataId(null)} />}
+            {metadata && (
+                <Dialog
+                    open
+                    onOpenChange={(open) => {
+                        if (!open) setMetadataId(null);
+                    }}
+                    title="Operation metadata"
+                >
+                    <Stack gap={2}>
+                        <span>
+                            <b>Operation</b> {metadata.kind}
+                        </span>
+                        <span>
+                            <b>Status</b> {metadata.status}
+                        </span>
+                        <span>
+                            <b>ID</b> {metadata.id}
+                        </span>
+                        <span>
+                            <b>Target</b> {metadata.target_id}
+                        </span>
+                        <span>
+                            <b>Created</b> {metadata.created_at}
+                        </span>
+                        {metadata.finished_at && (
+                            <span>
+                                <b>Finished</b> {metadata.finished_at}
+                            </span>
+                        )}
+                        {metadata.failed && (
+                            <span>
+                                <b>Reason</b> {metadata.failed}
+                            </span>
+                        )}
+                    </Stack>
+                </Dialog>
+            )}
         </Stack>
     );
 }

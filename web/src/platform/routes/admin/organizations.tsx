@@ -7,11 +7,11 @@ import { useDeferredValue, useRef, useState } from 'react';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { OrganizationMetadata } from '@/components/dialogs/organization-metadata';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -131,11 +131,33 @@ export default function Organizations() {
                 </footer>
             </Stack>
             {metadata && (
-                <OrganizationMetadata
-                    metadata={metadata}
-                    onClose={() => setDialog(null)}
-                    onDelete={() => setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })}
-                />
+                <Dialog
+                    open
+                    onOpenChange={(open) => {
+                        if (!open) setDialog(null);
+                    }}
+                    title="Organization metadata"
+                    footer={
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() =>
+                                setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
+                            }
+                        >
+                            Delete
+                        </Button>
+                    }
+                >
+                    <Stack gap={2}>
+                        <span>
+                            <b>Status</b> {metadata.status}
+                        </span>
+                        <span>
+                            <b>ID</b> {metadata.id}
+                        </span>
+                    </Stack>
+                </Dialog>
             )}
             <DeletionDialog
                 confirmation={
