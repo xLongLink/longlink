@@ -9,7 +9,10 @@ export default function Page() {
     const isHome = pathname === '/';
 
     return (
-        <Stack gap={0} className={`min-h-screen${isHome ? ' bg-black text-white' : ''}`}>
+        <Stack
+            gap={0}
+            className={`min-h-screen ${isHome ? 'bg-black text-white' : 'bg-background [--background:light-dark(#fff,var(--card))] [--surface:var(--background)]'}`}
+        >
             <Navbar expandOnTop={isHome} />
             <div className="min-h-0 min-w-0 grow">
                 <Outlet />

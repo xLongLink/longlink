@@ -20,39 +20,37 @@ export default function Documentation() {
             .sort((left, right) => right.path.length - left.path.length)[0] ?? documentationNavigation[0];
 
     return (
-        <div className="bg-background [--background:light-dark(#fff,var(--card))] [--surface:var(--background)]">
-            <Publication
-                navigation={<PublicationSectionLinks groups={documentationNavigation} activePath={activeGroup.path} />}
-                sideNav={
-                    <PublicationNavigation label="Documentation navigation">
-                        {activeGroup.sections.map((section) => (
-                            <PublicationNavigationSection key={section.title} title={section.title}>
-                                {section.pages.map((page) =>
-                                    page.children?.length ? (
-                                        <PublicationNavigationSection key={page.path} title={page.label}>
-                                            {page.children.map((child) => (
-                                                <PublicationNavigationItem
-                                                    key={child.path}
-                                                    page={child}
-                                                    pagePath={pagePath}
-                                                    hash={hash}
-                                                />
-                                            ))}
-                                        </PublicationNavigationSection>
-                                    ) : (
-                                        <PublicationNavigationItem
-                                            key={page.path}
-                                            page={page}
-                                            pagePath={pagePath}
-                                            hash={hash}
-                                        />
-                                    )
-                                )}
-                            </PublicationNavigationSection>
-                        ))}
-                    </PublicationNavigation>
-                }
-            />
-        </div>
+        <Publication
+            navigation={<PublicationSectionLinks groups={documentationNavigation} activePath={activeGroup.path} />}
+            sideNav={
+                <PublicationNavigation label="Documentation navigation">
+                    {activeGroup.sections.map((section) => (
+                        <PublicationNavigationSection key={section.title} title={section.title}>
+                            {section.pages.map((page) =>
+                                page.children?.length ? (
+                                    <PublicationNavigationSection key={page.path} title={page.label}>
+                                        {page.children.map((child) => (
+                                            <PublicationNavigationItem
+                                                key={child.path}
+                                                page={child}
+                                                pagePath={pagePath}
+                                                hash={hash}
+                                            />
+                                        ))}
+                                    </PublicationNavigationSection>
+                                ) : (
+                                    <PublicationNavigationItem
+                                        key={page.path}
+                                        page={page}
+                                        pagePath={pagePath}
+                                        hash={hash}
+                                    />
+                                )
+                            )}
+                        </PublicationNavigationSection>
+                    ))}
+                </PublicationNavigation>
+            }
+        />
     );
 }
