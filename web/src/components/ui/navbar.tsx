@@ -77,13 +77,14 @@ export function Navbar({
                             <div className="hidden items-center gap-6 sm:flex">
                                 <PublicLinks />
                             </div>
-                            <SheetTrigger
-                                className="sm:hidden"
-                                aria-label="Open navigation"
-                                render={<Button variant="ghost" size="icon" type="button" />}
-                            >
-                                <Menu aria-hidden="true" size={20} />
-                            </SheetTrigger>
+                            <div className="sm:hidden">
+                                <SheetTrigger
+                                    aria-label="Open navigation"
+                                    render={<Button variant="ghost" size="icon" type="button" />}
+                                >
+                                    <Menu aria-hidden="true" size={20} />
+                                </SheetTrigger>
+                            </div>
                         </div>
                     </nav>
                     <SheetContent
