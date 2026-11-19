@@ -4734,7 +4734,12 @@ function Link(props: LinkProps): React$1.JSX.Element;
 function Card({ className, size, ...props }: React$1.ComponentProps<"div"> & {
     size?: "default" | "sm";
 }): React$1.JSX.Element;
-type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" | "onChange"> & {
+type CardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" | "onChange" | "className" | "style" | "title"> & {
+    title?: React$1.ReactNode;
+    description?: React$1.ReactNode;
+    action?: React$1.ReactNode;
+    footer?: React$1.ReactNode;
+    padding?: "default" | "none";
     label?: string;
     onClick?: (event: React$1.MouseEvent<HTMLElement>) => void;
     href?: string;
@@ -4743,14 +4748,7 @@ type InteractiveCardProps = Omit<React$1.ComponentProps<typeof Card>, "onClick" 
     isSelected?: boolean;
     onChange?: (isSelected: boolean) => void;
 };
-function InteractiveCard({ label, onClick, href, target, isDisabled, isSelected, onChange, children, className, onMouseUp, inert, ...props }: InteractiveCardProps): React$1.JSX.Element;
-function Card$1({ title, description, action, footer, padding, children, ...props }: Omit<React$1.ComponentProps<typeof InteractiveCard>, "className" | "style" | "title"> & {
-    title?: React$1.ReactNode;
-    description?: React$1.ReactNode;
-    action?: React$1.ReactNode;
-    footer?: React$1.ReactNode;
-    padding?: "default" | "none";
-}): React$1.JSX.Element;
+function Card$1({ title, description, action, footer, padding, label, onClick, href, target, isDisabled, isSelected, onChange, children, onMouseUp, inert, ...props }: CardProps): React$1.JSX.Element;
 type GridColumns = number | {
     base?: number;
     sm?: number;

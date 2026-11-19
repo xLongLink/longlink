@@ -1,7 +1,6 @@
 import { useUpdateUser } from '@/lib/hooks/use-user';
-import { CardContent } from '@/components/shadcn/card';
+import { Card } from '@/components/longlink/layout/card';
 import { useAppearance } from '@/lib/hooks/use-appearance';
-import { InteractiveCard } from '@/components/custom/interactive-card';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
@@ -22,7 +21,7 @@ export default function AppearanceSettings() {
                             { value: 'dark', label: 'Dark', image: 'theme_dark.png' }
                         ] as const
                     ).map(({ value, label, image }) => (
-                        <InteractiveCard
+                        <Card
                             key={value}
                             label={label}
                             size="sm"
@@ -33,7 +32,7 @@ export default function AppearanceSettings() {
                                     userUpdate.mutate({ theme: value });
                             }}
                         >
-                            <CardContent className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2">
                                 <span>{label}</span>
                                 <img
                                     src={`/images/${image}`}
@@ -42,8 +41,8 @@ export default function AppearanceSettings() {
                                     height={1024}
                                     className="aspect-3/2 w-40 max-w-full rounded-md object-cover"
                                 />
-                            </CardContent>
-                        </InteractiveCard>
+                            </div>
+                        </Card>
                     ))}
                 </div>
             </div>
