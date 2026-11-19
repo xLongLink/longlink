@@ -1,6 +1,7 @@
+import { useRef } from 'react';
 import { X } from 'lucide-react';
-import { useRef, useTransition } from 'react';
 import { Button } from '@/components/shadcn/button';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -18,8 +19,7 @@ export function DeletionDialog({
     onClose: () => void;
 }) {
     // Preserve pending state across dismissal for callers that keep this component mounted.
-    const [isDeleting, startDeletion] = useTransition();
-    const deletionInFlight = useRef(false);
+    const { isPending: isDeleting, run } = useConfirmAction();
     const cancel = useRef<HTMLButtonElement>(null);
 
     if (!confirmation) return null;
@@ -38,20 +38,7 @@ export function DeletionDialog({
             disabled={isDeleting}
             focusableWhenDisabled
             aria-busy={isDeleting || undefined}
-            onClick={() => {
-                // Deduplicate same-tick clicks before the transition's pending state renders.
-                if (deletionInFlight.current) return;
-
-                deletionInFlight.current = true;
-                startDeletion(async () => {
-                    // Release the guard without swallowing transition errors.
-                    try {
-                        await confirmation.onDelete();
-                    } finally {
-                        deletionInFlight.current = false;
-                    }
-                });
-            }}
+            onClick={() => run(confirmation.onDelete)}
         >
             Delete
         </Button>

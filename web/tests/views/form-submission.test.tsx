@@ -7,9 +7,9 @@ import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
-import { RequestContext } from '@/views/contexts';
 import userEvent from '@testing-library/user-event';
 import { Input } from '@/components/longlink/form/input';
+import { RequestContext } from '@/lib/view-capabilities';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi

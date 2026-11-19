@@ -5,7 +5,7 @@ import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import Platform from '@/components/layouts/platform';
 import { ProfileMenu } from '@/components/ui/profile';
-import { PageContainer } from '@/components/ui/page-container';
+import { PageContainer } from '@/components/layouts/page-container';
 import { Outlet, useLocation, useOutletContext } from 'react-router';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';

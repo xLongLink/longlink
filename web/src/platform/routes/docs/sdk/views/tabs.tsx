@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { Tabs } from '@/components/longlink/layout/tabs';
+import { Tabs } from '@/components/longlink';
 
 /** Documents native tab composition and selection. */
 export default function TabsPage() {
@@ -7,18 +7,6 @@ export default function TabsPage() {
     return (
         <ViewLayout
             name="Tabs"
-            properties={[
-                { name: 'defaultValue', type: 'string' },
-                { name: 'value', type: 'string' },
-                { name: 'onValueChange', type: '(value: string) => void' },
-                { name: 'variant', type: '"default" | "line"' },
-                { name: 'items', type: 'readonly TabItem[]' },
-                { name: 'items[].value', type: 'string' },
-                { name: 'items[].label', type: 'ReactNode' },
-                { name: 'items[].disabled', type: 'boolean' },
-                { name: 'items[].keepMounted', type: 'boolean' },
-                { name: 'items[].content', type: 'ReactNode' }
-            ]}
             example={{
                 title: 'Tabs',
                 preview: <TabsExample />,

@@ -1,8 +1,8 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Icon } from '@/components/longlink/display/icon';
-import { Stack } from '@/components/longlink/layout/stack';
 import {
+    Box,
+    Icon,
+    Stack,
     Table,
     TableHeader,
     TableBody,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Pagination } from '@/components/longlink/action/pagination';
+import { Pagination } from '@/components/longlink';
 
 /** Documents controlled pagination in LongLink Views. */
 export default function PaginationPage() {

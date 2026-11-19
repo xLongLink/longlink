@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Menu } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { Wordmark } from '@/components/ui/wordmark';
-import { Button, buttonVariants } from '@/components/longlink/action/button';
+import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/shadcn/sheet';
 
 const publicLinks = [

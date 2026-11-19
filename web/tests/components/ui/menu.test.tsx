@@ -2,7 +2,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Menu } from '@/components/longlink/layout/menu';
-import { MenuNavigationContext } from '@/views/contexts';
+import { MenuNavigationContext } from '@/lib/view-capabilities';
 // @vitest-environment happy-dom
 import { act, useEffect, useState, type FormEvent } from 'react';
 

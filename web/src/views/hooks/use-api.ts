@@ -1,6 +1,6 @@
 import type { ViewData } from '../protocol';
 import { useCallback, useContext } from 'react';
-import { RequestContext } from '@/views/contexts';
+import { RequestContext } from '@/lib/view-capabilities';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 /** Loads Solution data and invalidates only the complete request path within this View. */

@@ -122,6 +122,7 @@ export const componentDocumentation = [
     { name: 'Empty', category: 'Display', icon: Package },
     { name: 'FileType', category: 'Display', icon: FileText },
     { name: 'FileViewer', category: 'Display', icon: FileText },
+    { name: 'Filters', category: 'Form', icon: ListFilter },
     { name: 'Frame', category: 'Layouts', icon: PanelsTopLeft },
     { name: 'Functions', category: 'Runtime' },
     { name: 'Grid', category: 'Layouts', icon: Grip },

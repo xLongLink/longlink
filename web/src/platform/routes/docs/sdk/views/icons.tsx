@@ -1,8 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Grid } from '@/components/longlink/layout/grid';
-import { Icon } from '@/components/longlink/display/icon';
-import { Stack } from '@/components/longlink/layout/stack';
+import { Box, Grid, Icon, Stack } from '@/components/longlink';
 
 /** Documents Icon in LongLink Views. */
 export default function IconsPage() {
@@ -10,12 +7,6 @@ export default function IconsPage() {
     return (
         <ViewLayout
             name="Icon"
-            properties={[
-                { name: 'icon', type: 'IconName' },
-                { name: 'size', type: '"sm" | "md" | "lg"' },
-                { name: 'tile', type: '"outline" | "elevated" | "soft" | "solid" | "frame"' },
-                { name: 'variant', type: '"primary" | "secondary" | "outline" | "destructive"' }
-            ]}
             example={{
                 title: 'Icon',
                 preview: <IconExample />,

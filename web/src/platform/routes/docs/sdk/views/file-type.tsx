@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Stack } from '@/components/longlink/layout/stack';
-import { FileType } from '@/components/longlink/display/file-type';
+import { Stack, FileType } from '@/components/longlink';
 
 /** Documents FileType in LongLink Views. */
 export default function FileTypePage() {

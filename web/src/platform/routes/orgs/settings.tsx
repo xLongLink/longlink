@@ -1,37 +1,25 @@
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
+import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
-import { useApi } from '@/lib/hooks/use-api';
+import MembersSection from './members';
+import InvitationsSection from './invitations';
 import PaymentMethods from './payment-methods';
 import { ApiBoundary } from '@/components/api';
-import { useState, useTransition } from 'react';
-import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
-import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Empty } from '@/components/longlink/display/empty';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { useLocation, useOutletContext } from 'react-router';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { InviteMember } from '@/components/dialogs/invite-member';
-import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { Link, useLocation, useNavigate, useOutletContext } from 'react-router';
-import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
-import { Boxes, Building2, ChevronDown, CreditCard, Ellipsis, Users } from 'lucide-react';
-import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
+import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
+import { Boxes, Building2, ChevronDown, CreditCard, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/shadcn/dropdown-menu';
 
 const organizationSections = [
     { id: 'general', label: 'General' },
@@ -77,80 +65,66 @@ export default function OrganizationSettings() {
                     <span className="text-xs text-muted-foreground">Organization</span>
                 </Stack>
             </Stack>
-            <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
-                <nav aria-label="Settings sections" className="flex min-w-0 flex-col gap-0.5 pe-4">
-                    {[
-                        { label: 'Organization', icon: Building2, sections: organizationSections },
-                        { label: 'Billing', icon: CreditCard, sections: billingSections },
-                        { label: 'People', icon: Users, sections: peopleSections }
-                    ].map((group) => (
-                        <Collapsible key={group.label} defaultOpen>
-                            <CollapsibleTrigger
-                                render={<Button variant="ghost" size="sm" className="w-full justify-start" />}
-                            >
-                                <group.icon aria-hidden="true" />
-                                {group.label}
-                                <ChevronDown className="ms-auto in-data-open:rotate-180" aria-hidden="true" />
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <div className="flex flex-col gap-0.5 ps-6">
-                                    {group.sections.map((item) => (
-                                        <Button
-                                            nativeButton={false}
-                                            render={<Link to={`${location.pathname}${location.search}#${item.id}`} />}
-                                            variant={section === item.id ? 'secondary' : 'ghost'}
-                                            size="sm"
-                                            className="w-full justify-start"
-                                            aria-current={section === item.id ? 'location' : undefined}
-                                            key={item.id}
-                                        >
-                                            {item.label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    ))}
-                    <Button
-                        nativeButton={false}
-                        render={<Link to={`${location.pathname}${location.search}#solutions`} />}
-                        variant={section === 'solutions' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start"
-                        aria-current={section === 'solutions' ? 'location' : undefined}
-                    >
-                        <Boxes className="size-4" aria-hidden="true" />
-                        Solutions
-                    </Button>
-                </nav>
-                <Stack gap={3} className="min-w-0">
-                    <ApiBoundary key={section}>
-                        {section === 'usage' ? (
-                            <Usage base={base} />
-                        ) : section === 'payment-methods' ? (
-                            <PaymentMethods base={base} canManage={membership.role === 'owner'} />
-                        ) : section === 'invoices' ? (
-                            <Invoices base={base} canManage={membership.role === 'owner'} />
-                        ) : section === 'private-registries' ? (
-                            <Registries base={base} canMaintain={canMaintain} />
-                        ) : section === 'members' ? (
-                            <MembersSection base={base} role={membership.role} />
-                        ) : section === 'invitations' ? (
-                            <InvitationsSection base={base} role={membership.role} />
-                        ) : section === 'solutions' ? (
-                            <SolutionManagement membership={membership} presentation="settings" />
-                        ) : (
-                            <GeneralSection
-                                base={base}
-                                tags={membership.tags}
-                                name={membership.organization.name}
-                                canMaintain={canMaintain}
-                                canDelete={membership.role === 'owner'}
-                            />
-                        )}
-                    </ApiBoundary>
-                </Stack>
-            </div>
+            <SettingsLayout
+                navigation={
+                    <>
+                        {[
+                            { label: 'Organization', icon: Building2, sections: organizationSections },
+                            { label: 'Billing', icon: CreditCard, sections: billingSections },
+                            { label: 'People', icon: Users, sections: peopleSections }
+                        ].map((group) => (
+                            <Collapsible key={group.label} defaultOpen>
+                                <CollapsibleTrigger
+                                    render={<Button variant="ghost" size="sm" className="w-full justify-start" />}
+                                >
+                                    <group.icon aria-hidden="true" />
+                                    {group.label}
+                                    <ChevronDown className="ms-auto in-data-open:rotate-180" aria-hidden="true" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                    <div className="flex flex-col gap-0.5 ps-6">
+                                        {group.sections.map((item) => (
+                                            <SettingsLink active={section} id={item.id} key={item.id}>
+                                                {item.label}
+                                            </SettingsLink>
+                                        ))}
+                                    </div>
+                                </CollapsibleContent>
+                            </Collapsible>
+                        ))}
+                        <SettingsLink active={section} id="solutions">
+                            <Boxes className="size-4" aria-hidden="true" />
+                            Solutions
+                        </SettingsLink>
+                    </>
+                }
+            >
+                <ApiBoundary key={section}>
+                    {section === 'usage' ? (
+                        <Usage base={base} />
+                    ) : section === 'payment-methods' ? (
+                        <PaymentMethods base={base} canManage={membership.role === 'owner'} />
+                    ) : section === 'invoices' ? (
+                        <Invoices base={base} canManage={membership.role === 'owner'} />
+                    ) : section === 'private-registries' ? (
+                        <Registries base={base} canMaintain={canMaintain} />
+                    ) : section === 'members' ? (
+                        <MembersSection base={base} role={membership.role} />
+                    ) : section === 'invitations' ? (
+                        <InvitationsSection base={base} role={membership.role} />
+                    ) : section === 'solutions' ? (
+                        <SolutionManagement membership={membership} presentation="settings" />
+                    ) : (
+                        <GeneralSection
+                            base={base}
+                            tags={membership.tags}
+                            name={membership.organization.name}
+                            canMaintain={canMaintain}
+                            canDelete={membership.role === 'owner'}
+                        />
+                    )}
+                </ApiBoundary>
+            </SettingsLayout>
         </Stack>
     );
 }
@@ -225,256 +199,5 @@ function GeneralSection({
                 onClose={() => setIsConfirming(false)}
             />
         </Stack>
-    );
-}
-
-/** Owns role-change and seat-removal confirmations only while the members section is active. */
-function MembersSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
-    const user = useAuthenticatedUser();
-    const client = useQueryClient();
-    const navigate = useNavigate();
-    const canAdminister = permissions.canAdminister(role);
-    const canManageOwners = role === 'owner';
-
-    const [member, setMember] = useState<{
-        id: string;
-        action: { kind: 'role'; role: permissions.AssignableRole } | { kind: 'remove' };
-    } | null>(null);
-
-    // Load and invalidate members independently of pending invitations.
-    const [members, invalidateMembers] = useApi(`${base}/members`, schemas.zOrganizationMemberAccessResponse.array());
-
-    // An open confirmation must respect refreshed caller and target roles as well as its original menu.
-    const selectedMember = members.find((row) => row.user.id === member?.id);
-
-    const canManageSelectedMember =
-        canAdminister && selectedMember !== undefined && (canManageOwners || selectedMember.role !== 'owner');
-
-    return (
-        <>
-            <Stack gap={0}>
-                <Stack gap={4}>
-                    <Stack gap={0} justify="end" className="min-h-8">
-                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                            Members
-                        </h2>
-                    </Stack>
-                    <Separator />
-                </Stack>
-                <Table wrap>
-                    <TableBody>
-                        {members.map((row) => (
-                            <TableRow key={row.user.id}>
-                                <TableCell>
-                                    <Stack direction="horizontal" gap={3} align="center">
-                                        <Avatar name={row.user.name} src={row.user.avatar} />
-                                        <Stack gap={0} align="start">
-                                            <Stack direction="horizontal" gap={1} align="center">
-                                                <span>{row.user.name}</span>
-                                                <span className="text-xs text-muted-foreground">{row.role}</span>
-                                            </Stack>
-                                            <span className="text-xs text-muted-foreground">{row.user.email}</span>
-                                        </Stack>
-                                    </Stack>
-                                </TableCell>
-                                {canAdminister && (
-                                    <TableCell align="end">
-                                        {row.role === 'owner' && !canManageOwners ? null : (
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger
-                                                    render={
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            aria-label={`Actions for ${row.user.name}`}
-                                                        >
-                                                            <Ellipsis aria-hidden="true" />
-                                                        </Button>
-                                                    }
-                                                />
-                                                <DropdownMenuContent align="end">
-                                                    {permissions.assignableRoleSchema.options.map((role) =>
-                                                        role === row.role ? null : (
-                                                            <DropdownMenuItem
-                                                                key={role}
-                                                                onClick={() =>
-                                                                    setMember({
-                                                                        id: row.user.id,
-                                                                        action: { kind: 'role', role }
-                                                                    })
-                                                                }
-                                                            >
-                                                                {`Set as ${role[0].toUpperCase() + role.slice(1)}`}
-                                                            </DropdownMenuItem>
-                                                        )
-                                                    )}
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            setMember({ id: row.user.id, action: { kind: 'remove' } })
-                                                        }
-                                                    >
-                                                        Remove member
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        )}
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        ))}
-                        {members.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={canAdminister ? 2 : 1} align="center">
-                                    <Empty role="status" title="No data" />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </Stack>
-            {canManageSelectedMember && member && (
-                <MembershipConfirmation
-                    destructive={member.action.kind === 'remove'}
-                    title={member.action.kind === 'remove' ? 'Remove member' : 'Change role'}
-                    description={
-                        member.action.kind === 'remove'
-                            ? `Remove ${selectedMember.user.name} from this organization? Access is revoked immediately.`
-                            : `Change ${selectedMember.user.name} to ${member.action.role}?`
-                    }
-                    actionLabel={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                    onOpenChange={() => setMember(null)}
-                    onConfirm={async () => {
-                        // Update access on the server before refreshing the member list.
-                        if (member.action.kind === 'remove') {
-                            await api.delete(`${base}/members/${member.id}`);
-
-                            // Leave before clearing revoked access, without refetching an inaccessible member list.
-                            if (member.id === user.id) {
-                                await navigate('/user/organizations', { replace: true });
-                                client.removeQueries({ queryKey: ['api', base], exact: true });
-                                await client.invalidateQueries({
-                                    queryKey: ['api', '/api/v1/me/organizations'],
-                                    exact: true
-                                });
-
-                                return;
-                            }
-                        } else {
-                            await api.patch(`${base}/members/${member.id}`, {
-                                json: schemas.zOrganizationMemberUpdate.parse({ role: member.action.role })
-                            });
-                        }
-
-                        // Refresh access-dependent controls after changing the current user's role.
-                        const refreshes = [invalidateMembers()];
-
-                        if (member.action.kind === 'role' && member.id === user.id) {
-                            refreshes.push(
-                                client.invalidateQueries({ queryKey: ['api', base], exact: true }),
-                                client.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'], exact: true })
-                            );
-                        }
-
-                        await Promise.all(refreshes);
-                        setMember((current) => (current === member ? null : current));
-                    }}
-                />
-            )}
-        </>
-    );
-}
-
-/** Owns invitation drafts and actions only while their section is active. */
-function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
-    const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
-    const canMaintain = permissions.canMaintain(role);
-    const canInviteAdmin = permissions.canAdminister(role);
-
-    // Load and invalidate invitations independently of member access.
-    const [invitations, invalidateInvitations] = useApi(
-        `${base}/invitations`,
-        schemas.zOrganizationInvitationResponse.array()
-    );
-
-    // Serialize revocation until the refreshed list is available.
-    const [revoking, startTransition] = useTransition();
-    const revokeInvitation = useSubmit(
-        async (id: string) => {
-            await api.delete(`${base}/invitations/${id}`);
-            await invalidateInvitations();
-        },
-        { onError: () => {} }
-    );
-
-    /** Closes only the invitation attempt that owns this callback. */
-    function closeInvitation() {
-        setInvitationAttempt((current) => (current === invitationAttempt ? null : current));
-    }
-
-    return (
-        <>
-            <Stack gap={0}>
-                <Stack gap={4}>
-                    <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                            Invitations
-                        </h2>
-                        {canMaintain && (
-                            <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
-                                Invite
-                            </Button>
-                        )}
-                    </Stack>
-                    <Separator />
-                </Stack>
-                <Table wrap>
-                    <TableBody>
-                        {invitations.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell>{row.email}</TableCell>
-                                <TableCell>
-                                    <span className="text-xs text-muted-foreground">{row.role}</span>
-                                </TableCell>
-                                {canMaintain && (
-                                    <TableCell align="end">
-                                        <Button
-                                            variant="destructive"
-                                            disabled={revoking}
-                                            aria-busy={revoking || undefined}
-                                            onClick={() => {
-                                                startTransition(async () => {
-                                                    await revokeInvitation(row.id);
-                                                });
-                                            }}
-                                        >
-                                            Revoke
-                                        </Button>
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        ))}
-                        {invitations.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={canMaintain ? 3 : 2} align="center">
-                                    <Empty role="status" title="No data" />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </Stack>
-            <span role="status" className="sr-only">
-                {revoking ? 'Loading' : ''}
-            </span>
-            {invitationAttempt !== null && (
-                <InviteMember
-                    base={base}
-                    canInviteAdmin={canInviteAdmin}
-                    onSettled={invalidateInvitations}
-                    onOpenChange={closeInvitation}
-                />
-            )}
-        </>
     );
 }

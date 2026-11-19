@@ -73,8 +73,12 @@ export default defineConfig(({ mode }) => {
                                 patterns: [
                                     {
                                         group: [
-                                            '@/views/contexts',
-                                            '**/views/contexts',
+                                            '@/lib/view-capabilities',
+                                            '**/lib/view-capabilities',
+                                            '@/platform/**',
+                                            '@/solution/**',
+                                            '@/components/longlink/**',
+                                            '@/views/**',
                                             '@/components/ui/*',
                                             '../ui/*',
                                             '../../ui/*'
@@ -88,7 +92,16 @@ export default defineConfig(({ mode }) => {
                     }
                 },
                 {
-                    files: ['src/views/contexts.ts'],
+                    files: ['src/components/longlink/**/*'],
+                    rules: {
+                        'no-restricted-imports': [
+                            'error',
+                            { patterns: ['@/platform/**', '@/solution/**', '@/views/**', '@/components/ui/**'] }
+                        ]
+                    }
+                },
+                {
+                    files: ['src/lib/view-capabilities.ts'],
                     rules: {
                         'no-restricted-imports': [
                             'error',

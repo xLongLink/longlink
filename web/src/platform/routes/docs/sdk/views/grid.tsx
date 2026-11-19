@@ -1,7 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Text } from '@/components/longlink/display/text';
-import { Grid, GridItem } from '@/components/longlink/layout/grid';
+import { Box, Text, Grid, GridItem } from '@/components/longlink';
 
 /** Documents Grid in LongLink Views. */
 export default function GridPage() {

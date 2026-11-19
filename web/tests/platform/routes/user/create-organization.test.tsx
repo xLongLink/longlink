@@ -3,7 +3,7 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import userEvent from '@testing-library/user-event';
-import CreateOrganization from '@/components/dialogs/create-organization';
+import CreateOrganization from '@/platform/routes/user/dialogs/create-organization';
 
 it('validates and retries organization creation through the fixed footer without losing the name', async () => {
     const writes: unknown[] = [];

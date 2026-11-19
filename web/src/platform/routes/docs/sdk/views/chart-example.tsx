@@ -1,5 +1,5 @@
+import { Box } from '@/components/longlink';
 import * as charts from '@/components/longlink';
-import { Box } from '@/components/longlink/layout/box';
 
 export type ChartName =
     | 'AreaChart'

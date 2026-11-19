@@ -10,7 +10,7 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
-import { ComputeRegistration } from '@/components/dialogs/compute-registration';
+import { ComputeRegistration } from '@/platform/routes/admin/dialogs/compute-registration';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 

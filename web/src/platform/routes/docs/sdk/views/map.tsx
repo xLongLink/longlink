@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Map as ViewMap } from '@/components/longlink';
-import { Box } from '@/components/longlink/layout/box';
+import { Map as ViewMap, Box } from '@/components/longlink';
 
 /** Documents the shared map container with a world overview. */
 export default function MapPage() {

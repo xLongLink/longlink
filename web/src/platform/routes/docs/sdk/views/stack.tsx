@@ -1,7 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Text } from '@/components/longlink/display/text';
-import { Stack, StackItem } from '@/components/longlink/layout/stack';
+import { Box, Text, Stack, StackItem } from '@/components/longlink';
 
 /** Documents Stack in LongLink Views. */
 export default function StackPage() {

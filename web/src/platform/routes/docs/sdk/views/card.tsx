@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Card } from '@/components/longlink/layout/card';
-import { Button } from '@/components/longlink/action/button';
-import { AreaChart } from '@/components/longlink/charts/area';
+import { Box, Card, Button, AreaChart } from '@/components/longlink';
 
 const requests = [
     { month: 'Jan', requests: 1842 },

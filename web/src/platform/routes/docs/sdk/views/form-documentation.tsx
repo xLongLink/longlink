@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
 import type { ReactNode } from 'react';
-import { Box } from '@/components/longlink/layout/box';
+import { Box } from '@/components/longlink';
 import { FieldGroup } from '@/components/shadcn/field';
 
 /** Keeps form previews editable and documents the same API published to Solution authors. */

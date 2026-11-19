@@ -7,7 +7,7 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 // @vitest-environment happy-dom
 import { act, createRef, useContext, useState } from 'react';
 import { FilePreview } from '@/components/longlink/display/file-preview';
-import { RequestContext, LinkNavigationContext, DialogActivityContext } from '@/views/contexts';
+import { RequestContext, LinkNavigationContext, DialogActivityContext } from '@/lib/view-capabilities';
 
 function PreviewAction({ src, title }: { src: string; title: string }) {
     const requests = useContext(RequestContext);

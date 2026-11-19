@@ -1,7 +1,7 @@
 import { useApiError } from '@/lib/errors';
-import { useRef, useTransition } from 'react';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -27,8 +27,7 @@ export function MembershipConfirmation({
     onConfirm: () => Promise<void>;
 }) {
     const reportError = useApiError();
-    const inFlight = useRef(false);
-    const [pending, startConfirmation] = useTransition();
+    const { isPending: pending, inFlight, run } = useConfirmAction();
 
     const footer = (
         <>
@@ -46,16 +45,11 @@ export function MembershipConfirmation({
                 disabled={pending}
                 aria-busy={pending || undefined}
                 onClick={() => {
-                    // Guard immediate repeated clicks before pending state renders.
-                    if (inFlight.current) return;
-                    inFlight.current = true;
-                    startConfirmation(async () => {
+                    run(async () => {
                         try {
                             await onConfirm();
                         } catch (cause) {
                             reportError(cause);
-                        } finally {
-                            inFlight.current = false;
                         }
                     });
                 }}

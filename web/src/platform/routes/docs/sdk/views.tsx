@@ -7,6 +7,7 @@ import { WorldMapExample } from './views/map';
 import { SelectExample } from './views/select';
 import { SliderExample } from './views/slider';
 import { SwitchExample } from './views/switch';
+import { FiltersExample } from './views/filters';
 import { MapExample } from './views/map-example';
 import { Link as RouterLink } from 'react-router';
 import { CheckboxExample } from './views/checkbox';
@@ -88,6 +89,7 @@ const previews: Record<string, ReactNode> = {
         </AvatarGroup>
     ),
     FileType: <FileTypeExample />,
+    Filters: <FiltersExample />,
     Badge: (
         <div className="flex flex-wrap items-center justify-center gap-2">
             <Badge variant="primary">primary</Badge>

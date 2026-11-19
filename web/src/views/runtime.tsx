@@ -10,7 +10,12 @@ import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
-import { RequestContext, LinkNavigationContext, MenuNavigationContext, DialogActivityContext } from './contexts';
+import {
+    RequestContext,
+    LinkNavigationContext,
+    MenuNavigationContext,
+    DialogActivityContext
+} from '@/lib/view-capabilities';
 import {
     requestSchema,
     parametersSchema,
@@ -24,7 +29,7 @@ import {
     appearanceMessageSchema,
     type AppearanceMessage
 } from './protocol';
-import '../index.css';
+import './runtime.css';
 
 declare global {
     interface Window {

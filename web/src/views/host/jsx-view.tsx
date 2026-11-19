@@ -403,10 +403,7 @@ export function JsxView({
     if (bootstrapState.status === 'preparing') return <PageLoading label="Preparing View" />;
 
     return (
-        <div
-            className="relative flex min-h-[calc(100dvh-var(--\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-calc(var(--spacing)*2)*4)] flex-col"
-            style={{ height }}
-        >
+        <div className="relative flex min-h-(--page-content-height) flex-col" style={{ height }}>
             <iframe
                 ref={frame}
                 title="Solution View"

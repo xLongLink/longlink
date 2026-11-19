@@ -38,7 +38,7 @@ import {
     PinOffIcon
 } from 'lucide-react';
 
-interface DataGridColumnHeaderProps<TData extends object, TValue> extends HTMLAttributes<HTMLDivElement> {
+type DataGridColumnHeaderProps<TData extends object, TValue> = HTMLAttributes<HTMLDivElement> & {
     column: Column<DataGridFeatures, TData, TValue>;
     /** When omitted, uses `column.columnDef.meta.headerTitle`, then a string `columnDef.header`, then `column.id`. */
     title?: string;
@@ -47,7 +47,7 @@ interface DataGridColumnHeaderProps<TData extends object, TValue> extends HTMLAt
     pinnable?: boolean;
     filter?: ReactNode;
     visibility?: boolean;
-}
+};
 
 // Unpinning moves a column into another header list (pinned, windowed center),
 // which remounts its header, so the focus request outlives the button: the next

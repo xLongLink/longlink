@@ -5,7 +5,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
-import SolutionPermissions from '@/components/dialogs/solution-permissions';
+import SolutionPermissions from '@/platform/routes/orgs/dialogs/solution-permissions';
 
 it('retains an explicit no-access draft after save failure and retries against the deployed revision', async () => {
     // Only transport is replaced: queries, selection, disabled save state, and retry stay real.

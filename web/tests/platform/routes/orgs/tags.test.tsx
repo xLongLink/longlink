@@ -5,8 +5,8 @@ import { it, expect, vi } from 'vitest';
 import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import userEvent from '@testing-library/user-event';
-import { TagForm } from '@/components/dialogs/tag-form';
-import { SolutionTags } from '@/components/dialogs/solution-tags';
+import { TagForm } from '@/platform/routes/orgs/dialogs/tag-form';
+import { SolutionTags } from '@/platform/routes/orgs/dialogs/solution-tags';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const tags = [

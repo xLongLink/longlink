@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Stack } from '@/components/longlink/layout/stack';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import { Stack, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink';
 
 // Describe the runtime bindings exposed to Views.
 const functions = [

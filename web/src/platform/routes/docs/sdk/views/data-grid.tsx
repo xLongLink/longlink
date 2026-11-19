@@ -1,13 +1,11 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Frame } from '@/components/longlink/layout/frame';
 import {
+    Box,
+    Frame,
     useTable,
     dataGridFeatures,
     type DataGridFeatures,
-    type ColumnDef
-} from '@/components/longlink/hooks/use-table';
-import {
+    type ColumnDef,
     DataGrid,
     DataGridTable,
     DataGridColumnHeader,
@@ -15,7 +13,7 @@ import {
     DataGridScrollArea,
     DataGridTableRowSelect,
     DataGridTableRowSelectAll
-} from '@/components/longlink/display/data-grid';
+} from '@/components/longlink';
 
 const files = [
     { id: 'po-871', name: 'purchase-order-871.pdf', type: 'PDF' },

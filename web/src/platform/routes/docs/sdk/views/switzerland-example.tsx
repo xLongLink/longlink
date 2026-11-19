@@ -1,6 +1,5 @@
-import { Box } from '@/components/longlink/layout/box';
 import { switzerland, switzerlandAttribution } from './switzerland';
-import { Map as ViewMap, MapGeoJSON, MapControls } from '@/components/longlink';
+import { Box, Map as ViewMap, MapGeoJSON, MapControls } from '@/components/longlink';
 
 /** Shows detailed Swiss canton boundaries without street tiles. */
 export function SwitzerlandExample({

@@ -10,9 +10,9 @@ import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import CreateOrganization from '@/components/dialogs/create-organization';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
+import CreateOrganization from '@/platform/routes/user/dialogs/create-organization';
+import { MembershipConfirmation } from '@/platform/components/membership-confirmation';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const membershipsQuery = apiQueryOptions('/api/v1/me/organizations', schemas.zUserOrganizationMembership.array());
@@ -54,11 +54,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
             <Stack
                 gap={presentation === 'settings' ? 0 : onboarding ? 8 : 4}
                 justify={onboarding ? 'center' : undefined}
-                className={
-                    onboarding
-                        ? 'min-h-[calc(100dvh-var(--\\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-var(--spacing)*8)]'
-                        : undefined
-                }
+                className={onboarding ? 'min-h-(--page-content-height)' : undefined}
             >
                 {presentation === 'settings' ? (
                     <Stack gap={4}>

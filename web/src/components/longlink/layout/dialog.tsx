@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import { use, useEffect, useState } from 'react';
 import * as dialog from '@/components/shadcn/dialog';
-import { DialogActivityContext } from '@/views/contexts';
+import { DialogActivityContext } from '@/lib/view-capabilities';
 import type { ComponentProps, CSSProperties, ReactElement, ReactNode } from 'react';
 
 /** Owns modal layout and dismissal while retaining native focus and isolated-host coordination. */
