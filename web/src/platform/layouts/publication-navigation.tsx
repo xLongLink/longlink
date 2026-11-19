@@ -39,14 +39,16 @@ function moveNavigationFocus(event: KeyboardEvent<HTMLElement>) {
 /** Renders route navigation rather than tabs with nonexistent tab panels. */
 export function PublicationSectionLinks({
     groups,
-    activePath
+    activePath,
+    label = 'Documentation sections'
 }: {
     groups: readonly { path: string; label: string }[];
     activePath: string;
+    label?: string;
 }) {
     return (
         <nav
-            aria-label="Documentation sections"
+            aria-label={label}
             className="flex min-w-0 max-w-full gap-0.5 overflow-x-auto"
             onKeyDown={moveNavigationFocus}
         >
