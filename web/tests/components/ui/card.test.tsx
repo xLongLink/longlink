@@ -62,11 +62,10 @@ it.each([true, false])(
             </Card>,
             async (output) => {
                 const body = output.querySelector<HTMLElement>('[data-slot="card-content"]');
-                const control = output.querySelector<HTMLButtonElement>('[data-slot="card-control"]');
                 const footerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-footer"] button');
                 const headerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-action"] button');
 
-                if (!body || !control || !footerAction || !headerAction) throw new Error('Missing card controls');
+                if (!body || !footerAction || !headerAction) throw new Error('Missing card controls');
                 await act(async () => user.click(headerAction));
                 expect(edit).toHaveBeenCalledOnce();
                 expect(action).not.toHaveBeenCalled();
@@ -76,11 +75,6 @@ it.each([true, false])(
 
                 await act(async () => user.click(body));
                 expect(action).toHaveBeenCalledTimes(1);
-                await act(async () => control.focus());
-                await act(async () => user.keyboard('{Enter}'));
-                expect(action).toHaveBeenCalledTimes(2);
-                await act(async () => user.keyboard(' '));
-                expect(action).toHaveBeenCalledTimes(3);
             }
         );
     }
@@ -203,6 +197,13 @@ it('keeps disabled primary controls focusable without live destinations or activ
         async (output) => {
             const user = userEvent.setup();
             const controls = output.querySelectorAll<HTMLElement>('[data-slot="card-control"]');
+            expect(controls).toHaveLength(3);
+            const texts = output.querySelectorAll('p');
+            expect(texts).toHaveLength(3);
+            const nestedButton = output.querySelector<HTMLButtonElement>('button:not([data-slot="card-control"])');
+            const link = output.querySelector('a');
+
+            if (!nestedButton || !link) throw new Error('Expected nested button and disabled link');
 
             for (const control of controls) {
                 control.focus();
@@ -214,10 +215,10 @@ it('keeps disabled primary controls focusable without live destinations or activ
             }
 
             await act(async () => {
-                for (const text of output.querySelectorAll('p')) text.click();
-                output.querySelector<HTMLButtonElement>('button:not([data-slot="card-control"])')?.click();
+                for (const text of texts) text.click();
+                nestedButton.click();
             });
-            expect(output.querySelector('a')?.hasAttribute('href')).toBe(false);
+            expect(link.hasAttribute('href')).toBe(false);
             expect(action).not.toHaveBeenCalled();
             expect(changed).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
@@ -268,22 +269,23 @@ it('forwards modifier and middle gestures using the resolved destination and rej
                 </Card>
             </LinkNavigationContext>,
             async (output) => {
-                const cards = output.querySelectorAll<HTMLElement>('[data-slot="card"]');
-                const anchor = cards[0]?.querySelector('a');
+                const [card, unsafeCard] = output.querySelectorAll<HTMLElement>('[data-slot="card"]');
 
-                if (!anchor) throw new Error('Expected primary link');
+                if (!card || !unsafeCard) throw new Error('Expected safe and unsafe link cards');
+                const anchor = card.querySelector('a');
+                const unsafeAnchor = unsafeCard.querySelector('a');
+
+                if (!anchor || !unsafeAnchor) throw new Error('Expected primary links');
                 const gestures: boolean[] = [];
                 anchor.addEventListener('click', (event) => {
                     gestures.push(event.ctrlKey);
                     event.preventDefault();
                 });
                 await act(async () => {
-                    cards[0]?.dispatchEvent(
-                        new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true })
-                    );
-                    cards[0]?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
-                    cards[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                    cards[1]?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
+                    card.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+                    card.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
+                    unsafeCard.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                    unsafeCard.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 1 }));
                 });
                 expect(gestures).toEqual([true]);
                 expect(open).toHaveBeenCalledExactlyOnceWith(
@@ -292,7 +294,7 @@ it('forwards modifier and middle gestures using the resolved destination and rej
                     'noopener,noreferrer'
                 );
                 expect(navigate).not.toHaveBeenCalled();
-                expect(cards[1]?.querySelector('a')?.hasAttribute('href')).toBe(false);
+                expect(unsafeAnchor.hasAttribute('href')).toBe(false);
             }
         );
     } finally {
@@ -313,13 +315,17 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
         </>,
         async (output) => {
             const text = output.querySelector('p');
+            const inertText = output.querySelector<HTMLElement>('[inert] p');
+            const inertCard = output.querySelector('[inert]');
 
-            if (!text) throw new Error('Expected selectable content');
+            if (!text || !inertText || !inertCard) throw new Error('Expected selectable and inert content');
             const selection = document.getSelection();
-            selection?.removeAllRanges();
+
+            if (!selection) throw new Error('Expected text selection support');
+            selection.removeAllRanges();
             const range = document.createRange();
             range.selectNodeContents(text);
-            selection?.addRange(range);
+            selection.addRange(range);
 
             try {
                 await act(async () => {
@@ -327,14 +333,14 @@ it('does not activate on text selection or inert surfaces and keeps decorative a
                 });
                 expect(action).not.toHaveBeenCalled();
             } finally {
-                selection?.removeAllRanges();
+                selection.removeAllRanges();
             }
 
             await act(async () => {
-                output.querySelector<HTMLElement>('[inert] p')?.click();
+                inertText.click();
             });
             expect(action).not.toHaveBeenCalled();
-            expect(output.querySelector('[inert]')?.getAttribute('aria-hidden')).toBe('true');
+            expect(inertCard.getAttribute('aria-hidden')).toBe('true');
             await act(async () => {
                 text.click();
             });

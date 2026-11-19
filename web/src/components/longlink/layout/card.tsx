@@ -1,7 +1,16 @@
 import { cn } from 'cn';
 import * as card from '@/components/shadcn/card';
 import { NavigationLink } from '@/components/longlink/action/link';
-import type { ComponentProps, MouseEvent, ReactNode } from 'react';
+import type { ComponentProps, KeyboardEvent, MouseEvent, ReactNode, SyntheticEvent } from 'react';
+
+function preventActivation(event: SyntheticEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+}
+
+function preventActivationKey(event: KeyboardEvent) {
+    if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
+}
 
 /** Surface gestures must not steal nested controls, portal events, or text selection. */
 function isSurfaceActivation(event: MouseEvent<HTMLElement>) {
@@ -123,7 +132,6 @@ export function Card({
                 padding === 'none' && 'py-0'
             )}
             style={undefined}
-            data-mode={mode}
             data-pressable-container={mode ? '' : undefined}
             data-selected={mode === 'selection' && isSelected ? '' : undefined}
             data-disabled={mode && isDisabled ? '' : undefined}
@@ -154,21 +162,14 @@ export function Card({
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
                     checked={isSelected}
-                    onClick={
-                        blocked
-                            ? (event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                              }
-                            : undefined
-                    }
+                    onClick={blocked ? preventActivation : undefined}
                     onChange={() => {
                         if (!blocked) onChange?.(!isSelected);
                     }}
                     onKeyDown={(event) => {
                         if (event.nativeEvent.isComposing || event.keyCode === 229) return;
 
-                        if (blocked && (event.key === ' ' || event.key === 'Enter')) event.preventDefault();
+                        if (blocked) preventActivationKey(event);
                         else if (event.key === 'Enter') {
                             event.preventDefault();
                             onChange?.(!isSelected);
@@ -182,19 +183,8 @@ export function Card({
                     type="button"
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
-                    onClick={(event) => {
-                        if (blocked) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        } else onClick?.(event);
-                    }}
-                    onKeyDown={
-                        blocked
-                            ? (event) => {
-                                  if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
-                              }
-                            : undefined
-                    }
+                    onClick={blocked ? preventActivation : onClick}
+                    onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : mode === 'link' ? (
                 <NavigationLink
@@ -206,21 +196,8 @@ export function Card({
                     tabIndex={0}
                     aria-label={label}
                     aria-disabled={isDisabled || undefined}
-                    onClick={
-                        blocked
-                            ? (event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                              }
-                            : undefined
-                    }
-                    onKeyDown={
-                        blocked
-                            ? (event) => {
-                                  if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
-                              }
-                            : undefined
-                    }
+                    onClick={blocked ? preventActivation : undefined}
+                    onKeyDown={blocked ? preventActivationKey : undefined}
                 />
             ) : null}
             {(title != null || description != null || action != null) && (
