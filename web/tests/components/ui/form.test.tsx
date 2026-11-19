@@ -3,8 +3,8 @@ import { act } from 'react';
 import { it, expect } from 'vitest';
 import { useForm } from 'react-hook-form';
 import { withMounted } from '../../render';
+import { RequestContext } from '@/views/contexts';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { RequestContext } from '@/components/custom/contexts';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',

@@ -1,8 +1,8 @@
 import { cn } from 'cn';
 import { useQuery } from '@tanstack/react-query';
+import { RequestContext } from '@/views/contexts';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
-import { RequestContext } from '@/components/custom/contexts';
 import { AspectRatio } from '@/components/shadcn/aspect-ratio';
 import { useContext, useEffect, useRef, useState, type ComponentProps } from 'react';
 

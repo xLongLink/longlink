@@ -105,7 +105,7 @@ test('published component provenance matches the implementation exposed to Views
                 component.source === 'recharts' || component.source === 'react-hook-form'
                     ? filename?.includes(`/node_modules/${component.source}/`)
                 : component.source === 'custom'
-                  ? filename?.includes('/components/custom/') || filename?.includes('/components/longlink/') || filename?.includes('/components/dialogs/')
+                   ? filename?.includes('/components/longlink/') || filename?.includes('/components/dialogs/')
                 : filename?.includes(`/components/${component.source}/`),
             `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
         );

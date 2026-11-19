@@ -1,8 +1,8 @@
 import { CircleX } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
+import { DialogActivityContext } from '@/views/contexts';
 import { Alert, AlertDescription } from '@/components/reui/alert';
-import { DialogActivityContext } from '@/components/custom/contexts';
 import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import {
     AlertDialog,

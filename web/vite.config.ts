@@ -73,15 +73,14 @@ export default defineConfig(({ mode }) => {
                                 patterns: [
                                     {
                                         group: [
-                                            '@/components/custom/*',
-                                            '../custom/*',
-                                            '../../custom/*',
+                                            '@/views/contexts',
+                                            '**/views/contexts',
                                             '@/components/ui/*',
                                             '../ui/*',
                                             '../../ui/*'
                                         ],
                                         message:
-                                            'Library components must not depend on LongLink custom or application UI components.'
+                                            'Library components must not depend on View runtime contexts or application UI components.'
                                     }
                                 ]
                             }
@@ -89,7 +88,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
                 {
-                    files: ['src/components/custom/**/*'],
+                    files: ['src/views/contexts.ts'],
                     rules: {
                         'no-restricted-imports': [
                             'error',
@@ -97,8 +96,7 @@ export default defineConfig(({ mode }) => {
                                 patterns: [
                                     {
                                         group: ['@/components/ui/*', '**/components/ui/*', '../ui/*'],
-                                        message:
-                                            'Shared custom components must not depend on application UI components.'
+                                        message: 'View runtime contexts must not depend on application UI components.'
                                     }
                                 ]
                             }

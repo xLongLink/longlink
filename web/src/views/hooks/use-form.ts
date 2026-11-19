@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import * as forms from 'react-hook-form';
 import * as multipart from '../multipart';
+import { RequestContext } from '@/views/contexts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RequestContext } from '@/components/custom/contexts';
 import { useSubmit, type SubmitOptions } from '@/lib/hooks/use-submit';
 import { useCallback, useContext, type BaseSyntheticEvent } from 'react';
 import type { FieldValues, UseFormProps, UseFormReturn } from 'react-hook-form';
@@ -37,7 +37,6 @@ export function useForm<Input extends FieldValues, Context = unknown, Output ext
     const submit = useCallback(
         (event?: BaseSyntheticEvent) => {
             event?.preventDefault();
-            event?.persist();
             return send(event);
         },
         [send]

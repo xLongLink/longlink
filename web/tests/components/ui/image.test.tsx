@@ -1,9 +1,9 @@
 import { it, expect, vi } from 'vitest';
 // @vitest-environment happy-dom
 import { act, createRef, useState } from 'react';
+import { RequestContext } from '@/views/contexts';
 import { renderStatic, withMounted } from '../../render';
 import { Image } from '@/components/longlink/display/image';
-import { RequestContext } from '@/components/custom/contexts';
 
 it('forwards native image attributes without allowing alternate network sources', () => {
     // Arrange

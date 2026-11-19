@@ -1,5 +1,5 @@
 import ViewLayout from './view-layout';
-import { RequestContext } from '@/components/custom/contexts';
+import { RequestContext } from '@/views/contexts';
 import { FileViewer } from '@/components/longlink/display/file-viewer';
 
 /** Documents inline file previews through the scoped Solution API. */

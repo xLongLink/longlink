@@ -4,7 +4,7 @@ import { it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { Card } from '@/components/longlink/layout/card';
-import { LinkNavigationContext } from '@/components/custom/contexts';
+import { LinkNavigationContext } from '@/views/contexts';
 
 it('owns section layout and ignores injected styling', () => {
     const overrides = { className: 'hidden', style: { display: 'none' } };

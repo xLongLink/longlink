@@ -1,8 +1,8 @@
 import ViewLayout from './view-layout';
 import { useLocation, useNavigate } from 'react-router';
 import { Menu } from '@/components/longlink/layout/menu';
+import { MenuNavigationContext } from '@/views/contexts';
 import { Stack } from '@/components/longlink/layout/stack';
-import { MenuNavigationContext } from '@/components/custom/contexts';
 
 /** Documents section navigation and selected content. */
 export default function MenuPage() {
