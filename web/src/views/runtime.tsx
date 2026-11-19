@@ -186,7 +186,8 @@ function initialize(event: MessageEvent<unknown>): void {
 
     /** Asks the host to save an attachment without opening a document inside the sandbox. */
     async function download(path: string, filename: string): Promise<void> {
-        const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename });
+        const name = filename.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
+        const command = downloadSchema.parse({ type: 'download', id: sequence++, path, filename: name });
         await exchange(command);
     }
 
@@ -284,6 +285,7 @@ function initialize(event: MessageEvent<unknown>): void {
             ...components,
             Map: globalThis.Map,
             request,
+            download,
             navigate
         };
 

@@ -1353,8 +1353,8 @@
             "category": "Action",
             "source": "custom",
             "justification": "Coordinates scoped navigation, file capabilities, and async actions while preserving native anchor or button semantics.",
-            "introduction": "Link for navigation, file preview or download, and callback actions.",
-            "guidance": "Use href for navigation, add preview or a download filename for scoped files, or omit href for an onClick action. Scoped file and callback actions render as buttons with async loading and duplicate-click protection. Outside the Solution runtime, downloads use native anchors. Choose styling props instead of className or style.",
+            "introduction": "Link for navigation, downloads, and callback actions.",
+            "guidance": "Use href for navigation or omit href for an onClick action. Call download(path, filename) from onClick for scoped downloads. Open preview dialogs from onClick and render files separately with FileViewer. Callback actions render as buttons with async loading and duplicate-click protection. The download prop is a native anchor attribute, not a scoped file operation. Choose styling props instead of className or style.",
             "properties": [
                 {
                     "name": "href",
@@ -1364,7 +1364,7 @@
                 {
                     "name": "...props",
                     "type": "native anchor or button props",
-                    "description": "Navigation accepts anchor props; preview and callback actions accept button props. Downloads accept shared HTML props, target, and rel. Refs point to the rendered anchor or button. className and style are excluded."
+                    "description": "Navigation accepts anchor props; callback actions accept button props. Refs point to the rendered anchor or button. className and style are excluded."
                 },
                 {
                     "name": "onClick",
@@ -1372,20 +1372,15 @@
                     "description": "Runs a callback; actions track async loading. preventDefault cancels navigation or file handling."
                 },
                 {
-                    "name": "preview",
-                    "type": "string",
-                    "description": "Opens the attachment in a preview dialog using this filename."
-                },
-                {
                     "name": "download",
                     "type": "string | boolean",
-                    "description": "Use a filename string for scoped Solution downloads; an empty string uses attachment. Outside the Solution runtime, strings name native downloads and boolean true enables the native download attribute."
+                    "description": "Native anchor download attribute. Use a filename string or boolean true. For scoped Solution downloads, call download(path, filename) from onClick instead."
                 },
                 { "name": "disabled", "type": "boolean", "description": "Disables navigation or the action." },
                 {
                     "name": "isExternalLink",
                     "type": "boolean",
-                    "description": "Opens navigation links in a new tab with an external-link indicator. Also supported for native downloads; not available for previews or callback actions.",
+                    "description": "Opens navigation links in a new tab with an external-link indicator. Also supported for native downloads; not available for callback actions.",
                     "default": false
                 },
                 {
@@ -1870,11 +1865,7 @@
                     "type": "ReactNode",
                     "description": "Header or data cells rendered inside tr."
                 },
-                {
-                    "name": "TableHead.children",
-                    "type": "ReactNode",
-                    "description": "Header cell content."
-                },
+                { "name": "TableHead.children", "type": "ReactNode", "description": "Header cell content." },
                 {
                     "name": "TableHead.scope",
                     "type": "\"col\" | \"row\" | \"colgroup\" | \"rowgroup\"",
@@ -1886,11 +1877,7 @@
                     "description": "Header text alignment.",
                     "default": "start"
                 },
-                {
-                    "name": "TableCell.children",
-                    "type": "ReactNode",
-                    "description": "Data cell content."
-                },
+                { "name": "TableCell.children", "type": "ReactNode", "description": "Data cell content." },
                 {
                     "name": "TableCell.align",
                     "type": "\"start\" | \"center\" | \"end\"",

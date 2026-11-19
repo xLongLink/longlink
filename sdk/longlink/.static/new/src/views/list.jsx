@@ -14,6 +14,7 @@ const files = [
 /** Lists bundled file types with on-demand preview dialogs. */
 export default function List() {
     const [search, setSearch] = useState('');
+    const [preview, setPreview] = useState(null);
     const term = search.trim().toLowerCase();
     const filtered = useMemo(() => files.filter((file) => file.filename.includes(term)), [term]);
 
@@ -22,7 +23,7 @@ export default function List() {
             accessorKey: 'filename',
             header: ({ column }) => <DataGridColumnHeader column={column} title="File" />,
             cell: ({ row }) => (
-                <Link href={`/assets/${row.original.filename}`} preview={row.original.filename}>
+                <Link onClick={() => setPreview(row.original.filename)} aria-haspopup="dialog">
                     <Stack direction="horizontal" align="center" gap={2}>
                         <FileType type={row.original.type} size="xs" aria-hidden="true" />
                         {row.original.filename}
@@ -45,7 +46,6 @@ export default function List() {
         initialState: { sorting: [{ id: 'filename', desc: false }], pagination: { pageIndex: 0, pageSize: 10 } }
     });
 
-    // Reuse scoped attachment previews without owning dialog or file-loading state.
     return (
         <Stack padding={2}>
             <DataGrid
@@ -86,6 +86,11 @@ export default function List() {
                     </DataGridScrollArea>
                 </Frame>
             </DataGrid>
+            {preview !== null && (
+                <Dialog open fullscreen title={preview} onOpenChange={() => setPreview(null)}>
+                    <FileViewer src={`/assets/${preview}`} title={preview} />
+                </Dialog>
+            )}
         </Stack>
     );
 }

@@ -4,23 +4,19 @@ import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Spinner } from '@/components/shadcn/spinner';
 import type { VariantProps } from 'class-variance-authority';
-import { FilePreview } from '@/components/dialogs/file-preview';
+import { LinkNavigationContext } from '@/components/custom/contexts';
 import { buttonVariants } from '@/components/longlink/action/button';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
-import { RequestContext, LinkNavigationContext } from '@/components/custom/contexts';
 import {
     useContext,
     useRef,
-    useState,
     useCallback,
     useTransition,
     type Ref,
     type RefCallback,
-    type ContextType,
     type DOMAttributes,
     type MouseEvent,
-    type HTMLAttributes,
     type AnchorHTMLAttributes,
     type ButtonHTMLAttributes
 } from 'react';
@@ -35,36 +31,23 @@ type LinkElementProps<Props extends DOMAttributes<HTMLElement>, OtherProps> = Om
 type NavigationProps = LinkElementProps<
     AnchorHTMLAttributes<HTMLAnchorElement>,
     ButtonHTMLAttributes<HTMLButtonElement>
-> & { href: string; preview?: never; download?: boolean; disabled?: boolean; isExternalLink?: boolean };
+> & { href: string; download?: string | boolean; disabled?: boolean; isExternalLink?: boolean };
 
 type ButtonLinkProps = LinkElementProps<
     ButtonHTMLAttributes<HTMLButtonElement>,
     AnchorHTMLAttributes<HTMLAnchorElement>
 >;
 
-type PreviewProps = ButtonLinkProps & { href: string; preview: string; download?: never; isExternalLink?: never };
-
-type DownloadProps = LinkElementProps<
-    HTMLAttributes<HTMLElement> & Pick<AnchorHTMLAttributes<HTMLElement>, 'target' | 'rel'>,
-    AnchorHTMLAttributes<HTMLElement> & ButtonHTMLAttributes<HTMLElement>
-> & { href: string; download: string; preview?: never; disabled?: boolean; isExternalLink?: boolean };
-
 type CallbackProps = ButtonLinkProps &
-    Required<Pick<ButtonLinkProps, 'onClick'>> & {
-        href?: never;
-        preview?: never;
-        download?: never;
-        isExternalLink?: never;
-    };
+    Required<Pick<ButtonLinkProps, 'onClick'>> & { href?: never; download?: never; isExternalLink?: never };
 
-type ActionLinkProps = (PreviewProps | DownloadProps | CallbackProps) & { ref?: RefCallback<HTMLElement> };
+type ActionLinkProps = CallbackProps & { ref?: RefCallback<HTMLElement> };
 
-type LinkProps = (NavigationProps | PreviewProps | DownloadProps | CallbackProps) &
+type LinkProps = (NavigationProps | CallbackProps) &
     VariantProps<typeof buttonVariants> & { ref?: Ref<HTMLElement>; fullWidth?: boolean };
 
-/** Renders navigation as an anchor and file or callback actions as link-styled buttons. */
+/** Renders navigation as an anchor and callback actions as link-styled buttons. */
 export function Link(props: LinkProps) {
-    const requests = useContext(RequestContext);
     const navigationContext = useContext(LinkNavigationContext);
     const router = useInRouterContext();
     const {
@@ -88,12 +71,8 @@ export function Link(props: LinkProps) {
         fullWidth && 'w-full'
     );
 
-    if (
-        link.preview !== undefined ||
-        link.href === undefined ||
-        (typeof link.download === 'string' && (requests || navigationContext))
-    ) {
-        return <ActionLink {...link} ref={elementRef} className={className} requests={requests} />;
+    if (link.href === undefined) {
+        return <ActionLink {...link} ref={elementRef} className={className} />;
     }
 
     const { disabled, onClick, children, href: suppliedHref, target: suppliedTarget, rel, download, ...anchor } = link;
@@ -139,6 +118,7 @@ export function Link(props: LinkProps) {
                 navigationContext &&
                 href &&
                 internalHref &&
+                download === undefined &&
                 (!target || target === '_self') &&
                 event.button === 0 &&
                 !event.altKey &&
@@ -163,24 +143,18 @@ export function Link(props: LinkProps) {
         return <RouterLink {...anchorProps} to={href} />;
     }
 
-    return <a {...anchorProps} href={destination} download={navigationContext ? undefined : download} />;
+    return <a {...anchorProps} href={destination} download={download} />;
 }
 
 /** Owns async action state without changing the button or its focus during pending work. */
 function ActionLink({
-    href,
-    download,
-    preview,
     disabled = false,
     onClick,
     onKeyDown,
     children,
     className,
-    requests,
     ...props
-}: ActionLinkProps & { className: string; requests: ContextType<typeof RequestContext> }) {
-    const [filePreview, setFilePreview] = useState<Blob>();
-    const [downloadError, setDownloadError] = useState<string>();
+}: ActionLinkProps & { className: string }) {
     const actionInFlight = useRef(false);
     const [isPending, startTransition] = useTransition();
     const blocked = disabled || isPending;
@@ -204,34 +178,11 @@ function ActionLink({
             result = Promise.reject(error);
         }
 
-        const canceled = event.defaultPrevented;
         event.preventDefault();
 
-        // A caller can cancel the file operation while retaining its own action.
         startTransition(async () => {
             try {
                 await result;
-
-                if (canceled || href === undefined) return;
-
-                if (preview !== undefined) {
-                    if (!requests) throw new Error('Previews require the Solution runtime');
-                    const body = await requests.request(href, { binary: true });
-                    if (!(body instanceof Blob)) throw new Error('File preview unavailable');
-                    setFilePreview(body);
-                } else {
-                    setDownloadError(undefined);
-
-                    try {
-                        if (!requests) throw new Error('Downloads require the Solution runtime');
-                        const filename = download.replace(/[/\\\p{Cc}]/gu, '_').slice(0, 256) || 'attachment';
-                        await requests.download(href, filename);
-                    } catch (failure) {
-                        if (!(failure instanceof ReportedError)) {
-                            setDownloadError(failure instanceof Error ? failure.message : 'Download failed');
-                        }
-                    }
-                }
             } catch (error) {
                 if (!(error instanceof ReportedError) && !isCanceledRequest(error)) throw error;
             } finally {
@@ -241,37 +192,30 @@ function ActionLink({
     }
 
     return (
-        <>
-            <button
-                {...props}
-                type="button"
-                style={undefined}
-                aria-disabled={blocked || undefined}
-                aria-busy={isPending || undefined}
-                aria-haspopup={preview !== undefined ? 'dialog' : props['aria-haspopup']}
-                onClick={activate}
-                onKeyDown={(event) => {
-                    if (blocked && (event.key === 'Enter' || event.key === ' ')) {
-                        event.preventDefault();
+        <button
+            {...props}
+            type="button"
+            style={undefined}
+            aria-disabled={blocked || undefined}
+            aria-busy={isPending || undefined}
+            onClick={activate}
+            onKeyDown={(event) => {
+                if (blocked && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
 
-                        return;
-                    }
+                    return;
+                }
 
-                    onKeyDown?.(event);
-                }}
-                className={cn(className, 'gap-1.5')}
-            >
-                {isPending && (
-                    <span role="status" aria-label="Loading" className="inline-flex align-middle">
-                        <Spinner aria-hidden="true" className="motion-reduce:animate-none" />
-                    </span>
-                )}
-                {children}
-            </button>
-            {downloadError && <span role="alert">{downloadError}</span>}
-            {preview !== undefined && filePreview !== undefined && (
-                <FilePreview body={filePreview} title={preview} onOpenChange={() => setFilePreview(undefined)} />
+                onKeyDown?.(event);
+            }}
+            className={cn(className, 'gap-1.5')}
+        >
+            {isPending && (
+                <span role="status" aria-label="Loading" className="inline-flex align-middle">
+                    <Spinner aria-hidden="true" className="motion-reduce:animate-none" />
+                </span>
             )}
-        </>
+            {children}
+        </button>
     );
 }

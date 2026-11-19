@@ -105,12 +105,12 @@ async def report(
                 </CodeBlock>
                 <p>
                     Use <InlineCode>FileViewer</InlineCode> for inline file previews, or <InlineCode>Link</InlineCode>{' '}
-                    with a <InlineCode>download</InlineCode> filename to download directly. No backend download headers
-                    or separate endpoint are required.
+                    with an <InlineCode>onClick</InlineCode> callback calling <InlineCode>download</InlineCode> to save
+                    the file. No backend download headers or separate endpoint are required.
                 </p>
                 <CodeBlock
                     code={`<FileViewer src="/reports/latest" title="report.pdf" />
-<Link href="/reports/latest" download="report.pdf">Download report</Link>`}
+<Link onClick={() => download("/reports/latest", "report.pdf")}>Download report</Link>`}
                     language="jsx"
                 >
                     <CodeBlockCopyButton />

@@ -1,11 +1,41 @@
 import { it, expect, vi } from 'vitest';
 import { ReportedError } from '@/lib/reported';
-// @vitest-environment happy-dom
-import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { Link } from '@/components/longlink/action/link';
+import { Dialog } from '@/components/longlink/layout/dialog';
+// @vitest-environment happy-dom
+import { act, createRef, useContext, useState } from 'react';
+import { FilePreview } from '@/components/longlink/display/file-preview';
 import { RequestContext, LinkNavigationContext, DialogActivityContext } from '@/components/custom/contexts';
+
+function PreviewAction({ src, title }: { src: string; title: string }) {
+    const requests = useContext(RequestContext);
+    const [body, setBody] = useState<Blob>();
+
+    return (
+        <>
+            <Link
+                aria-haspopup="dialog"
+                onClick={async () => {
+                    if (!requests) throw new Error('File requests unavailable');
+                    const result = await requests.request(src, { binary: true });
+                    if (!(result instanceof Blob)) throw new Error('File preview unavailable');
+                    setBody(result);
+                }}
+            >
+                Preview
+            </Link>
+            {body && (
+                <Dialog open fullscreen title={title} onOpenChange={() => setBody(undefined)}>
+                    <div className="h-full min-h-0">
+                        <FilePreview body={body} title={title} highlight />
+                    </div>
+                </Dialog>
+            )}
+        </>
+    );
+}
 
 it.each(['navigation', 'action'] as const)('ignores injected presentation overrides on a %s link', (kind) => {
     const overrides = { className: 'hidden', style: { display: 'none' } };
@@ -117,26 +147,27 @@ it('opens validated external destinations outside the frame without an opener', 
     expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
 });
 
-it('uses the scoped download capability with a sanitized filename rather than native navigation', async () => {
+it('keeps native download links independent of the scoped download capability', async () => {
     const navigate = vi.fn();
     const download = vi.fn(async () => {});
 
     await withMounted(
         <RequestContext value={{ request: vi.fn(), download }}>
             <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                <Link href="/invoice.pdf" download={'invoices/2026\\invoice\u0000.pdf'}>
+                <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
                     Invoice
                 </Link>
             </LinkNavigationContext>
         </RequestContext>,
         async (output) => {
-            const control = output.querySelector('button');
+            const control = output.querySelector('a');
 
             if (!control) throw new Error('Expected download action');
-            expect(control.hasAttribute('download')).toBe(false);
-            expect(output.querySelector('a')).toBeNull();
+            expect(control.getAttribute('download')).toBe('invoice.pdf');
+            expect(control.getAttribute('href')).toBe('/solutions/orders/invoice.pdf');
+            expect(output.querySelector('button')).toBeNull();
             await act(async () => control.click());
-            expect(download).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'invoices_2026_invoice_.pdf');
+            expect(download).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
         }
     );
@@ -167,7 +198,7 @@ it.each([false, true])(
                 await act(async () => user.tab());
                 expect(document.activeElement).toBe(control);
                 expect(control.getAttribute('aria-disabled')).toBe('true');
-                expect(control.tagName).toBe('BUTTON');
+                expect(control.tagName).toBe(file ? 'A' : 'BUTTON');
                 expect(control.hasAttribute('href')).toBe(false);
                 await act(async () => user.keyboard('{Enter} '));
                 await act(async () => control.click());
@@ -261,63 +292,6 @@ it('blocks disabled navigation and its callback until enabled', async () => {
     });
 });
 
-it('guards repeated downloads until the callback and scoped host download finish, then recovers', async () => {
-    let release = () => {};
-
-    const pending = new Promise<void>((resolve) => {
-        release = resolve;
-    });
-
-    const action = vi.fn(() => pending);
-    const download = vi.fn(async () => {}).mockRejectedValueOnce(new Error('Download unavailable'));
-    const navigate = vi.fn();
-
-    try {
-        await withMounted(
-            <RequestContext
-                value={{
-                    request: async () => {
-                        throw new Error('Downloads must not load file bytes in the View');
-                    },
-                    download
-                }}
-            >
-                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                    <Link href="/invoice.pdf" download="invoice.pdf" onClick={action}>
-                        Download
-                    </Link>
-                </LinkNavigationContext>
-            </RequestContext>,
-            async (output) => {
-                const anchor = output.querySelector('button');
-
-                if (!anchor) throw new Error('Expected download link');
-                await act(async () => {
-                    anchor.click();
-                    anchor.click();
-                });
-                expect(action).toHaveBeenCalledTimes(1);
-                expect(download).not.toHaveBeenCalled();
-                expect(output.querySelector('button')?.getAttribute('aria-busy')).toBe('true');
-                expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading');
-                await act(async () => {
-                    release();
-                    await pending;
-                });
-                expect(download).toHaveBeenCalledExactlyOnceWith('/invoice.pdf', 'invoice.pdf');
-                expect(output.querySelector('[role="alert"]')?.textContent).toBe('Download unavailable');
-                expect(navigate).not.toHaveBeenCalled();
-                expect(output.querySelector('button')?.hasAttribute('aria-busy')).toBe(false);
-                await act(async () => output.querySelector('button')?.click());
-                expect(download).toHaveBeenCalledTimes(2);
-                expect(output.querySelector('[role="alert"]')).toBeNull();
-            }
-        );
-    } finally {
-        release();
-    }
-});
-
 it('commits callback state updates before the returned promise settles', async () => {
     let release = () => {};
 
@@ -390,7 +364,7 @@ it.each([false, true])('forwards the rendered download element to its ref and ha
             await act(async () => control.click());
 
             // Assert
-            expect(control.tagName).toBe(scoped ? 'BUTTON' : 'A');
+            expect(control.tagName).toBe('A');
             expect(ref.current).toBe(control);
             expect(activated).toBe(control);
             expect(document.activeElement).toBe(control);
@@ -438,7 +412,7 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
     );
 });
 
-it('allows canceling an attachment preview without navigating or requesting file bytes', async () => {
+it('allows canceling an attachment download without navigating or requesting file bytes', async () => {
     const load = vi.fn(async () => {
         throw new Error('Attachment links must not load file bytes');
     });
@@ -448,18 +422,18 @@ it('allows canceling an attachment preview without navigating or requesting file
     await withMounted(
         <RequestContext value={{ request: load, download: async () => {} }}>
             <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                <Link href="/invoice.pdf" preview="Invoice" onClick={(event) => event.preventDefault()}>
+                <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
                     Preview
                 </Link>
             </LinkNavigationContext>
         </RequestContext>,
         async (output) => {
             const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-            await act(async () => output.querySelector('button')?.dispatchEvent(event));
+            await act(async () => output.querySelector('a')?.dispatchEvent(event));
             expect(event.defaultPrevented).toBe(true);
             expect(load).not.toHaveBeenCalled();
             expect(navigate).not.toHaveBeenCalled();
-            expect(output.querySelector('button')?.hasAttribute('aria-busy')).toBe(false);
+            expect(output.querySelector('a')?.hasAttribute('aria-busy')).toBe(false);
         }
     );
 });
@@ -479,9 +453,7 @@ it('loads and displays previews locally, coordinates modal activity and releases
             <RequestContext value={{ request, download }}>
                 <DialogActivityContext value={activity}>
                     <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                        <Link href="/invoice.png" preview="Invoice">
-                            Preview
-                        </Link>
+                        <PreviewAction src="/invoice.png" title="Invoice" />
                     </LinkNavigationContext>
                 </DialogActivityContext>
             </RequestContext>,
@@ -526,9 +498,7 @@ it.each([
 
         await withMounted(
             <RequestContext value={{ request, download: async () => {} }}>
-                <Link href="/file" preview={title}>
-                    Preview
-                </Link>
+                <PreviewAction src="/file" title={title} />
             </RequestContext>,
             async (output) => {
                 // Act
@@ -559,9 +529,7 @@ it('keeps a text decoding failure inside the preview and permits reopening with 
 
     await withMounted(
         <RequestContext value={{ request, download: async () => {} }}>
-            <Link href="/file" preview="source.html">
-                Preview
-            </Link>
+            <PreviewAction src="/file" title="source.html" />
         </RequestContext>,
         async (output) => {
             const control = output.querySelector('button');
@@ -596,9 +564,7 @@ it('recovers after a scoped preview failure has already been reported', async ()
 
     await withMounted(
         <RequestContext value={{ request, download: async () => {} }}>
-            <Link href="/invoice.pdf" preview="Invoice">
-                Preview
-            </Link>
+            <PreviewAction src="/invoice.pdf" title="Invoice" />
         </RequestContext>,
         async (output) => {
             await act(async () => output.querySelector('button')?.click());
@@ -627,19 +593,4 @@ it.each([false, true])('recovers from an already-reported action failure (async:
         await act(async () => output.querySelector('button')?.click());
         expect(action).toHaveBeenCalledTimes(2);
     });
-});
-
-it('reports a missing scoped download capability instead of navigating or claiming success', async () => {
-    await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
-            <Link href="/invoice.pdf" download="invoice.pdf">
-                Download
-            </Link>
-        </LinkNavigationContext>,
-        async (output) => {
-            await act(async () => output.querySelector('button')?.click());
-            expect(output.querySelector('[role="alert"]')?.textContent).toBe('Downloads require the Solution runtime');
-            expect(output.querySelector('button')?.hasAttribute('aria-busy')).toBe(false);
-        }
-    );
 });
