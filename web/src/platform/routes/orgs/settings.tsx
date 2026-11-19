@@ -1,7 +1,6 @@
 import Usage from './usage';
 import { api } from '@/lib/api';
 import TabsSection from './tags';
-import { useState } from 'react';
 import Invoices from './invoices';
 import Registries from './registries';
 import MembersSection from './members';
@@ -15,7 +14,7 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useLocation, useOutletContext } from 'react-router';
 import { Avatar } from '@/components/longlink/display/avatar';
-import { DeletionDialog } from '@/components/dialogs/deletion';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
 import { Boxes, Building2, ChevronDown, CreditCard, Users } from 'lucide-react';
@@ -143,7 +142,7 @@ function GeneralSection({
     canMaintain: boolean;
     canDelete: boolean;
 }) {
-    const [isConfirming, setIsConfirming] = useState(false);
+    const confirmation = useConfirm();
 
     return (
         <Stack gap={4}>
@@ -176,28 +175,27 @@ function GeneralSection({
                                 Once deleted, it will be gone forever. Please be certain.
                             </span>
                         </Stack>
-                        <Button variant="destructive" onClick={() => setIsConfirming(true)}>
+                        <Button
+                            variant="destructive"
+                            onClick={() =>
+                                confirmation.show({
+                                    title: 'Delete organization',
+                                    description: `Delete ${name}? Once deleted, it will be gone forever. Please be certain.`,
+                                    actionLabel: 'Delete',
+                                    actionVariant: 'destructive',
+                                    onAction: async () => {
+                                        await api.delete(base);
+                                        window.location.assign('/user/organizations');
+                                    }
+                                })
+                            }
+                        >
                             Delete
                         </Button>
                     </Stack>
                 </Stack>
             )}
-            <DeletionDialog
-                confirmation={
-                    isConfirming
-                        ? {
-                              title: 'Delete organization',
-                              description: `Delete ${name}? Once deleted, it will be gone forever. Please be certain.`,
-                              onDelete: async () => {
-                                  // Leave the deleted organization only after the server accepts deletion.
-                                  await api.delete(base);
-                                  window.location.assign('/user/organizations');
-                              }
-                          }
-                        : null
-                }
-                onClose={() => setIsConfirming(false)}
-            />
+            {confirmation.element}
         </Stack>
     );
 }

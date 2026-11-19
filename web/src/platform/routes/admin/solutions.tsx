@@ -9,8 +9,8 @@ import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
-import { DeletionDialog } from '@/components/dialogs/deletion';
 import { Pagination } from '@/components/longlink/action/pagination';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -21,17 +21,15 @@ export default function Solutions() {
     const { search, page } = useDeferredValue(filters);
     const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
-    const [dialog, setDialog] = useState<
-        { kind: 'metadata'; id: string } | { kind: 'deletion'; item: { id: string; name: string } } | null
-    >(null);
+    const [dialog, setDialog] = useState<{ kind: 'metadata'; id: string } | null>(null);
+    const confirmation = useConfirm();
 
     const [solutions, invalidate] = useApi(`/api/v1/solutions${suffix}`, zPageSolutionResponse);
 
-    // Forget missing metadata while retaining the captured identity of a pending deletion.
+    // Forget missing metadata.
     const metadata = dialog?.kind === 'metadata' ? solutions.items.find((item) => item.id === dialog.id) : undefined;
 
     if (dialog?.kind === 'metadata' && !metadata) setDialog(null);
-    const deletion = dialog?.kind === 'deletion' ? dialog.item : null;
 
     return (
         <Stack gap={2}>
@@ -166,9 +164,19 @@ export default function Solutions() {
                         <Button
                             type="button"
                             variant="destructive"
-                            onClick={() =>
-                                setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
-                            }
+                            onClick={() => {
+                                setDialog(null);
+                                confirmation.show({
+                                    title: 'Delete solution',
+                                    description: `Delete solution ${metadata.name}?`,
+                                    actionLabel: 'Delete',
+                                    actionVariant: 'destructive',
+                                    onAction: async () => {
+                                        await api.delete(`/api/v1/solutions/${metadata.id}`);
+                                        await invalidate();
+                                    }
+                                });
+                            }}
                         >
                             Delete
                         </Button>
@@ -204,23 +212,7 @@ export default function Solutions() {
                     </Stack>
                 </Dialog>
             )}
-            <DeletionDialog
-                confirmation={
-                    deletion
-                        ? {
-                              title: 'Delete solution',
-                              description: `Delete solution ${deletion.name}?`,
-                              onDelete: async () => {
-                                  // Refresh the list only after deletion succeeds.
-                                  await api.delete(`/api/v1/solutions/${deletion.id}`);
-                                  await invalidate();
-                                  setDialog(null);
-                              }
-                          }
-                        : null
-                }
-                onClose={() => setDialog(null)}
-            />
+            {confirmation.element}
         </Stack>
     );
 }

@@ -7,9 +7,9 @@ import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Field, FieldLabel } from '@/components/shadcn/field';
-import { DeletionDialog } from '@/components/dialogs/deletion';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
+import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { ComputeRegistration } from '@/platform/routes/admin/dialogs/compute-registration';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -21,12 +21,8 @@ export default function Compute() {
     const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
     const searchInput = useRef<HTMLInputElement>(null);
 
-    const [dialog, setDialog] = useState<
-        | { kind: 'registration' }
-        | { kind: 'metadata'; id: string }
-        | { kind: 'deletion'; item: { id: string; name: string } }
-        | null
-    >(null);
+    const [dialog, setDialog] = useState<{ kind: 'registration' } | { kind: 'metadata'; id: string } | null>(null);
+    const confirmation = useConfirm();
 
     const path = `/api/v1/computes${suffix}`;
     const [computes, invalidate] = useApi(path, schemas.zPageComputeRegistryResponse);
@@ -144,9 +140,19 @@ export default function Compute() {
                         <Button
                             type="button"
                             variant="destructive"
-                            onClick={() =>
-                                setDialog({ kind: 'deletion', item: { id: metadata.id, name: metadata.name } })
-                            }
+                            onClick={() => {
+                                setDialog(null);
+                                confirmation.show({
+                                    title: 'Delete compute',
+                                    description: `Remove compute ${metadata.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
+                                    actionLabel: 'Delete',
+                                    actionVariant: 'destructive',
+                                    onAction: async () => {
+                                        await api.delete(`/api/v1/computes/${metadata.id}`);
+                                        await invalidate();
+                                    }
+                                });
+                            }}
                         >
                             Delete
                         </Button>
@@ -168,21 +174,7 @@ export default function Compute() {
                     </Stack>
                 </Dialog>
             )}
-            {dialog?.kind === 'deletion' && (
-                <DeletionDialog
-                    confirmation={{
-                        title: 'Delete compute',
-                        description: `Remove compute ${dialog.item.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
-                        onDelete: async () => {
-                            // Remove the registry entry without deleting its Kubernetes resources.
-                            await api.delete(`/api/v1/computes/${dialog.item.id}`);
-                            await invalidate();
-                            setDialog((current) => (current === dialog ? null : current));
-                        }
-                    }}
-                    onClose={() => setDialog(null)}
-                />
-            )}
+            {confirmation.element}
         </Stack>
     );
 }
