@@ -50,6 +50,7 @@ TYPESCRIPT:
 - PREFER explicit async/await.
 - DO declare route response schemas.
 - DO keep each page simple and standalone.
+- AVOID tight coupling or mixed responsibilities.
 - DO use concurrency only for independent operations.
 - DO clean up timers, listeners, subscriptions, and observers.
 - When prop types are shared or complex, DO keep named prop types.
