@@ -84,6 +84,7 @@ test:
 
 
 # Create or reapply local resources in dependency order.
+up: SHELL := /bin/bash
 up:
 	# Fail fast when storage.localhost does not resolve to loopback for the k3d port mapping.
 	@getent ahosts storage.localhost | awk '$$1 !~ /^(127\..*|::1)$$/ {print "storage.localhost must resolve to loopback." > "/dev/stderr"; exit 1} END {if (NR == 0) {print "storage.localhost does not resolve." > "/dev/stderr"; exit 1}}'
@@ -95,17 +96,19 @@ up:
 	@docker exec k3d-compute-server-0 nslookup gcr.io. >/dev/null 2>&1 && docker exec k3d-compute-server-0 nslookup longlink-registry. >/dev/null 2>&1 || { echo 'k3d node DNS cannot resolve public or local image registries. Check host/VPN DNS and the Docker network before deploying.' >&2; exit 1; }
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
 	helm --kubeconfig dev/kubeconfig.yaml upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
-	
+
 	# Wait for the storage backend to pass its readiness probe before checking through the proxies.
 	kubectl --kubeconfig dev/kubeconfig.yaml wait --for=condition=Ready pod --selector=app.kubernetes.io/name=rustfs --namespace rustfs --timeout=10m
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=5m
-	install -d -m 700 dev/certificates
-	kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving get secret longlink-gateway-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/gateway.crt
-	kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs get secret longlink-storage-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/storage.crt
 
 	# Verify host TLS connectivity through the k3d port mappings.
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/gateway.crt --header 'Host: internalkourier' https://127.0.0.1:8443/ready
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/storage.crt --output /dev/null https://storage.localhost:9443/health/ready
+	@set -euo pipefail; \
+	certificates=$$(mktemp -d); \
+	trap 'rm -rf -- "$$certificates"' EXIT; \
+	kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving get secret longlink-gateway-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > "$$certificates/gateway.crt"; \
+	kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs get secret longlink-storage-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > "$$certificates/storage.crt"; \
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert "$$certificates/gateway.crt" --header 'Host: internalkourier' https://127.0.0.1:8443/ready; \
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert "$$certificates/storage.crt" --output /dev/null https://storage.localhost:9443/health/ready
 
 
 # Build and push the local sample, preserving an existing development project.
@@ -125,7 +128,6 @@ down:
 	@k3d registry delete longlink-registry >/dev/null 2>&1 || :
 	docker compose -f dev/compose.yml down --remove-orphans
 	rm -f api/dev.db dev/kubeconfig.yaml
-	rm -rf dev/certificates
 	# Remove the local sample, including any edits; make seed or make sdk recreates it.
 	rm -rf sdk/dev
 	# Reap volumes orphaned by removed containers and superseded image layers.

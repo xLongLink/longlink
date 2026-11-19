@@ -5,9 +5,8 @@ from src import auth
 from uuid import UUID
 from fastapi import Response, APIRouter, HTTPException
 from src.kubernetes import solutions as solution_resources
-from src.environments import env
 from src.models.solutions import SolutionPatch, SolutionUpdateCheck
-from src.database.services import solutions
+from src.database.services import mcp, solutions
 from src.kubernetes.client import Kubernetes
 
 router = APIRouter()
@@ -79,17 +78,17 @@ async def download_plugin(solution: auth.SolutionMaintainer) -> Response:
             }
         },
     }
-    mcp = {
+    mcp_manifest = {
         "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
         # Clients connect through the authenticated Platform proxy.
-        "mcpServers": {name: {"type": "streamable-http", "url": f"{env.PUBLIC_URL}/api/v1/solutions/{solution.id}/proxy/mcp"}},
+        "mcpServers": {name: {"type": "streamable-http", "url": mcp.resource(solution.id)}},
     }
 
     # Put the portable manifests at the ZIP root; never bundle runtime credentials.
     content = io.BytesIO()
     with zipfile.ZipFile(content, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("plugin.json", json.dumps(manifest, indent=2) + "\n")
-        archive.writestr("mcp.json", json.dumps(mcp, indent=2) + "\n")
+        archive.writestr("mcp.json", json.dumps(mcp_manifest, indent=2) + "\n")
 
     # Serve inert attachment bytes rather than a navigable document.
     return Response(
