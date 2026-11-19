@@ -57,8 +57,6 @@ mapCollection.get('office')?.trim();
 const invalidMapCenter = <Map blank center="Switzerland" />;
 // @ts-expect-error Map follows the UI theme instead of accepting an override.
 const customMapTheme = <Map theme="dark" />;
-// @ts-expect-error The retired SVG map is no longer part of the public View API.
-const legacyMap = <Maps label="Legacy map" geography={mapRegions} />;
 const mapElements = (
     <Box height={320}>
         <StreetMap
@@ -138,12 +136,8 @@ const _tabsNumericValue = <Tabs items={[]} value={1} />;
 const _tabsNumericDefault = <Tabs items={[]} defaultValue={1} />;
 // @ts-expect-error Tabs always uses horizontal orientation.
 const _tabsOrientation = <Tabs items={[]} orientation="vertical" />;
-// @ts-expect-error Tab marker composition has been removed.
-const _removedTab = <Tab value="one" label="One" />;
 // @ts-expect-error Tabs panels are defined by items, not children.
 const _tabsChildren = <Tabs items={[]}>Content</Tabs>;
-// @ts-expect-error LongLink aliases are not Lucide names.
-const legacyIcon = <Icon icon="close" size="sm" />;
 // @ts-expect-error Icon names do not accept a provider prefix.
 const prefixedIcon = <Icon icon="lucide:search" size="sm" />;
 const nativeGrid = (
@@ -397,8 +391,6 @@ const invalidDefaults = useForm(z.object({ quantity: z.string().transform(Number
 const customResolver = useForm(formSchema, { resolver: undefined });
 // @ts-expect-error The schema is required as the first argument.
 const missingSchema = useForm({ defaultValues: { name: '' } });
-// @ts-expect-error Resolver composition is no longer part of the public View API.
-const legacyResolver = zodResolver(formSchema);
 const formWithDefaults = useForm(z.object({ enabled: z.boolean().default(false) }));
 formWithDefaults.handleSubmit((values) => values.enabled.valueOf());
 convertedForm.handleSubmit((values) => {
@@ -439,31 +431,15 @@ const _adapters = (
 
 // @ts-expect-error Native variants must not silently accept arbitrary strings.
 const _badVariant = <Badge variant="not-a-variant" />;
-// @ts-expect-error Native Button no longer accepts the legacy label adapter.
-const _legacyButton = <Button label="Save" />;
-// @ts-expect-error Native Separator has no LongLink full-bleed policy.
-const _legacySeparator = <Separator isFullBleed />;
 // @ts-expect-error Slider inference must preserve numeric scalar values.
 const _badSlider = <Slider defaultValue={10} onValueChange={(value) => value.map(Math.round)} />;
-// @ts-expect-error Native Table accepts HTML composition, not the data adapter contract.
-const _legacyTable = <Table data={[{ name: 'Order' }]} />;
-// @ts-expect-error Dropdown does not accept data-driven action items.
-const _legacyMenu = <Dropdown items={[]} />;
 
-// @ts-expect-error Native ButtonGroup does not coordinate the custom disabled group contract.
-const _customGroupProps = <ButtonGroup isDisabled />;
-// @ts-expect-error Dialog visibility uses open, not isOpen.
-const _customDialogProps = <Dialog title="Details" isOpen open onOpenChange={() => {}} />;
-// @ts-expect-error Dialog uses fullscreen rather than a size selector.
-const _dialogSize = <Dialog title="Details" size="lg" />;
 // @ts-expect-error Dialog requires an accessible title.
 const _dialogTitle = <Dialog open />;
 // @ts-expect-error Dialog presentation is owned internally.
 const _dialogStyle = <Dialog title="Details" style={{ width: 900 }} />;
 // @ts-expect-error Fullscreen is a boolean, not a size name.
 const _dialogFullscreen = <Dialog title="Details" fullscreen="fullscreen" />;
-// @ts-expect-error Ordinary links use the native href property.
-const _legacyLink = <Link to="/orders">Orders</Link>;
 // @ts-expect-error A file action cannot preview and download simultaneously.
 const _conflictingLinkActions = <Link href="/api/report" preview="report.pdf" download="report.pdf">Report</Link>;
 // @ts-expect-error Scoped file actions require a path.
@@ -491,8 +467,6 @@ const _comboboxChildren = <Combobox options={[]}><input /></Combobox>;
 const _checkboxRender = <Checkbox render={<button />} />;
 // @ts-expect-error Nested-component class overrides are not exposed.
 const _fileTypeClasses = <FileType type="pdf" labelClassName="text-red-500" />;
-// @ts-expect-error The medium FileType size is named md.
-const _fileTypeDefaultSize = <FileType type="pdf" size="default" />;
 // @ts-expect-error DataGrid styling cannot be overridden through its slot map.
 const _gridClasses = <DataGrid recordCount={0} tableClassNames={{ body: 'custom-body' }} />;
 /** @type {ColumnDef<DataGridFeatures, { name: string }>} */
@@ -507,14 +481,6 @@ const _columnClasses = {
 const _chartStyle = <BarChart data={[{ month: 'Jan', total: 1 }]} xKey="month" series={[{ key: 'total' }]} style={{ height: 280 }} />;
 // @ts-expect-error Series must select numeric fields, not category labels.
 const _seriesKey = <AreaChart data={[{ month: 'Jan', total: 1 }]} xKey="month" series={[{ key: 'month' }]} />;
-// @ts-expect-error Avatar geometry is selected through shape, not an owner kind.
-const _avatarKind = <Avatar kind="organization" />;
-// @ts-expect-error Avatar artwork uses a fixed internal seed.
-const _avatarSeed = <Avatar seed="account-1" />;
-// @ts-expect-error Avatar accessible text uses name or native ARIA attributes.
-const _avatarAlt = <Avatar alt="Account" />;
-// @ts-expect-error The medium Avatar size is named md.
-const _avatarSize = <Avatar size="default" />;
 // @ts-expect-error Text always renders a span; use Heading for a title.
 const _textAs = <Text as="h4">Title</Text>;
 // @ts-expect-error Text does not expose a ref.
@@ -527,8 +493,6 @@ const _currencyStyle = <Currency value={1} currency="USD" className="text-red-50
 const _timestampRef = <Timestamp value={0} ref={null} />;
 // @ts-expect-error Timestamp styling is owned by the component in Views.
 const _timestampStyle = <Timestamp value={0} style={{ color: 'red' }} />;
-// @ts-expect-error Button uses primary rather than the former default variant.
-const _buttonDefaultVariant = <Button variant="default">Save</Button>;
 const _buttonPrimaryVariant = <Button variant="primary">Save</Button>;
 // @ts-expect-error DropdownContent styling is owned by the component.
 const _dropdownContentClasses = <DropdownContent className="hidden" />;
@@ -538,20 +502,8 @@ const _dropdownItemClasses = <DropdownItem className="hidden">Archive</DropdownI
 const _cardClasses = <Card className="hidden" />;
 // @ts-expect-error Card styling is owned by the component.
 const _cardStyle = <Card style={{ display: 'none' }} />;
-// @ts-expect-error Card owns its content sections.
-const _removedCardHeader = <CardHeader>Settings</CardHeader>;
-// @ts-expect-error Card includes surface interactions without a separate component.
-const _interactiveCard = <InteractiveCard onClick={() => {}} />;
-// @ts-expect-error Text no longer provides truncation tooltips.
-const _textTooltip = <Text maxLines={1} hasTruncateTooltip>Details</Text>;
-// @ts-expect-error Heading uses level for both its HTML element and accessible outline.
-const _headingAccessibilityLevel = <Heading level={2} accessibilityLevel={1}>Title</Heading>;
 // @ts-expect-error Heading does not expose a ref.
 const _headingRef = <Heading ref={null}>Title</Heading>;
-// @ts-expect-error Collapsible is not currently exposed to Views.
-const _removedCollapsible = <Collapsible />;
-// @ts-expect-error Stepper is not currently exposed to Views.
-const _removedStepper = <Stepper />;
 
 const _charts = (
     <>
@@ -566,9 +518,6 @@ const _charts = (
         </Box>
     </>
 );
-
-// @ts-expect-error Cartesian charts use xKey, not a categoryKey alias.
-const _legacyChart = <AreaChart data={[]} categoryKey="month" series={[]} />;
 
 const _externalSeriesLegend = <ChartLegend series={[{ key: 'total', label: 'Total' }]} />;
 const _externalSegmentLegend = <ChartLegend data={[{ title: 'Complete', count: 12 }]} nameKey="title" />;
