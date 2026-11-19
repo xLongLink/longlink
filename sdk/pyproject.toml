@@ -16,8 +16,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "fastapi>=0.141.1",
     "fastmcp>=4.0.11,<5",
-    "fsspec>=2026.4.0",
-    "gitpython>=3.1.46",
+    "fsspec>=2026.9.0",
     "httpx2>=2.9.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",
@@ -119,6 +118,7 @@ ignore = ["D100", "D104", "D202"]
 "longlink/testclient.py" = ["ANN401"]
 # The CLI intentionally executes argument lists without a shell.
 "longlink/cli/build.py" = ["S404", "S603"]
+"longlink/cli/init.py" = ["S404", "S603"]
 # FastAPI closes the request dependency after the response lifecycle.
 "longlink/context.py" = ["ASYNC119"]
 # JWT algorithm and audience names are public protocol constants.

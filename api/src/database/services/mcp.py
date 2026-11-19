@@ -16,11 +16,13 @@ from collections.abc import Sequence
 from src.environments import env
 from sqlalchemy.engine import CursorResult
 from src.database.types import attr
-from src.database.services import permissions, organizations
+from src.database.services import permissions
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.mcp import MCPCode, MCPToken, MCPClient
 from src.database.models.users import User
 from src.database.models.solutions import Solution
+from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 ACCESS_LIFETIME_SECONDS = 30 * 24 * 60 * 60
 
@@ -92,6 +94,8 @@ async def _permitted_solution(session: AsyncSession, user: User, solution_id: UU
     # Load only permission and consent metadata, without decrypting runtime secrets.
     solution = await session.scalar(
         select(Solution)
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
+        .join(UserOrganization, col(UserOrganization.organization_id) == col(Organization.id))
         .options(
             load_only(
                 attr(Solution.id),
@@ -101,11 +105,15 @@ async def _permitted_solution(session: AsyncSession, user: User, solution_id: UU
                 attr(Solution.deployed_revision_id),
             )
         )
-        .where(col(Solution.id) == solution_id)
+        .where(
+            col(Solution.id) == solution_id,
+            col(Solution.deleted_at).is_(None),
+            col(Organization.deleted_at).is_(None),
+            col(UserOrganization.user_id) == user.id,
+        )
     )
-    if solution is None or solution.deleted_at is not None:
+    if solution is None:
         raise HTTPException(status_code=403, detail="Access required")
-    await organizations.require_membership(session, user.id, solution.organization_id)
     await permissions.runtime_role(session, solution, user.id)
     return solution
 

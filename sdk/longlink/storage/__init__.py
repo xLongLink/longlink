@@ -1,5 +1,4 @@
 import fsspec
-from uuid import uuid4
 from pathlib import Path, PurePosixPath
 from longlink.storage import tls
 from longlink.storage.base import File, Storage, MissingFileError
@@ -46,16 +45,11 @@ def create_storage(settings: Envs) -> Storage:
         filesystem = DirFileSystem(path=scope.as_posix() if scope else "", fs=backend, asynchronous=True, skip_instance_cache=True)
         return Filesystem(filesystem, certificate=settings.STORAGE_CERTIFICATE)
 
-    # fsspec's memory store is global, so give every testing filesystem its own namespace.
+    # Keep each testing filesystem's store independent.
     if settings.ENV == "testing":
-        backend = MemoryFileSystem(skip_instance_cache=True)
-        directory = f"/longlink-testing-{uuid4()}"
-        backend.mkdir(directory)
-        root = PurePosixPath(directory)
-        if scope is not None:
-            root /= scope
-        filesystem = DirFileSystem(path=root.as_posix(), fs=backend, skip_instance_cache=True)
-        return Filesystem(filesystem, memory_directory=directory)
+        backend = MemoryFileSystem(global_store=False, skip_instance_cache=True)
+        filesystem = DirFileSystem(path=scope.as_posix() if scope else "/", fs=backend, skip_instance_cache=True)
+        return Filesystem(filesystem)
 
     # Mirror the production bucket and prefix beneath the development directory.
     root = Path.cwd() / ".storage"
