@@ -26,7 +26,7 @@ export default function Admin() {
                 icon: <Icon aria-hidden="true" size={16} />
             }))}
         >
-            <PageContainer gap={8} padding={2}>
+            <PageContainer gap={8}>
                 <Outlet />
             </PageContainer>
         </Platform>

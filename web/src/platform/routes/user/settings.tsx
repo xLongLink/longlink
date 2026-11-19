@@ -19,7 +19,7 @@ export default function Settings() {
     const user = useAuthenticatedUser();
 
     return (
-        <PageContainer padding={2}>
+        <PageContainer>
             <title>Account Settings | LongLink</title>
             <SettingsPage key={user.id} user={user} />
         </PageContainer>

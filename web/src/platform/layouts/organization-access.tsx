@@ -81,9 +81,7 @@ function OrganizationFallback({
             sidebarHeader={sidebarHeader}
             tabs={[]}
         >
-            <PageContainer gap={8} padding={2}>
-                {children}
-            </PageContainer>
+            <PageContainer gap={8}>{children}</PageContainer>
         </Platform>
     );
 }

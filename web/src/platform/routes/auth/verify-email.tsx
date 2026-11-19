@@ -48,14 +48,16 @@ export default function VerifyEmail() {
     > {
         // Exchange the URL credential, or recover the server-owned registration setup.
         const request = registrationToken
-            ? api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json()
-            : api('/api/v1/auth/register/setup', { signal }).json();
+            ? api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST', signal }).json(
+                  zEmailPayload
+              )
+            : api('/api/v1/auth/register/setup', { signal }).json(zEmailPayload);
 
         // Handle only transport failures as invalid credentials.
-        let value: unknown;
+        let data: z.output<typeof zEmailPayload>;
 
         try {
-            value = await request;
+            data = await request;
         } catch (cause: unknown) {
             if (signal.aborted) return;
 
@@ -65,10 +67,9 @@ export default function VerifyEmail() {
             return { status: 'error' };
         }
 
-        // Validate the email claim only while verification is still active.
+        // Clear the stored credential only while verification is still active.
         if (signal.aborted) return;
 
-        const data = zEmailPayload.parse(value);
         sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
 
         return { status: 'verified', data };

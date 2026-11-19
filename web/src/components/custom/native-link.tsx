@@ -33,22 +33,19 @@ export function NativeLink({
     className,
     ...props
 }: Omit<NativeAnchorProps, 'type' | 'color'> & { isExternalLink?: boolean }) {
-    const linkTarget = isExternalLink ? '_blank' : target;
-
-    const attributes = {
-        ...props,
-        target: linkTarget,
-        rel,
-        download,
-        className: cn(
-            buttonVariants({ variant: 'link', size: null }),
-            'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
-            className
-        )
-    };
-
     return (
-        <NativeNavigationLink {...attributes} href={href}>
+        <NativeNavigationLink
+            {...props}
+            target={isExternalLink ? '_blank' : target}
+            rel={rel}
+            download={download}
+            className={cn(
+                buttonVariants({ variant: 'link', size: null }),
+                'align-baseline whitespace-normal aria-disabled:pointer-events-none aria-disabled:opacity-50',
+                className
+            )}
+            href={href}
+        >
             {children}
             {isExternalLink && <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0" />}
             {isExternalLink && <span className="sr-only">(opens in new tab)</span>}

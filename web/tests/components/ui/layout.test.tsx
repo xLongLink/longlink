@@ -9,14 +9,14 @@ import { Grid } from '@/components/longlink/layout/grid';
 import { PageContainer } from '@/components/ui/page-container';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
-it('keeps Platform pages free of View spacing defaults and honors zero inline padding', () => {
+it('keeps Platform page spacing consistent while preserving sizing overrides', () => {
     // Platform pages must not inherit the View Stack's implicit gap or lose their full-height sizing chain.
     const output = renderStatic(
         <>
             <PageContainer>
                 <h1>Default page</h1>
             </PageContainer>
-            <PageContainer className="h-full min-h-0 max-w-[720px]" gap={8} padding={2} paddingInline={0}>
+            <PageContainer className="h-full min-h-0 max-w-[720px]" gap={8}>
                 <h2>Sized page</h2>
             </PageContainer>
         </>
@@ -27,15 +27,15 @@ it('keeps Platform pages free of View spacing defaults and honors zero inline pa
 
     if (!plain || !sized) throw new Error('Expected page containers');
     expect(plain.style.gap).toBe('calc(var(--spacing) * 0)');
-    expect(plain.style.paddingInline).toBe('');
-    expect(plain.style.paddingBlock).toBe('');
+    expect(plain.style.paddingInline).toBe('calc(var(--spacing) * 2)');
+    expect(plain.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
     expect(plain.classList.contains('max-w-[1000px]')).toBe(true);
     expect(sized.classList.contains('h-full')).toBe(true);
     expect(sized.classList.contains('min-h-0')).toBe(true);
     expect(sized.classList.contains('max-w-[720px]')).toBe(true);
     expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
     expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
-    expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 0)');
+    expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 2)');
     expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
 });
 

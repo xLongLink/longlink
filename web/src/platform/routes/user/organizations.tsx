@@ -6,7 +6,7 @@ import { PageContainer } from '@/components/ui/page-container';
 export default function Organizations() {
     // Keep the page inside the existing Platform shell and request boundary.
     return (
-        <PageContainer padding={2}>
+        <PageContainer>
             <title>Organizations | LongLink</title>
             <ApiBoundary>
                 <OrganizationManagement presentation="overview" />

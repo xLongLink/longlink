@@ -23,7 +23,7 @@ export function useForm<Input extends FieldValues, Context = unknown, Output ext
                 throw new Error('Unsupported write method');
 
             const data = multipart.encode(values);
-            const result = await request(action, { method: method ?? 'POST', form: [...data.entries()] });
+            const result = await request(action, { method: method ?? 'POST', form: data });
             await onSuccess?.(result);
         }),
         {

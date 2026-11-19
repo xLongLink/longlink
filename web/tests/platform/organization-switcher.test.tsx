@@ -65,6 +65,7 @@ it('loads lazily, recovers from a failed request, and closes immediately on nati
 
                 await act(async () => await events.click(button('Acme')));
                 await vi.waitFor(() => expect(document.querySelector(`a[href="${href}"]`)).not.toBeNull());
+                expect(transport).toHaveBeenCalledTimes(2);
                 const destination = document.querySelector<HTMLAnchorElement>(`a[href="${href}"]`);
 
                 if (!destination) throw new Error('Missing organization destination');
