@@ -1,10 +1,10 @@
 import { Page } from '@/components/ui/page';
+import { Scrollspy } from '@/components/reui/scrollspy';
 import { Separator } from '@/components/shadcn/separator';
 import { Button } from '@/components/longlink/action/button';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
-import { ArticleOutline, type ArticleOutlineItem } from './article-outline';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
@@ -29,7 +29,7 @@ export type ArticleMetadata = {
     description: string;
     lastUpdated: string;
     editUrl: string;
-    toc: readonly ArticleOutlineItem[];
+    toc: readonly { id: string; label: string; level: number }[];
 };
 
 /** Publishes public articles with Home-rooted navigation and optional collection reading order. */
@@ -78,6 +78,8 @@ export function ArticleBody({
     className: string;
     paths?: readonly string[];
 }) {
+    const { hash, pathname } = useLocation();
+
     return (
         <div className="p-6">
             <div className="mx-auto flex w-full min-w-0 max-w-[1016px] gap-6">
@@ -87,7 +89,38 @@ export function ArticleBody({
                         <ArticleFooter lastUpdated={article.lastUpdated} editUrl={article.editUrl} paths={paths} />
                     </article>
                 </div>
-                {article.toc.length ? <ArticleOutline items={article.toc} /> : null}
+                {article.toc.length ? (
+                    <aside
+                        className="sticky top-20 box-border hidden w-56 flex-none flex-col gap-3 self-start p-5 min-[64rem]:flex"
+                        aria-label="On this page"
+                    >
+                        <h2 className="m-0 font-sans text-sm leading-(--text-sm--line-height) font-semibold text-foreground">
+                            On this page
+                        </h2>
+                        <nav aria-label="On this page">
+                            <Scrollspy key={pathname} initialHash={hash} history="push">
+                                <ul className="m-0 flex list-none flex-col gap-0.5 border-s-2 border-border p-0">
+                                    {article.toc.map((item, index) => (
+                                        <li
+                                            key={item.id}
+                                            className="m-0 p-0 has-[[aria-current=location]]:shadow-[-2px_0_var(--foreground)]"
+                                        >
+                                            <a
+                                                className="relative block truncate rounded-lg py-1 ps-3 pe-2 text-sm leading-(--text-sm--line-height) font-normal text-muted-foreground no-underline data-[level=3]:ps-7 data-[level=4]:ps-11 data-[level=5]:ps-12 data-[level=6]:ps-12 aria-[current=location]:font-semibold aria-[current=location]:text-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"
+                                                href={`#${encodeURIComponent(item.id)}`}
+                                                data-level={item.level}
+                                                data-scrollspy-anchor={item.id}
+                                                aria-current={index === 0 ? 'location' : undefined}
+                                            >
+                                                {item.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Scrollspy>
+                        </nav>
+                    </aside>
+                ) : null}
             </div>
         </div>
     );
