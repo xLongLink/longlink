@@ -20,21 +20,35 @@ import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
 import { Boxes, Building2, ChevronDown, CreditCard, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
 
-const organizationSections = [
-    { id: 'general', label: 'General' },
-    { id: 'private-registries', label: 'Private registries' }
+const groups = [
+    {
+        label: 'Organization',
+        icon: Building2,
+        sections: [
+            { id: 'general', label: 'General' },
+            { id: 'private-registries', label: 'Private registries' }
+        ]
+    },
+    {
+        label: 'Billing',
+        icon: CreditCard,
+        sections: [
+            { id: 'usage', label: 'Usage' },
+            { id: 'payment-methods', label: 'Payment Methods' },
+            { id: 'invoices', label: 'Invoices' }
+        ]
+    },
+    {
+        label: 'People',
+        icon: Users,
+        sections: [
+            { id: 'members', label: 'Members' },
+            { id: 'invitations', label: 'Invitations' }
+        ]
+    }
 ];
 
-const billingSections = [
-    { id: 'usage', label: 'Usage' },
-    { id: 'payment-methods', label: 'Payment Methods' },
-    { id: 'invoices', label: 'Invoices' }
-];
-
-const peopleSections = [
-    { id: 'members', label: 'Members' },
-    { id: 'invitations', label: 'Invitations' }
-];
+const sections = new Set(['solutions', ...groups.flatMap((group) => group.sections.map((section) => section.id))]);
 
 /** Shares organization identity and permissions while sections own resource lifetimes. */
 export default function OrganizationSettings() {
@@ -44,10 +58,8 @@ export default function OrganizationSettings() {
     const location = useLocation();
 
     // Unknown fragments select General; inactive sections never mount their queries or drafts.
-    const section =
-        [...organizationSections, ...billingSections, ...peopleSections, { id: 'solutions', label: 'Solutions' }].find(
-            (item) => `#${item.id}` === location.hash
-        )?.id ?? 'general';
+    const requested = location.hash.slice(1);
+    const section = sections.has(requested) ? requested : 'general';
 
     // Share the layout-resolved identity and permissions without loading inactive sections.
     const canMaintain = permissions.canMaintain(membership.role);
@@ -67,11 +79,7 @@ export default function OrganizationSettings() {
             <SettingsLayout
                 navigation={
                     <>
-                        {[
-                            { label: 'Organization', icon: Building2, sections: organizationSections },
-                            { label: 'Billing', icon: CreditCard, sections: billingSections },
-                            { label: 'People', icon: Users, sections: peopleSections }
-                        ].map((group) => (
+                        {groups.map((group) => (
                             <Collapsible key={group.label} defaultOpen>
                                 <CollapsibleTrigger
                                     render={<Button variant="ghost" size="sm" className="w-full justify-start" />}

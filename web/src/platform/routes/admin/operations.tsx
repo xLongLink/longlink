@@ -1,14 +1,13 @@
+import { Info } from 'lucide-react';
+import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
-import { Info, Search, X } from 'lucide-react';
+import { useListControls } from './use-list-controls';
 import { Stack } from '@/components/longlink/layout/stack';
-import { useDeferredValue, useRef, useState } from 'react';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
-import { Field, FieldLabel } from '@/components/shadcn/field';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/shadcn/input-group';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
 
 const kinds = {
@@ -22,53 +21,20 @@ const statuses = { scheduled: 'Planned', active: 'Active', completed: 'Completed
 
 /** Lists operation history and exposes its metadata. */
 export default function Operations() {
-    const [filters, setFilters] = useState({ search: '', page: 1 });
-    const { search, page } = useDeferredValue(filters);
-    const suffix = `?page=${page}&page_size=25&search=${encodeURIComponent(search.trim())}`;
-    const searchInput = useRef<HTMLInputElement>(null);
-    const [metadataId, setMetadataId] = useState<string | null>(null);
+    const { suffix, searchField, pagination } = useListControls(
+        'operations',
+        'Search by operation kind or resource name'
+    );
 
     const [operations] = useApi(`/api/v1/operations${suffix}`, zPageOperationResponse);
 
-    // Use current metadata and clear missing selections so returning to a page cannot reopen the dialog.
-    const metadata = operations.items.find((item) => item.id === metadataId);
-
-    if (metadataId !== null && !metadata) setMetadataId(null);
+    const [metadata, selectMetadata] = useMetadata(operations.items);
 
     return (
         <Stack gap={2}>
             <title>Operations | LongLink</title>
             <h1 className="font-semibold tracking-tight text-4xl">Operations</h1>
-            <Field>
-                <FieldLabel htmlFor="search-operations">Search operations</FieldLabel>
-                <InputGroup>
-                    <InputGroupInput
-                        ref={searchInput}
-                        id="search-operations"
-                        placeholder="Search by operation kind or resource name"
-                        value={filters.search}
-                        onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
-                    />
-                    <InputGroupAddon aria-hidden="true">
-                        <Search />
-                    </InputGroupAddon>
-                    {filters.search !== '' && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                size="icon-xs"
-                                aria-label="Clear Search operations"
-                                onMouseDown={(event) => event.preventDefault()}
-                                onClick={() => {
-                                    setFilters({ search: '', page: 1 });
-                                    searchInput.current?.focus({ preventScroll: true });
-                                }}
-                            >
-                                <X aria-hidden="true" />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-            </Field>
+            {searchField}
             <Stack gap={1}>
                 <Table wrap>
                     <TableHeader>
@@ -99,7 +65,7 @@ export default function Operations() {
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
-                                    <Button size="sm" variant="ghost" onClick={() => setMetadataId(row.id)}>
+                                    <Button size="sm" variant="ghost" onClick={() => selectMetadata(row.id)}>
                                         <Info aria-hidden="true" />
                                         Metadata
                                     </Button>
@@ -116,19 +82,14 @@ export default function Operations() {
                     </TableBody>
                 </Table>
                 <footer className="flex flex-col items-center py-2">
-                    <Pagination
-                        page={filters.page}
-                        pageSize={25}
-                        onPageChange={(page) => setFilters({ ...filters, page })}
-                        totalItems={operations.total}
-                    />
+                    <Pagination {...pagination} totalItems={operations.total} />
                 </footer>
             </Stack>
             {metadata && (
                 <Dialog
                     open
                     onOpenChange={(open) => {
-                        if (!open) setMetadataId(null);
+                        if (!open) selectMetadata(null);
                     }}
                     title="Operation metadata"
                 >

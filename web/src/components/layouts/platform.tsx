@@ -28,11 +28,11 @@ type PlatformProps = {
     children: ReactNode;
     homeHref?: string;
     sidebarHeader?: ReactNode;
-    tabs: readonly NavigationTab[];
+    tabs?: readonly NavigationTab[];
 };
 
 /** Finds the longest platform tab path that matches a pathname. */
-function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string | undefined {
+function findActiveTab(tabs: readonly NavigationTab[], pathname: string): NavigationTab | undefined {
     const normalizedPathname = pathname.replace(/\/+$/, '') || '/';
     let bestTab: NavigationTab | undefined;
     let bestMatchLength = 0;
@@ -49,7 +49,7 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
         }
     }
 
-    return bestTab?.href;
+    return bestTab;
 }
 
 /** Owns sidebar navigation, responsive collapse state, and the content toolbar. */
@@ -70,12 +70,14 @@ function PlatformLayout({
     children,
     homeHref = '/',
     sidebarHeader,
-    tabs
+    tabs = []
 }: PlatformProps) {
     const { pathname } = useLocation();
-    const selectedTab = activeTab ?? findActiveTab(tabs, pathname) ?? '';
+    const selectedTab =
+        activeTab === undefined ? findActiveTab(tabs, pathname) : tabs.find((tab) => tab.href === activeTab);
     const { state, isMobile, openMobile, setOpenMobile } = useSidebar();
     const isCollapsed = !isMobile && state === 'collapsed';
+    const expanded = isMobile ? openMobile : !isCollapsed;
     const mainId = useId();
     const navId = useId();
     const mainRef = useRef<HTMLElement>(null);
@@ -128,10 +130,10 @@ function PlatformLayout({
                                 {tabs.map((tab) => (
                                     <SidebarMenuItem key={tab.href}>
                                         <SidebarMenuButton
-                                            isActive={selectedTab === tab.href}
+                                            isActive={selectedTab?.href === tab.href}
                                             tooltip={{ children: tab.label, className: '[&[hidden]]:hidden' }}
                                             aria-label={tab.label}
-                                            aria-current={selectedTab === tab.href ? 'page' : undefined}
+                                            aria-current={selectedTab?.href === tab.href ? 'page' : undefined}
                                             onClick={(event) => {
                                                 if (
                                                     event.defaultPrevented ||
@@ -181,15 +183,11 @@ function PlatformLayout({
                             <SidebarTrigger
                                 type="button"
                                 aria-controls={navId}
-                                aria-expanded={isMobile ? openMobile : !isCollapsed}
-                                aria-label={
-                                    (isMobile ? openMobile : !isCollapsed) ? 'Collapse sidebar' : 'Expand sidebar'
-                                }
+                                aria-expanded={expanded}
+                                aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
                             />
                             <Separator className="h-5" orientation="vertical" />
-                            {breadcrumb ?? (
-                                <Breadcrumbs items={[{ label: tabs.find((tab) => tab.href === selectedTab)?.label }]} />
-                            )}
+                            {breadcrumb ?? <Breadcrumbs items={[{ label: selectedTab?.label }]} />}
                         </section>
                     }
                 >

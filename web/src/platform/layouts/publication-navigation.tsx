@@ -1,8 +1,6 @@
 import { Link } from 'react-router';
-import type { LucideIcon } from 'lucide-react';
+import type { PublicationPage } from '@/platform/publications';
 import { useId, type KeyboardEvent, type ReactNode } from 'react';
-
-type PublicationPage = { path: string; label: string; icon: LucideIcon };
 
 const rowClassName =
     'publication-navigation-row flex box-border w-full min-h-8 cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2 py-0 font-[inherit] text-sm leading-(--text-sm--line-height) font-normal text-start text-foreground no-underline hover:bg-muted aria-[current]:bg-muted aria-[current]:font-medium focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:-outline-offset-2 forced-colors:aria-[current]:bg-[Highlight] forced-colors:aria-[current]:text-[HighlightText] [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>svg]:flex-none [&>svg]:text-muted-foreground aria-[current]:[&>svg]:text-inherit';
@@ -67,16 +65,35 @@ export function PublicationSectionLinks({
 }
 
 /** Shares the publication sidebar's density and keyboard navigation across legal and docs. */
-export function PublicationNavigation({ label, children }: { label: string; children: ReactNode }) {
+export function PublicationNavigation({
+    label,
+    sections,
+    currentPath
+}: {
+    label: string;
+    sections: readonly { title: string; pages: readonly PublicationPage[]; trailingSlash?: boolean }[];
+    currentPath: string;
+}) {
     return (
         <nav aria-label={label} className="box-border w-full px-6 py-8 lg:w-[260px]" onKeyDown={moveNavigationFocus}>
-            {children}
+            {sections.map(({ title, pages, trailingSlash = true }) => (
+                <PublicationNavigationSection key={title} title={title}>
+                    {pages.map((page) => (
+                        <PublicationNavigationItem
+                            key={page.path}
+                            page={page}
+                            currentPath={currentPath}
+                            trailingSlash={trailingSlash}
+                        />
+                    ))}
+                </PublicationNavigationSection>
+            ))}
         </nav>
     );
 }
 
 /** Labels one group of publication links. */
-export function PublicationNavigationSection({ title, children }: { title: string; children: ReactNode }) {
+function PublicationNavigationSection({ title, children }: { title: string; children: ReactNode }) {
     const headingId = useId();
 
     return (
@@ -93,18 +110,31 @@ export function PublicationNavigationSection({ title, children }: { title: strin
 }
 
 /** Links to an article or fragment within a publication section. */
-export function PublicationNavigationItem({
+function PublicationNavigationItem({
     page,
-    pagePath,
-    hash = '',
-    trailingSlash = true
+    currentPath,
+    trailingSlash
 }: {
     page: PublicationPage;
-    pagePath: string;
-    hash?: string;
-    trailingSlash?: boolean;
+    currentPath: string;
+    trailingSlash: boolean;
 }) {
-    const selected = `${pagePath}${hash}` === page.path;
+    if (page.children?.length) {
+        return (
+            <PublicationNavigationSection title={page.label}>
+                {page.children.map((child) => (
+                    <PublicationNavigationItem
+                        key={child.path}
+                        page={child}
+                        currentPath={currentPath}
+                        trailingSlash={trailingSlash}
+                    />
+                ))}
+            </PublicationNavigationSection>
+        );
+    }
+
+    const selected = currentPath === page.path;
 
     const [pathname, fragment] = page.path.split('#');
     const to = `${pathname}${trailingSlash ? '/' : ''}${fragment ? `#${fragment}` : ''}`;

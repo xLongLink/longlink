@@ -51,17 +51,12 @@ import {
     type LucideIcon
 } from 'lucide-react';
 
-type DocumentationPage = {
-    path: string;
-    label: string;
-    icon: LucideIcon;
-    children?: Array<{ path: string; label: string; icon: LucideIcon }>;
-};
+export type PublicationPage = { path: string; label: string; icon: LucideIcon; children?: readonly PublicationPage[] };
 
-type DocumentationSection = { title: string; pages: DocumentationPage[]; paths?: readonly string[] };
+type DocumentationSection = { title: string; pages: PublicationPage[]; paths?: readonly string[] };
 
 // Keep category navigation and overview headings in the same reading order.
-export const documentationCategories = [
+const categories = [
     { label: 'Introduction', category: 'Runtime', anchor: '', icon: BookOpen },
     { label: 'Hooks', category: 'Hooks', anchor: '#hooks', icon: FileCode2 },
     { label: 'Layout', category: 'Layouts', anchor: '#layouts', icon: FileCode2 },
@@ -163,6 +158,11 @@ export const componentDocumentation = [
             .toLowerCase()
 }));
 
+export const documentationCategories = categories.map((category) => ({
+    ...category,
+    components: componentDocumentation.filter((component) => component.category === category.category)
+}));
+
 export const documentationNavigation: Array<{ path: string; label: string; sections: DocumentationSection[] }> = [
     {
         path: '/docs/sdk',
@@ -190,30 +190,22 @@ export const documentationNavigation: Array<{ path: string; label: string; secti
                 title: 'Views',
                 paths: [
                     '/docs/sdk/views',
-                    ...documentationCategories.flatMap(({ category }) =>
-                        componentDocumentation.flatMap((component) =>
-                            component.category === category ? [`/docs/sdk/views/${component.slug}`] : []
-                        )
+                    ...documentationCategories.flatMap(({ components }) =>
+                        components.map((component) => `/docs/sdk/views/${component.slug}`)
                     )
                 ],
-                pages: documentationCategories.map(({ label, category, anchor, icon }) => ({
+                pages: documentationCategories.map(({ label, category, anchor, icon, components }) => ({
                     path: `/docs/sdk/views${anchor}`,
                     label,
                     icon,
                     children:
                         category === 'Runtime'
                             ? undefined
-                            : componentDocumentation.flatMap((component) =>
-                                  component.category === category
-                                      ? [
-                                            {
-                                                path: `/docs/sdk/views/${component.slug}`,
-                                                label: component.label,
-                                                icon: component.icon ?? FileCode2
-                                            }
-                                        ]
-                                      : []
-                              )
+                            : components.map((component) => ({
+                                  path: `/docs/sdk/views/${component.slug}`,
+                                  label: component.label,
+                                  icon: component.icon ?? FileCode2
+                              }))
                 }))
             }
         ]

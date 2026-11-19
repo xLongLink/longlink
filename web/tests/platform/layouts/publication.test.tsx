@@ -5,13 +5,9 @@ import { BookOpen } from 'lucide-react';
 import { withMounted } from '../../render';
 import { it, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import Publication from '@/platform/layouts/publication';
 import { Route, Routes, useLocation } from 'react-router';
-import Publication from '@/components/layouts/publication';
-import {
-    PublicationNavigation,
-    PublicationNavigationItem,
-    PublicationNavigationSection
-} from '@/platform/layouts/publication-navigation';
+import { PublicationNavigation } from '@/platform/layouts/publication-navigation';
 
 // SAFETY: happy-dom supplies its viewport controller on the test window.
 const viewport = (window as typeof window & Pick<Window, 'happyDOM'>).happyDOM;
@@ -41,21 +37,16 @@ function PublicationRoutes() {
                 element={
                     <Publication
                         sideNav={
-                            <PublicationNavigation label="Article navigation">
-                                <PublicationNavigationSection title="Guides">
-                                    <PublicationNavigationItem
-                                        page={{ path: '/docs/first', label: 'First guide', icon: BookOpen }}
-                                        pagePath="/docs/first"
-                                        trailingSlash={false}
-                                    />
-                                    <PublicationNavigationSection title="More guides">
-                                        <PublicationNavigationItem
-                                            page={{ path: '/docs/second', label: 'Second guide', icon: BookOpen }}
-                                            pagePath="/docs/first"
-                                        />
-                                    </PublicationNavigationSection>
-                                </PublicationNavigationSection>
-                            </PublicationNavigation>
+                            <PublicationNavigation
+                                label="Article navigation"
+                                currentPath="/docs/first"
+                                sections={[
+                                    {
+                                        title: 'More guides',
+                                        pages: [{ path: '/docs/second', label: 'Second guide', icon: BookOpen }]
+                                    }
+                                ]}
+                            />
                         }
                     />
                 }

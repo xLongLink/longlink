@@ -35,11 +35,11 @@ import { Empty } from '@/components/longlink/display/empty';
 import { InlineCode } from '@/components/shadcn/inline-code';
 import { SwitzerlandExample } from './views/switzerland-example';
 import { Currency } from '@/components/longlink/display/currency';
+import { documentationCategories } from '@/platform/publications';
 import { Card as LongLinkCard } from '@/components/longlink/layout/card';
 import { Avatar, AvatarGroup } from '@/components/longlink/display/avatar';
 import { Heading as ViewHeading } from '@/components/longlink/display/heading';
 import { DocumentationArticle } from '@/platform/layouts/documentation-article';
-import { componentDocumentation, documentationCategories } from '@/platform/publications';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/shadcn/collapsible';
 import { Card, CardTitle, CardHeader, CardFooter, CardContent, CardDescription } from '@/components/shadcn/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -295,65 +295,63 @@ export default function Item({ params }) {
                         </Table>
                     </CollapsibleContent>
                 </Collapsible>
-                {categories.map(({ category, anchor }) => (
+                {categories.map(({ category, anchor, components }) => (
                     <Stack key={category} gap={3}>
                         <h2 className="font-semibold tracking-tight text-3xl" id={anchor.slice(1)}>
                             {category}
                         </h2>
                         <Grid columns={3} gap={4}>
-                            {componentDocumentation
-                                .filter((component) => component.category === category)
-                                .map((component) => (
-                                    <Stack key={component.slug} className="relative min-w-0" gap={2}>
-                                        <Card
-                                            aria-hidden="true"
-                                            inert
-                                            size="sm"
-                                            className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
+                            {components.map((component) => (
+                                <Stack key={component.slug} className="relative min-w-0" gap={2}>
+                                    <Card
+                                        aria-hidden="true"
+                                        inert
+                                        size="sm"
+                                        className={`aspect-square w-full max-w-full ${component.category === 'Maps' ? 'py-0 [&_.maplibregl-ctrl-attrib]:hidden' : ''}`}
+                                    >
+                                        {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
+                                        <div
+                                            className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
                                         >
-                                            {/* Constrain artwork before scaling so intrinsic control sizes cannot widen the card. */}
-                                            <div
-                                                className={`flex min-h-0 w-full min-w-0 flex-1 items-center justify-center overflow-hidden ${['AreaChart', 'BarChart', 'LineChart'].includes(component.name) ? 'px-4 [&_.recharts-wrapper]:max-w-full [&_.recharts-surface]:max-w-full' : ''}`}
+                                            <Stack
+                                                className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
+                                                align={
+                                                    component.category === 'Form' &&
+                                                    !['Checkbox', 'RadioGroup', 'Switch'].includes(component.name)
+                                                        ? 'stretch'
+                                                        : 'center'
+                                                }
+                                                gap={0}
                                             >
-                                                <Stack
-                                                    className={`w-full min-w-0 max-w-full [&>*]:min-w-0 [&>*]:max-w-full ${component.name.endsWith('Chart') || component.category === 'Maps' ? '' : 'scale-90'}`}
-                                                    align={
-                                                        component.category === 'Form' &&
-                                                        !['Checkbox', 'RadioGroup', 'Switch'].includes(component.name)
-                                                            ? 'stretch'
-                                                            : 'center'
-                                                    }
-                                                    gap={0}
-                                                >
-                                                    {component.category === 'Hooks' ? (
-                                                        <Stack align="center" gap={2}>
-                                                            {(component.name === 'ReactHooks'
-                                                                ? ['useState', 'useEffect', 'useMemo', 'useRef']
-                                                                : [component.name]
-                                                            ).map((name) => (
-                                                                <InlineCode key={name}>{`${name}()`}</InlineCode>
-                                                            ))}
-                                                        </Stack>
-                                                    ) : (
-                                                        (previews[component.name] ?? (
-                                                            <InlineCode>{`<${component.name} />`}</InlineCode>
-                                                        ))
-                                                    )}
-                                                </Stack>
-                                            </div>
-                                        </Card>
-                                        <span className="text-xs text-muted-foreground">
-                                            {component.category === 'Action' || component.category === 'Form'
-                                                ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                : component.label}
-                                        </span>
-                                        <RouterLink
-                                            aria-label={`Open ${component.label} documentation`}
-                                            className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                                            to={`/docs/sdk/views/${component.slug}/`}
-                                        />
-                                    </Stack>
-                                ))}
+                                                {component.category === 'Hooks' ? (
+                                                    <Stack align="center" gap={2}>
+                                                        {(component.name === 'ReactHooks'
+                                                            ? ['useState', 'useEffect', 'useMemo', 'useRef']
+                                                            : [component.name]
+                                                        ).map((name) => (
+                                                            <InlineCode key={name}>{`${name}()`}</InlineCode>
+                                                        ))}
+                                                    </Stack>
+                                                ) : (
+                                                    (previews[component.name] ?? (
+                                                        <InlineCode>{`<${component.name} />`}</InlineCode>
+                                                    ))
+                                                )}
+                                            </Stack>
+                                        </div>
+                                    </Card>
+                                    <span className="text-xs text-muted-foreground">
+                                        {component.category === 'Action' || component.category === 'Form'
+                                            ? component.label.replace(/([a-z])([A-Z])/g, '$1 $2')
+                                            : component.label}
+                                    </span>
+                                    <RouterLink
+                                        aria-label={`Open ${component.label} documentation`}
+                                        className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                        to={`/docs/sdk/views/${component.slug}/`}
+                                    />
+                                </Stack>
+                            ))}
                         </Grid>
                     </Stack>
                 ))}

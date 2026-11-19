@@ -18,7 +18,6 @@ export default function Brand({ children = <Outlet /> }: { children?: ReactNode 
                     <ExternalLink aria-hidden="true" size={16} className="shrink-0" />
                 </a>
             }
-            tabs={[]}
         >
             <meta name="robots" content="noindex, nofollow" />
             {children}

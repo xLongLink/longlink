@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { spacing } from './spacing';
 import { createElement, useCallback, useState, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
 
 type StackProps = Omit<HTMLAttributes<HTMLElement>, 'style'> & {
@@ -54,9 +55,9 @@ export function Stack({
                 className
             ),
             style: {
-                gap: gap === undefined ? undefined : `calc(var(--spacing) * ${gap})`,
-                paddingInline: paddingInline === undefined ? undefined : `calc(var(--spacing) * ${paddingInline})`,
-                paddingBlock: paddingBlock === undefined ? undefined : `calc(var(--spacing) * ${paddingBlock})`,
+                gap: spacing(gap),
+                paddingInline: spacing(paddingInline),
+                paddingBlock: spacing(paddingBlock),
                 flexWrap: wrap
             }
         },
@@ -110,24 +111,19 @@ export function StackItem(props: {
                 attributeFilter: ['class', 'dir', 'hidden', 'style']
             });
             observeChildren();
-            window.addEventListener('resize', measure);
-            window.visualViewport?.addEventListener('resize', measure);
-            element.addEventListener('load', measure, true);
-            element.addEventListener('transitionend', measure);
-            element.addEventListener('animationend', measure);
-            document.fonts?.addEventListener?.('loadingdone', measure);
+            const { signal } = lifetime;
+            window.addEventListener('resize', measure, { signal });
+            window.visualViewport?.addEventListener('resize', measure, { signal });
+            element.addEventListener('load', measure, { capture: true, signal });
+            element.addEventListener('transitionend', measure, { signal });
+            element.addEventListener('animationend', measure, { signal });
+            document.fonts?.addEventListener?.('loadingdone', measure, { signal });
             void document.fonts?.ready.then(measure);
 
             return () => {
                 lifetime.abort();
                 resize?.disconnect();
                 mutations.disconnect();
-                window.removeEventListener('resize', measure);
-                window.visualViewport?.removeEventListener('resize', measure);
-                element.removeEventListener('load', measure, true);
-                element.removeEventListener('transitionend', measure);
-                element.removeEventListener('animationend', measure);
-                document.fonts?.removeEventListener?.('loadingdone', measure);
             };
         },
         [props.isScrollable]
