@@ -10,9 +10,11 @@ test('published component provenance matches the implementation exposed to Views
     const root = fileURLToPath(new URL('../', import.meta.url));
     const entry = path.join(root, 'src/components/longlink/index.ts');
     const viewEntry = path.join(root, 'src/views/index.ts');
+    const frontendEntry = path.join(root, 'scripts/frontend.ts');
+    const declarationEntry = fileURLToPath(new URL('../../sdk/longlink/.static/jsx/frontend.d.ts', import.meta.url));
     const config = ts.readConfigFile(path.join(root, 'tsconfig.app.json'), ts.sys.readFile);
     const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
-    const program = ts.createProgram([entry, viewEntry], parsed.options);
+    const program = ts.createProgram([entry, viewEntry, frontendEntry, declarationEntry], parsed.options);
     const checker = program.getTypeChecker();
     const source = program.getSourceFile(viewEntry);
     const exports = new Map(
@@ -49,34 +51,40 @@ test('published component provenance matches the implementation exposed to Views
         );
     }
 
-    // Keep runtime providers outside the authored component registry.
-    for (const statement of source.statements) {
-        assert.ok(ts.isExportDeclaration(statement) && statement.moduleSpecifier);
-        const target = statement.moduleSpecifier.text;
-        assert.match(
-            target,
-            /^(?:@\/components\/longlink(?:\/hooks\/use-confirm)?|@\/lib\/hooks\/use-submit|react|react-hook-form|zod|@hookform\/resolvers\/zod|\.\/hooks\/(?:use-api|use-form))$/
+    const frontend = program.getSourceFile(frontendEntry);
+    for (const symbol of checker.getExportsOfModule(checker.getSymbolAtLocation(frontend))) {
+        const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        if (!(implementation.flags & ts.SymbolFlags.Value)) continue;
+        const runtime = exports.get(symbol.name);
+        assert.ok(runtime, `${symbol.name} is published but not exposed to Views.`);
+        assert.equal(
+            runtime.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(runtime) : runtime,
+            implementation,
+            `${symbol.name} must resolve to the same implementation in Views and SDK declarations.`
         );
-        if (target.startsWith('./hooks/') && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
-            for (const specifier of statement.exportClause.elements) {
-                if (!statement.isTypeOnly && !specifier.isTypeOnly) {
-                    assert.match(specifier.name.text, /^use[A-Z]/);
-                }
-            }
-        }
     }
-
-    // Runtime and SDK declarations share the same public component entry point.
-    const frontend = ts.createSourceFile(
-        'frontend.ts',
-        await readFile(path.join(root, 'scripts/frontend.ts'), 'utf8'),
-        ts.ScriptTarget.Latest,
-        true
+    const declarations = new Set(
+        program
+            .getSourceFile(declarationEntry)
+            .statements.flatMap((statement) =>
+                ts.isVariableStatement(statement)
+                    ? statement.declarationList.declarations.map((declaration) => declaration.name)
+                    : statement.name
+                      ? [statement.name]
+                      : []
+            )
+            .map((name) => checker.getSymbolAtLocation(name))
+            .filter((symbol) => symbol && symbol.flags & (ts.SymbolFlags.Value | ts.SymbolFlags.Alias))
+            .map((symbol) => symbol.name)
     );
-    for (const statement of frontend.statements.filter(ts.isExportDeclaration)) {
-        assert.match(
-            statement.moduleSpecifier?.text ?? '',
-            /^(?:zod|react-hook-form|\.\.\/src\/(?:components\/longlink|views\/hooks\/use-form|lib\/hooks\/use-submit))$/
+    for (const symbol of exports.values()) {
+        const implementation = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        if (!(implementation.flags & ts.SymbolFlags.Value)) continue;
+        // Map retains the global constructor; its JSX contract is checked by the standalone fixture.
+        if (symbol.name === 'Map') continue;
+        assert.ok(
+            declarations.has(symbol.name),
+            `${symbol.name} is exposed to Views but missing from SDK declarations.`
         );
     }
 
