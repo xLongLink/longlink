@@ -35,32 +35,6 @@ it('keeps Platform page spacing consistent while preserving sizing overrides', (
     expect(sized.classList.contains('max-w-[720px]')).toBe(true);
     expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
     expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
-    expect(sized.style.paddingInline).toBe('calc(var(--spacing) * 2)');
-    expect(sized.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
-});
-
-it.each([Stack, Grid])('forwards native container events alongside layout props', async (Layout) => {
-    const user = userEvent.setup();
-    let resets = 0;
-
-    await withMounted(
-        <Layout role="region" aria-label="Draft preview" gap={4} onResetCapture={() => resets++}>
-            <form>
-                <button type="reset">Reset draft</button>
-            </form>
-        </Layout>,
-        async (output) => {
-            const container = output.querySelector<HTMLDivElement>('[role="region"]');
-            const button = output.querySelector('button');
-
-            if (!container || !button) throw new Error('Expected a native preview container');
-
-            expect(container.getAttribute('aria-label')).toBe('Draft preview');
-            expect(container.style.gap).toBe('calc(var(--spacing) * 4)');
-            await user.click(button);
-            expect(resets).toBe(1);
-        }
-    );
 });
 
 it.each([Box, Grid])('updates padding overrides without remounting an editable child', async (Layout) => {

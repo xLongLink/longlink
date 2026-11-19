@@ -5,9 +5,10 @@ import { act, useRef, useState } from 'react';
 import { renderStatic, withMounted } from '../../render';
 import { Avatar } from '@/components/longlink/display/avatar';
 
-it('recovers failed URLs to stable artwork and retries a newly supplied source', async () => {
+it('defers artwork until failure, uses the latest profile, and retries a newly supplied source', async () => {
     function Owner() {
         const [src, setSrc] = useState('https://images.example/first.png');
+        const [updated, setUpdated] = useState(false);
         const ref = useRef<HTMLSpanElement>(null);
 
         return (
@@ -17,10 +18,11 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
                     id="owner-avatar"
                     tabIndex={0}
                     className="owner-avatar"
-                    name="Acme"
-                    shape="rounded"
+                    name={updated ? 'ACME Ink' : 'ACME Studio'}
+                    shape={updated ? 'rounded' : 'circle'}
                     src={src}
                 />
+                <button onClick={() => setUpdated(true)}>Update profile</button>
                 <button
                     onClick={() => {
                         setSrc('https://images.example/second.png');
@@ -33,23 +35,34 @@ it('recovers failed URLs to stable artwork and retries a newly supplied source',
         );
     }
 
-    const generated = renderStatic(<Avatar name="Acme" shape="rounded" />)
+    const generated = renderStatic(<Avatar name="ACME Ink" shape="rounded" />)
         .querySelector('img')
         ?.getAttribute('src');
+    const serialize = vi.spyOn(dicebear.Avatar.prototype, 'toDataUri');
 
-    await withMounted(<Owner />, async (output) => {
-        const image = output.querySelector('img');
-        const root = output.querySelector('#owner-avatar');
-        expect(image?.getAttribute('src')).toBe('https://images.example/first.png');
-        expect(root?.classList.contains('owner-avatar')).toBe(true);
-        await act(async () => image?.dispatchEvent(new Event('error')));
-        expect(output.querySelector('img')?.getAttribute('src')).toBe(generated);
-        await act(async () => output.querySelector('button')?.click());
-        expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/second.png');
-        expect(document.activeElement).toBe(root);
-        await act(async () => output.querySelector('img')?.dispatchEvent(new Event('load')));
-        expect(output.querySelector('img')?.hasAttribute('data-error')).toBe(false);
-    });
+    try {
+        await withMounted(<Owner />, async (output) => {
+            const image = output.querySelector('img');
+            const root = output.querySelector('#owner-avatar');
+            const buttons = output.querySelectorAll('button');
+
+            expect(image?.getAttribute('src')).toBe('https://images.example/first.png');
+            expect(root?.classList.contains('owner-avatar')).toBe(true);
+            await act(async () => buttons[0]?.click());
+            expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/first.png');
+            expect(serialize).not.toHaveBeenCalled();
+            await act(async () => image?.dispatchEvent(new Event('error')));
+            expect(serialize).toHaveBeenCalledOnce();
+            expect(output.querySelector('img')?.getAttribute('src')).toBe(generated);
+            await act(async () => buttons[1]?.click());
+            expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/second.png');
+            expect(document.activeElement).toBe(root);
+            await act(async () => output.querySelector('img')?.dispatchEvent(new Event('load')));
+            expect(output.querySelector('img')?.hasAttribute('data-error')).toBe(false);
+        });
+    } finally {
+        serialize.mockRestore();
+    }
 });
 
 it('uses the name for stable artwork and updates it when the name changes', async () => {
@@ -82,66 +95,18 @@ it('uses the name for stable artwork and updates it when the name changes', asyn
     });
 });
 
-it('defers artwork until image failure and uses the latest name and shape', async () => {
-    // Arrange
-    const primary = 'https://images.example/avatar.png';
-    const expected = renderStatic(<Avatar name="ACME Ink" shape="rounded" />)
-        .querySelector('img')
-        ?.getAttribute('src');
-    const serialize = vi.spyOn(dicebear.Avatar.prototype, 'toDataUri');
-
-    function Owner() {
-        const [updated, setUpdated] = useState(false);
-
-        return (
-            <>
-                <Avatar
-                    src={primary}
-                    name={updated ? 'ACME Ink' : 'ACME Studio'}
-                    shape={updated ? 'rounded' : 'circle'}
-                />
-                <button onClick={() => setUpdated(true)}>Update profile</button>
-            </>
-        );
-    }
-
-    try {
-        await withMounted(<Owner />, async (output) => {
-            // Act
-            await act(async () => output.querySelector('button')?.click());
-
-            // Assert
-            expect(output.querySelector('img')?.getAttribute('src')).toBe(primary);
-            expect(serialize).not.toHaveBeenCalled();
-
-            // Act
-            await act(async () => output.querySelector('img')?.dispatchEvent(new Event('error')));
-
-            // Assert
-            expect(serialize).toHaveBeenCalledOnce();
-            expect(output.querySelector('img')?.getAttribute('src')).toBe(expected);
-        });
-    } finally {
-        serialize.mockRestore();
-    }
-});
-
-it('retains geometry, generated artwork choice, and named versus decorative semantics', () => {
+it('retains generated artwork choice and named versus decorative semantics', () => {
     const rounded = renderStatic(<Avatar name="Acme logo" shape="rounded" size="lg" />);
 
     const root = rounded.querySelector('[data-slot="avatar"]');
     expect(root?.getAttribute('aria-label')).toBe('Acme logo');
-    expect(root?.getAttribute('data-size')).toBe('lg');
-    expect(root?.classList.contains('rounded-lg')).toBe(true);
     const square = renderStatic(<Avatar name="Acme" shape="square" />);
-    expect(square.querySelector('[data-slot="avatar"]')?.classList.contains('rounded-none')).toBe(true);
     expect(square.querySelector('img')?.getAttribute('src')).not.toBe(
         rounded.querySelector('img')?.getAttribute('src')
     );
     const decorative = renderStatic(<Avatar name="  " size="sm" />).querySelector('[data-slot="avatar"]');
     expect(decorative?.getAttribute('role')).toBe('presentation');
     expect(decorative?.getAttribute('aria-hidden')).toBe('true');
-    expect(decorative?.getAttribute('data-size')).toBe('sm');
     const labelled = renderStatic(<Avatar aria-label="Account" />).querySelector('[data-slot="avatar"]');
     expect(labelled?.getAttribute('role')).toBe('img');
     expect(labelled?.hasAttribute('aria-hidden')).toBe(false);

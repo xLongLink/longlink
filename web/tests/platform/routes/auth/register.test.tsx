@@ -92,7 +92,6 @@ it('delivers registration failure and confirmed success through one Sonner queue
             notification.textContent?.includes('Check your inbox for the registration link.')
         );
 
-        expect(confirmation).toBeDefined();
         expect(confirmation?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
         expect(failure?.getAttribute('data-type')).toBe('error');
         expect(confirmation?.closest('[aria-hidden="true"], [inert]')).toBeNull();

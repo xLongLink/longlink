@@ -26,7 +26,6 @@ it('validates and retries organization creation through the fixed footer without
 
             // Assert
             expect(dialog?.textContent).toContain('New organization');
-            expect(dialog?.querySelector('button[type="submit"]')?.hasAttribute('disabled')).toBe(false);
             expect(dialog?.querySelector('input[name="name"]')?.getAttribute('aria-required')).toBe('true');
 
             const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');

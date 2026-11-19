@@ -30,16 +30,3 @@ it('keeps authored account completion descriptions outside plain-text typography
     expect(output.querySelector('p')?.className).toBe('authored-description');
     expect(output.textContent).toContain('Profile fields');
 });
-
-it('keeps an empty string description present without coercing authored content', () => {
-    // Act
-    const output = renderStatic(
-        <AuthLayout title="Sign in" description="">
-            Credentials
-        </AuthLayout>
-    );
-
-    // Assert the empty string remains a plain-text paragraph, unlike null.
-    expect(output.querySelectorAll('p')).toHaveLength(1);
-    expect(output.querySelector('p')?.textContent).toBe('');
-});

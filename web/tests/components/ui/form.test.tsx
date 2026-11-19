@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
-import { useForm } from 'react-hook-form';
 import { withMounted } from '../../render';
 import { RequestContext } from '@/views/contexts';
 import { useSubmit } from '@/views/hooks/use-submit';
@@ -15,8 +14,6 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
         let completed = false;
 
         function Example() {
-            const form = useForm();
-
             const submit = useSubmit('/api/orders', {
                 method,
                 onSuccess: () => {
@@ -27,11 +24,10 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
             return (
                 <form
                     onSubmit={(event) => {
+                        event.preventDefault();
                         const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
                         data.append('attachment', file);
-                        void form.handleSubmit(async () => {
-                            await submit(data);
-                        })(event);
+                        void submit(data);
                     }}
                 >
                     <input name="tag" defaultValue="red" />

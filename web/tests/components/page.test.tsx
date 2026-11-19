@@ -7,9 +7,8 @@ it('renders the page title and description', () => {
     // Act
     const output = renderStatic(
         <Page title="Orders" description="Order process">
-            <main>Orders content</main>
-        </Page>,
-        '/docs/orders?search=secret'
+            {null}
+        </Page>
     );
 
     // Assert

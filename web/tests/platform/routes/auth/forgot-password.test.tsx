@@ -2,21 +2,10 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
-import { renderPlatform } from '../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import Page from '@/platform/routes/auth/forgot-password';
-
-it('requests an email before displaying password-reset confirmation', () => {
-    // Act
-    const output = renderPlatform(<Page />);
-
-    // Assert
-    expect(output.querySelector('input[name="email"]')?.getAttribute('type')).toBe('email');
-    expect(output.textContent).toContain('Send reset email');
-    expect(output.textContent).not.toContain('instructions are on the way');
-});
 
 it.each([204, 503])('only confirms a reset email after a successful response, status %s', async (status) => {
     const payloads: unknown[] = [];

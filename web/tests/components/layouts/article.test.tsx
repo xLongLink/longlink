@@ -110,21 +110,17 @@ it('uses the same routed destinations for buttons and keyboard shortcuts', async
     );
 });
 
-it.each([
-    ['Alt', { altKey: true }],
-    ['Control', { ctrlKey: true }],
-    ['Meta', { metaKey: true }],
-    ['Shift', { shiftKey: true }]
-])('leaves %s-modified arrows available without navigating', async (_modifier, modifiers) => {
+it('leaves modified arrows available without navigating', async () => {
     // Act
     await withMounted(
         <ArticleNavigation />,
         async (output) => {
-            const event = await pressArrow(document, 'ArrowRight', modifiers);
+            for (const modifiers of [{ altKey: true }, { ctrlKey: true }, { metaKey: true }, { shiftKey: true }]) {
+                const event = await pressArrow(document, 'ArrowRight', modifiers);
 
-            // Assert
-            expect(event.defaultPrevented).toBe(false);
-            expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
+                expect(event.defaultPrevented).toBe(false);
+                expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
+            }
 
             // Act
             await pressArrow(document, 'ArrowRight');
@@ -161,50 +157,36 @@ it('respects an arrow event already handled by a child control', async () => {
     );
 });
 
-it.each([
-    ['input', <input key="input" aria-label="Editing control" />],
-    ['textarea', <textarea key="textarea" aria-label="Editing control" />],
-    [
-        'select',
-        <select key="select" aria-label="Editing control">
-            <option>First</option>
-            <option>Second</option>
-        </select>
-    ],
-    [
-        'contenteditable descendant',
-        <section key="editor" contentEditable suppressContentEditableWarning>
-            <p aria-label="Editing control" tabIndex={0}>
-                Draft article
-            </p>
-        </section>
-    ],
-    [
-        'slider descendant',
-        <section
-            key="slider"
-            role="slider"
-            aria-label="Reading zoom"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={50}
-        >
-            <button aria-label="Editing control">Slider thumb</button>
-        </section>
-    ]
-])('does not steal arrow input from a %s', async (_name, control) => {
+it('does not steal arrow input from editing controls', async () => {
     // Act
     await withMounted(
-        <ArticleNavigation>{control}</ArticleNavigation>,
+        <ArticleNavigation>
+            <input aria-label="Editing input" />
+            <textarea aria-label="Editing text" />
+            <select aria-label="Editing selection">
+                <option>First</option>
+                <option>Second</option>
+            </select>
+            <section contentEditable suppressContentEditableWarning>
+                <p aria-label="Editing content" tabIndex={0}>
+                    Draft article
+                </p>
+            </section>
+            <section role="slider" aria-label="Reading zoom" aria-valuemin={0} aria-valuemax={100} aria-valuenow={50}>
+                <button aria-label="Editing slider">Slider thumb</button>
+            </section>
+        </ArticleNavigation>,
         async (output) => {
-            const target = output.querySelector<HTMLElement>('[aria-label="Editing control"]');
-            expect(target).not.toBeNull();
-            target?.focus();
-            const event = await pressArrow(target ?? document, 'ArrowRight');
+            const controls = output.querySelectorAll<HTMLElement>('[aria-label^="Editing "]');
+            expect(controls).toHaveLength(5);
 
-            // Assert
-            expect(event.defaultPrevented).toBe(false);
-            expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
+            for (const control of controls) {
+                control.focus();
+                const event = await pressArrow(control, 'ArrowRight');
+
+                expect(event.defaultPrevented).toBe(false);
+                expect(output.querySelector('output')?.textContent).toBe('/docs/middle/');
+            }
 
             // Act
             await pressArrow(document, 'ArrowRight');

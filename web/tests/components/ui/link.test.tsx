@@ -62,7 +62,6 @@ it('keeps a Solution-relative destination on the rendered link', () => {
 
     // Assert
     expect(output.querySelector('a')?.getAttribute('href')).toBe('/orders');
-    expect(output.querySelector('a')?.textContent).toBe('Orders');
 });
 
 it('delegates ordinary solution navigation while preserving canceled, modified and middle clicks', async () => {

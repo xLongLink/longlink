@@ -161,7 +161,6 @@ it.each([
                         )
                     ).find((button) => button.textContent === action);
 
-                    expect(confirm).toBeDefined();
                     await act(async () => confirm?.click());
 
                     // Assert

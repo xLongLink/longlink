@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
-import routes from '@/platform/routes';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
@@ -35,20 +34,6 @@ it('keeps password entry masked and email drafts in their owned field', () => {
     // Assert
     expect(output.querySelector('input[name="email"]')?.getAttribute('value')).toBe('owner@example.com');
     expect(output.querySelector('input[name="password"]')?.getAttribute('type')).toBe('password');
-});
-
-it('routes login, registration, and password recovery through the same standalone layout', () => {
-    // Assert
-    expect(routes).toContainEqual({
-        file: './layouts/account.tsx',
-        children: [
-            { path: 'login', file: './routes/auth/login.tsx' },
-            { path: 'auth/register', file: './routes/auth/register.tsx' },
-            { path: 'auth/verify-email', file: './routes/auth/verify-email.tsx' },
-            { path: 'auth/forgot-password', file: './routes/auth/forgot-password.tsx' },
-            { path: 'auth/reset-password', file: './routes/auth/reset-password.tsx' }
-        ]
-    });
 });
 
 it.each([

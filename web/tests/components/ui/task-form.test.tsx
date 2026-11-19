@@ -64,9 +64,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
 
             if (!form || !title || !upload) throw new Error('Expected the task dialog form');
 
-            await React.act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-            });
+            await React.act(async () => form.requestSubmit());
             expect(writes).toEqual([]);
             expect(document.querySelectorAll('[role="alert"]').length).toBeGreaterThan(0);
 
@@ -74,16 +72,12 @@ it('validates the shipped task form, retains the file and draft on failure, and 
 
             // Native file inputs leave size validation to the form schema before any scoped write.
             await React.act(async () => user.upload(upload, new File([new Uint8Array(10485761)], 'oversized.pdf')));
-            await React.act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-            });
+            await React.act(async () => form.requestSubmit());
             expect(writes).toEqual([]);
             expect(form.textContent).toContain('Choose a file smaller than 10 MB.');
 
             await React.act(async () => user.upload(upload, file));
-            await React.act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-            });
+            await React.act(async () => form.requestSubmit());
             expect(writes).toEqual([
                 [
                     ['title', 'Review invoice'],
@@ -95,9 +89,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
             expect(upload.files?.[0]).toBe(file);
             expect(form.textContent).toContain('Unavailable');
 
-            await React.act(async () => {
-                form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
-            });
+            await React.act(async () => form.requestSubmit());
             expect(writes).toEqual([
                 [
                     ['title', 'Review invoice'],

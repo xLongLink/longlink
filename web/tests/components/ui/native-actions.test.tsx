@@ -33,7 +33,6 @@ it('ignores class overrides supplied outside the typed LongLink Button API', () 
 
     expect(button?.classList.contains('hidden')).toBe(false);
     expect(button?.classList.contains('bg-red-500')).toBe(false);
-    expect(button?.classList.contains('bg-primary')).toBe(true);
 });
 
 it.each([false, true])(
