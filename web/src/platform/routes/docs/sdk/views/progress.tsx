@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Progress } from '@/components/longlink/display/progress';
+import { Box, Progress } from '@/components/longlink';
 
 /** Documents Progress in LongLink Views. */
 export default function ProgressPage() {

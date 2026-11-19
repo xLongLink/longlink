@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Input } from '@/components/longlink/form/input';
-import { Stack } from '@/components/longlink/layout/stack';
-import { Button } from '@/components/longlink/action/button';
-import { Dialog } from '@/components/longlink/layout/dialog';
+import { Input, Stack, Button, Dialog } from '@/components/longlink';
 
 /** Shows the same owned dialog API in centered and fullscreen layouts. */
 export function DialogExample({ fullscreen = false }: { fullscreen?: boolean }) {

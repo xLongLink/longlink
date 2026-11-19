@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import ViewLayout from './view-layout';
-import { Link } from '@/components/longlink/action/link';
-import { Stack } from '@/components/longlink/layout/stack';
-import { Dialog } from '@/components/longlink/layout/dialog';
+import { Link, Stack, Dialog } from '@/components/longlink';
 
 /** Documents Link in LongLink Views. */
 export default function LinkPage() {

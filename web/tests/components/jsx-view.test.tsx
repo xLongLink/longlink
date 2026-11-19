@@ -5,7 +5,7 @@ import { it, expect, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { ApiErrorContext } from '@/lib/errors';
 import * as workers from 'node:worker_threads';
-import { JsxView } from '@/components/jsx-view';
+import { JsxView } from '@/views/host/jsx-view';
 import { renderStatic, withMounted } from '../render';
 
 it.each([

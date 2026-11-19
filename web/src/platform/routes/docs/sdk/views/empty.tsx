@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Empty } from '@/components/longlink/display/empty';
-import { Button } from '@/components/longlink/action/button';
+import { Empty, Button } from '@/components/longlink';
 
 /** Documents Empty in LongLink Views. */
 export default function EmptyPage() {
@@ -8,12 +7,6 @@ export default function EmptyPage() {
     return (
         <ViewLayout
             name="Empty"
-            properties={[
-                { name: 'icon', type: 'IconName | URL string' },
-                { name: 'title', type: 'ReactNode' },
-                { name: 'description', type: 'ReactNode' },
-                { name: 'children', type: 'ReactNode' }
-            ]}
             example={{
                 title: 'Project actions',
                 preview: <EmptyExample />,

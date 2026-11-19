@@ -1,9 +1,10 @@
 import { CircleX } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { Button } from '@/components/shadcn/button';
-import { DialogActivityContext } from '@/views/contexts';
+import { DialogActivityContext } from '@/lib/view-capabilities';
 import { Alert, AlertDescription } from '@/components/reui/alert';
-import { use, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -25,30 +26,30 @@ export type ConfirmOptions = {
 /** Owns a compact confirmation; render element once in the calling component's JSX. */
 export function useConfirm() {
     const [options, setOptions] = useState<ConfirmOptions | null>(null);
-    const [isPending, startAction] = useTransition();
+    const { isPending, inFlight: pending, run } = useConfirmAction();
     const [error, setError] = useState<string | null>(null);
-    const pending = useRef(false);
 
     // A running server operation cannot be canceled by dismissing or replacing its dialog.
-    const show = useCallback((next: ConfirmOptions) => {
-        if (pending.current) return;
-        setError(null);
-        setOptions(next);
-    }, []);
+    const show = useCallback(
+        (next: ConfirmOptions) => {
+            if (pending.current) return;
+            setError(null);
+            setOptions(next);
+        },
+        [pending]
+    );
 
     const hide = useCallback(() => {
         if (pending.current) return;
         setOptions(null);
         setError(null);
-    }, []);
+    }, [pending]);
 
     /** Closes only after success and retains failed confirmations for retry. */
     function submit() {
-        if (!options || pending.current) return;
-        pending.current = true;
-        setError(null);
-
-        startAction(async () => {
+        if (!options) return;
+        run(async () => {
+            setError(null);
             // Scoped request failures are already reported by the host.
             try {
                 await options.onAction();
@@ -57,8 +58,6 @@ export function useConfirm() {
                 if (!(failure instanceof ReportedError)) {
                     setError(failure instanceof Error ? failure.message : 'The action failed. Please try again.');
                 }
-            } finally {
-                pending.current = false;
             }
         });
     }

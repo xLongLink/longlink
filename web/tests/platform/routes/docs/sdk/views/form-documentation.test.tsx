@@ -2,9 +2,9 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { Input } from '@/components/shadcn/input';
-import { RequestContext } from '@/views/contexts';
 import { withMounted } from '../../../../../render';
 import userEvent from '@testing-library/user-event';
+import { RequestContext } from '@/lib/view-capabilities';
 import FormDocumentation from '@/platform/routes/docs/sdk/views/form-documentation';
 
 it('keeps edited fields local when a preview form is submitted', async () => {

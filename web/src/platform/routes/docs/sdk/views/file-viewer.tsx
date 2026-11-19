@@ -1,6 +1,6 @@
 import ViewLayout from './view-layout';
-import { RequestContext } from '@/views/contexts';
-import { FileViewer } from '@/components/longlink/display/file-viewer';
+import { FileViewer } from '@/components/longlink';
+import { RequestContext } from '@/lib/view-capabilities';
 
 /** Documents inline file previews through the scoped Solution API. */
 export default function FileViewerPage() {

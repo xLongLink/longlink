@@ -1,6 +1,5 @@
 import MapcnDocumentation from './mapcn-documentation';
-import { Box } from '@/components/longlink/layout/box';
-import { Map as ViewMap, MapControls } from '@/components/longlink';
+import { Box, Map as ViewMap, MapControls } from '@/components/longlink';
 
 /** Documents mapcn zoom, compass, location, and fullscreen controls. */
 export default function MapControlsPage() {

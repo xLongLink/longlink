@@ -1,10 +1,5 @@
-import { Box } from '@/components/longlink/layout/box';
-import { ArcMap } from '@/components/longlink/maps/arcs';
-import { RouteMap } from '@/components/longlink/maps/routes';
-import { StreetMap } from '@/components/longlink/maps/street';
-import { MarkerMap } from '@/components/longlink/maps/markers';
-import { ClusterMap } from '@/components/longlink/maps/clusters';
-import type { MapMarker, MapRoute, MapArc, MapOptions } from '@/components/longlink/maps/types';
+import type { MapMarker, MapRoute, MapArc } from '@/components/longlink';
+import { Box, ArcMap, RouteMap, StreetMap, MarkerMap, ClusterMap } from '@/components/longlink';
 
 export type MapName = 'StreetMap' | 'MarkerMap' | 'RouteMap' | 'ClusterMap' | 'ArcMap';
 
@@ -53,7 +48,7 @@ export function MapExample({
         controls: !isCompact,
         interactive: !isCompact,
         'aria-label': name.replace(/([a-z])([A-Z])/g, '$1 $2')
-    } satisfies MapOptions;
+    } satisfies Parameters<typeof StreetMap>[0];
 
     return (
         <Box width="100%" height={height}>

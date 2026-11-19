@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { Box } from '@/components/longlink/layout/box';
 import { renderStatic, withMounted } from '../../render';
 import { Grid } from '@/components/longlink/layout/grid';
-import { PageContainer } from '@/components/ui/page-container';
+import { PageContainer } from '@/components/layouts/page-container';
 import { Stack, StackItem } from '@/components/longlink/layout/stack';
 
 it('keeps Platform page spacing consistent while preserving sizing overrides', () => {
@@ -16,7 +16,7 @@ it('keeps Platform page spacing consistent while preserving sizing overrides', (
             <PageContainer>
                 <h1>Default page</h1>
             </PageContainer>
-            <PageContainer className="h-full min-h-0 max-w-[720px]" gap={8}>
+            <PageContainer fill wide gap={8}>
                 <h2>Sized page</h2>
             </PageContainer>
         </>
@@ -32,7 +32,7 @@ it('keeps Platform page spacing consistent while preserving sizing overrides', (
     expect(plain.classList.contains('max-w-[1000px]')).toBe(true);
     expect(sized.classList.contains('h-full')).toBe(true);
     expect(sized.classList.contains('min-h-0')).toBe(true);
-    expect(sized.classList.contains('max-w-[720px]')).toBe(true);
+    expect(sized.classList.contains('max-w-none')).toBe(true);
     expect(sized.classList.contains('max-w-[1000px]')).toBe(false);
     expect(sized.style.gap).toBe('calc(var(--spacing) * 8)');
 });

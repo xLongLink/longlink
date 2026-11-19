@@ -1,7 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Grid } from '@/components/longlink/layout/grid';
-import { Text } from '@/components/longlink/display/text';
+import { Box, Grid, Text } from '@/components/longlink';
 
 /** Documents Box sizing and semantic backgrounds in LongLink Views. */
 export default function BoxPage() {

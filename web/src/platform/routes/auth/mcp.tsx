@@ -1,11 +1,11 @@
 import { api } from '@/lib/api';
 import { AuthLayout } from './auth-layout';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Button } from '@/components/shadcn/button';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Button } from '@/components/longlink/action/button';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -81,22 +81,10 @@ export default function McpAuthorization() {
                                     Client names are self-reported. Approve only if you recognize this callback.
                                 </p>
                             </Stack>
-                            <Button
-                                variant="primary"
-                                style={{ width: '100%' }}
-                                type="submit"
-                                name="decision"
-                                value="allow"
-                            >
+                            <Button variant="primary" className="w-full" type="submit" name="decision" value="allow">
                                 Allow access
                             </Button>
-                            <Button
-                                variant="outline"
-                                style={{ width: '100%' }}
-                                type="submit"
-                                name="decision"
-                                value="deny"
-                            >
+                            <Button variant="outline" className="w-full" type="submit" name="decision" value="deny">
                                 Deny
                             </Button>
                         </Stack>

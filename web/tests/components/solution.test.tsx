@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { createRoot } from 'react-dom/client';
 import { Dialog } from '@base-ui/react/dialog';
 import { MessagePort } from 'node:worker_threads';
-import { SolutionPage } from '@/components/ui/solution-page';
+import { SolutionPage } from '@/views/host/solution-page';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';

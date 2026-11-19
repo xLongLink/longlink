@@ -2,7 +2,7 @@ import * as host from '@/views/host';
 import type { ReactNode } from 'react';
 import { FileText } from 'lucide-react';
 import { startCase } from 'es-toolkit/compat';
-import { JsxView } from '@/components/jsx-view';
+import { JsxView } from '@/views/host/jsx-view';
 import { PageError } from '@/components/ui/utils';
 import { manifestSchema } from '@/views/manifest';
 import Platform from '@/components/layouts/platform';
@@ -10,8 +10,8 @@ import type { IconName } from 'lucide-react/dynamic';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Icon } from '@/components/longlink/display/icon';
 import { skipToken, useQuery } from '@tanstack/react-query';
-import { PageContainer } from '@/components/ui/page-container';
 import { matchRoutes, Navigate, useParams } from 'react-router';
+import { PageContainer } from '@/components/layouts/page-container';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
 
 const EMPTY_VIEWS = [] as const;
@@ -158,7 +158,7 @@ export function SolutionPage({
         content = <PageError description="The view could not be loaded." title="Unable to load this view" />;
     } else {
         content = (
-            <div className="flex min-h-[calc(100vh-14rem)] w-full min-w-0 items-center justify-center">
+            <div className="flex min-h-(--page-content-height) w-full min-w-0 items-center justify-center">
                 <Spinner className="motion-reduce:animate-none" />
             </div>
         );
@@ -173,7 +173,7 @@ export function SolutionPage({
             tabs={tabs}
         >
             <title>{formatTitle(isNotFound ? 'Page Not Found' : activeViewTitle)}</title>
-            <PageContainer className={`h-full min-h-0${activeView?.width === 'wide' ? ' max-w-none' : ''}`}>
+            <PageContainer fill wide={activeView?.width === 'wide'}>
                 {content}
             </PageContainer>
         </Platform>

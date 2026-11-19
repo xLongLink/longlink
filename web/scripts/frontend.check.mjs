@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 
@@ -113,7 +113,7 @@ test('published component provenance matches the implementation exposed to Views
                 component.source === 'recharts' || component.source === 'react-hook-form'
                     ? filename?.includes(`/node_modules/${component.source}/`)
                 : component.source === 'custom'
-                   ? filename?.includes('/components/longlink/') || filename?.includes('/components/dialogs/')
+                    ? filename?.includes('/components/longlink/')
                 : filename?.includes(`/components/${component.source}/`),
             `${component.name} is documented as ${component.source}, but resolves to ${filename}.`
         );
@@ -123,15 +123,13 @@ test('published component provenance matches the implementation exposed to Views
 test('SDK declarations support native JSX composition without installed React or Base UI types', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'longlink-frontend-'));
     try {
-        const declarations = await readFile(
-            new URL('../../sdk/longlink/.static/jsx/frontend.d.ts', import.meta.url),
-            'utf8'
-        );
-        const fixture = await readFile(new URL('./frontend.contract.jsx', import.meta.url), 'utf8');
         const declarationPath = path.join(directory, 'frontend.d.ts');
+        const nativePath = path.join(directory, 'frontend.native.d.ts');
         const fixturePath = path.join(directory, 'view.jsx');
-        await writeFile(declarationPath, declarations);
-        await writeFile(fixturePath, fixture);
+        const sdk = new URL('../../sdk/longlink/.static/jsx/', import.meta.url);
+        await copyFile(new URL('frontend.d.ts', sdk), declarationPath);
+        await copyFile(new URL('frontend.native.d.ts', sdk), nativePath);
+        await copyFile(new URL('./frontend.contract.jsx', import.meta.url), fixturePath);
         const program = ts.createProgram([declarationPath, fixturePath], {
             strict: true,
             allowJs: true,
@@ -167,7 +165,7 @@ test('SDK declarations support native JSX composition without installed React or
                 .getSourceFiles()
                 .every(
                     (source) =>
-                        source.fileName === declarationPath || source.fileName === fixturePath || source.hasNoDefaultLib
+                        [declarationPath, nativePath, fixturePath].includes(source.fileName) || source.hasNoDefaultLib
                 )
         );
     } finally {

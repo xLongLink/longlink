@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Box } from '@/components/longlink/layout/box';
-import { Image } from '@/components/longlink/display/image';
+import { Box, Image } from '@/components/longlink';
 import photo from '../../../../../../../sdk/longlink/.static/new/src/assets/skyline.jpg?inline';
 
 /** Documents scoped images and optional framing in LongLink Views. */

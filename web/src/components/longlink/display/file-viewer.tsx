@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RequestContext } from '@/views/contexts';
 import { Spinner } from '@/components/shadcn/spinner';
+import { RequestContext } from '@/lib/view-capabilities';
 import { FilePreview } from '@/components/longlink/display/file-preview';
 
 /** Displays supported attachments inside the View using scoped file requests. */

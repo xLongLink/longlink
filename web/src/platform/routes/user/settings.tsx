@@ -1,18 +1,18 @@
 import type { z } from 'zod';
 import { useState } from 'react';
+import { useLocation } from 'react-router';
 import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
-import { Link, useLocation } from 'react-router';
 import { Input } from '@/components/shadcn/input';
-import { Button } from '@/components/shadcn/button';
 import { UserRound, Building2 } from 'lucide-react';
 import { Separator } from '@/components/shadcn/separator';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
-import { PageContainer } from '@/components/ui/page-container';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { PageContainer } from '@/components/layouts/page-container';
 import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
@@ -54,63 +54,50 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                     <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
             </div>
-            <div className="grid min-w-0 grid-cols-[260px_minmax(0,1fr)] items-start max-[47.999rem]:grid-cols-[minmax(0,1fr)] max-[47.999rem]:gap-6 [&>nav]:min-w-0">
-                <nav aria-label="Settings sections" className="flex min-w-0 flex-col gap-0.5 pe-4">
-                    <Button
-                        nativeButton={false}
-                        render={<Link to={`${location.pathname}${location.search}#account`} />}
-                        variant={section === 'account' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start"
-                        aria-current={section === 'account' ? 'location' : undefined}
-                    >
-                        <UserRound className="size-4" aria-hidden="true" />
-                        Account
-                    </Button>
-                    <Button
-                        nativeButton={false}
-                        render={<Link to={`${location.pathname}${location.search}#organizations`} />}
-                        variant={section === 'organizations' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start"
-                        aria-current={section === 'organizations' ? 'location' : undefined}
-                    >
-                        <Building2 className="size-4" aria-hidden="true" />
-                        Organizations
-                    </Button>
-                </nav>
-                <div className="flex min-w-0 flex-col gap-3">
-                    {section === 'organizations' ? (
-                        <ApiBoundary>
-                            <OrganizationManagement presentation="settings" />
-                        </ApiBoundary>
-                    ) : (
-                        <div className="flex flex-col gap-8">
-                            <div className="flex flex-col gap-4">
-                                <div className="flex min-h-8 flex-col justify-end">
-                                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
-                                        Account
-                                    </h2>
-                                </div>
-                                <Separator />
-                                <Field className="min-w-0">
-                                    <FieldLabel htmlFor="account-name">Username</FieldLabel>
-                                    <Input
-                                        id="account-name"
-                                        value={name}
-                                        required
-                                        aria-required
-                                        readOnly={userUpdate.isPending}
-                                        onChange={(event) => setName(event.target.value)}
-                                        onBlur={saveAccount}
-                                    />
-                                </Field>
+            <SettingsLayout
+                navigation={
+                    <>
+                        <SettingsLink active={section} id="account">
+                            <UserRound className="size-4" aria-hidden="true" />
+                            Account
+                        </SettingsLink>
+                        <SettingsLink active={section} id="organizations">
+                            <Building2 className="size-4" aria-hidden="true" />
+                            Organizations
+                        </SettingsLink>
+                    </>
+                }
+            >
+                {section === 'organizations' ? (
+                    <ApiBoundary>
+                        <OrganizationManagement presentation="settings" />
+                    </ApiBoundary>
+                ) : (
+                    <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex min-h-8 flex-col justify-end">
+                                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                                    Account
+                                </h2>
                             </div>
-                            <AppearanceSettings />
+                            <Separator />
+                            <Field className="min-w-0">
+                                <FieldLabel htmlFor="account-name">Username</FieldLabel>
+                                <Input
+                                    id="account-name"
+                                    value={name}
+                                    required
+                                    aria-required
+                                    readOnly={userUpdate.isPending}
+                                    onChange={(event) => setName(event.target.value)}
+                                    onBlur={saveAccount}
+                                />
+                            </Field>
                         </div>
-                    )}
-                </div>
-            </div>
+                        <AppearanceSettings />
+                    </div>
+                )}
+            </SettingsLayout>
         </div>
     );
 }

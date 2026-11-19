@@ -5,7 +5,7 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
-import CreateSolution from '@/components/dialogs/create-solution';
+import CreateSolution from '@/platform/routes/orgs/dialogs/create-solution';
 
 it('gates creation on inspection and validation, retaining configuration through Back and a failed submission', async () => {
     // Arrange

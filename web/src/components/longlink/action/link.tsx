@@ -3,9 +3,9 @@ import { ArrowUpRight } from 'lucide-react';
 import { ReportedError } from '@/lib/reported';
 import { isCanceledRequest } from '@/lib/errors';
 import { Spinner } from '@/components/shadcn/spinner';
-import { LinkNavigationContext } from '@/views/contexts';
+import { buttonVariants } from '@/components/shadcn/button';
 import type { VariantProps } from 'class-variance-authority';
-import { buttonVariants } from '@/components/longlink/action/button';
+import { LinkNavigationContext } from '@/lib/view-capabilities';
 import { Link as RouterLink, useInRouterContext } from 'react-router';
 import { resolveExternalUrl, resolveScopedNavigationUrl } from '@/lib/url';
 import {

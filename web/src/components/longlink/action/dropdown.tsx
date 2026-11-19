@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentType } from 'react';
 import * as menu from '@/components/shadcn/dropdown-menu';
 
 export {
@@ -7,50 +7,21 @@ export {
     DropdownMenuSub as DropdownSub
 } from '@/components/shadcn/dropdown-menu';
 
-export function DropdownTrigger(props: Omit<ComponentProps<typeof menu.DropdownMenuTrigger>, 'className'>) {
-    return <menu.DropdownMenuTrigger {...props} className={undefined} />;
+function fixedStyles<Props extends object>(Component: ComponentType<Props>) {
+    return function DropdownPart(props: Props) {
+        return <Component {...props} className={undefined} style={undefined} />;
+    };
 }
 
-export function DropdownContent(props: Omit<ComponentProps<typeof menu.DropdownMenuContent>, 'className'>) {
-    return <menu.DropdownMenuContent {...props} className={undefined} />;
-}
-
-export function DropdownGroup(props: Omit<ComponentProps<typeof menu.DropdownMenuGroup>, 'className'>) {
-    return <menu.DropdownMenuGroup {...props} className={undefined} />;
-}
-
-export function DropdownLabel(props: Omit<ComponentProps<typeof menu.DropdownMenuLabel>, 'className'>) {
-    return <menu.DropdownMenuLabel {...props} className={undefined} />;
-}
-
-export function DropdownItem(props: Omit<ComponentProps<typeof menu.DropdownMenuItem>, 'className'>) {
-    return <menu.DropdownMenuItem {...props} className={undefined} />;
-}
-
-export function DropdownCheckboxItem(props: Omit<ComponentProps<typeof menu.DropdownMenuCheckboxItem>, 'className'>) {
-    return <menu.DropdownMenuCheckboxItem {...props} className={undefined} />;
-}
-
-export function DropdownRadioGroup(props: Omit<ComponentProps<typeof menu.DropdownMenuRadioGroup>, 'className'>) {
-    return <menu.DropdownMenuRadioGroup {...props} className={undefined} />;
-}
-
-export function DropdownRadioItem(props: Omit<ComponentProps<typeof menu.DropdownMenuRadioItem>, 'className'>) {
-    return <menu.DropdownMenuRadioItem {...props} className={undefined} />;
-}
-
-export function DropdownSeparator(props: Omit<ComponentProps<typeof menu.DropdownMenuSeparator>, 'className'>) {
-    return <menu.DropdownMenuSeparator {...props} className={undefined} />;
-}
-
-export function DropdownShortcut(props: Omit<ComponentProps<typeof menu.DropdownMenuShortcut>, 'className'>) {
-    return <menu.DropdownMenuShortcut {...props} className={undefined} />;
-}
-
-export function DropdownSubTrigger(props: Omit<ComponentProps<typeof menu.DropdownMenuSubTrigger>, 'className'>) {
-    return <menu.DropdownMenuSubTrigger {...props} className={undefined} />;
-}
-
-export function DropdownSubContent(props: Omit<ComponentProps<typeof menu.DropdownMenuSubContent>, 'className'>) {
-    return <menu.DropdownMenuSubContent {...props} className={undefined} />;
-}
+export const DropdownTrigger = fixedStyles(menu.DropdownMenuTrigger);
+export const DropdownContent = fixedStyles(menu.DropdownMenuContent);
+export const DropdownGroup = fixedStyles(menu.DropdownMenuGroup);
+export const DropdownLabel = fixedStyles(menu.DropdownMenuLabel);
+export const DropdownItem = fixedStyles(menu.DropdownMenuItem);
+export const DropdownCheckboxItem = fixedStyles(menu.DropdownMenuCheckboxItem);
+export const DropdownRadioGroup = fixedStyles(menu.DropdownMenuRadioGroup);
+export const DropdownRadioItem = fixedStyles(menu.DropdownMenuRadioItem);
+export const DropdownSeparator = fixedStyles(menu.DropdownMenuSeparator);
+export const DropdownShortcut = fixedStyles(menu.DropdownMenuShortcut);
+export const DropdownSubTrigger = fixedStyles(menu.DropdownMenuSubTrigger);
+export const DropdownSubContent = fixedStyles(menu.DropdownMenuSubContent);

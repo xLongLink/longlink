@@ -6,8 +6,8 @@ import { withMounted } from '../../render';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
-import { TagForm } from '@/components/dialogs/tag-form';
-import { InviteMember } from '@/components/dialogs/invite-member';
+import { TagForm } from '@/platform/routes/orgs/dialogs/tag-form';
+import { InviteMember } from '@/platform/routes/orgs/dialogs/invite-member';
 import { zOrganizationInvitationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 function Invitations({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {

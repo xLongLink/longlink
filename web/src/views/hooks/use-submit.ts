@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react';
-import { RequestContext } from '@/views/contexts';
 import * as submission from '@/lib/hooks/use-submit';
+import { RequestContext } from '@/lib/view-capabilities';
 import type { ViewData, RequestOptions } from '../protocol';
 
 export type SubmitOptions = {

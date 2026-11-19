@@ -7,8 +7,8 @@ import { ApiProvider } from '@/components/api';
 import { act, Suspense, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import Management from '@/platform/routes/orgs/solution-management';
-import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import type { OrganizationContext } from '@/platform/layouts/organization';
+import { SolutionLogsDialog } from '@/platform/routes/orgs/dialogs/solution-logs';
 
 const solution = {
     id: '00000000-0000-4000-8000-000000000003',

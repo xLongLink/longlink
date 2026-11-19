@@ -2,8 +2,8 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { RequestContext } from '@/views/contexts';
 import { useSubmit } from '@/views/hooks/use-submit';
+import { RequestContext } from '@/lib/view-capabilities';
 import type { SubmitOptions } from '@/views/hooks/use-submit';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(

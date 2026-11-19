@@ -1,6 +1,6 @@
 import { ApiBoundary } from '@/components/api';
 import OrganizationManagement from './organization-management';
-import { PageContainer } from '@/components/ui/page-container';
+import { PageContainer } from '@/components/layouts/page-container';
 
 /** Lists the current user's organizations and creates new organizations. */
 export default function Organizations() {

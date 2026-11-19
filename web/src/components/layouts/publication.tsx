@@ -3,7 +3,7 @@ import { Footer } from '@/components/ui/footer';
 import { Navbar } from '@/components/ui/navbar';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { useId, useRef, type ReactElement, type ReactNode } from 'react';
-import { PublicationNavigation } from '@/components/dialogs/publication-navigation';
+import { PublicationNavigation } from '@/platform/layouts/mobile-publication-navigation';
 
 /** Shares public publication chrome while leaving sidebar content with its caller. */
 export default function Publication({

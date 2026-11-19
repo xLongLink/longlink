@@ -1,8 +1,5 @@
 import ViewLayout from './view-layout';
-import { Icon } from '@/components/longlink/display/icon';
-import { Stack } from '@/components/longlink/layout/stack';
-import { Button } from '@/components/longlink/action/button';
-import { ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/longlink';
+import { Icon, Stack, Button, ButtonGroup, ButtonGroupText, ButtonGroupSeparator } from '@/components/longlink';
 
 /** Documents buttons and grouped button actions in LongLink Views. */
 export default function ButtonsPage() {

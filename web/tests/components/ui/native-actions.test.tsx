@@ -8,7 +8,7 @@ import { renderStatic, withMounted } from '../../render';
 import { Link } from '@/components/longlink/action/link';
 import { Button } from '@/components/longlink/action/button';
 import { ApiErrorContext, createErrorReporter } from '@/lib/errors';
-import { MembershipConfirmation } from '@/components/dialogs/membership-confirmation';
+import { MembershipConfirmation } from '@/platform/components/membership-confirmation';
 
 /** Exposes actual router state after clicks without replacing navigation. */
 function Location() {
@@ -22,8 +22,8 @@ function Location() {
     );
 }
 
-it('ignores class overrides supplied outside the typed LongLink Button API', () => {
-    const overrides = { className: 'hidden bg-red-500' };
+it('ignores styling overrides supplied outside the typed LongLink Button API', () => {
+    const overrides = { className: 'hidden bg-red-500', style: { display: 'none' } };
     const output = renderStatic(
         <Button {...overrides} variant="primary">
             Save
@@ -33,6 +33,7 @@ it('ignores class overrides supplied outside the typed LongLink Button API', () 
 
     expect(button?.classList.contains('hidden')).toBe(false);
     expect(button?.classList.contains('bg-red-500')).toBe(false);
+    expect(button?.style.display).not.toBe('none');
 });
 
 it.each([false, true])(

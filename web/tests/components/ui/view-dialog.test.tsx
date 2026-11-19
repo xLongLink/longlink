@@ -4,9 +4,9 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Input } from '@/components/longlink/form/input';
-import { DialogActivityContext } from '@/views/contexts';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { DialogActivityContext } from '@/lib/view-capabilities';
 
 it.each([false, true])(
     'closes without submitting and submits from the owned footer (fullscreen: %s)',

@@ -28,7 +28,6 @@ import type { Cell, Column, Header, Row } from '@tanstack/react-table';
 import { cn } from 'cn';
 
 import { Button } from '@/components/shadcn/button';
-import { Empty } from '@/components/longlink/display/empty';
 import { Checkbox } from '@/components/shadcn/checkbox';
 import { Spinner } from '@/components/shadcn/spinner';
 import { PlusIcon } from 'lucide-react';
@@ -2198,7 +2197,12 @@ function DataGridTableEmpty() {
         <tr>
             <td colSpan={Math.max(visibleColumnCount, 1)} className="text-muted-foreground text-center text-sm">
                 <div ref={handleMessageRef} data-slot="data-grid-table-empty" className="sticky start-0">
-                    <Empty role="status" title={props.emptyMessage || i18n.labels.empty} />
+                    <div
+                        role="status"
+                        className="mx-auto box-content max-w-sm p-6 text-balance font-medium tracking-tight"
+                    >
+                        {props.emptyMessage || i18n.labels.empty}
+                    </div>
                 </div>
             </td>
         </tr>

@@ -3,22 +3,23 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
+import { SolutionOverview } from './solution-overview';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import CreateSolution from '@/components/dialogs/create-solution';
-import { SolutionTags } from '@/components/dialogs/solution-tags';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import DeploymentReview from '@/components/dialogs/deployment-review';
-import { SolutionMcpDialog } from '@/components/dialogs/solution-mcp';
-import { SolutionLogsDialog } from '@/components/dialogs/solution-logs';
 import type { OrganizationContext } from '@/platform/layouts/organization';
-import { SolutionPermissionsDialog } from '@/components/dialogs/solution-permissions';
-import { Ellipsis, ExternalLink, Logs, Plug, Plus, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
+import CreateSolution from '@/platform/routes/orgs/dialogs/create-solution';
+import { SolutionTags } from '@/platform/routes/orgs/dialogs/solution-tags';
+import DeploymentReview from '@/platform/routes/orgs/dialogs/deployment-review';
+import { SolutionMcpDialog } from '@/platform/routes/orgs/dialogs/solution-mcp';
+import { SolutionLogsDialog } from '@/platform/routes/orgs/dialogs/solution-logs';
+import { Ellipsis, Logs, Plug, RefreshCw, Shield, Tags, Trash } from 'lucide-react';
+import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
+import { SolutionPermissionsDialog } from '@/platform/routes/orgs/dialogs/solution-permissions';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,7 +45,7 @@ export default function SolutionManagement({
     presentation: 'overview' | 'settings';
 }) {
     // Derive Solution actions from the same membership that supplies organization-scoped resources.
-    const { organization, tags, activeTag, role } = membership;
+    const { organization, tags, role } = membership;
     const canMaintain = permissions.canMaintain(role);
     const canAdminister = permissions.canAdminister(role);
 
@@ -54,15 +55,6 @@ export default function SolutionManagement({
 
     // Keep solution refreshes scoped to the section's resource.
     const [solutions, invalidateSolutions] = useApi(`${base}/solutions`, schemas.zOrganizationSolutionSummary.array());
-    const onboarding = presentation === 'overview' && solutions.length === 0;
-
-    const categoryName = activeTag?.name ?? 'Solutions';
-
-    const visibleSolutions =
-        presentation === 'settings' || activeTag?.kind === 'all'
-            ? solutions
-            : solutions.filter((solution) => activeTag && solution.tag_ids?.includes(activeTag.id));
-
     /** Opens creation without replacing an already active creation attempt. */
     function openCreate() {
         setSelected((current) => (current?.kind === 'create' ? current : { kind: 'create' }));
@@ -83,16 +75,10 @@ export default function SolutionManagement({
 
     return (
         <>
-            <Stack
-                gap={presentation === 'settings' ? 0 : onboarding ? 8 : 4}
-                justify={onboarding ? 'center' : undefined}
-                className={
-                    onboarding
-                        ? 'min-h-[calc(100dvh-var(--\\_app-shell-header-height,0px)-var(--platform-toolbar-height,0px)-var(--spacing)*8)]'
-                        : undefined
-                }
-            >
-                {presentation === 'settings' ? (
+            {presentation === 'overview' ? (
+                <SolutionOverview membership={membership} solutions={solutions} openCreate={openCreate} />
+            ) : (
+                <Stack gap={0}>
                     <Stack gap={4}>
                         <Stack
                             gap={0}
@@ -113,99 +99,22 @@ export default function SolutionManagement({
                         </Stack>
                         <Separator />
                     </Stack>
-                ) : solutions.length > 0 ? (
-                    <Stack
-                        gap={0}
-                        direction="horizontal"
-                        justify="between"
-                        align="center"
-                        wrap="wrap"
-                        className="min-h-12"
-                    >
-                        <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
-                        {canMaintain && <Button onClick={openCreate}>New Solution</Button>}
-                    </Stack>
-                ) : null}
-                {presentation === 'overview' && tags.length === 0 ? (
-                    <p className="text-muted-foreground">
-                        No tabs configured. Add tabs in organization settings under General.
-                    </p>
-                ) : onboarding ? (
-                    <Stack gap={6} align="center">
-                        <img
-                            src="/images/solution.png"
-                            alt=""
-                            className="size-20 object-contain invert dark:invert-0"
-                            width={272}
-                            height={279}
-                            decoding="async"
-                        />
-                        <Stack gap={0}>
-                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Solutions</h1>
-                            <p className="text-muted-foreground text-center">Bring your business processes to life</p>
-                        </Stack>
-                        <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Link variant="outline" href="/docs/" target="_blank">
-                                Read the docs
-                                <ExternalLink className="size-4" aria-hidden="true" />
-                            </Link>
-                            {canMaintain && (
-                                <Button onClick={openCreate}>
-                                    <Plus className="size-4" aria-hidden="true" />
-                                    Create solution
-                                </Button>
-                            )}
-                        </Stack>
-                    </Stack>
-                ) : presentation === 'overview' && visibleSolutions.length === 0 ? (
-                    <Stack justify="center" className="min-h-64">
-                        <Empty role="status" icon="boxes" title="No solutions in this tab" />
-                    </Stack>
-                ) : (
                     <Table wrap>
-                        {presentation === 'overview' && (
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Solution</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                        )}
                         <TableBody>
-                            {visibleSolutions.map((row) => (
+                            {solutions.map((row) => (
                                 <TableRow key={row.id}>
                                     <TableCell>
                                         <Stack gap={0} align="start">
-                                            {presentation === 'overview' ? (
-                                                <Stack direction="horizontal" gap={1} align="center">
-                                                    <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
-                                                        {row.name}
-                                                    </Link>
-                                                    {row.status !== 'running' && (
-                                                        <span
-                                                            className={
-                                                                row.status === 'creating'
-                                                                    ? 'text-xs text-info-foreground'
-                                                                    : 'text-xs text-destructive-foreground'
-                                                            }
-                                                        >
-                                                            {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                        </span>
-                                                    )}
-                                                </Stack>
-                                            ) : (
-                                                <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
-                                                    {row.name}
-                                                </Link>
-                                            )}
+                                            <Link href={`/orgs/${organization.id}/solutions/${row.id}`}>
+                                                {row.name}
+                                            </Link>
                                             {row.description && (
                                                 <span className="text-xs text-muted-foreground">{row.description}</span>
                                             )}
                                         </Stack>
                                     </TableCell>
-                                    {presentation === 'settings' && (
-                                        <TableCell align="end">{row.deployed_version || '—'}</TableCell>
-                                    )}
-                                    {presentation === 'settings' && canMaintain && (
+                                    <TableCell align="end">{row.deployed_version || '—'}</TableCell>
+                                    {canMaintain && (
                                         <TableCell align="end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger
@@ -286,24 +195,17 @@ export default function SolutionManagement({
                                     )}
                                 </TableRow>
                             ))}
-                            {visibleSolutions.length === 0 && (
+                            {solutions.length === 0 && (
                                 <TableRow>
-                                    <TableCell
-                                        colSpan={
-                                            1 +
-                                            (presentation === 'settings' ? 1 : 0) +
-                                            (presentation === 'settings' && canMaintain ? 1 : 0)
-                                        }
-                                        align="center"
-                                    >
+                                    <TableCell colSpan={canMaintain ? 3 : 2} align="center">
                                         <Empty role="status" title="No data" />
                                     </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
-                )}
-            </Stack>
+                </Stack>
+            )}
             {selected?.kind === 'create' && (
                 <CreateSolution organizationId={organization.id} onSuccess={onSuccess} onOpenChange={closeSelected} />
             )}

@@ -86,7 +86,8 @@ def test_dev_command_applies_migrations_and_refreshes_declarations_before_servin
             tables = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'task'").fetchall()
         assert revision == ("20260713_0001",)
         assert tables == [("task",)]
-        assert (tmp_path / "frontend.d.ts").read_bytes() == (dev.ROOT / ".static" / "jsx" / "frontend.d.ts").read_bytes()
+        for name in ("frontend.d.ts", "frontend.native.d.ts"):
+            assert (tmp_path / name).read_bytes() == (dev.ROOT / ".static" / "jsx" / name).read_bytes()
         applications.append(application)
 
     monkeypatch.setattr(dev.uvicorn, "run", run)

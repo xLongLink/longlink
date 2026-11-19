@@ -5,7 +5,7 @@ import { ProfileMenu } from '@/components/ui/profile';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import NotFoundLayout from '@/components/layouts/not-found';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { PageContainer } from '@/components/ui/page-container';
+import { PageContainer } from '@/components/layouts/page-container';
 
 /** Renders authorized administration within the shared application layouts. */
 export default function Admin() {

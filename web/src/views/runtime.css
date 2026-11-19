@@ -1,3 +1,5 @@
+@import '../theme.css';
+
 /* Dynamic Views share a precompiled stylesheet; keep standard utilities available without source discovery. */
 @source inline("{sm:,md:,lg:,xl:,2xl:,}{block,inline-block,inline,flex,inline-flex,grid,inline-grid,hidden}");
 @source inline("{sm:,md:,lg:,xl:,2xl:,}{flex-row,flex-col,flex-row-reverse,flex-col-reverse,flex-wrap,flex-nowrap,flex-1,flex-auto,flex-none,grow,grow-0,shrink,shrink-0}");

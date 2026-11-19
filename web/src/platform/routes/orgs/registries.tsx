@@ -7,8 +7,8 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { DeletionDialog } from '@/components/dialogs/deletion';
-import { RegistryForm } from '@/components/dialogs/registry-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { RegistryForm } from '@/platform/routes/orgs/dialogs/registry-form';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 type Registry = z.output<typeof schemas.zRegistryResponse>;

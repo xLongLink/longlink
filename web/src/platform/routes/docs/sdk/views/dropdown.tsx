@@ -1,6 +1,5 @@
 import ViewLayout from './view-layout';
-import { Button } from '@/components/longlink/action/button';
-import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
+import { Button, Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink';
 
 /** Documents native menu composition in LongLink Views. */
 export default function DropdownPage() {
