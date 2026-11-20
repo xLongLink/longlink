@@ -1,24 +1,19 @@
 import { it, expect } from 'vitest';
 import routes from '@/platform/routes';
-import type { RouteConfigEntry } from '@react-router/dev/routes';
-import { componentDocumentation, documentationPaths } from '@/platform/publications';
+import { matchRoutes } from 'react-router';
 
-it('uses the public Buttons route without publishing companion-only components', () => {
+it.each(['buttons', 'table'])('keeps the canonical %s documentation URL routable', (slug) => {
+    // Act
+    const route = matchRoutes(routes, `/docs/sdk/views/${slug}/`)?.at(-1)?.route;
+
     // Assert
-    expect(componentDocumentation.find((component) => component.name === 'Button')?.slug).toBe('buttons');
-    expect(documentationPaths).toContain('/docs/sdk/views/buttons');
-    expect(componentDocumentation.some((component) => component.name === 'CodeBlock')).toBe(false);
-    expect(new Set(documentationPaths).size).toBe(documentationPaths.length);
+    expect(route && 'file' in route ? route.file : undefined).toBe(`./routes/docs/sdk/views/${slug}.tsx`);
 });
 
-it('publishes the data-driven table at the canonical Table documentation route', () => {
-    // Arrange
-    const pages = routes.flatMap<RouteConfigEntry>((route) => ('children' in route ? (route.children ?? []) : []));
+it.each(['code-block', 'data-table'])('does not expose a companion-only %s documentation page', (slug) => {
+    // Act
+    const route = matchRoutes(routes, `/docs/sdk/views/${slug}/`)?.at(-1)?.route;
 
     // Assert
-    expect(documentationPaths).toContain('/docs/sdk/views/table');
-    expect(documentationPaths).not.toContain('/docs/sdk/views/data-table');
-    expect(componentDocumentation.some((component) => component.name === 'DataTable')).toBe(false);
-    expect(pages.some((page) => page?.path === 'docs/sdk/views/table')).toBe(true);
-    expect(pages.some((page) => page?.path === 'docs/sdk/views/data-table')).toBe(false);
+    expect(route && 'id' in route ? route.id : undefined).toBe('docs-not-found');
 });

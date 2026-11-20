@@ -194,6 +194,27 @@ it('displays active text documents as inert text without creating nested frames'
     }
 });
 
+it('keeps PDF bytes out of text rendering and embedded documents despite a text filename', async () => {
+    // Arrange
+    const body = new Blob([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xff])], { type: 'application/pdf' });
+
+    // Act
+    await withMounted(
+        <RequestContext value={{ request: async () => body, download: async () => undefined }}>
+            <FileViewer src="/api/report" title="report.txt" />
+        </RequestContext>,
+        async (output) => {
+            // Assert
+            await vi.waitFor(async () => {
+                await act(async () => {});
+                expect(output.querySelector('[role="status"]')?.textContent).toBe('Unable to display this PDF.');
+            });
+            expect(output.querySelector('pre, iframe, object, embed')).toBeNull();
+            expect(output.textContent).not.toContain('%PDF');
+        }
+    );
+});
+
 it.each(['application/octet-stream', 'image/svg+xml'])(
     'does not embed or interpret unsupported %s files',
     async (type) => {
