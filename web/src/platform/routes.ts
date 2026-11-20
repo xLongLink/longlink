@@ -1,5 +1,7 @@
 import type { RouteConfig } from '@react-router/dev/routes';
-import { brandingPages, componentDocumentation, legalPages } from './publications';
+import { brandingPages, documentationPaths, legalPages } from './publications';
+
+const documentationIndexes = new Set(['/docs', '/docs/sdk', '/docs/sdk/views', '/docs/api']);
 
 export default [
     {
@@ -21,27 +23,15 @@ export default [
     {
         file: './layouts/documentation.tsx',
         children: [
-            { path: 'docs', index: true, file: './routes/docs/index.tsx' },
-            { path: 'docs/sdk', index: true, file: './routes/docs/sdk/index.tsx' },
-            { path: 'docs/sdk/building', file: './routes/docs/sdk/building.tsx' },
-            { path: 'docs/sdk/database', file: './routes/docs/sdk/database.tsx' },
-            { path: 'docs/sdk/environments', file: './routes/docs/sdk/environments.tsx' },
-            { path: 'docs/sdk/routes', file: './routes/docs/sdk/routes.tsx' },
-            { path: 'docs/sdk/storage', file: './routes/docs/sdk/storage.tsx' },
-            { path: 'docs/sdk/testing', file: './routes/docs/sdk/testing.tsx' },
-            { path: 'docs/sdk/views', index: true, file: './routes/docs/sdk/views.tsx' },
+            ...documentationPaths.map((path) => {
+                const index = documentationIndexes.has(path);
 
-            // Keep component routes aligned with the published documentation catalog.
-            ...componentDocumentation.map(({ slug }) => ({
-                path: `docs/sdk/views/${slug}`,
-                file: `./routes/docs/sdk/views/${slug}.tsx`
-            })),
-            { path: 'docs/api', index: true, file: './routes/docs/api/index.tsx' },
-            { path: 'docs/api/organizations', file: './routes/docs/api/organizations.tsx' },
-            { path: 'docs/api/solutions', file: './routes/docs/api/solutions.tsx' },
-            { path: 'docs/api/mcp', file: './routes/docs/api/mcp.tsx' },
-            { path: 'docs/api/self-hosted/platform', file: './routes/docs/api/self-hosted/platform.tsx' },
-            { path: 'docs/api/self-hosted/compute', file: './routes/docs/api/self-hosted/compute.tsx' },
+                return {
+                    path: path.slice(1),
+                    ...(index ? { index: true as const } : {}),
+                    file: `./routes${path}${index && path !== '/docs/sdk/views' ? '/index' : ''}.tsx`
+                };
+            }),
             { path: 'docs/*', file: '../components/layouts/not-found.tsx', id: 'docs-not-found' }
         ]
     },

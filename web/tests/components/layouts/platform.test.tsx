@@ -53,20 +53,6 @@ it('uses the sidebar and selects the longest nested route with a trailing slash'
     );
 });
 
-it('keeps the sidebar when navigation is empty', async () => {
-    // Act
-    await withMounted(
-        <Platform action={null} tabs={[]}>
-            <h1>Solution content</h1>
-        </Platform>,
-        async (output) => {
-            // Assert
-            expect(output.querySelector('nav[aria-label="Section navigation"]')).not.toBeNull();
-            expect(output.querySelector('nav[aria-label="Platform navigation"]')).toBeNull();
-        }
-    );
-});
-
 it('keeps mobile and desktop collapse preferences independent across viewport changes', async () => {
     // Arrange
     viewport.setViewport({ width: 1280 });

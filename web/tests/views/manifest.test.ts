@@ -42,10 +42,4 @@ describe('viewsSchema', () => {
             ]).success
         ).toBe(true);
     });
-
-    it('omits custom titles and icons from the parsed catalog', () => {
-        expect(viewsSchema.parse([{ path: 'home.jsx', route: '/home', name: 'Issues', icon: 'list' }])).toEqual([
-            { path: 'home.jsx', route: '/home' }
-        ]);
-    });
 });

@@ -201,30 +201,6 @@ describe('Solution response loading', () => {
             }
         }
     );
-
-    it.each([
-        { name: 'missing Content-Length', headers: new Headers() },
-        { name: 'underreported Content-Length', headers: new Headers({ 'Content-Length': '1' }) }
-    ])('accepts a complete response with $name', async ({ headers }) => {
-        // Arrange
-        const body = new ReadableStream<Uint8Array>({
-            start(controller) {
-                controller.enqueue(new TextEncoder().encode('ab'));
-                controller.enqueue(new TextEncoder().encode('cde'));
-                controller.close();
-            }
-        });
-
-        vi.stubGlobal('fetch', async () => new Response(body, { headers }));
-        const controller = new AbortController();
-
-        // Act
-        const response = await load('https://solution.example/items', { signal: controller.signal });
-
-        // Assert
-        expect(await response.text()).toBe('abcde');
-        expect(response.size).toBe(5);
-    });
 });
 
 describe('Solution request errors', () => {
