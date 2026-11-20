@@ -12,10 +12,12 @@ export default [
     {
         file: './layouts/explore.tsx',
         children: [
-            { path: 'explore', file: './routes/explore.tsx', id: 'explore-solutions' },
+            { path: 'explore', file: './routes/explore-solutions.tsx', id: 'explore' },
+            { path: 'explore/solutions', file: './routes/explore-solutions.tsx' },
             { path: 'explore/catalog', file: './routes/explore.tsx', id: 'explore-catalog' }
         ]
     },
+    { path: 'explore/solutions/:solution/*', file: './routes/public-solution.tsx' },
     {
         file: './layouts/documentation.tsx',
         children: [

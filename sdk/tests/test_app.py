@@ -40,6 +40,7 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
 
         # Observe actual engine shutdown after a request initializes the runtime database.
         event.listen(value.database.get_bind(), "engine_disposed", disposed.append)
+        assert value.user is not None
         return value.user.name
 
     # Act
@@ -384,6 +385,7 @@ def test_mcp_discovers_late_routes_and_invokes_with_context(solution_source: Pat
     async def current_user(value: Context) -> str:
         """Return the contextual user name."""
 
+        assert value.user is not None
         return value.user.name
 
     @app.post("/views.json", response_model=int, operation_id="business_manifest_action")

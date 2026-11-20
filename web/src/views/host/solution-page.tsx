@@ -10,6 +10,7 @@ import type { IconName } from 'lucide-react/dynamic';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Icon } from '@/components/longlink/display/icon';
 import { skipToken, useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/longlink/action/button';
 import { matchRoutes, Navigate, useParams } from 'react-router';
 import { PageContainer } from '@/components/layouts/page-container';
 import { RELATIVE_URL_ORIGIN, resolveNavigationUrl, resolveRequestUrl } from '@/lib/url';
@@ -49,7 +50,11 @@ export function SolutionPage({
     const requestBaseLocation = new URL('.', viewsLocation);
     const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
 
-    const { data: manifest, error: viewsError } = useQuery({
+    const {
+        data: manifest,
+        error: viewsError,
+        refetch: refetchManifest
+    } = useQuery({
         queryKey: ['api', viewsUrl],
         queryFn: async ({ signal }) => {
             const body = await host.load(viewsUrl, { signal });
@@ -84,7 +89,11 @@ export function SolutionPage({
 
     const isNotFound = manifest !== undefined && routePath.length > 0 && match == null;
 
-    const { data: activeViewSource, error: activeViewError } = useQuery({
+    const {
+        data: activeViewSource,
+        error: activeViewError,
+        refetch: refetchView
+    } = useQuery({
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
         queryFn: activeView
             ? async ({ signal }) => {
@@ -122,10 +131,11 @@ export function SolutionPage({
         );
     } else if (viewsError) {
         content = (
-            <PageError
-                description="The solution definition could not be loaded."
-                title="Unable to load this solution"
-            />
+            <PageError description="The solution definition could not be loaded." title="Unable to load this solution">
+                <Button type="button" variant="outline" onClick={() => void refetchManifest()}>
+                    Retry
+                </Button>
+            </PageError>
         );
     } else if (activeViewSource !== undefined && activeView && match && manifest) {
         content = (
@@ -155,7 +165,13 @@ export function SolutionPage({
             />
         );
     } else if (activeViewError) {
-        content = <PageError description="The view could not be loaded." title="Unable to load this view" />;
+        content = (
+            <PageError description="The view could not be loaded." title="Unable to load this view">
+                <Button type="button" variant="outline" onClick={() => void refetchView()}>
+                    Retry
+                </Button>
+            </PageError>
+        );
     } else {
         content = (
             <div className="flex min-h-(--page-content-height) w-full min-w-0 items-center justify-center">

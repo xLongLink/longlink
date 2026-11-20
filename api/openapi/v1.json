@@ -1040,6 +1040,73 @@
         }
       }
     },
+    "/api/v1/solutions/{solution_id}/visibility": {
+      "patch": {
+        "summary": "Update Visibility",
+        "description": "Publish or unpublish a Solution with current maintenance authority.",
+        "operationId": "update_visibility_api_v1_solutions__solution_id__visibility_patch",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolutionVisibility"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolutionVisibility"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/solutions/{solution_id}/update": {
       "get": {
         "summary": "Check Update",
@@ -1502,6 +1569,101 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/solutions": {
+      "get": {
+        "summary": "List Solutions",
+        "description": "List explicitly published Solutions without requiring an account.",
+        "operationId": "list_solutions_api_v1_public_solutions_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PublicSolution_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/solutions/{solution_id}": {
+      "get": {
+        "summary": "Get Solution",
+        "description": "Return public display metadata, never management or infrastructure fields.",
+        "operationId": "get_solution_api_v1_public_solutions__solution_id__get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSolution"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5226,6 +5388,11 @@
             "type": "string",
             "title": "Name"
           },
+          "public": {
+            "type": "boolean",
+            "title": "Public",
+            "default": false
+          },
           "description": {
             "anyOf": [
               {
@@ -5508,6 +5675,28 @@
         ],
         "title": "Page[OrganizationIdentity]"
       },
+      "Page_PublicSolution_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicSolution"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[PublicSolution]"
+      },
       "Page_SolutionResponse_": {
         "properties": {
           "items": {
@@ -5732,6 +5921,83 @@
         ],
         "title": "PermissionSettings",
         "description": "Expose discovered defaults without Solution secrets."
+      },
+      "PublicOrganization": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PublicOrganization",
+        "description": "Expose only a public Solution's owning Organization identity."
+      },
+      "PublicSolution": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "public": {
+            "type": "boolean",
+            "title": "Public"
+          },
+          "deployed_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deployed Version"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/PublicOrganization"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "status",
+          "public",
+          "deployed_version",
+          "organization"
+        ],
+        "title": "PublicSolution",
+        "description": "Expose public display metadata without deployment configuration or credentials."
       },
       "RegisteredClient": {
         "properties": {
@@ -6073,6 +6339,11 @@
             "type": "string",
             "title": "Name"
           },
+          "public": {
+            "type": "boolean",
+            "title": "Public",
+            "default": false
+          },
           "description": {
             "anyOf": [
               {
@@ -6227,6 +6498,20 @@
         ],
         "title": "SolutionUpdateCheck",
         "description": "Expose a candidate and configured names, never environment values."
+      },
+      "SolutionVisibility": {
+        "properties": {
+          "public": {
+            "type": "boolean",
+            "title": "Public"
+          }
+        },
+        "type": "object",
+        "required": [
+          "public"
+        ],
+        "title": "SolutionVisibility",
+        "description": "Validate a maintainer's publication decision."
       },
       "Status": {
         "type": "string",

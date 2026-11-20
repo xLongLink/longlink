@@ -289,6 +289,7 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
             load_only(
                 attr(Solution.id),
                 attr(Solution.name),
+                attr(Solution.public),
                 attr(Solution.description),
                 attr(Solution.status),
                 attr(Solution.desired_revision_id),

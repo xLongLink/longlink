@@ -122,12 +122,21 @@ function isCurrentUserQuery({ queryKey }: { queryKey: readonly unknown[] }) {
     return queryKey[0] === currentUserKey[0] && queryKey[1] === currentUserKey[1];
 }
 
-/** Cancels and removes cached API data from the previous identity. */
+/** Identifies anonymous Solution reads, including manifest and JSX source queries. */
+export function isPublicSolutionQuery({ queryKey }: { queryKey: readonly unknown[] }): boolean {
+    const path = queryKey[1] === 'solution-view' ? queryKey[2] : queryKey[1];
+
+    return queryKey[0] === 'api' && typeof path === 'string' && /^\/api\/v1\/public\/solutions(?:[/?]|$)/.test(path);
+}
+
+/** Cancels and removes session-bound API data from the previous identity. */
 export async function clearSessionQueries(client: QueryClient, preserveCurrentUser = false): Promise<void> {
     const identity = client.getQueryData(currentUserKey);
 
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) =>
-        query.queryKey[0] === 'api' && (!preserveCurrentUser || !isCurrentUserQuery(query));
+        query.queryKey[0] === 'api' &&
+        !isPublicSolutionQuery(query) &&
+        (!preserveCurrentUser || !isCurrentUserQuery(query));
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });

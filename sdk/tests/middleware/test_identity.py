@@ -97,6 +97,13 @@ HTTP_IDENTITY_CASES = [
     pytest.param({"x-longlink-identity": "invalid-token"}, None, 401, {"detail": "Authentication required"}, id="malformed"),
     pytest.param({}, "wrong-identity-secret-01234567890", 401, {"detail": "Authentication required"}, id="wrong-key"),
     pytest.param({}, IDENTITY_SECRET, 200, {"authenticated": True}, id="valid"),
+    pytest.param(
+        {"x-longlink-identity": identity.create_identity_token(None, IDENTITY_SECRET, permissions.Access(catalog="a" * 64, endpoints=[]))},
+        None,
+        200,
+        {"authenticated": False},
+        id="guest",
+    ),
 ]
 
 
@@ -118,6 +125,11 @@ def test_production_context_requires_signed_http_identity(
     # Assert
     assert response.status_code == status
     assert response.json() == payload
+
+    # A verified guest remains anonymous and cannot enter mutation or MCP transports.
+    if status == 200 and payload == {"authenticated": False}:
+        assert production_client.post("/views.json", headers=headers).status_code == 403
+        assert production_client.get("/mcp", headers=headers).status_code == 403
 
 
 def test_production_context_rejects_signed_identity_without_endpoint_permissions(production_client: TestClient) -> None:

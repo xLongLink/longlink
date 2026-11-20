@@ -210,6 +210,10 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         raise RuntimeError("Could not identify the newly created development Solution")
     created = matches[0]
 
+    # Publish the illustrative sample through the same maintainer boundary as the application.
+    response = await client.patch(f"/api/v1/solutions/{created.id}/visibility", json={"public": True})
+    response.raise_for_status()
+
     # Do not report seed success while the new schema or View runtime is still being provisioned.
     async with asyncio.timeout(300):
         while True:
@@ -234,7 +238,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                     break
             await asyncio.sleep(1)
 
-    print(f"Sample ready: {env.PUBLIC_URL}/orgs/{organization.id}/solutions/{created.id}/projects")
+    print(f"Sample ready: {env.PUBLIC_URL}/explore/solutions/{created.id}")
 
 
 async def create_invited_organization() -> None:

@@ -11,8 +11,32 @@ it('automatically cancels and removes prior-account API queries when a new ident
     const runtime = createQueryRuntime(() => undefined, true);
     const identityKey = ['api', '/api/v1/me'];
     const privateKey = ['api', '/api/v1/organizations'];
-    const pendingKey = ['api', '/api/v1/invitations'];
+    const pendingKey = ['api', 'solution-view', '/api/v1/solutions/private-id/proxy/views.json', 'index.jsx'];
     const runtimeKey = ['view-runtime', 'version'];
+    const publicKeys = [
+        apiQueryOptions('/api/v1/public/solutions?page=1', z.string().array()).queryKey,
+        ['api', '/api/v1/public/solutions/public-id'],
+        ['api', '/api/v1/public/solutions/public-id/proxy/views.json'],
+        ['api', 'solution-view', '/api/v1/public/solutions/public-id/proxy/views.json', 'index.jsx']
+    ];
+    const publicSignals: AbortSignal[] = [];
+    let releasePublic: ((data: string[]) => void) | undefined;
+    const publicResponse = new Promise<string[]>((resolve) => {
+        releasePublic = resolve;
+    });
+    const publicObservers = publicKeys.map(
+        (queryKey) =>
+            new QueryObserver(runtime.client, {
+                queryKey,
+                retry: false,
+                queryFn: ({ signal }) => {
+                    publicSignals.push(signal);
+
+                    return publicResponse;
+                }
+            })
+    );
+    const unsubscribePublic = publicObservers.map((observer) => observer.subscribe(() => undefined));
     let pendingSignal: AbortSignal | undefined;
     let release: ((data: string[]) => void) | undefined;
 
@@ -52,7 +76,18 @@ it('automatically cancels and removes prior-account API queries when a new ident
         expect(isCancelledError(await pending)).toBe(true);
         expect(runtime.client.getQueryData(identityKey)).toEqual({ id: 'account-b' });
         expect(runtime.client.getQueryData(runtimeKey)).toBe('runtime');
+        expect(publicSignals.every((signal) => !signal.aborted)).toBe(true);
+        expect(publicObservers.every((observer) => observer.getCurrentResult().fetchStatus === 'fetching')).toBe(true);
+        releasePublic?.(['public-data']);
+        await vi.waitFor(() =>
+            expect(publicObservers.map((observer) => observer.getCurrentResult().data)).toEqual(
+                publicKeys.map(() => ['public-data'])
+            )
+        );
     } finally {
+        unsubscribePublic.forEach((unsubscribe) => unsubscribe());
+        publicObservers.forEach((observer) => observer.destroy());
+        releasePublic?.(['public-data']);
         runtime.client.clear();
         release?.(['late-private-a']);
         await pending;
@@ -65,10 +100,27 @@ it('revalidates resource 401s without losing a valid session, but clears private
     const runtime = createQueryRuntime((message) => messages.push(message), true);
     const identityOptions = apiQueryOptions('/api/v1/me', z.object({ id: z.string() }).nullable());
     const privateKey = ['api', '/api/v1/organizations'];
+    const publicKey = apiQueryOptions('/api/v1/public/solutions', z.string().array()).queryKey;
+    let publicSignal: AbortSignal | undefined;
+    let releasePublic: ((data: string[]) => void) | undefined;
+    const publicResponse = new Promise<string[]>((resolve) => {
+        releasePublic = resolve;
+    });
+    const publicObserver = new QueryObserver(runtime.client, {
+        queryKey: publicKey,
+        retry: false,
+        queryFn: ({ signal }) => {
+            publicSignal = signal;
+
+            return publicResponse;
+        }
+    });
+    const unsubscribePublic = publicObserver.subscribe(() => undefined);
 
     const transport = vi
         .spyOn(globalThis, 'fetch')
         .mockRejectedValue(new Error('Unexpected session request'))
+        .mockResolvedValueOnce(Response.json({ detail: 'Anonymous' }, { status: 401 }))
         .mockResolvedValueOnce(Response.json({ id: 'account-a' }))
         .mockResolvedValueOnce(Response.json({ detail: 'Resource credentials expired' }, { status: 401 }))
         .mockResolvedValueOnce(Response.json({ id: 'account-a' }))
@@ -79,6 +131,10 @@ it('revalidates resource 401s without losing a valid session, but clears private
 
     try {
         unsubscribe = observer.subscribe(() => undefined);
+        await vi.waitFor(() => expect(observer.getCurrentResult().data).toBeNull());
+        expect(publicSignal?.aborted).toBe(false);
+        expect(publicObserver.getCurrentResult().fetchStatus).toBe('fetching');
+        await observer.refetch();
         await vi.waitFor(() => expect(observer.getCurrentResult().isSuccess).toBe(true));
         runtime.client.setQueryData(privateKey, ['private-a']);
 
@@ -89,11 +145,12 @@ it('revalidates resource 401s without losing a valid session, but clears private
         await expect(resource).rejects.toBeInstanceOf(ApiError);
         await expect(resource).rejects.toMatchObject({ status: 401, message: 'Resource credentials expired' });
         await vi.waitFor(() => {
-            expect(transport).toHaveBeenCalledTimes(3);
+            expect(transport).toHaveBeenCalledTimes(4);
             expect(observer.getCurrentResult().fetchStatus).toBe('idle');
         });
         expect(observer.getCurrentResult().data).toEqual({ id: 'account-a' });
         expect(transport.mock.calls.map(([input]) => (input instanceof Request ? input.url : String(input)))).toEqual([
+            'http://localhost/api/v1/me',
             'http://localhost/api/v1/me',
             'http://localhost/api/v1/protected',
             'http://localhost/api/v1/me'
@@ -111,9 +168,16 @@ it('revalidates resource 401s without losing a valid session, but clears private
             expect(observer.getCurrentResult().data).toBeNull();
             expect(runtime.client.getQueryState(privateKey)).toBeUndefined();
         });
-        expect(transport).toHaveBeenCalledTimes(4);
+        expect(transport).toHaveBeenCalledTimes(5);
         expect(messages).toEqual(['Resource credentials expired']);
+        expect(publicSignal?.aborted).toBe(false);
+        expect(publicObserver.getCurrentResult().fetchStatus).toBe('fetching');
+        releasePublic?.(['public-data']);
+        await vi.waitFor(() => expect(publicObserver.getCurrentResult().data).toEqual(['public-data']));
     } finally {
+        unsubscribePublic();
+        publicObserver.destroy();
+        releasePublic?.(['public-data']);
         unsubscribe?.();
         observer.destroy();
         runtime.client.clear();

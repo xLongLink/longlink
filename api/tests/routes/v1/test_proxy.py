@@ -14,7 +14,7 @@ from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Sequence, Awaitable, AsyncIterator, AsyncGenerator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
-from longlink.permissions import Catalog
+from longlink.permissions import Catalog, Endpoint
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -137,10 +137,9 @@ async def test_solution_proxy_forwards_safe_content(
         captured["content"] = await request.aread()
         captured["content_type"] = request.headers.get("content-type")
         captured["has_content_type"] = "content-type" in request.headers
-        captured["user_id"] = str(
-            # Inspect the signed identity actually delivered to the gateway.
-            identity.identity_token_data(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")[0].id
-        )
+        principal, access = identity.identity_token_data(request.headers["x-longlink-identity"], "test-identity-secret-01234567890")
+        captured["user_id"] = str(principal.id) if principal is not None else None
+        captured["access"] = access
 
         def close() -> None:
             """Record upstream response cleanup."""
@@ -178,6 +177,31 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("user_id") == str(user.id)
     assert captured["content_type"] == request_content_type
     assert captured["has_content_type"] is (request_content_type is not None)
+
+    # A logged-in maintainer using the public viewer still receives only anonymous safe read grants.
+    catalog = Catalog(
+        endpoints=[
+            Endpoint(key="GET /anything", path="/anything", method="GET", roles=["read"]),
+            Endpoint(key="GET /private", path="/private", method="GET", roles=["write"]),
+            Endpoint(key="POST /anything", path="/anything", method="POST", roles=["read"]),
+        ]
+    )
+    async with session_scope() as session:
+        record = await session.get(PermissionCatalog, solution.deployed_revision_id)
+        assert record is not None
+        record.catalog = catalog.model_dump(mode="json")
+        await session.commit()
+    assert (await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/anything")).status_code == 404
+    published = await client.patch(f"/api/v1/solutions/{solution.id}/visibility", json={"public": True})
+    assert published.status_code == 200
+    response = await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/anything")
+    assert response.status_code == upstream_status
+    assert captured["user_id"] is None
+    assert captured["access"] == catalog.access("read").model_copy(update={"endpoints": [0]})
+    assert (await client.post(f"/api/v1/public/solutions/{solution.id}/proxy/anything")).status_code == 403
+    assert (await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/mcp")).status_code == 403
+    await client.patch(f"/api/v1/solutions/{solution.id}/visibility", json={"public": False})
+    assert (await client.get(f"/api/v1/public/solutions/{solution.id}/proxy/anything")).status_code == 404
 
 
 async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(

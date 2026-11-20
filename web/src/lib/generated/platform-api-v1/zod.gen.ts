@@ -483,6 +483,16 @@ export const zPermissionSettings = z.object({
 });
 
 /**
+ * PublicOrganization
+ *
+ * Expose only a public Solution's owning Organization identity.
+ */
+export const zPublicOrganization = z.object({
+    id: z.uuid(),
+    name: z.string()
+});
+
+/**
  * RegisteredClient
  *
  * Return public registration metadata, never a confidential client credential.
@@ -602,6 +612,15 @@ export const zSolutionUpdateCheck = z.object({
 });
 
 /**
+ * SolutionVisibility
+ *
+ * Validate a maintainer's publication decision.
+ */
+export const zSolutionVisibility = z.object({
+    public: z.boolean()
+});
+
+/**
  * Status
  *
  * Lifecycle states shared by Platform-managed resources.
@@ -631,6 +650,7 @@ export const zOrganizationIdentity = z.object({
 export const zOrganizationSolutionSummary = z.object({
     id: z.uuid(),
     name: z.string(),
+    public: z.boolean().optional().default(false),
     description: z.string().nullish(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,
@@ -648,6 +668,29 @@ export const zPageOrganizationIdentity = z.object({
 });
 
 /**
+ * PublicSolution
+ *
+ * Expose public display metadata without deployment configuration or credentials.
+ */
+export const zPublicSolution = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    description: z.string().nullable(),
+    status: zStatus,
+    public: z.boolean(),
+    deployed_version: z.string().nullable(),
+    organization: zPublicOrganization
+});
+
+/**
+ * Page[PublicSolution]
+ */
+export const zPagePublicSolution = z.object({
+    items: z.array(zPublicSolution),
+    total: z.int().gte(0)
+});
+
+/**
  * SolutionResponse
  *
  * Represent one solution in API responses.
@@ -655,6 +698,7 @@ export const zPageOrganizationIdentity = z.object({
 export const zSolutionResponse = z.object({
     id: z.uuid(),
     name: z.string(),
+    public: z.boolean().optional().default(false),
     description: z.string().nullable(),
     tag_ids: z.array(z.uuid()).optional(),
     status: zStatus,

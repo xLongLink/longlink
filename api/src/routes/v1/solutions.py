@@ -5,11 +5,25 @@ from src import auth
 from uuid import UUID
 from fastapi import Response, APIRouter, HTTPException
 from src.kubernetes import solutions as solution_resources
-from src.models.solutions import SolutionPatch, SolutionUpdateCheck
+from src.models.solutions import SolutionPatch, SolutionVisibility, SolutionUpdateCheck
 from src.database.services import mcp, solutions
 from src.kubernetes.client import Kubernetes
 
 router = APIRouter()
+
+
+@router.patch("/solutions/{solution_id}/visibility", response_model=SolutionVisibility)
+async def update_visibility(
+    solution_id: UUID, payload: SolutionVisibility, session: auth.Session, user: auth.CurrentUser
+) -> dict[str, bool]:
+    """Publish or unpublish a Solution with current maintenance authority."""
+
+    # Serialize visibility changes with membership revocation and Solution lifecycle commands.
+    solution = await solutions.access(session, solution_id, user.id)
+    solution.public = payload.public
+    solution.updated_id = user.id
+    await session.commit()
+    return {"public": payload.public}
 
 
 @router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)

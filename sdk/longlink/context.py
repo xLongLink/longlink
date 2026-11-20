@@ -12,7 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class _ContextData:
     """Hold Platform data and services for one Solution request."""
 
-    user: User
+    user: User | None
     storage: Storage
     database: AsyncSession
 
@@ -20,11 +20,14 @@ class _ContextData:
 async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
     """Yield the request context for a FastAPI dependency."""
 
-    # Resolve a real user record before exposing request services to a Solution route.
+    # Signed guests receive request services without a synthetic persisted user.
     async with request.app.state.longlink.database.session() as database:
         user_id = audit.current_actor.get()
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Authentication required")
+            if request.scope.get("longlink.access") is None:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            yield _ContextData(user=None, storage=request.app.state.longlink.storage, database=database)
+            return
 
         # Signed identity must resolve to the request database's local user record.
         user = await database.get(User, user_id)
