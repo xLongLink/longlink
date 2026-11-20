@@ -76,7 +76,6 @@ VIEWS:
 - USE the exposed LongLink View components for layout and presentation. Use native HTML for semantics such as forms. Keep custom components for functionality unavailable through the exposed API.
 - AVOID duplicated derived state and effects that do not synchronize with external systems.
 - DON'T add standalone explanatory, onboarding, or empty-state sentences around the primary content.
-- DON'T use browsers or browser automation to inspect or verify changes. DO inspect source and run code-level checks instead.
 - DON'T add decorative containers, redundant labels, or explanatory text that repeats what the interface already makes clear.
 - FOLLOW a prop-driven component philosophy: configure layout, alignment, spacing, and styling through component props rather than utility classes or custom CSS. Exposed components do not accept `className` or `style`; preserve their default styling.
 
