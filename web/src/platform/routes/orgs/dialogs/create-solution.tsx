@@ -7,8 +7,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
-import { useEffect, useId, useRef, useState, useTransition } from 'react';
 
 /** Owns image inspection and configuration for one creation attempt. */
 export default function CreateSolution({
@@ -20,7 +20,6 @@ export default function CreateSolution({
     onOpenChange: (open: boolean) => void;
     onSuccess: () => void | Promise<void>;
 }) {
-    const formId = useId();
     const [stage, setStage] = useState<'image' | 'configure'>('image');
     const [inspection, setInspection] = useState<{
         source: string;
@@ -111,37 +110,9 @@ export default function CreateSolution({
     const pending = inspecting || form.formState.isSubmitting;
 
     return (
-        <Dialog
-            open
-            onOpenChange={onOpenChange}
-            title="Create solution"
-            footer={
-                <>
-                    <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    {stage === 'configure' && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() => {
-                                form.clearErrors('root');
-                                setStage('image');
-                            }}
-                        >
-                            Back
-                        </Button>
-                    )}
-                    <Button type="submit" form={formId} disabled={pending}>
-                        {stage === 'image' ? 'Inspect' : 'Create'}
-                    </Button>
-                </>
-            }
-        >
+        <Dialog open onOpenChange={onOpenChange} title="Create solution" showHeader={false} bodyPadding={false}>
             <form
-                id={formId}
-                className="flex min-h-0 flex-col gap-4"
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={(event) => {
                     if (stage === 'image') {
                         event.preventDefault();
@@ -155,19 +126,23 @@ export default function CreateSolution({
                 noValidate
                 aria-busy={pending}
             >
-                <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4 border-0 p-6">
+                    <h2 className="text-center text-xl font-semibold">
+                        {stage === 'image' ? 'Create solution' : 'Configure solution'}
+                    </h2>
                     {stage === 'image' ? (
                         <>
-                            <img
-                                src="/images/solution.png"
-                                alt=""
-                                width={272}
-                                height={279}
-                                decoding="async"
-                                className="size-20 self-center object-contain invert dark:invert-0"
-                            />
                             <Field data-invalid={Boolean(form.formState.errors.image)}>
-                                <FieldLabel htmlFor="solution-image">Image</FieldLabel>
+                                <div className="flex items-center justify-between gap-2">
+                                    <FieldLabel htmlFor="solution-image">Image</FieldLabel>
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+                                        onClick={() => form.setValue('image', 'ghcr.io/xlonglink/sample:latest')}
+                                    >
+                                        Use sample image
+                                    </button>
+                                </div>
                                 <Input
                                     {...form.register('image')}
                                     id="solution-image"
@@ -177,24 +152,9 @@ export default function CreateSolution({
                                 />
                                 <FieldError errors={[form.formState.errors.image]} />
                             </Field>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => form.setValue('image', 'ghcr.io/xlonglink/sample:latest')}
-                            >
-                                Use sample image
-                            </Button>
                         </>
                     ) : (
                         <>
-                            <img
-                                src="/images/nametag.png"
-                                alt=""
-                                width={1448}
-                                height={1086}
-                                decoding="async"
-                                className="size-20 self-center object-contain invert dark:invert-0"
-                            />
                             {(['name', 'description'] as const).map((name) => (
                                 <Field key={name} data-invalid={Boolean(form.formState.errors[name])}>
                                     <FieldLabel htmlFor={`solution-${name}`}>
@@ -209,16 +169,6 @@ export default function CreateSolution({
                                     <FieldError errors={[form.formState.errors[name]]} />
                                 </Field>
                             ))}
-                            {!!inspection?.metadata.environments?.length && (
-                                <img
-                                    src="/images/lock.png"
-                                    alt=""
-                                    width={1327}
-                                    height={1186}
-                                    decoding="async"
-                                    className="size-20 self-center object-contain invert dark:invert-0"
-                                />
-                            )}
                             {(inspection?.metadata.environments ?? []).map((environment) => (
                                 <Controller
                                     key={environment.name}
@@ -243,8 +193,41 @@ export default function CreateSolution({
                             ))}
                         </>
                     )}
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <div className="flex items-center justify-between gap-2">
+                        <Button type="button" variant="link" disabled={pending} onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <div className="flex items-center gap-2">
+                            {stage === 'configure' && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={pending}
+                                    onClick={() => {
+                                        form.clearErrors('root');
+                                        setStage('image');
+                                    }}
+                                >
+                                    Back
+                                </Button>
+                            )}
+                            <Button type="submit" disabled={pending}>
+                                {stage === 'image' ? 'Inspect' : 'Create'}
+                            </Button>
+                        </div>
+                    </div>
                 </fieldset>
-                <FieldError errors={[form.formState.errors.root]} />
+                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    <img
+                        src={stage === 'image' ? '/images/solution.png' : '/images/nametag.png'}
+                        alt=""
+                        width={stage === 'image' ? 272 : 1448}
+                        height={stage === 'image' ? 279 : 1086}
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </div>
             </form>
         </Dialog>
     );
