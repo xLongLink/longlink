@@ -19,6 +19,7 @@ from src.database.session import session_scope
 from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
@@ -457,9 +458,13 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
         assert revision.envs == {"API_KEY": "runtime-secret"}
 
 
-@pytest.mark.parametrize("identity", [None, "persisted-secret"], ids=["missing-identity", "running-existing-identity"])
+@pytest.mark.parametrize(
+    ("identity", "storage_certificate"),
+    [(None, None), ("persisted-secret", ""), ("persisted-secret", "current-storage-ca")],
+    ids=["missing-identity", "empty-storage-certificate", "current-storage-certificate"],
+)
 async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
-    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, identity: str | None
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, identity: str | None, storage_certificate: str | None
 ) -> None:
     """Apply a retry without rotating persisted provider credentials."""
 
@@ -491,6 +496,9 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_STORAGE_CERTIFICATE": "old-storage-ca",
     }
     async with session_scope() as session:
+        compute = await session.get(ComputeRegistry, organization.compute_id)
+        assert compute is not None
+        compute.storage_certificate = storage_certificate
         persisted = await session.get(Solution, solution.id)
         assert persisted is not None
         persisted.secrets = dict(initial_secrets)
@@ -550,6 +558,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             "LONGLINK_STORAGE_REGION": "us-east-1",
             "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
             "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+            **({"LONGLINK_STORAGE_CERTIFICATE": storage_certificate} if storage_certificate else {}),
         }
     ]
 

@@ -49,8 +49,7 @@ it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
                         expect(completed).toBe(false);
 
                         return null;
-                    },
-                    download: async () => {}
+                    }
                 }}
             >
                 <Example />
@@ -96,7 +95,7 @@ it('keeps a scoped submission guarded until its success callback completes', asy
     }
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <Example />
         </RequestContext>,
         async () => {
@@ -131,7 +130,7 @@ it('rejects unsupported runtime write methods before reaching scoped transport',
     }
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <Example />
         </RequestContext>,
         async () => {

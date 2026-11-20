@@ -5,7 +5,7 @@ import { act, createRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { renderStatic, withMounted } from '../../render';
 import { Link } from '@/components/longlink/action/link';
-import { RequestContext, LinkNavigationContext } from '@/lib/view-capabilities';
+import { LinkNavigationContext } from '@/lib/view-capabilities';
 
 it.each(['navigation', 'action'] as const)('ignores injected presentation overrides on a %s link', (kind) => {
     const overrides = { className: 'hidden', style: { display: 'none' } };
@@ -116,18 +116,15 @@ it('opens validated external destinations outside the frame without an opener', 
     expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
 });
 
-it('keeps native download links independent of the scoped download capability', async () => {
+it('preserves native download links and allows canceling without navigating', async () => {
     const navigate = vi.fn();
-    const download = vi.fn(async () => {});
 
     await withMounted(
-        <RequestContext value={{ request: vi.fn(), download }}>
-            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
-                    Invoice
-                </Link>
-            </LinkNavigationContext>
-        </RequestContext>,
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
+            <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
+                Invoice
+            </Link>
+        </LinkNavigationContext>,
         async (output) => {
             const control = output.querySelector('a');
 
@@ -135,8 +132,10 @@ it('keeps native download links independent of the scoped download capability', 
             expect(control.getAttribute('download')).toBe('invoice.pdf');
             expect(control.getAttribute('href')).toBe('/solutions/orders/invoice.pdf');
             expect(output.querySelector('button')).toBeNull();
-            await act(async () => control.click());
-            expect(download).not.toHaveBeenCalled();
+            const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+            await act(async () => control.dispatchEvent(event));
+            expect(event.defaultPrevented).toBe(true);
+            expect(control.hasAttribute('aria-busy')).toBe(false);
             expect(navigate).not.toHaveBeenCalled();
         }
     );
@@ -303,26 +302,23 @@ it('commits callback state updates before the returned promise settles', async (
     }
 });
 
-it.each([false, true])('forwards the rendered download element to its ref and handler (scoped: %s)', async (scoped) => {
+it('forwards the rendered download element to its ref and handler', async () => {
     // Arrange
     const ref = createRef<HTMLElement>();
-    const download = vi.fn(async () => {});
     let activated: HTMLElement | undefined;
 
     await withMounted(
-        <RequestContext value={scoped ? { request: vi.fn(), download } : null}>
-            <Link
-                ref={ref}
-                href="/invoice.pdf"
-                download="invoice.pdf"
-                onClick={(event) => {
-                    activated = event.currentTarget;
-                    event.preventDefault();
-                }}
-            >
-                Download
-            </Link>
-        </RequestContext>,
+        <Link
+            ref={ref}
+            href="/invoice.pdf"
+            download="invoice.pdf"
+            onClick={(event) => {
+                activated = event.currentTarget;
+                event.preventDefault();
+            }}
+        >
+            Download
+        </Link>,
         async (output) => {
             const control = output.querySelector<HTMLElement>('a, button');
 
@@ -337,7 +333,6 @@ it.each([false, true])('forwards the rendered download element to its ref and ha
             expect(ref.current).toBe(control);
             expect(activated).toBe(control);
             expect(document.activeElement).toBe(control);
-            expect(download).not.toHaveBeenCalled();
         }
     );
 
@@ -377,32 +372,6 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
             await act(async () => anchor.dispatchEvent(event));
             expect(preventedByLink).toBe(false);
             expect(navigate).not.toHaveBeenCalled();
-        }
-    );
-});
-
-it('allows canceling an attachment download without navigating or requesting file bytes', async () => {
-    const load = vi.fn(async () => {
-        throw new Error('Attachment links must not load file bytes');
-    });
-
-    const navigate = vi.fn();
-
-    await withMounted(
-        <RequestContext value={{ request: load, download: async () => {} }}>
-            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-                <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
-                    Preview
-                </Link>
-            </LinkNavigationContext>
-        </RequestContext>,
-        async (output) => {
-            const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-            await act(async () => output.querySelector('a')?.dispatchEvent(event));
-            expect(event.defaultPrevented).toBe(true);
-            expect(load).not.toHaveBeenCalled();
-            expect(navigate).not.toHaveBeenCalled();
-            expect(output.querySelector('a')?.hasAttribute('aria-busy')).toBe(false);
         }
     );
 });

@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient, ASGITransport
 from fastapi import HTTPException
 from conftest import DatabaseKubernetes
+from datetime import UTC, datetime
 from sqlmodel import col
 from factories import add_member, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from src.utils import images
@@ -25,6 +26,7 @@ from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetadata | None = None) -> None:
@@ -381,6 +383,42 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": False})
     assert (await client.get(f"/api/v1/public/solutions/{solution_id}")).status_code == 404
     assert (await client.get("/api/v1/public/solutions")).json() == {"items": [], "total": 0}
+
+
+@pytest.mark.parametrize("deleted_target", ["solution", "organization"])
+async def test_public_solutions_hide_deleted_targets(client: AsyncClient, users: tuple[User, User, User], deleted_target: str) -> None:
+    """Hide published metadata when either the Solution or its parent is tombstoned."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    async with session_scope() as session:
+        published = await session.get(Solution, solution.id)
+        assert published is not None
+        published.public = True
+        await session.commit()
+    assert (await client.get(f"/api/v1/public/solutions/{solution.id}")).status_code == 200
+
+    # Tombstone the parent independently so its visibility predicate is exercised before child cleanup.
+    async with session_scope() as session:
+        if deleted_target == "solution":
+            target = await session.get(Solution, solution.id)
+        else:
+            target = await session.get(Organization, organization.id)
+        assert target is not None
+        target.deleted_at = datetime.now(UTC)
+        await session.commit()
+
+    # Act
+    detail = await client.get(f"/api/v1/public/solutions/{solution.id}")
+    page = await client.get("/api/v1/public/solutions")
+    missing = await client.get(f"/api/v1/public/solutions/{uuid4()}")
+
+    # Assert
+    assert detail.status_code == missing.status_code == 404
+    assert detail.json() == missing.json() == {"detail": "Solution not found"}
+    assert page.status_code == 200
+    assert page.json() == {"items": [], "total": 0}
 
 
 async def test_create_app_returns_403_for_regular_member(

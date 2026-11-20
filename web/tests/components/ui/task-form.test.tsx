@@ -44,8 +44,7 @@ it('validates the shipped task form, retains the file and draft on failure, and 
                     if (writes.length === 1) throw new ReportedError('Unavailable');
 
                     return null;
-                },
-                download: async () => {}
+                }
             }}
         >
             <Tasks />

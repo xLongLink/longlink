@@ -43,7 +43,7 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     }
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <Example />
         </RequestContext>,
         async (output) => {
@@ -143,7 +143,7 @@ it('blocks duplicate validation and writes through the success callback while en
     }
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <Example />
         </RequestContext>,
         async (output) => {
@@ -241,7 +241,7 @@ it.each([
 
     await withMounted(
         <ApiErrorContext value={reportError}>
-            <RequestContext value={{ request, download: vi.fn() }}>
+            <RequestContext value={{ request }}>
                 <Example />
             </RequestContext>
         </ApiErrorContext>,
@@ -305,7 +305,7 @@ it.each([
     }
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <Example />
         </RequestContext>,
         async (output) => {

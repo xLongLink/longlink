@@ -118,10 +118,8 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
     const user = userEvent.setup();
     const request = vi.fn(async (_path: string, _options?: { binary?: boolean }) => new Blob(['sample']));
 
-    const download = vi.fn(async (_path: string, _filename: string) => {});
-
     await withMounted(
-        <RequestContext value={{ request, download }}>
+        <RequestContext value={{ request }}>
             <List />
         </RequestContext>,
         async (output) => {
@@ -145,8 +143,6 @@ it('wires filtered file rows to scoped previews with their own asset path and ti
                 expect(document.querySelector('[role="dialog"]')?.textContent).toContain(filename);
                 await act(async () => user.keyboard('{Escape}'));
             }
-
-            expect(download).not.toHaveBeenCalled();
         }
     );
 });

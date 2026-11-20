@@ -11,8 +11,7 @@ it.each(['missing', 'rejected'] as const)('reports a %s file capability without 
     const files = {
         request: async () => {
             throw new Error('File request denied');
-        },
-        download: async () => undefined
+        }
     };
 
     // Act
@@ -39,14 +38,7 @@ it('displays an image immediately without custom preview or download actions', a
 
     try {
         await withMounted(
-            <RequestContext
-                value={{
-                    request: async () => new Blob(['image'], { type: 'image/png' }),
-                    download: async () => {
-                        throw new Error('Viewing must not download');
-                    }
-                }}
-            >
+            <RequestContext value={{ request: async () => new Blob(['image'], { type: 'image/png' }) }}>
                 <FileViewer src="/api/image" title="Invoice" />
             </RequestContext>,
             async (output) => {
@@ -85,7 +77,7 @@ it('updates the accessible title without reloading or replacing the displayed me
 
     try {
         await withMounted(
-            <RequestContext value={{ request: load, download: async () => undefined }}>
+            <RequestContext value={{ request: load }}>
                 <Example />
             </RequestContext>,
             async (output) => {
@@ -141,8 +133,7 @@ it('ignores a pending response after replacing the file and releases the display
         await withMounted(
             <RequestContext
                 value={{
-                    request: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' })),
-                    download: async () => undefined
+                    request: async (path) => (path === '/api/first' ? first : new Blob(['new'], { type: 'image/png' }))
                 }}
             >
                 <Example />
@@ -176,7 +167,7 @@ it('displays active text documents as inert text without creating nested frames'
         for (const type of ['application/xml', 'text/html']) {
             const body = new Blob(['<script>active()</script>'], { type });
             await withMounted(
-                <RequestContext value={{ request: async () => body, download: async () => undefined }}>
+                <RequestContext value={{ request: async () => body }}>
                     <FileViewer src="/api/report" title="Report" />
                 </RequestContext>,
                 async (output) => {
@@ -200,7 +191,7 @@ it('keeps PDF bytes out of text rendering and embedded documents despite a text 
 
     // Act
     await withMounted(
-        <RequestContext value={{ request: async () => body, download: async () => undefined }}>
+        <RequestContext value={{ request: async () => body }}>
             <FileViewer src="/api/report" title="report.txt" />
         </RequestContext>,
         async (output) => {
@@ -222,12 +213,7 @@ it.each(['application/octet-stream', 'image/svg+xml'])(
 
         try {
             await withMounted(
-                <RequestContext
-                    value={{
-                        request: async () => new Blob(['<script>active()</script>'], { type }),
-                        download: async () => undefined
-                    }}
-                >
+                <RequestContext value={{ request: async () => new Blob(['<script>active()</script>'], { type }) }}>
                     <FileViewer src="/api/file" title="Attachment" />
                 </RequestContext>,
                 async (output) => {
@@ -266,7 +252,7 @@ it('shares a pending file request and reloads after all viewers close, releasing
     function Example() {
         const [visible, setVisible] = useState(true);
         return (
-            <RequestContext value={{ request, download: async () => {} }}>
+            <RequestContext value={{ request }}>
                 <button type="button" onClick={() => setVisible(!visible)}>
                     Toggle
                 </button>

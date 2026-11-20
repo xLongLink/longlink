@@ -6,9 +6,6 @@ import { currentUserKey, currentUserPath } from '@/lib/react-query';
 import { zUserUpdate, zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 
-// Share the user validated by the authenticated route boundary.
-export const AuthenticatedUserContext = createContext<z.output<typeof zCurrentUser> | undefined>(undefined);
-
 // Share the account provider's identity observer across public and protected routes.
 export const CurrentUserContext = createContext<UseQueryResult<z.output<typeof zCurrentUser> | null> | undefined>(
     undefined
@@ -67,13 +64,12 @@ export function useUpdateUser() {
     });
 }
 
-/** Reads the user guaranteed by the authenticated route boundary. */
+/** Reads the authenticated account without creating another query observer. */
 export function useAuthenticatedUser() {
-    const user = useContext(AuthenticatedUserContext);
+    const { data: user } = useCurrentUser();
 
-    // Fail clearly when a consumer is mounted outside the authenticated boundary.
-    if (user === undefined) {
-        throw new Error('useAuthenticatedUser must be used within an authenticated route');
+    if (!user) {
+        throw new Error('useAuthenticatedUser requires an authenticated account');
     }
 
     return user;

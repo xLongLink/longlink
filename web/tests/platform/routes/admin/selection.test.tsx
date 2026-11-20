@@ -2,13 +2,12 @@
 import { act } from 'react';
 import { expect, it, vi } from 'vitest';
 import { withMounted } from '../../../render';
-import { membership, user } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { useQueryClient } from '@tanstack/react-query';
 import Solutions from '@/platform/routes/admin/solutions';
 import { ApiProvider, ApiBoundary } from '@/components/api';
 import Organizations from '@/platform/routes/admin/organizations';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { membership, user, TestAccountProvider } from '../../render';
 import { zSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const organization = membership.organization;
@@ -48,14 +47,14 @@ for (const { name, Page, item } of [
 
         try {
             await withMounted(
-                <AuthenticatedUserContext value={{ ...user, administrator: true }}>
-                    <ApiProvider platformSession>
+                <ApiProvider platformSession>
+                    <TestAccountProvider account={{ ...user, administrator: true }}>
                         <Refresh />
                         <ApiBoundary>
                             <Page />
                         </ApiBoundary>
-                    </ApiProvider>
-                </AuthenticatedUserContext>,
+                    </TestAccountProvider>
+                </ApiProvider>,
                 async (output) => {
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));
                     const metadata = [...output.querySelectorAll('button')].find(
@@ -128,13 +127,13 @@ for (const { name, Page, item } of [
 
         try {
             await withMounted(
-                <AuthenticatedUserContext value={{ ...user, administrator: true }}>
-                    <ApiProvider platformSession>
+                <ApiProvider platformSession>
+                    <TestAccountProvider account={{ ...user, administrator: true }}>
                         <ApiBoundary>
                             <Page />
                         </ApiBoundary>
-                    </ApiProvider>
-                </AuthenticatedUserContext>,
+                    </TestAccountProvider>
+                </ApiProvider>,
                 async (output) => {
                     // Arrange
                     await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain(item.name));

@@ -3,7 +3,6 @@ import type { ViewData, RequestOptions } from '@/views/protocol';
 
 export const RequestContext = createContext<{
     request: (path: string, options?: RequestOptions) => Promise<ViewData>;
-    download: (path: string, filename: string) => Promise<void>;
 } | null>(null);
 
 export const DialogActivityContext = createContext<((open: boolean) => void) | null>(null);

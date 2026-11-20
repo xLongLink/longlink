@@ -33,14 +33,7 @@ async function requestPreviewFile() {
 export function FileViewerExample() {
     // Scope the sample request capability to this example.
     return (
-        <RequestContext
-            value={{
-                request: requestPreviewFile,
-                download: async () => {
-                    throw new Error('Downloads are unavailable in this documentation example');
-                }
-            }}
-        >
+        <RequestContext value={{ request: requestPreviewFile }}>
             <FileViewer src="/api/reports/latest" title="report.pdf" />
         </RequestContext>
     );

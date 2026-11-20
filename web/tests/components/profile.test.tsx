@@ -3,13 +3,12 @@
 import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
-import { user } from '../platform/render';
 import { useLocation } from 'react-router';
 import { ProfileMenu } from '@/platform/profile';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { SidebarProvider } from '@/components/shadcn/sidebar';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { user, TestAccountProvider } from '../platform/render';
 
 /** Observes real Router navigation without replacing its link behavior. */
 function Location() {
@@ -35,14 +34,14 @@ it.each([false, true])(
         // A real regular user must not receive administrator destinations; both actors retain native link gestures.
         const events = userEvent.setup();
         await withMounted(
-            <AuthenticatedUserContext value={{ ...user, administrator }}>
+            <TestAccountProvider account={{ ...user, administrator }}>
                 <SidebarProvider>
                     <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
                         <ProfileMenu />
                     </ErrorBoundary>
                 </SidebarProvider>
                 <Location />
-            </AuthenticatedUserContext>,
+            </TestAccountProvider>,
             async (output) => {
                 await act(async () => await events.click(button('Owner')));
                 const popup = document.querySelector('[role="menu"]');
@@ -100,13 +99,13 @@ it('closes logout urgently, retains the session preference on denial, and retrie
 
     try {
         await withMounted(
-            <AuthenticatedUserContext value={user}>
+            <TestAccountProvider>
                 <ErrorBoundary fallback={<p role="alert">Profile unavailable</p>}>
                     <SidebarProvider>
                         <ProfileMenu />
                     </SidebarProvider>
                 </ErrorBoundary>
-            </AuthenticatedUserContext>,
+            </TestAccountProvider>,
             async () => {
                 await act(async () => await events.click(button('Owner')));
                 const signOut = button('Sign out');

@@ -13,7 +13,7 @@ it('keeps edited fields local when a preview form is submitted', async () => {
     const request = vi.fn().mockResolvedValue({});
 
     await withMounted(
-        <RequestContext value={{ request, download: vi.fn() }}>
+        <RequestContext value={{ request }}>
             <FormDocumentation
                 name="Input"
                 preview={<Input aria-label="Name" name="name" defaultValue="New order" />}

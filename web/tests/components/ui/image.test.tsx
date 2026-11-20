@@ -37,8 +37,7 @@ it.each(['data:image/png;base64,AA==', 'blob:caller-owned'])(
                 requests.push(path);
 
                 return new Blob();
-            },
-            download: async () => undefined
+            }
         };
 
         // Act
@@ -59,10 +58,7 @@ it('releases owned previews on source changes and ignores late responses', async
     // Hold host responses independently so stale requests cannot overwrite the current photo.
     const pending = new Map<string, (blob: Blob) => void>();
 
-    const files = {
-        request: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)),
-        download: async () => undefined
-    };
+    const files = { request: (path: string) => new Promise<Blob>((resolve) => pending.set(path, resolve)) };
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:first').mockReturnValueOnce('blob:last');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
@@ -127,8 +123,7 @@ it.each(['rejected', 'non-image', 'missing'] as const)(
                 if (result === 'rejected') throw new Error('Denied');
 
                 return new Blob(['<script>private attachment</script>'], { type: 'text/html' });
-            },
-            download: async () => undefined
+            }
         };
 
         await withMounted(
@@ -191,7 +186,7 @@ it('recovers from an inline decode failure on source change without revoking cal
 
 it('releases a scoped preview after a decode failure and reports the original image error', async () => {
     // A failed decode must still notify callers and release the host-owned URL on unmount.
-    const files = { request: async () => new Blob(['broken'], { type: 'image/png' }), download: async () => undefined };
+    const files = { request: async () => new Blob(['broken'], { type: 'image/png' }) };
 
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:broken-scoped');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
