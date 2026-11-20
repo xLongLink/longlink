@@ -5,15 +5,16 @@ import { api, ApiError } from '@/lib/api';
 import { AppearanceProvider } from '@/components/appearance';
 import { CurrentUserContext } from '@/platform/hooks/use-user';
 import { useQuery, useIsMutating } from '@tanstack/react-query';
+import { currentUserKey, currentUserPath } from '@/lib/react-query';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
-import { clearAppearanceCache, defaultAppearance } from '@/lib/appearance';
+import { appearanceCacheKey, clearAppearanceCache, defaultAppearance } from '@/lib/appearance';
 
 /** Owns account identity and synchronizes preferences across focus and session changes. */
 export function AccountProvider({ children }: { children: ReactNode }) {
     // Keep one identity observer for both appearance and route access decisions.
     const currentUser = useQuery<z.output<typeof zCurrentUser> | null>({
-        queryKey: ['api', '/api/v1/me'],
-        queryFn: ({ signal }) => api('/api/v1/me', { signal }).json(zCurrentUser),
+        queryKey: currentUserKey,
+        queryFn: ({ signal }) => api(currentUserPath, { signal }).json(zCurrentUser),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false
@@ -41,8 +42,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         if (!accountId || !cachedPreference || isSaving) return;
 
         try {
-            if (localStorage.getItem('longlink:appearance') !== cachedPreference)
-                localStorage.setItem('longlink:appearance', cachedPreference);
+            if (localStorage.getItem(appearanceCacheKey) !== cachedPreference)
+                localStorage.setItem(appearanceCacheKey, cachedPreference);
         } catch {
             // Saving to the account does not depend on browser storage.
         }
@@ -51,7 +52,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     // Revalidate the account rather than trusting another tab's cached identity.
     useEffect(() => {
         const refresh = (event: StorageEvent) => {
-            if (event.key === 'longlink:appearance') void refetch();
+            if (event.key === appearanceCacheKey) void refetch();
         };
 
         window.addEventListener('storage', refresh);

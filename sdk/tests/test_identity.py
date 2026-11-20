@@ -2,7 +2,7 @@ import jwt
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from longlink import User, identity
+from longlink import User, identity, permissions
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
@@ -41,11 +41,19 @@ def test_identity_token_data_returns_identity_from_created_token() -> None:
     result, _access = identity.identity_token_data(token, IDENTITY_SECRET)
 
     # Assert
+    assert result is not None
     assert result.model_dump() == user.model_dump()
     claims = jwt.decode(token, IDENTITY_SECRET, algorithms=["HS256"], audience="longlink:identity")
     assert claims["sub"] == str(user_id)
     assert claims["aud"] == "longlink:identity"
     assert claims["exp"] - claims["iat"] == 300
+
+    # Anonymous assertions preserve grants without inventing a persisted user.
+    access = permissions.Access(catalog="a" * 64, endpoints=[0])
+    guest_token = identity.create_identity_token(None, IDENTITY_SECRET, access)
+    guest, guest_access = identity.identity_token_data(guest_token, IDENTITY_SECRET)
+    assert guest is None
+    assert guest_access == access
 
 
 def test_identity_token_data_rejects_empty_identity_secret() -> None:

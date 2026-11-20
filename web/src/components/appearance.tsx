@@ -2,12 +2,18 @@ import type { ReactNode } from 'react';
 import { useMemo, useSyncExternalStore } from 'react';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
 import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
-import { appearanceSchema, defaultAppearance, type Appearance } from '@/lib/appearance';
+import {
+    appearanceSchema,
+    appearanceCacheKey,
+    defaultAppearance,
+    uncachedAppearancePath,
+    type Appearance
+} from '@/lib/appearance';
 
 /** Observes optional startup data without sharing state between documents. */
 function subscribeToCache(notify: () => void) {
     const refresh = (event: StorageEvent) => {
-        if (event.key === 'longlink:appearance') notify();
+        if (event.key === appearanceCacheKey) notify();
     };
 
     window.addEventListener('storage', refresh);
@@ -17,10 +23,10 @@ function subscribeToCache(notify: () => void) {
 
 /** Reads cached preferences without requiring browser storage. */
 function readCache() {
-    if (/^\/(login|register|auth)(\/|$)/.test(window.location.pathname)) return null;
+    if (uncachedAppearancePath.test(window.location.pathname)) return null;
 
     try {
-        return localStorage.getItem('longlink:appearance');
+        return localStorage.getItem(appearanceCacheKey);
     } catch {
         return null;
     }

@@ -257,15 +257,18 @@ it('opens row tags with the existing assignment and saves edits before closing',
     }
 });
 
-it('confirms the canonical MCP URL copy only after the clipboard succeeds and closes its dialog', async () => {
+it('blocks duplicate MCP copies, reports failure, and closes only after a successful retry', async () => {
+    // Arrange
     const events = userEvent.setup();
+    let failCopy: ((cause: Error) => void) | undefined;
     let finishCopy: (() => void) | undefined;
-
+    const failed = new Promise<void>((_, reject) => {
+        failCopy = reject;
+    });
     const copied = new Promise<void>((resolve) => {
         finishCopy = resolve;
     });
-
-    const clipboard = vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(copied);
+    const clipboard = vi.spyOn(navigator.clipboard, 'writeText').mockReturnValueOnce(failed).mockReturnValue(copied);
 
     try {
         await withSolutions('maintain', async (output) => {
@@ -289,14 +292,51 @@ it('confirms the canonical MCP URL copy only after the clipboard succeeds and cl
             );
 
             if (!copy) throw new Error('Missing MCP copy action');
-            await act(async () => events.click(copy));
+
+            // Act
+            await act(async () => {
+                copy.click();
+                expect(clipboard).toHaveBeenCalledExactlyOnceWith(mcpResource);
+                copy.click();
+            });
+
+            // Assert
             expect(clipboard).toHaveBeenCalledExactlyOnceWith(mcpResource);
+            expect(copy.disabled).toBe(true);
+            expect(copy.getAttribute('aria-busy')).toBe('true');
             expect(document.querySelector('[data-sonner-toast]')).toBeNull();
             expect(document.querySelector('[role="dialog"]')).not.toBeNull();
 
-            await act(async () => finishCopy?.());
+            // Act
+            await act(async () => failCopy?.(new Error('Clipboard unavailable')));
+
+            // Assert
             await vi.waitFor(() => {
-                expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain('Copied');
+                expect(copy.disabled).toBe(false);
+                expect(copy.getAttribute('aria-busy')).toBeNull();
+                expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain(
+                    'The request could not be completed. Please try again.'
+                );
+            });
+            expect(document.querySelectorAll('[data-sonner-toast]')).toHaveLength(1);
+            expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+
+            // Act
+            await act(async () => events.click(copy));
+
+            // Assert
+            expect(clipboard).toHaveBeenCalledTimes(2);
+            expect(clipboard).toHaveBeenLastCalledWith(mcpResource);
+            expect(copy.disabled).toBe(true);
+            expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+            expect(document.querySelector('[data-sonner-toaster]')?.textContent).not.toContain('Copied');
+
+            // Act
+            await act(async () => finishCopy?.());
+
+            // Assert
+            await vi.waitFor(() => {
+                expect(document.querySelector('[data-sonner-toaster]')?.textContent).toContain('Copied');
                 expect(document.querySelector('[role="dialog"]')).toBeNull();
             });
             expect(document.querySelectorAll('[data-sonner-toaster]')).toHaveLength(1);

@@ -74,5 +74,4 @@ TEMP
 /web/*.local
 /web/.vscode/*
 !/web/.vscode/extensions.json
-/dev/certificates/
 /dev/bin/

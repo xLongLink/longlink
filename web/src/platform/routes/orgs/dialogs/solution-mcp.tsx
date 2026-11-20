@@ -1,7 +1,6 @@
 import { Plug } from 'lucide-react';
 import { useApiError } from '@/lib/errors';
 import { useApi } from '@/lib/hooks/use-api';
-import { useRef, useTransition } from 'react';
 import { ApiBoundary } from '@/components/api';
 import { OpenAI } from '@/components/svg/openai';
 import { Button } from '@/components/shadcn/button';
@@ -9,6 +8,7 @@ import { useNotification } from '@/lib/notifications';
 import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { useConfirmAction } from '@/lib/hooks/use-confirm-action';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 
 export function SolutionMcpDialog({
@@ -37,8 +37,7 @@ export function SolutionMcpDialog({
 function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: () => void }) {
     const showNotification = useNotification();
     const reportError = useApiError();
-    const inFlight = useRef(false);
-    const [pending, startCopy] = useTransition();
+    const { isPending, run } = useConfirmAction();
 
     const [{ resource }] = useApi(
         `/.well-known/oauth-protected-resource/api/v1/solutions/${solutionId}/proxy/mcp`,
@@ -50,21 +49,17 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
             <Button
                 variant="outline"
                 className="w-full"
-                disabled={pending}
-                aria-busy={pending || undefined}
+                disabled={isPending}
+                aria-busy={isPending || undefined}
                 onClick={() => {
                     // Start clipboard access within the user gesture and close only after success.
-                    if (inFlight.current) return;
-                    inFlight.current = true;
-                    startCopy(async () => {
+                    run(async () => {
                         try {
                             await navigator.clipboard.writeText(resource);
                             showNotification('Copied');
                             onClose();
                         } catch (cause) {
                             reportError(cause);
-                        } finally {
-                            inFlight.current = false;
                         }
                     });
                 }}
@@ -72,7 +67,7 @@ function SolutionMcpUrl({ solutionId, onClose }: { solutionId: string; onClose: 
                 Copy MCP server URL
             </Button>
             <span role="status" className="sr-only">
-                {pending ? 'Loading' : ''}
+                {isPending ? 'Loading' : ''}
             </span>
         </>
     );

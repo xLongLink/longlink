@@ -6,6 +6,7 @@ import * as permissions from '@/platform/permissions';
 import { SolutionOverview } from './solution-overview';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
+import { SolutionVisibility } from './solution-visibility';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
@@ -114,6 +115,13 @@ export default function SolutionManagement({
                                         </Stack>
                                     </TableCell>
                                     <TableCell align="end">{row.deployed_version || '—'}</TableCell>
+                                    <TableCell align="end">
+                                        {canMaintain ? (
+                                            <SolutionVisibility solution={row} invalidate={invalidateSolutions} />
+                                        ) : (
+                                            <span className="text-sm">{row.public ? 'Public' : 'Private'}</span>
+                                        )}
+                                    </TableCell>
                                     {canMaintain && (
                                         <TableCell align="end">
                                             <DropdownMenu>
@@ -203,7 +211,7 @@ export default function SolutionManagement({
                             ))}
                             {solutions.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={canMaintain ? 3 : 2} align="center">
+                                    <TableCell colSpan={canMaintain ? 4 : 3} align="center">
                                         <Empty role="status" title="No data" />
                                     </TableCell>
                                 </TableRow>

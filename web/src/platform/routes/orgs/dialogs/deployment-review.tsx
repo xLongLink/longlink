@@ -65,25 +65,20 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
         isMissingRequired(environment, envs[environment.name]?.value)
     );
 
-    const hasChanges =
-        candidate?.metadata.image !== candidate?.current_image ||
-        Object.values(envs).some((environment) => environment.value !== undefined || environment.removed === true);
+    const edits: [string, string | null][] = [];
+    for (const [name, { value, removed }] of Object.entries(envs)) {
+        if (removed === true) edits.push([name, null]);
+        else if (value !== undefined) edits.push([name, value]);
+    }
+    const hasChanges = candidate?.metadata.image !== candidate?.current_image || edits.length > 0;
 
-    /** Submits the reviewed deployment while preserving untouched secrets. */
     async function updateSolution() {
         if (!candidate || missingRequired || !hasChanges) return;
-
-        // Send edited secrets and explicit removals, preserving omitted values.
-        const patchEnvs: Record<string, string | null> = {};
-
-        // Removal takes precedence without discarding the edit retained for untoggling.
-        for (const [name, environment] of Object.entries(envs)) {
-            if (environment.removed === true) patchEnvs[name] = null;
-            else if (environment.value !== undefined) patchEnvs[name] = environment.value;
-        }
-
-        await api.post(`/api/v1/solutions/${item.id}/update`, {
-            json: schemas.zSolutionPatch.parse({ envs: patchEnvs, expected_revision_id: candidate.revision_id })
+        await api.post(path, {
+            json: schemas.zSolutionPatch.parse({
+                envs: Object.fromEntries(edits),
+                expected_revision_id: candidate.revision_id
+            })
         });
         await onSuccess();
     }

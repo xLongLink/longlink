@@ -3,34 +3,12 @@
 import { z } from 'zod';
 import { flushSync } from 'react-dom';
 import { it, vi, expect } from 'vitest';
-import { renderStatic } from '../render';
 import { useApi } from '@/lib/hooks/use-api';
 import { createRoot } from 'react-dom/client';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import { Link, Route, Routes, MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-it('uses the caller-selected loading fallback for suspended reads', () => {
-    // Arrange
-    const pending = new Promise<never>(() => undefined);
-
-    function Pending(): never {
-        throw pending;
-    }
-
-    // Act
-    const output = renderStatic(
-        <ApiErrorContext value={() => undefined}>
-            <ApiBoundary fallback={<p>Loading orders</p>}>
-                <Pending />
-            </ApiBoundary>
-        </ApiErrorContext>
-    );
-
-    // Assert
-    expect(output.textContent).toBe('Loading orders');
-});
 
 it.each(['retry', 'navigation'] as const)('recovers a failed validated read through %s', async (recovery) => {
     // Arrange

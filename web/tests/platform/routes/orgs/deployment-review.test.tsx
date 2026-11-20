@@ -148,14 +148,20 @@ describe('DeploymentReview', () => {
         );
     });
 
-    it('submits the retained secret draft after removal is toggled off', async () => {
+    it('deploys an environment-only change and retains the edit when removal is toggled off', async () => {
         // Arrange
-        const submissions = await openReview(() => Response.json(secretCandidate));
+        const submissions = await openReview(() =>
+            Response.json({
+                ...secretCandidate,
+                current_image: secretCandidate.metadata.image,
+                configured_envs: [...secretCandidate.configured_envs, 'NEW_SECRET']
+            })
+        );
         const user = userEvent.setup();
-        await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
-        await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
+        expect(button('Update solution').disabled).toBe(true);
 
         // Act
+        await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
         await act(async () => button('Update solution').click());
@@ -165,10 +171,7 @@ describe('DeploymentReview', () => {
             expect(submissions).toEqual([
                 {
                     path: `/api/v1/solutions/${solutionId}/update`,
-                    body: {
-                        envs: { NEW_SECRET: 'new-fixture-value', OPTIONAL_SECRET: 'replacement-fixture-value' },
-                        expected_revision_id: revisionId
-                    }
+                    body: { envs: { OPTIONAL_SECRET: 'replacement-fixture-value' }, expected_revision_id: revisionId }
                 }
             ])
         );

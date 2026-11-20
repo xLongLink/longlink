@@ -14,8 +14,11 @@ from collections.abc import AsyncIterator, AsyncGenerator
 from fastapi.responses import JSONResponse, StreamingResponse
 from longlink.database import users
 from src.models.statuses import Status
-from longlink.permissions import METHODS
+from longlink.permissions import METHODS, Access
 from src.database.services import permissions, organizations
+from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
+from src.database.models.solutions import Solution
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -45,9 +48,6 @@ async def proxy_solution_request(
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    # Preserve protocol metadata only on the scoped MCP transport, never ordinary Solution routes.
-    is_mcp = path.rstrip("/") == "mcp"
-
     # Release the request snapshot before independent runtime transactions begin.
     await session.commit()
 
@@ -63,9 +63,25 @@ async def proxy_solution_request(
     access = definition.access(role)
     await session.commit()
 
+    # Share the transport boundary without changing authenticated member identity or grants.
+    return await forward(request, solution, registry, user, access, path, runtime)
+
+
+async def forward(
+    request: Request, solution: Solution, registry: ComputeRegistry, user: User | None, access: Access, path: str, runtime: AsyncExitStack
+) -> Response:
+    """Forward a request with exactly the caller's resolved identity and endpoint grants."""
+
+    # Preserve protocol metadata only for authenticated MCP transports.
+    is_mcp = path.rstrip("/") == "mcp"
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
     if not identity_secret:
         raise HTTPException(status_code=503, detail="Solution gateway is not ready")
+
+    # Anonymous requests never persist a synthetic user profile in the runtime.
+    profile = None
+    if user is not None:
+        profile = users.User.model_validate(user, update={"updated_at": user.updated_at.replace(tzinfo=UTC)})
 
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
@@ -79,9 +95,7 @@ async def proxy_solution_request(
                 # Sign platform identity while keeping Knative's Host independent of the verified TLS hostname.
                 headers = {
                     "host": namespace.solution_hostname(solution.organization_id, solution.id),
-                    "x-longlink-identity": identity.create_identity_token(
-                        users.User.model_validate(user, update={"updated_at": user.updated_at.replace(tzinfo=UTC)}), identity_secret, access
-                    ),
+                    "x-longlink-identity": identity.create_identity_token(profile, identity_secret, access),
                 }
 
                 # Preserve body encoding without forwarding arbitrary browser headers.

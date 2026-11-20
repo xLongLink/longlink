@@ -46,6 +46,7 @@ class Solution(AuditTable, table=True):
 
     # Metadata
     name: str = Field(max_length=100)
+    public: bool = Field(default=False)
     description: str | None = Field(default=None, max_length=255)
 
     # Desired release

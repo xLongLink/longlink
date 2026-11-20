@@ -6,6 +6,9 @@ import { QueryCache, QueryClient, queryOptions } from '@tanstack/react-query';
 
 const identitySchema = z.object({ id: z.string() });
 
+export const currentUserPath = '/api/v1/me';
+export const currentUserKey = ['api', currentUserPath] as const;
+
 /** Defines a cancellable, validated API query keyed by its full request path. */
 export function apiQueryOptions<Schema extends StandardSchemaV1>(path: string, schema: Schema) {
     // Keep cache identity and fetch policy identical for hooks and batched queries.
@@ -41,7 +44,7 @@ export function createQueryRuntime(
                 url.pathname.startsWith('/api/v1/')
             ) {
                 void client
-                    .invalidateQueries({ queryKey: ['api', '/api/v1/me'], exact: true }, { cancelRefetch: false })
+                    .invalidateQueries({ queryKey: currentUserKey, exact: true }, { cancelRefetch: false })
                     .catch(notifyError);
             }
         }
@@ -54,13 +57,7 @@ export function createQueryRuntime(
             if (isCanceledRequest(error)) return;
 
             // Only the identity read establishes anonymous state; writes still report their failure.
-            if (
-                platformSession &&
-                query.queryKey[0] === 'api' &&
-                query.queryKey[1] === '/api/v1/me' &&
-                error instanceof ApiError &&
-                error.status === 401
-            ) {
+            if (platformSession && isCurrentUserQuery(query) && error instanceof ApiError && error.status === 401) {
                 const identity = query.state;
                 void clearSessionQueries(client, true)
                     .then(() => {
@@ -103,13 +100,7 @@ export function createQueryRuntime(
     if (platformSession) {
         let userId: string | null = null;
         queryCache.subscribe((event) => {
-            if (
-                event.type !== 'updated' ||
-                event.action.type !== 'success' ||
-                event.query.queryKey[0] !== 'api' ||
-                event.query.queryKey[1] !== '/api/v1/me'
-            )
-                return;
+            if (event.type !== 'updated' || event.action.type !== 'success' || !isCurrentUserQuery(event.query)) return;
             // Only a validated identity can trigger an account switch.
             const user = identitySchema.safeParse(event.query.state.data);
             const nextUserId = user.success ? user.data.id : null;
@@ -127,17 +118,30 @@ export function createQueryRuntime(
     return { client, reportError };
 }
 
-/** Cancels and removes cached API data from the previous identity. */
+function isCurrentUserQuery({ queryKey }: { queryKey: readonly unknown[] }) {
+    return queryKey[0] === currentUserKey[0] && queryKey[1] === currentUserKey[1];
+}
+
+/** Identifies anonymous Solution reads, including manifest and JSX source queries. */
+export function isPublicSolutionQuery({ queryKey }: { queryKey: readonly unknown[] }): boolean {
+    const path = queryKey[1] === 'solution-view' ? queryKey[2] : queryKey[1];
+
+    return queryKey[0] === 'api' && typeof path === 'string' && /^\/api\/v1\/public\/solutions(?:[/?]|$)/.test(path);
+}
+
+/** Cancels and removes session-bound API data from the previous identity. */
 export async function clearSessionQueries(client: QueryClient, preserveCurrentUser = false): Promise<void> {
-    const identity = client.getQueryData(['api', '/api/v1/me']);
+    const identity = client.getQueryData(currentUserKey);
 
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) =>
-        query.queryKey[0] === 'api' && (!preserveCurrentUser || query.queryKey[1] !== '/api/v1/me');
+        query.queryKey[0] === 'api' &&
+        !isPublicSolutionQuery(query) &&
+        (!preserveCurrentUser || !isCurrentUserQuery(query));
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });
 
-    if (client.getQueryData(['api', '/api/v1/me']) === identity) {
+    if (client.getQueryData(currentUserKey) === identity) {
         client.removeQueries({ predicate: isSessionQuery });
     }
 }

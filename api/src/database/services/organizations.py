@@ -289,6 +289,7 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
             load_only(
                 attr(Solution.id),
                 attr(Solution.name),
+                attr(Solution.public),
                 attr(Solution.description),
                 attr(Solution.status),
                 attr(Solution.desired_revision_id),
@@ -526,7 +527,6 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
 
     # Store the All filter once so later renames and deletions remain permanent.
     session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
-    await session.flush()
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
     await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)

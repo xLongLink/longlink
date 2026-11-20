@@ -119,7 +119,6 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Organiza
     if invitation is None:
         invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
         session.add(invitation)
-        await session.flush()
         return
 
     # Replacing a grant requires the same authority as revoking its existing role.

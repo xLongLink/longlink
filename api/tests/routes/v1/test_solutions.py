@@ -309,7 +309,10 @@ async def test_create_solution_accepts_duplicate_name_with_separate_lifecycle_wo
 
 
 async def test_solution_responses_do_not_expose_environment_secrets(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient,
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Redact persisted Solution environment values from every response surface."""
 
@@ -358,6 +361,26 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert "envs" not in check_payload
     assert "runtime-secret" not in check_response.text
     assert "private-value" not in check_response.text
+
+    # Public responses retain redaction, while publication requires maintenance authority.
+    assert (await client.get(f"/api/v1/public/solutions/{solution_id}")).status_code == 404
+    assert (await client.get("/api/v1/public/solutions")).json() == {"items": [], "total": 0}
+    assert (await client.patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": True})).status_code == 401
+    assert (await clients[2].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": True})).status_code == 403
+    published = await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": True})
+    assert published.status_code == 200
+    public_response = await client.get(f"/api/v1/public/solutions/{solution_id}")
+    assert public_response.status_code == 200
+    assert public_response.json()["public"] is True
+    assert {"secrets", "envs", "image_desired", "desired_revision_id", "deployed_revision_id"}.isdisjoint(public_response.json())
+    assert "runtime-secret" not in public_response.text
+    assert "private-value" not in public_response.text
+    page = (await client.get("/api/v1/public/solutions?page_size=1")).json()
+    assert [item["id"] for item in page["items"]] == [solution_id]
+    assert page["total"] == 1
+    await clients[0].patch(f"/api/v1/solutions/{solution_id}/visibility", json={"public": False})
+    assert (await client.get(f"/api/v1/public/solutions/{solution_id}")).status_code == 404
+    assert (await client.get("/api/v1/public/solutions")).json() == {"items": [], "total": 0}
 
 
 async def test_create_app_returns_403_for_regular_member(

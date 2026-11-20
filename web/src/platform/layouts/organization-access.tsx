@@ -16,6 +16,7 @@ import { zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod
 export default function OrganizationAccess() {
     const { organization = '', solution } = useParams();
     const solutionRoute = solution !== undefined;
+    const resource = solutionRoute ? 'solution' : 'organization';
 
     return (
         <ApiBoundary
@@ -35,29 +36,26 @@ export default function OrganizationAccess() {
                     </OrganizationFallback>
                 )
             }
-            fallbackRender={({ error }) =>
-                solutionRoute ? (
+            fallbackRender={({ error }) => {
+                const content =
                     error instanceof ApiError && error.status === 404 ? (
                         <NotFoundLayout />
                     ) : (
                         <>
-                            <title>Solution | LongLink</title>
-                            <PageError description="We couldn't load this solution." title="Unable to load solution" />
-                        </>
-                    )
-                ) : (
-                    <OrganizationFallback organization={organization}>
-                        {error instanceof ApiError && error.status === 404 ? (
-                            <NotFoundLayout />
-                        ) : (
+                            {solutionRoute && <title>Solution | LongLink</title>}
                             <PageError
-                                description="We couldn't load this organization."
-                                title="Unable to load organization"
+                                description={`We couldn't load this ${resource}.`}
+                                title={`Unable to load ${resource}`}
                             />
-                        )}
-                    </OrganizationFallback>
-                )
-            }
+                        </>
+                    );
+
+                return solutionRoute ? (
+                    content
+                ) : (
+                    <OrganizationFallback organization={organization}>{content}</OrganizationFallback>
+                );
+            }}
         >
             <OrganizationMembership organization={organization} />
         </ApiBoundary>

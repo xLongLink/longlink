@@ -71,11 +71,6 @@ class SeedSettings(BaseSettings):
 
     # API connection
     API_URL: str = "http://127.0.0.1:8000"
-    PUBLIC_URL: str = "http://localhost:5173"
-
-    # Platform administrator
-    ADMIN_EMAIL: str = Field(default="", min_length=1, validate_default=True)
-    ADMIN_PASSWORD: str = Field(default="", min_length=1, validate_default=True)
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
@@ -215,6 +210,10 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         raise RuntimeError("Could not identify the newly created development Solution")
     created = matches[0]
 
+    # Publish the illustrative sample through the same maintainer boundary as the application.
+    response = await client.patch(f"/api/v1/solutions/{created.id}/visibility", json={"public": True})
+    response.raise_for_status()
+
     # Do not report seed success while the new schema or View runtime is still being provisioned.
     async with asyncio.timeout(300):
         while True:
@@ -239,10 +238,10 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                     break
             await asyncio.sleep(1)
 
-    print(f"Sample ready: {settings.PUBLIC_URL}/orgs/{organization.id}/solutions/{created.id}/projects")
+    print(f"Sample ready: {env.PUBLIC_URL}/explore/solutions/{created.id}")
 
 
-async def create_invited_organization(settings: SeedSettings) -> None:
+async def create_invited_organization() -> None:
     """Restore a pending invitation for the administrator in a separately owned Organization."""
 
     # Bootstrap a separate owner without requiring email verification or known login credentials.
@@ -264,7 +263,7 @@ async def create_invited_organization(settings: SeedSettings) -> None:
             organization = await organizations.create(database, INVITED_ORGANIZATION, owner)
 
         # Reset accepted invitations so every seed run demonstrates the pending state again.
-        administrator = await users.by_email(database, settings.ADMIN_EMAIL)
+        administrator = await users.by_email(database, env.ADMIN_EMAIL)
         if administrator is None:
             raise RuntimeError("Development administrator was not found")
         membership = await database.get(UserOrganization, (administrator.id, organization.id))
@@ -276,7 +275,7 @@ async def create_invited_organization(settings: SeedSettings) -> None:
         await invitations.create(database, organization.id, invitation, owner.id)
         await database.commit()
 
-    print(f"Pending invitation to ACME Studio ready: {settings.PUBLIC_URL}/orgs")
+    print(f"Pending invitation to ACME Studio ready: {env.PUBLIC_URL}/orgs")
 
 
 async def register_card(organization_id: UUID) -> None:
@@ -372,19 +371,15 @@ async def seed(settings: SeedSettings) -> None:
         raise RuntimeError("Development seeding requires a Stripe test-mode key; live-mode credentials are refused")
 
     # Own the API client for the complete provisioning workflow.
-    async with httpx2.AsyncClient(
-        base_url=settings.API_URL, headers={"Origin": settings.PUBLIC_URL}, timeout=10, trust_env=False
-    ) as client:
+    async with httpx2.AsyncClient(base_url=settings.API_URL, headers={"Origin": env.PUBLIC_URL}, timeout=10, trust_env=False) as client:
         # Release the fixture database connection even when API provisioning fails.
         try:
             # Authenticate with the administrator that the API initializes during startup.
-            response = await client.post(
-                "/api/v1/auth/password/login", json={"email": settings.ADMIN_EMAIL, "password": settings.ADMIN_PASSWORD}
-            )
+            response = await client.post("/api/v1/auth/password/login", json={"email": env.ADMIN_EMAIL, "password": env.ADMIN_PASSWORD})
             response.raise_for_status()
 
             await register_compute(client, settings)
-            await create_invited_organization(settings)
+            await create_invited_organization()
 
             organization = await create_organization(client)
             await register_card(organization.id)
