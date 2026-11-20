@@ -118,3 +118,36 @@ async def test_user_service_retains_deleted_accounts_in_email_lookups_and_admini
     assert len(page) == 3
     assert deleted_user.id in {user.id for user in page}
     assert total == 3
+
+
+async def test_administrator_handover_keeps_provider_links_on_demoted_account(password_hash: str) -> None:
+    """Transfer platform authority while keeping prior provider identities with their owner."""
+
+    # Arrange
+    async with session_scope() as session:
+        former = User(
+            email="former@example.com", password=password_hash, administrator=True, google_id="google-old", github_id="github-old"
+        )
+        incoming = User(email=env.ADMIN_EMAIL, password=password_hash)
+        session.add_all([former, incoming])
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await user_service.ensure_administrator(session)
+        await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        google = await user_service.by_oauth_identity(session, "google", "google-old")
+        github = await user_service.by_oauth_identity(session, "github", "github-old")
+        replacement = await session.get(User, incoming.id)
+        assert google is not None
+        assert github is google
+        assert google.id == former.id
+        assert not google.administrator
+        assert google.password != password_hash
+        assert replacement is not None
+        assert replacement.administrator
+        assert replacement.google_id is None
+        assert replacement.github_id is None

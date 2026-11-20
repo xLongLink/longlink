@@ -117,8 +117,17 @@ async def complete_oauth_login(
 
     # Resolve a stable provider identity before safely linking verified email ownership.
     user = await users.by_oauth_identity(session, provider, identity.subject)
+    if user is not None:
+        if getattr(user, f"{provider}_id") != identity.subject:
+            return oauth_failure_response()
+        # Older administrator handovers could leave the previous owner linked.
+        if user.administrator and user.email != identity.email:
+            return oauth_failure_response()
     if user is None:
         user = await users.by_email(session, identity.email)
+        # A database collation can match distinct canonical mailboxes.
+        if user is not None and user.email != identity.email:
+            return oauth_failure_response()
         if user is None:
             user = await users.register(session, identity.name, identity.email, secrets.token_urlsafe(48), identity.avatar)
 
