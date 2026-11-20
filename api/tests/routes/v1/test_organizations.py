@@ -8,12 +8,14 @@ from factories import create_compute, create_solution, fetch_operations, create_
 from src.utils import s3, mail
 from sqlalchemy import func
 from urllib.parse import urlencode
+from src.models.tags import TagKind
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
+from src.database.models.tags import OrganizationTag
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.solutions import Solution
@@ -41,7 +43,12 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         organization = await session.get(Organization, UUID(payload["id"]))
         assert organization is not None
         memberships = await organizations.members(session, organization.id)
+        default_tag = await session.scalar(
+            select(OrganizationTag).where(OrganizationTag.organization_id == organization.id, OrganizationTag.kind == TagKind.all)
+        )
     assert organization.name == "acme"
+    assert default_tag is not None
+    assert default_tag.name == "All"
 
     # Creation persists an active Organization before asynchronous provisioning.
     assert organization.deleted_at is None
