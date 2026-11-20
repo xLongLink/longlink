@@ -1285,3 +1285,54 @@ async def test_wrong_audience_browser_session_is_rejected_at_http(client: AsyncC
     # Assert
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.usefixtures("oauth_responses")
+async def test_oauth_rejects_collation_equivalent_mailbox(
+    client: AsyncClient, users: tuple[User, User, User], provider: oauth.OAuthProvider, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject a database lookup that folds two distinct verified mailboxes together."""
+
+    # Arrange
+    async def collated_lookup(_session: AsyncSession, email: str) -> User:
+        return User(email=email.replace("e", "é", 1), password=users[1].password)
+
+    monkeypatch.setattr(v1.auth.users, "by_email", collated_lookup)
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback", params={"code": "provider-code", "state": "expected-state"}, follow_redirects=False
+    )
+
+    # Assert
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert client.cookies.get("longlink_auth") is None
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+@pytest.mark.usefixtures("oauth_responses")
+async def test_oauth_rejects_previous_administrator_identity(
+    client: AsyncClient, users: tuple[User, User, User], provider: oauth.OAuthProvider
+) -> None:
+    """Reject a stale provider link retained by an earlier administrator handover."""
+
+    # Arrange
+    async with session_scope() as session:
+        administrator = await session.get(User, users[0].id)
+        assert administrator is not None
+        setattr(administrator, f"{provider}_id", "12345")
+        await session.commit()
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier", "/user/organizations")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback", params={"code": "provider-code", "state": "expected-state"}, follow_redirects=False
+    )
+
+    # Assert
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert client.cookies.get("longlink_auth") is None

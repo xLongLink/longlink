@@ -1,4 +1,5 @@
 import asyncio
+import secrets
 from pwdlib import PasswordHash
 from datetime import UTC, datetime
 from sqlmodel import col
@@ -92,13 +93,14 @@ async def replace_password(session: AsyncSession, user: User, password: str) -> 
 async def ensure_administrator(session: AsyncSession) -> None:
     """Reconcile the configured account as the sole Platform administrator."""
 
-    # Reconcile the persisted administrator before considering an initial account creation.
-    statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
-    user = await session.scalar(select(User).where(col(User.administrator).is_(True)))
+    # Keep provider identities and memberships attached to their original accounts.
+    administrator = await session.scalar(select(User).where(col(User.administrator).is_(True)).with_for_update())
+    if administrator is not None and administrator.email != env.ADMIN_EMAIL:
+        administrator.administrator = False
+        administrator.password = PASSWORD_HASH.hash(secrets.token_urlsafe(48))
 
-    # Match the configured identity only when no administrator has been created yet.
-    if user is None:
-        user = await session.scalar(statement)
+    statement = select(User).where(col(User.email) == env.ADMIN_EMAIL).with_for_update()
+    user = await session.scalar(statement)
     if user is None:
         user = User(name="Administrator", email=env.ADMIN_EMAIL, password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD), administrator=True)
 
@@ -117,6 +119,10 @@ async def ensure_administrator(session: AsyncSession) -> None:
                 raise
         else:
             return
+
+    # Fail closed if the database matched a different canonical mailbox.
+    if user.email != env.ADMIN_EMAIL:
+        return
 
     # Reconcile the configured account, including one created concurrently by another replica.
     if not PASSWORD_HASH.verify(env.ADMIN_PASSWORD, user.password):
