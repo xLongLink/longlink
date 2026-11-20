@@ -6,13 +6,15 @@ export const appearanceSchema = zCurrentUser.pick({ theme: true });
 export type Appearance = z.output<typeof appearanceSchema>;
 
 export const defaultAppearance: Appearance = { theme: 'system' };
+export const appearanceCacheKey = 'longlink:appearance';
+export const uncachedAppearancePath = /^\/(login|register|auth)(\/|$)/;
 
 // Restore the saved appearance before the shared stylesheet renders the document.
 export const appearanceBootstrap = `(() => {
     try {
         if (location.pathname === '/' && document.currentScript?.hasAttribute('data-platform')) return;
-        if (/^\\/(login|register|auth)(\\/|$)/.test(location.pathname)) return;
-        const preference = JSON.parse(localStorage.getItem('longlink:appearance') || 'null');
+        if (${uncachedAppearancePath}.test(location.pathname)) return;
+        const preference = JSON.parse(localStorage.getItem(${JSON.stringify(appearanceCacheKey)}) || 'null');
         const modes = ${JSON.stringify(zCurrentUser.shape.theme.options)};
         if (!preference || !modes.includes(preference.theme)) return;
         const root = document.documentElement;
@@ -23,7 +25,7 @@ export const appearanceBootstrap = `(() => {
 /** Discards the previous account's startup preference after a successful logout. */
 export function clearAppearanceCache() {
     try {
-        localStorage.removeItem('longlink:appearance');
+        localStorage.removeItem(appearanceCacheKey);
     } catch {
         // Appearance remains usable when browser storage is unavailable.
     }

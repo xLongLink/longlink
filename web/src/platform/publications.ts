@@ -65,28 +65,38 @@ const categories = [
     { label: 'Form', category: 'Form', anchor: '#form', icon: FileText },
     { label: 'Charts', category: 'Charts', anchor: '#charts', icon: ChartArea },
     { label: 'Maps', category: 'Maps', anchor: '#maps', icon: Map }
-];
+] as const;
 
 // Keep branding navigation and publication paths in their established reading order.
 export const brandingPages = [
-    { path: '/branding/assets', label: 'Brand assets', icon: Image },
-    { path: '/branding/values', label: 'Values', icon: Gem },
-    { path: '/branding/comunication', label: 'Communication', icon: MessageSquare }
+    { path: '/branding/assets', file: './routes/branding/assets.tsx', label: 'Brand assets', icon: Image },
+    { path: '/branding/values', file: './routes/branding/values.tsx', label: 'Values', icon: Gem },
+    {
+        path: '/branding/comunication',
+        file: './routes/branding/communication.tsx',
+        label: 'Communication',
+        icon: MessageSquare
+    }
 ];
 
 export const brandingPaths = brandingPages.map((page) => page.path);
 
 // Keep legal navigation and publication paths in their established reading order.
 export const legalPages = [
-    { path: '/terms', label: 'Terms', icon: FileText },
-    { path: '/impressum', label: 'Impressum', icon: Building2 },
-    { path: '/privacy', label: 'Privacy', icon: ShieldCheck }
+    { path: '/terms', file: './routes/legal/terms.tsx', label: 'Terms', icon: FileText },
+    { path: '/impressum', file: './routes/legal/impressum.tsx', label: 'Impressum', icon: Building2 },
+    { path: '/privacy', file: './routes/legal/privacy.tsx', label: 'Privacy', icon: ShieldCheck }
 ];
 
 export const legalPaths = legalPages.map((page) => page.path);
 
-// Derive route identity from the website's published component pages.
-export const componentDocumentation = [
+const componentPages: {
+    name: string;
+    category: (typeof categories)[number]['category'];
+    icon?: LucideIcon;
+    label?: string;
+    slug?: string;
+}[] = [
     { name: 'AreaChart', category: 'Charts', icon: ChartArea },
     { name: 'BarChart', category: 'Charts', icon: ChartColumn },
     { name: 'LineChart', category: 'Charts', icon: ChartLine },
@@ -147,7 +157,9 @@ export const componentDocumentation = [
     { name: 'Text', category: 'Display', icon: Type },
     { name: 'Textarea', category: 'Form', icon: TextAlignStart },
     { name: 'Timestamp', category: 'Display', icon: CalendarClock }
-].map((component) => ({
+];
+
+export const componentDocumentation = componentPages.map((component) => ({
     ...component,
     label: component.label ?? component.name,
     slug:

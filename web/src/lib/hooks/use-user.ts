@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { createContext, useContext } from 'react';
+import { currentUserKey, currentUserPath } from '@/lib/react-query';
 import { zUserUpdate, zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 
@@ -37,30 +38,30 @@ export function useUpdateUser() {
         networkMode: 'always',
         mutationFn: async (payload: z.input<typeof zUserUpdate>) => {
             const update = zUserUpdate.parse(payload);
-            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
+            await queryClient.cancelQueries({ queryKey: currentUserKey, exact: true });
 
             // Preview appearance only when this serialized write starts, leaving other profile fields unchanged.
-            const previous = queryClient.getQueryData<z.output<typeof zCurrentUser>>(['api', '/api/v1/me']);
+            const previous = queryClient.getQueryData<z.output<typeof zCurrentUser>>(currentUserKey);
 
             const preview =
                 previous && update.theme
-                    ? queryClient.setQueryData(['api', '/api/v1/me'], { ...previous, theme: update.theme })
+                    ? queryClient.setQueryData(currentUserKey, { ...previous, theme: update.theme })
                     : undefined;
 
             try {
-                return await api.patch('/api/v1/me', { json: update }).json(zCurrentUser);
+                return await api.patch(currentUserPath, { json: update }).json(zCurrentUser);
             } catch (error) {
                 // A newer account response must not be replaced by this attempt's rollback.
-                if (preview && queryClient.getQueryData(['api', '/api/v1/me']) === preview) {
-                    queryClient.setQueryData(['api', '/api/v1/me'], previous);
+                if (preview && queryClient.getQueryData(currentUserKey) === preview) {
+                    queryClient.setQueryData(currentUserKey, previous);
                 }
 
                 throw error;
             }
         },
         onSuccess: async (user) => {
-            await queryClient.cancelQueries({ queryKey: ['api', '/api/v1/me'], exact: true });
-            queryClient.setQueryData(['api', '/api/v1/me'], user);
+            await queryClient.cancelQueries({ queryKey: currentUserKey, exact: true });
+            queryClient.setQueryData(currentUserKey, user);
         },
         onError: reportError
     });

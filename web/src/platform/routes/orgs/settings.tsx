@@ -20,58 +20,78 @@ import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
 import { Boxes, Building2, ChevronDown, CreditCard, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
 
-const groups = [
-    {
-        label: 'Organization',
-        icon: Building2,
-        sections: [
-            { id: 'general', label: 'General' },
-            { id: 'private-registries', label: 'Private registries' }
-        ]
-    },
-    {
-        label: 'Billing',
-        icon: CreditCard,
-        sections: [
-            { id: 'usage', label: 'Usage' },
-            { id: 'payment-methods', label: 'Payment Methods' },
-            { id: 'invoices', label: 'Invoices' }
-        ]
-    },
-    {
-        label: 'People',
-        icon: Users,
-        sections: [
-            { id: 'members', label: 'Members' },
-            { id: 'invitations', label: 'Invitations' }
-        ]
-    }
-];
-
-const sections = new Set(['solutions', ...groups.flatMap((group) => group.sections.map((section) => section.id))]);
-
 /** Shares organization identity and permissions while sections own resource lifetimes. */
 export default function OrganizationSettings() {
     const membership = useOutletContext<OrganizationContext>();
+    const { organization, role, tags } = membership;
+    const base = `/api/v1/organizations/${organization.id}`;
+    const requested = useLocation().hash.slice(1);
+    const canMaintain = permissions.canMaintain(role);
+    const isOwner = role === 'owner';
 
-    const base = `/api/v1/organizations/${membership.organization.id}`;
-    const location = useLocation();
-
-    // Unknown fragments select General; inactive sections never mount their queries or drafts.
-    const requested = location.hash.slice(1);
-    const section = sections.has(requested) ? requested : 'general';
-
-    // Share the layout-resolved identity and permissions without loading inactive sections.
-    const canMaintain = permissions.canMaintain(membership.role);
+    const general = {
+        id: 'general',
+        label: 'General',
+        content: (
+            <GeneralSection
+                base={base}
+                tags={tags}
+                name={organization.name}
+                canMaintain={canMaintain}
+                canDelete={isOwner}
+            />
+        )
+    };
+    const groups = [
+        {
+            label: 'Organization',
+            icon: Building2,
+            sections: [
+                general,
+                {
+                    id: 'private-registries',
+                    label: 'Private registries',
+                    content: <Registries base={base} canMaintain={canMaintain} />
+                }
+            ]
+        },
+        {
+            label: 'Billing',
+            icon: CreditCard,
+            sections: [
+                { id: 'usage', label: 'Usage', content: <Usage base={base} /> },
+                {
+                    id: 'payment-methods',
+                    label: 'Payment Methods',
+                    content: <PaymentMethods base={base} canManage={isOwner} />
+                },
+                { id: 'invoices', label: 'Invoices', content: <Invoices base={base} canManage={isOwner} /> }
+            ]
+        },
+        {
+            label: 'People',
+            icon: Users,
+            sections: [
+                { id: 'members', label: 'Members', content: <MembersSection base={base} role={role} /> },
+                { id: 'invitations', label: 'Invitations', content: <InvitationsSection base={base} role={role} /> }
+            ]
+        }
+    ];
+    const solutions = {
+        id: 'solutions',
+        content: <SolutionManagement membership={membership} presentation="settings" />
+    };
+    const section =
+        [solutions, ...groups.flatMap((group) => group.sections)].find((item) => item.id === requested) ?? general;
 
     return (
         <Stack gap={8}>
             <title>Organization Settings | LongLink</title>
             <Stack direction="horizontal" gap={3} align="center">
-                <Avatar shape="rounded" name={membership.organization.name} />
+                <Avatar shape="rounded" name={organization.name} />
                 <Stack gap={0}>
                     <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
-                        {membership.organization.name}
+                        {organization.name}
                     </h4>
                     <span className="text-xs text-muted-foreground">Organization</span>
                 </Stack>
@@ -91,7 +111,7 @@ export default function OrganizationSettings() {
                                 <CollapsibleContent>
                                     <div className="flex flex-col gap-0.5 ps-6">
                                         {group.sections.map((item) => (
-                                            <SettingsLink active={section} id={item.id} key={item.id}>
+                                            <SettingsLink active={section.id} id={item.id} key={item.id}>
                                                 {item.label}
                                             </SettingsLink>
                                         ))}
@@ -99,38 +119,14 @@ export default function OrganizationSettings() {
                                 </CollapsibleContent>
                             </Collapsible>
                         ))}
-                        <SettingsLink active={section} id="solutions">
+                        <SettingsLink active={section.id} id={solutions.id}>
                             <Boxes className="size-4" aria-hidden="true" />
                             Solutions
                         </SettingsLink>
                     </>
                 }
             >
-                <ApiBoundary key={section}>
-                    {section === 'usage' ? (
-                        <Usage base={base} />
-                    ) : section === 'payment-methods' ? (
-                        <PaymentMethods base={base} canManage={membership.role === 'owner'} />
-                    ) : section === 'invoices' ? (
-                        <Invoices base={base} canManage={membership.role === 'owner'} />
-                    ) : section === 'private-registries' ? (
-                        <Registries base={base} canMaintain={canMaintain} />
-                    ) : section === 'members' ? (
-                        <MembersSection base={base} role={membership.role} />
-                    ) : section === 'invitations' ? (
-                        <InvitationsSection base={base} role={membership.role} />
-                    ) : section === 'solutions' ? (
-                        <SolutionManagement membership={membership} presentation="settings" />
-                    ) : (
-                        <GeneralSection
-                            base={base}
-                            tags={membership.tags}
-                            name={membership.organization.name}
-                            canMaintain={canMaintain}
-                            canDelete={membership.role === 'owner'}
-                        />
-                    )}
-                </ApiBoundary>
+                <ApiBoundary key={section.id}>{section.content}</ApiBoundary>
             </SettingsLayout>
         </Stack>
     );

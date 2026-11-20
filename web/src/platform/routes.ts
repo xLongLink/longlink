@@ -1,5 +1,5 @@
-import { componentDocumentation } from './publications';
 import type { RouteConfig } from '@react-router/dev/routes';
+import { brandingPages, componentDocumentation, legalPages } from './publications';
 
 export default [
     {
@@ -45,14 +45,7 @@ export default [
     },
     {
         file: './layouts/legal.tsx',
-        children: [
-            { path: 'terms', file: './routes/legal/terms.tsx' },
-            { path: 'impressum', file: './routes/legal/impressum.tsx' },
-            { path: 'privacy', file: './routes/legal/privacy.tsx' },
-            { path: 'branding/assets', file: './routes/branding/assets.tsx' },
-            { path: 'branding/values', file: './routes/branding/values.tsx' },
-            { path: 'branding/comunication', file: './routes/branding/communication.tsx' }
-        ]
+        children: [...legalPages, ...brandingPages].map(({ path, file }) => ({ path: path.slice(1), file }))
     },
     {
         file: './layouts/account.tsx',
