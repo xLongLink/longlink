@@ -6,7 +6,7 @@ import { ApiErrorContext } from '@/lib/errors';
 import { renderStatic, withMounted } from '../../render';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useUpdateUser, useAuthenticatedUser, AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { useUpdateUser, useAuthenticatedUser, AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 const userKey = ['api', '/api/v1/me'];
 

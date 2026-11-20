@@ -10,13 +10,13 @@ import { createNotifications, NotificationContext } from '@/lib/notifications';
 import { QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 
 /** Connects cache and direct-request failures to the notification layer. */
-export function ApiProvider({ children }: { children: ReactNode }) {
+export function ApiProvider({ children, platformSession }: { children: ReactNode; platformSession: boolean }) {
     const toasterId = useId();
 
     // Keep notifications and deduplication local to this document's API runtime.
     const [runtime] = useState(() => {
         const notifications = createNotifications(toasterId);
-        const query = createQueryRuntime(notifications.notify, import.meta.env.MODE !== 'sdk', notifications.dismiss);
+        const query = createQueryRuntime(notifications.notify, platformSession, notifications.dismiss);
 
         return { ...query, notifications };
     });

@@ -5,9 +5,9 @@ import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useErrorBoundary } from 'react-error-boundary';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
+import { useAuthenticatedUser } from '@/platform/hooks/use-user';
 import { BookOpen, Building2, ChevronsUpDown, ExternalLink, LogOut, Settings2 } from 'lucide-react';
 import {
     DropdownMenu,

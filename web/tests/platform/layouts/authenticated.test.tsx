@@ -6,8 +6,8 @@ import { withMounted } from '../../render';
 import { Route, Routes } from 'react-router';
 import { ApiProvider } from '@/components/api';
 import { renderPlatform, user } from '../render';
+import { AccountProvider } from '@/platform/account';
 import Layout from '@/platform/layouts/authenticated';
-import { AccountAppearanceProvider } from '@/components/appearance';
 
 it('does not mount protected content while the identity request is unresolved', () => {
     // Act
@@ -28,10 +28,10 @@ it('refreshes the startup cache when the account changes without changing its ap
         localStorage.removeItem('longlink:appearance');
 
         await withMounted(
-            <ApiProvider>
-                <AccountAppearanceProvider>
+            <ApiProvider platformSession>
+                <AccountProvider>
                     <p>Account</p>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiProvider>,
             async () => {
                 await vi.waitFor(async () => {
@@ -84,15 +84,15 @@ it.each([401, 503])(
 
         try {
             await withMounted(
-                <ApiProvider>
-                    <AccountAppearanceProvider>
+                <ApiProvider platformSession>
+                    <AccountProvider>
                         <Routes>
                             <Route element={<Layout />}>
                                 <Route path="/user/organizations" element={<p>Private organizations</p>} />
                             </Route>
                             <Route path="/login" element={<p>Sign in again</p>} />
                         </Routes>
-                    </AccountAppearanceProvider>
+                    </AccountProvider>
                 </ApiProvider>,
                 async (output) => {
                     await act(async () => {

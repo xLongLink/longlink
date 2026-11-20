@@ -13,7 +13,7 @@ import { AppearanceProvider } from '@/components/appearance';
 it('preserves a supplied email when linking back to sign in', () => {
     // Act
     const output = renderPlatform(
-        <ApiProvider>
+        <ApiProvider platformSession>
             <Page />
         </ApiProvider>,
         '/auth/register?email=owner%40example.com'
@@ -46,7 +46,7 @@ it('delivers registration failure and confirmed success through one Sonner queue
             root.render(
                 <MemoryRouter initialEntries={['/auth/register?email=owner%40example.com']}>
                     <AppearanceProvider preference={{ theme: 'dark' }}>
-                        <ApiProvider>
+                        <ApiProvider platformSession>
                             <ApiBoundary>
                                 <Page />
                             </ApiBoundary>

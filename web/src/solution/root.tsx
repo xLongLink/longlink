@@ -17,7 +17,7 @@ export default function SolutionRoot() {
     // Keep theme and API ownership around the active route.
     return (
         <CachedAppearanceProvider>
-            <ApiProvider>
+            <ApiProvider platformSession={false}>
                 <ApiBoundary>
                     <Outlet />
                 </ApiBoundary>

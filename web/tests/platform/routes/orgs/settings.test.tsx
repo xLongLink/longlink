@@ -12,8 +12,8 @@ import userEvent from '@testing-library/user-event';
 import Settings from '@/platform/routes/orgs/settings';
 import Organization from '@/platform/layouts/organization';
 import { renderPlatform, membership, user } from '../../render';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 import OrganizationAccess from '@/platform/layouts/organization-access';
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 

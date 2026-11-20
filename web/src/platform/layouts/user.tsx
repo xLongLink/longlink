@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router';
+import { ProfileMenu } from '@/platform/profile';
 import { Building2, Settings2 } from 'lucide-react';
 import Platform from '@/components/layouts/platform';
-import { ProfileMenu } from '@/components/ui/profile';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {

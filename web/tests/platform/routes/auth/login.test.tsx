@@ -9,11 +9,11 @@ import Page from '@/platform/routes/auth/login';
 import BrandLayout from '@/platform/layouts/brand';
 import { renderPlatform, user } from '../../render';
 import userEvent from '@testing-library/user-event';
+import { AccountProvider } from '@/platform/account';
 import AccountLayout from '@/platform/layouts/account';
 import McpAuthorization from '@/platform/routes/auth/mcp';
 import { Route, Routes, useLocation } from 'react-router';
 import AuthenticatedLayout from '@/platform/layouts/authenticated';
-import { AccountAppearanceProvider } from '@/components/appearance';
 
 /** Exposes the actual router destination without replacing navigation. */
 function LocationProbe() {
@@ -91,7 +91,7 @@ it.each([
             await withMounted(
                 <ApiErrorContext value={(error) => errors.push(error)}>
                     <LocationProbe />
-                    <AccountAppearanceProvider>
+                    <AccountProvider>
                         <ApiBoundary>
                             <Routes>
                                 <Route element={<AccountLayout />}>
@@ -105,7 +105,7 @@ it.each([
                                 </Route>
                             </Routes>
                         </ApiBoundary>
-                    </AccountAppearanceProvider>
+                    </AccountProvider>
                 </ApiErrorContext>,
                 async (output) => {
                     // Submit valid form values with an incorrect password.
@@ -215,14 +215,14 @@ it('retains the complete MCP approval query when the persistent identity is alre
         await withMounted(
             <ApiErrorContext value={() => undefined}>
                 <LocationProbe />
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <ApiBoundary>
                         <Routes>
                             <Route path="/login" element={<Page />} />
                             <Route path="/mcp/authorize" element={<p>MCP approval</p>} />
                         </Routes>
                     </ApiBoundary>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 await vi.waitFor(async () => {
@@ -254,7 +254,7 @@ it('carries the trimmed live email draft through SPA registration navigation', a
     try {
         await withMounted(
             <ApiErrorContext value={() => undefined}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <ApiBoundary>
                         <Routes>
                             <Route path="/login" element={<Page />} />
@@ -262,7 +262,7 @@ it('carries the trimmed live email draft through SPA registration navigation', a
                             <Route path="/auth/forgot-password" element={<p>Recovery destination</p>} />
                         </Routes>
                     </ApiBoundary>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Editing email updates only the registration handoff, without submitting credentials.
@@ -311,11 +311,11 @@ it('uses document navigation for enabled OAuth providers without submitting pass
     try {
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <ApiBoundary>
                         <Page />
                     </ApiBoundary>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 const events = userEvent.setup();

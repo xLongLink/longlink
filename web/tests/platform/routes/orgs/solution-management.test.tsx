@@ -54,7 +54,7 @@ it('joins repeated log refreshes, retains logs after failure, and recovers befor
 
     try {
         await withMounted(
-            <ApiProvider>
+            <ApiProvider platformSession>
                 <Logs />
             </ApiProvider>,
             async () => {
@@ -150,7 +150,7 @@ async function withSolutions(role: OrganizationContext['role'], check: (output: 
 
     try {
         await withMounted(
-            <ApiProvider>
+            <ApiProvider platformSession>
                 <Suspense fallback={<p>Loading solutions</p>}>
                     <Management
                         membership={{ ...membership, role, tags: [], activeTag: undefined }}
@@ -211,7 +211,7 @@ it('opens row tags with the existing assignment and saves edits before closing',
 
     try {
         await withMounted(
-            <ApiProvider>
+            <ApiProvider platformSession>
                 <Suspense fallback={<p>Loading solutions</p>}>
                     <Management
                         membership={{ ...membership, tags: [], activeTag: undefined }}

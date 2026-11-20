@@ -2,7 +2,7 @@
 import { it, expect } from 'vitest';
 import Layout from '@/platform/layouts/admin';
 import { renderPlatform, user } from '../render';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 it('does not reveal administrator navigation to a regular Platform user', () => {
     // Act

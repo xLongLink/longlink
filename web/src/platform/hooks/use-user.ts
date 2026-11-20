@@ -19,7 +19,7 @@ export function useCurrentUser() {
 
     // Keep identity ownership at the account provider rather than silently adding a query.
     if (user === undefined) {
-        throw new Error('useCurrentUser must be used within AccountAppearanceProvider');
+        throw new Error('useCurrentUser must be used within AccountProvider');
     }
 
     return user;

@@ -37,7 +37,7 @@ it('keeps pending feedback and its dismissal when document appearance and direct
         html.dir = 'ltr';
 
         await withMounted(
-            <ApiProvider>
+            <ApiProvider platformSession>
                 <Failure />
             </ApiProvider>,
             async () => {
@@ -92,7 +92,7 @@ it('keeps initial direct-error feedback through the document StrictMode effect r
         flushSync(() =>
             root.render(
                 <StrictMode>
-                    <ApiProvider>
+                    <ApiProvider platformSession>
                         <InitialFailure />
                     </ApiProvider>
                 </StrictMode>
@@ -145,7 +145,7 @@ it('keeps API failures in Sonner’s live region while a real dialog opens and c
 
     try {
         await withMounted(
-            <ApiProvider>
+            <ApiProvider platformSession>
                 <MembershipDialog />
             </ApiProvider>,
             async (output) => {
@@ -245,7 +245,7 @@ it('reports one failed GET shared by observers, supports dismissal, and recovers
         // Act
         flushSync(() =>
             root.render(
-                <ApiProvider>
+                <ApiProvider platformSession>
                     <Orders />
                     <Orders />
                 </ApiProvider>
@@ -327,7 +327,7 @@ it('reports direct API failures without a legacy toast provider and clears prior
         // Act
         flushSync(() =>
             root.render(
-                <ApiProvider>
+                <ApiProvider platformSession>
                     <ChangeOrder />
                 </ApiProvider>
             )
@@ -393,7 +393,7 @@ it('dismisses only its own notifications and prevents late direct failures from 
             root.render(
                 <>
                     <Toaster id="other-owner" />
-                    <ApiProvider>
+                    <ApiProvider platformSession>
                         <DirectRequest />
                     </ApiProvider>
                 </>
@@ -416,7 +416,7 @@ it('dismisses only its own notifications and prevents late direct failures from 
             root.render(
                 <>
                     <Toaster id="other-owner" />
-                    <ApiProvider>
+                    <ApiProvider platformSession>
                         <p>Next account</p>
                     </ApiProvider>
                 </>

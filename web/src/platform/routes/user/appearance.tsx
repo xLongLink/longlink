@@ -1,5 +1,5 @@
-import { useUpdateUser } from '@/lib/hooks/use-user';
 import { Card } from '@/components/longlink/layout/card';
+import { useUpdateUser } from '@/platform/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */

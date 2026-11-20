@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
+import { ProfileMenu } from '@/platform/profile';
 import Platform from '@/components/layouts/platform';
-import { ProfileMenu } from '@/components/ui/profile';
 import * as permissions from '@/platform/permissions';
 import { SolutionPage } from '@/views/host/solution-page';
 import { Stack } from '@/components/longlink/layout/stack';

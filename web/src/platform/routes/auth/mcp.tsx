@@ -2,10 +2,10 @@ import { api } from '@/lib/api';
 import { AuthLayout } from './auth-layout';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
-import { useCurrentUser } from '@/lib/hooks/use-user';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
 import { Stack } from '@/components/longlink/layout/stack';
+import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { zConsent, zAuthorizationRedirect } from '@/lib/generated/platform-api-v1/zod.gen';
 

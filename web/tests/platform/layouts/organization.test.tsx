@@ -7,7 +7,7 @@ import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import Layout from '@/platform/layouts/organization';
 import { Outlet, Route, Routes } from 'react-router';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 

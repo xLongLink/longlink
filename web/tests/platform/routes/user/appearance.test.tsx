@@ -6,8 +6,8 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
+import { AccountProvider } from '@/platform/account';
 import Appearance from '@/platform/routes/user/appearance';
-import { AccountAppearanceProvider } from '@/components/appearance';
 
 it('saves the theme by keyboard without submitting a form or allowing duplicate writes', async () => {
     // Arrange
@@ -38,7 +38,7 @@ it('saves the theme by keyboard without submitting a form or allowing duplicate 
     try {
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <form
                         onSubmit={(event) => {
                             event.preventDefault();
@@ -47,7 +47,7 @@ it('saves the theme by keyboard without submitting a form or allowing duplicate 
                     >
                         <Appearance />
                     </form>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Act

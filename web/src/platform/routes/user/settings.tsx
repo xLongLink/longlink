@@ -11,8 +11,8 @@ import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { PageContainer } from '@/components/layouts/page-container';
-import { useUpdateUser, useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
+import { useUpdateUser, useAuthenticatedUser } from '@/platform/hooks/use-user';
 
 /** Renders account metadata and resets drafts when the authenticated identity changes. */
 export default function Settings() {
