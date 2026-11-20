@@ -10,6 +10,8 @@ export function Dialog({
     defaultOpen,
     onOpenChange,
     title,
+    showHeader = true,
+    bodyPadding = true,
     description,
     trigger,
     footer,
@@ -20,6 +22,8 @@ export function Dialog({
     dismissible = true
 }: Pick<ComponentProps<typeof dialog.Dialog>, 'open' | 'defaultOpen' | 'onOpenChange'> & {
     title: string;
+    showHeader?: boolean;
+    bodyPadding?: boolean;
     description?: string;
     trigger?: ReactElement;
     footer?: ReactNode;
@@ -66,12 +70,18 @@ export function Dialog({
                     height: fullscreen ? '95dvh' : height
                 }}
             >
-                <dialog.DialogHeader className={cn('shrink-0 p-4', hasBody && 'pb-0', dismissible && 'pr-12')}>
+                <dialog.DialogHeader
+                    className={cn(
+                        showHeader ? 'shrink-0 p-4' : 'sr-only',
+                        showHeader && hasBody && 'pb-0',
+                        showHeader && dismissible && 'pr-12'
+                    )}
+                >
                     <dialog.DialogTitle>{title}</dialog.DialogTitle>
                     {description && <dialog.DialogDescription>{description}</dialog.DialogDescription>}
                 </dialog.DialogHeader>
                 {hasBody && (
-                    <div data-slot="dialog-body" className="min-h-0 flex-1 overflow-auto p-4">
+                    <div data-slot="dialog-body" className={cn('min-h-0 flex-1 overflow-auto', bodyPadding && 'p-4')}>
                         {children}
                     </div>
                 )}
