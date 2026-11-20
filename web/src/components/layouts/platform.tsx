@@ -186,7 +186,7 @@ function PlatformLayout({
                                 aria-expanded={expanded}
                                 aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
                             />
-                            <Separator className="h-5" orientation="vertical" />
+                            <Separator className="h-5 data-[orientation=vertical]:self-center" orientation="vertical" />
                             {breadcrumb ?? <Breadcrumbs items={[{ label: selectedTab?.label }]} />}
                         </section>
                     }
