@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { renderStatic } from '../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
+import { AccountProvider } from '@/platform/account';
 import { Outlet, Route, Routes } from 'react-router';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
-import { AccountAppearanceProvider } from '@/components/appearance';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { zCurrentUser, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -32,7 +32,7 @@ export function renderPlatform(
 ) {
     return renderStatic(
         <ApiErrorContext value={() => undefined}>
-            <AccountAppearanceProvider>
+            <AccountProvider>
                 <AuthenticatedUserContext value={user}>
                     <Routes>
                         <Route element={<Outlet context={context} />}>
@@ -40,7 +40,7 @@ export function renderPlatform(
                         </Route>
                     </Routes>
                 </AuthenticatedUserContext>
-            </AccountAppearanceProvider>
+            </AccountProvider>
         </ApiErrorContext>,
         path,
         resources

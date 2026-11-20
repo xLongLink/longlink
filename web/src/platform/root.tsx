@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { PageLoading } from '@/components/ui/utils';
+import { AccountProvider } from '@/platform/account';
 import { appearanceBootstrap } from '@/lib/appearance';
 import { ApiBoundary, ApiProvider } from '@/components/api';
 import { AppearanceContext } from '@/lib/hooks/use-appearance';
-import { AccountAppearanceProvider } from '@/components/appearance';
 import { useDocumentAppearance } from '@/lib/hooks/use-document-appearance';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from 'react-router';
 import '@/index.css';
@@ -24,12 +24,12 @@ export default function PlatformRoot() {
     const content = isHome ? (
         <Outlet />
     ) : (
-        <ApiProvider>
-            <AccountAppearanceProvider>
+        <ApiProvider platformSession>
+            <AccountProvider>
                 <ApiBoundary>
                     <Outlet />
                 </ApiBoundary>
-            </AccountAppearanceProvider>
+            </AccountProvider>
         </ApiProvider>
     );
 

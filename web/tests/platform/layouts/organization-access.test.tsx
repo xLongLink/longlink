@@ -8,7 +8,7 @@ import { ApiErrorContext } from '@/lib/errors';
 import Organization from '@/platform/layouts/organization';
 import Layout from '@/platform/layouts/organization-access';
 import { renderPlatform, membership, user } from '../render';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 it('keeps unresolved organization reads behind their loading boundary', () => {
     // Act

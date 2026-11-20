@@ -4,7 +4,7 @@ import Brand from '@/platform/layouts/brand';
 import { Navigate, Outlet } from 'react-router';
 import { Button } from '@/components/longlink/action/button';
 import { PageError, PageLoading } from '@/components/ui/utils';
-import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext, useCurrentUser } from '@/platform/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {

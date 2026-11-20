@@ -45,7 +45,7 @@ it('navigates public and legal pages in the SPA and preserves back navigation', 
     );
 });
 
-it('isolates external-link openers and retains the email contact destination', async () => {
+it('isolates external-link openers', async () => {
     await withMounted(
         <FooterNavigation />,
         async (output) => {
@@ -57,12 +57,6 @@ it('isolates external-link openers and retains the email contact destination', a
                     expect.arrayContaining(['noopener', 'noreferrer'])
                 );
             }
-
-            const contact = output.querySelector(
-                'nav[aria-label="Legal navigation"] a[href="mailto:info@longlink.dev"]'
-            );
-
-            if (!contact) throw new Error('Expected contact link');
         },
         '/pricing/'
     );

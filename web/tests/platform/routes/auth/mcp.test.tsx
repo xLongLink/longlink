@@ -6,7 +6,7 @@ import { withMounted } from '../../../render';
 import Page from '@/platform/routes/auth/mcp';
 import { ApiErrorContext } from '@/lib/errors';
 import { renderPlatform, user } from '../../render';
-import { AccountAppearanceProvider } from '@/components/appearance';
+import { AccountProvider } from '@/platform/account';
 
 it('withholds approval actions until the server has validated the consent request', () => {
     // Act
@@ -66,9 +66,9 @@ it.each([
 
             try {
                 await withMounted(
-                    <AccountAppearanceProvider>
+                    <AccountProvider>
                         <Page />
-                    </AccountAppearanceProvider>,
+                    </AccountProvider>,
                     async (output) => {
                         await act(async () => {
                             await vi.waitFor(() =>
@@ -147,9 +147,9 @@ it('prevents duplicate decisions while pending and permits retry after a reporte
     try {
         await withMounted(
             <ApiErrorContext value={reportError}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <Page />
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 await act(async () => {

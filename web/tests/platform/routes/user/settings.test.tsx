@@ -7,8 +7,8 @@ import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import Page from '@/platform/routes/user/settings';
 import userEvent from '@testing-library/user-event';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 /** Publishes authoritative profile responses through the authenticated route context. */
 function AccountSettings() {

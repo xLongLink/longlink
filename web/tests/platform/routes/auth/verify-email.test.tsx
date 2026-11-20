@@ -10,9 +10,9 @@ import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
+import { AccountProvider } from '@/platform/account';
 import Page from '@/platform/routes/auth/verify-email';
 import AuthenticatedLayout from '@/platform/layouts/authenticated';
-import { AccountAppearanceProvider } from '@/components/appearance';
 
 it('allows account credential entry only after the email proof exchange succeeds', async () => {
     // Arrange
@@ -47,13 +47,13 @@ it('allows account credential entry only after the email proof exchange succeeds
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <Brand>
                         <ApiBoundary>
                             <Page />
                         </ApiBoundary>
                     </Brand>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert
@@ -128,11 +128,11 @@ it('retains pending proof when verification is canceled by unmounting', async ()
     try {
         await withMounted(
             <ApiErrorContext value={() => undefined}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <ApiBoundary>
                         <Page />
                     </ApiBoundary>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 await vi.waitFor(() => expect(verificationRequest).toBeDefined());
@@ -188,11 +188,11 @@ it.each(['transport failure', 'invalid response'])('retains email proof for retr
     try {
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <ApiBoundary>
                         <Page />
                     </ApiBoundary>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // A failed exchange must retain proof without admitting credential entry.
@@ -336,13 +336,13 @@ it('withholds account credentials and offers a new link when email proof is reje
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AccountAppearanceProvider>
+                <AccountProvider>
                     <Brand>
                         <ApiBoundary>
                             <Page />
                         </ApiBoundary>
                     </Brand>
-                </AccountAppearanceProvider>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert

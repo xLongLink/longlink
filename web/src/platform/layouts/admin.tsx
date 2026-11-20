@@ -1,10 +1,10 @@
 import { Outlet } from 'react-router';
+import { ProfileMenu } from '@/platform/profile';
 import { adminNavigation } from '@/platform/admin';
 import Platform from '@/components/layouts/platform';
-import { ProfileMenu } from '@/components/ui/profile';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import NotFoundLayout from '@/components/layouts/not-found';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { useAuthenticatedUser } from '@/platform/hooks/use-user';
 import { PageContainer } from '@/components/layouts/page-container';
 
 /** Renders authorized administration within the shared application layouts. */

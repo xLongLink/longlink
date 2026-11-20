@@ -5,11 +5,11 @@ import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
 import { user } from '../platform/render';
 import { useLocation } from 'react-router';
+import { ProfileMenu } from '@/platform/profile';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ProfileMenu } from '@/components/ui/profile';
 import { SidebarProvider } from '@/components/shadcn/sidebar';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 /** Observes real Router navigation without replacing its link behavior. */
 function Location() {

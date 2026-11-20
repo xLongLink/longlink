@@ -7,7 +7,7 @@ import { membership, user } from '../../render';
 import { Outlet, Route, Routes } from 'react-router';
 import Settings from '@/platform/routes/orgs/settings';
 import { renderStatic, withMounted } from '../../../render';
-import { AuthenticatedUserContext } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
