@@ -30,7 +30,7 @@ def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None
     async def get_context(value: context.Context) -> dict[str, str | bool]:
         """Expose dependency values for the request-boundary test."""
 
-        return {"name": value.user.name, "storage_matches": value.storage is app.state.longlink.storage}
+        return {"name": value.user.name if value.user is not None else "", "storage_matches": value.storage is app.state.longlink.storage}
 
     async def read_profile() -> tuple[str, str, str]:
         """Read committed profile fields outside the request's identity map."""
@@ -61,6 +61,8 @@ def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None
         stale = client.get("/", headers=identity_headers(user))
         assert client.portal is not None
         persisted_profile = client.portal.call(read_profile)
+        guest_token = identity.create_identity_token(None, IDENTITY_SECRET, app.state.permission_catalog.access("read"))
+        guest_response = client.get("/", headers={"x-longlink-identity": guest_token})
 
     # Assert
     assert response.status_code == 200
@@ -72,6 +74,8 @@ def test_data_resolves_request_services(monkeypatch: pytest.MonkeyPatch) -> None
     assert stale.status_code == 200
     assert stale.json() == refreshed.json()
     assert persisted_profile == ("Updated", "updated@example.com", "https://example.com/updated.png")
+    assert guest_response.status_code == 200
+    assert guest_response.json() == {"name": "", "storage_matches": True}
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -88,6 +92,7 @@ def test_data_closes_database_session_when_endpoint_fails(monkeypatch: pytest.Mo
     async def fail(value: context.Context) -> None:
         """Fail after the context dependency opens its session."""
 
+        assert value.user is not None
         value.user.name = "Rolled back"
         await value.database.flush()
         raise RuntimeError("endpoint failed")

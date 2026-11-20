@@ -28,6 +28,7 @@ class OrganizationSolutionSummary(BaseModel):
 
     # Metadata
     name: str
+    public: bool = False
     description: str | None = None
 
     # Categories

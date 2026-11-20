@@ -20,15 +20,19 @@ class DevelopmentIdentity(BaseModel):
     user: Annotated[User, BeforeValidator(User.model_validate)]
 
 
-def create_identity_token(user: User, secret: str, access: permissions.Access | None = None) -> str:
+def create_identity_token(user: User | None, secret: str, access: permissions.Access | None = None) -> str:
     """Create one short-lived Platform identity assertion for a Solution request."""
+
+    # Anonymous assertions carry grants but never impersonate a persisted user.
+    if user is None and access is None:
+        raise ValueError("Anonymous identity requires endpoint permissions")
 
     # Bind the assertion to one user and a fixed runtime-only token purpose.
     issued_at = datetime.now(UTC)
     return jwt.encode(
         {
-            "sub": str(user.id),
-            "profile": user.model_dump(mode="json", exclude={"id"}),
+            "sub": str(user.id) if user is not None else "anonymous",
+            "profile": user.model_dump(mode="json", exclude={"id"}) if user is not None else None,
             "access": access.model_dump(mode="json") if access is not None else None,
             "aud": IDENTITY_TOKEN_AUDIENCE,
             "iat": issued_at,
@@ -40,7 +44,7 @@ def create_identity_token(user: User, secret: str, access: permissions.Access | 
     )
 
 
-def identity_token_data(token: str, secret: str) -> tuple[User, permissions.Access | None]:
+def identity_token_data(token: str, secret: str) -> tuple[User | None, permissions.Access | None]:
     """Validate the user profile carried by a signed Platform identity assertion."""
 
     # Reject missing runtime credentials before attempting JWT verification.
@@ -49,15 +53,21 @@ def identity_token_data(token: str, secret: str) -> tuple[User, permissions.Acce
 
     # Restrict verification to LongLink's fixed algorithm and token purpose.
     data = jwt.decode(
-        token,
-        secret,
-        audience=IDENTITY_TOKEN_AUDIENCE,
-        algorithms=[IDENTITY_TOKEN_ALGORITHM],
-        options={"require": ["exp", "iat", "sub", "profile"]},
+        token, secret, audience=IDENTITY_TOKEN_AUDIENCE, algorithms=[IDENTITY_TOKEN_ALGORITHM], options={"require": ["exp", "iat", "sub"]}
     )
 
     # Validate profile fields and require an authoritative timestamp for ordered updates.
     try:
+        if "profile" not in data:
+            raise jwt.InvalidTokenError("Identity profile is required")
+        access = permissions.Access.model_validate(data["access"]) if data.get("access") is not None else None
+
+        # A signed anonymous principal has no profile and always has explicit endpoint grants.
+        if data["sub"] == "anonymous":
+            if data["profile"] is not None or access is None:
+                raise jwt.InvalidTokenError("Invalid anonymous identity")
+            return None, access
+
         profile = data["profile"]
         if not isinstance(profile, dict) or "updated_at" not in profile:
             raise jwt.InvalidTokenError("Invalid identity token profile")
@@ -67,7 +77,6 @@ def identity_token_data(token: str, secret: str) -> tuple[User, permissions.Acce
         if user.updated_at.tzinfo is None:
             raise jwt.InvalidTokenError("Profile timestamp must include a timezone")
         user.updated_at = user.updated_at.astimezone(UTC)
-        access = permissions.Access.model_validate(data["access"]) if data.get("access") is not None else None
         return user, access
 
     # Invalid signed profiles share the JWT authentication error boundary.

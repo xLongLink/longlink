@@ -22,6 +22,7 @@ const publicPagePaths = [
     '/login',
     '/pricing',
     '/explore',
+    '/explore/solutions',
     '/explore/catalog',
     ...legalPaths,
     ...brandingPaths,

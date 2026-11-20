@@ -28,6 +28,7 @@ def test_solution_test_client_replaces_development_services_with_testing_service
 
         # Observe disposal of the replacement services rather than the original development database.
         event.listen(value.database.get_bind(), "engine_disposed", disposed.append)
+        assert value.user is not None
         return value.user.name
 
     # Act

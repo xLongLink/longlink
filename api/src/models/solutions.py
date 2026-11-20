@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, AfterValidator, field_validator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from src.models.statuses import Status
 from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 
 
@@ -92,3 +93,39 @@ class SolutionResponse(OrganizationSolutionSummary):
 
     # Audit
     created_at: datetime
+
+
+class SolutionVisibility(BaseModel):
+    """Validate a maintainer's publication decision."""
+
+    # Visibility
+    public: bool
+
+
+class PublicOrganization(BaseModel):
+    """Expose only a public Solution's owning Organization identity."""
+
+    model_config = {"from_attributes": True}
+
+    # Identity
+    id: UUID
+    name: str
+
+
+class PublicSolution(BaseModel):
+    """Expose public display metadata without deployment configuration or credentials."""
+
+    model_config = {"from_attributes": True}
+
+    # Identity
+    id: UUID
+    name: str
+    description: str | None
+
+    # State
+    status: Status
+    public: bool
+    deployed_version: str | None
+
+    # Organization
+    organization: PublicOrganization
