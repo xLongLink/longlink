@@ -59,7 +59,7 @@ export default function OrganizationSettings() {
             label: 'Billing',
             icon: CreditCard,
             sections: [
-                { id: 'usage', label: 'Usage', content: <Usage base={base} /> },
+                { id: 'usage', label: 'Usage', content: <Usage base={base} canManage={isOwner} /> },
                 {
                     id: 'payment-methods',
                     label: 'Payment Methods',

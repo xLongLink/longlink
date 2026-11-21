@@ -113,6 +113,13 @@ it('preserves a replacement credential draft when an earlier registry save compl
                         expect(credentials).toEqual([{ provider: 'ghcr', credential: 'ghp_credential_A' }])
                     );
                     expect(document.querySelector('[role="dialog"] form')?.getAttribute('aria-busy')).toBe('true');
+                    const cancel = Array.from(
+                        document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')
+                    ).find((button) => button.textContent === 'Cancel');
+                    if (!cancel) throw new Error('Expected the registry cancel action');
+                    expect(cancel.getAttribute('aria-disabled')).toBe('true');
+                    await act(async () => cancel.click());
+                    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
 
                     const close = document.querySelector<HTMLButtonElement>(
                         '[role="dialog"] [data-slot="dialog-close"]'
@@ -148,6 +155,13 @@ it('preserves a replacement credential draft when an earlier registry save compl
                     expect(credentials).toEqual([{ provider: 'ghcr', credential: 'ghp_credential_A' }]);
                     expect(requests).toEqual([`POST ${path}`, `GET ${path}`]);
                     expect(errors).toEqual([]);
+                    const cancelReplacement = Array.from(replacement?.querySelectorAll('button') ?? []).find(
+                        (button) => button.textContent === 'Cancel'
+                    );
+                    if (!cancelReplacement) throw new Error('Expected the replacement cancel action');
+                    await act(async () => cancelReplacement.click());
+                    expect(document.querySelector('[role="dialog"]')).toBeNull();
+                    expect(credentials).toHaveLength(1);
                 } finally {
                     await act(async () => finishSave(new Response(null, { status: 204 })));
                 }

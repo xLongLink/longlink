@@ -73,7 +73,7 @@ describe('DeploymentReview', () => {
 
         // Act
         await act(async () => button('Retry').click());
-        await act(async () => vi.waitFor(() => button('Update solution')));
+        await act(async () => vi.waitFor(() => button('Next')));
 
         // Assert
         expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
@@ -83,6 +83,12 @@ describe('DeploymentReview', () => {
         expect(onSuccess).not.toHaveBeenCalled();
 
         // Act
+        await act(async () => button('Next').click());
+        expect(submissions).toEqual([]);
+        expect(document.body.textContent).toContain('No required environments.');
+        await act(async () => button('Next').click());
+        expect(submissions).toEqual([]);
+        expect(document.body.textContent).toContain('No optional environments.');
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         await act(async () => button('Update solution').click());
 
@@ -98,21 +104,19 @@ describe('DeploymentReview', () => {
         });
     });
 
-    it('preserves untouched configured secrets and gives removal precedence over an edited value', async () => {
+    it('validates required secrets, preserves drafts across steps, and submits only on the final step', async () => {
         // Arrange
         const submissions = await openReview(() => Response.json(secretCandidate));
         const user = userEvent.setup();
 
         // Act
-        // The image already changed, so only the missing required value blocks submission.
+        await act(async () => user.click(button('Next')));
         expect(input('REQUIRED_SECRET').value).toBe('');
-        expect(button('Update solution').disabled).toBe(true);
-        await act(async () => button('Update solution').click());
+        expect(document.body.textContent).not.toContain('OPTIONAL_SECRET');
+        await act(async () => button('Next').click());
+        expect(document.activeElement).toBe(input('NEW_SECRET'));
         expect(submissions).toEqual([]);
         await act(async () => user.type(input('NEW_SECRET'), '   '));
-        expect(button('Update solution').disabled).toBe(true);
-        await act(async () => button('Update solution').click());
-        expect(submissions).toEqual([]);
         await act(async () => user.click(input('NEW_SECRET')));
         await act(async () => user.keyboard('{Enter}'));
         expect(submissions).toEqual([]);
@@ -126,12 +130,24 @@ describe('DeploymentReview', () => {
         expect(document.body.textContent).toContain('Please complete this field.');
         expect(submissions).toEqual([]);
         await act(async () => user.clear(input('NEW_SECRET')));
-        await act(async () => user.type(input('NEW_SECRET'), 'n'));
-        expect(input('NEW_SECRET').getAttribute('aria-invalid')).toBe('false');
-        await act(async () => user.type(input('NEW_SECRET'), 'ew-fixture-value'));
-        expect(button('Update solution').disabled).toBe(false);
+        await act(async () => user.type(input('NEW_SECRET'), 'new-fixture-value'));
+        await act(async () => user.keyboard('{Enter}'));
+        expect(submissions).toEqual([]);
+        await act(async () => form.requestSubmit());
+        expect(document.body.textContent).not.toContain('REQUIRED_SECRET');
         await act(async () => user.type(input('OPTIONAL_SECRET'), 'replacement-fixture-value'));
         await act(async () => user.click(label('Remove OPTIONAL_SECRET')));
+        await act(async () => user.click(button('Back')));
+        expect(input('NEW_SECRET').value).toBe('new-fixture-value');
+        expect(input('REQUIRED_SECRET').value).toBe('');
+        await act(async () => user.click(button('Back')));
+        expect(document.body.textContent).toContain('sha256:bbbbbbbbbbbb');
+        await act(async () => user.click(button('Next')));
+        expect(input('NEW_SECRET').value).toBe('new-fixture-value');
+        await act(async () => user.click(button('Next')));
+        expect(input('OPTIONAL_SECRET').value).toBe('replacement-fixture-value');
+        expect(input('OPTIONAL_SECRET').disabled).toBe(true);
+        expect(submissions).toEqual([]);
         await act(async () => button('Update solution').click());
 
         // Assert
@@ -158,6 +174,8 @@ describe('DeploymentReview', () => {
             })
         );
         const user = userEvent.setup();
+        await act(async () => button('Next').click());
+        await act(async () => button('Next').click());
         expect(button('Update solution').disabled).toBe(true);
 
         // Act

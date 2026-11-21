@@ -50,11 +50,9 @@ it.each(['create', 'edit'] as const)(
                 async () => {
                     const dialog = document.querySelector('[role="dialog"]');
                     const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
-                    const submit = dialog?.querySelector<HTMLButtonElement>(
-                        '[data-slot="dialog-footer"] button[type="submit"]'
-                    );
+                    const submit = dialog?.querySelector<HTMLButtonElement>('button[type="submit"]');
 
-                    if (!input || !submit) throw new Error('Expected the tab name and footer submit action');
+                    if (!input || !submit) throw new Error('Expected the tab name and submit action');
                     expect(input.value).toBe(mode === 'edit' ? 'Operations' : '');
 
                     // Reject a blank name before issuing any write.

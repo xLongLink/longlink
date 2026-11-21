@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useId } from 'react';
 import { api } from '@/lib/api';
 import * as tabs from '@/platform/tabs';
 import { Input } from '@/components/shadcn/input';
@@ -34,7 +33,6 @@ export function TagForm({
     tag: z.output<typeof schemas.zOrganizationTagResponse> | null;
     onSuccess: () => Promise<void>;
 }) {
-    const formId = useId();
     const form = useForm({
         resolver: zodResolver(tagSchema),
         defaultValues: { name: tag?.name ?? '', icon: tag?.icon ?? 'tag' }
@@ -59,32 +57,19 @@ export function TagForm({
             open
             onOpenChange={onOpenChange}
             title={tag ? 'Edit tab' : 'New tab'}
-            footer={
-                <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
-                        {tag ? 'Save' : 'Create tab'}
-                    </Button>
-                </>
-            }
+            showHeader={false}
+            bodyPadding={false}
         >
             <form
-                id={formId}
-                className="flex flex-col gap-4"
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={(event) => {
                     void form.handleSubmit(submit)(event);
                 }}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >
-                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
+                    <h2 className="text-center text-xl font-semibold">{tag ? 'Edit tab' : 'New tab'}</h2>
                     <Field data-invalid={Boolean(form.formState.errors.name)}>
                         <FieldLabel htmlFor="tag-name">Name</FieldLabel>
                         <Input
@@ -136,8 +121,31 @@ export function TagForm({
                             </Field>
                         )}
                     />
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <div className="flex items-center justify-between gap-2">
+                        <Button
+                            type="button"
+                            variant="link"
+                            disabled={form.formState.isSubmitting}
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                            {tag ? 'Save' : 'Create tab'}
+                        </Button>
+                    </div>
                 </fieldset>
-                <FieldError errors={[form.formState.errors.root]} />
+                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    <img
+                        src="/images/tabs.png"
+                        alt=""
+                        width={768}
+                        height={768}
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </div>
             </form>
         </Dialog>
     );

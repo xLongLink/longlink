@@ -372,22 +372,17 @@ export const zOrganizationTagMove = z.object({
 });
 
 /**
- * OrganizationUsage
+ * OrganizationUsageUpdate
  *
- * Describe current Organization usage, limits, and month-end pricing.
+ * Validate independently purchased resource pools.
  */
-export const zOrganizationUsage = z.object({
-    free_users: z.int().optional().default(5),
-    free_storage_bytes: z.int().optional().default(1073741824),
-    free_database_bytes: z.int().optional().default(104857600),
-    user_monthly_price: z.int().optional().default(1000),
-    storage_mib_monthly_price: z.string().optional().default('0.02'),
-    database_mib_monthly_price: z.string().optional().default('0.1'),
-    users: z.int().gte(0),
-    solutions: z.int().gte(0),
-    max_solutions: z.int().optional().default(9),
-    stripe_enabled: z.boolean(),
-    has_payment_method: z.boolean()
+export const zOrganizationUsageUpdate = z.object({
+    storage_bytes: z.int().gt(0).lte(9007199254740991),
+    compute_ram_bytes: z.int().gte(268435456).lte(9007199254740991),
+    database_ram_bytes: z.int().gte(268435456).lte(9007199254740991),
+    compute_cpu_millicores: z.int().gte(250).lte(2147483647),
+    database_storage_bytes: z.int().gte(104857600).lte(9007199254740991),
+    database_cpu_millicores: z.int().gte(250).lte(2147483647)
 });
 
 /**
@@ -657,6 +652,29 @@ export const zOrganizationSolutionSummary = z.object({
     deployment_pending: z.boolean(),
     desired_revision_id: z.uuid().nullable(),
     deployed_version: z.string().nullish()
+});
+
+/**
+ * OrganizationUsage
+ *
+ * Describe current Organization usage, limits, and month-end pricing.
+ */
+export const zOrganizationUsage = z.object({
+    cpu_monthly_price: z.int().optional().default(1000),
+    ram_gib_monthly_price: z.int().optional().default(500),
+    storage_gib_monthly_price: z.int().optional().default(1),
+    users: z.int().gte(0),
+    status: zStatus,
+    solutions: z.int().gte(0),
+    max_solutions: z.int().optional().default(9),
+    stripe_enabled: z.boolean(),
+    has_payment_method: z.boolean(),
+    storage_bytes: z.int(),
+    compute_ram_bytes: z.int(),
+    database_ram_bytes: z.int(),
+    compute_cpu_millicores: z.int(),
+    database_storage_bytes: z.int(),
+    database_cpu_millicores: z.int()
 });
 
 /**

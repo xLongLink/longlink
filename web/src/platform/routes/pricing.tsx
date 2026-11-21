@@ -1,45 +1,22 @@
 import { Page } from '@/components/ui/page';
+import { capacityRates } from '@/lib/pricing';
 import { Box } from '@/components/longlink/layout/box';
 import { Link } from '@/components/longlink/action/link';
 import { Grid } from '@/components/longlink/layout/grid';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
-import { Database, HardDrive, UsersRound } from 'lucide-react';
-import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-
-// Schema defaults come from the same constants used to calculate monthly invoices.
-const rates = schemas.zOrganizationUsage
-    .omit({ users: true, solutions: true, max_solutions: true, stripe_enabled: true, has_payment_method: true })
-    .parse({});
+import { Cpu, HardDrive, MemoryStick } from 'lucide-react';
 
 const resources = [
-    {
-        id: 'users',
-        resource: 'Users',
-        publicIncluded: `First ${rates.free_users} users`,
-        rate: `CHF ${(rates.user_monthly_price / 100).toFixed(2)} per additional user`
-    },
-    {
-        id: 'database',
-        resource: 'Database',
-        publicIncluded: `${rates.free_database_bytes / 1024 ** 2} MiB database storage`,
-        rate: `CHF ${(Number(rates.database_mib_monthly_price) / 100).toFixed(3)} per additional MiB`
-    },
-    {
-        id: 'storage',
-        resource: 'File storage',
-        publicIncluded: `${rates.free_storage_bytes / 1024 ** 3} GiB file storage`,
-        rate: `CHF ${(Number(rates.storage_mib_monthly_price) / 100).toFixed(4)} per additional MiB`
-    }
+    { resource: 'CPU', icon: Cpu, rate: `CHF ${capacityRates.cpu_monthly_price / 100} per vCPU` },
+    { resource: 'RAM', icon: MemoryStick, rate: `CHF ${capacityRates.ram_gib_monthly_price / 100} per GiB` },
+    { resource: 'Storage', icon: HardDrive, rate: `CHF ${capacityRates.storage_gib_monthly_price / 100} per GiB` }
 ];
 
-/** Publishes usage pricing from generated backend defaults without introducing plans. */
+/** Publishes monthly organization capacity pricing. */
 export default function Pricing() {
     return (
-        <Page
-            description="Usage-based pricing for LongLink, with free users and storage included."
-            title="Pricing | LongLink"
-        >
+        <Page description="Monthly CPU, RAM, and storage capacity pricing for LongLink." title="Pricing | LongLink">
             <main>
                 <section className="p-6">
                     <Stack className="mx-auto w-full max-w-[1000px]" gap={10} align="center">
@@ -50,16 +27,11 @@ export default function Pricing() {
                         <Box width="100%">
                             <Grid columns={3} gap={0}>
                                 {resources.map((resource) => {
-                                    const ResourceIcon =
-                                        resource.id === 'users'
-                                            ? UsersRound
-                                            : resource.id === 'database'
-                                              ? Database
-                                              : HardDrive;
+                                    const ResourceIcon = resource.icon;
 
                                     return (
                                         <div
-                                            key={resource.id}
+                                            key={resource.resource}
                                             className="-mb-px -mr-px min-w-0 overflow-clip rounded-none border border-border bg-transparent p-6"
                                         >
                                             <Stack gap={6} paddingBlock={10} align="center">
@@ -71,16 +43,9 @@ export default function Pricing() {
                                                 </Stack>
                                                 <Separator className="data-[orientation=horizontal]:w-1/3" />
                                                 <Stack gap={2} align="center">
-                                                    <p className="font-semibold text-center">
-                                                        {resource.publicIncluded}
-                                                    </p>
-                                                    <p className="text-muted-foreground text-center">Included free</p>
-                                                </Stack>
-                                                <Separator className="data-[orientation=horizontal]:w-1/3" />
-                                                <Stack gap={2} align="center">
                                                     <p className="font-semibold text-center">{resource.rate}</p>
                                                     <p className="text-xs text-center text-muted-foreground">
-                                                        Per month, above included usage
+                                                        Per month
                                                     </p>
                                                 </Stack>
                                             </Stack>
@@ -89,12 +54,17 @@ export default function Pricing() {
                                 })}
                             </Grid>
                         </Box>
+                        <p className="text-sm text-center text-muted-foreground">
+                            Billed at the end of the current month for the last successfully applied capacity, without
+                            proration. Pending or failed changes are not billed until applied. Compute, database, and
+                            file storage are independent capacities billed at these rates. GiB means 1,073,741,824
+                            bytes. No per-user fees. Organizations without authorized card billing retain an unbilled
+                            starter allocation. Once billing is authorized, these rates apply to all configured
+                            capacities, without a starter deduction.
+                        </p>
                         <Link href="/user/organizations/" variant="primary">
                             Get started
                         </Link>
-                        <p className="text-xs text-center text-muted-foreground">
-                            LongLink is currently in beta. Pricing, limits, and included usage may change.
-                        </p>
                     </Stack>
                 </section>
             </main>

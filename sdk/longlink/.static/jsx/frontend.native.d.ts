@@ -71245,8 +71245,10 @@ declare const ButtonGroupSeparator$1: PublicComponent<typeof ButtonGroupSeparato
 declare const Separator$2: PublicComponent<typeof Separator$1>;
 declare function Dialog({ ...props }: DialogRoot.Props): React$1.JSX.Element;
 /** Owns modal layout and dismissal while retaining native focus and isolated-host coordination. */
-declare function Dialog$1({ open, defaultOpen, onOpenChange, title, description, trigger, footer, children, width, height, fullscreen, dismissible }: Pick<React$1.ComponentProps<typeof Dialog>, "open" | "defaultOpen" | "onOpenChange"> & {
+declare function Dialog$1({ open, defaultOpen, onOpenChange, title, showHeader, bodyPadding, description, trigger, footer, children, width, height, fullscreen, dismissible }: Pick<React$1.ComponentProps<typeof Dialog>, "open" | "defaultOpen" | "onOpenChange"> & {
 	title: string;
+	showHeader?: boolean;
+	bodyPadding?: boolean;
 	description?: string;
 	trigger?: React$1.ReactElement;
 	footer?: React$1.ReactNode;

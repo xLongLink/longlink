@@ -189,10 +189,15 @@ export default function Terms() {
                         6. Usage and payments
                     </h2>
                     <p>
-                        Usage within the published free allowances has no fee. Usage above those allowances is measured
-                        at month-end and charged monthly to your saved payment method at the published rates, without
-                        proration. If you order another paid service, the disclosed price and limits apply. Prices are
-                        in Swiss francs (CHF) unless stated otherwise, with taxes identified as required by law.
+                        Organization capacity is billed at the published monthly rates for CPU, RAM, and storage. The
+                        last successfully applied capacity at the end of the current month is charged to your saved
+                        payment method without proration. Pending or failed changes are not billed until applied. CPU is
+                        priced per vCPU and RAM and storage per GiB, meaning 1,073,741,824 bytes. Compute, database, and
+                        file storage are independent capacities, and there are no per-user fees. Organizations without
+                        authorized card billing retain an unbilled starter allocation. Registering a card authorizes
+                        billing for all configured capacities, without deducting the starter allocation. If you order
+                        another paid service, the disclosed price and limits apply. Prices are in Swiss francs (CHF)
+                        unless stated otherwise, with taxes identified as required by law.
                     </p>
                     <p>
                         You owe valid charges incurred through your account or order. Contact us promptly about billing

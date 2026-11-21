@@ -14,7 +14,12 @@ export function Progress({
     valueText?: ReactNode;
 }) {
     return (
-        <ProgressPrimitive.Root value={value} data-slot="progress" className="flex w-full flex-wrap gap-3" {...props}>
+        <ProgressPrimitive.Root
+            value={value}
+            data-slot="progress"
+            className="flex w-full flex-wrap gap-x-3 gap-y-1"
+            {...props}
+        >
             {label != null && (
                 <ProgressPrimitive.Label data-slot="progress-label" className="text-sm font-medium">
                     {label}
