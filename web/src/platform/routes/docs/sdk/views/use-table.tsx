@@ -28,7 +28,7 @@ export default function ItemsGrid() {
   });
 
   return (
-    <DataGrid table={table} recordCount={items.length}>
+    <DataGrid table={table}>
       <DataGridContainer>
         <DataGridTable />
       </DataGridContainer>

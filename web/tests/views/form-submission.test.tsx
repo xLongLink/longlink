@@ -2,12 +2,14 @@
 import { z } from 'zod';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
+import { useForm } from 'react-hook-form';
 import { act, type ContextType } from 'react';
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
-import { useForm } from '@/views/hooks/use-form';
 import type { ViewData } from '@/views/protocol';
 import userEvent from '@testing-library/user-event';
+import { useSubmit } from '@/views/hooks/use-submit';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/longlink/form/input';
 import { RequestContext } from '@/lib/view-capabilities';
 
@@ -19,17 +21,26 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     const onSuccess = vi.fn();
 
     function Example() {
-        const form = useForm(z.object({ title: z.string().trim().min(1, 'Enter a title.') }), {
-            action: '/api/tasks',
+        const form = useForm({
             defaultValues: { title: '' },
-            onSuccess
+            resolver: zodResolver(z.object({ title: z.string().trim().min(1, 'Enter a title.') }))
         });
+        const submit = useSubmit('/api/tasks', {
+            onSuccess,
+            onError: (error) => form.setError('root', { message: error.message })
+        });
+
+        async function save(values: { title: string }) {
+            const data = new FormData();
+            data.append('title', values.title);
+            await submit(data);
+        }
 
         return (
             <form
                 noValidate
                 onSubmit={(event) => {
-                    void form.submit(event);
+                    void form.handleSubmit(save)(event);
                     expect(event.defaultPrevented).toBe(true);
                 }}
                 data-success={form.formState.isSubmitSuccessful}
@@ -75,7 +86,7 @@ it('blocks invalid data, surfaces a failed write, and retries the preserved draf
     );
 });
 
-it('blocks duplicate validation and writes through the success callback while encoding parsed values', async () => {
+it('deduplicates overlapping writes through success callbacks while preserving parsed values and files', async () => {
     const files = [
         new File(['invoice'], 'invoice.txt', { type: 'text/plain' }),
         new File(['notes'], 'notes.txt', { type: 'text/plain' })
@@ -92,11 +103,7 @@ it('blocks duplicate validation and writes through the success callback while en
         quantity: z.string().regex(/^\d+$/).transform(Number).refine(validate),
         enabled: z.boolean(),
         tags: z.array(z.string()),
-        files: z.array(z.instanceof(File)),
-        empty: z.string(),
-        zero: z.number(),
-        optional: z.null(),
-        missing: z.undefined()
+        files: z.array(z.instanceof(File))
     });
     let completeRequest: (data: ViewData) => void = () => {};
     let completeCallback: () => void = () => {};
@@ -112,27 +119,24 @@ it('blocks duplicate validation and writes through the success callback while en
     });
 
     function Example() {
-        const form = useForm(schema, {
-            action: '/api/tasks',
-            method: 'PATCH',
-            onSuccess,
-            defaultValues: {
-                quantity: '1',
-                enabled: false,
-                tags: ['design', 'engineering'],
-                files,
-                empty: '',
-                zero: 0,
-                optional: null,
-                missing: undefined
-            }
+        const form = useForm({
+            resolver: zodResolver(schema),
+            defaultValues: { quantity: '1', enabled: false, tags: ['design', 'engineering'], files }
         });
+        const submit = useSubmit('/api/tasks', { method: 'PATCH', onSuccess });
+
+        async function save(values: z.output<typeof schema>) {
+            const data = new FormData();
+            data.append('quantity', String(values.quantity));
+            data.append('enabled', String(values.enabled));
+            for (const tag of values.tags) data.append('tags', tag);
+            for (const file of values.files) data.append('files', file);
+            await submit(data);
+        }
 
         return (
             <form
-                onSubmit={(event) => {
-                    void form.submit(event);
-                }}
+                onSubmit={form.handleSubmit(save)}
                 aria-busy={form.formState.isSubmitting}
                 data-success={form.formState.isSubmitSuccessful}
             >
@@ -158,13 +162,13 @@ it('blocks duplicate validation and writes through the success callback while en
                 expect(form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))).toBe(false);
                 expect(form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))).toBe(false);
             });
-            expect(validate).toHaveBeenCalledTimes(1);
+            expect(validate).toHaveBeenCalledTimes(2);
             expect(request).not.toHaveBeenCalled();
             expect(form.getAttribute('aria-busy')).toBe('true');
             await act(async () => {
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
             });
-            expect(validate).toHaveBeenCalledTimes(1);
+            expect(validate).toHaveBeenCalledTimes(3);
             await act(async () => completeValidation());
             expect(request).toHaveBeenCalledTimes(1);
             const [path, options] = request.mock.calls[0] ?? [];
@@ -177,10 +181,6 @@ it('blocks duplicate validation and writes through the success callback while en
             expect(data.get('quantity')).toBe('4');
             expect(data.get('enabled')).toBe('false');
             expect(data.getAll('tags')).toEqual(['design', 'engineering']);
-            expect(data.get('empty')).toBe('');
-            expect(data.get('zero')).toBe('0');
-            expect(data.has('optional')).toBe(false);
-            expect(data.has('missing')).toBe(false);
             const uploaded = data.getAll('files');
             expect(uploaded).toHaveLength(2);
             if (!(uploaded[0] instanceof File) || !(uploaded[1] instanceof File))
@@ -198,7 +198,7 @@ it('blocks duplicate validation and writes through the success callback while en
                 form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
             });
             expect(request).toHaveBeenCalledTimes(1);
-            expect(validate).toHaveBeenCalledTimes(1);
+            expect(validate).toHaveBeenCalledTimes(4);
             await act(async () => completeCallback());
             expect(form.getAttribute('aria-busy')).toBe('false');
             expect(form.getAttribute('data-success')).toBe('true');
@@ -225,12 +225,21 @@ it.each([
     let submit: (() => Promise<void>) | undefined;
 
     function Example() {
-        const form = useForm(z.object({ title: z.string() }), {
-            action: '/api/tasks',
+        const form = useForm({
             defaultValues: { title: 'Draft' },
-            onError
+            resolver: zodResolver(z.object({ title: z.string() }))
         });
-        submit = form.submit;
+        const send = useSubmit('/api/tasks', {
+            onError: async (error) => {
+                form.setError('root', { message: error.message });
+                await onError(error);
+            }
+        });
+        submit = form.handleSubmit(async (values) => {
+            const data = new FormData();
+            data.append('title', values.title);
+            await send(data);
+        });
         return (
             <form aria-busy={form.formState.isSubmitting} data-success={form.formState.isSubmitSuccessful}>
                 <Input {...form.register('title')} label="Title" />
@@ -252,7 +261,6 @@ it.each([
             await act(async () => {
                 if (!submit) throw new Error('Expected form submission');
                 const submission = submit();
-                expect(submit()).toBe(submission);
                 await expect(submission).rejects.toBe(callbackError);
             });
 
@@ -271,54 +279,6 @@ it.each([
             expect(onError).toHaveBeenCalledTimes(1);
             expect(output.querySelector('form')?.getAttribute('data-success')).toBe('true');
             expect(output.querySelector('[role="alert"]')).toBeNull();
-        }
-    );
-});
-
-it.each([
-    { name: 'nested objects', value: { city: 'Bern' } },
-    { name: 'nested arrays', value: [['design']] },
-    { name: 'nonfinite values', value: Infinity }
-])('rejects $name without queuing a write or leaving the form pending', async ({ value }) => {
-    const request = vi.fn<NonNullable<ContextType<typeof RequestContext>>['request']>().mockResolvedValue(null);
-    const onError = vi.fn();
-
-    function Example() {
-        const form = useForm(z.object({ value: z.unknown() }), {
-            action: '/api/tasks',
-            onError,
-            defaultValues: { value }
-        });
-
-        return (
-            <form
-                onSubmit={(event) => {
-                    void form.submit(event);
-                }}
-                aria-busy={form.formState.isSubmitting}
-                data-success={form.formState.isSubmitSuccessful}
-            >
-                <button type="submit">Save</button>
-                {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
-            </form>
-        );
-    }
-
-    await withMounted(
-        <RequestContext value={{ request }}>
-            <Example />
-        </RequestContext>,
-        async (output) => {
-            const button = output.querySelector('button');
-
-            if (!button) throw new Error('Expected submit action');
-            const user = userEvent.setup();
-            await act(async () => user.click(button));
-            expect(request).not.toHaveBeenCalled();
-            expect(onError).toHaveBeenCalledExactlyOnceWith(expect.any(TypeError));
-            expect(output.querySelector('[role="alert"]')?.textContent).toContain('Field "value"');
-            expect(output.querySelector('form')?.getAttribute('aria-busy')).toBe('false');
-            expect(output.querySelector('form')?.getAttribute('data-success')).toBe('false');
         }
     );
 });

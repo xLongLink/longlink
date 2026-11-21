@@ -81,7 +81,7 @@ export { ViewMap as Map };
 export { MapGeoJSON, MapControls } from './maps/map';
 export const Frame: PublicComponent<typeof frame.Frame> = frame.Frame;
 
-export { Controller, FormProvider } from 'react-hook-form';
+export { Controller } from 'react-hook-form';
 export { Input } from './form/input';
 export { Textarea } from './form/textarea';
 export { Checkbox } from './form/checkbox';

@@ -72,7 +72,7 @@ it.each([204, 503])('only confirms a reset email after a successful response, st
                         expect(
                             status === 204
                                 ? output.textContent?.includes('instructions are on the way')
-                                : output.textContent?.includes('Unable to load this page.')
+                                : output.querySelector('form')?.getAttribute('aria-busy') === 'false'
                         ).toBe(true)
                     );
                 });
@@ -92,6 +92,8 @@ it.each([204, 503])('only confirms a reset email after a successful response, st
                     ).toHaveLength(1);
                 } else {
                     expect(announcements).toEqual([]);
+                    expect(output.querySelector('input[name="email"]')).toBe(email);
+                    expect(email.value).toBe('unknown@example.com');
                 }
 
                 observer.disconnect();

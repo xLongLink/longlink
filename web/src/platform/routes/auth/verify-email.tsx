@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -99,6 +100,7 @@ export default function VerifyEmail() {
         await refetch();
         void navigate('/user/organizations', { replace: true });
     }
+    const save = useSubmit(handleComplete, { onError: (error) => form.setError('root', { message: error.message }) });
 
     const recoveryRegisterHref = verifiedEmail
         ? `/auth/register?${new URLSearchParams({ email: verifiedEmail })}`
@@ -153,12 +155,18 @@ export default function VerifyEmail() {
             {pageMetadata}
             <Stack gap={3}>
                 <Separator />
-                <form noValidate action={() => form.handleSubmit(handleComplete)()}>
+                <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
                     <div className="flex flex-col gap-2">
-                        <TextField control={form.control} name="name" autoComplete="name" required label="Name" />
                         <TextField
-                            control={form.control}
-                            name="password"
+                            {...form.register('name')}
+                            error={form.formState.errors.name?.message}
+                            autoComplete="name"
+                            required
+                            label="Name"
+                        />
+                        <TextField
+                            {...form.register('password')}
+                            error={form.formState.errors.password?.message}
                             autoComplete="new-password"
                             required
                             label="Password"

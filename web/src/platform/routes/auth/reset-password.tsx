@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { CircleCheck } from 'lucide-react';
 import { passwordSchema } from './validation';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Separator } from '@/components/shadcn/separator';
@@ -65,6 +66,17 @@ export default function ResetPassword() {
     }
 
     const { verification } = useVerification(token, verify);
+    const save = useSubmit(
+        async (payload: ResetPasswordValues) => {
+            try {
+                await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' });
+            } catch (cause: unknown) {
+                if (!isBadTokenError(cause)) throw cause;
+                form.setError('root.credential', { type: 'expired' });
+            }
+        },
+        { onError: (error) => form.setError('root', { message: error.message }) }
+    );
 
     const pageMetadata = <title>Set a New Password | LongLink</title>;
 
@@ -112,26 +124,11 @@ export default function ResetPassword() {
                     </Link>
                 </Stack>
             ) : (
-                <form
-                    noValidate
-                    action={() =>
-                        form.handleSubmit(async (payload) => {
-                            // Publish the saved result only after the password change succeeds.
-                            try {
-                                await api('/api/v1/auth/reset-password', { json: payload, method: 'POST' });
-                            } catch (cause: unknown) {
-                                if (!isBadTokenError(cause)) throw cause;
-                                form.setError('root.credential', { type: 'expired' });
-
-                                return;
-                            }
-                        })()
-                    }
-                >
+                <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
                     <Stack gap={4}>
                         <TextField
-                            control={form.control}
-                            name="password"
+                            {...form.register('password')}
+                            error={form.formState.errors.password?.message}
                             required
                             label="New password"
                             type="password"

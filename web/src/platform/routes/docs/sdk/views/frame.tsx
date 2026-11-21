@@ -78,7 +78,6 @@ function Example() {
     <Box width="100%" maxWidth={640}>
       <DataGrid
         table={table}
-        recordCount={data.length}
         tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
         emptyMessage={
           <Empty title="No files found">
@@ -139,7 +138,6 @@ export function FrameExample() {
         <Box width="100%" maxWidth={640}>
             <DataGrid
                 table={table}
-                recordCount={data.length}
                 tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
                 emptyMessage={
                     <Empty title="No files found">

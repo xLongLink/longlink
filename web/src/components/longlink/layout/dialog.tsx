@@ -1,8 +1,21 @@
 import { cn } from 'cn';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect } from 'react';
 import * as dialog from '@/components/shadcn/dialog';
 import { DialogActivityContext } from '@/lib/view-capabilities';
 import type { ComponentProps, CSSProperties, ReactElement, ReactNode } from 'react';
+
+function DialogPopup({ open, ...props }: ComponentProps<'div'> & { open: boolean }) {
+    const activity = use(DialogActivityContext);
+
+    useEffect(() => {
+        if (!open || !activity) return;
+        activity(true);
+
+        return () => activity(false);
+    }, [open, activity]);
+
+    return <div {...props} />;
+}
 
 /** Owns modal layout and dismissal while retaining native focus and isolated-host coordination. */
 export function Dialog({
@@ -33,22 +46,12 @@ export function Dialog({
     fullscreen?: boolean;
     dismissible?: boolean;
 }) {
-    const activity = use(DialogActivityContext);
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(Boolean(defaultOpen));
-    const visible = open ?? uncontrolledOpen;
     const hasBody = children != null && children !== false;
-
-    // Keep host coordination tied to accepted visibility changes and the modal's lifetime.
-    useEffect(() => {
-        if (!visible || !activity) return;
-        activity(true);
-
-        return () => activity(false);
-    }, [visible, activity]);
 
     return (
         <dialog.Dialog
-            open={visible}
+            open={open}
+            defaultOpen={defaultOpen}
             disablePointerDismissal={!dismissible}
             onOpenChange={(nextOpen, details) => {
                 if (!nextOpen && !dismissible) {
@@ -57,11 +60,11 @@ export function Dialog({
                 }
 
                 onOpenChange?.(nextOpen, details);
-                if (open === undefined && !details.isCanceled) setUncontrolledOpen(nextOpen);
             }}
         >
             {trigger && <dialog.DialogTrigger render={trigger} />}
             <dialog.DialogContent
+                render={(props, state) => <DialogPopup {...props} open={state.open} />}
                 showCloseButton={dismissible}
                 className="flex min-h-0 max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden! p-0"
                 style={{

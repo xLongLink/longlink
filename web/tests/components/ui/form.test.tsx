@@ -145,3 +145,34 @@ it('rejects unsupported runtime write methods before reaching scoped transport',
         }
     );
 });
+
+it('rejects callback endpoints without invoking them or reaching scoped transport', async () => {
+    // Arrange
+    const request = vi.fn().mockResolvedValue(null);
+    const action = vi.fn();
+    const onError = vi.fn();
+    let submit: ((data: FormData) => Promise<void>) | undefined;
+
+    function Example() {
+        // @ts-expect-error Callback submissions are not part of the public Views API.
+        submit = useSubmit(action, { onError });
+        return null;
+    }
+
+    await withMounted(
+        <RequestContext value={{ request }}>
+            <Example />
+        </RequestContext>,
+        async () => {
+            if (!submit) throw new Error('Expected scoped submission');
+
+            // Act
+            await submit(new FormData());
+
+            // Assert
+            expect(action).not.toHaveBeenCalled();
+            expect(request).not.toHaveBeenCalled();
+            expect(onError).toHaveBeenCalledExactlyOnceWith(new Error('Scoped submissions require an endpoint path'));
+        }
+    );
+});

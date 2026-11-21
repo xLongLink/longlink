@@ -13,11 +13,11 @@ function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload
     const form = useForm<EmailPayload>({ defaultValues: { email: '' }, resolver: zodResolver(emailPayloadSchema) });
 
     return (
-        <form noValidate action={() => form.handleSubmit(onSubmit)()}>
+        <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
             <p id="email-help">Use an address you can access.</p>
             <TextField
-                control={form.control}
-                name="email"
+                {...form.register('email')}
+                error={form.formState.errors.email?.message}
                 label="Email"
                 labelHidden={labelHidden}
                 description="Work address"

@@ -140,7 +140,7 @@ export default defineConfig(({ mode }) => {
                         'typescript/no-base-to-string': 'off',
                         'typescript/no-explicit-any': 'error',
                         'typescript/no-floating-promises': 'error',
-                        'typescript/no-misused-promises': 'error',
+                        'typescript/no-misused-promises': ['error', { checksVoidReturn: { attributes: false } }],
                         'typescript/no-non-null-assertion': 'error',
                         'typescript/no-redundant-type-constituents': 'off',
                         'typescript/no-unnecessary-type-assertion': 'error',

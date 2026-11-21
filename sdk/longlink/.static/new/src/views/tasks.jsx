@@ -13,22 +13,29 @@ const taskSchema = z.object({
 
 /** Validates task values with the form schema. */
 function TaskForm({ onSuccess, onCancel }) {
-    const form = useForm(taskSchema, {
-        defaultValues: { title: '', attachment: null },
-        action: '/api/tasks',
-        onSuccess
+    const form = useForm({ defaultValues: { title: '', attachment: null }, resolver: zodResolver(taskSchema) });
+    const submit = useSubmit('/api/tasks', {
+        onSuccess,
+        onError: (error) => form.setError('root', { message: error.message })
     });
 
+    /** Sends validated values without discarding the draft on failure. */
+    async function save(values) {
+        const data = new FormData();
+        data.append('title', values.title);
+        data.append('attachment', values.attachment);
+        await submit(data);
+    }
+
     return (
-        <form onSubmit={form.submit} noValidate aria-busy={form.formState.isSubmitting}>
+        <form onSubmit={form.handleSubmit(save)} noValidate aria-busy={form.formState.isSubmitting}>
             <fieldset disabled={form.formState.isSubmitting} className="contents">
                 <Stack gap={4}>
-                    <Controller
-                        name="title"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Input {...field} id="task-title" label="Title" error={fieldState.error?.message} />
-                        )}
+                    <Input
+                        {...form.register('title')}
+                        id="task-title"
+                        label="Title"
+                        error={form.formState.errors.title?.message}
                     />
                     <Controller
                         name="attachment"
@@ -123,7 +130,6 @@ export default function Tasks() {
             </Stack>
             <DataGrid
                 table={table}
-                recordCount={tasks.length}
                 tableLayout={{ rowBorder: true, headerBorder: true }}
                 emptyMessage={<Empty title="No tasks yet" description="Select Add task to create your first task." />}
             >

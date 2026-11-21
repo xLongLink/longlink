@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { act } from 'react';
 import { withMounted } from '../render';
 import { it, expect, vi } from 'vitest';
-import { Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { ReportedError } from '@/lib/reported';
-import { useForm } from '@/views/hooks/use-form';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import userEvent from '@testing-library/user-event';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/longlink/form/input';
 
 it('rejects invalid values, guards duplicate writes, and preserves the draft after a reported failure for retry', async () => {
@@ -19,7 +19,7 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
     const user = userEvent.setup();
 
     function Example() {
-        const form = useForm(schema, { defaultValues: { email: '' } });
+        const form = useForm({ defaultValues: { email: '' }, resolver: zodResolver(schema) });
 
         const submit = useSubmit(
             async (values: z.output<typeof schema>) => {
@@ -34,28 +34,16 @@ it('rejects invalid values, guards duplicate writes, and preserves the draft aft
         );
 
         return (
-            <form
-                onSubmit={(event) => {
-                    void form.handleSubmit(submit)(event);
-                }}
-                noValidate
-                data-success={form.formState.isSubmitSuccessful}
-            >
+            <form onSubmit={form.handleSubmit(submit)} noValidate data-success={form.formState.isSubmitSuccessful}>
                 <fieldset disabled={form.formState.isSubmitting}>
                     <p id="policy">Only work accounts.</p>
-                    <Controller
-                        name="email"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Input
-                                {...field}
-                                id="email"
-                                label="Email"
-                                description="Your account email."
-                                aria-describedby="policy"
-                                error={fieldState.error?.message}
-                            />
-                        )}
+                    <Input
+                        {...form.register('email')}
+                        id="email"
+                        label="Email"
+                        description="Your account email."
+                        aria-describedby="policy"
+                        error={form.formState.errors.email?.message}
                     />
                     <button type="submit">Save</button>
                     {form.formState.errors.root?.message && <p role="alert">{form.formState.errors.root.message}</p>}
@@ -121,16 +109,14 @@ it('validates asynchronously on blur, submits parsed output, and resets to expli
     const saved: z.output<typeof schema>[] = [];
 
     function Example() {
-        const form = useForm(schema, { defaultValues: { quantity: '2' }, mode: 'onBlur' });
+        const form = useForm({ defaultValues: { quantity: '2' }, mode: 'onBlur', resolver: zodResolver(schema) });
 
         return (
             <form
                 noValidate
-                onSubmit={(event) => {
-                    void form.handleSubmit((values) => {
-                        saved.push(values);
-                    })(event);
-                }}
+                onSubmit={form.handleSubmit((values) => {
+                    saved.push(values);
+                })}
             >
                 <Input
                     {...form.register('quantity')}

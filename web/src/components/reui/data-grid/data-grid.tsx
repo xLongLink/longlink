@@ -414,7 +414,6 @@ export type DataGridLayoutProps<TData extends object> = Omit<DataGridProps<Table
 export interface DataGridContextProps<TData extends object> {
     props: DataGridLayoutProps<TData>;
     table: DataGridTableInstance<TData>;
-    recordCount: number;
     isLoading: boolean;
     /** Stable per-grid prefix for the DOM ids ARIA relations point at. */
     gridId: string;
@@ -771,7 +770,6 @@ export interface DataGridCellsChangeDetails<TData> {
 export interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
     className?: string;
     table?: Table<TFeatures, TData>;
-    recordCount: number;
     children?: ReactNode;
     onRowClick?: (row: TData) => void;
     /**
@@ -845,7 +843,6 @@ export interface DataGridProps<TFeatures extends TableFeatures, TData extends ob
         width?: 'auto' | 'fixed';
         columnsVisibility?: boolean;
         columnsResizable?: boolean;
-        columnsResizeMode?: 'onChange' | 'onEnd';
         columnsPinnable?: boolean;
         columnsMovable?: boolean;
         columnsDraggable?: boolean;
@@ -1025,22 +1022,6 @@ function DataGridProvider<TData extends object>({
     const tableRef = useRef(table);
     tableRef.current = table;
 
-    // Re-assert an explicit tableLayout resize mode so consumer-level useTable
-    // options cannot flip it back between drags. v9 makes `table.options`
-    // readonly, so this goes through setOptions in an effect rather than a
-    // render-phase mutation. Without an explicit mode, the consumer's own
-    // tanstack columnResizeMode (default "onEnd") is honored.
-    const resizeMode =
-        props.tableLayout?.columnsResizable && props.tableLayout.columnsResizeMode
-            ? props.tableLayout.columnsResizeMode
-            : undefined;
-
-    useEffect(() => {
-        if (!resizeMode) return;
-        if (table.options.columnResizeMode === resizeMode) return;
-        table.setOptions((old) => ({ ...old, columnResizeMode: resizeMode }));
-    }, [table, resizeMode]);
-
     // With the selection UI on, every paste/fill/clear batch replaces `data`,
     // and the feature's default autoResetCellSelection would wipe the selection
     // after each write. Ranges are row-id based and unresolvable ids drop out
@@ -1120,7 +1101,6 @@ function DataGridProvider<TData extends object>({
                     get i18n() {
                         return i18nRef.current;
                     },
-                    recordCount: props.recordCount,
                     isLoading: props.isLoading || false,
                     gridId,
                     autoSize
@@ -1162,8 +1142,6 @@ function DataGrid<TFeatures extends TableFeatures, TData extends object>({
             width: 'fixed',
             columnsVisibility: false,
             columnsResizable: false,
-            // columnsResizeMode has no default on purpose: when unset, the
-            // consumer's tanstack columnResizeMode (default "onEnd") is honored.
             columnsPinnable: false,
             columnsMovable: false,
             columnsDraggable: false,

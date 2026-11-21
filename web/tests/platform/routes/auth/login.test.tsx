@@ -27,7 +27,7 @@ function LocationProbe() {
     );
 }
 
-it('keeps password entry masked and email drafts in their owned field', () => {
+it('keeps password entry masked and carries the email into the registration link', () => {
     // Act
     const output = renderStatic(
         <ApiErrorContext value={() => undefined}>
@@ -41,7 +41,7 @@ it('keeps password entry masked and email drafts in their owned field', () => {
     );
 
     // Assert
-    expect(output.querySelector('input[name="email"]')?.getAttribute('value')).toBe('owner@example.com');
+    expect(output.querySelector('a[href="/auth/register?email=owner%40example.com"]')).not.toBeNull();
     expect(output.querySelector('input[name="password"]')?.getAttribute('type')).toBe('password');
 });
 

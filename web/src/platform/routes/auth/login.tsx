@@ -5,6 +5,7 @@ import { AuthLayout } from './auth-layout';
 import { useApiError } from '@/lib/errors';
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { GitHubIcon } from '@/components/svg/github';
@@ -67,6 +68,16 @@ export default function Login() {
         }
     }, [oauthError, reportApiError]);
 
+    const save = useSubmit(
+        async (payload: LoginValues) => {
+            await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
+            await clearSessionQueries(queryClient);
+            await refetch();
+            void navigate(destination, { replace: true });
+        },
+        { onError: (error) => form.setError('root', { message: error.message }) }
+    );
+
     // Keep authenticated users out of the sign-in page.
     if (user) {
         return (
@@ -87,28 +98,14 @@ export default function Login() {
             <div className="flex flex-col gap-4">
                 <Separator />
                 <div className="flex flex-col gap-2">
-                    <form
-                        noValidate
-                        action={() =>
-                            form.handleSubmit(async (payload) => {
-                                // Keep failed submissions in the form instead of the page error boundary.
-                                try {
-                                    await api('/api/v1/auth/password/login', { json: payload, method: 'POST' });
-                                } catch (cause: unknown) {
-                                    reportApiError(cause);
-
-                                    return;
-                                }
-
-                                // Refresh the persistent identity observer only after sign-in succeeds.
-                                await clearSessionQueries(queryClient);
-                                await refetch();
-                                void navigate(destination, { replace: true });
-                            })()
-                        }
-                    >
+                    <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
                         <div className="flex flex-col gap-2">
-                            <TextField control={form.control} name="email" label="Email" type="email" />
+                            <TextField
+                                {...form.register('email')}
+                                error={form.formState.errors.email?.message}
+                                label="Email"
+                                type="email"
+                            />
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between">
                                     <Text size="sm" weight="medium">
@@ -123,8 +120,8 @@ export default function Login() {
                                 </div>
                                 <div className="relative flex flex-col">
                                     <TextField
-                                        control={form.control}
-                                        name="password"
+                                        {...form.register('password')}
+                                        error={form.formState.errors.password?.message}
                                         className="pr-10"
                                         labelHidden
                                         required

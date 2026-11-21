@@ -20,7 +20,6 @@ it('preserves a supplied email when linking back to sign in', () => {
     );
 
     // Assert
-    expect(output.querySelector('input[name="email"]')?.getAttribute('value')).toBe('owner@example.com');
     expect(output.querySelector('a[href="/login?email=owner%40example.com"]')).not.toBeNull();
 });
 
@@ -66,22 +65,14 @@ it('delivers registration failure and confirmed success through one Sonner queue
             )
         );
         expect(document.body.textContent).not.toContain('Check your inbox for the registration link.');
-        expect(caughtErrors).toEqual([
-            expect.objectContaining({ status: 503, message: 'Registration temporarily unavailable' })
-        ]);
+        expect(caughtErrors).toEqual([]);
+        expect(output.querySelector<HTMLInputElement>('input[name="email"]')?.value).toBe('owner@example.com');
 
         const failure = document.querySelector('[data-sonner-toast]');
         expect(failure?.closest('[aria-live]')?.getAttribute('aria-live')).toBe('polite');
 
-        const retry = Array.from(output.querySelectorAll('button')).find((button) => button.textContent === 'Retry');
-
-        if (!retry) throw new Error('Missing registration recovery');
-        await events.click(retry);
-        await vi.waitFor(() => expect(output.querySelector('button[type="submit"]')).not.toBeNull());
-        const recoveredSubmit = output.querySelector<HTMLButtonElement>('button[type="submit"]');
-
-        if (!recoveredSubmit) throw new Error('Missing recovered registration form');
-        await events.click(recoveredSubmit);
+        expect(output.querySelector('button[type="submit"]')).toBe(submit);
+        await events.click(submit);
         await vi.waitFor(() => expect(transport).toHaveBeenCalledTimes(2));
         expect(document.body.textContent).not.toContain('Check your inbox for the registration link.');
 
