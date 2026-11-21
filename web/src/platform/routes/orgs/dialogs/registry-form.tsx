@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@/components/longlink/action/link';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -70,9 +71,9 @@ export function RegistryForm({
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
                     <div className="flex items-center justify-between gap-2">
-                        <Button type="button" variant="link" onClick={() => onOpenChange(false)}>
+                        <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
                             Cancel
-                        </Button>
+                        </Link>
                         <Button type="submit">Save</Button>
                     </div>
                 </fieldset>

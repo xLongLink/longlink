@@ -30,19 +30,19 @@ const sections = {
         title: 'Compute',
         fields: { cpu: 'compute_cpu_millicores', ram: 'compute_ram_bytes' },
         color: 'bg-blue-500/10',
-        image: '/images/capacity-dialog.png'
+        image: '/images/capacity.png'
     },
     database: {
         title: 'Database',
         fields: { cpu: 'database_cpu_millicores', ram: 'database_ram_bytes', storage: 'database_storage_bytes' },
         color: 'bg-violet-500/10',
-        image: '/images/database-allocation.png'
+        image: '/images/capacity.png'
     },
     storage: {
         title: 'Storage',
         fields: { storage: 'storage_bytes' },
         color: 'bg-emerald-500/10',
-        image: '/images/capacity-dialog.png'
+        image: '/images/capacity.png'
     }
 } as const;
 
@@ -277,7 +277,7 @@ function CapacityCards({
                             className="flex min-w-0 flex-col gap-4 border-0 p-6"
                             aria-label={`${sections[editing].title} capacity`}
                         >
-                            <h2 className="text-center text-xl font-semibold tracking-tight">
+                            <h2 className="text-xl font-semibold tracking-tight">
                                 Edit {sections[editing].title.toLowerCase()} capacity
                             </h2>
                             {resources.map(({ key, label, unit, units, scale }) => {
@@ -335,12 +335,10 @@ function CapacityCards({
                                 </Button>
                             </div>
                         </fieldset>
-                        <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                        <div className="flex items-center justify-center p-6">
                             <img
                                 src={sections[editing].image}
                                 alt=""
-                                width={768}
-                                height={768}
                                 decoding="async"
                                 className="w-full max-w-72 object-contain invert dark:invert-0"
                             />
