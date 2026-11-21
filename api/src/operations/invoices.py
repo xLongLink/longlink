@@ -6,18 +6,13 @@ from decimal import ROUND_HALF_UP, Decimal
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import s3, dates, stripe
+from src.utils import dates, stripe
 from sqlalchemy import select, update
 from src.models import pricing
-from src.kubernetes import databases
 from src.environments import env
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
-from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.kubernetes.storage import Storage
-from src.models.organizations import DatabaseState
 from src.database.models.invoices import Invoice
 from src.database.models.organizations import Organization
 
@@ -30,57 +25,40 @@ def storage_quantity(used: int) -> int:
     return (used + 1024**2 - 1) // 1024**2
 
 
-async def snapshot(organization_id: UUID, period_end: datetime) -> None:
-    """Freeze month-end usage once under the Organization's membership lock."""
+def capture(session: AsyncSession, organization: Organization, period_end: datetime) -> None:
+    """Freeze a due month's confirmed allocations under the caller's Organization lock without committing."""
 
-    # Keep each capture's commits and rollback isolated from other work.
-    async with session_scope() as session:
-        # The persisted deadline serializes replicas and prevents charging a month before Organization creation.
-        organization = await organizations.lock(session, organization_id)
-        if (
-            organization.deleted_at is not None
-            or organization.invoice_due_at is None
-            or organization.invoice_due_at > period_end
-            or organization.status != Status.running
-        ):
-            return
+    # The persisted deadline serializes replicas and excludes pre-consent or already captured months.
+    if organization.deleted_at is not None or organization.invoice_due_at is None or organization.invoice_due_at > period_end:
+        return
 
-        # Organizations without payment authorization cannot be charged retroactively after adding a card.
-        if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
-            organization.invoice_due_at = dates.next_month(period_end)
-            await session.commit()
-            return
-        customer_id = organization.stripe_customer_id
-        target = await organizations.infrastructure(session, organization_id)
-        if target is None or organization.database_state != DatabaseState.available:
-            raise HTTPException(status_code=503, detail="Organization usage is unavailable for invoicing")
-
-        # Measure members and infrastructure against the locked Organization.
-        organization, compute = target
-        users = await organizations.member_count(session, organization_id)
-
-        # A failed measurement never becomes zero usage or a partially calculated invoice.
-        cluster = Kubernetes(compute.kubeconfig)
-        credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
-        storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
-        async with asyncio.timeout(60):
-            async with databases.connection(organization, cluster) as database:
-                database_bytes = await database.usage(organization_id)
-            storage_bytes = await storage.usage(Storage.bucket_name(organization_id))
-
-        # Retain measured usage for issuance and retries.
+    # Only renewed authorization and successful initial provisioning permit charges.
+    if (
+        organization.stripe_customer_id is not None
+        and organization.stripe_payment_method_id is not None
+        and organization.provisioned_at is not None
+    ):
         invoice = Invoice(
-            organization_id=organization_id,
-            customer_id=customer_id,
+            organization_id=organization.id,
+            customer_id=organization.stripe_customer_id,
             period_end=period_end,
-            users=users,
-            database_bytes=database_bytes,
-            storage_bytes=storage_bytes,
+            cpu_millicores=organization.compute_cpu_millicores + organization.database_cpu_millicores,
+            ram_bytes=organization.compute_ram_bytes + organization.database_ram_bytes,
+            storage_bytes=organization.storage_bytes + organization.database_storage_bytes,
         )
         session.add(invoice)
 
-        # Advance the billing boundary atomically with the captured usage.
-        organization.invoice_due_at = dates.next_month(period_end)
+    # Advance even unbilled months so later provisioning cannot fabricate historical allocations.
+    organization.invoice_due_at = dates.next_month(period_end)
+
+
+async def snapshot(organization_id: UUID, period_end: datetime) -> None:
+    """Freeze month-end allocation once in an isolated transaction under the Organization lock."""
+
+    # Share the same capture boundary with successful provider reconciliation.
+    async with session_scope() as session:
+        organization = await organizations.lock(session, organization_id)
+        capture(session, organization, period_end)
         await session.commit()
 
 
@@ -138,23 +116,63 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             discount = 0
             total = 0
 
-            # Apply current pricing; storage quantities use MiB while users remain whole seats.
-            for resource, label, used, included, rate, unit in (
-                ("users", "Users", invoice.users, pricing.FREE_USERS, pricing.USER_MONTHLY_PRICE, "users"),
-                ("database", "Database", invoice.database_bytes, pricing.FREE_DATABASE_BYTES, pricing.DATABASE_MIB_MONTHLY_PRICE, "MiB"),
-                ("storage", "File storage", invoice.storage_bytes, pricing.FREE_STORAGE_BYTES, pricing.STORAGE_MIB_MONTHLY_PRICE, "MiB"),
-            ):
-                quantity = used if resource == "users" else storage_quantity(used)
+            # Historical pending invoices retain their original quantities, allowances, and recovery keys.
+            if invoice.pricing_version == 1:
+                resources = (
+                    ("users", "Users", invoice.users, pricing.FREE_USERS, Decimal(pricing.USER_MONTHLY_PRICE)),
+                    ("database", "Database (MiB)", invoice.database_bytes, pricing.FREE_DATABASE_BYTES, pricing.DATABASE_MIB_MONTHLY_PRICE),
+                    ("storage", "File storage (MiB)", invoice.storage_bytes, pricing.FREE_STORAGE_BYTES, pricing.STORAGE_MIB_MONTHLY_PRICE),
+                )
+
+            # Paid allocation invoices charge totals without free allowances or double-counting database allocations.
+            elif invoice.pricing_version in {2, 3}:
+                byte_unit = pricing.GB_BYTES if invoice.pricing_version == 2 else pricing.GIB_BYTES
+                unit_name = "GB" if invoice.pricing_version == 2 else "GiB"
+                resources = (
+                    (
+                        "cpu",
+                        f"CPU: {Decimal(invoice.cpu_millicores) / 1000:f} vCPU × CHF {pricing.CPU_MONTHLY_PRICE / 100:f}/vCPU",
+                        invoice.cpu_millicores,
+                        0,
+                        pricing.CPU_MONTHLY_PRICE / 1000,
+                    ),
+                    (
+                        "ram",
+                        f"RAM: {Decimal(invoice.ram_bytes) / byte_unit:f} {unit_name} "
+                        f"× CHF {pricing.RAM_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
+                        invoice.ram_bytes,
+                        0,
+                        pricing.RAM_GIB_MONTHLY_PRICE / byte_unit,
+                    ),
+                    (
+                        "storage",
+                        f"Storage: {Decimal(invoice.storage_bytes) / byte_unit:f} {unit_name} "
+                        f"× CHF {pricing.STORAGE_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
+                        invoice.storage_bytes,
+                        0,
+                        pricing.STORAGE_GIB_MONTHLY_PRICE / byte_unit,
+                    ),
+                )
+            else:
+                raise HTTPException(status_code=409, detail="Invoice pricing version requires administrator review")
+
+            # Calculate exact Decimal amounts before rounding each line to CHF centimes.
+            for resource, description, used, included, unit_price in resources:
+                legacy_storage = invoice.pricing_version == 1 and resource != "users"
+                quantity = storage_quantity(used) if legacy_storage else used
                 excess = max(0, used - included)
 
-                # Bill only usage beyond each resource's free allowance.
-                billable = excess if resource == "users" else storage_quantity(excess)
-                unit_price = Decimal(rate)
+                # Only historical usage invoices deduct their historical free allowances.
+                billable = storage_quantity(excess) if legacy_storage else excess
                 gross = (quantity * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-                description = label if resource == "users" else f"{label} ({unit})"
                 discount += int(gross - net)
                 total += int(net)
+
+                # Allocation lines use a single readable charge, avoiding provider limits on byte quantities.
+                if invoice.pricing_version in {2, 3}:
+                    quantity = 1
+                    unit_price = gross
 
                 # Recover each resource line independently to avoid duplicate charges.
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]
@@ -258,7 +276,6 @@ async def run() -> None:
                     select(col(Organization.id)).where(
                         # Deleted Organizations never enter a new billing capture.
                         col(Organization.deleted_at).is_(None),
-                        col(Organization.status) == Status.running,
                         # Capture only Organizations whose current period has closed.
                         col(Organization.invoice_due_at) <= period_end,
                     )

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
-import { useEffect, useId, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
@@ -25,7 +25,6 @@ export function ComputeRegistration({
     onOpenChange: (open: boolean) => void;
     onSuccess: () => Promise<void>;
 }) {
-    const formId = useId();
     const form = useForm({
         resolver: zodResolver(registrationSchema),
         defaultValues: { name: '', gateway_url: '', storage_endpoint: '', kubeconfig: '' }
@@ -82,40 +81,17 @@ export function ComputeRegistration({
     });
 
     return (
-        <Dialog
-            open
-            onOpenChange={onOpenChange}
-            title="Register Compute"
-            footer={
-                <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        form={formId}
-                        disabled={form.formState.isSubmitting || fileRead.kind === 'reading' || !kubeconfig.trim()}
-                    >
-                        Register
-                    </Button>
-                </>
-            }
-        >
+        <Dialog open onOpenChange={onOpenChange} title="Register Compute" showHeader={false} bodyPadding={false}>
             <form
-                id={formId}
-                className="flex min-h-0 flex-col gap-4"
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={(event) => {
                     void form.handleSubmit(submit)(event);
                 }}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >
-                <fieldset disabled={form.formState.isSubmitting} className="flex min-h-0 flex-col gap-4 border-0 p-0">
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
+                    <h2 className="text-center text-xl font-semibold">Register Compute</h2>
                     {(
                         [
                             ['name', 'Name'],
@@ -182,8 +158,34 @@ export function ComputeRegistration({
                         )}
                         <FieldError errors={[form.formState.errors.kubeconfig]} />
                     </Field>
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <div className="flex items-center justify-between gap-2">
+                        <Button
+                            type="button"
+                            variant="link"
+                            disabled={form.formState.isSubmitting}
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={form.formState.isSubmitting || fileRead.kind === 'reading' || !kubeconfig.trim()}
+                        >
+                            Register
+                        </Button>
+                    </div>
                 </fieldset>
-                <FieldError errors={[form.formState.errors.root]} />
+                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    <img
+                        src="/images/capacity-dialog.png"
+                        alt=""
+                        width={768}
+                        height={768}
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </div>
             </form>
         </Dialog>
     );

@@ -8,12 +8,14 @@ from factories import create_compute, create_solution, fetch_operations, create_
 from src.utils import s3, mail
 from sqlalchemy import func
 from urllib.parse import urlencode
+from unittest.mock import AsyncMock
+from src.kubernetes import databases
 from src.models.tags import TagKind
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, organizations
+from src.database.services import operations, invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.tags import OrganizationTag
 from src.models.organizations import DatabaseState
@@ -47,6 +49,12 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
             select(OrganizationTag).where(OrganizationTag.organization_id == organization.id, OrganizationTag.kind == TagKind.all)
         )
     assert organization.name == "acme"
+    assert organization.compute_cpu_millicores == 250
+    assert organization.database_cpu_millicores == 250
+    assert organization.compute_ram_bytes == 256 * 1024**2
+    assert organization.database_ram_bytes == 256 * 1024**2
+    assert organization.storage_bytes == 1024**3
+    assert organization.database_storage_bytes == 1024**3
     assert default_tag is not None
     assert default_tag.name == "All"
 
@@ -62,6 +70,369 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert len(operations) == 1
     assert operations[0].kind == OperationKind.organization_create
     assert operations[0].target_id == organization.id
+
+
+async def test_usage_edit_revalidates_ownership_and_payment_authorization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Prevent nonowners and unapproved paid upgrades from changing capacity."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=OrganizationRoles.admin))
+        await session.commit()
+    usage = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: usage.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+    capacity["compute_cpu_millicores"] += 1000
+
+    # Act
+    denied = await clients[1].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    unpaid = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert denied.status_code == 403
+    assert unpaid.status_code == 402
+    unchanged = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    assert unchanged.json()["compute_cpu_millicores"] == capacity["compute_cpu_millicores"] - 1000
+
+    # Cardless owners cannot fund a database increase by reducing another pool.
+    capacity["compute_cpu_millicores"] -= 1000
+    capacity["storage_bytes"] //= 2
+    capacity["database_cpu_millicores"] += 250
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
+    split = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    assert split.status_code == 402
+
+
+@pytest.mark.parametrize(
+    ("pool", "increase"),
+    [
+        ("compute_cpu_millicores", 250),
+        ("compute_ram_bytes", 256 * 1024**2),
+        ("storage_bytes", 1),
+        ("database_cpu_millicores", 250),
+        ("database_ram_bytes", 256 * 1024**2),
+        ("database_storage_bytes", 1),
+    ],
+)
+async def test_usage_edit_requires_payment_for_each_pool_increase(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], pool: str, increase: int
+) -> None:
+    """Reject each independent pool increase before contacting providers."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        await session.commit()
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: response.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+    capacity[pool] += increase
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert response.status_code == 402
+    assert await fetch_operations() == []
+
+
+async def test_usage_edit_accepts_database_pools_larger_than_compute_and_files(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Configure database capacity without reserving it inside another pool."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.database_cpu_millicores = 1000
+        persisted.database_ram_bytes = 1024**3
+        await session.commit()
+    capacity = {
+        "storage_bytes": 17,
+        "compute_ram_bytes": 256 * 1024**2,
+        "database_ram_bytes": 1024**3,
+        "compute_cpu_millicores": 250,
+        "database_storage_bytes": organization.database_storage_bytes,
+        "database_cpu_millicores": 1000,
+    }
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=organization.database_storage_bytes))
+    monkeypatch.setattr(s3.S3, "usage", AsyncMock(return_value=17))
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert response.status_code == 200
+    [operation] = await fetch_operations()
+    assert operation.allocation == capacity
+    assert response.json()["storage_bytes"] == organization.storage_bytes
+    assert response.json()["status"] == "creating"
+
+
+async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Preserve database capacity even when provisioned PVCs exceed desired state."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_storage_bytes *= 2
+        persisted.status = Status.running
+        persisted.storage_bytes *= 4
+        persisted.compute_cpu_millicores *= 2
+        await session.commit()
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: response.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+    provisioned = AsyncMock(return_value=capacity["database_storage_bytes"] * 2)
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", provisioned)
+    smaller = {**capacity, "database_storage_bytes": capacity["database_storage_bytes"] // 2}
+    same_disk = {**capacity, "compute_cpu_millicores": capacity["compute_cpu_millicores"] - 250}
+
+    # Act
+    desired_response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=smaller)
+    provisioned_response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=same_disk)
+
+    # Assert
+    assert desired_response.status_code == 409
+    assert provisioned_response.status_code == 409
+    assert "provisioned" in provisioned_response.json()["detail"]
+    provisioned.assert_awaited_once()
+
+    # Failed reconciliation cannot reduce the previously confirmed database capacity.
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.failed
+        await session.commit()
+    provisioned.return_value = smaller["database_storage_bytes"]
+    restored = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=smaller)
+    assert restored.status_code == 409
+
+
+async def test_usage_edit_preserves_current_files_on_downsize(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject capacity that cannot contain current files and persist a safe downsize."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.storage_bytes *= 4
+        persisted.status = Status.running
+        await session.commit()
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: response.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+    capacity["storage_bytes"] //= 2
+    quota = capacity["storage_bytes"]
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
+    measurement = AsyncMock(side_effect=[quota + 1, quota, quota])
+    monkeypatch.setattr(s3.S3, "usage", measurement)
+
+    # Act
+    rejected = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    accepted = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    pending = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert rejected.status_code == 409
+    assert accepted.status_code == 200
+    assert accepted.json()["status"] == "creating"
+    assert pending.status_code == 409
+    assert accepted.json()["storage_bytes"] == capacity["storage_bytes"] * 2
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.storage_quota_bytes == quota * 2
+        operation = await operations.claim(session)
+        assert operation is not None
+        await operations.fail(session, operation, "Provider failed")
+        await session.commit()
+
+    # Failed reconciliation remains explicitly retryable with the same desired allocation.
+    retried = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+    assert retried.status_code == 200
+    assert retried.json()["status"] == "creating"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"compute_cpu_millicores": 1699},
+        {"compute_ram_bytes": 256 * 1024**2 - 1},
+        {"database_storage_bytes": 100 * 1024**2 - 1},
+        {"storage_bytes": 0},
+        {"compute_cpu_millicores": True},
+        {"database_ram_bytes": 256 * 1024**2 - 1},
+        {"database_cpu_millicores": 249},
+        {"storage_bytes": 2**53},
+        {"compute_cpu_millicores": 100_000_000},
+        {"cpu_millicores": 500},
+    ],
+)
+async def test_usage_edit_validates_pool_minimums(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], changes: dict[str, int | bool]
+) -> None:
+    """Reject invalid pool capacity before mutating the Organization."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    usage = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: usage.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json={**capacity, **changes})
+
+    # Assert
+    assert response.status_code == 422
+    unchanged = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    assert all(unchanged.json()[name] == value for name, value in capacity.items())
+
+
+async def test_usage_edit_accepts_minimum_workload_capacity_and_positive_file_share(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Permit smaller purchased budgets while preserving real workload minimums."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_storage_bytes = 100 * 1024**2
+        persisted.status = Status.running
+        await session.commit()
+    capacity = {
+        "compute_cpu_millicores": 250,
+        "compute_ram_bytes": 256 * 1024**2,
+        "storage_bytes": 1,
+        "database_cpu_millicores": 250,
+        "database_ram_bytes": 256 * 1024**2,
+        "database_storage_bytes": 100 * 1024**2,
+    }
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
+    monkeypatch.setattr(s3.S3, "usage", AsyncMock(return_value=0))
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["compute_cpu_millicores"] == organization.compute_cpu_millicores
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.storage_quota_bytes == organization.storage_bytes
+    [operation] = await fetch_operations()
+    assert operation.allocation == capacity
+
+
+async def test_usage_edit_can_update_desired_capacity_before_month_end_snapshot(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Allow desired edits while provisioning owns month-end capture of applied capacity."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.storage_bytes *= 4
+        persisted.status = Status.running
+        persisted.stripe_payment_method_id = "pm_authorized"
+        persisted.invoice_due_at = datetime(2020, 1, 1, tzinfo=UTC)
+        persisted.provisioned_at = datetime.now(UTC)
+        await session.commit()
+    usage = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
+    capacity = {
+        name: usage.json()[name]
+        for name in (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
+        )
+    }
+    capacity["storage_bytes"] //= 2
+    monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
+    monkeypatch.setattr(s3.S3, "usage", AsyncMock(return_value=0))
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["status"] == "creating"
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.storage_bytes == capacity["storage_bytes"] * 2
 
 
 async def test_create_organization_enforces_the_per_user_beta_limit(
@@ -245,8 +616,8 @@ async def test_get_organization_quotas_requires_platform_administrator(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_size_mib = 512
-        persisted.storage_quota_bytes = 4096
+        persisted.database_storage_bytes = 512 * 1024**2
+        persisted.storage_bytes = 4096
         await session.commit()
 
     # Act
@@ -454,7 +825,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = {"space_used": expected_usage, "quota_bytes": 1073741824}
+        expected_payload = {"space_used": expected_usage, "quota_bytes": organization.storage_quota_bytes}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -488,7 +859,7 @@ async def test_organization_storage_endpoint_allows_members(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"space_used": 0, "quota_bytes": 1073741824}
+    assert response.json() == {"space_used": 0, "quota_bytes": organization.storage_quota_bytes}
 
 
 async def test_organization_storage_endpoint_rejects_non_members(

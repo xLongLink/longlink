@@ -159,6 +159,28 @@ async def deleting(organization_id: UUID) -> AsyncGenerator[None]:
     yield
 
 
+@contextlib.asynccontextmanager
+async def reconciling(organization_id: UUID) -> AsyncGenerator[Lease | None]:
+    """Hold the Organization transition lease throughout capacity reconciliation."""
+
+    # Admit reconciliation under the same lock as destructive database transitions.
+    while True:
+        async with session_scope() as session:
+            organization = await organizations.lock_row(session, organization_id)
+            if organization is None or organization.deleted_at is not None:
+                yield None
+                return
+            lease = await _claim(session, organization_id)
+            await session.commit()
+
+        # Keep exclusive ownership through provider changes and their publication.
+        if lease is not None:
+            async with lease.maintain():
+                yield lease
+            return
+        await asyncio.sleep(0.5)
+
+
 async def ready(organization_id: UUID) -> bool:
     """Provision the database behind one persisted transition lease."""
 
@@ -213,7 +235,9 @@ async def ready(organization_id: UUID) -> bool:
                         organization.database_password,
                         # Preserve the Compute's selected persistent storage class.
                         database_storage_class,
-                        size_mib=organization.database_size_mib,
+                        storage_bytes=organization.database_storage_bytes,
+                        cpu_millicores=organization.database_cpu_millicores,
+                        ram_bytes=organization.database_ram_bytes,
                     )
 
                 await database_resources.wait_ready(cluster, organization_id)

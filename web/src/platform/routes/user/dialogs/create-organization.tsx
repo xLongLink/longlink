@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { useId } from 'react';
 import { api } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@/components/longlink/action/link';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -22,7 +22,6 @@ export default function CreateOrganization({
     onOpenChange: (open: boolean) => void;
     onSuccess: () => Promise<void>;
 }) {
-    const formId = useId();
     const form = useForm({ resolver: zodResolver(organizationSchema), defaultValues: { name: '' } });
 
     /** Creates the organization before awaiting the parent's success workflow. */
@@ -36,46 +35,18 @@ export default function CreateOrganization({
         onError: () => form.setError('root', { message: 'Could not create the organization. Please try again.' })
     });
 
-    // Keep the form in the shared dialog body and its actions in the fixed footer.
     return (
-        <Dialog
-            open
-            onOpenChange={onOpenChange}
-            title="New organization"
-            footer={
-                <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
-                        Create organization
-                    </Button>
-                </>
-            }
-        >
+        <Dialog open showHeader={false} bodyPadding={false} onOpenChange={onOpenChange} title="New organization">
             <form
-                id={formId}
-                className="flex flex-col gap-4"
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={(event) => {
                     void form.handleSubmit(submit)(event);
                 }}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >
-                <img
-                    src="/images/organization.png"
-                    alt=""
-                    width={1254}
-                    height={1254}
-                    decoding="async"
-                    className="size-20 self-center object-contain invert dark:invert-0"
-                />
-                <fieldset disabled={form.formState.isSubmitting} className="contents">
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
+                    <h2 className="text-center text-xl font-semibold tracking-tight">New organization</h2>
                     <Field data-invalid={Boolean(form.formState.errors.name)}>
                         <FieldLabel htmlFor="organization-name">Name</FieldLabel>
                         <Input
@@ -88,8 +59,26 @@ export default function CreateOrganization({
                         />
                         <FieldError errors={[form.formState.errors.name]} />
                     </Field>
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Link>
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                            Create organization
+                        </Button>
+                    </div>
                 </fieldset>
-                <FieldError errors={[form.formState.errors.root]} />
+                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    <img
+                        src="/images/new-organization.png"
+                        alt=""
+                        width={768}
+                        height={768}
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </div>
             </form>
         </Dialog>
     );

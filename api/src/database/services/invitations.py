@@ -8,7 +8,6 @@ from sqlalchemy.orm import contains_eager
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.database.types import attr
-from src.models.pricing import FREE_USERS
 from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import OrganizationInvitationCreate
@@ -71,11 +70,9 @@ async def accept(session: AsyncSession, user: User, invitation_id: UUID) -> None
     if invitation is None or organization.deleted_at is not None or invitation.created_at <= datetime.now(UTC) - INVITATION_LIFETIME:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
-    # Keep an existing role, and admit new members only within the Free member allowance.
+    # Keep an existing member's role when consuming another invitation.
     membership = await session.get(UserOrganization, (user.id, organization.id))
     if membership is None:
-        if organization.stripe_payment_method_id is None and await organizations.member_count(session, organization.id) >= FREE_USERS:
-            raise HTTPException(status_code=409, detail="This organization has reached its member limit. Ask an owner to register a card.")
         membership = UserOrganization(user_id=user.id, organization_id=organization.id, role=invitation.role)
         session.add(membership)
 
@@ -87,13 +84,9 @@ async def create(session: AsyncSession, organization_id: UUID, payload: Organiza
     """Authorize and create one Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
-    organization, membership = await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
+    _, membership = await organizations.lock_active_access(session, user_id, organization_id, OrganizationRoles.maintain)
     if not roles.atleast(membership.role, payload.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
-
-    # Pending invitations do not count against the organization's member allowance.
-    if organization.stripe_payment_method_id is None and await organizations.member_count(session, organization_id) >= FREE_USERS:
-        raise HTTPException(status_code=409, detail=f"Register a card before adding more than {FREE_USERS} members.")
 
     # Reject emails that already belong to the locked Organization.
     if (

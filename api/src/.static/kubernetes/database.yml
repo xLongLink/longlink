@@ -14,12 +14,12 @@ spec:
     hard:
         # Budget one instance, its bootstrap/join Job, and one backup/replacement Pod.
         pods: '3'
-        requests.cpu: '3'
-        requests.memory: '3Gi'
-        limits.cpu: '3'
-        limits.memory: '3Gi'
+        requests.cpu: '${quota_cpu_millicores}m'
+        requests.memory: '$quota_ram_bytes'
+        limits.cpu: '${quota_cpu_millicores}m'
+        limits.memory: '$quota_ram_bytes'
         persistentvolumeclaims: '2'
-        requests.storage: '${quota_storage_mib}Mi'
+        requests.storage: '$quota_storage_bytes'
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -70,14 +70,14 @@ spec:
         name: database-superuser
     storage:
         storageClass: $storage_class
-        size: '${size_mib}Mi'
+        size: '$storage_bytes'
     resources:
         requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: '${cpu_millicores}m'
+            memory: '$request_ram_bytes'
         limits:
-            cpu: '1'
-            memory: 1Gi
+            cpu: '${cpu_millicores}m'
+            memory: '$ram_bytes'
     postgresql:
         pg_hba:
             - hostnossl all all all reject

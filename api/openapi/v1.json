@@ -4015,6 +4015,71 @@
             }
           }
         }
+      },
+      "patch": {
+        "summary": "Update Organization Usage",
+        "description": "Change purchased capacity and reconcile the Organization's resource limits.",
+        "operationId": "update_organization_usage_api_v1_organizations__organization_id__usage_patch",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationUsageUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationUsage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/organizations/{organization_id}/storage": {
@@ -5523,40 +5588,28 @@
       },
       "OrganizationUsage": {
         "properties": {
-          "free_users": {
+          "cpu_monthly_price": {
             "type": "integer",
-            "title": "Free Users",
-            "default": 5
-          },
-          "free_storage_bytes": {
-            "type": "integer",
-            "title": "Free Storage Bytes",
-            "default": 1073741824
-          },
-          "free_database_bytes": {
-            "type": "integer",
-            "title": "Free Database Bytes",
-            "default": 104857600
-          },
-          "user_monthly_price": {
-            "type": "integer",
-            "title": "User Monthly Price",
+            "title": "Cpu Monthly Price",
             "default": 1000
           },
-          "storage_mib_monthly_price": {
-            "type": "string",
-            "title": "Storage Mib Monthly Price",
-            "default": "0.02"
+          "ram_gib_monthly_price": {
+            "type": "integer",
+            "title": "Ram Gib Monthly Price",
+            "default": 500
           },
-          "database_mib_monthly_price": {
-            "type": "string",
-            "title": "Database Mib Monthly Price",
-            "default": "0.1"
+          "storage_gib_monthly_price": {
+            "type": "integer",
+            "title": "Storage Gib Monthly Price",
+            "default": 1
           },
           "users": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Users"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
           },
           "solutions": {
             "type": "integer",
@@ -5575,17 +5628,102 @@
           "has_payment_method": {
             "type": "boolean",
             "title": "Has Payment Method"
+          },
+          "storage_bytes": {
+            "type": "integer",
+            "title": "Storage Bytes"
+          },
+          "compute_ram_bytes": {
+            "type": "integer",
+            "title": "Compute Ram Bytes"
+          },
+          "database_ram_bytes": {
+            "type": "integer",
+            "title": "Database Ram Bytes"
+          },
+          "compute_cpu_millicores": {
+            "type": "integer",
+            "title": "Compute Cpu Millicores"
+          },
+          "database_storage_bytes": {
+            "type": "integer",
+            "title": "Database Storage Bytes"
+          },
+          "database_cpu_millicores": {
+            "type": "integer",
+            "title": "Database Cpu Millicores"
           }
         },
         "type": "object",
         "required": [
           "users",
+          "status",
           "solutions",
           "stripe_enabled",
-          "has_payment_method"
+          "has_payment_method",
+          "storage_bytes",
+          "compute_ram_bytes",
+          "database_ram_bytes",
+          "compute_cpu_millicores",
+          "database_storage_bytes",
+          "database_cpu_millicores"
         ],
         "title": "OrganizationUsage",
         "description": "Describe current Organization usage, limits, and month-end pricing."
+      },
+      "OrganizationUsageUpdate": {
+        "properties": {
+          "storage_bytes": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Storage Bytes"
+          },
+          "compute_ram_bytes": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "minimum": 268435456.0,
+            "title": "Compute Ram Bytes"
+          },
+          "database_ram_bytes": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "minimum": 268435456.0,
+            "title": "Database Ram Bytes"
+          },
+          "compute_cpu_millicores": {
+            "type": "integer",
+            "multipleOf": 250.0,
+            "maximum": 2147483647.0,
+            "minimum": 250.0,
+            "title": "Compute Cpu Millicores"
+          },
+          "database_storage_bytes": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "minimum": 104857600.0,
+            "title": "Database Storage Bytes"
+          },
+          "database_cpu_millicores": {
+            "type": "integer",
+            "multipleOf": 250.0,
+            "maximum": 2147483647.0,
+            "minimum": 250.0,
+            "title": "Database Cpu Millicores"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "storage_bytes",
+          "compute_ram_bytes",
+          "database_ram_bytes",
+          "compute_cpu_millicores",
+          "database_storage_bytes",
+          "database_cpu_millicores"
+        ],
+        "title": "OrganizationUsageUpdate",
+        "description": "Validate independently purchased resource pools."
       },
       "Page_AdminUserSummary_": {
         "properties": {

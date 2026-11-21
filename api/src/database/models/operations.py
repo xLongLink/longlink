@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Index, Column
+from sqlalchemy import JSON, Enum, Index, Column
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.base import AuditTable
 
@@ -35,6 +35,7 @@ class Operation(AuditTable, table=True):
 
     # State
     failed: str | None = Field(default=None, min_length=1, max_length=500)
+    allocation: dict[str, int] | None = Field(default=None, sa_column=Column(JSON(none_as_null=True), nullable=True))
 
     # Lock
     lease_expires_at: datetime | None = Field(default=None)
