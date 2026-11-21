@@ -128,17 +128,6 @@ async def provisioned_storage_bytes(client: "Kubernetes", organization_id: UUID)
     return int(utils.quantity(cluster.spec["storage"]["size"]))
 
 
-async def compute_capacity(client: "Kubernetes", organization_id: UUID) -> tuple[int, int]:
-    """Read the live database CPU and RAM reservation before reallocating its share."""
-
-    # Existing Cluster resources retain their current reservation until a verified resize.
-    api = await client.api()
-    cluster = ClusterResource("database", namespace=namespace.database(organization_id), api=api)
-    await cluster.refresh()
-    limits = cluster.spec["resources"]["limits"]
-    return int(utils.quantity(limits["cpu"]) * 1000), int(utils.quantity(limits["memory"]))
-
-
 async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
     """Wait for cluster readiness and the expected ready, nonterminating database Pods."""
 
