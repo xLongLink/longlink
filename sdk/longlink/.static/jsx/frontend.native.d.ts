@@ -24655,10 +24655,11 @@ declare function StackItem(props: {
 	/** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
 	crossAlignSelf?: "start" | "center" | "end" | "stretch";
 }): React$1.JSX.Element;
-declare function Empty({ icon, title, description, children, ...props }: Omit<React$1.ComponentProps<"div">, "className" | "style" | "title"> & {
+declare function Empty({ icon, title, description, children }: {
 	icon?: IconName | `https://${string}` | `http://${string}` | `/${string}`;
 	title: React$1.ReactNode;
 	description?: React$1.ReactNode;
+	children?: React$1.ReactNode;
 }): React$1.JSX.Element;
 type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
 	/** Scoped Solution image path, or an image data/blob URL. */
@@ -71224,9 +71225,10 @@ declare const MapGeoJSON$1: PublicComponent<typeof MapGeoJSON>;
 declare const MapControls$1: PublicComponent<typeof MapControls>;
 declare function ViewMap(props: PublicProps<Omit<MapProps, "theme"> & React$1.RefAttributes<MapRef>>): React$1.JSX.Element;
 type TimestampFormat = "date" | "date_long" | "date_weekday" | "date_time" | "time" | "relative" | "system_date" | "system_date_time" | "system_time";
-declare function Timestamp({ value, format, className, ...props }: Omit<React$1.ComponentPropsWithoutRef<"span">, "children"> & {
+declare function Timestamp({ value, format, timeZone, className, ...props }: Omit<React$1.ComponentPropsWithoutRef<"span">, "children"> & {
 	value: number | string;
 	format?: TimestampFormat;
+	timeZone?: string;
 }): React$1.JSX.Element | null;
 declare function FileViewer({ src, title }: {
 	/** Scoped Solution operation path returning the file to preview. */

@@ -13,11 +13,13 @@ export function ViewMap(props: PublicProps<Omit<mapcn.MapProps, 'theme'> & RefAt
     return (
         <ErrorBoundary
             fallbackRender={({ resetErrorBoundary }) => (
-                <Empty role="alert" title="Unable to load map">
-                    <Button type="button" size="sm" variant="outline" onClick={resetErrorBoundary}>
-                        Retry
-                    </Button>
-                </Empty>
+                <div role="alert" className="flex min-w-0 flex-1">
+                    <Empty title="Unable to load map">
+                        <Button type="button" size="sm" variant="outline" onClick={resetErrorBoundary}>
+                            Retry
+                        </Button>
+                    </Empty>
+                </div>
             )}
         >
             <mapcn.Map {...props} theme={undefined} />

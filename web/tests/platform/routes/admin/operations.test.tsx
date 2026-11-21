@@ -5,6 +5,7 @@ import { withMounted } from '../../../render';
 import { renderPlatform } from '../../render';
 import userEvent from '@testing-library/user-event';
 import Page from '@/platform/routes/admin/operations';
+import { ApiProvider, ApiBoundary } from '@/components/api';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 it('keeps unfinished resource history readable without a resolved resource name', () => {
@@ -94,6 +95,57 @@ it('advances again while the previous result page is still loading', async () =>
         );
     } finally {
         finishSecond(Response.json(result(2)));
+        transport.mockRestore();
+    }
+});
+
+it('opens failed operation metadata with its failure reason and creation and completion timestamps', async () => {
+    // Arrange
+    const actor = userEvent.setup();
+    const operation = zOperationResponse.parse({
+        id: '00000000-0000-4000-8000-000000000003',
+        kind: 'solution.deploy',
+        target_id: '00000000-0000-4000-8000-000000000004',
+        resource_name: 'Orders',
+        status: 'failed',
+        failed: 'Deployment unavailable',
+        created_at: '2026-10-16T12:00:00Z',
+        finished_at: '2026-10-16T12:01:00Z'
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ items: [operation], total: 1 }));
+
+    try {
+        await withMounted(
+            <ApiProvider platformSession>
+                <ApiBoundary>
+                    <Page />
+                </ApiBoundary>
+            </ApiProvider>,
+            async (output) => {
+                await vi.waitFor(() => expect(output.querySelector('tbody')?.textContent).toContain('Orders'));
+                const metadata = [...output.querySelectorAll('button')].find(
+                    (button) => button.textContent === 'Metadata'
+                );
+
+                if (!metadata) throw new Error('Expected metadata action');
+
+                // Act
+                await act(async () => actor.click(metadata));
+
+                // Assert
+                const dialog = document.querySelector('[role="dialog"]');
+                if (!dialog) throw new Error('Expected operation metadata dialog');
+                expect(dialog.textContent).toContain('Deployment unavailable');
+                expect(dialog.querySelector('[data-slot="badge"]')?.textContent).toBe('failed');
+                expect([...dialog.querySelectorAll('time')].map((time) => time.dateTime)).toEqual([
+                    '2026-10-16T12:00:00.000Z',
+                    '2026-10-16T12:01:00.000Z'
+                ]);
+                expect(output.querySelector('tbody time')?.getAttribute('datetime')).toBe('2026-10-16T12:01:00.000Z');
+            },
+            '/admin/operations'
+        );
+    } finally {
         transport.mockRestore();
     }
 });

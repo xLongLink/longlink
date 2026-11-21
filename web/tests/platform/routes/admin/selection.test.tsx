@@ -67,6 +67,14 @@ for (const { name, Page, item } of [
                     if (!metadata || !refresh) throw new Error('Expected metadata and refresh actions');
                     await act(async () => actor.click(metadata));
                     expect(document.querySelector('[role="dialog"]')?.textContent).toContain(item.id);
+                    expect(document.querySelector('[role="dialog"] [data-slot="badge"]')?.textContent).toBe(
+                        item.status
+                    );
+                    if (name === 'solutions') {
+                        expect(document.querySelector('[role="dialog"] time')?.getAttribute('datetime')).toBe(
+                            '2026-10-16T12:00:00.000Z'
+                        );
+                    }
 
                     present = false;
                     await act(async () => actor.click(refresh));

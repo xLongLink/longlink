@@ -4,6 +4,7 @@ import * as permissions from '@/platform/permissions';
 import { Link } from '@/components/longlink/action/link';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Heading } from '@/components/longlink/display/heading';
@@ -32,7 +33,7 @@ export function SolutionOverview({
 
     return (
         <Stack
-            gap={onboarding ? 8 : 4}
+            gap={4}
             justify={onboarding ? 'center' : undefined}
             className={onboarding ? 'min-h-(--page-content-height)' : undefined}
         >
@@ -43,43 +44,38 @@ export function SolutionOverview({
                 </Stack>
             ) : null}
             {tags.length === 0 ? (
-                <Text as="p" tone="muted">
-                    No tabs configured. Add tabs in organization settings under General.
-                </Text>
+                <Empty
+                    title={onboarding ? <h1>No tabs configured</h1> : 'No tabs configured'}
+                    description={
+                        canMaintain
+                            ? 'Add tabs in organization settings under General.'
+                            : 'Ask an organization maintainer to add a tab.'
+                    }
+                />
             ) : onboarding ? (
-                <Stack gap={6} align="center">
-                    <img
-                        src="/images/solution.png"
-                        alt=""
-                        className="size-20 object-contain invert dark:invert-0"
-                        width={272}
-                        height={279}
-                        decoding="async"
-                    />
-                    <Stack gap={0}>
-                        <Heading level={1} align="center">
-                            Your Solutions
-                        </Heading>
-                        <Text as="p" tone="muted" align="center">
-                            Bring your business processes to life
-                        </Text>
-                    </Stack>
-                    <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                        <Link variant="outline" href="/docs/" target="_blank">
-                            Read the docs
-                            <ExternalLink className="size-4" aria-hidden="true" />
-                        </Link>
-                        {canMaintain && (
-                            <Button onClick={openCreate}>
-                                <Plus className="size-4" aria-hidden="true" />
-                                Create solution
-                            </Button>
-                        )}
-                    </Stack>
-                </Stack>
+                <Empty
+                    icon="boxes"
+                    title={<h1>Your Solutions</h1>}
+                    description={
+                        canMaintain
+                            ? 'Create your first solution to get started.'
+                            : 'No solutions have been created in this organization yet.'
+                    }
+                >
+                    <Link variant="outline" href="/docs/" target="_blank">
+                        Read the docs
+                        <ExternalLink className="size-4" aria-hidden="true" />
+                    </Link>
+                    {canMaintain && (
+                        <Button onClick={openCreate}>
+                            <Plus className="size-4" aria-hidden="true" />
+                            Create solution
+                        </Button>
+                    )}
+                </Empty>
             ) : visibleSolutions.length === 0 ? (
-                <Stack justify="center" className="min-h-64">
-                    <Empty role="status" icon="boxes" title="No solutions in this tab" />
+                <Stack justify="center" className="min-h-64" role="status">
+                    <Empty icon="boxes" title="No solutions in this tab" />
                 </Stack>
             ) : (
                 <Table wrap>
@@ -98,15 +94,11 @@ export function SolutionOverview({
                                                 {row.name}
                                             </Link>
                                             {row.status !== 'running' && (
-                                                <span
-                                                    className={
-                                                        row.status === 'creating'
-                                                            ? 'text-xs text-info-foreground'
-                                                            : 'text-xs text-destructive-foreground'
-                                                    }
+                                                <Badge
+                                                    variant={row.status === 'creating' ? 'secondary' : 'destructive'}
                                                 >
                                                     {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                </span>
+                                                </Badge>
                                             )}
                                         </Stack>
                                         {row.description && (

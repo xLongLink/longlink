@@ -54,7 +54,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
     return (
         <>
             <Stack
-                gap={presentation === 'settings' ? 0 : onboarding ? 8 : 4}
+                gap={presentation === 'settings' ? 0 : 4}
                 justify={onboarding ? 'center' : undefined}
                 className={onboarding ? 'min-h-(--page-content-height)' : undefined}
             >
@@ -91,34 +91,20 @@ export default function OrganizationManagement({ presentation }: { presentation:
                     </Stack>
                 ) : null}
                 {onboarding ? (
-                    <Stack gap={6} align="center">
-                        <img
-                            src="/images/organization.png"
-                            alt=""
-                            className="size-20 object-contain invert dark:invert-0"
-                            width={1254}
-                            height={1254}
-                            decoding="async"
-                        />
-                        <Stack gap={0}>
-                            <Heading level={1} align="center">
-                                Your Organizations
-                            </Heading>
-                            <Text as="p" tone="muted" align="center">
-                                A place for your workflows and data
-                            </Text>
-                        </Stack>
-                        <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
-                            <Link variant="outline" href="/docs/" target="_blank">
-                                Read the docs
-                                <ExternalLink className="size-4" aria-hidden="true" />
-                            </Link>
-                            <Button onClick={() => setSelected({ type: 'create' })}>
-                                <Plus className="size-4" aria-hidden="true" />
-                                Create organization
-                            </Button>
-                        </Stack>
-                    </Stack>
+                    <Empty
+                        icon="building-2"
+                        title={<h1>Your Organizations</h1>}
+                        description="Create an organization or accept an invitation to join one."
+                    >
+                        <Link variant="outline" href="/docs/" target="_blank">
+                            Read the docs
+                            <ExternalLink className="size-4" aria-hidden="true" />
+                        </Link>
+                        <Button onClick={() => setSelected({ type: 'create' })}>
+                            <Plus className="size-4" aria-hidden="true" />
+                            Create organization
+                        </Button>
+                    </Empty>
                 ) : (
                     <Table wrap>
                         {presentation === 'overview' && (
@@ -197,7 +183,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             {rows.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={invitations.length > 0 ? 2 : 1} align="center">
-                                        <Empty role="status" title="No data" />
+                                        <Empty title="No data" />
                                     </TableCell>
                                 </TableRow>
                             )}

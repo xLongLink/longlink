@@ -4,10 +4,12 @@ import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -52,10 +54,14 @@ export default function Operations() {
                                 <TableCell>
                                     <Stack gap={0} align="start">
                                         <Text>{kinds[row.kind]}</Text>
-                                        <Text size="xs" tone="muted">
-                                            {statuses[row.status]}
-                                            {row.finished_at && ` - ${row.finished_at}`}
-                                        </Text>
+                                        <Stack direction="horizontal" gap={1} align="center" wrap="wrap">
+                                            <Badge variant={row.status === 'failed' ? 'destructive' : 'secondary'}>
+                                                {statuses[row.status]}
+                                            </Badge>
+                                            {row.finished_at && (
+                                                <Timestamp value={row.finished_at} format="date_time" />
+                                            )}
+                                        </Stack>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
@@ -77,7 +83,7 @@ export default function Operations() {
                         {operations.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={3} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -100,7 +106,10 @@ export default function Operations() {
                             <b>Operation</b> {metadata.kind}
                         </Text>
                         <Text>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b>{' '}
+                            <Badge variant={metadata.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {metadata.status}
+                            </Badge>
                         </Text>
                         <Text>
                             <b>ID</b> {metadata.id}
@@ -109,11 +118,11 @@ export default function Operations() {
                             <b>Target</b> {metadata.target_id}
                         </Text>
                         <Text>
-                            <b>Created</b> {metadata.created_at}
+                            <b>Created</b> <Timestamp value={metadata.created_at} format="date_time" />
                         </Text>
                         {metadata.finished_at && (
                             <Text>
-                                <b>Finished</b> {metadata.finished_at}
+                                <b>Finished</b> <Timestamp value={metadata.finished_at} format="date_time" />
                             </Text>
                         )}
                         {metadata.failed && (

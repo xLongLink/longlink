@@ -7,7 +7,9 @@ import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Heading } from '@/components/longlink/display/heading';
+import { Currency } from '@/components/longlink/display/currency';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
 /** Keeps private invoice reads scoped to the active owner-only settings section. */
@@ -43,10 +45,10 @@ function InvoiceTable({ base }: { base: string }) {
         <Table wrap>
             <TableBody>
                 {invoices.map((row) => {
-                    const currency = new Intl.NumberFormat(undefined, {
-                        style: 'currency',
-                        currency: row.currency.toUpperCase()
-                    });
+                    const currency = row.currency.toUpperCase();
+                    const fractionDigits =
+                        new Intl.NumberFormat(undefined, { style: 'currency', currency }).resolvedOptions()
+                            .maximumFractionDigits ?? 2;
 
                     return (
                         <TableRow key={row.id}>
@@ -60,12 +62,10 @@ function InvoiceTable({ base }: { base: string }) {
                                 )}
                             </TableCell>
                             <TableCell>
-                                {new Date(row.created_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+                                <Timestamp value={row.created_at} format="date" timeZone="UTC" />
                             </TableCell>
                             <TableCell align="end">
-                                {currency.format(
-                                    row.total / 10 ** (currency.resolvedOptions().maximumFractionDigits ?? 2)
-                                )}
+                                <Currency value={row.total / 10 ** fractionDigits} currency={currency} />
                             </TableCell>
                             <TableCell>
                                 <Badge variant="secondary">{row.status?.replaceAll('_', ' ') ?? 'Unknown'}</Badge>
@@ -83,7 +83,7 @@ function InvoiceTable({ base }: { base: string }) {
                 {invoices.length === 0 && (
                     <TableRow>
                         <TableCell colSpan={5} align="center">
-                            <Empty role="status" title="No data" />
+                            <Empty title="No data" />
                         </TableCell>
                     </TableRow>
                 )}

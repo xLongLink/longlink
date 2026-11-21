@@ -38,7 +38,7 @@ it('does not offer unrelated collection navigation for an unlisted article', () 
     expect(output.querySelector('[aria-label="Article page navigation"]')).toBeNull();
     expect(output.querySelector('a[href="/docs/first/"]')).toBeNull();
     expect(output.querySelector('a[href="/docs/last/"]')).toBeNull();
-    expect(output.textContent).toContain('16 Oct 2026');
+    expect(output.querySelector('time')?.textContent).toBe('Oct 16, 2026');
 });
 
 it.each([
@@ -262,7 +262,8 @@ it('keeps modified collection links native while ordinary clicks use the router'
 
 it('renders UTC modification dates and only offers an external source link when supplied', () => {
     const withoutEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16T23:30:00-03:00" />);
-    expect(withoutEdit.textContent).toContain('17 Oct 2026');
+    expect(withoutEdit.querySelector('time')?.textContent).toBe('Oct 17, 2026');
+    expect(withoutEdit.querySelector('time')?.getAttribute('datetime')).toBe('2026-10-17T02:30:00.000Z');
     expect(withoutEdit.querySelector('a')).toBeNull();
 
     const withEdit = renderStatic(<ArticleFooter lastUpdated="2026-10-16" editUrl="https://example.com/source" />);

@@ -75,7 +75,7 @@ export default function Organizations() {
                         {organizations.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={2} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -116,7 +116,10 @@ export default function Organizations() {
                 >
                     <Stack gap={2}>
                         <Text>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b>{' '}
+                            <Badge variant={metadata.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {metadata.status}
+                            </Badge>
                         </Text>
                         <Text>
                             <b>ID</b> {metadata.id}
