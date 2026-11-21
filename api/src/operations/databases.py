@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col
-from sqlalchemy import text, delete, select, update
+from sqlalchemy import text, delete, update
 from dataclasses import dataclass
 from src.kubernetes import databases as database_resources
 from collections.abc import AsyncGenerator
@@ -14,7 +14,6 @@ from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
-from src.database.models.computes import ComputeRegistry
 from src.database.models.organizations import Organization, OrganizationActivity
 
 
@@ -161,7 +160,7 @@ async def deleting(organization_id: UUID) -> AsyncGenerator[None]:
 
 @contextlib.asynccontextmanager
 async def reconciling(organization_id: UUID) -> AsyncGenerator[Lease | None]:
-    """Hold the Organization transition lease throughout capacity reconciliation."""
+    """Hold the Organization transition lease throughout preparation and reconciliation."""
 
     # Admit reconciliation under the same lock as destructive database transitions.
     while True:
@@ -181,101 +180,54 @@ async def reconciling(organization_id: UUID) -> AsyncGenerator[Lease | None]:
         await asyncio.sleep(0.5)
 
 
-async def ready(organization_id: UUID) -> bool:
-    """Provision the database behind one persisted transition lease."""
+async def prepare(lease: Lease, organization: Organization, cluster: Kubernetes, database_storage_class: str) -> None:
+    """Prepare the captured database assignment under the caller's admitted lease."""
 
-    # Provisioning decisions share the same short write transaction.
-    while True:
-        async with session_scope() as session:
-            organization = await organizations.lock_row(session, organization_id)
+    # An available database needs no repeated PostgreSQL initialization.
+    if organization.database_state == DatabaseState.available:
+        return
+    organization_id = organization.id
 
-            # Provisioning cannot revive an absent or deleted Organization.
-            if organization is None or organization.deleted_at is not None:
-                return False
+    # Keep provisioning failure separate from later capacity or storage failures.
+    try:
+        await lease.check()
 
-            # Available databases can be reused only outside an active transition.
-            if organization.database_state == DatabaseState.available:
-                transition = await session.get(OrganizationActivity, organization_id)
-                if transition is None or transition.expires_at <= datetime.now(UTC):
-                    return True
-            lease = await _claim(session, organization_id)
-            target = None
+        # New infrastructure needs provisioning before PostgreSQL initialization.
+        if organization.status != Status.running:
+            await database_resources.apply(
+                cluster,
+                organization_id,
+                organization.database_password,
+                database_storage_class,
+                storage_bytes=organization.database_storage_bytes,
+                cpu_millicores=organization.database_cpu_millicores,
+                ram_bytes=organization.database_ram_bytes,
+            )
 
-            # Capture the admitted database assignment without decrypting unrelated storage credentials.
-            if lease is not None:
-                result = await session.execute(
-                    select(Organization, col(ComputeRegistry.kubeconfig), col(ComputeRegistry.database_storage_class))
-                    .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-                    .where(col(Organization.id) == organization_id)
-                )
-                target = result.one_or_none()
-            await session.commit()
-
-        # Another transition may finish while this caller waits for admission.
-        if lease is None:
-            await asyncio.sleep(0.5)
-            continue
-
-        async with lease.maintain():
-            # Provision only from the committed admission snapshot.
-            try:
-                if target is None:
-                    raise RuntimeError("Organization is unavailable")
-                organization, kubeconfig, database_storage_class = target
-                cluster = Kubernetes(kubeconfig)
-
-                # Revalidate ownership before mutating cluster resources.
+        await database_resources.wait_ready(cluster, organization_id)
+        async with database_resources.connection(organization, cluster) as database:
+            if organization.status != Status.running:
                 await lease.check()
+                await database.prepare_organization_database(organization_id)
 
-                # New infrastructure needs provisioning before PostgreSQL initialization.
-                if organization.status != Status.running:
-                    await database_resources.apply(
-                        cluster,
-                        organization_id,
-                        organization.database_password,
-                        # Preserve the Compute's selected persistent storage class.
-                        database_storage_class,
-                        storage_bytes=organization.database_storage_bytes,
-                        cpu_millicores=organization.database_cpu_millicores,
-                        ram_bytes=organization.database_ram_bytes,
-                    )
+            # Verify the tenant connection immediately before publication.
+            await lease.check()
+            async with asyncio.timeout(10), database.connection(organization_id.hex) as sql:
+                await sql.execute(text("SELECT 1"))
 
-                await database_resources.wait_ready(cluster, organization_id)
-                async with database_resources.connection(organization, cluster) as database:
-                    if organization.status != Status.running:
-                        await lease.check()
+            # Publish readiness independently from confirmed allocation.
+            async with session_scope() as session:
+                current = await organizations.lock_row(session, organization_id)
+                if current is None or current.deleted_at is not None or not await lease.owned(session):
+                    raise RuntimeError("Organization transition lease was lost")
+                current.database_state = DatabaseState.available
+                await session.commit()
 
-                        # Prepare PostgreSQL roles only while the transition is still owned.
-                        await database.prepare_organization_database(organization_id)
-
-                    # Verify ownership before checking the tenant connection and publishing readiness.
-                    await lease.check()
-
-                    # Verify the tenant connection immediately before publication.
-                    async with asyncio.timeout(10), database.connection(organization_id.hex) as sql:
-                        await sql.execute(text("SELECT 1"))
-
-                    # Publish the provisioned database.
-                    async with session_scope() as session:
-                        organization = await organizations.lock_row(session, organization_id)
-
-                        # A lost lease cannot publish infrastructure as available.
-                        if organization is None or organization.deleted_at is not None or not await lease.owned(session):
-                            raise RuntimeError("Organization transition lease was lost")
-                        organization.database_state = DatabaseState.available
-                        await session.commit()
-
-                        # Availability is visible only after the transaction commits.
-                        return True
-
-            # Interrupted provisioning is retried through the failed state.
-            except BaseException:
-                # Persist failure without changing a replacement lease's state.
-                async with session_scope() as session:
-                    organization = await organizations.lock_row(session, organization_id)
-
-                    # Do not overwrite a replacement worker's transition state.
-                    if organization is not None and await lease.owned(session):
-                        organization.database_state = DatabaseState.failed
-                    await session.commit()
-                raise
+    # Interrupted provisioning is retried without changing a replacement worker's state.
+    except BaseException:
+        async with session_scope() as session:
+            current = await organizations.lock_row(session, organization_id)
+            if current is not None and await lease.owned(session):
+                current.database_state = DatabaseState.failed
+            await session.commit()
+        raise

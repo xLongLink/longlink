@@ -8,6 +8,7 @@ from factories import create_organization
 from src.operations import databases
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import organizations
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.organizations import Organization, OrganizationActivity
@@ -60,7 +61,7 @@ async def test_owned_rejects_missing_row() -> None:
 
 @pytest.mark.usefixtures("database_runtime")
 @pytest.mark.parametrize("status", [Status.creating, Status.running])
-async def test_ready_verifies_readiness_before_opening_postgres(
+async def test_prepare_verifies_readiness_before_opening_postgres(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, status: Status
 ) -> None:
     """Require ready infrastructure before SQL access on both provisioning paths."""
@@ -72,6 +73,10 @@ async def test_ready_verifies_readiness_before_opening_postgres(
         assert persisted is not None
         persisted.status = status
         await session.commit()
+        target = await organizations.infrastructure(session, organization.id)
+        assert target is not None
+        snapshot, compute = target
+    cluster = databases.Kubernetes(compute.kubeconfig)
     verified = False
 
     async def wait_ready(_client: object, _organization: UUID) -> None:
@@ -91,10 +96,11 @@ async def test_ready_verifies_readiness_before_opening_postgres(
     monkeypatch.setattr(databases.database_resources.postgres, "Postgres", Database)
 
     # Act
-    result = await databases.ready(organization.id)
+    async with databases.reconciling(organization.id) as lease:
+        assert lease is not None
+        await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
 
     # Assert
-    assert result is True
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -102,13 +108,18 @@ async def test_ready_verifies_readiness_before_opening_postgres(
 
 
 @pytest.mark.usefixtures("database_runtime")
-async def test_ready_interrupts_provisioning_without_releasing_replacement_lease(
+async def test_prepare_interrupts_provisioning_without_releasing_replacement_lease(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Cancel stale provisioning without publishing or altering a successor's state."""
 
     # Arrange
     organization = await create_organization(users[0])
+    async with session_scope() as session:
+        target = await organizations.infrastructure(session, organization.id)
+        assert target is not None
+        snapshot, compute = target
+    cluster = databases.Kubernetes(compute.kubeconfig)
     started = asyncio.Event()
     interrupted = asyncio.Event()
     renew = asyncio.Event()
@@ -133,8 +144,15 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
     monkeypatch.setattr(databases.database_resources.postgres, "Postgres", Database)
     monkeypatch.setattr(databases, "asyncio", SimpleNamespace(**(vars(asyncio) | {"sleep": renewal_tick})))
 
+    async def prepare() -> None:
+        """Run preparation under the same maintained lease as reconciliation."""
+
+        async with databases.reconciling(organization.id) as lease:
+            assert lease is not None
+            await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+
     # Act
-    provisioning = asyncio.create_task(databases.ready(organization.id))
+    provisioning = asyncio.create_task(prepare())
     try:
         async with asyncio.timeout(5):
             await started.wait()
@@ -170,13 +188,18 @@ async def test_ready_interrupts_provisioning_without_releasing_replacement_lease
 
 
 @pytest.mark.usefixtures("database_runtime")
-async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
+async def test_prepare_cancellation_releases_owned_lease_and_allows_retry(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Release an interrupted owner's activity and allow real provisioning to retry."""
 
     # Arrange
     organization = await create_organization(users[0])
+    async with session_scope() as session:
+        target = await organizations.infrastructure(session, organization.id)
+        assert target is not None
+        snapshot, compute = target
+    cluster = databases.Kubernetes(compute.kubeconfig)
     started = asyncio.Event()
     interrupted = asyncio.Event()
 
@@ -190,10 +213,17 @@ async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
             finally:
                 interrupted.set()
 
+    async def prepare() -> None:
+        """Run preparation under the same maintained lease as reconciliation."""
+
+        async with databases.reconciling(organization.id) as lease:
+            assert lease is not None
+            await databases.prepare(lease, snapshot, cluster, compute.database_storage_class)
+
     # Act with a scoped external-I/O seam so the retry uses the normal local transport.
     with monkeypatch.context() as provider:
         provider.setattr(databases.database_resources.postgres, "Postgres", Database)
-        provisioning = asyncio.create_task(databases.ready(organization.id))
+        provisioning = asyncio.create_task(prepare())
         try:
             await asyncio.wait_for(started.wait(), timeout=5)
             provisioning.cancel()
@@ -217,7 +247,7 @@ async def test_ready_cancellation_releases_owned_lease_and_allows_retry(
 
     # Retry the real lifecycle and inspect publication from another session.
     async with asyncio.timeout(5):
-        assert await databases.ready(organization.id) is True
+        await prepare()
     async with session_scope() as session:
         assert await session.get(OrganizationActivity, organization.id) is None
         persisted = await session.get(Organization, organization.id)

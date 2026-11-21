@@ -209,7 +209,7 @@ def _infrastructure_query() -> Select[Organization, ComputeRegistry]:
             load_only(
                 attr(ComputeRegistry.id),
                 attr(ComputeRegistry.kubeconfig),
-                # Database provisioning selects placement separately from lifecycle storage access.
+                attr(ComputeRegistry.database_storage_class),
                 attr(ComputeRegistry.storage_endpoint),
                 attr(ComputeRegistry.storage_access_key),
                 attr(ComputeRegistry.storage_secret_key),
@@ -559,7 +559,6 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
         # A third active Organization exceeds the beta allowance.
         .offset(2)
         .limit(1)
-        .with_for_update()
     )
     if organization_limit_result.scalar_one_or_none() is not None:
         raise HTTPException(

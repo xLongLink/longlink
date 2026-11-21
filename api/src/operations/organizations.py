@@ -37,11 +37,7 @@ async def reconcile(operation: Operation) -> None:
             raise RuntimeError("Operation lease was lost")
         allocation = OrganizationUsageUpdate.model_validate(claimed.allocation) if claimed.allocation is not None else None
 
-    # Initial database preparation uses confirmed defaults, before applying purchased capacity.
-    if not await databases.ready(operation.target_id):
-        return
-
-    # Fence every capacity change against deletion and competing database transitions.
+    # Fence preparation and capacity changes against deletion and competing transitions.
     async with databases.reconciling(operation.target_id) as lease:
         if lease is None:
             return
@@ -56,8 +52,11 @@ async def reconcile(operation: Operation) -> None:
             return
         desired = allocation or OrganizationUsageUpdate.model_validate(organization, from_attributes=True)
 
-        # Reconcile independent pools using only the frozen desired snapshot.
+        # Prepare confirmed database defaults before applying purchased capacity.
         cluster = Kubernetes(compute.kubeconfig)
+        await databases.prepare(lease, organization, cluster, compute.database_storage_class)
+
+        # Reconcile independent pools using only the frozen desired snapshot.
         await lease.check()
         await database_resources.wait_ready(cluster, organization.id)
         await organizations.apply(
