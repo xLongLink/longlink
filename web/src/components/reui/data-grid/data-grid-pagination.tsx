@@ -108,7 +108,8 @@ function getDataGridPaginationItems(pageIndex: number, pageCount: number, limit:
 const PAGE_BUTTON_WIDTH_CLASS = 'min-w-7';
 
 function DataGridPagination(props: DataGridPaginationProps): JSX.Element {
-    const { i18n, table, recordCount, isLoading } = useDataGrid();
+    const { i18n, table, isLoading } = useDataGrid();
+    const recordCount = table.getRowCount();
 
     const defaultProps: Partial<DataGridPaginationProps> = {
         sizes: [5, 10, 25, 50, 100],

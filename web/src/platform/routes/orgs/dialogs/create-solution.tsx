@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { useForm } from 'react-hook-form';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
@@ -171,26 +171,21 @@ export default function CreateSolution({
                                 </Field>
                             ))}
                             {(inspection?.metadata.environments ?? []).map((environment) => (
-                                <Controller
+                                <Field
                                     key={environment.name}
-                                    name={`envs.${environment.name}`}
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field data-invalid={fieldState.invalid}>
-                                            <FieldLabel htmlFor={`solution-env-${environment.name}`}>
-                                                {environment.name}
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={`solution-env-${environment.name}`}
-                                                value={field.value ?? ''}
-                                                placeholder={environment.description ?? undefined}
-                                                aria-invalid={fieldState.invalid}
-                                            />
-                                            <FieldError errors={[fieldState.error]} />
-                                        </Field>
-                                    )}
-                                />
+                                    data-invalid={Boolean(form.formState.errors.envs?.[environment.name])}
+                                >
+                                    <FieldLabel htmlFor={`solution-env-${environment.name}`}>
+                                        {environment.name}
+                                    </FieldLabel>
+                                    <Input
+                                        {...form.register(`envs.${environment.name}`)}
+                                        id={`solution-env-${environment.name}`}
+                                        placeholder={environment.description ?? undefined}
+                                        aria-invalid={Boolean(form.formState.errors.envs?.[environment.name])}
+                                    />
+                                    <FieldError errors={[form.formState.errors.envs?.[environment.name]]} />
+                                </Field>
                             ))}
                         </>
                     )}

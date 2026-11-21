@@ -71822,9 +71822,6 @@ type UseFormReturn<TFieldValues extends FieldValues = FieldValues, TContext = an
 	subscribe: UseFormSubscribe<TFieldValues>;
 };
 type UseFormStateReturn<TFieldValues extends FieldValues> = FormState$1<TFieldValues>;
-type FormProviderProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
-	children: React$1.ReactNode | React$1.ReactNode[];
-} & UseFormReturn<TFieldValues, TContext, TTransformedValues>;
 type Noop = () => void;
 interface File$1 extends Blob {
 	readonly lastModified: number;
@@ -72026,31 +72023,20 @@ type ControllerProps<TFieldValues extends FieldValues = FieldValues, TName exten
  */
 export declare const Controller: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues>(props: ControllerProps<TFieldValues, TName, TTransformedValues>) => React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
 /**
- * Retrieves all `useForm` methods from the nearest `FormProvider`.
- * Use in deeply nested components to avoid prop-drilling.
+ * Core hook for managing a form. Returns all methods and state for
+ * registration, validation, and submission.
  *
- * @see [API](https://react-hook-form.com/docs/useformcontext)
- *
- * @example
- * ```tsx
- * const { register } = useFormContext<FormValues>();
- * ```
- */
-export declare const useFormContext: <TFieldValues extends FieldValues, TContext = any, TTransformedValues = TFieldValues>() => UseFormReturn<TFieldValues, TContext, TTransformedValues>;
-/**
- * Provides all `useForm` methods to the component tree via React Context.
- * Pair with `useFormContext` to consume them in any descendant.
- *
- * @see [API](https://react-hook-form.com/docs/useformcontext)
+ * @see [API](https://react-hook-form.com/docs/useform)
  *
  * @example
  * ```tsx
- * <FormProvider {...methods}>
- *   <form onSubmit={methods.handleSubmit(onSubmit)}>{children}</form>
- * </FormProvider>
+ * const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+ * <form onSubmit={handleSubmit(onSubmit)}>
+ *   <input {...register("email", { required: true })} />
+ * </form>
  * ```
  */
-export declare const FormProvider: <TFieldValues extends FieldValues, TContext = any, TTransformedValues = TFieldValues>({ children, watch, getValues, getErrors, getFieldState, setError, clearErrors, setValue, setValues, trigger, formState, resetField, reset, resetDefaultValues, handleSubmit, unregister, control, register, setFocus, subscribe, }: FormProviderProps<TFieldValues, TContext, TTransformedValues>) => React$1.JSX.Element;
+export declare function useForm<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues>(props?: UseFormProps<TFieldValues, TContext, TTransformedValues>): UseFormReturn<TFieldValues, TContext, TTransformedValues>;
 type FieldProps = Pick<React$1.AriaAttributes, "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-invalid"> & {
 	id?: string;
 	label?: string;
@@ -72151,15 +72137,12 @@ export type SankeyLink = {
 	target: number;
 	value: number;
 };
-/** Plots numeric area series without filling gaps in missing data. */
-export declare function AreaChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, fill, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row> & {
+export declare function AreaChart<Row extends object>({ curve, fill, ...props }: CartesianChartProps<Row> & {
 	curve?: ChartCurve;
 	fill?: "solid" | "gradient";
 }): React$1.JSX.Element;
-/** Plots grouped numeric series with theme-owned presentation. */
-export declare function BarChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row>): React$1.JSX.Element;
-/** Plots numeric line series while preserving zero values and missing-point gaps. */
-export declare function LineChart<Row extends object>({ data: rows, xKey, series, axes, legend, tooltip, padding, curve, xTickFormatter, yTickFormatter, ...props }: CartesianChartProps<Row> & {
+export declare function BarChart<Row extends object>(props: CartesianChartProps<Row>): React$1.JSX.Element;
+export declare function LineChart<Row extends object>({ curve, ...props }: CartesianChartProps<Row> & {
 	curve?: ChartCurve;
 }): React$1.JSX.Element;
 /** Shows nonnegative contributions without letting data supply its own colors. */
@@ -76176,7 +76159,6 @@ interface DataGridCellsChangeDetails<TData> {
 interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
 	className?: string;
 	table?: Table$1<TFeatures, TData>;
-	recordCount: number;
 	children?: React$1.ReactNode;
 	onRowClick?: (row: TData) => void;
 	/**
@@ -76250,7 +76232,6 @@ interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
 		width?: "auto" | "fixed";
 		columnsVisibility?: boolean;
 		columnsResizable?: boolean;
-		columnsResizeMode?: "onChange" | "onEnd";
 		columnsPinnable?: boolean;
 		columnsMovable?: boolean;
 		columnsDraggable?: boolean;
@@ -81260,6 +81241,1654 @@ declare function bigint$2<T = unknown>(params?: string | core.$ZodBigIntParams):
 interface ZodCoercedDate<T = unknown> extends schemas$1._ZodDate<core.$ZodDateInternals<T>> {
 }
 declare function date$3<T = unknown>(params?: string | core.$ZodDateParams): ZodCoercedDate<T>;
+type Primitive$2 = string | number | symbol | bigint | boolean | null | undefined;
+type Scalars = Primitive$2 | Primitive$2[];
+declare namespace util$1 {
+	type AssertEqual<T, U> = (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2 ? true : false;
+	export type isAny<T> = 0 extends 1 & T ? true : false;
+	export const assertEqual: <A, B>(_: AssertEqual<A, B>) => void;
+	export function assertIs<T>(_arg: T): void;
+	export function assertNever(_x: never): never;
+	export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+	export type OmitKeys<T, K extends string> = Pick<T, Exclude<keyof T, K>>;
+	export type MakePartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+	export type Exactly<T, X> = T & Record<Exclude<keyof X, keyof T>, never>;
+	export type InexactPartial<T> = {
+		[k in keyof T]?: T[k] | undefined;
+	};
+	export const arrayToEnum: <T extends string, U extends [
+		T,
+		...T[]
+	]>(items: U) => {
+		[k in U[number]]: k;
+	};
+	export const getValidEnumValues: (obj: any) => any[];
+	export const objectValues: (obj: any) => any[];
+	export const objectKeys: ObjectConstructor["keys"];
+	export const find: <T>(arr: T[], checker: (arg: T) => any) => T | undefined;
+	export type identity<T> = objectUtil.identity<T>;
+	export type flatten<T> = objectUtil.flatten<T>;
+	export type noUndefined<T> = T extends undefined ? never : T;
+	export const isInteger: NumberConstructor["isInteger"];
+	export function joinValues<T extends any[]>(array: T, separator?: string): string;
+	export const jsonStringifyReplacer: (_: string, value: any) => any;
+	export {};
+}
+declare namespace objectUtil {
+	export type MergeShapes<U, V> = keyof U & keyof V extends never ? U & V : {
+		[k in Exclude<keyof U, keyof V>]: U[k];
+	} & V;
+	type optionalKeys<T extends object> = {
+		[k in keyof T]: undefined extends T[k] ? k : never;
+	}[keyof T];
+	type requiredKeys<T extends object> = {
+		[k in keyof T]: undefined extends T[k] ? never : k;
+	}[keyof T];
+	export type addQuestionMarks<T extends object, _O = any> = {
+		[K in requiredKeys<T>]: T[K];
+	} & {
+		[K in optionalKeys<T>]?: T[K];
+	} & {
+		[k in keyof T]?: unknown;
+	};
+	export type identity<T> = T;
+	export type flatten<T> = identity<{
+		[k in keyof T]: T[k];
+	}>;
+	export type noNeverKeys<T> = {
+		[k in keyof T]: [
+			T[k]
+		] extends [
+			never
+		] ? never : k;
+	}[keyof T];
+	export type noNever<T> = identity<{
+		[k in noNeverKeys<T>]: k extends keyof T ? T[k] : never;
+	}>;
+	export const mergeShapes: <U, T>(first: U, second: T) => T & U;
+	export type extendShape<A extends object, B extends object> = keyof A & keyof B extends never ? A & B : {
+		[K in keyof A as K extends keyof B ? never : K]: A[K];
+	} & {
+		[K in keyof B]: B[K];
+	};
+	export {};
+}
+declare const ZodParsedType: {
+	string: "string";
+	nan: "nan";
+	number: "number";
+	integer: "integer";
+	float: "float";
+	boolean: "boolean";
+	date: "date";
+	bigint: "bigint";
+	symbol: "symbol";
+	function: "function";
+	undefined: "undefined";
+	null: "null";
+	array: "array";
+	object: "object";
+	unknown: "unknown";
+	promise: "promise";
+	void: "void";
+	never: "never";
+	map: "map";
+	set: "set";
+};
+type ZodParsedType = keyof typeof ZodParsedType;
+declare const getParsedType$1: (data: any) => ZodParsedType;
+type allKeys<T> = T extends any ? keyof T : never;
+type inferFlattenedErrors$1<T extends ZodType$1<any, any, any>, U = string> = typeToFlattenedError<TypeOf$1<T>, U>;
+type typeToFlattenedError<T, U = string> = {
+	formErrors: U[];
+	fieldErrors: {
+		[P in allKeys<T>]?: U[];
+	};
+};
+declare const ZodIssueCode$1: {
+	invalid_type: "invalid_type";
+	too_big: "too_big";
+	too_small: "too_small";
+	not_multiple_of: "not_multiple_of";
+	unrecognized_keys: "unrecognized_keys";
+	invalid_union: "invalid_union";
+	custom: "custom";
+	invalid_literal: "invalid_literal";
+	invalid_union_discriminator: "invalid_union_discriminator";
+	invalid_enum_value: "invalid_enum_value";
+	invalid_arguments: "invalid_arguments";
+	invalid_return_type: "invalid_return_type";
+	invalid_date: "invalid_date";
+	invalid_string: "invalid_string";
+	invalid_intersection_types: "invalid_intersection_types";
+	not_finite: "not_finite";
+};
+type ZodIssueCode$1 = keyof typeof ZodIssueCode$1;
+type ZodIssueBase = {
+	path: (string | number)[];
+	message?: string | undefined;
+};
+interface ZodInvalidTypeIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_type;
+	expected: ZodParsedType;
+	received: ZodParsedType;
+}
+interface ZodInvalidLiteralIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_literal;
+	expected: unknown;
+	received: unknown;
+}
+interface ZodUnrecognizedKeysIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.unrecognized_keys;
+	keys: string[];
+}
+interface ZodInvalidUnionIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_union;
+	unionErrors: ZodError$1[];
+}
+interface ZodInvalidUnionDiscriminatorIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_union_discriminator;
+	options: Primitive$2[];
+}
+interface ZodInvalidEnumValueIssue extends ZodIssueBase {
+	received: string | number;
+	code: typeof ZodIssueCode$1.invalid_enum_value;
+	options: (string | number)[];
+}
+interface ZodInvalidArgumentsIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_arguments;
+	argumentsError: ZodError$1;
+}
+interface ZodInvalidReturnTypeIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_return_type;
+	returnTypeError: ZodError$1;
+}
+interface ZodInvalidDateIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_date;
+}
+type StringValidation = "email" | "url" | "emoji" | "uuid" | "nanoid" | "regex" | "cuid" | "cuid2" | "ulid" | "datetime" | "date" | "time" | "duration" | "ip" | "cidr" | "base64" | "jwt" | "base64url" | {
+	includes: string;
+	position?: number | undefined;
+} | {
+	startsWith: string;
+} | {
+	endsWith: string;
+};
+interface ZodInvalidStringIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_string;
+	validation: StringValidation;
+}
+interface ZodTooSmallIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.too_small;
+	minimum: number | bigint;
+	inclusive: boolean;
+	exact?: boolean;
+	type: "array" | "string" | "number" | "set" | "date" | "bigint";
+}
+interface ZodTooBigIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.too_big;
+	maximum: number | bigint;
+	inclusive: boolean;
+	exact?: boolean;
+	type: "array" | "string" | "number" | "set" | "date" | "bigint";
+}
+interface ZodInvalidIntersectionTypesIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.invalid_intersection_types;
+}
+interface ZodNotMultipleOfIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.not_multiple_of;
+	multipleOf: number | bigint;
+}
+interface ZodNotFiniteIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.not_finite;
+}
+interface ZodCustomIssue extends ZodIssueBase {
+	code: typeof ZodIssueCode$1.custom;
+	params?: {
+		[k: string]: any;
+	};
+}
+type DenormalizedError = {
+	[k: string]: DenormalizedError | string[];
+};
+type ZodIssueOptionalMessage = ZodInvalidTypeIssue | ZodInvalidLiteralIssue | ZodUnrecognizedKeysIssue | ZodInvalidUnionIssue | ZodInvalidUnionDiscriminatorIssue | ZodInvalidEnumValueIssue | ZodInvalidArgumentsIssue | ZodInvalidReturnTypeIssue | ZodInvalidDateIssue | ZodInvalidStringIssue | ZodTooSmallIssue | ZodTooBigIssue | ZodInvalidIntersectionTypesIssue | ZodNotMultipleOfIssue | ZodNotFiniteIssue | ZodCustomIssue;
+type ZodIssue$1 = ZodIssueOptionalMessage & {
+	fatal?: boolean | undefined;
+	message: string;
+};
+declare const quotelessJson: (obj: any) => string;
+type recursiveZodFormattedError<T> = T extends [
+	any,
+	...any[]
+] ? {
+	[K in keyof T]?: ZodFormattedError$1<T[K]>;
+} : T extends any[] ? {
+	[k: number]: ZodFormattedError$1<T[number]>;
+} : T extends object ? {
+	[K in keyof T]?: ZodFormattedError$1<T[K]>;
+} : unknown;
+type ZodFormattedError$1<T, U = string> = {
+	_errors: U[];
+} & recursiveZodFormattedError<NonNullable<T>>;
+type inferFormattedError$1<T extends ZodType$1<any, any, any>, U = string> = ZodFormattedError$1<TypeOf$1<T>, U>;
+declare class ZodError$1<T = any> extends Error {
+	issues: ZodIssue$1[];
+	get errors(): ZodIssue$1[];
+	constructor(issues: ZodIssue$1[]);
+	format(): ZodFormattedError$1<T>;
+	format<U>(mapper: (issue: ZodIssue$1) => U): ZodFormattedError$1<T, U>;
+	static create: (issues: ZodIssue$1[]) => ZodError$1<any>;
+	static assert(value: unknown): asserts value is ZodError$1;
+	toString(): string;
+	get message(): string;
+	get isEmpty(): boolean;
+	addIssue: (sub: ZodIssue$1) => void;
+	addIssues: (subs?: ZodIssue$1[]) => void;
+	flatten(): typeToFlattenedError<T>;
+	flatten<U>(mapper?: (issue: ZodIssue$1) => U): typeToFlattenedError<T, U>;
+	get formErrors(): typeToFlattenedError<T, string>;
+}
+type stripPath<T extends object> = T extends any ? util$1.OmitKeys<T, "path"> : never;
+type IssueData$1 = stripPath<ZodIssueOptionalMessage> & {
+	path?: (string | number)[];
+	fatal?: boolean | undefined;
+};
+type ErrorMapCtx = {
+	defaultError: string;
+	data: any;
+};
+type ZodErrorMap$1 = (issue: ZodIssueOptionalMessage, _ctx: ErrorMapCtx) => {
+	message: string;
+};
+declare const errorMap: ZodErrorMap$1;
+declare function setErrorMap$1(map: ZodErrorMap$1): void;
+declare function getErrorMap$1(): ZodErrorMap$1;
+declare const makeIssue: (params: {
+	data: any;
+	path: (string | number)[];
+	errorMaps: ZodErrorMap$1[];
+	issueData: IssueData$1;
+}) => ZodIssue$1;
+type ParseParams = {
+	path: (string | number)[];
+	errorMap: ZodErrorMap$1;
+	async: boolean;
+};
+type ParsePathComponent = string | number;
+type ParsePath = ParsePathComponent[];
+declare const EMPTY_PATH: ParsePath;
+interface ParseContext$1 {
+	readonly common: {
+		readonly issues: ZodIssue$1[];
+		readonly contextualErrorMap?: ZodErrorMap$1 | undefined;
+		readonly async: boolean;
+	};
+	readonly path: ParsePath;
+	readonly schemaErrorMap?: ZodErrorMap$1 | undefined;
+	readonly parent: ParseContext$1 | null;
+	readonly data: any;
+	readonly parsedType: ZodParsedType;
+}
+type ParseInput = {
+	data: any;
+	path: (string | number)[];
+	parent: ParseContext$1;
+};
+declare function addIssueToContext(ctx: ParseContext$1, issueData: IssueData$1): void;
+type ObjectPair = {
+	key: SyncParseReturnType<any>;
+	value: SyncParseReturnType<any>;
+};
+declare class ParseStatus {
+	value: "aborted" | "dirty" | "valid";
+	dirty(): void;
+	abort(): void;
+	static mergeArray(status: ParseStatus, results: SyncParseReturnType<any>[]): SyncParseReturnType;
+	static mergeObjectAsync(status: ParseStatus, pairs: {
+		key: ParseReturnType<any>;
+		value: ParseReturnType<any>;
+	}[]): Promise<SyncParseReturnType<any>>;
+	static mergeObjectSync(status: ParseStatus, pairs: {
+		key: SyncParseReturnType<any>;
+		value: SyncParseReturnType<any>;
+		alwaysSet?: boolean;
+	}[]): SyncParseReturnType;
+}
+interface ParseResult {
+	status: "aborted" | "dirty" | "valid";
+	data: any;
+}
+type INVALID$1 = {
+	status: "aborted";
+};
+declare const INVALID$1: INVALID$1;
+type DIRTY<T> = {
+	status: "dirty";
+	value: T;
+};
+declare const DIRTY: <T>(value: T) => DIRTY<T>;
+type OK<T> = {
+	status: "valid";
+	value: T;
+};
+declare const OK: <T>(value: T) => OK<T>;
+type SyncParseReturnType<T = any> = OK<T> | DIRTY<T> | INVALID$1;
+type AsyncParseReturnType<T> = Promise<SyncParseReturnType<T>>;
+type ParseReturnType<T> = SyncParseReturnType<T> | AsyncParseReturnType<T>;
+declare const isAborted: (x: ParseReturnType<any>) => x is INVALID$1;
+declare const isDirty: <T>(x: ParseReturnType<T>) => x is OK<T> | DIRTY<T>;
+declare const isValid: <T>(x: ParseReturnType<T>) => x is OK<T>;
+declare const isAsync: <T>(x: ParseReturnType<T>) => x is AsyncParseReturnType<T>;
+declare namespace enumUtil {
+	type UnionToIntersectionFn<T> = (T extends unknown ? (k: () => T) => void : never) extends (k: infer Intersection) => void ? Intersection : never;
+	type GetUnionLast<T> = UnionToIntersectionFn<T> extends () => infer Last ? Last : never;
+	type UnionToTuple<T, Tuple extends unknown[] = [
+	]> = [
+		T
+	] extends [
+		never
+	] ? Tuple : UnionToTuple<Exclude<T, GetUnionLast<T>>, [
+		GetUnionLast<T>,
+		...Tuple
+	]>;
+	type CastToStringTuple<T> = T extends [
+		string,
+		...string[]
+	] ? T : never;
+	export type UnionToTupleString<T> = CastToStringTuple<UnionToTuple<T>>;
+	export {};
+}
+declare namespace errorUtil {
+	type ErrMessage = string | {
+		message?: string | undefined;
+	};
+	const errToObj: (message?: ErrMessage) => {
+		message?: string | undefined;
+	};
+	const toString: (message?: ErrMessage) => string | undefined;
+}
+declare namespace partialUtil {
+	type DeepPartial<T extends ZodTypeAny$1> = T extends ZodObject$1<ZodRawShape$1> ? ZodObject$1<{
+		[k in keyof T["shape"]]: ZodOptional$1<DeepPartial<T["shape"][k]>>;
+	}, T["_def"]["unknownKeys"], T["_def"]["catchall"]> : T extends ZodArray$1<infer Type, infer Card> ? ZodArray$1<DeepPartial<Type>, Card> : T extends ZodOptional$1<infer Type> ? ZodOptional$1<DeepPartial<Type>> : T extends ZodNullable$1<infer Type> ? ZodNullable$1<DeepPartial<Type>> : T extends ZodTuple$1<infer Items> ? {
+		[k in keyof Items]: Items[k] extends ZodTypeAny$1 ? DeepPartial<Items[k]> : never;
+	} extends infer PI ? PI extends ZodTupleItems ? ZodTuple$1<PI> : never : never : T;
+}
+type StandardSchemaV1$1<Input = unknown, Output = Input> = {
+	/**
+	 * The Standard Schema properties.
+	 */
+	readonly "~standard": StandardSchemaV1$1.Props<Input, Output>;
+};
+declare namespace StandardSchemaV1$1 {
+	/**
+	 * The Standard Schema properties interface.
+	 */
+	export interface Props<Input = unknown, Output = Input> {
+		/**
+		 * The version number of the standard.
+		 */
+		readonly version: 1;
+		/**
+		 * The vendor name of the schema library.
+		 */
+		readonly vendor: string;
+		/**
+		 * Validates unknown input values.
+		 */
+		readonly validate: (value: unknown) => Result<Output> | Promise<Result<Output>>;
+		/**
+		 * Inferred types associated with the schema.
+		 */
+		readonly types?: Types<Input, Output> | undefined;
+	}
+	/**
+	 * The result interface of the validate function.
+	 */
+	export type Result<Output> = SuccessResult<Output> | FailureResult;
+	/**
+	 * The result interface if validation succeeds.
+	 */
+	export interface SuccessResult<Output> {
+		/**
+		 * The typed output value.
+		 */
+		readonly value: Output;
+		/**
+		 * The non-existent issues.
+		 */
+		readonly issues?: undefined;
+	}
+	/**
+	 * The result interface if validation fails.
+	 */
+	export interface FailureResult {
+		/**
+		 * The issues of failed validation.
+		 */
+		readonly issues: ReadonlyArray<Issue>;
+	}
+	/**
+	 * The issue interface of the failure output.
+	 */
+	export interface Issue {
+		/**
+		 * The error message of the issue.
+		 */
+		readonly message: string;
+		/**
+		 * The path of the issue, if any.
+		 */
+		readonly path?: ReadonlyArray<PropertyKey | PathSegment> | undefined;
+	}
+	/**
+	 * The path segment interface of the issue.
+	 */
+	export interface PathSegment {
+		/**
+		 * The key representing a path segment.
+		 */
+		readonly key: PropertyKey;
+	}
+	/**
+	 * The Standard Schema types interface.
+	 */
+	export interface Types<Input = unknown, Output = Input> {
+		/**
+		 * The input type of the schema.
+		 */
+		readonly input: Input;
+		/**
+		 * The output type of the schema.
+		 */
+		readonly output: Output;
+	}
+	/**
+	 * Infers the input type of a Standard Schema.
+	 */
+	export type InferInput<Schema extends StandardSchemaV1$1> = NonNullable<Schema["~standard"]["types"]>["input"];
+	/**
+	 * Infers the output type of a Standard Schema.
+	 */
+	export type InferOutput<Schema extends StandardSchemaV1$1> = NonNullable<Schema["~standard"]["types"]>["output"];
+	export {};
+}
+interface RefinementCtx {
+	addIssue: (arg: IssueData$1) => void;
+	path: (string | number)[];
+}
+type ZodRawShape$1 = {
+	[k: string]: ZodTypeAny$1;
+};
+type ZodTypeAny$1 = ZodType$1<any, any, any>;
+type TypeOf$1<T extends ZodType$1<any, any, any>> = T["_output"];
+type input$2<T extends ZodType$1<any, any, any>> = T["_input"];
+type output$2<T extends ZodType$1<any, any, any>> = T["_output"];
+type CustomErrorParams = Partial<util$1.Omit<ZodCustomIssue, "code">>;
+interface ZodTypeDef {
+	errorMap?: ZodErrorMap$1 | undefined;
+	description?: string | undefined;
+}
+type RawCreateParams = {
+	errorMap?: ZodErrorMap$1 | undefined;
+	invalid_type_error?: string | undefined;
+	required_error?: string | undefined;
+	message?: string | undefined;
+	description?: string | undefined;
+} | undefined;
+type ProcessedCreateParams = {
+	errorMap?: ZodErrorMap$1 | undefined;
+	description?: string | undefined;
+};
+type SafeParseSuccess$1<Output> = {
+	success: true;
+	data: Output;
+	error?: never;
+};
+type SafeParseError$1<Input> = {
+	success: false;
+	error: ZodError$1<Input>;
+	data?: never;
+};
+type SafeParseReturnType<Input, Output> = SafeParseSuccess$1<Output> | SafeParseError$1<Input>;
+declare abstract class ZodType$1<Output = any, Def extends ZodTypeDef = ZodTypeDef, Input = Output> {
+	readonly _type: Output;
+	readonly _output: Output;
+	readonly _input: Input;
+	readonly _def: Def;
+	get description(): string | undefined;
+	"~standard": StandardSchemaV1$1.Props<Input, Output>;
+	abstract _parse(input: ParseInput): ParseReturnType<Output>;
+	_getType(input: ParseInput): string;
+	_getOrReturnCtx(input: ParseInput, ctx?: ParseContext$1 | undefined): ParseContext$1;
+	_processInputParams(input: ParseInput): {
+		status: ParseStatus;
+		ctx: ParseContext$1;
+	};
+	_parseSync(input: ParseInput): SyncParseReturnType<Output>;
+	_parseAsync(input: ParseInput): AsyncParseReturnType<Output>;
+	parse(data: unknown, params?: util$1.InexactPartial<ParseParams>): Output;
+	safeParse(data: unknown, params?: util$1.InexactPartial<ParseParams>): SafeParseReturnType<Input, Output>;
+	"~validate"(data: unknown): StandardSchemaV1$1.Result<Output> | Promise<StandardSchemaV1$1.Result<Output>>;
+	parseAsync(data: unknown, params?: util$1.InexactPartial<ParseParams>): Promise<Output>;
+	safeParseAsync(data: unknown, params?: util$1.InexactPartial<ParseParams>): Promise<SafeParseReturnType<Input, Output>>;
+	/** Alias of safeParseAsync */
+	spa: (data: unknown, params?: util$1.InexactPartial<ParseParams>) => Promise<SafeParseReturnType<Input, Output>>;
+	refine<RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | CustomErrorParams | ((arg: Output) => CustomErrorParams)): ZodEffects<this, RefinedOutput, Input>;
+	refine(check: (arg: Output) => unknown | Promise<unknown>, message?: string | CustomErrorParams | ((arg: Output) => CustomErrorParams)): ZodEffects<this, Output, Input>;
+	refinement<RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData$1 | ((arg: Output, ctx: RefinementCtx) => IssueData$1)): ZodEffects<this, RefinedOutput, Input>;
+	refinement(check: (arg: Output) => boolean, refinementData: IssueData$1 | ((arg: Output, ctx: RefinementCtx) => IssueData$1)): ZodEffects<this, Output, Input>;
+	_refinement(refinement: RefinementEffect<Output>["refinement"]): ZodEffects<this, Output, Input>;
+	superRefine<RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>;
+	superRefine(refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>;
+	superRefine(refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>;
+	constructor(def: Def);
+	optional(): ZodOptional$1<this>;
+	nullable(): ZodNullable$1<this>;
+	nullish(): ZodOptional$1<ZodNullable$1<this>>;
+	array(): ZodArray$1<this>;
+	promise(): ZodPromise$1<this>;
+	or<T extends ZodTypeAny$1>(option: T): ZodUnion$1<[
+		this,
+		T
+	]>;
+	and<T extends ZodTypeAny$1>(incoming: T): ZodIntersection$1<this, T>;
+	transform<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>): ZodEffects<this, NewOut>;
+	default(def: util$1.noUndefined<Input>): ZodDefault$1<this>;
+	default(def: () => util$1.noUndefined<Input>): ZodDefault$1<this>;
+	brand<B extends string | number | symbol>(brand?: B): ZodBranded<this, B>;
+	catch(def: Output): ZodCatch$1<this>;
+	catch(def: (ctx: {
+		error: ZodError$1;
+		input: Input;
+	}) => Output): ZodCatch$1<this>;
+	describe(description: string): this;
+	pipe<T extends ZodTypeAny$1>(target: T): ZodPipeline<this, T>;
+	readonly(): ZodReadonly$1<this>;
+	isOptional(): boolean;
+	isNullable(): boolean;
+}
+type IpVersion = "v4" | "v6";
+type ZodStringCheck = {
+	kind: "min";
+	value: number;
+	message?: string | undefined;
+} | {
+	kind: "max";
+	value: number;
+	message?: string | undefined;
+} | {
+	kind: "length";
+	value: number;
+	message?: string | undefined;
+} | {
+	kind: "email";
+	message?: string | undefined;
+} | {
+	kind: "url";
+	message?: string | undefined;
+} | {
+	kind: "emoji";
+	message?: string | undefined;
+} | {
+	kind: "uuid";
+	message?: string | undefined;
+} | {
+	kind: "nanoid";
+	message?: string | undefined;
+} | {
+	kind: "cuid";
+	message?: string | undefined;
+} | {
+	kind: "includes";
+	value: string;
+	position?: number | undefined;
+	message?: string | undefined;
+} | {
+	kind: "cuid2";
+	message?: string | undefined;
+} | {
+	kind: "ulid";
+	message?: string | undefined;
+} | {
+	kind: "startsWith";
+	value: string;
+	message?: string | undefined;
+} | {
+	kind: "endsWith";
+	value: string;
+	message?: string | undefined;
+} | {
+	kind: "regex";
+	regex: RegExp;
+	message?: string | undefined;
+} | {
+	kind: "trim";
+	message?: string | undefined;
+} | {
+	kind: "toLowerCase";
+	message?: string | undefined;
+} | {
+	kind: "toUpperCase";
+	message?: string | undefined;
+} | {
+	kind: "jwt";
+	alg?: string;
+	message?: string | undefined;
+} | {
+	kind: "datetime";
+	offset: boolean;
+	local: boolean;
+	precision: number | null;
+	message?: string | undefined;
+} | {
+	kind: "date";
+	message?: string | undefined;
+} | {
+	kind: "time";
+	precision: number | null;
+	message?: string | undefined;
+} | {
+	kind: "duration";
+	message?: string | undefined;
+} | {
+	kind: "ip";
+	version?: IpVersion | undefined;
+	message?: string | undefined;
+} | {
+	kind: "cidr";
+	version?: IpVersion | undefined;
+	message?: string | undefined;
+} | {
+	kind: "base64";
+	message?: string | undefined;
+} | {
+	kind: "base64url";
+	message?: string | undefined;
+};
+interface ZodStringDef extends ZodTypeDef {
+	checks: ZodStringCheck[];
+	typeName: ZodFirstPartyTypeKind$1.ZodString;
+	coerce: boolean;
+}
+declare function datetimeRegex(args: {
+	precision?: number | null;
+	offset?: boolean;
+	local?: boolean;
+}): RegExp;
+declare class ZodString$1 extends ZodType$1<string, ZodStringDef, string> {
+	_parse(input: ParseInput): ParseReturnType<string>;
+	protected _regex(regex: RegExp, validation: StringValidation, message?: errorUtil.ErrMessage): ZodEffects<this, string, string>;
+	_addCheck(check: ZodStringCheck): ZodString$1;
+	email(message?: errorUtil.ErrMessage): ZodString$1;
+	url(message?: errorUtil.ErrMessage): ZodString$1;
+	emoji(message?: errorUtil.ErrMessage): ZodString$1;
+	uuid(message?: errorUtil.ErrMessage): ZodString$1;
+	nanoid(message?: errorUtil.ErrMessage): ZodString$1;
+	cuid(message?: errorUtil.ErrMessage): ZodString$1;
+	cuid2(message?: errorUtil.ErrMessage): ZodString$1;
+	ulid(message?: errorUtil.ErrMessage): ZodString$1;
+	base64(message?: errorUtil.ErrMessage): ZodString$1;
+	base64url(message?: errorUtil.ErrMessage): ZodString$1;
+	jwt(options?: {
+		alg?: string;
+		message?: string | undefined;
+	}): ZodString$1;
+	ip(options?: string | {
+		version?: IpVersion;
+		message?: string | undefined;
+	}): ZodString$1;
+	cidr(options?: string | {
+		version?: IpVersion;
+		message?: string | undefined;
+	}): ZodString$1;
+	datetime(options?: string | {
+		message?: string | undefined;
+		precision?: number | null;
+		offset?: boolean;
+		local?: boolean;
+	}): ZodString$1;
+	date(message?: string): ZodString$1;
+	time(options?: string | {
+		message?: string | undefined;
+		precision?: number | null;
+	}): ZodString$1;
+	duration(message?: errorUtil.ErrMessage): ZodString$1;
+	regex(regex: RegExp, message?: errorUtil.ErrMessage): ZodString$1;
+	includes(value: string, options?: {
+		message?: string;
+		position?: number;
+	}): ZodString$1;
+	startsWith(value: string, message?: errorUtil.ErrMessage): ZodString$1;
+	endsWith(value: string, message?: errorUtil.ErrMessage): ZodString$1;
+	min(minLength: number, message?: errorUtil.ErrMessage): ZodString$1;
+	max(maxLength: number, message?: errorUtil.ErrMessage): ZodString$1;
+	length(len: number, message?: errorUtil.ErrMessage): ZodString$1;
+	/**
+	 * Equivalent to `.min(1)`
+	 */
+	nonempty(message?: errorUtil.ErrMessage): ZodString$1;
+	trim(): ZodString$1;
+	toLowerCase(): ZodString$1;
+	toUpperCase(): ZodString$1;
+	get isDatetime(): boolean;
+	get isDate(): boolean;
+	get isTime(): boolean;
+	get isDuration(): boolean;
+	get isEmail(): boolean;
+	get isURL(): boolean;
+	get isEmoji(): boolean;
+	get isUUID(): boolean;
+	get isNANOID(): boolean;
+	get isCUID(): boolean;
+	get isCUID2(): boolean;
+	get isULID(): boolean;
+	get isIP(): boolean;
+	get isCIDR(): boolean;
+	get isBase64(): boolean;
+	get isBase64url(): boolean;
+	get minLength(): number | null;
+	get maxLength(): number | null;
+	static create: (params?: RawCreateParams & {
+		coerce?: true;
+	}) => ZodString$1;
+}
+type ZodNumberCheck = {
+	kind: "min";
+	value: number;
+	inclusive: boolean;
+	message?: string | undefined;
+} | {
+	kind: "max";
+	value: number;
+	inclusive: boolean;
+	message?: string | undefined;
+} | {
+	kind: "int";
+	message?: string | undefined;
+} | {
+	kind: "multipleOf";
+	value: number;
+	message?: string | undefined;
+} | {
+	kind: "finite";
+	message?: string | undefined;
+};
+interface ZodNumberDef extends ZodTypeDef {
+	checks: ZodNumberCheck[];
+	typeName: ZodFirstPartyTypeKind$1.ZodNumber;
+	coerce: boolean;
+}
+declare class ZodNumber$1 extends ZodType$1<number, ZodNumberDef, number> {
+	_parse(input: ParseInput): ParseReturnType<number>;
+	static create: (params?: RawCreateParams & {
+		coerce?: boolean;
+	}) => ZodNumber$1;
+	gte(value: number, message?: errorUtil.ErrMessage): ZodNumber$1;
+	min: (value: number, message?: errorUtil.ErrMessage) => ZodNumber$1;
+	gt(value: number, message?: errorUtil.ErrMessage): ZodNumber$1;
+	lte(value: number, message?: errorUtil.ErrMessage): ZodNumber$1;
+	max: (value: number, message?: errorUtil.ErrMessage) => ZodNumber$1;
+	lt(value: number, message?: errorUtil.ErrMessage): ZodNumber$1;
+	protected setLimit(kind: "min" | "max", value: number, inclusive: boolean, message?: string): ZodNumber$1;
+	_addCheck(check: ZodNumberCheck): ZodNumber$1;
+	int(message?: errorUtil.ErrMessage): ZodNumber$1;
+	positive(message?: errorUtil.ErrMessage): ZodNumber$1;
+	negative(message?: errorUtil.ErrMessage): ZodNumber$1;
+	nonpositive(message?: errorUtil.ErrMessage): ZodNumber$1;
+	nonnegative(message?: errorUtil.ErrMessage): ZodNumber$1;
+	multipleOf(value: number, message?: errorUtil.ErrMessage): ZodNumber$1;
+	step: (value: number, message?: errorUtil.ErrMessage) => ZodNumber$1;
+	finite(message?: errorUtil.ErrMessage): ZodNumber$1;
+	safe(message?: errorUtil.ErrMessage): ZodNumber$1;
+	get minValue(): number | null;
+	get maxValue(): number | null;
+	get isInt(): boolean;
+	get isFinite(): boolean;
+}
+type ZodBigIntCheck = {
+	kind: "min";
+	value: bigint;
+	inclusive: boolean;
+	message?: string | undefined;
+} | {
+	kind: "max";
+	value: bigint;
+	inclusive: boolean;
+	message?: string | undefined;
+} | {
+	kind: "multipleOf";
+	value: bigint;
+	message?: string | undefined;
+};
+interface ZodBigIntDef extends ZodTypeDef {
+	checks: ZodBigIntCheck[];
+	typeName: ZodFirstPartyTypeKind$1.ZodBigInt;
+	coerce: boolean;
+}
+declare class ZodBigInt$1 extends ZodType$1<bigint, ZodBigIntDef, bigint> {
+	_parse(input: ParseInput): ParseReturnType<bigint>;
+	_getInvalidInput(input: ParseInput): INVALID$1;
+	static create: (params?: RawCreateParams & {
+		coerce?: boolean;
+	}) => ZodBigInt$1;
+	gte(value: bigint, message?: errorUtil.ErrMessage): ZodBigInt$1;
+	min: (value: bigint, message?: errorUtil.ErrMessage) => ZodBigInt$1;
+	gt(value: bigint, message?: errorUtil.ErrMessage): ZodBigInt$1;
+	lte(value: bigint, message?: errorUtil.ErrMessage): ZodBigInt$1;
+	max: (value: bigint, message?: errorUtil.ErrMessage) => ZodBigInt$1;
+	lt(value: bigint, message?: errorUtil.ErrMessage): ZodBigInt$1;
+	protected setLimit(kind: "min" | "max", value: bigint, inclusive: boolean, message?: string): ZodBigInt$1;
+	_addCheck(check: ZodBigIntCheck): ZodBigInt$1;
+	positive(message?: errorUtil.ErrMessage): ZodBigInt$1;
+	negative(message?: errorUtil.ErrMessage): ZodBigInt$1;
+	nonpositive(message?: errorUtil.ErrMessage): ZodBigInt$1;
+	nonnegative(message?: errorUtil.ErrMessage): ZodBigInt$1;
+	multipleOf(value: bigint, message?: errorUtil.ErrMessage): ZodBigInt$1;
+	get minValue(): bigint | null;
+	get maxValue(): bigint | null;
+}
+interface ZodBooleanDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodBoolean;
+	coerce: boolean;
+}
+declare class ZodBoolean$1 extends ZodType$1<boolean, ZodBooleanDef, boolean> {
+	_parse(input: ParseInput): ParseReturnType<boolean>;
+	static create: (params?: RawCreateParams & {
+		coerce?: boolean;
+	}) => ZodBoolean$1;
+}
+type ZodDateCheck = {
+	kind: "min";
+	value: number;
+	message?: string | undefined;
+} | {
+	kind: "max";
+	value: number;
+	message?: string | undefined;
+};
+interface ZodDateDef extends ZodTypeDef {
+	checks: ZodDateCheck[];
+	coerce: boolean;
+	typeName: ZodFirstPartyTypeKind$1.ZodDate;
+}
+declare class ZodDate$1 extends ZodType$1<Date, ZodDateDef, Date> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	_addCheck(check: ZodDateCheck): ZodDate$1;
+	min(minDate: Date, message?: errorUtil.ErrMessage): ZodDate$1;
+	max(maxDate: Date, message?: errorUtil.ErrMessage): ZodDate$1;
+	get minDate(): Date | null;
+	get maxDate(): Date | null;
+	static create: (params?: RawCreateParams & {
+		coerce?: boolean;
+	}) => ZodDate$1;
+}
+interface ZodSymbolDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodSymbol;
+}
+declare class ZodSymbol$1 extends ZodType$1<symbol, ZodSymbolDef, symbol> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodSymbol$1;
+}
+interface ZodUndefinedDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodUndefined;
+}
+declare class ZodUndefined$1 extends ZodType$1<undefined, ZodUndefinedDef, undefined> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	params?: RawCreateParams;
+	static create: (params?: RawCreateParams) => ZodUndefined$1;
+}
+interface ZodNullDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodNull;
+}
+declare class ZodNull$1 extends ZodType$1<null, ZodNullDef, null> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodNull$1;
+}
+interface ZodAnyDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodAny;
+}
+declare class ZodAny$1 extends ZodType$1<any, ZodAnyDef, any> {
+	_any: true;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodAny$1;
+}
+interface ZodUnknownDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodUnknown;
+}
+declare class ZodUnknown$1 extends ZodType$1<unknown, ZodUnknownDef, unknown> {
+	_unknown: true;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodUnknown$1;
+}
+interface ZodNeverDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodNever;
+}
+declare class ZodNever$1 extends ZodType$1<never, ZodNeverDef, never> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodNever$1;
+}
+interface ZodVoidDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodVoid;
+}
+declare class ZodVoid$1 extends ZodType$1<void, ZodVoidDef, void> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: (params?: RawCreateParams) => ZodVoid$1;
+}
+interface ZodArrayDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	type: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodArray;
+	exactLength: {
+		value: number;
+		message?: string | undefined;
+	} | null;
+	minLength: {
+		value: number;
+		message?: string | undefined;
+	} | null;
+	maxLength: {
+		value: number;
+		message?: string | undefined;
+	} | null;
+}
+type ArrayCardinality = "many" | "atleastone";
+type arrayOutputType<T extends ZodTypeAny$1, Cardinality extends ArrayCardinality = "many"> = Cardinality extends "atleastone" ? [
+	T["_output"],
+	...T["_output"][]
+] : T["_output"][];
+declare class ZodArray$1<T extends ZodTypeAny$1, Cardinality extends ArrayCardinality = "many"> extends ZodType$1<arrayOutputType<T, Cardinality>, ZodArrayDef<T>, Cardinality extends "atleastone" ? [
+	T["_input"],
+	...T["_input"][]
+] : T["_input"][]> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get element(): T;
+	min(minLength: number, message?: errorUtil.ErrMessage): this;
+	max(maxLength: number, message?: errorUtil.ErrMessage): this;
+	length(len: number, message?: errorUtil.ErrMessage): this;
+	nonempty(message?: errorUtil.ErrMessage): ZodArray$1<T, "atleastone">;
+	static create: <El extends ZodTypeAny$1>(schema: El, params?: RawCreateParams) => ZodArray$1<El>;
+}
+type ZodNonEmptyArray<T extends ZodTypeAny$1> = ZodArray$1<T, "atleastone">;
+type UnknownKeysParam = "passthrough" | "strict" | "strip";
+interface ZodObjectDef<T extends ZodRawShape$1 = ZodRawShape$1, UnknownKeys extends UnknownKeysParam = UnknownKeysParam, Catchall extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodObject;
+	shape: () => T;
+	catchall: Catchall;
+	unknownKeys: UnknownKeys;
+}
+type mergeTypes<A, B> = {
+	[k in keyof A | keyof B]: k extends keyof B ? B[k] : k extends keyof A ? A[k] : never;
+};
+type objectOutputType<Shape extends ZodRawShape$1, Catchall extends ZodTypeAny$1, UnknownKeys extends UnknownKeysParam = UnknownKeysParam> = objectUtil.flatten<objectUtil.addQuestionMarks<baseObjectOutputType<Shape>>> & CatchallOutput<Catchall> & PassthroughType<UnknownKeys>;
+type baseObjectOutputType<Shape extends ZodRawShape$1> = {
+	[k in keyof Shape]: Shape[k]["_output"];
+};
+type objectInputType<Shape extends ZodRawShape$1, Catchall extends ZodTypeAny$1, UnknownKeys extends UnknownKeysParam = UnknownKeysParam> = objectUtil.flatten<baseObjectInputType<Shape>> & CatchallInput<Catchall> & PassthroughType<UnknownKeys>;
+type baseObjectInputType<Shape extends ZodRawShape$1> = objectUtil.addQuestionMarks<{
+	[k in keyof Shape]: Shape[k]["_input"];
+}>;
+type CatchallOutput<T extends ZodType$1> = ZodType$1 extends T ? unknown : {
+	[k: string]: T["_output"];
+};
+type CatchallInput<T extends ZodType$1> = ZodType$1 extends T ? unknown : {
+	[k: string]: T["_input"];
+};
+type PassthroughType<T extends UnknownKeysParam> = T extends "passthrough" ? {
+	[k: string]: unknown;
+} : unknown;
+type deoptional<T extends ZodTypeAny$1> = T extends ZodOptional$1<infer U> ? deoptional<U> : T extends ZodNullable$1<infer U> ? ZodNullable$1<deoptional<U>> : T;
+type SomeZodObject = ZodObject$1<ZodRawShape$1, UnknownKeysParam, ZodTypeAny$1>;
+type noUnrecognized<Obj extends object, Shape extends object> = {
+	[k in keyof Obj]: k extends keyof Shape ? Obj[k] : never;
+};
+declare class ZodObject$1<T extends ZodRawShape$1, UnknownKeys extends UnknownKeysParam = UnknownKeysParam, Catchall extends ZodTypeAny$1 = ZodTypeAny$1, Output = objectOutputType<T, Catchall, UnknownKeys>, Input = objectInputType<T, Catchall, UnknownKeys>> extends ZodType$1<Output, ZodObjectDef<T, UnknownKeys, Catchall>, Input> {
+	_cached: {
+		shape: T;
+		keys: string[];
+	} | null;
+	_getCached(): {
+		shape: T;
+		keys: string[];
+	};
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get shape(): T;
+	strict(message?: errorUtil.ErrMessage): ZodObject$1<T, "strict", Catchall>;
+	strip(): ZodObject$1<T, "strip", Catchall>;
+	passthrough(): ZodObject$1<T, "passthrough", Catchall>;
+	/**
+	 * @deprecated In most cases, this is no longer needed - unknown properties are now silently stripped.
+	 * If you want to pass through unknown properties, use `.passthrough()` instead.
+	 */
+	nonstrict: () => ZodObject$1<T, "passthrough", Catchall>;
+	extend<Augmentation extends ZodRawShape$1>(augmentation: Augmentation): ZodObject$1<objectUtil.extendShape<T, Augmentation>, UnknownKeys, Catchall>;
+	/**
+	 * @deprecated Use `.extend` instead
+	 *  */
+	augment: <Augmentation extends ZodRawShape$1>(augmentation: Augmentation) => ZodObject$1<objectUtil.extendShape<T, Augmentation>, UnknownKeys, Catchall>;
+	/**
+	 * Prior to zod@1.0.12 there was a bug in the
+	 * inferred type of merged objects. Please
+	 * upgrade if you are experiencing issues.
+	 */
+	merge<Incoming extends AnyZodObject, Augmentation extends Incoming["shape"]>(merging: Incoming): ZodObject$1<objectUtil.extendShape<T, Augmentation>, Incoming["_def"]["unknownKeys"], Incoming["_def"]["catchall"]>;
+	setKey<Key extends string, Schema extends ZodTypeAny$1>(key: Key, schema: Schema): ZodObject$1<T & {
+		[k in Key]: Schema;
+	}, UnknownKeys, Catchall>;
+	catchall<Index extends ZodTypeAny$1>(index: Index): ZodObject$1<T, UnknownKeys, Index>;
+	pick<Mask extends util$1.Exactly<{
+		[k in keyof T]?: true;
+	}, Mask>>(mask: Mask): ZodObject$1<Pick<T, Extract<keyof T, keyof Mask>>, UnknownKeys, Catchall>;
+	omit<Mask extends util$1.Exactly<{
+		[k in keyof T]?: true;
+	}, Mask>>(mask: Mask): ZodObject$1<Omit<T, keyof Mask>, UnknownKeys, Catchall>;
+	/**
+	 * @deprecated
+	 */
+	deepPartial(): partialUtil.DeepPartial<this>;
+	partial(): ZodObject$1<{
+		[k in keyof T]: ZodOptional$1<T[k]>;
+	}, UnknownKeys, Catchall>;
+	partial<Mask extends util$1.Exactly<{
+		[k in keyof T]?: true;
+	}, Mask>>(mask: Mask): ZodObject$1<objectUtil.noNever<{
+		[k in keyof T]: k extends keyof Mask ? ZodOptional$1<T[k]> : T[k];
+	}>, UnknownKeys, Catchall>;
+	required(): ZodObject$1<{
+		[k in keyof T]: deoptional<T[k]>;
+	}, UnknownKeys, Catchall>;
+	required<Mask extends util$1.Exactly<{
+		[k in keyof T]?: true;
+	}, Mask>>(mask: Mask): ZodObject$1<objectUtil.noNever<{
+		[k in keyof T]: k extends keyof Mask ? deoptional<T[k]> : T[k];
+	}>, UnknownKeys, Catchall>;
+	keyof(): ZodEnum$1<enumUtil.UnionToTupleString<keyof T>>;
+	static create: <Shape extends ZodRawShape$1>(shape: Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strip", ZodTypeAny$1, objectOutputType<Shape, ZodTypeAny$1, "strip">, objectInputType<Shape, ZodTypeAny$1, "strip">>;
+	static strictCreate: <Shape extends ZodRawShape$1>(shape: Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strict">;
+	static lazycreate: <Shape extends ZodRawShape$1>(shape: () => Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strip">;
+}
+type AnyZodObject = ZodObject$1<any, any, any>;
+type ZodUnionOptions = Readonly<[
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+]>;
+interface ZodUnionDef<T extends ZodUnionOptions = Readonly<[
+	ZodTypeAny$1,
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+]>> extends ZodTypeDef {
+	options: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodUnion;
+}
+declare class ZodUnion$1<T extends ZodUnionOptions> extends ZodType$1<T[number]["_output"], ZodUnionDef<T>, T[number]["_input"]> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get options(): T;
+	static create: <Options extends Readonly<[
+		ZodTypeAny$1,
+		ZodTypeAny$1,
+		...ZodTypeAny$1[]
+	]>>(types: Options, params?: RawCreateParams) => ZodUnion$1<Options>;
+}
+type ZodDiscriminatedUnionOption<Discriminator extends string> = ZodObject$1<{
+	[key in Discriminator]: ZodTypeAny$1;
+} & ZodRawShape$1, UnknownKeysParam, ZodTypeAny$1>;
+interface ZodDiscriminatedUnionDef<Discriminator extends string, Options extends readonly ZodDiscriminatedUnionOption<string>[] = ZodDiscriminatedUnionOption<string>[]> extends ZodTypeDef {
+	discriminator: Discriminator;
+	options: Options;
+	optionsMap: Map<Primitive$2, ZodDiscriminatedUnionOption<any>>;
+	typeName: ZodFirstPartyTypeKind$1.ZodDiscriminatedUnion;
+}
+declare class ZodDiscriminatedUnion$1<Discriminator extends string, Options extends readonly ZodDiscriminatedUnionOption<Discriminator>[]> extends ZodType$1<output$2<Options[number]>, ZodDiscriminatedUnionDef<Discriminator, Options>, input$2<Options[number]>> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get discriminator(): Discriminator;
+	get options(): Options;
+	get optionsMap(): Map<Primitive$2, ZodDiscriminatedUnionOption<any>>;
+	/**
+	 * The constructor of the discriminated union schema. Its behaviour is very similar to that of the normal z.union() constructor.
+	 * However, it only allows a union of objects, all of which need to share a discriminator property. This property must
+	 * have a different value for each object in the union.
+	 * @param discriminator the name of the discriminator property
+	 * @param types an array of object schemas
+	 * @param params
+	 */
+	static create<Discriminator extends string, Types extends readonly [
+		ZodDiscriminatedUnionOption<Discriminator>,
+		...ZodDiscriminatedUnionOption<Discriminator>[]
+	]>(discriminator: Discriminator, options: Types, params?: RawCreateParams): ZodDiscriminatedUnion$1<Discriminator, Types>;
+}
+interface ZodIntersectionDef<T extends ZodTypeAny$1 = ZodTypeAny$1, U extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	left: T;
+	right: U;
+	typeName: ZodFirstPartyTypeKind$1.ZodIntersection;
+}
+declare class ZodIntersection$1<T extends ZodTypeAny$1, U extends ZodTypeAny$1> extends ZodType$1<T["_output"] & U["_output"], ZodIntersectionDef<T, U>, T["_input"] & U["_input"]> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <TSchema extends ZodTypeAny$1, USchema extends ZodTypeAny$1>(left: TSchema, right: USchema, params?: RawCreateParams) => ZodIntersection$1<TSchema, USchema>;
+}
+type ZodTupleItems = [
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+];
+type AssertArray<T> = T extends any[] ? T : never;
+type OutputTypeOfTuple<T extends ZodTupleItems | [
+]> = AssertArray<{
+	[k in keyof T]: T[k] extends ZodType$1<any, any, any> ? T[k]["_output"] : never;
+}>;
+type OutputTypeOfTupleWithRest<T extends ZodTupleItems | [
+], Rest extends ZodTypeAny$1 | null = null> = Rest extends ZodTypeAny$1 ? [
+	...OutputTypeOfTuple<T>,
+	...Rest["_output"][]
+] : OutputTypeOfTuple<T>;
+type InputTypeOfTuple<T extends ZodTupleItems | [
+]> = AssertArray<{
+	[k in keyof T]: T[k] extends ZodType$1<any, any, any> ? T[k]["_input"] : never;
+}>;
+type InputTypeOfTupleWithRest<T extends ZodTupleItems | [
+], Rest extends ZodTypeAny$1 | null = null> = Rest extends ZodTypeAny$1 ? [
+	...InputTypeOfTuple<T>,
+	...Rest["_input"][]
+] : InputTypeOfTuple<T>;
+interface ZodTupleDef<T extends ZodTupleItems | [
+] = ZodTupleItems, Rest extends ZodTypeAny$1 | null = null> extends ZodTypeDef {
+	items: T;
+	rest: Rest;
+	typeName: ZodFirstPartyTypeKind$1.ZodTuple;
+}
+type AnyZodTuple = ZodTuple$1<[
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+] | [
+], ZodTypeAny$1 | null>;
+declare class ZodTuple$1<T extends ZodTupleItems | [
+] = ZodTupleItems, Rest extends ZodTypeAny$1 | null = null> extends ZodType$1<OutputTypeOfTupleWithRest<T, Rest>, ZodTupleDef<T, Rest>, InputTypeOfTupleWithRest<T, Rest>> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get items(): T;
+	rest<RestSchema extends ZodTypeAny$1>(rest: RestSchema): ZodTuple$1<T, RestSchema>;
+	static create: <Items extends [
+		ZodTypeAny$1,
+		...ZodTypeAny$1[]
+	] | [
+	]>(schemas: Items, params?: RawCreateParams) => ZodTuple$1<Items, null>;
+}
+interface ZodRecordDef<Key extends KeySchema = ZodString$1, Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	valueType: Value;
+	keyType: Key;
+	typeName: ZodFirstPartyTypeKind$1.ZodRecord;
+}
+type KeySchema = ZodType$1<string | number | symbol, any, any>;
+type RecordType<K extends string | number | symbol, V> = [
+	string
+] extends [
+	K
+] ? Record<K, V> : [
+	number
+] extends [
+	K
+] ? Record<K, V> : [
+	symbol
+] extends [
+	K
+] ? Record<K, V> : [
+	BRAND$1<string | number | symbol>
+] extends [
+	K
+] ? Record<K, V> : Partial<Record<K, V>>;
+declare class ZodRecord$1<Key extends KeySchema = ZodString$1, Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodType$1<RecordType<Key["_output"], Value["_output"]>, ZodRecordDef<Key, Value>, RecordType<Key["_input"], Value["_input"]>> {
+	get keySchema(): Key;
+	get valueSchema(): Value;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get element(): Value;
+	static create<Value extends ZodTypeAny$1>(valueType: Value, params?: RawCreateParams): ZodRecord$1<ZodString$1, Value>;
+	static create<Keys extends KeySchema, Value extends ZodTypeAny$1>(keySchema: Keys, valueType: Value, params?: RawCreateParams): ZodRecord$1<Keys, Value>;
+}
+interface ZodMapDef<Key extends ZodTypeAny$1 = ZodTypeAny$1, Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	valueType: Value;
+	keyType: Key;
+	typeName: ZodFirstPartyTypeKind$1.ZodMap;
+}
+declare class ZodMap$1<Key extends ZodTypeAny$1 = ZodTypeAny$1, Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodType$1<Map<Key["_output"], Value["_output"]>, ZodMapDef<Key, Value>, Map<Key["_input"], Value["_input"]>> {
+	get keySchema(): Key;
+	get valueSchema(): Value;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <KeySchema extends ZodTypeAny$1 = ZodTypeAny$1, ValueSchema extends ZodTypeAny$1 = ZodTypeAny$1>(keyType: KeySchema, valueType: ValueSchema, params?: RawCreateParams) => ZodMap$1<KeySchema, ValueSchema>;
+}
+interface ZodSetDef<Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	valueType: Value;
+	typeName: ZodFirstPartyTypeKind$1.ZodSet;
+	minSize: {
+		value: number;
+		message?: string | undefined;
+	} | null;
+	maxSize: {
+		value: number;
+		message?: string | undefined;
+	} | null;
+}
+declare class ZodSet$1<Value extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodType$1<Set<Value["_output"]>, ZodSetDef<Value>, Set<Value["_input"]>> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	min(minSize: number, message?: errorUtil.ErrMessage): this;
+	max(maxSize: number, message?: errorUtil.ErrMessage): this;
+	size(size: number, message?: errorUtil.ErrMessage): this;
+	nonempty(message?: errorUtil.ErrMessage): ZodSet$1<Value>;
+	static create: <ValueSchema extends ZodTypeAny$1 = ZodTypeAny$1>(valueType: ValueSchema, params?: RawCreateParams) => ZodSet$1<ValueSchema>;
+}
+interface ZodFunctionDef<Args extends ZodTuple$1<any, any> = ZodTuple$1<any, any>, Returns extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	args: Args;
+	returns: Returns;
+	typeName: ZodFirstPartyTypeKind$1.ZodFunction;
+}
+type OuterTypeOfFunction<Args extends ZodTuple$1<any, any>, Returns extends ZodTypeAny$1> = Args["_input"] extends Array<any> ? (...args: Args["_input"]) => Returns["_output"] : never;
+type InnerTypeOfFunction<Args extends ZodTuple$1<any, any>, Returns extends ZodTypeAny$1> = Args["_output"] extends Array<any> ? (...args: Args["_output"]) => Returns["_input"] : never;
+declare class ZodFunction$1<Args extends ZodTuple$1<any, any>, Returns extends ZodTypeAny$1> extends ZodType$1<OuterTypeOfFunction<Args, Returns>, ZodFunctionDef<Args, Returns>, InnerTypeOfFunction<Args, Returns>> {
+	_parse(input: ParseInput): ParseReturnType<any>;
+	parameters(): Args;
+	returnType(): Returns;
+	args<Items extends Parameters<(typeof ZodTuple$1)["create"]>[0]>(...items: Items): ZodFunction$1<ZodTuple$1<Items, ZodUnknown$1>, Returns>;
+	returns<NewReturnType extends ZodType$1<any, any, any>>(returnType: NewReturnType): ZodFunction$1<Args, NewReturnType>;
+	implement<F extends InnerTypeOfFunction<Args, Returns>>(func: F): ReturnType<F> extends Returns["_output"] ? (...args: Args["_input"]) => ReturnType<F> : OuterTypeOfFunction<Args, Returns>;
+	strictImplement(func: InnerTypeOfFunction<Args, Returns>): InnerTypeOfFunction<Args, Returns>;
+	validate: <F extends InnerTypeOfFunction<Args, Returns>>(func: F) => ReturnType<F> extends Returns["_output"] ? (...args: Args["_input"]) => ReturnType<F> : OuterTypeOfFunction<Args, Returns>;
+	static create(): ZodFunction$1<ZodTuple$1<[
+	], ZodUnknown$1>, ZodUnknown$1>;
+	static create<T extends AnyZodTuple = ZodTuple$1<[
+	], ZodUnknown$1>>(args: T): ZodFunction$1<T, ZodUnknown$1>;
+	static create<T extends AnyZodTuple, U extends ZodTypeAny$1>(args: T, returns: U): ZodFunction$1<T, U>;
+	static create<T extends AnyZodTuple = ZodTuple$1<[
+	], ZodUnknown$1>, U extends ZodTypeAny$1 = ZodUnknown$1>(args: T, returns: U, params?: RawCreateParams): ZodFunction$1<T, U>;
+}
+interface ZodLazyDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	getter: () => T;
+	typeName: ZodFirstPartyTypeKind$1.ZodLazy;
+}
+declare class ZodLazy$1<T extends ZodTypeAny$1> extends ZodType$1<output$2<T>, ZodLazyDef<T>, input$2<T>> {
+	get schema(): T;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <Inner extends ZodTypeAny$1>(getter: () => Inner, params?: RawCreateParams) => ZodLazy$1<Inner>;
+}
+interface ZodLiteralDef<T = any> extends ZodTypeDef {
+	value: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodLiteral;
+}
+declare class ZodLiteral$1<T> extends ZodType$1<T, ZodLiteralDef<T>, T> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get value(): T;
+	static create: <Value extends Primitive$2>(value: Value, params?: RawCreateParams) => ZodLiteral$1<Value>;
+}
+type ArrayKeys = keyof any[];
+type Indices<T> = Exclude<keyof T, ArrayKeys>;
+type EnumValues<T extends string = string> = readonly [
+	T,
+	...T[]
+];
+type Values<T extends EnumValues> = {
+	[k in T[number]]: k;
+};
+interface ZodEnumDef<T extends EnumValues = EnumValues> extends ZodTypeDef {
+	values: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodEnum;
+}
+type Writeable$1<T> = {
+	-readonly [P in keyof T]: T[P];
+};
+type FilterEnum<Values, ToExclude> = Values extends [
+] ? [
+] : Values extends [
+	infer Head,
+	...infer Rest
+] ? Head extends ToExclude ? FilterEnum<Rest, ToExclude> : [
+	Head,
+	...FilterEnum<Rest, ToExclude>
+] : never;
+type typecast<A, T> = A extends T ? A : never;
+declare function createZodEnum<U extends string, T extends Readonly<[
+	U,
+	...U[]
+]>>(values: T, params?: RawCreateParams): ZodEnum$1<Writeable$1<T>>;
+declare function createZodEnum<U extends string, T extends [
+	U,
+	...U[]
+]>(values: T, params?: RawCreateParams): ZodEnum$1<T>;
+declare class ZodEnum$1<T extends [
+	string,
+	...string[]
+]> extends ZodType$1<T[number], ZodEnumDef<T>, T[number]> {
+	_cache: Set<T[number]> | undefined;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	get options(): T;
+	get enum(): Values<T>;
+	get Values(): Values<T>;
+	get Enum(): Values<T>;
+	extract<ToExtract extends readonly [
+		T[number],
+		...T[number][]
+	]>(values: ToExtract, newDef?: RawCreateParams): ZodEnum$1<Writeable$1<ToExtract>>;
+	exclude<ToExclude extends readonly [
+		T[number],
+		...T[number][]
+	]>(values: ToExclude, newDef?: RawCreateParams): ZodEnum$1<typecast<Writeable$1<FilterEnum<T, ToExclude[number]>>, [
+		string,
+		...string[]
+	]>>;
+	static create: typeof createZodEnum;
+}
+interface ZodNativeEnumDef<T extends EnumLike$1 = EnumLike$1> extends ZodTypeDef {
+	values: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodNativeEnum;
+}
+type EnumLike$1 = {
+	[k: string]: string | number;
+	[nu: number]: string;
+};
+declare class ZodNativeEnum<T extends EnumLike$1> extends ZodType$1<T[keyof T], ZodNativeEnumDef<T>, T[keyof T]> {
+	_cache: Set<T[keyof T]> | undefined;
+	_parse(input: ParseInput): ParseReturnType<T[keyof T]>;
+	get enum(): T;
+	static create: <Elements extends EnumLike$1>(values: Elements, params?: RawCreateParams) => ZodNativeEnum<Elements>;
+}
+interface ZodPromiseDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	type: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodPromise;
+}
+declare class ZodPromise$1<T extends ZodTypeAny$1> extends ZodType$1<Promise<T["_output"]>, ZodPromiseDef<T>, Promise<T["_input"]>> {
+	unwrap(): T;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <Inner extends ZodTypeAny$1>(schema: Inner, params?: RawCreateParams) => ZodPromise$1<Inner>;
+}
+type Refinement<T> = (arg: T, ctx: RefinementCtx) => any;
+type SuperRefinement<T> = (arg: T, ctx: RefinementCtx) => void | Promise<void>;
+type RefinementEffect<T> = {
+	type: "refinement";
+	refinement: (arg: T, ctx: RefinementCtx) => any;
+};
+type TransformEffect<T> = {
+	type: "transform";
+	transform: (arg: T, ctx: RefinementCtx) => any;
+};
+type PreprocessEffect<T> = {
+	type: "preprocess";
+	transform: (arg: T, ctx: RefinementCtx) => any;
+};
+type Effect<T> = RefinementEffect<T> | TransformEffect<T> | PreprocessEffect<T>;
+interface ZodEffectsDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	schema: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodEffects;
+	effect: Effect<any>;
+}
+declare class ZodEffects<T extends ZodTypeAny$1, Output = output$2<T>, Input = input$2<T>> extends ZodType$1<Output, ZodEffectsDef<T>, Input> {
+	innerType(): T;
+	sourceType(): T;
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <I extends ZodTypeAny$1>(schema: I, effect: Effect<I["_output"]>, params?: RawCreateParams) => ZodEffects<I, I["_output"]>;
+	static createWithPreprocess: <I extends ZodTypeAny$1>(preprocess: (arg: unknown, ctx: RefinementCtx) => unknown, schema: I, params?: RawCreateParams) => ZodEffects<I, I["_output"], unknown>;
+}
+interface ZodOptionalDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	innerType: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodOptional;
+}
+type ZodOptionalType<T extends ZodTypeAny$1> = ZodOptional$1<T>;
+declare class ZodOptional$1<T extends ZodTypeAny$1> extends ZodType$1<T["_output"] | undefined, ZodOptionalDef<T>, T["_input"] | undefined> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	unwrap(): T;
+	static create: <Inner extends ZodTypeAny$1>(type: Inner, params?: RawCreateParams) => ZodOptional$1<Inner>;
+}
+interface ZodNullableDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	innerType: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodNullable;
+}
+type ZodNullableType<T extends ZodTypeAny$1> = ZodNullable$1<T>;
+declare class ZodNullable$1<T extends ZodTypeAny$1> extends ZodType$1<T["_output"] | null, ZodNullableDef<T>, T["_input"] | null> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	unwrap(): T;
+	static create: <Inner extends ZodTypeAny$1>(type: Inner, params?: RawCreateParams) => ZodNullable$1<Inner>;
+}
+interface ZodDefaultDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	innerType: T;
+	defaultValue: () => util$1.noUndefined<T["_input"]>;
+	typeName: ZodFirstPartyTypeKind$1.ZodDefault;
+}
+declare class ZodDefault$1<T extends ZodTypeAny$1> extends ZodType$1<util$1.noUndefined<T["_output"]>, ZodDefaultDef<T>, T["_input"] | undefined> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	removeDefault(): T;
+	static create: <Inner extends ZodTypeAny$1>(type: Inner, params: RawCreateParams & {
+		default: Inner["_input"] | (() => util$1.noUndefined<Inner["_input"]>);
+	}) => ZodDefault$1<Inner>;
+}
+interface ZodCatchDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	innerType: T;
+	catchValue: (ctx: {
+		error: ZodError$1;
+		input: unknown;
+	}) => T["_input"];
+	typeName: ZodFirstPartyTypeKind$1.ZodCatch;
+}
+declare class ZodCatch$1<T extends ZodTypeAny$1> extends ZodType$1<T["_output"], ZodCatchDef<T>, unknown> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	removeCatch(): T;
+	static create: <Inner extends ZodTypeAny$1>(type: Inner, params: RawCreateParams & {
+		catch: Inner["_output"] | (() => Inner["_output"]);
+	}) => ZodCatch$1<Inner>;
+}
+interface ZodNaNDef extends ZodTypeDef {
+	typeName: ZodFirstPartyTypeKind$1.ZodNaN;
+}
+declare class ZodNaN$1 extends ZodType$1<number, ZodNaNDef, number> {
+	_parse(input: ParseInput): ParseReturnType<any>;
+	static create: (params?: RawCreateParams) => ZodNaN$1;
+}
+interface ZodBrandedDef<T extends ZodTypeAny$1> extends ZodTypeDef {
+	type: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodBranded;
+}
+declare const BRAND$1: unique symbol;
+type BRAND$1<T extends string | number | symbol> = {
+	[BRAND$1]: {
+		[k in T]: true;
+	};
+};
+declare class ZodBranded<T extends ZodTypeAny$1, B extends string | number | symbol> extends ZodType$1<T["_output"] & BRAND$1<B>, ZodBrandedDef<T>, T["_input"]> {
+	_parse(input: ParseInput): ParseReturnType<any>;
+	unwrap(): T;
+}
+interface ZodPipelineDef<A extends ZodTypeAny$1, B extends ZodTypeAny$1> extends ZodTypeDef {
+	in: A;
+	out: B;
+	typeName: ZodFirstPartyTypeKind$1.ZodPipeline;
+}
+declare class ZodPipeline<A extends ZodTypeAny$1, B extends ZodTypeAny$1> extends ZodType$1<B["_output"], ZodPipelineDef<A, B>, A["_input"]> {
+	_parse(input: ParseInput): ParseReturnType<any>;
+	static create<ASchema extends ZodTypeAny$1, BSchema extends ZodTypeAny$1>(a: ASchema, b: BSchema): ZodPipeline<ASchema, BSchema>;
+}
+type BuiltIn$1 = (((...args: any[]) => any) | (new (...args: any[]) => any)) | {
+	readonly [Symbol.toStringTag]: string;
+} | Date | Error | Generator | Promise<unknown> | RegExp;
+type MakeReadonly$1<T> = T extends Map<infer K, infer V> ? ReadonlyMap<K, V> : T extends Set<infer V> ? ReadonlySet<V> : T extends [
+	infer Head,
+	...infer Tail
+] ? readonly [
+	Head,
+	...Tail
+] : T extends Array<infer V> ? ReadonlyArray<V> : T extends BuiltIn$1 ? T : Readonly<T>;
+interface ZodReadonlyDef<T extends ZodTypeAny$1 = ZodTypeAny$1> extends ZodTypeDef {
+	innerType: T;
+	typeName: ZodFirstPartyTypeKind$1.ZodReadonly;
+}
+declare class ZodReadonly$1<T extends ZodTypeAny$1> extends ZodType$1<MakeReadonly$1<T["_output"]>, ZodReadonlyDef<T>, MakeReadonly$1<T["_input"]>> {
+	_parse(input: ParseInput): ParseReturnType<this["_output"]>;
+	static create: <Inner extends ZodTypeAny$1>(type: Inner, params?: RawCreateParams) => ZodReadonly$1<Inner>;
+	unwrap(): T;
+}
+type CustomParams = CustomErrorParams & {
+	fatal?: boolean;
+};
+declare function custom$1<T>(check?: (data: any) => any, _params?: string | CustomParams | ((input: any) => CustomParams),
+/**
+ * @deprecated
+ *
+ * Pass `fatal` into the params object instead:
+ *
+ * ```ts
+ * z.string().custom((val) => val.length > 5, { fatal: false })
+ * ```
+ *
+ */
+fatal?: boolean): ZodType$1<T, ZodTypeDef, T>;
+declare const late: {
+	object: <Shape extends ZodRawShape$1>(shape: () => Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strip">;
+};
+declare enum ZodFirstPartyTypeKind$1 {
+	ZodString = "ZodString",
+	ZodNumber = "ZodNumber",
+	ZodNaN = "ZodNaN",
+	ZodBigInt = "ZodBigInt",
+	ZodBoolean = "ZodBoolean",
+	ZodDate = "ZodDate",
+	ZodSymbol = "ZodSymbol",
+	ZodUndefined = "ZodUndefined",
+	ZodNull = "ZodNull",
+	ZodAny = "ZodAny",
+	ZodUnknown = "ZodUnknown",
+	ZodNever = "ZodNever",
+	ZodVoid = "ZodVoid",
+	ZodArray = "ZodArray",
+	ZodObject = "ZodObject",
+	ZodUnion = "ZodUnion",
+	ZodDiscriminatedUnion = "ZodDiscriminatedUnion",
+	ZodIntersection = "ZodIntersection",
+	ZodTuple = "ZodTuple",
+	ZodRecord = "ZodRecord",
+	ZodMap = "ZodMap",
+	ZodSet = "ZodSet",
+	ZodFunction = "ZodFunction",
+	ZodLazy = "ZodLazy",
+	ZodLiteral = "ZodLiteral",
+	ZodEnum = "ZodEnum",
+	ZodEffects = "ZodEffects",
+	ZodNativeEnum = "ZodNativeEnum",
+	ZodOptional = "ZodOptional",
+	ZodNullable = "ZodNullable",
+	ZodDefault = "ZodDefault",
+	ZodCatch = "ZodCatch",
+	ZodPromise = "ZodPromise",
+	ZodBranded = "ZodBranded",
+	ZodPipeline = "ZodPipeline",
+	ZodReadonly = "ZodReadonly"
+}
+type ZodFirstPartySchemaTypes$1 = ZodString$1 | ZodNumber$1 | ZodNaN$1 | ZodBigInt$1 | ZodBoolean$1 | ZodDate$1 | ZodUndefined$1 | ZodNull$1 | ZodAny$1 | ZodUnknown$1 | ZodNever$1 | ZodVoid$1 | ZodArray$1<any, any> | ZodObject$1<any, any, any> | ZodUnion$1<any> | ZodDiscriminatedUnion$1<any, any> | ZodIntersection$1<any, any> | ZodTuple$1<any, any> | ZodRecord$1<any, any> | ZodMap$1<any> | ZodSet$1<any> | ZodFunction$1<any, any> | ZodLazy$1<any> | ZodLiteral$1<any> | ZodEnum$1<any> | ZodEffects<any, any, any> | ZodNativeEnum<any> | ZodOptional$1<any> | ZodNullable$1<any> | ZodDefault$1<any> | ZodCatch$1<any> | ZodPromise$1<any> | ZodBranded<any, any> | ZodPipeline<any, any> | ZodReadonly$1<any> | ZodSymbol$1;
+declare abstract class Class$1 {
+	constructor(..._: any[]);
+}
+declare const instanceOfType: <T extends typeof Class$1>(cls: T, params?: CustomParams) => ZodType$1<InstanceType<T>, ZodTypeDef, InstanceType<T>>;
+declare const stringType: (params?: RawCreateParams & {
+	coerce?: true;
+}) => ZodString$1;
+declare const numberType: (params?: RawCreateParams & {
+	coerce?: boolean;
+}) => ZodNumber$1;
+declare const nanType: (params?: RawCreateParams) => ZodNaN$1;
+declare const bigIntType: (params?: RawCreateParams & {
+	coerce?: boolean;
+}) => ZodBigInt$1;
+declare const booleanType: (params?: RawCreateParams & {
+	coerce?: boolean;
+}) => ZodBoolean$1;
+declare const dateType: (params?: RawCreateParams & {
+	coerce?: boolean;
+}) => ZodDate$1;
+declare const symbolType: (params?: RawCreateParams) => ZodSymbol$1;
+declare const undefinedType: (params?: RawCreateParams) => ZodUndefined$1;
+declare const nullType: (params?: RawCreateParams) => ZodNull$1;
+declare const anyType: (params?: RawCreateParams) => ZodAny$1;
+declare const unknownType: (params?: RawCreateParams) => ZodUnknown$1;
+declare const neverType: (params?: RawCreateParams) => ZodNever$1;
+declare const voidType: (params?: RawCreateParams) => ZodVoid$1;
+declare const arrayType: <El extends ZodTypeAny$1>(schema: El, params?: RawCreateParams) => ZodArray$1<El>;
+declare const objectType: <Shape extends ZodRawShape$1>(shape: Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strip", ZodTypeAny$1, objectOutputType<Shape, ZodTypeAny$1, "strip">, objectInputType<Shape, ZodTypeAny$1, "strip">>;
+declare const strictObjectType: <Shape extends ZodRawShape$1>(shape: Shape, params?: RawCreateParams) => ZodObject$1<Shape, "strict">;
+declare const unionType: <Options extends Readonly<[
+	ZodTypeAny$1,
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+]>>(types: Options, params?: RawCreateParams) => ZodUnion$1<Options>;
+declare const discriminatedUnionType: typeof ZodDiscriminatedUnion$1.create;
+declare const intersectionType: <TSchema extends ZodTypeAny$1, USchema extends ZodTypeAny$1>(left: TSchema, right: USchema, params?: RawCreateParams) => ZodIntersection$1<TSchema, USchema>;
+declare const tupleType: <Items extends [
+	ZodTypeAny$1,
+	...ZodTypeAny$1[]
+] | [
+]>(schemas: Items, params?: RawCreateParams) => ZodTuple$1<Items, null>;
+declare const recordType: typeof ZodRecord$1.create;
+declare const mapType: <KeySchema extends ZodTypeAny$1 = ZodTypeAny$1, ValueSchema extends ZodTypeAny$1 = ZodTypeAny$1>(keyType: KeySchema, valueType: ValueSchema, params?: RawCreateParams) => ZodMap$1<KeySchema, ValueSchema>;
+declare const setType: <ValueSchema extends ZodTypeAny$1 = ZodTypeAny$1>(valueType: ValueSchema, params?: RawCreateParams) => ZodSet$1<ValueSchema>;
+declare const functionType: typeof ZodFunction$1.create;
+declare const lazyType: <Inner extends ZodTypeAny$1>(getter: () => Inner, params?: RawCreateParams) => ZodLazy$1<Inner>;
+declare const literalType: <Value extends Primitive$2>(value: Value, params?: RawCreateParams) => ZodLiteral$1<Value>;
+declare const enumType: typeof createZodEnum;
+declare const nativeEnumType: <Elements extends EnumLike$1>(values: Elements, params?: RawCreateParams) => ZodNativeEnum<Elements>;
+declare const promiseType: <Inner extends ZodTypeAny$1>(schema: Inner, params?: RawCreateParams) => ZodPromise$1<Inner>;
+declare const effectsType: <I extends ZodTypeAny$1>(schema: I, effect: Effect<I["_output"]>, params?: RawCreateParams) => ZodEffects<I, I["_output"]>;
+declare const optionalType: <Inner extends ZodTypeAny$1>(type: Inner, params?: RawCreateParams) => ZodOptional$1<Inner>;
+declare const nullableType: <Inner extends ZodTypeAny$1>(type: Inner, params?: RawCreateParams) => ZodNullable$1<Inner>;
+declare const preprocessType: <I extends ZodTypeAny$1>(preprocess: (arg: unknown, ctx: RefinementCtx) => unknown, schema: I, params?: RawCreateParams) => ZodEffects<I, I["_output"], unknown>;
+declare const pipelineType: typeof ZodPipeline.create;
+declare const ostring: () => ZodOptional$1<ZodString$1>;
+declare const onumber: () => ZodOptional$1<ZodNumber$1>;
+declare const oboolean: () => ZodOptional$1<ZodBoolean$1>;
+declare const coerce$1: {
+	string: (typeof ZodString$1)["create"];
+	number: (typeof ZodNumber$1)["create"];
+	boolean: (typeof ZodBoolean$1)["create"];
+	bigint: (typeof ZodBigInt$1)["create"];
+	date: (typeof ZodDate$1)["create"];
+};
+declare const NEVER$1: never;
+type RawResolverOptions = {
+	mode?: "async" | "sync";
+	raw: true;
+};
+type NonRawResolverOptions = {
+	mode?: "async" | "sync";
+	raw?: false;
+};
+interface Zod3Type<O = unknown, I = unknown> {
+	_output: O;
+	_input: I;
+	_def: object;
+}
+interface Zod4Type<Output = unknown, Input = unknown> {
+	_zod: {
+		output: Output;
+		input: Input;
+	};
+}
+type IsUnresolved<T> = PropertyKey extends keyof T ? true : false;
+type UnresolvedFallback<T, Fallback> = IsUnresolved<typeof z3> extends true ? Fallback : T;
+type FallbackIssue = {
+	code: string;
+	message: string;
+	path: (string | number)[];
+};
+type Zod3ParseParams = UnresolvedFallback<ParseParams, {
+	path?: (string | number)[];
+	errorMap?: (iss: FallbackIssue, ctx: {
+		defaultError: string;
+		data: any;
+	}) => {
+		message: string;
+	};
+	async?: boolean;
+}>;
+type Zod4ParseParams = UnresolvedFallback<z4.ParseContext<z4.$ZodIssue>, {
+	readonly error?: (iss: FallbackIssue) => null | undefined | string | {
+		message: string;
+	};
+	readonly reportInput?: boolean;
+	readonly jitless?: boolean;
+}>;
+export declare function zodResolver<Input extends FieldValues, Context, Output>(schema: Zod3Type<Output, Input>, schemaOptions?: Zod3ParseParams, resolverOptions?: NonRawResolverOptions): Resolver<Input, Context, Output>;
+export declare function zodResolver<Input extends FieldValues, Context, Output>(schema: Zod3Type<Output, Input>, schemaOptions: Zod3ParseParams | undefined, resolverOptions: RawResolverOptions): Resolver<Input, Context, Input>;
+export declare function zodResolver<Input extends FieldValues, Context, Output, T extends Zod4Type<Output, Input> = Zod4Type<Output, Input>>(schema: T, schemaOptions?: Zod4ParseParams, // already partial
+resolverOptions?: NonRawResolverOptions): Resolver<z4.input<T>, Context, z4.output<T>>;
+export declare function zodResolver<Input extends FieldValues, Context, Output, T extends Zod4Type<Output, Input> = Zod4Type<Output, Input>>(schema: Zod4Type<Output, Input>, schemaOptions: Zod4ParseParams | undefined, // already partial
+resolverOptions: RawResolverOptions): Resolver<z4.input<T>, Context, z4.input<T>>;
 declare const responseSchema: z.ZodUnion<readonly [
 	z.ZodJSONSchema,
 	z.ZodInstanceOf<Blob>
@@ -81270,14 +82899,8 @@ type SubmitOptions = {
 	onSuccess?: (data: ViewData) => void | Promise<void>;
 	onError?: (error: Error) => void | Promise<void>;
 };
+/** Submits multipart writes through the Solution's scoped transport. */
 export declare function useSubmit(path: string, options?: SubmitOptions): (data: FormData) => Promise<void>;
-export declare function useSubmit<T>(action: (data: T) => void | Promise<void>, options?: Pick<SubmitOptions, "onError">): (data: T) => Promise<void>;
-/** Validates editing values and optionally submits parsed output through the scoped multipart transport. */
-export declare function useForm<Input extends FieldValues, Context = unknown, Output extends FieldValues = Input>(schema: z.ZodType<Output, Input>, options?: Omit<UseFormProps<Input, Context, Output>, "resolver"> & SubmitOptions & {
-	action?: string;
-}): UseFormReturn<Input, Context, Output> & {
-	submit: (event?: React$1.BaseSyntheticEvent) => Promise<void>;
-};
 export type FrontendElement = React$1.JSX.Element;
 export type FrontendElementType = React$1.JSX.ElementType;
 
@@ -81320,6 +82943,9 @@ declare namespace regexes {
 declare namespace locales {
 	export { _default as ar, _default$1 as az, _default$10 as el, _default$11 as en, _default$12 as eo, _default$13 as es, _default$14 as fa, _default$15 as fi, _default$16 as fr, _default$17 as frCA, _default$18 as gu, _default$19 as he, _default$2 as be, _default$20 as hi, _default$21 as hr, _default$22 as hu, _default$23 as hy, _default$24 as id, _default$25 as is, _default$26 as it, _default$27 as ja, _default$28 as ka, _default$29 as kh, _default$3 as bg, _default$30 as km, _default$31 as kn, _default$32 as ko, _default$33 as lt, _default$34 as mk, _default$35 as ms, _default$36 as ne, _default$37 as nl, _default$38 as nn, _default$39 as no, _default$4 as bn, _default$40 as ota, _default$41 as ps, _default$42 as pl, _default$43 as pt, _default$44 as ptBR, _default$45 as ro, _default$46 as ru, _default$47 as sk, _default$48 as sl, _default$49 as sv, _default$5 as ca, _default$50 as ta, _default$51 as tg, _default$52 as th, _default$53 as tk, _default$54 as tr, _default$55 as ua, _default$56 as uk, _default$57 as ur, _default$58 as uz, _default$59 as vi, _default$6 as ckb, _default$60 as zhCN, _default$61 as zhTW, _default$62 as yo, _default$7 as cs, _default$8 as da, _default$9 as de };
 }
+declare namespace z4 {
+	export { z$1 as z };
+}
 declare namespace schemas$1 {
 	export { SafeExtendShape, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodExactOptional, ZodFile, ZodFloat32, ZodFloat64, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRecord, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _enum$1 as enum, _function, _function as function, _instanceof as instanceof, _null$2 as null, _undefined$2 as undefined, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, codec, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, exactOptional, file, float32, float64, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, looseObject, looseRecord, mac$1 as mac, map, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, partialRecord, pipe, prefault, preprocess, promise, readonly, record, refine, set, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, transform, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, xid$1 as xid, xor };
 }
@@ -81330,7 +82956,10 @@ declare namespace iso {
 	export { ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, date$2 as date, datetime$1 as datetime, duration$1 as duration, time$1 as time };
 }
 declare namespace z {
-	export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, core, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor };
+	export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor, z4 as core };
+}
+declare namespace z$1 {
+	export { AnyZodObject, AnyZodTuple, ArrayCardinality, ArrayKeys, AssertArray, AsyncParseReturnType, BRAND$1 as BRAND, CatchallInput, CatchallOutput, CustomErrorParams, DIRTY, DenormalizedError, EMPTY_PATH, Effect, EnumLike$1 as EnumLike, EnumValues, ErrorMapCtx, FilterEnum, INVALID$1 as INVALID, Indices, InnerTypeOfFunction, InputTypeOfTuple, InputTypeOfTupleWithRest, IpVersion, IssueData$1 as IssueData, KeySchema, NEVER$1 as NEVER, OK, ObjectPair, OuterTypeOfFunction, OutputTypeOfTuple, OutputTypeOfTupleWithRest, ParseContext$1 as ParseContext, ParseInput, ParseParams, ParsePath, ParsePathComponent, ParseResult, ParseReturnType, ParseStatus, PassthroughType, PreprocessEffect, Primitive$2 as Primitive, ProcessedCreateParams, RawCreateParams, RecordType, Refinement, RefinementCtx, RefinementEffect, SafeParseError$1 as SafeParseError, SafeParseReturnType, SafeParseSuccess$1 as SafeParseSuccess, Scalars, SomeZodObject, StringValidation, SuperRefinement, SyncParseReturnType, TransformEffect, TypeOf$1 as TypeOf, TypeOf$1 as infer, UnknownKeysParam, Values, Writeable$1 as Writeable, ZodAny$1 as ZodAny, ZodAnyDef, ZodArray$1 as ZodArray, ZodArrayDef, ZodBigInt$1 as ZodBigInt, ZodBigIntCheck, ZodBigIntDef, ZodBoolean$1 as ZodBoolean, ZodBooleanDef, ZodBranded, ZodBrandedDef, ZodCatch$1 as ZodCatch, ZodCatchDef, ZodCustomIssue, ZodDate$1 as ZodDate, ZodDateCheck, ZodDateDef, ZodDefault$1 as ZodDefault, ZodDefaultDef, ZodDiscriminatedUnion$1 as ZodDiscriminatedUnion, ZodDiscriminatedUnionDef, ZodDiscriminatedUnionOption, ZodEffects, ZodEffects as ZodTransformer, ZodEffectsDef, ZodEnum$1 as ZodEnum, ZodEnumDef, ZodError$1 as ZodError, ZodErrorMap$1 as ZodErrorMap, ZodFirstPartySchemaTypes$1 as ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind$1 as ZodFirstPartyTypeKind, ZodFormattedError$1 as ZodFormattedError, ZodFunction$1 as ZodFunction, ZodFunctionDef, ZodIntersection$1 as ZodIntersection, ZodIntersectionDef, ZodInvalidArgumentsIssue, ZodInvalidDateIssue, ZodInvalidEnumValueIssue, ZodInvalidIntersectionTypesIssue, ZodInvalidLiteralIssue, ZodInvalidReturnTypeIssue, ZodInvalidStringIssue, ZodInvalidTypeIssue, ZodInvalidUnionDiscriminatorIssue, ZodInvalidUnionIssue, ZodIssue$1 as ZodIssue, ZodIssueBase, ZodIssueCode$1 as ZodIssueCode, ZodIssueOptionalMessage, ZodLazy$1 as ZodLazy, ZodLazyDef, ZodLiteral$1 as ZodLiteral, ZodLiteralDef, ZodMap$1 as ZodMap, ZodMapDef, ZodNaN$1 as ZodNaN, ZodNaNDef, ZodNativeEnum, ZodNativeEnumDef, ZodNever$1 as ZodNever, ZodNeverDef, ZodNonEmptyArray, ZodNotFiniteIssue, ZodNotMultipleOfIssue, ZodNull$1 as ZodNull, ZodNullDef, ZodNullable$1 as ZodNullable, ZodNullableDef, ZodNullableType, ZodNumber$1 as ZodNumber, ZodNumberCheck, ZodNumberDef, ZodObject$1 as ZodObject, ZodObjectDef, ZodOptional$1 as ZodOptional, ZodOptionalDef, ZodOptionalType, ZodParsedType, ZodPipeline, ZodPipelineDef, ZodPromise$1 as ZodPromise, ZodPromiseDef, ZodRawShape$1 as ZodRawShape, ZodReadonly$1 as ZodReadonly, ZodReadonlyDef, ZodRecord$1 as ZodRecord, ZodRecordDef, ZodSet$1 as ZodSet, ZodSetDef, ZodString$1 as ZodString, ZodStringCheck, ZodStringDef, ZodSymbol$1 as ZodSymbol, ZodSymbolDef, ZodTooBigIssue, ZodTooSmallIssue, ZodTuple$1 as ZodTuple, ZodTupleDef, ZodTupleItems, ZodType$1 as Schema, ZodType$1 as ZodSchema, ZodType$1 as ZodType, ZodTypeAny$1 as ZodTypeAny, ZodTypeDef, ZodUndefined$1 as ZodUndefined, ZodUndefinedDef, ZodUnion$1 as ZodUnion, ZodUnionDef, ZodUnionOptions, ZodUnknown$1 as ZodUnknown, ZodUnknownDef, ZodUnrecognizedKeysIssue, ZodVoid$1 as ZodVoid, ZodVoidDef, addIssueToContext, anyType as any, arrayOutputType, arrayType as array, baseObjectInputType, baseObjectOutputType, bigIntType as bigint, booleanType as boolean, coerce$1 as coerce, custom$1 as custom, dateType as date, datetimeRegex, deoptional, discriminatedUnionType as discriminatedUnion, effectsType as effect, effectsType as transformer, enumType as enum, errorMap as defaultErrorMap, functionType as function, getErrorMap$1 as getErrorMap, getParsedType$1 as getParsedType, inferFlattenedErrors$1 as inferFlattenedErrors, inferFormattedError$1 as inferFormattedError, input$2 as input, instanceOfType as instanceof, intersectionType as intersection, isAborted, isAsync, isDirty, isValid, late, lazyType as lazy, literalType as literal, makeIssue, mapType as map, mergeTypes, nanType as nan, nativeEnumType as nativeEnum, neverType as never, noUnrecognized, nullType as null, nullableType as nullable, numberType as number, objectInputType, objectOutputType, objectType as object, objectUtil, oboolean, onumber, optionalType as optional, ostring, output$2 as output, pipelineType as pipeline, preprocessType as preprocess, promiseType as promise, quotelessJson, recordType as record, setErrorMap$1 as setErrorMap, setType as set, strictObjectType as strictObject, stringType as string, symbolType as symbol, tupleType as tuple, typeToFlattenedError, typecast, undefinedType as undefined, unionType as union, unknownType as unknown, util$1 as util, voidType as void };
 }
 
 export {

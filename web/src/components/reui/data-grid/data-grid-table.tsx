@@ -837,7 +837,7 @@ function DataGridTableAddRow() {
 }
 
 function DataGridTableBase({ children }: { children: ReactNode }) {
-    const { props, table, recordCount } = useDataGrid();
+    const { props, table } = useDataGrid();
     const columnSizing = useDataGridAtom(table.atoms.columnSizing);
     const leftVisibleColumns = table.getStartVisibleLeafColumns();
     const centerVisibleColumns = table.getCenterVisibleLeafColumns();
@@ -902,12 +902,12 @@ function DataGridTableBase({ children }: { children: ReactNode }) {
             aria-multiselectable={
                 cellSelectionOn && props.tableLayout?.cellSelectionMode !== 'single' ? true : undefined
             }
-            // recordCount can undercount the rows actually present (a pinned
+            // The table total can undercount the rows actually present (a pinned
             // draft row a consumer keeps out of its totals), and aria-rowindex
             // is computed from the full display order; the union keeps every
             // announced index inside the announced count.
             aria-rowcount={
-                cellSelectionOn ? Math.max(recordCount, table.getRowsInDisplayOrder().length) + 1 : undefined
+                cellSelectionOn ? Math.max(table.getRowCount(), table.getRowsInDisplayOrder().length) + 1 : undefined
             }
             className={cn(
                 'text-foreground caption-bottom text-left align-middle text-sm font-normal rtl:text-right',
@@ -1339,13 +1339,6 @@ function DataGridTableHeadRowCell<TData extends object>({
  */
 const DATA_GRID_DEFAULT_COLUMN_RESIZE_MODE = 'onEnd' as const;
 
-function getDataGridColumnResizeMode(
-    layoutMode: 'onChange' | 'onEnd' | undefined,
-    tableMode: 'onChange' | 'onEnd' | undefined
-) {
-    return layoutMode ?? tableMode ?? DATA_GRID_DEFAULT_COLUMN_RESIZE_MODE;
-}
-
 function DataGridTableHeadRowCellResize<TData extends object>({
     header
 }: {
@@ -1370,8 +1363,7 @@ function DataGridTableHeadRowCellResize<TData extends object>({
         props.tableLayout?.columnsPinnable &&
         edgeColumn.getIsLastColumn('center') &&
         hasDataGridTableRightPinnedColumns(table);
-    const isResizeModeOnEnd =
-        getDataGridColumnResizeMode(props.tableLayout?.columnsResizeMode, table.options.columnResizeMode) === 'onEnd';
+    const isResizeModeOnEnd = (table.options.columnResizeMode ?? DATA_GRID_DEFAULT_COLUMN_RESIZE_MODE) === 'onEnd';
     const stopResizeSessionRef = useRef<(() => void) | undefined>(undefined);
 
     // End a live drag if the handle unmounts mid-resize so document listeners
@@ -1503,10 +1495,7 @@ function DataGridTableResizeIndicator({ viewportNodeRef }: { viewportNodeRef: Re
     const columnResizing = useDataGridAtom(table.atoms.columnResizing) ?? table.state.columnResizing;
     // Absent with a bundle that leaves out columnResizingFeature.
     const resizingColumnId = columnResizing?.isResizingColumn;
-    const resizeMode = getDataGridColumnResizeMode(
-        props.tableLayout?.columnsResizeMode,
-        table.options.columnResizeMode
-    );
+    const resizeMode = table.options.columnResizeMode ?? DATA_GRID_DEFAULT_COLUMN_RESIZE_MODE;
     const isActive = !!(props.tableLayout?.columnsResizable && resizeMode === 'onEnd' && resizingColumnId);
 
     // Positioning happens imperatively after each drag-frame render: layout
@@ -2312,7 +2301,7 @@ function DataGridTableRowSelect<TData extends object>({ row }: { row: Row<DataGr
 }
 
 function DataGridTableRowSelectAll() {
-    const { i18n, table, recordCount, isLoading } = useDataGrid();
+    const { i18n, table, isLoading } = useDataGrid();
 
     // `getIsSomePageRowsSelected()` means "at least one" in v9, where v8 meant
     // "some but not all", so the all-selected case has to be excluded explicitly
@@ -2327,7 +2316,7 @@ function DataGridTableRowSelectAll() {
                     <Checkbox
                         checked={isAllSelected}
                         indeterminate={isSomeSelected && !isAllSelected}
-                        disabled={isLoading || recordCount === 0}
+                        disabled={isLoading || table.getRowCount() === 0}
                         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                         aria-label={i18n.labels.selectAll}
                         className="align-[inherit]"

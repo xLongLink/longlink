@@ -537,7 +537,7 @@ it('sorts authored grid results and reports row actions', async () => {
             columns
         });
         return <>
-            <DataGrid table={table} recordCount={2}
+            <DataGrid table={table}
                 onRowClick={(row) => setSelected(row.name)}>
                 <DataGridContainer>
                     <DataGridTable />

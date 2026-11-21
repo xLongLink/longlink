@@ -3,6 +3,7 @@ import { TextField } from './field';
 import { Mail } from 'lucide-react';
 import { AuthLayout } from './auth-layout';
 import { useSearchParams } from 'react-router';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNotification } from '@/lib/notifications';
@@ -25,6 +26,13 @@ export default function Register() {
 
     const trimmedEmail = useWatch({ control: form.control, name: 'email' }).trim();
     const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
+    const save = useSubmit(
+        async (payload: EmailPayload) => {
+            await api('/api/v1/auth/register', { json: payload, method: 'POST' });
+            showNotification('Check your inbox for the registration link.');
+        },
+        { onError: (error) => form.setError('root', { message: error.message }) }
+    );
 
     return (
         <AuthLayout
@@ -35,20 +43,11 @@ export default function Register() {
             <title>Create Account | LongLink</title>
             <Stack gap={3}>
                 <Separator />
-                <form
-                    noValidate
-                    action={() =>
-                        form.handleSubmit(async (payload) => {
-                            // Notify the user only after the email request succeeds.
-                            await api('/api/v1/auth/register', { json: payload, method: 'POST' });
-                            showNotification('Check your inbox for the registration link.');
-                        })()
-                    }
-                >
+                <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
                     <Stack gap={3}>
                         <TextField
-                            control={form.control}
-                            name="email"
+                            {...form.register('email')}
+                            error={form.formState.errors.email?.message}
                             autoComplete="email"
                             required
                             label="Email"

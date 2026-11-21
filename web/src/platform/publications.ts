@@ -135,7 +135,6 @@ const componentPages: {
     { name: 'Hooks', category: 'Runtime' },
     { name: 'useApi', category: 'Hooks', icon: Database },
     { name: 'useForm', category: 'Hooks', icon: FileText },
-    { name: 'useFormContext', category: 'Hooks', icon: FileText },
     { name: 'useSubmit', category: 'Hooks', icon: Waypoints },
     { name: 'useConfirm', category: 'Hooks', icon: ShieldCheck },
     { name: 'useTable', category: 'Hooks', icon: Table2 },

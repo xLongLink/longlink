@@ -50,7 +50,6 @@ export default function List() {
         <Stack padding={2}>
             <DataGrid
                 table={table}
-                recordCount={filtered.length}
                 tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
                 emptyMessage={
                     <Empty title="No files found">

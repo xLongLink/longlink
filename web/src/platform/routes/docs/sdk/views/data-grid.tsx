@@ -83,7 +83,6 @@ function Example() {
     <Box width="100%" maxWidth={640}>
       <DataGrid
         table={table}
-        recordCount={files.length}
         tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
         emptyMessage="No files"
       >
@@ -122,7 +121,6 @@ export function DataGridExample() {
         <Box width="100%" maxWidth={640}>
             <DataGrid
                 table={table}
-                recordCount={files.length}
                 tableLayout={{ dense: true, headerBackground: false, rowBorder: true }}
                 emptyMessage="No files"
             >

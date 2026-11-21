@@ -12,14 +12,28 @@ export default function InputPage() {
         <FormDocumentation
             name="Input"
             preview={<InputExample />}
-            code={`function Example() {
-  const form = useForm(z.object({ name: z.string().trim().min(1, "Enter an order name.") }), {
+            code={`const schema = z.object({ name: z.string().trim().min(1, "Enter an order name.") });
+
+function Example() {
+  const submit = useSubmit("/api/orders");
+  const form = useForm({
     defaultValues: { name: "New order" },
-    action: "/api/orders",
+    resolver: zodResolver(schema),
   });
 
+  async function save(values) {
+    const data = new FormData();
+    data.set("name", values.name);
+
+    try {
+      await submit(data);
+    } catch (error) {
+      form.setError("root", { message: error.message });
+    }
+  }
+
   return (
-    <form onSubmit={form.submit} noValidate>
+    <form onSubmit={form.handleSubmit(save)} noValidate>
       <Stack gap={4}>
         <Input
           {...form.register("name")}

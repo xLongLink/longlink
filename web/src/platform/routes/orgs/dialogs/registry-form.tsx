@@ -36,9 +36,7 @@ export function RegistryForm({
         <Dialog open onOpenChange={onOpenChange} title="Connect a registry" showHeader={false} bodyPadding={false}>
             <form
                 className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
-                onSubmit={(event) => {
-                    void form.handleSubmit(submit)(event);
-                }}
+                onSubmit={form.handleSubmit(submit)}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >

@@ -248,3 +248,89 @@ it('retains an uncontrolled draft and host activity when the caller cancels Esca
         }
     );
 });
+
+it('reports actual controlled visibility when the caller ignores open and close requests', async () => {
+    // Arrange
+    const activity = vi.fn();
+    const changes = vi.fn();
+    const user = userEvent.setup();
+
+    function Editor() {
+        const [open, setOpen] = useState(false);
+
+        return (
+            <DialogActivityContext value={activity}>
+                <Button onClick={() => setOpen(true)}>Show editor</Button>
+                <Dialog
+                    title="Edit draft"
+                    open={open}
+                    onOpenChange={changes}
+                    trigger={<Button>Edit</Button>}
+                    footer={<Button onClick={() => setOpen(false)}>Finish</Button>}
+                >
+                    <Input name="draft" label="Draft" defaultValue="Initial" />
+                </Dialog>
+            </DialogActivityContext>
+        );
+    }
+
+    await withMounted(<Editor />, async (output) => {
+        const trigger = output.querySelector('[data-slot="dialog-trigger"]');
+        const show = output.querySelector('button');
+
+        if (!trigger || !show) throw new Error('Expected editor actions');
+
+        // Act
+        await act(async () => user.click(trigger));
+
+        // Assert
+        expect(changes).toHaveBeenLastCalledWith(true, expect.anything());
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(activity).not.toHaveBeenCalled();
+
+        // Act
+        await act(async () => user.click(show));
+        const modal = document.querySelector('[role="dialog"]');
+        const input = modal?.querySelector('input');
+
+        if (!modal || !input) throw new Error('Expected the controlled editor');
+        await act(async () => user.type(input, ' edit'));
+        await act(async () => user.keyboard('{Escape}'));
+
+        // Assert
+        expect(changes).toHaveBeenLastCalledWith(false, expect.anything());
+        expect(document.querySelector('[role="dialog"]')).toBe(modal);
+        expect(input.value).toBe('Initial edit');
+        expect(activity.mock.calls).toEqual([[true]]);
+        const finish = modal.querySelector('[data-slot="dialog-footer"] button');
+
+        if (!finish) throw new Error('Expected completion action');
+
+        // Act
+        await act(async () => user.click(finish));
+
+        // Assert
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(activity.mock.calls).toEqual([[true], [false]]);
+    });
+});
+
+it('reports default-open activity and releases it when the dialog owner unmounts', async () => {
+    // Arrange
+    const activity = vi.fn();
+
+    // Act
+    await withMounted(
+        <DialogActivityContext value={activity}>
+            <Dialog title="Order details" defaultOpen />
+        </DialogActivityContext>,
+        async () => {
+            // Assert
+            expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+            expect(activity.mock.calls).toEqual([[true]]);
+        }
+    );
+
+    // Assert
+    expect(activity.mock.calls).toEqual([[true], [false]]);
+});

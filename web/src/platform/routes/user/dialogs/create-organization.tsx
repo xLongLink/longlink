@@ -40,9 +40,7 @@ export default function CreateOrganization({
         <Dialog open showHeader={false} bodyPadding={false} onOpenChange={onOpenChange} title="New organization">
             <form
                 className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
-                onSubmit={(event) => {
-                    void form.handleSubmit(submit)(event);
-                }}
+                onSubmit={form.handleSubmit(submit)}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >

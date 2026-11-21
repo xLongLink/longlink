@@ -6,14 +6,13 @@
             "source": "reui",
             "reference": "https://reui.io/docs/components/base/data-grid",
             "introduction": "Native ReUI data grid with caller-owned TanStack state and columns.",
-            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface. For row selection, enableRowSelection, provide stable domain IDs through getRowId, and compose DataGridTableRowSelectAll (no props) and DataGridTableRowSelect in the selection column. Client pagination uses zero-based state.pagination.pageIndex. Server pagination also requires manualPagination: true and rowCount: total in useTable; recordCount alone does not configure the table. Keep data loading and mutations in the View. Use isLoading for skeleton rows; emptyMessage accepts an Empty component with a recovery action or a request error with Retry.",
+            "guidance": "Create a controller with useTable({ features: dataGridFeatures, data, columns, getRowId, state, ...handlers }). Compose DataGridTable inside DataGridScrollArea. Use DataGridColumnHeader for sorting, DataGridPagination for pagination, and DataGridContainer or Frame for the surface. For row selection, enableRowSelection, provide stable domain IDs through getRowId, and compose DataGridTableRowSelectAll (no props) and DataGridTableRowSelect in the selection column. Client pagination uses zero-based state.pagination.pageIndex. Server pagination also requires manualPagination: true and rowCount: total in useTable. Configure resizing through the table's columnResizeMode option. Keep data loading and mutations in the View. Use isLoading for skeleton rows; emptyMessage accepts an Empty component with a recovery action or a request error with Retry.",
             "properties": [
                 {
                     "name": "table",
                     "type": "ReactTable<DataGridFeatures, T>",
                     "description": "Controller returned by the exposed useTable hook."
                 },
-                { "name": "recordCount", "type": "number", "description": "Total number of matching records." },
                 { "name": "emptyMessage", "type": "ReactNode", "description": "Caller-owned empty-state content." },
                 {
                     "name": "children",
@@ -1137,26 +1136,10 @@
             "justification": "Loads scoped attachment bytes and renders supported media inline without exposing host credentials or weakening the Solution sandbox."
         },
         {
-            "name": "FormProvider",
-            "category": "Form",
-            "introduction": "Shares React Hook Form methods with nested controls.",
-            "keywords": ["editing form", "edit", "create", "submit", "validation", "fields"],
-            "guidance": "Call useForm(schema, { defaultValues, action }) and use form.submit for automatic validation and scoped multipart submission. Editing defaults stay explicit and do not need to satisfy the schema before submission. Parsed scalar values become text; files remain binary; arrays repeat field names; null and undefined are omitted, not treated as clearing a value. Nested objects and nonfinite numbers are rejected before transport. Submission failures populate formState.errors.root and preserve the draft. Standard methods remain available for local or custom forms. Spread methods onto FormProvider only when descendants need useFormContext. Validate and authorize mutations on the server.",
-            "properties": [
-                {
-                    "name": "...form",
-                    "type": "UseFormReturn",
-                    "description": "Methods returned by useForm, including control, handleSubmit, reset, trigger, setError, and formState."
-                }
-            ],
-            "source": "react-hook-form",
-            "reference": "https://ui.shadcn.com/docs/forms/react-hook-form"
-        },
-        {
             "name": "Controller",
             "category": "Form",
             "introduction": "Connects a controlled input to React Hook Form without a LongLink field adapter.",
-            "guidance": "Pass field props to Input or Textarea, with label and error={fieldState.error?.message}. For selection controls, pass value={field.value}, onValueChange={field.onChange}, and ref={field.ref}; boolean controls use checked and onCheckedChange. Use form.reset() to restore defaults. Field layout and accessible feedback are internal to each control.",
+            "guidance": "Use form.register for native inputs and textareas. Use Controller for controlled selection controls: pass value={field.value}, onValueChange={field.onChange}, and ref={field.ref}; boolean controls use checked and onCheckedChange. Pass error={fieldState.error?.message} for accessible feedback. Use form.reset() to restore defaults.",
             "properties": [
                 { "name": "name", "type": "FieldPath", "description": "Registered form value path." },
                 { "name": "control", "type": "Control", "description": "The control returned by useForm." },
@@ -1272,12 +1255,16 @@
             "guidance": "Use controlled state for local interaction. Effects should synchronize with external systems, not duplicate derived state.",
             "members": [
                 {
-                    "name": "useForm(schema, options?)",
-                    "description": "React Hook Form state with automatic Zod validation. Pass defaultValues and an action endpoint, then use form.submit for duplicate-protected multipart submission of parsed values. Scalars become text, files remain binary, arrays repeat field names, and null values are omitted; nested objects are rejected. Failures populate formState.errors.root and preserve the draft. Native handleSubmit remains available for custom submissions."
+                    "name": "useForm(options?)",
+                    "description": "Standard React Hook Form editing and validation state. Pass defaultValues and resolver: zodResolver(schema), then bind a native form with onSubmit={form.handleSubmit(save)}. Use register for native inputs and Controller for composite controls. Submission transport and success behavior belong in save. Drafts remain until explicitly reset."
+                },
+                {
+                    "name": "zodResolver(schema)",
+                    "description": "Connects a Zod schema to React Hook Form. Successful validation passes parsed schema output to the handleSubmit callback."
                 },
                 {
                     "name": "useSubmit(path, options)",
-                    "description": "Returns an awaitable, duplicate-protected scoped submission function accepting FormData for standalone actions. Use useForm(schema, { action }) for forms. Successful writes refresh cached View data before onSuccess. Unhandled failures reject."
+                    "description": "Returns an awaitable, duplicate-protected scoped endpoint write accepting FormData. Call it from a form.handleSubmit callback or a standalone action. Successful writes refresh cached View data before onSuccess. Unhandled failures reject."
                 },
                 {
                     "name": "useState(initial)",
@@ -2108,10 +2095,10 @@
             "name": "Editing form",
             "description": "Collect intent through named fields and persist changes through a validated Solution route.",
             "keywords": ["edit form", "editing form", "create form", "form", "record editor"],
-            "components": ["FormProvider", "Input", "Select", "Hooks"],
+            "components": ["Controller", "Input", "Select", "Hooks"],
             "steps": [
-                "Use the documented useForm hook with an action endpoint and explicit defaults from the record being edited; use FormProvider when descendants need form context.",
-                "Choose field components that match the server schema and use documented names and value contracts.",
+                "Use standard useForm with explicit defaultValues and resolver: zodResolver(schema); bind a native form with onSubmit={form.handleSubmit(save)}.",
+                "Use register for native inputs and Controller for composite controls, choosing fields that match the server schema.",
                 "Submit to a Solution route that validates input and enforces authorization; display its documented success or error state."
             ]
         },

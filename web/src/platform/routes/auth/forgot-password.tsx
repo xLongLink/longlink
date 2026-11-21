@@ -3,6 +3,7 @@ import { TextField } from './field';
 import { useForm } from 'react-hook-form';
 import { AuthLayout } from './auth-layout';
 import { Mail, CircleCheck } from 'lucide-react';
+import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
@@ -13,6 +14,12 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const form = useForm<EmailPayload>({ defaultValues: { email: '' }, resolver: zodResolver(emailPayloadSchema) });
+    const save = useSubmit(
+        async (payload: EmailPayload) => {
+            await api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' });
+        },
+        { onError: (error) => form.setError('root', { message: error.message }) }
+    );
 
     const confirmation = 'If an account exists for that email, password reset instructions are on the way.';
 
@@ -46,19 +53,11 @@ export default function ForgotPassword() {
                     </Link>
                 </Stack>
             ) : (
-                <form
-                    noValidate
-                    action={() =>
-                        form.handleSubmit(async (payload) => {
-                            // Show the confirmation without disclosing whether an account exists.
-                            await api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' });
-                        })()
-                    }
-                >
+                <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
                     <Stack gap={4}>
                         <TextField
-                            control={form.control}
-                            name="email"
+                            {...form.register('email')}
+                            error={form.formState.errors.email?.message}
                             autoComplete="email"
                             required
                             label="Email"
