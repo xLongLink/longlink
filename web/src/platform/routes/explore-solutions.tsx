@@ -51,16 +51,16 @@ export default function ExploreSolutions() {
                     ))}
                 </div>
             ) : isError ? (
-                <div className="min-w-0 overflow-clip border border-border bg-transparent p-4">
-                    <Empty role="status" title="Unable to load solutions">
+                <div className="min-w-0 overflow-clip border border-border bg-transparent p-4" role="status">
+                    <Empty title="Unable to load solutions">
                         <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
                             Retry
                         </Button>
                     </Empty>
                 </div>
             ) : solutions.length === 0 ? (
-                <div className="min-w-0 overflow-clip border border-border bg-transparent p-4">
-                    <Empty role="status" title="No public solutions">
+                <div className="min-w-0 overflow-clip border border-border bg-transparent p-4" role="status">
+                    <Empty title="No public solutions">
                         <Button
                             type="button"
                             size="sm"

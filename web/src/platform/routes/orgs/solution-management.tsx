@@ -212,7 +212,7 @@ export default function SolutionManagement({
                             {solutions.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={canMaintain ? 4 : 3} align="center">
-                                        <Empty role="status" title="No data" />
+                                        <Empty title="No data" />
                                     </TableCell>
                                 </TableRow>
                             )}

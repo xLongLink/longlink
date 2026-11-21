@@ -68,7 +68,7 @@ export default function Compute() {
                         {computes.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={2} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}

@@ -22,8 +22,8 @@ export function PageError({
     children?: ReactNode;
 }) {
     return (
-        <div className="flex min-h-[70dvh] min-w-0 items-center justify-center">
-            <Empty role="status" aria-atomic="true" title={<h1>{title}</h1>} description={description}>
+        <div className="flex min-h-[70dvh] min-w-0 items-center justify-center" role="status" aria-atomic="true">
+            <Empty title={<h1>{title}</h1>} description={description}>
                 {children}
             </Empty>
         </div>

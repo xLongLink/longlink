@@ -179,7 +179,7 @@ export default function Models() {
                                                 className="relative h-60 overflow-hidden @min-[640px]/country:absolute @min-[640px]/country:inset-0 @min-[640px]/country:left-[28%] @min-[640px]/country:h-auto"
                                             >
                                                 {mapFailed ? (
-                                                    <Empty role="alert" title="Unable to load map">
+                                                    <Empty title={<span role="alert">Unable to load map</span>}>
                                                         <Button
                                                             type="button"
                                                             size="sm"

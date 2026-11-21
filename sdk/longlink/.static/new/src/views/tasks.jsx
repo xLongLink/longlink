@@ -121,7 +121,12 @@ export default function Tasks() {
                     Add task
                 </Button>
             </Stack>
-            <DataGrid table={table} recordCount={tasks.length} tableLayout={{ rowBorder: true, headerBorder: true }}>
+            <DataGrid
+                table={table}
+                recordCount={tasks.length}
+                tableLayout={{ rowBorder: true, headerBorder: true }}
+                emptyMessage={<Empty title="No tasks yet" description="Select Add task to create your first task." />}
+            >
                 <DataGridContainer>
                     <DataGridScrollArea orientation="horizontal">
                         <DataGridTable />
