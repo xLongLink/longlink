@@ -13,9 +13,14 @@ const serverClock = () => false;
 export function Timestamp({
     value,
     format = 'date_time',
+    timeZone,
     className,
     ...props
-}: Omit<ComponentPropsWithoutRef<'span'>, 'children'> & { value: number | string; format?: TimestampFormat }) {
+}: Omit<ComponentPropsWithoutRef<'span'>, 'children'> & {
+    value: number | string;
+    format?: TimestampFormat;
+    timeZone?: string;
+}) {
     const canReadClock = useSyncExternalStore(subscribe, clientClock, serverClock);
     const [now, setNow] = useState<number | null>(() => (format === 'relative' && canReadClock ? Date.now() : null));
 
@@ -30,7 +35,7 @@ export function Timestamp({
     const relative = format === 'relative' && now !== null;
     const text = relative
         ? formatRelativeTimestamp(date, now)
-        : formatTimestamp(date, format === 'relative' ? 'date_time' : format, format === 'relative');
+        : formatTimestamp(date, format === 'relative' ? 'date_time' : format, format === 'relative', false, timeZone);
 
     // Only relative timestamps expose the copyable absolute-date details.
     return (

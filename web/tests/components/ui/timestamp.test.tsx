@@ -39,6 +39,23 @@ it('defaults to date and time and accepts Unix seconds and ISO strings as the sa
     expect(outputs.map((time) => time?.getAttribute('datetime'))).toEqual(Array(3).fill(date.toISOString()));
 });
 
+it.each([
+    ['date', 'Oct 16, 2026'],
+    ['system_date_time', '2026-10-16 17:30:00']
+] as const)('honors an explicit zone across calendar boundaries for %s', (format, expected) => {
+    // Arrange
+    const value = '2026-10-17T00:30:00Z';
+
+    // Act
+    const output = renderStatic(<Timestamp value={value} format={format} timeZone="America/Los_Angeles" />);
+    const time = output.querySelector('time');
+
+    // Assert
+    expect(time?.textContent).toBe(expected);
+    expect(time?.getAttribute('datetime')).toBe('2026-10-17T00:30:00.000Z');
+    expect(output.querySelector('[timezone]')).toBeNull();
+});
+
 it.each(['not a date', '', Number.NaN, Number.POSITIVE_INFINITY])(
     'renders invalid dates without crashing: %s',
     (value) => {
