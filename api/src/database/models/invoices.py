@@ -7,7 +7,7 @@ from src.database.models.base import PlatformModel
 
 
 class Invoice(PlatformModel, table=True):
-    """Retain one Organization's month-end usage before contacting Stripe."""
+    """Retain one Organization's month-end billing snapshot before contacting Stripe."""
 
     __tablename__: ClassVar[str] = "invoices"
     __table_args__ = (UniqueConstraint("organization_id", "period_end", name="uq_invoices_organization_period"),)
@@ -22,7 +22,14 @@ class Invoice(PlatformModel, table=True):
     issued_at: datetime | None = None
     period_end: datetime
 
-    # Month-end usage
-    users: int = Field(ge=0)
+    # Frozen allocation pricing version
+    pricing_version: int = Field(default=3, ge=1)
+
+    # Month-end organization allocation
+    ram_bytes: int = Field(default=0, ge=0, sa_type=BigInteger)
+    cpu_millicores: int = Field(default=0, ge=0)
     storage_bytes: int = Field(ge=0, sa_type=BigInteger)
-    database_bytes: int = Field(ge=0, sa_type=BigInteger)
+
+    # Retained legacy metered usage
+    users: int = Field(default=0, ge=0)
+    database_bytes: int = Field(default=0, ge=0, sa_type=BigInteger)

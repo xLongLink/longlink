@@ -7,6 +7,19 @@ metadata:
     labels:
         pod-security.kubernetes.io/enforce: restricted
 ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+    name: longlink-apps
+    namespace: '$namespace'
+spec:
+    hard:
+        pods: '$pods'
+        requests.cpu: '${cpu_millicores}m'
+        requests.memory: '$ram_bytes'
+        limits.cpu: '${cpu_millicores}m'
+        limits.memory: '$ram_bytes'
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

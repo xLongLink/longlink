@@ -1,22 +1,32 @@
+import httpx
+import asyncio
+from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from typing import cast
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from sqlmodel import col
-from src.utils import roles
+from src.utils import s3, roles
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_eager
+from src.kubernetes import databases
 from collections.abc import Sequence
 from src.models.tags import TagIcon, TagKind
+from src.environments import env
 from src.models.roles import OrganizationRoles
 from sqlalchemy.engine import CursorResult
 from src.database.types import attr
+from botocore.exceptions import ClientError, BotoCoreError
+from src.models.statuses import Status
 from src.database.services import operations
+from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.kubernetes.storage import Storage
 from src.database.models.tags import OrganizationTag
+from src.models.organizations import OrganizationUsageUpdate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
@@ -37,7 +47,8 @@ def _membership_query(user_id: UUID) -> Select[UserOrganization]:
                 attr(Organization.name),
                 # Include lifecycle and quota data without decrypting infrastructure credentials.
                 attr(Organization.status),
-                attr(Organization.storage_quota_bytes),
+                attr(Organization.storage_bytes),
+                attr(Organization.database_storage_bytes),
             )
         )
         .where(col(UserOrganization.user_id) == user_id, col(Organization.deleted_at).is_(None))
@@ -174,7 +185,7 @@ async def database_infrastructure(session: AsyncSession, organization_id: UUID) 
                 attr(Organization.id),
                 attr(Organization.database_state),
                 attr(Organization.database_password),
-                attr(Organization.database_size_mib),
+                attr(Organization.database_storage_bytes),
             ),
             # Database provisioning needs cluster access, not storage credentials.
             load_only(attr(ComputeRegistry.kubeconfig)),
@@ -380,6 +391,59 @@ async def lock_active_access(
         raise HTTPException(status_code=403, detail="Access required")
     membership = await locked_membership(session, user_id, organization_id, minimum_role)
     return organization, membership
+
+
+async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UUID, payload: OrganizationUsageUpdate) -> None:
+    """Authorize capacity changes, preserve live data, and queue infrastructure reconciliation."""
+
+    # Serialize payment authorization, capacity changes, and ownership revocation.
+    organization, _ = await lock_active_access(session, user_id, organization_id, OrganizationRoles.owner)
+    values = payload.model_dump()
+    if organization.status not in (Status.running, Status.failed):
+        raise HTTPException(status_code=409, detail="Organization capacity reconciliation is pending")
+    if organization.status == Status.running and all(getattr(organization, name) == value for name, value in values.items()):
+        return
+
+    # PostgreSQL PVC capacity is irreversible even when its logical data would fit.
+    if organization.status != Status.failed and payload.database_storage_bytes < organization.database_storage_bytes:
+        raise HTTPException(status_code=409, detail="Database storage cannot be reduced")
+
+    # Require payment authorization for any pool increase, including transfers between pools.
+    if any(value > getattr(organization, name) for name, value in values.items()) and (
+        not env.stripe_enabled or organization.stripe_payment_method_id is None
+    ):
+        raise HTTPException(status_code=402, detail="Payment authorization required")
+
+    # Check provider-observed capacity rather than assuming desired database size matches existing PVCs.
+    _, compute = await database_infrastructure(session, organization_id)
+    cluster = Kubernetes(compute.kubeconfig)
+    try:
+        async with asyncio.timeout(15):
+            provisioned = await databases.provisioned_storage_bytes(cluster, organization_id)
+    except (TimeoutError, OSError, ServerError, NotFoundError, APITimeoutError, ConnectionClosedError, httpx.HTTPError) as exc:
+        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
+    if payload.database_storage_bytes < provisioned:
+        raise HTTPException(status_code=409, detail="Database storage cannot be reduced below provisioned capacity")
+
+    # File downsizing must retain every currently stored object.
+    quota_bytes = payload.storage_bytes
+    if quota_bytes < organization.storage_quota_bytes:
+        compute = await storage_infrastructure(session, organization_id)
+        credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
+        storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+        try:
+            async with asyncio.timeout(15):
+                used_bytes = await storage.usage(Storage.bucket_name(organization_id))
+        except (TimeoutError, BotoCoreError, ClientError) as exc:
+            raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
+        if quota_bytes < used_bytes:
+            raise HTTPException(status_code=409, detail="Storage capacity cannot be reduced below current usage")
+
+    # Persist the whole allocation atomically with its durable reconciliation request.
+    for name, value in values.items():
+        setattr(organization, name, value)
+    organization.status = Status.creating
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id)
 
 
 async def update_member_role(session: AsyncSession, organization_id: UUID, member_id: UUID, role: OrganizationRoles, user_id: UUID) -> None:

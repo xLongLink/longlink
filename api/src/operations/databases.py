@@ -213,7 +213,9 @@ async def ready(organization_id: UUID) -> bool:
                         organization.database_password,
                         # Preserve the Compute's selected persistent storage class.
                         database_storage_class,
-                        size_mib=organization.database_size_mib,
+                        storage_bytes=organization.database_storage_bytes,
+                        cpu_millicores=organization.database_cpu_millicores,
+                        ram_bytes=organization.database_ram_bytes,
                     )
 
                 await database_resources.wait_ready(cluster, organization_id)

@@ -44,10 +44,12 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             await super().apply(organization, quota_bytes=quota_bytes)
 
-    async def apply(_client: object, organization_id: UUID) -> None:
+    async def apply(_client: object, organization_id: UUID, *, cpu_millicores: int, ram_bytes: int) -> None:
         """Record namespace reconciliation."""
 
         assert organization_id == organization.id
+        assert cpu_millicores == organization.compute_cpu_millicores
+        assert ram_bytes == organization.compute_ram_bytes
         calls.append("namespace")
 
     async def synchronize(_client: object, organization_id: UUID) -> None:
@@ -68,9 +70,12 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         refreshed = await session.get(Organization, organization.id)
 
     # Every boundary completes before status publication.
-    assert calls == ["database", "storage", "namespace", "registries"]
+    assert calls == ["database", "namespace", "storage", "registries"]
     assert refreshed is not None
     assert refreshed.status == Status.running
+    assert refreshed.applied_cpu_millicores == organization.compute_cpu_millicores + organization.database_cpu_millicores
+    assert refreshed.applied_ram_bytes == organization.compute_ram_bytes + organization.database_ram_bytes
+    assert refreshed.applied_storage_bytes == organization.storage_bytes + organization.database_storage_bytes
 
 
 @pytest.mark.usefixtures("database_runtime")
@@ -79,6 +84,13 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
 
     # Arrange
     organization = await create_organization(users[0])
+    async with session_scope() as session:
+        previous = await session.get(Organization, organization.id)
+        assert previous is not None
+        previous.applied_cpu_millicores = 1000
+        previous.applied_ram_bytes = 1_000_000_000
+        previous.applied_storage_bytes = 2_000_000_000
+        await session.commit()
 
     class Storage(StorageKubernetes):
         async def apply(self, _organization: UUID, **_kwargs: object) -> None:
@@ -96,6 +108,97 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
         refreshed = await session.get(Organization, organization.id)
     assert refreshed is not None
     assert refreshed.status == Status.creating
+    assert refreshed.applied_cpu_millicores == 1000
+    assert refreshed.applied_ram_bytes == 1_000_000_000
+    assert refreshed.applied_storage_bytes == 2_000_000_000
+
+
+@pytest.mark.usefixtures("database_runtime")
+async def test_reconcile_does_not_publish_over_newer_desired_allocation(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Leave a newer allocation pending rather than publishing stale provider results."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    async def boundary(_client: object, organization_id: UUID, *, cpu_millicores: int, ram_bytes: int) -> None:
+        """Persist a competing allocation while Kubernetes work is in flight."""
+
+        assert cpu_millicores > 0
+        assert ram_bytes > 0
+        async with session_scope() as session:
+            current = await session.get(Organization, organization_id)
+            assert current is not None
+            current.compute_cpu_millicores += 1000
+            await session.commit()
+
+    async def synchronize(_client: object, _organization_id: UUID) -> None:
+        """Accept the external registry synchronization."""
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations, "Storage", StorageKubernetes)
+    monkeypatch.setattr(organization_operations.organizations, "apply", boundary)
+    monkeypatch.setattr(organization_operations.registries, "synchronize", synchronize)
+
+    # Act
+    await organization_operations.reconcile(organization.id)
+
+    # Assert
+    async with session_scope() as session:
+        current = await session.get(Organization, organization.id)
+        assert current is not None
+        assert current.compute_cpu_millicores == organization.compute_cpu_millicores + 1000
+        assert current.status == Status.creating
+        assert current.applied_cpu_millicores is None
+        assert current.applied_ram_bytes is None
+        assert current.applied_storage_bytes is None
+
+
+@pytest.mark.usefixtures("database_runtime")
+async def test_reconcile_applies_independent_pools_without_quota_transfers(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Apply app, file, and database capacity without cross-pool deductions."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    events: list[tuple[str, int, int]] = []
+
+    async def boundary(_client: object, _organization: UUID, *, cpu_millicores: int, ram_bytes: int) -> None:
+        """Record the staged and final namespace admission."""
+
+        events.append(("apps", cpu_millicores, ram_bytes))
+
+    async def resize(_client: object, _organization: UUID, *, storage_bytes: int, cpu_millicores: int, ram_bytes: int) -> None:
+        """Record the live DB resize."""
+
+        assert storage_bytes == organization.database_storage_bytes
+        events.append(("database", cpu_millicores, ram_bytes))
+
+    class Storage(StorageKubernetes):
+        async def apply(self, _organization: UUID, *, quota_bytes: int) -> None:
+            """Record releasing file capacity before growing the DB disk."""
+
+            assert quota_bytes == organization.storage_bytes
+            events.append(("files", quota_bytes, 0))
+
+    async def synchronize(_client: object, _organization: UUID) -> None:
+        """Accept external registry synchronization."""
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    monkeypatch.setattr(organization_operations.organizations, "apply", boundary)
+    monkeypatch.setattr(organization_operations.database_resources, "resize", resize)
+    monkeypatch.setattr(organization_operations.registries, "synchronize", synchronize)
+
+    # Act
+    await organization_operations.reconcile(organization.id)
+
+    # Assert
+    assert [event[0] for event in events] == ["apps", "files", "database"]
+    assert events[0][1:] == (organization.compute_cpu_millicores, organization.compute_ram_bytes)
+    assert events[2][1:] == (organization.database_cpu_millicores, organization.database_ram_bytes)
 
 
 async def test_reconcile_skips_missing_organization_without_constructing_providers(monkeypatch: pytest.MonkeyPatch) -> None:

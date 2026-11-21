@@ -4,9 +4,9 @@ from secrets import token_urlsafe
 from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import Enum, Column, BigInteger
+from src.models import pricing
 from src.environments import env
 from src.database.types import EncryptedType
-from src.models.pricing import FREE_STORAGE_BYTES, FREE_DATABASE_BYTES
 from src.models.statuses import Status
 from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
@@ -29,9 +29,25 @@ class Organization(AuditTable, table=True):
     # Infrastructure
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)
 
+    # File storage allocation
+    storage_bytes: int = Field(default=pricing.DEFAULT_STORAGE_BYTES, gt=0, sa_type=BigInteger)
+
+    # Solution compute allocation
+    compute_ram_bytes: int = Field(default=pricing.DEFAULT_COMPUTE_RAM_BYTES, gt=0, sa_type=BigInteger)
+    compute_cpu_millicores: int = Field(default=pricing.DEFAULT_COMPUTE_CPU_MILLICORES, gt=0)
+
+    # Last successfully reconciled billing allocation
+    applied_ram_bytes: int | None = Field(default=None, ge=0, sa_type=BigInteger)
+    applied_storage_bytes: int | None = Field(default=None, ge=0, sa_type=BigInteger)
+    applied_cpu_millicores: int | None = Field(default=None, ge=0)
+
+    # Database allocation
+    database_ram_bytes: int = Field(default=pricing.DEFAULT_DATABASE_RAM_BYTES, gt=0, sa_type=BigInteger)
+    database_storage_bytes: int = Field(default=pricing.DEFAULT_DATABASE_STORAGE_BYTES, gt=0, sa_type=BigInteger)
+    database_cpu_millicores: int = Field(default=pricing.DEFAULT_DATABASE_CPU_MILLICORES, gt=0)
+
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    database_size_mib: int = Field(default=FREE_DATABASE_BYTES // 1024**2, ge=100)
     database_state: DatabaseState = Field(
         default=DatabaseState.failed,
         sa_column=Column(
@@ -39,9 +55,6 @@ class Organization(AuditTable, table=True):
             nullable=False,
         ),
     )
-
-    # Storage
-    storage_quota_bytes: int = Field(default=FREE_STORAGE_BYTES, ge=1073741824, sa_type=BigInteger)
 
     # Stripe customer and durable card-registration attempt
     stripe_customer_id: str | None = Field(default=None, max_length=255, unique=True)
@@ -59,6 +72,18 @@ class Organization(AuditTable, table=True):
             Enum(Status, name="organization_status_enum", native_enum=False, create_constraint=True, validate_strings=True), nullable=False
         ),
     )
+
+    @property
+    def database_size_mib(self) -> int:
+        """Legacy provisioner size, rounded up without losing allocated bytes."""
+
+        return (self.database_storage_bytes + 1024**2 - 1) // 1024**2
+
+    @property
+    def storage_quota_bytes(self) -> int:
+        """File storage capacity independent of the database allocation."""
+
+        return self.storage_bytes
 
 
 class OrganizationActivity(PlatformModel, table=True):

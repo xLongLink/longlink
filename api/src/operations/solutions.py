@@ -43,30 +43,28 @@ async def deploy(revision_id: UUID) -> None:
         await session.commit()
         runtime_secrets = dict(solution.secrets)
 
+    # Infrastructure owns these settings; discard copies retained by earlier deployments.
+    for name in (
+        "LONGLINK_ENV",
+        "LONGLINK_DATABASE_HOST",
+        "LONGLINK_DATABASE_NAME",
+        "LONGLINK_DATABASE_PORT",
+        "LONGLINK_DATABASE_SCHEMA",
+        "LONGLINK_STORAGE_BUCKET",
+        "LONGLINK_STORAGE_PREFIX",
+        "LONGLINK_STORAGE_REGION",
+        "LONGLINK_STORAGE_ENDPOINT_URL",
+        "LONGLINK_DATABASE_CERTIFICATE",
+        "LONGLINK_STORAGE_CERTIFICATE",
+    ):
+        runtime_secrets.pop(name, None)
+
     # Organization reconciliation owns bucket provisioning and quota admission.
     cluster = Kubernetes(compute.kubeconfig)
     storage = Storage(compute, cluster)
 
     # Use one current CA snapshot for SQL provisioning and workload rendering in this attempt.
     database_certificate = await database_resources.certificate(cluster, organization.id)
-
-    # Infrastructure owns these settings, including optional trust removed since an earlier deployment.
-    infrastructure_environment = {
-        "LONGLINK_ENV": "production",
-        "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
-        "LONGLINK_DATABASE_NAME": organization.id.hex,
-        "LONGLINK_DATABASE_PORT": "5432",
-        "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-        "LONGLINK_STORAGE_BUCKET": storage.bucket_name(organization.id),
-        "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
-        "LONGLINK_STORAGE_REGION": "us-east-1",
-        # Workloads always reach object storage through the cluster-local TLS proxy.
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
-        "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
-        "LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate or None,
-    }
-    for name in infrastructure_environment:
-        runtime_secrets.pop(name, None)
 
     # Reuse generated credentials; new RustFS accounts remain scoped to this Solution.
     if "LONGLINK_DATABASE_PASSWORD" not in runtime_secrets:
@@ -93,7 +91,18 @@ async def deploy(revision_id: UUID) -> None:
     runtime_environment = {
         **revision.envs,
         **runtime_secrets,
-        **{name: value for name, value in infrastructure_environment.items() if value is not None},
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
+        "LONGLINK_DATABASE_NAME": organization.id.hex,
+        "LONGLINK_DATABASE_PORT": "5432",
+        "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
+        "LONGLINK_STORAGE_BUCKET": storage.bucket_name(organization.id),
+        "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
+        "LONGLINK_STORAGE_REGION": "us-east-1",
+        # Workloads always reach object storage through the cluster-local TLS proxy.
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+        "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
+        **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
     }
 
     # Persist generated credentials when the runtime contract changed.
@@ -127,6 +136,7 @@ async def deploy(revision_id: UUID) -> None:
         runtime_environment,
         # Replays reuse the captured release and skip already-completed migrations.
         revision_id=revision.id,
+        cpu_millicores=min(500, organization.compute_cpu_millicores),
         migrate=revision.deployed_at is None,
         registry_connection_id=revision.registry_connection_id,
     )

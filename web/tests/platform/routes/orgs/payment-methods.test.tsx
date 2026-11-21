@@ -37,9 +37,24 @@ it('attempts checkout offline, guards rapid activation, and permits retry after 
 
     client.setQueryData(
         ['api', `${base}/usage`],
-        schemas.zOrganizationUsage.parse({ users: 1, solutions: 1, stripe_enabled: true, has_payment_method: false })
+        schemas.zOrganizationUsage.parse({
+            users: 1,
+            status: 'running',
+            solutions: 1,
+            stripe_enabled: true,
+            has_payment_method: false,
+            compute_cpu_millicores: 1000,
+            compute_ram_bytes: 1e9,
+            storage_bytes: 1e9,
+            database_cpu_millicores: 100,
+            database_ram_bytes: 1e8,
+            database_storage_bytes: 1e8
+        })
     );
-    client.setQueryData(['api', `${base}/cards`], []);
+    client.setQueryData(
+        ['api', `${base}/cards`],
+        [{ id: 'pm_legacy', brand: 'visa', last4: '4242', exp_month: 12, exp_year: 2030, is_default: true }]
+    );
 
     try {
         await withMounted(

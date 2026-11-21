@@ -52,6 +52,7 @@ def test_solution_template_constrains_workloads() -> None:
         files("src").joinpath(".static", "kubernetes", "solution.yml"),
         solution_id="solution",
         image='"ghcr.io/longlink/dashboard:latest"',
+        cpu_millicores=250,
         namespace="acme",
         runtime_revision="revision",
         migration_id="solution-migration",
@@ -89,6 +90,8 @@ def test_solution_template_constrains_workloads() -> None:
 
         assert requests["ephemeral-storage"] == "256Mi"
         assert limits["ephemeral-storage"] == "512Mi"
+        assert requests["cpu"] == "100m"
+        assert limits["cpu"] == "250m"
         assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]  # noqa: S108
         assert pod_spec["volumes"] == [{"name": "tmp", "emptyDir": {"sizeLimit": "256Mi"}}]
 
@@ -141,9 +144,10 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
 
 
 @pytest.mark.parametrize("migrate", [True, False])
+@pytest.mark.parametrize("cpu_millicores", [250, 500])
 @pytest.mark.usefixtures("listed_pods")
 async def test_solution_apply_waits_for_deployment_and_route_readiness(
-    monkeypatch: pytest.MonkeyPatch, listed_jobs: list[solutions.Job], migrate: bool
+    monkeypatch: pytest.MonkeyPatch, listed_jobs: list[solutions.Job], migrate: bool, cpu_millicores: int
 ) -> None:
     """Stop interrupted migrations, isolate secrets, and skip migrations on rollback."""
 
@@ -190,6 +194,10 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(
             spec = resource.raw["spec"]
             assert isinstance(spec, dict)
             assert spec["template"]["spec"]["containers"][0]["envFrom"] == [{"secretRef": {"name": f"revision-{UUID(int=1)}"}}]
+        if resource.kind in {"Job", "Service"}:
+            resources = resource.raw["spec"]["template"]["spec"]["containers"][0]["resources"]
+            assert resources["limits"]["cpu"] == f"{cpu_millicores}m"
+            assert resources["requests"]["cpu"] == "100m"
 
     monkeypatch.setattr(solutions.Job, "patch", patch)
     monkeypatch.setattr(solutions.Job, "refresh", refresh_job)
@@ -207,6 +215,7 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(
         {},
         revision_id=UUID(int=1),
         migrate=migrate,
+        cpu_millicores=cpu_millicores,
     )
 
     # Assert

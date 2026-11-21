@@ -9,12 +9,13 @@ from pydantic import Field, BaseModel
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import select
-from src.models import pricing
 from src.database import session
 from src.operations import invoices
 from src.environments import env
 from src.models.roles import OrganizationRoles
+from src.models.users import UserOrganizationMembership
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from src.models.resources import OrganizationIdentity
 from src.database.services import users, payments, invitations, organizations
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.invoices import Invoice
@@ -119,19 +120,19 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
         raise RuntimeError("Local Compute registration was not recorded")
 
 
-async def development_organization(client: httpx2.AsyncClient) -> Resource | None:
+async def development_organization(client: httpx2.AsyncClient) -> OrganizationIdentity | None:
     """Return the local development Organization when present."""
 
     response = await client.get("/api/v1/me/organizations")
     response.raise_for_status()
-    organizations = [Resource.model_validate(membership["organization"]) for membership in response.json()]
+    organizations = [UserOrganizationMembership.model_validate(membership).organization for membership in response.json()]
     matches = [organization for organization in organizations if organization.name == DEVELOPMENT_ORGANIZATION]
     if len(matches) > 1:
         raise RuntimeError("Multiple development Organizations match ACME Ink; select one before seeding")
     return next(iter(matches), None)
 
 
-async def create_organization(client: httpx2.AsyncClient) -> Resource:
+async def create_organization(client: httpx2.AsyncClient) -> OrganizationIdentity:
     """Create the local development Organization when absent."""
 
     organization = await development_organization(client)
@@ -141,10 +142,10 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     # Create the development Organization with Platform-owned infrastructure defaults.
     response = await client.post("/api/v1/organizations", json={"name": DEVELOPMENT_ORGANIZATION})
     response.raise_for_status()
-    return Resource.model_validate(response.json())
+    return OrganizationIdentity.model_validate(response.json())
 
 
-async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
+async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: OrganizationIdentity) -> None:
     """Recreate the local sample with a fresh database and wait until it is ready."""
 
     # Find only the seeded sample; leave other Organization Solutions untouched.
@@ -281,7 +282,7 @@ async def create_invited_organization() -> None:
 async def register_card(organization_id: UUID) -> None:
     """Register a reusable Stripe test Visa for the development Organization."""
 
-    # Leave unconfigured development environments on the free allowance.
+    # Leave unconfigured development environments on unbilled starter allocations.
     if not env.stripe_enabled:
         print("Skipping test card: Stripe is not configured.")
         return
@@ -307,6 +308,10 @@ async def register_card(organization_id: UUID) -> None:
             if organization.stripe_payment_method_id is not None:
                 return
 
+        # Reacquiring the lock must still resolve the same persisted Stripe customer.
+        if organization.stripe_customer_id is None:
+            raise RuntimeError("Development Organization Stripe customer is unavailable")
+
         # Stripe's test fixture completes setup without card details, Checkout, or a charge.
         intent = await connection.v1.setup_intents.create_async(
             {
@@ -318,7 +323,7 @@ async def register_card(organization_id: UUID) -> None:
                 "metadata": {"organization_id": str(organization.id)},
             },
             # Repeated seeds reuse the same provider setup attempt.
-            options={"idempotency_key": f"seed-card:v2:{organization.id}"},
+            options={"idempotency_key": f"seed-card:v3:{organization.id}"},
         )
         await payments.save_setup_intent(database, organization, intent, connection)
         await database.commit()
@@ -327,7 +332,7 @@ async def register_card(organization_id: UUID) -> None:
 
 
 async def create_invoice(organization_id: UUID) -> None:
-    """Issue a reusable test invoice from illustrative usage, not measured resources."""
+    """Issue a reusable test invoice from the development Organization's allocations."""
 
     # Invoice fixtures require the same test-mode Stripe configuration as the saved card.
     if not env.stripe_enabled:
@@ -338,25 +343,30 @@ async def create_invoice(organization_id: UUID) -> None:
     async with session.session_scope() as database:
         organization = await organizations.lock(database, organization_id)
         invoice = await database.scalar(
-            select(Invoice).where(Invoice.organization_id == organization_id).order_by(Invoice.period_end).limit(1)
+            select(Invoice).where(col(Invoice.organization_id) == organization_id).order_by(col(Invoice.period_end)).limit(1)
         )
         if invoice is None:
             # Example invoicing requires completed development payment setup.
             if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
                 raise RuntimeError("Register the development test card before creating an example invoice")
+            if (
+                organization.applied_ram_bytes is None
+                or organization.applied_storage_bytes is None
+                or organization.applied_cpu_millicores is None
+            ):
+                raise RuntimeError("Wait for the development Organization's allocations to reconcile before creating an example invoice")
             invoice = Invoice(
                 organization_id=organization_id,
                 customer_id=organization.stripe_customer_id,
                 period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
-                users=pricing.FREE_USERS + 2,
-                # Example usage deliberately exceeds each free allowance.
-                database_bytes=pricing.FREE_DATABASE_BYTES + 1024**3,
-                storage_bytes=pricing.FREE_STORAGE_BYTES + 1024**3,
+                ram_bytes=organization.applied_ram_bytes,
+                storage_bytes=organization.applied_storage_bytes,
+                cpu_millicores=organization.applied_cpu_millicores,
             )
             database.add(invoice)
             await database.commit()
 
-        # Use the published rates, free-tier discount, and Stripe-hosted documents.
+        # Use the published allocation rates and Stripe-hosted documents.
         await invoices.issue(database, invoice.id)
         await database.commit()
 
@@ -383,6 +393,19 @@ async def seed(settings: SeedSettings) -> None:
 
             organization = await create_organization(client)
             await register_card(organization.id)
+
+            # Invoice only allocations acknowledged by successful provider reconciliation.
+            async with asyncio.timeout(300):
+                while True:
+                    response = await client.get(f"/api/v1/organizations/{organization.id}")
+                    response.raise_for_status()
+                    current = UserOrganizationMembership.model_validate(response.json()).organization
+                    if current.status == "failed":
+                        raise RuntimeError("Development Organization provisioning failed. Review its operations in the Platform.")
+                    if current.status == "running":
+                        break
+                    await asyncio.sleep(1)
+
             await create_invoice(organization.id)
             await create_sample(client, settings, organization)
 

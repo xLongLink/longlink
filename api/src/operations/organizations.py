@@ -1,12 +1,13 @@
 import src.database.services.organizations
 from uuid import UUID
+from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import select, update
+from sqlalchemy import select
 from src.kubernetes import utils, namespace, organizations
 from src.kubernetes import databases as database_resources
-from src.operations import databases, registries
+from src.operations import invoices, databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.kubernetes.client import Kubernetes
@@ -34,29 +35,50 @@ async def reconcile(organization_id: UUID) -> None:
     # Converge the Organization bucket before Solutions receive scoped credentials.
     cluster = Kubernetes(compute.kubeconfig)
 
-    # Card registration can expand capacity independently of the free pricing allowance.
-    if organization.stripe_payment_method_id is not None:
-        await database_resources.resize(cluster, organization.id, size_mib=organization.database_size_mib)
+    # Reconcile the independent application and file pools directly.
+    await database_resources.wait_ready(cluster, organization.id)
+    await organizations.apply(
+        cluster, organization.id, cpu_millicores=organization.compute_cpu_millicores, ram_bytes=organization.compute_ram_bytes
+    )
     storage = Storage(compute, cluster)
-    await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
+    await storage.apply(organization.id, quota_bytes=organization.storage_bytes)
+
+    # Reconcile the database pool separately.
+    await database_resources.resize(
+        cluster,
+        organization.id,
+        storage_bytes=organization.database_storage_bytes,
+        cpu_millicores=organization.database_cpu_millicores,
+        ram_bytes=organization.database_ram_bytes,
+    )
+    await database_resources.wait_ready(cluster, organization.id)
 
     # Apply shared tenant infrastructure after storage capacity is configured.
-    await organizations.apply(cluster, organization.id)
     await registries.synchronize(cluster, organization.id)
 
-    # Publish the Organization after its provider and Kubernetes boundaries are ready.
+    # Publish only the allocation snapshot that actually converged across providers.
     async with session_scope() as session:
-        await session.execute(
-            update(Organization)
-            .where(
-                col(Organization.id) == organization.id,
-                col(Organization.deleted_at).is_(None),
-                col(Organization.status).in_((Status.creating, Status.failed)),
-            )
-            # Publish readiness only for a still-active provisioning target.
-            .values(status=Status.running)
+        current = await src.database.services.organizations.lock_row(session, organization.id)
+        if current is None or current.deleted_at is not None:
+            return
+        fields = (
+            "compute_cpu_millicores",
+            "compute_ram_bytes",
+            "storage_bytes",
+            "database_cpu_millicores",
+            "database_ram_bytes",
+            "database_storage_bytes",
         )
+        if any(getattr(current, field) != getattr(organization, field) for field in fields):
+            return
 
+        # Close elapsed billing periods using the previous successfully applied allocation.
+        period_end = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        invoices.capture(session, current, period_end)
+        current.applied_cpu_millicores = organization.compute_cpu_millicores + organization.database_cpu_millicores
+        current.applied_ram_bytes = organization.compute_ram_bytes + organization.database_ram_bytes
+        current.applied_storage_bytes = organization.storage_bytes + organization.database_storage_bytes
+        current.status = Status.running
         await session.commit()
 
 

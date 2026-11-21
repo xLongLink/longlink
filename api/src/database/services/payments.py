@@ -3,11 +3,9 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import dates
-from src.models import pricing
 from src.environments import env
 from src.models.roles import OrganizationRoles
-from src.database.services import operations, organizations
-from src.models.operations import OperationKind
+from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.organizations import Organization
 
@@ -34,9 +32,9 @@ async def save_card(
 
 
 async def save_setup_intent(
-    session: AsyncSession, organization: Organization, intent: stripe.SetupIntent, connection: stripe.StripeClient
+    _session: AsyncSession, organization: Organization, intent: stripe.SetupIntent, connection: stripe.StripeClient
 ) -> None:
-    """Apply a completed card setup to its Organization's billing and capacity."""
+    """Apply a completed card setup to its Organization's billing authorization."""
 
     # Only a successful setup for this customer authorizes future invoice payments.
     if (
@@ -59,14 +57,6 @@ async def save_setup_intent(
         deadline = dates.next_month(datetime.now(UTC))
         organization.invoice_due_at = max(organization.invoice_due_at or deadline, deadline)
     organization.stripe_payment_method_id = intent.payment_method
-
-    # Expand provisioned capacity without introducing plans or shrinking existing volumes.
-    size_mib = max(organization.database_size_mib, pricing.REGISTERED_DATABASE_SIZE_MIB)
-    storage_bytes = max(organization.storage_quota_bytes, pricing.REGISTERED_STORAGE_QUOTA_BYTES)
-    if size_mib != organization.database_size_mib or storage_bytes != organization.storage_quota_bytes:
-        organization.database_size_mib = size_mib
-        organization.storage_quota_bytes = storage_bytes
-        await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
 
 
 async def _lock_checkout_owner(session: AsyncSession, organization_id: UUID, user_id: UUID) -> Organization:
@@ -144,7 +134,8 @@ async def checkout(session: AsyncSession, organization_id: UUID, user_id: UUID, 
                 "submit": {
                     # Hosted checkout records consent to usage-based monthly charges.
                     "message": "By saving your card, you authorize LongLink to charge it monthly for your organization's "
-                    "month-end users, database, and file storage above the free allowances at the published prices. "
+                    "month-end application and database CPU at CHF 10/vCPU, RAM at CHF 5/GiB, "
+                    "and file storage plus database disk at CHF 0.01/GiB. "
                     "No payment is taken now."
                 }
             },
