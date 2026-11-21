@@ -5,10 +5,12 @@ import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
 import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -51,15 +53,11 @@ export default function Solutions() {
                                                 {row.name}
                                             </Link>
                                             {row.status !== 'running' && (
-                                                <span
-                                                    className={
-                                                        row.status === 'creating'
-                                                            ? 'text-xs text-info-foreground'
-                                                            : 'text-xs text-destructive-foreground'
-                                                    }
+                                                <Badge
+                                                    variant={row.status === 'creating' ? 'secondary' : 'destructive'}
                                                 >
                                                     {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                </span>
+                                                </Badge>
                                             )}
                                         </Stack>
                                         {row.description && (
@@ -141,7 +139,10 @@ export default function Solutions() {
                 >
                     <Stack gap={2}>
                         <span>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b>{' '}
+                            <Badge variant={metadata.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {metadata.status}
+                            </Badge>
                         </span>
                         <span>
                             <b>Organization</b> {metadata.organization.name}
@@ -164,7 +165,7 @@ export default function Solutions() {
                             </span>
                         )}
                         <span>
-                            <b>Created</b> {metadata.created_at}
+                            <b>Created</b> <Timestamp value={metadata.created_at} format="date_time" />
                         </span>
                     </Stack>
                 </Dialog>

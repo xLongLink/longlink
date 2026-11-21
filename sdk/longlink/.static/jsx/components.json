@@ -2009,6 +2009,11 @@
                     "type": "\"date\" | \"date_long\" | \"date_weekday\" | \"date_time\" | \"time\" | \"relative\" | \"system_date\" | \"system_date_time\" | \"system_time\"",
                     "description": "Date, time, relative, or Unix-seconds display format.",
                     "default": "date_time"
+                },
+                {
+                    "name": "timeZone",
+                    "type": "string",
+                    "description": "IANA time zone for absolute formats, such as UTC. Defaults to the viewer's zone; relative details use their existing zones."
                 }
             ],
             "source": "custom",

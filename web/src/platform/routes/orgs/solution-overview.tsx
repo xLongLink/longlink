@@ -3,6 +3,7 @@ import { ExternalLink, Plus } from 'lucide-react';
 import * as permissions from '@/platform/permissions';
 import { Link } from '@/components/longlink/action/link';
 import { Stack } from '@/components/longlink/layout/stack';
+import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -91,15 +92,11 @@ export function SolutionOverview({
                                                 {row.name}
                                             </Link>
                                             {row.status !== 'running' && (
-                                                <span
-                                                    className={
-                                                        row.status === 'creating'
-                                                            ? 'text-xs text-info-foreground'
-                                                            : 'text-xs text-destructive-foreground'
-                                                    }
+                                                <Badge
+                                                    variant={row.status === 'creating' ? 'secondary' : 'destructive'}
                                                 >
                                                     {row.status === 'creating' ? 'Creating' : 'Failed'}
-                                                </span>
+                                                </Badge>
                                             )}
                                         </Stack>
                                         {row.description && (

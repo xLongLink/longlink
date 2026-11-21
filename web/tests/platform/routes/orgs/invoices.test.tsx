@@ -180,3 +180,41 @@ it('keeps a failed invoice read inside the section and retries it successfully',
         }
     );
 });
+
+it('displays invoice minor units with each currency’s precision and keeps UTC issue dates', async () => {
+    // Arrange
+    const invoices = [
+        { ...invoice, id: 'usd', currency: 'usd', total: 1234 },
+        { ...invoice, id: 'jpy', currency: 'jpy', total: 1234 },
+        { ...invoice, id: 'kwd', currency: 'kwd', total: 1234 }
+    ];
+
+    await withInvoices(
+        () => Response.json(invoices),
+        async (output, render) => {
+            // Act
+            render(true);
+
+            // Assert
+            await vi.waitFor(() => expect(output.querySelectorAll('[data-slot="currency"]')).toHaveLength(3));
+            const amounts = Array.from(
+                output.querySelectorAll('[data-slot="currency"]'),
+                (amount) => amount.textContent
+            );
+            expect(amounts).toEqual([
+                new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(12.34),
+                new Intl.NumberFormat(undefined, { style: 'currency', currency: 'JPY' }).format(1234),
+                new Intl.NumberFormat(undefined, { style: 'currency', currency: 'KWD' }).format(1.234)
+            ]);
+            const dates = Array.from(output.querySelectorAll('time'), (date) => ({
+                value: date.dateTime,
+                text: date.textContent
+            }));
+            expect(dates).toHaveLength(3);
+            for (const date of dates) {
+                expect(date.value).toBe('2026-10-01T00:00:00.000Z');
+                expect(date.text).toBe('Oct 1, 2026');
+            }
+        }
+    );
+});

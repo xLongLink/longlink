@@ -5,6 +5,7 @@ import { Button } from '@/components/longlink/action/button';
 import { PathBreadcrumb } from '@/components/ui/breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 
 /** Labels for public article route segments shared with visible breadcrumbs. */
@@ -14,13 +15,6 @@ const articleRouteLabels = {
     values: 'Values',
     comunication: 'Communication'
 } satisfies Record<string, string>;
-
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC'
-});
 
 export type ArticleMetadata = {
     title: string;
@@ -213,7 +207,9 @@ export function ArticleFooter({
             ) : null}
             <Separator />
             <div className="flex w-full flex-wrap items-center justify-between gap-3 font-sans text-sm leading-(--text-sm--line-height) font-normal text-muted-foreground">
-                <span>{`Last updated: ${dateFormatter.format(new Date(lastUpdated))}`}</span>
+                <span>
+                    Last updated: <Timestamp value={lastUpdated} format="date" timeZone="UTC" />
+                </span>
                 {editUrl ? (
                     <a
                         className="inline-flex items-center gap-0.5 text-primary underline underline-offset-2 hover:text-[color-mix(in_srgb,var(--primary),var(--foreground)_15%)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring focus-visible:outline-offset-2"

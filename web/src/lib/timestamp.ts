@@ -9,17 +9,34 @@ export type TimestampFormat =
     | 'system_date_time'
     | 'system_time';
 
-/** Formats fixed instants in the viewer's zone, using the View's English/Gregorian defaults. */
+/** Formats fixed instants using English/Gregorian defaults and the requested or viewer's zone. */
 export function formatTimestamp(
     date: Date,
     format: Exclude<TimestampFormat, 'relative'> | 'full',
     utc = false,
-    longZone = false
+    longZone = false,
+    timeZone?: string
 ) {
-    // Keep system formats independent of locale and based on the viewer's local clock.
+    // Keep system formats independent of locale.
     const pad = (value: number) => String(value).padStart(2, '0');
-    const systemDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    const systemTime = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    let systemDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    let systemTime = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+    if (timeZone && format.startsWith('system_')) {
+        const parts = new Intl.DateTimeFormat('en', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23',
+            timeZone
+        }).formatToParts(date);
+        const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+        systemDate = `${values.year}-${values.month}-${values.day}`;
+        systemTime = `${values.hour}:${values.minute}:${values.second}`;
+    }
 
     if (format === 'system_date') return systemDate;
 
@@ -28,7 +45,7 @@ export function formatTimestamp(
     if (format === 'system_date_time') return `${systemDate} ${systemTime}`;
 
     // Match the absolute date options used by the former renderer, including tooltip seconds and zone.
-    const options: Intl.DateTimeFormatOptions = { calendar: 'gregory' };
+    const options: Intl.DateTimeFormatOptions = { calendar: 'gregory', timeZone };
 
     if (format !== 'time') {
         options.year = 'numeric';

@@ -112,7 +112,10 @@ export default function Organizations() {
                 >
                     <Stack gap={2}>
                         <span>
-                            <b>Status</b> {metadata.status}
+                            <b>Status</b>{' '}
+                            <Badge variant={metadata.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {metadata.status}
+                            </Badge>
                         </span>
                         <span>
                             <b>ID</b> {metadata.id}
