@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useId } from 'react';
 import { api } from '@/lib/api';
 import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
@@ -24,7 +23,6 @@ export function InviteMember({
     canInviteAdmin: boolean;
     onSettled: () => Promise<void>;
 }) {
-    const formId = useId();
     const roleSchema = canInviteAdmin
         ? permissions.assignableRoleSchema
         : permissions.assignableRoleSchema.exclude(['admin']);
@@ -58,44 +56,17 @@ export function InviteMember({
     });
 
     return (
-        <Dialog
-            open
-            onOpenChange={onOpenChange}
-            title="Invite user"
-            footer={
-                <>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={form.formState.isSubmitting}
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
-                        Invite
-                    </Button>
-                </>
-            }
-        >
+        <Dialog open onOpenChange={onOpenChange} title="Invite user" showHeader={false} bodyPadding={false}>
             <form
-                id={formId}
-                className="flex flex-col gap-4"
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={(event) => {
                     void form.handleSubmit(submit)(event);
                 }}
                 noValidate
                 aria-busy={form.formState.isSubmitting}
             >
-                <img
-                    src="/images/organization.png"
-                    alt=""
-                    width={1254}
-                    height={1254}
-                    decoding="async"
-                    className="size-20 self-center object-contain invert dark:invert-0"
-                />
-                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+                <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
+                    <h2 className="text-center text-xl font-semibold">Invite user</h2>
                     <Field data-invalid={Boolean(form.formState.errors.email)}>
                         <FieldLabel htmlFor="invite-email">Email</FieldLabel>
                         <Input
@@ -142,8 +113,24 @@ export function InviteMember({
                             </Field>
                         )}
                     />
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <div className="flex items-center justify-between gap-2">
+                        <Button type="button" variant="link" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit">Invite</Button>
+                    </div>
                 </fieldset>
-                <FieldError errors={[form.formState.errors.root]} />
+                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    <img
+                        src="/images/organization.png"
+                        alt=""
+                        width={1254}
+                        height={1254}
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </div>
             </form>
         </Dialog>
     );

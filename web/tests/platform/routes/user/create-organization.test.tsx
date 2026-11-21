@@ -5,7 +5,7 @@ import { withMounted } from '../../../render';
 import userEvent from '@testing-library/user-event';
 import CreateOrganization from '@/platform/routes/user/dialogs/create-organization';
 
-it('validates and retries organization creation through the fixed footer without losing the name', async () => {
+it('validates and retries organization creation without losing the name', async () => {
     const writes: unknown[] = [];
     const complete = vi.fn(async () => {});
     const user = userEvent.setup();
@@ -29,12 +29,10 @@ it('validates and retries organization creation through the fixed footer without
             expect(dialog?.querySelector('input[name="name"]')?.getAttribute('aria-required')).toBe('true');
 
             const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
-            const submit = dialog?.querySelector<HTMLButtonElement>(
-                '[data-slot="dialog-footer"] button[type="submit"]'
-            );
-            if (!input || !submit) throw new Error('Expected organization form and footer');
+            const submit = dialog?.querySelector<HTMLButtonElement>('form button[type="submit"]');
+            if (!input || !submit) throw new Error('Expected organization form and submit button');
 
-            // Footer submission must validate before issuing any write.
+            // Submission must validate before issuing any write.
             await act(async () => user.click(submit));
 
             expect(dialog?.querySelector('[role="alert"]')?.textContent).toBe('Please complete this field.');
