@@ -5,10 +5,12 @@ import AppearanceSettings from './appearance';
 import { ApiBoundary } from '@/components/api';
 import { Input } from '@/components/shadcn/input';
 import { UserRound, Building2 } from 'lucide-react';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { PageContainer } from '@/components/layouts/page-container';
 import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
@@ -48,10 +50,12 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
             <div className="flex items-center gap-3">
                 <Avatar name={name} src={user.avatar} />
                 <div className="flex flex-col gap-0">
-                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
+                    <Heading level={1} size={4}>
                         {name}
-                    </h4>
-                    <span className="text-xs text-muted-foreground">{user.email}</span>
+                    </Heading>
+                    <Text size="xs" tone="muted">
+                        {user.email}
+                    </Text>
                 </div>
             </div>
             <SettingsLayout
@@ -76,9 +80,9 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col gap-4">
                             <div className="flex min-h-8 flex-col justify-end">
-                                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                                <Heading level={2} trim>
                                     Account
-                                </h2>
+                                </Heading>
                             </div>
                             <Separator />
                             <Field className="min-w-0">

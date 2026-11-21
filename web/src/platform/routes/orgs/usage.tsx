@@ -10,10 +10,12 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import { Progress } from '@/components/longlink/display/progress';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Card, CardHeader, CardContent } from '@/components/shadcn/card';
@@ -67,9 +69,9 @@ export default function Usage({ base, canManage }: { base: string; canManage: bo
     return (
         <Stack gap={4}>
             <Stack gap={0} justify="end" className="min-h-8">
-                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <Heading level={2} trim>
                     Usage
-                </h2>
+                </Heading>
             </Stack>
             <Separator />
             <CapacityCards base={base} usage={usage} canManage={canManage} onSaved={invalidate} />
@@ -156,7 +158,9 @@ function CapacityCards({
                         <CardHeader
                             className={`flex flex-col items-stretch gap-2 border-b py-2 [.border-b]:pb-2 sm:flex-row sm:items-center sm:justify-between ${color}`}
                         >
-                            <h3 className="font-semibold tracking-tight text-xl">{title}</h3>
+                            <Heading level={3} size={4}>
+                                {title}
+                            </Heading>
                             <div className="flex flex-wrap justify-end gap-2 sm:ml-auto">
                                 {section === 'compute' && (
                                     <Link variant="outline" size="sm" href="/pricing/" target="_blank">
@@ -223,15 +227,15 @@ function CapacityCards({
                             {section !== 'compute' && (
                                 <ApiBoundary
                                     fallback={
-                                        <p className="text-sm text-muted-foreground">
+                                        <Text as="p" size="sm" tone="muted">
                                             Loading {title.toLowerCase()} usage…
-                                        </p>
+                                        </Text>
                                     }
                                     fallbackRender={({ resetErrorBoundary }) => (
                                         <Stack direction="horizontal" gap={3} align="center" wrap="wrap">
-                                            <span className="text-sm text-muted-foreground">
+                                            <Text size="sm" tone="muted">
                                                 {title} usage unavailable.
-                                            </span>
+                                            </Text>
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -250,8 +254,16 @@ function CapacityCards({
                     </Card>
                 );
             })}
-            {usage.status === 'creating' && <p role="status">Applying capacity changes…</p>}
-            {usage.status === 'failed' && <p role="alert">Capacity update failed.</p>}
+            {usage.status === 'creating' && (
+                <Text as="p" role="status">
+                    Applying capacity changes…
+                </Text>
+            )}
+            {usage.status === 'failed' && (
+                <Text as="p" role="alert">
+                    Capacity update failed.
+                </Text>
+            )}
             {editing && (
                 <Dialog
                     open
@@ -277,9 +289,9 @@ function CapacityCards({
                             className="flex min-w-0 flex-col gap-4 border-0 p-6"
                             aria-label={`${sections[editing].title} capacity`}
                         >
-                            <h2 className="text-xl font-semibold tracking-tight">
+                            <Heading level={2} size={4}>
                                 Edit {sections[editing].title.toLowerCase()} capacity
-                            </h2>
+                            </Heading>
                             {resources.map(({ key, label, unit, units, scale }) => {
                                 const field = fields[key];
                                 if (!field) return null;

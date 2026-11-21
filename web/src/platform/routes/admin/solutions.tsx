@@ -4,11 +4,13 @@ import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -29,7 +31,7 @@ export default function Solutions() {
     return (
         <Stack gap={2}>
             <title>Solutions | LongLink</title>
-            <h1 className="font-semibold tracking-tight text-4xl">Solutions</h1>
+            <Heading level={1}>Solutions</Heading>
             {searchField}
             <Stack gap={1}>
                 <Table wrap>
@@ -63,7 +65,9 @@ export default function Solutions() {
                                             )}
                                         </Stack>
                                         {row.description && (
-                                            <span className="text-xs text-muted-foreground">{row.description}</span>
+                                            <Text size="xs" tone="muted">
+                                                {row.description}
+                                            </Text>
                                         )}
                                     </Stack>
                                 </TableCell>
@@ -72,21 +76,23 @@ export default function Solutions() {
                                         <Avatar shape="rounded" name={row.organization.name} />
                                         <Stack gap={0} align="start">
                                             <Link href={`/orgs/${row.organization.id}`}>{row.organization.name}</Link>
-                                            <span className="text-xs text-muted-foreground">Organization</span>
+                                            <Text size="xs" tone="muted">
+                                                Organization
+                                            </Text>
                                         </Stack>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
                                     <Stack gap={0} align="start">
-                                        <span>
+                                        <Text>
                                             {row.image_desired.replace(
                                                 /@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/,
                                                 '@sha25...$1'
                                             )}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        </Text>
+                                        <Text size="xs" tone="muted">
                                             Revision: {row.desired_revision_id ?? 'Not selected'}
-                                        </span>
+                                        </Text>
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
@@ -140,32 +146,32 @@ export default function Solutions() {
                     }
                 >
                     <Stack gap={2}>
-                        <span>
+                        <Text>
                             <b>Status</b> {metadata.status}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Organization</b> {metadata.organization.name}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Desired image</b> {metadata.image_desired}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Desired revision</b> {metadata.desired_revision_id ?? 'Not selected'}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Last deployed revision</b> {metadata.deployed_revision_id ?? 'Never deployed'}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>ID</b> {metadata.id}
-                        </span>
+                        </Text>
                         {metadata.description && (
-                            <span>
+                            <Text>
                                 <b>Description</b> {metadata.description}
-                            </span>
+                            </Text>
                         )}
-                        <span>
+                        <Text>
                             <b>Created</b> {metadata.created_at}
-                        </span>
+                        </Text>
                     </Stack>
                 </Dialog>
             )}

@@ -5,11 +5,13 @@ import { useApi } from '@/lib/hooks/use-api';
 import * as permissions from '@/platform/permissions';
 import { SolutionOverview } from './solution-overview';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { SolutionVisibility } from './solution-visibility';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import type { OrganizationContext } from '@/platform/layouts/organization';
@@ -89,9 +91,9 @@ export default function SolutionManagement({
                             wrap="wrap"
                             className="min-h-8"
                         >
-                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                            <Heading level={2} trim>
                                 Solutions
-                            </h2>
+                            </Heading>
                             {canMaintain && (
                                 <Button size="sm" onClick={openCreate}>
                                     New Solution
@@ -110,7 +112,9 @@ export default function SolutionManagement({
                                                 {row.name}
                                             </Link>
                                             {row.description && (
-                                                <span className="text-xs text-muted-foreground">{row.description}</span>
+                                                <Text size="xs" tone="muted">
+                                                    {row.description}
+                                                </Text>
                                             )}
                                         </Stack>
                                     </TableCell>
@@ -119,7 +123,7 @@ export default function SolutionManagement({
                                         {canMaintain ? (
                                             <SolutionVisibility solution={row} invalidate={invalidateSolutions} />
                                         ) : (
-                                            <span className="text-sm">{row.public ? 'Public' : 'Private'}</span>
+                                            <Text size="sm">{row.public ? 'Public' : 'Private'}</Text>
                                         )}
                                     </TableCell>
                                     {canMaintain && (

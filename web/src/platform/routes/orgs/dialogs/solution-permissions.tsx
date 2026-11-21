@@ -5,6 +5,7 @@ import { useApiError } from '@/lib/errors';
 import { ApiBoundary } from '@/components/api';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Ban, Eye, Pencil, Shield } from 'lucide-react';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
@@ -137,7 +138,9 @@ function MemberPermissions({
                                     <Avatar name={user.name} src={user.avatar} />
                                     <Stack gap={0}>
                                         <span>{user.name}</span>
-                                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                                        <Text size="xs" tone="muted">
+                                            {user.email}
+                                        </Text>
                                     </Stack>
                                 </Stack>
                             </TableCell>

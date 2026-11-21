@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
@@ -146,7 +147,8 @@ export default function VerifyEmail() {
     return (
         <AuthLayout
             description={null}
-            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
+            headingSize={3}
+            title={<span className="block text-nowrap">Welcome to LongLink</span>}
         >
             {pageMetadata}
             <Stack gap={3}>
@@ -168,10 +170,10 @@ export default function VerifyEmail() {
                     </div>
                 </form>
                 <Separator />
-                <p className="text-xs text-center text-muted-foreground">
+                <Text as="p" size="xs" align="center" tone="muted">
                     By continuing, you agree to our <br />
                     <Link href="/terms/">Terms of Service</Link> and <Link href="/privacy/">Privacy Policy</Link>.
-                </p>
+                </Text>
             </Stack>
         </AuthLayout>
     );

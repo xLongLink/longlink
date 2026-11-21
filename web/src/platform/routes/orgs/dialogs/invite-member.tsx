@@ -7,6 +7,7 @@ import * as permissions from '@/platform/permissions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { ArrowUp, CheckCheck, EyeOff, Wrench } from 'lucide-react';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -66,7 +67,9 @@ export function InviteMember({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
-                    <h2 className="text-center text-xl font-semibold">Invite user</h2>
+                    <Heading level={2} size={4} align="center">
+                        Invite user
+                    </Heading>
                     <Field data-invalid={Boolean(form.formState.errors.email)}>
                         <FieldLabel htmlFor="invite-email">Email</FieldLabel>
                         <Input

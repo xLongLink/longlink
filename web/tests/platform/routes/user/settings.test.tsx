@@ -92,7 +92,7 @@ it('trims blur saves, locks the pending field, and publishes the canonical accou
                     expect(input.value).toBe('Canonical Owner');
                     expect(output.querySelector('output')?.textContent).toBe('Canonical Owner');
                 });
-                expect(output.querySelector('[aria-level="1"]')?.textContent).toBe('Canonical Owner');
+                expect(output.querySelector('h1')?.textContent).toBe('Canonical Owner');
 
                 // Act
                 await act(async () => {
@@ -183,7 +183,7 @@ it('preserves a name draft through same-account appearance updates but resets it
                 await act(async () => switchAccount.click());
                 await vi.waitFor(() => {
                     expect(output.querySelector('input')?.value).toBe('Another Owner');
-                    expect(output.querySelector('[aria-level="1"]')?.textContent).toBe('Another Owner');
+                    expect(output.querySelector('h1')?.textContent).toBe('Another Owner');
                     expect(output.textContent).toContain('another@example.com');
                 });
                 expect(transport).not.toHaveBeenCalled();
@@ -250,7 +250,7 @@ it('keeps a failed name draft and saves it successfully on retry', async () => {
                     expect(input.value).toBe('Rejected Owner');
                     expect(errors).toHaveLength(1);
                 });
-                expect(output.querySelector('[aria-level="1"]')?.textContent).toBe('Rejected Owner');
+                expect(output.querySelector('h1')?.textContent).toBe('Rejected Owner');
                 expect(output.querySelector('output')?.textContent).toBe('Owner');
                 expect(errors[0]).toMatchObject({ message: 'Profile could not be saved', status: 500 });
 

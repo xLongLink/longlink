@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { ExternalLink, Plus } from 'lucide-react';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import CreateOrganization from '@/platform/routes/user/dialogs/create-organization';
@@ -66,9 +68,9 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             wrap="wrap"
                             className="min-h-8"
                         >
-                            <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                            <Heading level={2} trim>
                                 Organizations
-                            </h2>
+                            </Heading>
                             <Button size="sm" onClick={() => setSelected({ type: 'create' })}>
                                 Create Organization
                             </Button>
@@ -84,7 +86,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                         wrap="wrap"
                         className="min-h-12"
                     >
-                        <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
+                        <Heading level={1}>Organizations</Heading>
                         <Button onClick={() => setSelected({ type: 'create' })}>Create Organization</Button>
                     </Stack>
                 ) : null}
@@ -99,8 +101,12 @@ export default function OrganizationManagement({ presentation }: { presentation:
                             decoding="async"
                         />
                         <Stack gap={0}>
-                            <h1 className="font-semibold tracking-tight text-4xl text-center">Your Organizations</h1>
-                            <p className="text-muted-foreground text-center">A place for your workflows and data</p>
+                            <Heading level={1} align="center">
+                                Your Organizations
+                            </Heading>
+                            <Text as="p" tone="muted" align="center">
+                                A place for your workflows and data
+                            </Text>
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center" wrap="wrap">
                             <Link variant="outline" href="/docs/" target="_blank">
@@ -131,7 +137,7 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                             <Avatar shape="rounded" name={row.organization.name} />
                                             <Stack align="start" gap={0}>
                                                 {row.kind === 'invitation' ? (
-                                                    <span>{row.organization.name}</span>
+                                                    <Text>{row.organization.name}</Text>
                                                 ) : presentation === 'settings' ? (
                                                     <Stack direction="horizontal" gap={1} align="center">
                                                         <Link href={`/orgs/${row.organization.id}`}>
@@ -144,11 +150,11 @@ export default function OrganizationManagement({ presentation }: { presentation:
                                                         {row.organization.name}
                                                     </Link>
                                                 )}
-                                                <span className="text-xs text-muted-foreground">
+                                                <Text size="xs" tone="muted">
                                                     {row.kind === 'invitation'
                                                         ? `Invitation · ${row.role}`
                                                         : 'Organization'}
-                                                </span>
+                                                </Text>
                                             </Stack>
                                         </Stack>
                                     </TableCell>

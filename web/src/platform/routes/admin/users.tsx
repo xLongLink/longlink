@@ -1,8 +1,10 @@
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import { Timestamp } from '@/components/longlink/display/timestamp';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { zPageAdminUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -17,7 +19,7 @@ export default function Users() {
     return (
         <Stack gap={2}>
             <title>Users | LongLink</title>
-            <h1 className="font-semibold tracking-tight text-4xl">Users</h1>
+            <Heading level={1}>Users</Heading>
             {searchField}
             <Stack gap={1}>
                 <Table wrap>
@@ -35,21 +37,25 @@ export default function Users() {
                                         <Avatar name={row.name} src={row.avatar} />
                                         <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
-                                                <span>{row.name}</span>
-                                                <span className="text-xs text-muted-foreground">
+                                                <Text>{row.name}</Text>
+                                                <Text size="xs" tone="muted">
                                                     {row.administrator ? 'Administrator' : 'User'}
-                                                </span>
+                                                </Text>
                                             </Stack>
-                                            <span className="text-xs text-muted-foreground">{row.email}</span>
+                                            <Text size="xs" tone="muted">
+                                                {row.email}
+                                            </Text>
                                         </Stack>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
                                     <Stack gap={0} align="start">
-                                        <span>
+                                        <Text>
                                             Created: <Timestamp value={row.created_at} format="date_time" />
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">ID: {row.id}</span>
+                                        </Text>
+                                        <Text size="xs" tone="muted">
+                                            ID: {row.id}
+                                        </Text>
                                     </Stack>
                                 </TableCell>
                             </TableRow>

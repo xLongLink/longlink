@@ -4,11 +4,13 @@ import { ApiBoundary } from '@/components/api';
 import { ProfileMenu } from '@/platform/profile';
 import Platform from '@/components/layouts/platform';
 import * as permissions from '@/platform/permissions';
+import { Text } from '@/components/longlink/display/text';
 import { SolutionPage } from '@/views/host/solution-page';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useParams, useOutletContext } from 'react-router';
 import NotFoundLayout from '@/components/layouts/not-found';
 import { Empty } from '@/components/longlink/display/empty';
+import { Heading } from '@/components/longlink/display/heading';
 import { OrganizationSwitcher } from '@/components/ui/organization-switcher';
 import { OrganizationBreadcrumb } from '@/components/ui/organization-breadcrumb';
 import { CodeBlock, CodeBlockContent, CodeBlockCopyButton } from '@/components/reui/code-block/code-block';
@@ -73,7 +75,7 @@ export default function OrganizationSolution() {
                     <Stack gap={6} className="w-full max-w-[1200px]">
                         {solutionAccess.status === 'failed' && canMaintain ? (
                             <ApiBoundary
-                                fallback={<span className="text-muted-foreground">Loading pod logs…</span>}
+                                fallback={<Text tone="muted">Loading pod logs…</Text>}
                                 fallbackRender={() => notice}
                             >
                                 <DeploymentLogs key={solutionAccess.id} solutionId={solutionAccess.id} />
@@ -105,7 +107,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
 
     return (
         <Stack gap={2}>
-            <h1 className="font-semibold tracking-tight text-4xl">Solution deployment has failed</h1>
+            <Heading level={1}>Solution deployment has failed</Heading>
             {logs.length ? (
                 <CodeBlock code={logs.join('\n')} showLineNumbers>
                     <CodeBlockCopyButton />
@@ -114,7 +116,7 @@ function DeploymentLogs({ solutionId }: { solutionId: string }) {
                     </div>
                 </CodeBlock>
             ) : (
-                <span className="text-muted-foreground">No pod logs are available for this deployment.</span>
+                <Text tone="muted">No pod logs are available for this deployment.</Text>
             )}
         </Stack>
     );

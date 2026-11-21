@@ -4,6 +4,7 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { FieldError } from '@/components/shadcn/field';
 import { Navigate, useSearchParams } from 'react-router';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -54,8 +55,8 @@ export default function McpAuthorization() {
     return (
         <AuthLayout title="Authorize MCP access" description={null}>
             <title>Authorize MCP | LongLink</title>
-            {isLoading ? <p>Loading authorization request…</p> : null}
-            {error ? <p>This request is invalid or you do not have access to the Solution.</p> : null}
+            {isLoading ? <Text as="p">Loading authorization request…</Text> : null}
+            {error ? <Text as="p">This request is invalid or you do not have access to the Solution.</Text> : null}
             {consent ? (
                 <form
                     onSubmit={(event) => {
@@ -68,18 +69,20 @@ export default function McpAuthorization() {
                     <fieldset disabled={decision.isPending} className="contents">
                         <Stack gap={4}>
                             <Stack gap={2}>
-                                <p>
+                                <Text as="p">
                                     {consent.client_name} requests access to {consent.solution_name}.
-                                </p>
-                                <p className="text-xs text-muted-foreground">
+                                </Text>
+                                <Text as="p" size="xs" tone="muted">
                                     This client uses your current Solution permissions. Permission changes apply
                                     automatically. Access expires after {Math.round(consent.expires_in / 86400)} days.
-                                </p>
-                                <p className="text-sm font-medium">Client callback</p>
+                                </Text>
+                                <Text as="p" size="sm" weight="medium">
+                                    Client callback
+                                </Text>
                                 <p className="text-xs text-muted-foreground break-all">{consent.redirect_uri}</p>
-                                <p className="text-xs text-muted-foreground">
+                                <Text as="p" size="xs" tone="muted">
                                     Client names are self-reported. Approve only if you recognize this callback.
-                                </p>
+                                </Text>
                             </Stack>
                             <Button variant="primary" className="w-full" type="submit" name="decision" value="allow">
                                 Allow access

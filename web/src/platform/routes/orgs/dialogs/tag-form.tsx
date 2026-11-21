@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import {
@@ -69,7 +70,9 @@ export function TagForm({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
-                    <h2 className="text-center text-xl font-semibold">{tag ? 'Edit tab' : 'New tab'}</h2>
+                    <Heading level={2} size={4} align="center">
+                        {tag ? 'Edit tab' : 'New tab'}
+                    </Heading>
                     <Field data-invalid={Boolean(form.formState.errors.name)}>
                         <FieldLabel htmlFor="tag-name">Name</FieldLabel>
                         <Input

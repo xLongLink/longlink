@@ -24611,6 +24611,7 @@ declare function Icon({ icon, size, tile, variant, ...props }: Omit<React$1.Comp
 	variant?: NonNullable<BadgeProps["variant"]>;
 }): React$1.JSX.Element;
 interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "color"> {
+	as?: "span" | "p";
 	maxLines?: number;
 	size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl";
 	weight?: "normal" | "medium" | "semibold" | "bold";
@@ -24618,7 +24619,7 @@ interface TextProps extends Omit<React$1.ComponentPropsWithoutRef<"span">, "colo
 	align?: "start" | "center" | "end";
 	tabularNums?: boolean;
 }
-declare function Text$1({ maxLines, size, weight, tone, align, tabularNums, className, style, ...props }: TextProps): React$1.JSX.Element;
+declare function Text$1({ as: Component, maxLines, size, weight, tone, align, tabularNums, className, style, ...props }: TextProps): React$1.JSX.Element;
 declare const frameVariants: (props?: ({
 	variant?: "default" | "ghost" | "inverse" | null | undefined;
 	spacing?: "default" | "xs" | "sm" | "lg" | null | undefined;
@@ -24770,8 +24771,9 @@ interface HeadingProps extends Omit<React$1.ComponentPropsWithoutRef<"h2">, "col
 	level?: HeadingLevel;
 	size?: HeadingLevel;
 	align?: "start" | "center" | "end";
+	trim?: boolean;
 }
-declare function Heading({ level, size, align, className, ...props }: HeadingProps): React$1.JSX.Element;
+declare function Heading({ level, size, align, trim, className, ...props }: HeadingProps): React$1.JSX.Element;
 declare type AlignedPlacement = `${Side}-${Alignment}`;
 declare type Alignment = "start" | "end";
 declare type Axis = "x" | "y";

@@ -1,6 +1,8 @@
 import { Card } from '@/components/longlink/layout/card';
+import { Text } from '@/components/longlink/display/text';
 import { useUpdateUser } from '@/platform/hooks/use-user';
 import { useAppearance } from '@/lib/hooks/use-appearance';
+import { Heading } from '@/components/longlink/display/heading';
 
 /** Previews and saves personal appearance without changing any Solution configuration. */
 export default function AppearanceSettings() {
@@ -10,9 +12,9 @@ export default function AppearanceSettings() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3" role="group" aria-label="Theme">
-                <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
+                <Heading level={3} size={4}>
                     Theme
-                </h4>
+                </Heading>
                 <div className="flex flex-wrap gap-3">
                     {(
                         [
@@ -33,7 +35,7 @@ export default function AppearanceSettings() {
                             }}
                         >
                             <div className="flex flex-col gap-2">
-                                <span>{label}</span>
+                                <Text>{label}</Text>
                                 <img
                                     src={`/images/${image}`}
                                     alt=""
@@ -47,9 +49,9 @@ export default function AppearanceSettings() {
                 </div>
             </div>
             {userUpdate.isPending && (
-                <span role="status" className="text-xs text-muted-foreground">
+                <Text role="status" size="xs" tone="muted">
                     Saving theme…
-                </span>
+                </Text>
             )}
         </div>
     );

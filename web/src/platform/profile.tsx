@@ -5,6 +5,7 @@ import { adminNavigation } from '@/platform/admin';
 import { isNetworkError, isTimeoutError } from 'ky';
 import { clearAppearanceCache } from '@/lib/appearance';
 import { useErrorBoundary } from 'react-error-boundary';
+import { Text } from '@/components/longlink/display/text';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { useAuthenticatedUser } from '@/platform/hooks/use-user';
@@ -63,8 +64,12 @@ export function ProfileMenu() {
         <>
             {avatar}
             <span className="flex min-w-0 flex-1 flex-col text-start leading-tight">
-                <span className="truncate text-sm font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <Text maxLines={1} size="sm" weight="medium">
+                    {user.name}
+                </Text>
+                <Text maxLines={1} size="xs" tone="muted">
+                    {user.email}
+                </Text>
             </span>
         </>
     );
@@ -74,8 +79,12 @@ export function ProfileMenu() {
             <DropdownMenuTrigger type="button" aria-label={user.name} render={<SidebarMenuButton size="lg" />}>
                 {avatar}
                 <span className="flex min-w-0 flex-1 flex-col text-start leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate text-sm font-medium">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    <Text maxLines={1} size="sm" weight="medium">
+                        {user.name}
+                    </Text>
+                    <Text maxLines={1} size="xs" tone="muted">
+                        {user.email}
+                    </Text>
                 </span>
                 <ChevronsUpDown
                     aria-hidden="true"
@@ -127,9 +136,9 @@ export function ProfileMenu() {
                 ) : null}
                 <DropdownMenuSeparator />
                 {error && (
-                    <p role="alert" className="text-sm text-destructive">
+                    <Text as="p" role="alert" size="sm" tone="destructive">
                         {error}
-                    </p>
+                    </Text>
                 )}
                 <DropdownMenuItem disabled={pending} aria-busy={pending || undefined} onClick={() => void signOut()}>
                     <LogOut aria-hidden="true" />

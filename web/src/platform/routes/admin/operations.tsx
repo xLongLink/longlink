@@ -2,10 +2,12 @@ import { Info } from 'lucide-react';
 import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -33,7 +35,7 @@ export default function Operations() {
     return (
         <Stack gap={2}>
             <title>Operations | LongLink</title>
-            <h1 className="font-semibold tracking-tight text-4xl">Operations</h1>
+            <Heading level={1}>Operations</Heading>
             {searchField}
             <Stack gap={1}>
                 <Table wrap>
@@ -49,19 +51,19 @@ export default function Operations() {
                             <TableRow key={row.id}>
                                 <TableCell>
                                     <Stack gap={0} align="start">
-                                        <span>{kinds[row.kind]}</span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <Text>{kinds[row.kind]}</Text>
+                                        <Text size="xs" tone="muted">
                                             {statuses[row.status]}
                                             {row.finished_at && ` - ${row.finished_at}`}
-                                        </span>
+                                        </Text>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
                                     <Stack gap={0} align="start">
-                                        <span>{row.resource_name ?? 'Resource unavailable'}</span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <Text>{row.resource_name ?? 'Resource unavailable'}</Text>
+                                        <Text size="xs" tone="muted">
                                             {row.kind.startsWith('solution.') ? 'Solution' : 'Organization'}
-                                        </span>
+                                        </Text>
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
@@ -94,30 +96,30 @@ export default function Operations() {
                     title="Operation metadata"
                 >
                     <Stack gap={2}>
-                        <span>
+                        <Text>
                             <b>Operation</b> {metadata.kind}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Status</b> {metadata.status}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>ID</b> {metadata.id}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Target</b> {metadata.target_id}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Created</b> {metadata.created_at}
-                        </span>
+                        </Text>
                         {metadata.finished_at && (
-                            <span>
+                            <Text>
                                 <b>Finished</b> {metadata.finished_at}
-                            </span>
+                            </Text>
                         )}
                         {metadata.failed && (
-                            <span>
+                            <Text>
                                 <b>Reason</b> {metadata.failed}
-                            </span>
+                            </Text>
                         )}
                     </Stack>
                 </Dialog>

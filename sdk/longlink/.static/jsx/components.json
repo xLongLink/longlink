@@ -1259,7 +1259,12 @@
                     "type": "1 | 2 | 3 | 4 | 5 | 6",
                     "description": "Typography level, defaulting to level without changing heading semantics."
                 },
-                { "name": "align", "type": "\"start\" | \"center\" | \"end\"", "description": "Text alignment." }
+                { "name": "align", "type": "\"start\" | \"center\" | \"end\"", "description": "Text alignment." },
+                {
+                    "name": "trim",
+                    "type": "boolean",
+                    "description": "Trims extra space above capital letters and below the text baseline."
+                }
             ],
             "source": "custom",
             "justification": "Maps a numeric heading level to matching semantic HTML and typography; no Heading primitive exists in shadcn/ui or ReUI."
@@ -1962,6 +1967,12 @@
             "introduction": "Displays text with configurable typography, semantic tone, alignment, and optional truncation. Use Heading for titles.",
             "guidance": "Inherits surrounding typography unless size, weight, tone, or align is supplied. Use tone=\"muted\" for supporting text and tone=\"destructive\" for errors. Native HTML attributes, ARIA and data attributes, and event handlers are forwarded without styling overrides.",
             "properties": [
+                {
+                    "name": "as",
+                    "type": "\"span\" | \"p\"",
+                    "default": "span",
+                    "description": "Renders inline text or a semantic paragraph."
+                },
                 { "name": "children", "type": "ReactNode", "description": "Text content." },
                 {
                     "name": "size",
@@ -1981,7 +1992,7 @@
                 {
                     "name": "align",
                     "type": "\"start\" | \"center\" | \"end\"",
-                    "description": "Text alignment; renders the span as a block so alignment uses the available width."
+                    "description": "Text alignment; uses block layout so alignment uses the available width."
                 },
                 {
                     "name": "tabularNums",
@@ -1996,7 +2007,7 @@
                 }
             ],
             "source": "custom",
-            "justification": "Provides prop-driven typography and line-count-based truncation on a span; no Text primitive exists in shadcn/ui or ReUI."
+            "justification": "Provides prop-driven typography and line-count-based truncation on inline text or paragraphs; no Text primitive exists in shadcn/ui or ReUI."
         },
         {
             "name": "Timestamp",

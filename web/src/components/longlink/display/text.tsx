@@ -2,6 +2,7 @@ import { cn } from 'cn';
 import type { ComponentPropsWithoutRef } from 'react';
 
 export interface TextProps extends Omit<ComponentPropsWithoutRef<'span'>, 'color'> {
+    as?: 'span' | 'p';
     maxLines?: number;
     size?: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
     weight?: 'normal' | 'medium' | 'semibold' | 'bold';
@@ -10,10 +11,21 @@ export interface TextProps extends Omit<ComponentPropsWithoutRef<'span'>, 'color
     tabularNums?: boolean;
 }
 
-/** Displays a native span with optional line truncation, inheriting surrounding typography. */
-export function Text({ maxLines = 0, size, weight, tone, align, tabularNums, className, style, ...props }: TextProps) {
+/** Displays text with optional line truncation, inheriting surrounding typography. */
+export function Text({
+    as: Component = 'span',
+    maxLines = 0,
+    size,
+    weight,
+    tone,
+    align,
+    tabularNums,
+    className,
+    style,
+    ...props
+}: TextProps) {
     return (
-        <span
+        <Component
             data-slot="text"
             {...props}
             className={cn(
