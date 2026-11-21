@@ -2,7 +2,6 @@
 import { it, expect } from 'vitest';
 import Layout from '@/platform/layouts/admin';
 import { renderPlatform, user } from '../render';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
 it('does not reveal administrator navigation to a regular Platform user', () => {
     // Act
@@ -15,12 +14,7 @@ it('does not reveal administrator navigation to a regular Platform user', () => 
 });
 
 it('retains the administrator breadcrumb and navigation for an authorized user', () => {
-    const output = renderPlatform(
-        <AuthenticatedUserContext value={{ ...user, administrator: true }}>
-            <Layout />
-        </AuthenticatedUserContext>,
-        '/admin/users'
-    );
+    const output = renderPlatform(<Layout />, '/admin/users', [['/api/v1/me', { ...user, administrator: true }]]);
 
     expect(output.querySelector('nav[aria-label="Breadcrumb"] > ol > li [aria-current="page"]')?.textContent).toBe(
         'Admin'

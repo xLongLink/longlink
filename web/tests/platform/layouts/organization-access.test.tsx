@@ -7,8 +7,7 @@ import { Route, Routes } from 'react-router';
 import { ApiErrorContext } from '@/lib/errors';
 import Organization from '@/platform/layouts/organization';
 import Layout from '@/platform/layouts/organization-access';
-import { renderPlatform, membership, user } from '../render';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { renderPlatform, membership, TestAccountProvider } from '../render';
 
 it('keeps unresolved organization reads behind their loading boundary', () => {
     // Act
@@ -43,7 +42,7 @@ it.each([
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AuthenticatedUserContext value={user}>
+                <TestAccountProvider>
                     <Routes>
                         <Route element={<Layout />}>
                             <Route
@@ -52,7 +51,7 @@ it.each([
                             />
                         </Route>
                     </Routes>
-                </AuthenticatedUserContext>
+                </TestAccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert
@@ -96,7 +95,7 @@ it.each([
         // Act
         await withMounted(
             <ApiErrorContext value={(error) => errors.push(error)}>
-                <AuthenticatedUserContext value={user}>
+                <TestAccountProvider>
                     <Routes>
                         <Route element={<Layout />}>
                             <Route element={<Organization />}>
@@ -104,7 +103,7 @@ it.each([
                             </Route>
                         </Route>
                     </Routes>
-                </AuthenticatedUserContext>
+                </TestAccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 // Assert

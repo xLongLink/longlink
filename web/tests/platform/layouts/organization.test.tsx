@@ -2,12 +2,11 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { withMounted } from '../../render';
-import { membership, user } from '../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import Layout from '@/platform/layouts/organization';
 import { Outlet, Route, Routes } from 'react-router';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { membership, TestAccountProvider } from '../render';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { zOrganizationTagResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -31,7 +30,7 @@ it('selects the query category and updates it when following organization links'
         await withMounted(
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={() => undefined}>
-                    <AuthenticatedUserContext value={user}>
+                    <TestAccountProvider>
                         <Routes>
                             <Route element={<Outlet context={membership} />}>
                                 <Route
@@ -44,7 +43,7 @@ it('selects the query category and updates it when following organization links'
                                 />
                             </Route>
                         </Routes>
-                    </AuthenticatedUserContext>
+                    </TestAccountProvider>
                 </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => {

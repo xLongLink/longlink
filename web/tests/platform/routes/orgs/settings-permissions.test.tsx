@@ -3,11 +3,10 @@
 import { act } from 'react';
 import { it, expect } from 'vitest';
 import { ApiErrorContext } from '@/lib/errors';
-import { membership, user } from '../../render';
 import { Outlet, Route, Routes } from 'react-router';
 import Settings from '@/platform/routes/orgs/settings';
 import { renderStatic, withMounted } from '../../../render';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { membership, user, TestAccountProvider } from '../../render';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 
@@ -34,13 +33,13 @@ function settingsFor(role: OrganizationContext['role']) {
                 throw error;
             }}
         >
-            <AuthenticatedUserContext value={caller}>
+            <TestAccountProvider account={caller}>
                 <Routes>
                     <Route element={<Outlet context={access} />}>
                         <Route path="/orgs/:organization/settings" element={<Settings />} />
                     </Route>
                 </Routes>
-            </AuthenticatedUserContext>
+            </TestAccountProvider>
         </ApiErrorContext>
     );
 }

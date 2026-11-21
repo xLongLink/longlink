@@ -3,6 +3,7 @@ import { act } from 'react';
 import * as host from '@/views/host';
 import { it, expect, vi } from 'vitest';
 import { createHash } from 'node:crypto';
+import { useLocation } from 'react-router';
 import { ApiErrorContext } from '@/lib/errors';
 import * as workers from 'node:worker_threads';
 import { JsxView } from '@/views/host/jsx-view';
@@ -273,6 +274,80 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
                         if (activation) Object.defineProperty(navigator, 'userActivation', activation);
                         else Reflect.deleteProperty(navigator, 'userActivation');
                     }
+                } finally {
+                    transfer.mockRestore();
+                }
+            }
+        );
+    } finally {
+        load.mockRestore();
+    }
+});
+
+it('accepts v0.9.6 navigation commands with newTab:false and navigates within the Solution', async () => {
+    // Arrange
+    const script = '/* v0.9.6 navigation bootstrap */';
+    const version = createHash('sha256').update(`${script}\n`).digest('hex');
+    const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
+        if (url.includes('/views/runtime.js?')) return new Blob([script]);
+        if (url.includes('/views/runtime.css?')) return new Blob(['']);
+        throw new Error('Unexpected asset request');
+    });
+
+    function Location() {
+        return <output>{useLocation().pathname}</output>;
+    }
+
+    try {
+        await withMounted(
+            <ApiErrorContext value={() => undefined}>
+                <JsxView
+                    source=""
+                    params={{}}
+                    requestBaseUrl="/proxy/"
+                    navigationBaseUrl="/solutions/orders/"
+                    runtime={{ version }}
+                />
+                <Location />
+            </ApiErrorContext>,
+            async (mounted) => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(mounted.querySelector('iframe')).not.toBeNull();
+                });
+                const frame = mounted.querySelector('iframe');
+                const contentWindow = frame?.contentWindow;
+
+                if (!frame || !contentWindow) throw new Error('Expected prepared sandbox');
+                const session = /__VIEW_SESSION__=("[^"]+");/.exec(frame.srcdoc)?.[1];
+
+                if (!session) throw new Error('Expected bootstrap session');
+                const transfer = vi.spyOn(contentWindow, 'postMessage').mockImplementation(() => {});
+
+                try {
+                    await act(async () => {
+                        window.dispatchEvent(
+                            new MessageEvent('message', {
+                                source: contentWindow,
+                                origin: 'null',
+                                data: JSON.parse(session) as unknown
+                            })
+                        );
+                    });
+                    const calls: readonly (readonly unknown[])[] = transfer.mock.calls;
+                    const ports = calls[0]?.[2];
+                    if (!Array.isArray(ports) || !(ports[0] instanceof workers.MessagePort)) {
+                        throw new Error('Expected command transport');
+                    }
+
+                    // Act
+                    ports[0].postMessage({ type: 'navigate', path: '/invoices', newTab: false });
+
+                    // Assert
+                    await vi.waitFor(async () => {
+                        await act(async () => {});
+                        expect(mounted.querySelector('output')?.textContent).toBe('/solutions/orders/invoices');
+                    });
                 } finally {
                     transfer.mockRestore();
                 }

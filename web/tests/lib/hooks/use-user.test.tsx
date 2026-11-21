@@ -4,9 +4,10 @@ import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { ApiErrorContext } from '@/lib/errors';
 import { renderStatic, withMounted } from '../../render';
+import { TestAccountProvider } from '../../platform/render';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useUpdateUser, useAuthenticatedUser, AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useUpdateUser, useAuthenticatedUser } from '@/platform/hooks/use-user';
 
 const userKey = ['api', '/api/v1/me'];
 
@@ -45,12 +46,11 @@ function AccountSnapshot() {
 
 /** Mounts independent profile controls against a live cache observer. */
 function AccountControls() {
-    const currentUser = useQuery({ queryKey: userKey, initialData: user, enabled: false });
     const profile = useUpdateUser();
     const appearance = useUpdateUser();
 
     return (
-        <AuthenticatedUserContext value={currentUser.data}>
+        <TestAccountProvider account={user}>
             <button name="profile" onClick={() => profile.mutate({ name: 'Updated Owner' })}>
                 Save name
             </button>
@@ -61,18 +61,29 @@ function AccountControls() {
                 {appearance.status}:{appearance.isPaused ? 'queued' : 'active'}
             </output>
             <AccountSnapshot />
-        </AuthenticatedUserContext>
+        </TestAccountProvider>
     );
 }
 
-it('fails explicitly when used outside the authenticated route boundary', () => {
+it('fails explicitly when used without the account provider', () => {
     // Arrange
     function Probe() {
         return useAuthenticatedUser().name;
     }
 
     // Act / Assert
-    expect(() => renderStatic(<Probe />)).toThrow('useAuthenticatedUser must be used within an authenticated route');
+    expect(() => renderStatic(<Probe />)).toThrow('useCurrentUser must be used within AccountProvider');
+});
+
+it('rejects an anonymous account instead of exposing it to authenticated consumers', () => {
+    // Act / Assert
+    expect(() =>
+        renderStatic(
+            <TestAccountProvider account={null}>
+                <AccountSnapshot />
+            </TestAccountProvider>
+        )
+    ).toThrow('useAuthenticatedUser requires an authenticated account');
 });
 
 it('serializes independent account controls and publishes canonical responses before the next appearance preview', async () => {

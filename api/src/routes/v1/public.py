@@ -28,11 +28,7 @@ async def get_solution(solution_id: UUID, session: auth.Session) -> Solution:
     """Return public display metadata, never management or infrastructure fields."""
 
     # Private, deleted, and unknown Solutions share the same response.
-    pagination = Pagination(page_size=1)
-    items, _ = await public.fetch(session, pagination, solution_id)
-    if not items:
-        raise HTTPException(status_code=404, detail="Solution not found")
-    return items[0]
+    return await public.detail(session, solution_id)
 
 
 @router.api_route("/solutions/{solution_id}/proxy", methods=sorted(METHODS), include_in_schema=False)

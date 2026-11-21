@@ -2,9 +2,10 @@ import type { ReactNode } from 'react';
 import { renderStatic } from '../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
-import { AccountProvider } from '@/platform/account';
+import { useQuery } from '@tanstack/react-query';
+import { currentUserKey } from '@/lib/react-query';
 import { Outlet, Route, Routes } from 'react-router';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { CurrentUserContext } from '@/platform/hooks/use-user';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { zCurrentUser, zUserOrganizationMembership } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -22,6 +23,19 @@ export const membership = zUserOrganizationMembership.parse({
     role: 'owner'
 });
 
+/** Supplies an account observer without requesting an unrelated identity refresh. */
+export function TestAccountProvider({
+    children,
+    account = user
+}: {
+    children: ReactNode;
+    account?: typeof user | null;
+}) {
+    const currentUser = useQuery({ queryKey: currentUserKey, initialData: account, enabled: false });
+
+    return <CurrentUserContext value={currentUser}>{children}</CurrentUserContext>;
+}
+
 /** Renders a resolved Platform route with validated identity and explicit cached API responses. */
 export function renderPlatform(
     children: ReactNode,
@@ -32,15 +46,13 @@ export function renderPlatform(
 ) {
     return renderStatic(
         <ApiErrorContext value={() => undefined}>
-            <AccountProvider>
-                <AuthenticatedUserContext value={user}>
-                    <Routes>
-                        <Route element={<Outlet context={context} />}>
-                            <Route path={pattern} element={<ApiBoundary>{children}</ApiBoundary>} />
-                        </Route>
-                    </Routes>
-                </AuthenticatedUserContext>
-            </AccountProvider>
+            <TestAccountProvider>
+                <Routes>
+                    <Route element={<Outlet context={context} />}>
+                        <Route path={pattern} element={<ApiBoundary>{children}</ApiBoundary>} />
+                    </Route>
+                </Routes>
+            </TestAccountProvider>
         </ApiErrorContext>,
         path,
         resources

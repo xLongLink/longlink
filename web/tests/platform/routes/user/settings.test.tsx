@@ -7,19 +7,19 @@ import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
 import Page from '@/platform/routes/user/settings';
 import userEvent from '@testing-library/user-event';
+import { CurrentUserContext } from '@/platform/hooks/use-user';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
 
-/** Publishes authoritative profile responses through the authenticated route context. */
+/** Publishes authoritative profile responses through the account observer. */
 function AccountSettings() {
     const currentUser = useQuery({ queryKey: ['api', '/api/v1/me'], initialData: user, enabled: false });
 
     return (
-        <AuthenticatedUserContext value={currentUser.data}>
+        <CurrentUserContext value={currentUser}>
             <Page />
             <output aria-label="Authenticated account name">{currentUser.data.name}</output>
             <output aria-label="Authenticated account theme">{currentUser.data.theme}</output>
-        </AuthenticatedUserContext>
+        </CurrentUserContext>
     );
 }
 

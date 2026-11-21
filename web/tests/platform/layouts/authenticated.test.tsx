@@ -1,17 +1,22 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
+import { user } from '../render';
 import { it, expect, vi } from 'vitest';
-import { withMounted } from '../../render';
 import { Route, Routes } from 'react-router';
 import { ApiProvider } from '@/components/api';
-import { renderPlatform, user } from '../render';
 import { AccountProvider } from '@/platform/account';
 import Layout from '@/platform/layouts/authenticated';
+import { renderStatic, withMounted } from '../../render';
 
 it('does not mount protected content while the identity request is unresolved', () => {
     // Act
-    const output = renderPlatform(<Layout />, '/user/organizations');
+    const output = renderStatic(
+        <AccountProvider>
+            <Layout />
+        </AccountProvider>,
+        '/user/organizations'
+    );
 
     // Assert
     expect(output.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Loading account');

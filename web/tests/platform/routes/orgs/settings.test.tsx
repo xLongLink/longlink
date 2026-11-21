@@ -8,12 +8,11 @@ import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
-import { membership, user } from '../../render';
 import userEvent from '@testing-library/user-event';
 import Settings from '@/platform/routes/orgs/settings';
 import Organization from '@/platform/layouts/organization';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
-import { AuthenticatedUserContext } from '@/platform/hooks/use-user';
+import { membership, user, TestAccountProvider } from '../../render';
 import OrganizationAccess from '@/platform/layouts/organization-access';
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -65,7 +64,7 @@ async function withOrganizationSettings(
         await withMounted(
             <QueryClientProvider client={client}>
                 <ApiErrorContext value={(error) => errors.push(error)}>
-                    <AuthenticatedUserContext value={user}>
+                    <TestAccountProvider>
                         <ApiBoundary>
                             <AccountRole />
                         </ApiBoundary>
@@ -77,7 +76,7 @@ async function withOrganizationSettings(
                                 </Route>
                             </Route>
                         </Routes>
-                    </AuthenticatedUserContext>
+                    </TestAccountProvider>
                 </ApiErrorContext>
             </QueryClientProvider>,
             async (output) => check(output, client),

@@ -191,7 +191,7 @@ function initialize(event: MessageEvent<unknown>): void {
         await exchange(command);
     }
 
-    const requests = { request, download };
+    const requests = { request };
 
     /** Requests scoped Solution navigation. */
     function navigate(path: string): void {

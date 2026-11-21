@@ -2,9 +2,9 @@ import { ApiError } from '@/lib/api';
 import type { ReactNode } from 'react';
 import Brand from '@/platform/layouts/brand';
 import { Navigate, Outlet } from 'react-router';
+import { useCurrentUser } from '@/platform/hooks/use-user';
 import { Button } from '@/components/longlink/action/button';
 import { PageError, PageLoading } from '@/components/ui/utils';
-import { AuthenticatedUserContext, useCurrentUser } from '@/platform/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {
@@ -47,12 +47,7 @@ export default function AuthenticatedLayout() {
             </>
         );
     } else {
-        // Publish the validated user without creating query observers in protected children.
-        content = (
-            <AuthenticatedUserContext value={user}>
-                <Outlet />
-            </AuthenticatedUserContext>
-        );
+        content = <Outlet />;
     }
 
     return (

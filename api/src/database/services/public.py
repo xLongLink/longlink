@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 from sqlmodel import col
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import load_only, selectinload, contains_eager
 from collections.abc import Sequence
 from src.database.types import attr
@@ -12,21 +12,15 @@ from src.database.models.solutions import Revision, Solution
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession, pagination: Pagination, solution_id: UUID | None = None) -> tuple[Sequence[Solution], int]:
-    """Read only explicitly published Solutions in active Organizations."""
+def _metadata_query() -> Select[Solution]:
+    """Select published display metadata without management or infrastructure fields."""
 
     # Keep infrastructure, release configuration, and secrets outside public metadata reads.
-    query = (
+    return (
         select(Solution)
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(col(Solution.public).is_(True), col(Solution.deleted_at).is_(None), col(Organization.deleted_at).is_(None))
-    )
-    if solution_id is not None:
-        query = query.where(col(Solution.id) == solution_id)
-
-    # Load only display metadata and the deployed version.
-    statement = (
-        query.options(
+        .options(
             load_only(
                 attr(Solution.id),
                 attr(Solution.name),
@@ -39,13 +33,32 @@ async def fetch(session: AsyncSession, pagination: Pagination, solution_id: UUID
             contains_eager(attr(Solution.organization)).load_only(attr(Organization.id), attr(Organization.name), raiseload=True),
             selectinload(attr(Solution.deployed_revision)).load_only(attr(Revision.version), raiseload=True),
         )
-        .order_by(col(Solution.created_at).desc(), col(Solution.id).desc())
-        .offset(pagination.offset)
-        .limit(pagination.page_size)
+    )
+
+
+async def fetch(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Solution], int]:
+    """Read one page of explicitly published Solutions in active Organizations."""
+
+    # Apply pagination only after the shared publication and metadata restrictions.
+    query = _metadata_query()
+    statement = (
+        query.order_by(col(Solution.created_at).desc(), col(Solution.id).desc()).offset(pagination.offset).limit(pagination.page_size)
     )
     result = await session.scalars(statement)
     total = await session.scalar(select(func.count()).select_from(query.subquery()))
     return result.all(), total or 0
+
+
+async def detail(session: AsyncSession, solution_id: UUID) -> Solution:
+    """Read one published Solution's display metadata."""
+
+    # Private, deleted, and unknown Solutions share the same response.
+    statement = _metadata_query().where(col(Solution.id) == solution_id)
+    result = await session.scalars(statement)
+    solution = result.one_or_none()
+    if solution is None:
+        raise HTTPException(status_code=404, detail="Solution not found")
+    return solution
 
 
 async def runtime(session: AsyncSession, solution_id: UUID) -> tuple[Solution, ComputeRegistry]:
