@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shadcn/tooltip';
@@ -42,7 +43,11 @@ export function RegistryForm({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-2 border-0 p-6">
-                    <h2 className="mb-2 text-center text-xl font-semibold">GitHub Container Registry (ghcr.io)</h2>
+                    <div className="mb-2">
+                        <Heading level={2} size={4} align="center">
+                            GitHub Container Registry (ghcr.io)
+                        </Heading>
+                    </div>
                     <Field data-invalid={Boolean(form.formState.errors.credential)}>
                         <div className="flex items-center justify-between gap-2">
                             <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>

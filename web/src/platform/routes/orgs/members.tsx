@@ -6,10 +6,12 @@ import { useApi } from '@/lib/hooks/use-api';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import { useQueryClient } from '@tanstack/react-query';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import { useAuthenticatedUser } from '@/platform/hooks/use-user';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
@@ -49,9 +51,9 @@ export default function MembersSection({ base, role }: { base: string; role: Org
             <Stack gap={0}>
                 <Stack gap={4}>
                     <Stack gap={0} justify="end" className="min-h-8">
-                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                        <Heading level={2} trim>
                             Members
-                        </h2>
+                        </Heading>
                     </Stack>
                     <Separator />
                 </Stack>
@@ -65,9 +67,13 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                                         <Stack gap={0} align="start">
                                             <Stack direction="horizontal" gap={1} align="center">
                                                 <span>{row.user.name}</span>
-                                                <span className="text-xs text-muted-foreground">{row.role}</span>
+                                                <Text size="xs" tone="muted">
+                                                    {row.role}
+                                                </Text>
                                             </Stack>
-                                            <span className="text-xs text-muted-foreground">{row.user.email}</span>
+                                            <Text size="xs" tone="muted">
+                                                {row.user.email}
+                                            </Text>
                                         </Stack>
                                     </Stack>
                                 </TableCell>

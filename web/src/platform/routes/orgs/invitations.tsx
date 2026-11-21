@@ -4,9 +4,11 @@ import { useState, useTransition } from 'react';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { InviteMember } from '@/platform/routes/orgs/dialogs/invite-member';
@@ -44,9 +46,9 @@ export default function InvitationsSection({ base, role }: { base: string; role:
             <Stack gap={0}>
                 <Stack gap={4}>
                     <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                        <Heading level={2} trim>
                             Invitations
-                        </h2>
+                        </Heading>
                         {canMaintain && (
                             <Button size="sm" onClick={() => setInvitationAttempt(Symbol())}>
                                 Invite
@@ -61,7 +63,9 @@ export default function InvitationsSection({ base, role }: { base: string; role:
                             <TableRow key={row.id}>
                                 <TableCell>{row.email}</TableCell>
                                 <TableCell>
-                                    <span className="text-xs text-muted-foreground">{row.role}</span>
+                                    <Text size="xs" tone="muted">
+                                        {row.role}
+                                    </Text>
                                 </TableCell>
                                 {canMaintain && (
                                     <TableCell align="end">

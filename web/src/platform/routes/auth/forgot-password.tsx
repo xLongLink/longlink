@@ -18,7 +18,8 @@ export default function ForgotPassword() {
 
     return (
         <AuthLayout
-            title={<span className="text-2xl block text-nowrap text-center">Reset your password</span>}
+            headingSize={3}
+            title={<span className="block text-nowrap">Reset your password</span>}
             description={null}
         >
             <title>Reset Your Password | LongLink</title>

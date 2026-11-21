@@ -18,10 +18,11 @@ interface HeadingProps extends Omit<ComponentPropsWithoutRef<'h2'>, 'color'> {
     level?: HeadingLevel;
     size?: HeadingLevel;
     align?: 'start' | 'center' | 'end';
+    trim?: boolean;
 }
 
 /** Preserves native heading semantics independently of optional typography sizing. */
-export function Heading({ level = 2, size = level, align, className, ...props }: HeadingProps) {
+export function Heading({ level = 2, size = level, align, trim, className, ...props }: HeadingProps) {
     const Component = headings[level];
 
     return (
@@ -31,6 +32,7 @@ export function Heading({ level = 2, size = level, align, className, ...props }:
             className={cn(
                 'font-semibold tracking-tight',
                 headingClasses[size],
+                trim && '[text-box-trim:trim-both] [text-box-edge:cap_alphabetic]',
                 align && { start: 'text-start', center: 'text-center', end: 'text-end' }[align],
                 className
             )}

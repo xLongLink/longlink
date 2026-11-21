@@ -3,11 +3,13 @@ import { useTransition } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
 import { ApiBoundary } from '@/components/api';
 import { useSubmit } from '@/lib/hooks/use-submit';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/display/table';
 
@@ -32,9 +34,9 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
         <Stack gap={0}>
             <Stack gap={4}>
                 <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                    <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                    <Heading level={2} trim>
                         Payment Methods
-                    </h2>
+                    </Heading>
                     {usage.stripe_enabled && canManage && (
                         <Button
                             size="sm"
@@ -56,13 +58,17 @@ export default function PaymentMethods({ base, canManage }: { base: string; canM
                 <Separator />
             </Stack>
             {!usage.stripe_enabled ? (
-                <p className="text-muted-foreground">Card registration is not enabled on this deployment.</p>
+                <Text as="p" tone="muted">
+                    Card registration is not enabled on this deployment.
+                </Text>
             ) : canManage ? (
-                <ApiBoundary fallback={<span className="text-muted-foreground">Loading registered cards…</span>}>
+                <ApiBoundary fallback={<Text tone="muted">Loading registered cards…</Text>}>
                     <RegisteredCards base={base} />
                 </ApiBoundary>
             ) : (
-                <p className="text-muted-foreground">An organization owner can view and register cards.</p>
+                <Text as="p" tone="muted">
+                    An organization owner can view and register cards.
+                </Text>
             )}
         </Stack>
     );

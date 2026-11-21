@@ -10,10 +10,12 @@ import { ApiBoundary } from '@/components/api';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import SolutionManagement from './solution-management';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { useLocation, useOutletContext } from 'react-router';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { SettingsLayout, SettingsLink } from '@/platform/layouts/settings';
@@ -90,10 +92,12 @@ export default function OrganizationSettings() {
             <Stack direction="horizontal" gap={3} align="center">
                 <Avatar shape="rounded" name={organization.name} />
                 <Stack gap={0}>
-                    <h4 className="font-semibold tracking-tight text-xl" aria-level={1}>
+                    <Heading level={1} size={4}>
                         {organization.name}
-                    </h4>
-                    <span className="text-xs text-muted-foreground">Organization</span>
+                    </Heading>
+                    <Text size="xs" tone="muted">
+                        Organization
+                    </Text>
                 </Stack>
             </Stack>
             <SettingsLayout
@@ -151,18 +155,18 @@ function GeneralSection({
     return (
         <Stack gap={4}>
             <Stack gap={0} justify="end" className="min-h-8">
-                <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                <Heading level={2} trim>
                     General
-                </h2>
+                </Heading>
             </Stack>
             <Separator />
             <TabsSection base={base} tags={tags} canMaintain={canMaintain} />
             {canDelete && (
                 <Stack gap={3}>
                     <Stack gap={0} className="text-red-600 dark:text-red-400">
-                        <h4 aria-level={3} className="font-semibold tracking-tight text-xl text-inherit">
+                        <Heading level={3} size={4}>
                             Danger zone
-                        </h4>
+                        </Heading>
                     </Stack>
                     <Stack
                         direction="horizontal"
@@ -174,10 +178,8 @@ function GeneralSection({
                         className="rounded-lg border border-red-600 dark:border-red-400"
                     >
                         <Stack gap={0}>
-                            <span className="font-bold">Delete this organization</span>
-                            <span className="text-muted-foreground">
-                                Once deleted, it will be gone forever. Please be certain.
-                            </span>
+                            <Text weight="bold">Delete this organization</Text>
+                            <Text tone="muted">Once deleted, it will be gone forever. Please be certain.</Text>
                         </Stack>
                         <Button
                             variant="destructive"

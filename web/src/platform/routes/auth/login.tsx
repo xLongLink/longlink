@@ -11,6 +11,7 @@ import { GitHubIcon } from '@/components/svg/github';
 import { GoogleIcon } from '@/components/svg/google';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clearSessionQueries } from '@/lib/react-query';
+import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { emailSchema, passwordSchema } from './validation';
 import { FieldSeparator } from '@/components/shadcn/field';
@@ -78,7 +79,8 @@ export default function Login() {
 
     return (
         <AuthLayout
-            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
+            headingSize={3}
+            title={<span className="block text-nowrap">Welcome to LongLink</span>}
             description={null}
         >
             <title>Sign In | LongLink</title>
@@ -109,7 +111,9 @@ export default function Login() {
                             <TextField control={form.control} name="email" label="Email" type="email" />
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">Password</span>
+                                    <Text size="sm" weight="medium">
+                                        Password
+                                    </Text>
                                     <Link
                                         to="/auth/forgot-password"
                                         className="text-sm leading-(--text-sm--line-height) font-normal text-primary no-underline hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"

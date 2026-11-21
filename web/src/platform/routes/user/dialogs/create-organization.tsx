@@ -7,6 +7,7 @@ import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { zOrganizationCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -46,7 +47,9 @@ export default function CreateOrganization({
                 aria-busy={form.formState.isSubmitting}
             >
                 <fieldset disabled={form.formState.isSubmitting} className="flex min-w-0 flex-col gap-4 border-0 p-6">
-                    <h2 className="text-center text-xl font-semibold tracking-tight">New organization</h2>
+                    <Heading level={2} size={4} align="center">
+                        New organization
+                    </Heading>
                     <Field data-invalid={Boolean(form.formState.errors.name)}>
                         <FieldLabel htmlFor="organization-name">Name</FieldLabel>
                         <Input

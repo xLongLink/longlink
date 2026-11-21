@@ -2,10 +2,12 @@ import { z } from 'zod';
 import { ExternalLink, Plus } from 'lucide-react';
 import * as permissions from '@/platform/permissions';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationContext } from '@/platform/layouts/organization';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/longlink/display/table';
@@ -37,7 +39,7 @@ export function SolutionOverview({
         >
             {solutions.length > 0 ? (
                 <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap" className="min-h-12">
-                    <h1 className="font-semibold tracking-tight text-4xl">{categoryName}</h1>
+                    <Heading level={1}>{categoryName}</Heading>
                     {canMaintain && <Button onClick={openCreate}>New Solution</Button>}
                 </Stack>
             ) : null}
@@ -100,7 +102,9 @@ export function SolutionOverview({
                                             )}
                                         </Stack>
                                         {row.description && (
-                                            <span className="text-xs text-muted-foreground">{row.description}</span>
+                                            <Text size="xs" tone="muted">
+                                                {row.description}
+                                            </Text>
                                         )}
                                     </Stack>
                                 </TableCell>

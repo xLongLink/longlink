@@ -5,6 +5,7 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { RegistryForm } from '@/platform/routes/orgs/dialogs/registry-form';
@@ -33,9 +34,9 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
             <Stack gap={0}>
                 <Stack gap={4}>
                     <Stack gap={0} direction="horizontal" justify="between" align="end" wrap="wrap" className="min-h-8">
-                        <h2 className="font-semibold tracking-tight text-3xl block [text-box-trim:trim-both] [text-box-edge:cap_alphabetic]">
+                        <Heading level={2} trim>
                             Private registries
-                        </h2>
+                        </Heading>
                         {canMaintain && (
                             <Button
                                 size="sm"

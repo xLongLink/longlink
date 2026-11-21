@@ -6,9 +6,11 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { useEffect, useId, useState } from 'react';
 import { Checkbox } from '@/components/shadcn/checkbox';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -123,9 +125,13 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
         <Dialog open onOpenChange={onOpenChange} title={`Update ${item.name}`} showHeader={false} bodyPadding={false}>
             <div className="grid min-h-full grid-cols-1 sm:grid-cols-2">
                 <div className="flex min-w-0 flex-col justify-center gap-4 p-6">
-                    <h2 className="text-center text-xl font-semibold">Update {item.name}</h2>
+                    <Heading level={2} size={4} align="center">
+                        Update {item.name}
+                    </Heading>
                     {!candidate ? (
-                        <p role="status">{isPending ? 'Checking for updates…' : 'Could not check for updates.'}</p>
+                        <Text as="p" role="status">
+                            {isPending ? 'Checking for updates…' : 'Could not check for updates.'}
+                        </Text>
                     ) : (
                         <form
                             id={formId}
@@ -163,9 +169,9 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                     className="flex min-w-0 flex-col gap-4 border-0 p-0"
                                 >
                                     {environments.length === 0 && (
-                                        <p className="text-sm text-muted-foreground">
+                                        <Text as="p" size="sm" tone="muted">
                                             No {step === 1 ? 'required' : 'optional'} environments.
-                                        </p>
+                                        </Text>
                                     )}
                                     {environments.map((environment) => {
                                         // Resolve the configured secret and its local draft without exposing its value.

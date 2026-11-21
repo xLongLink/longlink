@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
@@ -32,7 +34,7 @@ export default function Compute() {
         <Stack gap={2}>
             <title>Compute | LongLink</title>
             <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
-                <h1 className="font-semibold tracking-tight text-4xl">Compute</h1>
+                <Heading level={1}>Compute</Heading>
                 <Button onClick={() => setDialog({ kind: 'registration' })}>Register Compute</Button>
             </Stack>
             {searchField}
@@ -49,8 +51,10 @@ export default function Compute() {
                             <TableRow key={row.id}>
                                 <TableCell>
                                     <Stack gap={0} align="start">
-                                        <span>{row.name}</span>
-                                        <span className="text-xs text-muted-foreground">{row.gateway_url}</span>
+                                        <Text>{row.name}</Text>
+                                        <Text size="xs" tone="muted">
+                                            {row.gateway_url}
+                                        </Text>
                                     </Stack>
                                 </TableCell>
                                 <TableCell align="end">
@@ -121,18 +125,18 @@ export default function Compute() {
                     }
                 >
                     <Stack gap={2}>
-                        <span>
+                        <Text>
                             <b>Gateway</b> {metadata.gateway_url}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Database storage class</b> {metadata.database_storage_class}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>ID</b> {metadata.id}
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>Storage endpoint</b> {metadata.storage_endpoint}
-                        </span>
+                        </Text>
                     </Stack>
                 </Dialog>
             )}

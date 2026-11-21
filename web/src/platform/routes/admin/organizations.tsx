@@ -4,12 +4,14 @@ import { useMetadata } from './use-metadata';
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
 import { Link } from '@/components/longlink/action/link';
+import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Avatar } from '@/components/longlink/display/avatar';
+import { Heading } from '@/components/longlink/display/heading';
 import { Pagination } from '@/components/longlink/action/pagination';
 import { useConfirm } from '@/components/longlink/hooks/use-confirm';
 import { zPageOrganizationIdentity } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -27,7 +29,7 @@ export default function Organizations() {
     return (
         <Stack gap={2}>
             <title>Organizations | LongLink</title>
-            <h1 className="font-semibold tracking-tight text-4xl">Organizations</h1>
+            <Heading level={1}>Organizations</Heading>
             {searchField}
             <Stack gap={1}>
                 <Table wrap>
@@ -56,7 +58,9 @@ export default function Organizations() {
                                                     </Badge>
                                                 )}
                                             </Stack>
-                                            <span className="text-xs text-muted-foreground">Organization</span>
+                                            <Text size="xs" tone="muted">
+                                                Organization
+                                            </Text>
                                         </Stack>
                                     </Stack>
                                 </TableCell>
@@ -111,15 +115,15 @@ export default function Organizations() {
                     }
                 >
                     <Stack gap={2}>
-                        <span>
+                        <Text>
                             <b>Status</b>{' '}
                             <Badge variant={metadata.status === 'failed' ? 'destructive' : 'secondary'}>
                                 {metadata.status}
                             </Badge>
-                        </span>
-                        <span>
+                        </Text>
+                        <Text>
                             <b>ID</b> {metadata.id}
-                        </span>
+                        </Text>
                     </Stack>
                 </Dialog>
             )}

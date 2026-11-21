@@ -29,7 +29,8 @@ export default function Register() {
     return (
         <AuthLayout
             description={null}
-            title={<span className="text-2xl block text-nowrap text-center">Welcome to LongLink</span>}
+            headingSize={3}
+            title={<span className="block text-nowrap">Welcome to LongLink</span>}
         >
             <title>Create Account | LongLink</title>
             <Stack gap={3}>

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
+import { Text } from '@/components/longlink/display/text';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { SidebarMenuButton } from '@/components/shadcn/sidebar';
 import { BookOpen, ChevronsUpDown, ExternalLink } from 'lucide-react';
@@ -28,8 +29,12 @@ export function DevelopmentProfile() {
             <DropdownMenuTrigger type="button" render={<SidebarMenuButton size="lg" />} aria-label={user.name}>
                 <Avatar name={user.name} size="sm" />
                 <span className="flex min-w-0 flex-1 flex-col text-start leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate text-sm font-medium">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    <Text maxLines={1} size="sm" weight="medium">
+                        {user.name}
+                    </Text>
+                    <Text maxLines={1} size="xs" tone="muted">
+                        {user.email}
+                    </Text>
                 </span>
                 <ChevronsUpDown
                     aria-hidden="true"
@@ -53,8 +58,12 @@ export function DevelopmentProfile() {
                         >
                             <Avatar name={candidate.user.name} size="sm" />
                             <span className="flex min-w-0 flex-1 flex-col text-start leading-tight">
-                                <span className="truncate text-sm font-medium">{candidate.user.name}</span>
-                                <span className="truncate text-xs text-muted-foreground">{candidate.user.email}</span>
+                                <Text maxLines={1} size="sm" weight="medium">
+                                    {candidate.user.name}
+                                </Text>
+                                <Text maxLines={1} size="xs" tone="muted">
+                                    {candidate.user.email}
+                                </Text>
                             </span>
                         </DropdownMenuItem>
                     ))}

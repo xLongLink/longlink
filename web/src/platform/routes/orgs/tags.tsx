@@ -7,6 +7,7 @@ import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
 import { Button } from '@/components/longlink/action/button';
+import { Heading } from '@/components/longlink/display/heading';
 import { TagForm } from '@/platform/routes/orgs/dialogs/tag-form';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -49,9 +50,9 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
             <Stack gap={0}>
                 <Stack gap={3}>
                     <Stack gap={0} direction="horizontal" justify="between" align="center" wrap="wrap">
-                        <h4 className="font-semibold tracking-tight text-xl" aria-level={3}>
+                        <Heading level={3} size={4}>
                             Tabs
-                        </h4>
+                        </Heading>
                         {canMaintain && (
                             <Button size="sm" onClick={() => setAction({ kind: 'create' })}>
                                 New tab

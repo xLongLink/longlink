@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
+import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -127,9 +128,9 @@ export default function CreateSolution({
                 aria-busy={pending}
             >
                 <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4 border-0 p-6">
-                    <h2 className="text-center text-xl font-semibold">
+                    <Heading level={2} size={4} align="center">
                         {stage === 'image' ? 'Create solution' : 'Configure solution'}
-                    </h2>
+                    </Heading>
                     {stage === 'image' ? (
                         <>
                             <Field data-invalid={Boolean(form.formState.errors.image)}>

@@ -1,14 +1,18 @@
 import type { ReactNode } from 'react';
+import { Text } from '@/components/longlink/display/text';
+import { Heading } from '@/components/longlink/display/heading';
 
 /** Renders the shared standalone account page frame. */
 export function AuthLayout({
     children,
     description,
-    title
+    title,
+    headingSize = 1
 }: {
     children: ReactNode;
     description: ReactNode;
     title: ReactNode;
+    headingSize?: 1 | 3;
 }) {
     return (
         <div className="flex min-h-(--surface-content-height) w-full items-center justify-center">
@@ -16,14 +20,14 @@ export function AuthLayout({
                 className="box-border flex w-full max-w-96 flex-col gap-4 px-4 py-8 data-[description=none]:gap-2"
                 data-description={description === null ? 'none' : undefined}
             >
-                <div className="flex flex-col gap-1">
-                    <h1 className="m-0 text-center font-sans text-4xl leading-(--text-4xl--line-height) font-semibold wrap-anywhere text-foreground">
+                <div className="flex flex-col gap-1 font-sans wrap-anywhere text-foreground">
+                    <Heading level={1} size={headingSize} align="center">
                         {title}
-                    </h1>
+                    </Heading>
                     {typeof description === 'string' ? (
-                        <p className="m-0 text-center font-sans text-sm leading-(--text-sm--line-height) font-normal wrap-anywhere text-muted-foreground">
+                        <Text as="p" size="sm" weight="normal" tone="muted" align="center">
                             {description}
-                        </p>
+                        </Text>
                     ) : (
                         description
                     )}

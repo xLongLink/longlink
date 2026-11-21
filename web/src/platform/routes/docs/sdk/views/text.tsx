@@ -12,7 +12,7 @@ export default function TextPage() {
                 preview: <TextExample />,
                 code: `function Example() {
   return (
-    <Text size="sm" tone="muted">
+    <Text as="p" size="sm" tone="muted">
       Normal <b>bold</b> and <i>italic</i>
     </Text>
   );
@@ -26,7 +26,7 @@ export default function TextPage() {
 export function TextExample() {
     // Show normal text alongside bold and italic emphasis.
     return (
-        <Text size="sm" tone="muted">
+        <Text as="p" size="sm" tone="muted">
             Normal <b>bold</b> and <i>italic</i>
         </Text>
     );
