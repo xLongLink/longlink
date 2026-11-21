@@ -1115,12 +1115,7 @@
                 },
                 { "name": "title", "type": "ReactNode", "description": "Empty-state title." },
                 { "name": "description", "type": "ReactNode", "description": "Optional empty-state description." },
-                { "name": "children", "type": "ReactNode", "description": "Optional actions below the description." },
-                {
-                    "name": "aria-* / data-*",
-                    "type": "native element props",
-                    "description": "Standard HTML props are forwarded to the root div."
-                }
+                { "name": "children", "type": "ReactNode", "description": "Optional actions below the description." }
             ],
             "source": "custom",
             "justification": "Provides a fixed empty-state layout with icon names or image URLs and action children.",

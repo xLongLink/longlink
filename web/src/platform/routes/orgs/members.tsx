@@ -120,7 +120,7 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                         {members.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canAdminister ? 2 : 1} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}

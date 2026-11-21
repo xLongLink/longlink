@@ -100,7 +100,7 @@ export default function Solutions() {
                         {solutions.items.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}

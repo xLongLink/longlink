@@ -147,7 +147,7 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                         {tags.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={canMaintain ? 2 : 1} align="center">
-                                    <Empty role="status" title="No data" />
+                                    <Empty title="No data" />
                                 </TableCell>
                             </TableRow>
                         )}

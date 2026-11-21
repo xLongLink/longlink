@@ -79,7 +79,7 @@ function InvoiceTable({ base }: { base: string }) {
                 {invoices.length === 0 && (
                     <TableRow>
                         <TableCell colSpan={5} align="center">
-                            <Empty role="status" title="No data" />
+                            <Empty title="No data" />
                         </TableCell>
                     </TableRow>
                 )}

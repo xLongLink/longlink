@@ -24654,10 +24654,11 @@ declare function StackItem(props: {
 	/** Overrides this item's cross-axis alignment; omitted values inherit the parent alignment. */
 	crossAlignSelf?: "start" | "center" | "end" | "stretch";
 }): React$1.JSX.Element;
-declare function Empty({ icon, title, description, children, ...props }: Omit<React$1.ComponentProps<"div">, "className" | "style" | "title"> & {
+declare function Empty({ icon, title, description, children }: {
 	icon?: IconName | `https://${string}` | `http://${string}` | `/${string}`;
 	title: React$1.ReactNode;
 	description?: React$1.ReactNode;
+	children?: React$1.ReactNode;
 }): React$1.JSX.Element;
 type ImageProps = Omit<React$1.ComponentProps<"img">, "src" | "alt"> & {
 	/** Scoped Solution image path, or an image data/blob URL. */

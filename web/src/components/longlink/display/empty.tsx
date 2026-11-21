@@ -1,5 +1,5 @@
+import type { ReactNode } from 'react';
 import type { IconName } from 'lucide-react/dynamic';
-import type { ComponentProps, ReactNode } from 'react';
 import { Icon } from '@/components/longlink/display/icon';
 
 /** Displays an empty state with optional actions below its description. */
@@ -7,12 +7,12 @@ export function Empty({
     icon,
     title,
     description,
-    children,
-    ...props
-}: Omit<ComponentProps<'div'>, 'className' | 'style' | 'title'> & {
+    children
+}: {
     icon?: IconName | `https://${string}` | `http://${string}` | `/${string}`;
     title: ReactNode;
     description?: ReactNode;
+    children?: ReactNode;
 }) {
     // URL sources render as images; other values are Lucide icon names.
     const isImage = icon !== undefined && /^(https?:\/\/|\/)/.test(icon);
@@ -21,7 +21,6 @@ export function Empty({
         <div
             data-slot="empty"
             className="flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-xl border-dashed p-6 text-center text-balance"
-            {...props}
         >
             <div data-slot="empty-header" className="flex max-w-sm flex-col items-center gap-2">
                 {icon && (
@@ -37,7 +36,7 @@ export function Empty({
                         )}
                     </div>
                 )}
-                <div data-slot="empty-title" className="text-sm font-medium tracking-tight">
+                <div data-slot="empty-title" className="text-base font-medium tracking-tight">
                     {title}
                 </div>
                 {description && (
