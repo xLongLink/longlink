@@ -155,6 +155,7 @@ async def apply(
     secrets: dict[str, str],
     *,
     revision_id: UUID,
+    cpu_millicores: int = 500,
     migrate: bool = True,
     # Private images use the Organization's retained registry connection.
     registry_connection_id: UUID | None = None,
@@ -162,6 +163,8 @@ async def apply(
     """Deploy one Solution and wait for its rollout."""
 
     # Render workload resources before the first cluster mutation.
+    if cpu_millicores < 100:
+        raise ValueError("Application CPU limit cannot be lower than its request")
     compute_namespace = namespace.compute(organization_id)
     migration_id = f"migration-{revision_id}"
     secret_id = f"revision-{revision_id}"
@@ -169,6 +172,7 @@ async def apply(
         files("src").joinpath(".static", "kubernetes", "solution.yml"),
         solution_id=str(solution_id),
         image=json.dumps(image),
+        cpu_millicores=cpu_millicores,
         namespace=compute_namespace,
         runtime_revision=revision_id.hex,
         migration_id=migration_id,
@@ -225,7 +229,6 @@ async def delete(client: "Kubernetes", organization_id: UUID, solution_id: UUID)
             Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
             Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
         ):
-
             # Any remaining kind requires another cleanup pass.
             if await _delete_resources(cast(AsyncIterator[APIObject], resources)):
                 remaining = True

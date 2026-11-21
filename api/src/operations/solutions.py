@@ -127,6 +127,7 @@ async def deploy(revision_id: UUID) -> None:
         runtime_environment,
         # Replays reuse the captured release and skip already-completed migrations.
         revision_id=revision.id,
+        cpu_millicores=min(500, organization.compute_cpu_millicores),
         migrate=revision.deployed_at is None,
         registry_connection_id=revision.registry_connection_id,
     )

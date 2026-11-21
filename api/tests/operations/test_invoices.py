@@ -7,7 +7,6 @@ from uuid import UUID
 from types import SimpleNamespace
 from decimal import ROUND_HALF_UP, Decimal
 from fastapi import HTTPException
-from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
 from factories import create_organization
 from sqlalchemy import select
@@ -16,6 +15,7 @@ from src.operations import invoices
 from src.environments import env
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -23,12 +23,11 @@ from src.database.models.invoices import Invoice
 from src.database.models.organizations import Organization
 
 
-@pytest.mark.usefixtures("database_runtime")
-@pytest.mark.parametrize("failed_measurement", ["database", "storage"])
-async def test_snapshot_measurement_failure_preserves_deadline_until_complete_retry(
-    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, failed_measurement: str
+@pytest.mark.parametrize("status", [Status.running, Status.creating, Status.failed])
+async def test_snapshot_freezes_total_allocations_once_without_measuring_consumption(
+    users: tuple[User, User, User], status: Status
 ) -> None:
-    """Never persist partial usage or skip a billing month when measurement fails."""
+    """Freeze allocations once without requiring available databases, storage, or per-user usage."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -36,50 +35,29 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.status = Status.running
-        persisted.database_state = DatabaseState.available
+        persisted.status = status
         persisted.stripe_customer_id = "cus_usage"
         persisted.stripe_payment_method_id = "pm_usage"
+        persisted.compute_cpu_millicores = 2000
+        persisted.compute_ram_bytes = 1_750_000_000
+        persisted.storage_bytes = 12_500_000_000
+        persisted.database_cpu_millicores = 1000
+        persisted.database_ram_bytes = 1024**3
+        persisted.database_storage_bytes = 5 * 1024**3
+        persisted.provisioned_at = period_end
+        persisted.database_state = DatabaseState.failed
 
         # Make the captured Organization eligible for the closed billing period.
         persisted.invoice_due_at = period_end
         await session.commit()
 
-    async def database_usage(_self: object, organization_id: UUID) -> int:
-        """Measure external SQL usage, with one recoverable outage."""
-
-        assert organization_id == organization.id
-        if failed_measurement == "database":
-            raise OSError("database measurement unavailable")
-        return 100 * 1024**2 + 1024**3
-
-    async def storage_usage(_self: object, bucket: str) -> int:
-        """Measure external S3 usage, with one recoverable outage."""
-
-        assert bucket == invoices.Storage.bucket_name(organization.id)
-        if failed_measurement == "storage":
-            raise OSError("storage measurement unavailable")
-        return 2 * 1024**3
-
-    monkeypatch.setattr(invoices, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(invoices.databases.postgres.Postgres, "usage", database_usage, raising=False)
-    monkeypatch.setattr(invoices.s3.S3, "usage", storage_usage)
-
     # Act
-    with pytest.raises(OSError, match=f"{failed_measurement} measurement unavailable"):
-        await invoices.snapshot(organization.id, period_end)
-
-    # Assert
+    await invoices.snapshot(organization.id, period_end)
     async with session_scope() as session:
-        result = await session.scalars(select(Invoice))
-        assert result.all() == []
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.invoice_due_at == period_end
-
-    # Act
-    failed_measurement = ""
-    await invoices.snapshot(organization.id, period_end)
+        persisted.compute_cpu_millicores = 3000
+        await session.commit()
     await invoices.snapshot(organization.id, period_end)
 
     # Assert
@@ -89,7 +67,8 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         assert invoice.organization_id == organization.id
         assert invoice.customer_id == "cus_usage"
         assert invoice.period_end == period_end
-        assert (invoice.users, invoice.database_bytes, invoice.storage_bytes) == (1, 100 * 1024**2 + 1024**3, 2 * 1024**3)
+        assert invoice.pricing_version == 3
+        assert (invoice.cpu_millicores, invoice.ram_bytes, invoice.storage_bytes) == (3000, 2_823_741_824, 17_868_709_120)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
 
@@ -97,19 +76,120 @@ async def test_snapshot_measurement_failure_preserves_deadline_until_complete_re
         assert persisted.invoice_due_at == invoices.dates.next_month(period_end)
 
 
-@pytest.mark.parametrize("crash_after", ["invoice", "item", "coupon", "finalize"])
+@pytest.mark.parametrize("missing", ["card", "allocation"])
+async def test_snapshot_skips_cardless_or_unprovisioned_periods(users: tuple[User, User, User], missing: str) -> None:
+    """Do not retroactively charge months before consent or successful provisioning."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    period_end = datetime(2026, 11, 1, tzinfo=UTC)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.stripe_customer_id = "cus_unconsented"
+        persisted.invoice_due_at = period_end
+        if missing == "card":
+            persisted.provisioned_at = period_end
+        else:
+            persisted.stripe_payment_method_id = "pm_new_consent"
+        await session.commit()
+
+    # Act
+    await invoices.snapshot(organization.id, period_end)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.stripe_payment_method_id = "pm_new_consent"
+        persisted.provisioned_at = period_end
+        await session.commit()
+    await invoices.snapshot(organization.id, period_end)
+
+    # Assert
+    async with session_scope() as session:
+        result = await session.scalars(select(Invoice))
+        assert result.all() == []
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.invoice_due_at == datetime(2026, 12, 1, tzinfo=UTC)
+
+
+async def test_capture_and_confirmed_allocation_update_share_the_callers_transaction(users: tuple[User, User, User]) -> None:
+    """Capture the closed month before publishing new totals, without committing the caller's work."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    period_end = datetime(2026, 11, 1, tzinfo=UTC)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.stripe_customer_id = "cus_transition"
+        persisted.stripe_payment_method_id = "pm_transition"
+        persisted.invoice_due_at = period_end
+        persisted.provisioned_at = period_end
+        persisted.compute_cpu_millicores = 1000
+        persisted.database_cpu_millicores = 1000
+        persisted.compute_ram_bytes = 1_000_000_000
+        persisted.database_ram_bytes = 1_000_000_000
+        persisted.storage_bytes = 5_000_000_000
+        persisted.database_storage_bytes = 5_000_000_000
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        persisted = await organizations.lock(session, organization.id)
+        invoices.capture(session, persisted, period_end)
+        persisted.compute_cpu_millicores = 3000
+        persisted.compute_ram_bytes = 3_000_000_000
+        persisted.storage_bytes = 15_000_000_000
+        result = await session.scalars(select(Invoice))
+        captured = result.one()
+
+        # Assert
+        assert (captured.cpu_millicores, captured.ram_bytes, captured.storage_bytes) == (2000, 2_000_000_000, 10_000_000_000)
+        await session.rollback()
+
+    # Assert
+    async with session_scope() as session:
+        result = await session.scalars(select(Invoice))
+        assert result.all() == []
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.invoice_due_at == period_end
+        assert persisted.compute_cpu_millicores == 1000
+        assert persisted.provisioned_at == period_end
+
+
+@pytest.mark.parametrize(
+    ("pricing_version", "crash_after"),
+    [
+        (1, "invoice"),
+        (1, "item"),
+        (1, "coupon"),
+        (1, "finalize"),
+        (2, "invoice"),
+        (2, "item"),
+        (2, "finalize"),
+        (3, "invoice"),
+        (3, "item"),
+        (3, "finalize"),
+    ],
+)
 async def test_issue_recovers_remote_success_after_crash_without_duplicate_charges(
-    monkeypatch: pytest.MonkeyPatch, crash_after: str
+    monkeypatch: pytest.MonkeyPatch, pricing_version: int, crash_after: str
 ) -> None:
     """Recover remote side effects after local rollback, even without retained idempotency keys."""
 
     # Arrange
     invoice = Invoice(
+        pricing_version=pricing_version,
         customer_id="cus_retry",
         period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
         users=7,
+        cpu_millicores=2500,
+        ram_bytes=7 * 1024**3 // 4 if pricing_version == 3 else 1_750_000_000,
         database_bytes=100 * 1024**2 + 1024**3,
-        storage_bytes=2 * 1024**3 + 1,
+        storage_bytes=2 * 1024**3 + 1 if pricing_version == 1 else 25 * 1024**3 // 2 if pricing_version == 3 else 12_500_000_000,
     )
     async with session_scope() as session:
         # Persist pending usage before exercising remote issuance retries.
@@ -130,7 +210,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
 
         # Decode the real SDK's wire request; deliberately do not retain idempotency keys.
         path = urlsplit(url).path
-        params = parse_qs(post_data or "")
+        params = parse_qs(post_data or "", keep_blank_values=True)
         event = None
         if method == "get" and path == "/v1/invoices":
             assert parse_qs(urlsplit(url).query)["customer"] == ["cus_retry"]
@@ -168,6 +248,7 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
                 ),
                 "quantity": int(params["quantity"][0]),
                 "unit_amount_decimal": params["unit_amount_decimal"][0],
+                "description": params["description"][0],
                 "metadata": {
                     "longlink_invoice_id": params["metadata[longlink_invoice_id]"][0],
                     "resource": params["metadata[resource]"][0],
@@ -211,8 +292,13 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
 
         # Applying the allowance updates the remote invoice's actual charge total.
         elif method == "post" and path == "/v1/invoices/in_1":
-            coupon = remote_coupons[params["discounts[0][coupon]"][0]]
-            remote_invoices[0]["total"] = sum(item["amount"] for item in remote_items) - coupon["amount_off"]
+            discount = 0
+            if pricing_version == 1:
+                coupon = remote_coupons[params["discounts[0][coupon]"][0]]
+                discount = coupon["amount_off"]
+            else:
+                assert params["discounts"] == [""]
+            remote_invoices[0]["total"] = sum(item["amount"] for item in remote_items) - discount
 
             # Subsequent retrieval observes the updated provider-side invoice.
             payload = remote_invoices[0]
@@ -268,6 +354,28 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
         assert persisted.stripe_invoice_id == "in_1"
         assert persisted.issued_at is not None
     assert len(remote_invoices) == 1
+    assert all(item["metadata"]["longlink_invoice_id"] == str(invoice.id) for item in remote_items)
+    if pricing_version in {2, 3}:
+        assert finalized_totals == [3388]
+        assert [(item["metadata"]["resource"], item["amount"]) for item in remote_items] == [("cpu", 2500), ("ram", 875), ("storage", 13)]
+        assert [item["quantity"] for item in remote_items] == [1, 1, 1]
+        assert [item["unit_amount_decimal"] for item in remote_items] == ["2500", "875", "13"]
+        if pricing_version == 2:
+            assert [item["description"] for item in remote_items] == [
+                "CPU: 2.5 vCPU × CHF 10/vCPU",
+                "RAM: 1.75 GB × CHF 5/GB",
+                "Storage: 12.5 GB × CHF 0.01/GB",
+            ]
+        else:
+            assert [item["description"] for item in remote_items] == [
+                "CPU: 2.5 vCPU × CHF 10/vCPU",
+                "RAM: 1.75 GiB × CHF 5/GiB",
+                "Storage: 12.5 GiB × CHF 0.01/GiB",
+            ]
+        assert remote_coupons == {}
+        return
+
+    # Historical pending invoices retain their original free credits and integer-MiB rounding.
     assert finalized_totals == [2123]
     assert [(item["metadata"]["resource"], item["amount"]) for item in remote_items] == [
         ("users", 7000),
@@ -290,7 +398,6 @@ async def test_issue_recovers_remote_success_after_crash_without_duplicate_charg
             "metadata": {"longlink_invoice_id": str(invoice.id)},
         }
     ]
-    assert all(item["metadata"]["longlink_invoice_id"] == str(invoice.id) for item in remote_items)
 
 
 @pytest.mark.parametrize(("customer", "currency"), [("cus_foreign", "chf"), ("cus_recovered", "eur")])
@@ -301,6 +408,7 @@ async def test_issue_rejects_recovered_invoice_with_wrong_customer_or_currency(
 
     # Arrange
     invoice = Invoice(
+        pricing_version=1,
         customer_id="cus_recovered",
         stripe_invoice_id="in_recovered",
         period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
@@ -357,6 +465,7 @@ async def test_issue_rejects_resource_line_owned_by_another_invoice(monkeypatch:
 
     # Arrange
     invoice = Invoice(
+        pricing_version=1,
         customer_id="cus_recovered",
         stripe_invoice_id="in_recovered",
         period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),

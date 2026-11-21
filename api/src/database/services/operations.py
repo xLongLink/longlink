@@ -89,7 +89,7 @@ async def fetch(session: AsyncSession, pagination: Pagination, search: str = "")
     return items, count_result.scalar_one()
 
 
-async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID) -> Operation:
+async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID, allocation: dict[str, int] | None = None) -> Operation:
     """Queue fresh Organization reconciliation and reuse other visible unfinished work."""
 
     # Mutable Organization state needs fresh work even when an earlier reconciliation is active.
@@ -106,7 +106,7 @@ async def enqueue(session: AsyncSession, *, kind: OperationKind, target_id: UUID
             return operation
 
     # Duplicate requests may queue repeated reconciliation; handlers must remain idempotent.
-    operation = Operation(kind=kind, target_id=target_id)
+    operation = Operation(kind=kind, target_id=target_id, allocation=allocation)
     session.add(operation)
     return operation
 
@@ -144,7 +144,7 @@ async def claim(session: AsyncSession) -> Operation | None:
                 or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
             )
             # Claim only work whose lease is still available at update time.
-            .values(lease_expires_at=now + timedelta(minutes=30))
+            .values(lease_expires_at=now.replace(microsecond=0) + timedelta(minutes=30))
         ),
     )
     if result.rowcount != 1:
@@ -153,12 +153,17 @@ async def claim(session: AsyncSession) -> Operation | None:
     return operation
 
 
-def _leased_operation_update(operation_id: UUID, now: datetime) -> Update:
+def _leased_operation_update(operation: Operation, now: datetime) -> Update:
     """Return the guarded update used only while the current worker owns a lease."""
 
     return (
         update(Operation)
-        .where(col(Operation.id) == operation_id, col(Operation.lease_expires_at) > now, col(Operation.finished_at).is_(None))
+        .where(
+            col(Operation.id) == operation.id,
+            col(Operation.lease_expires_at) == operation.lease_expires_at,
+            col(Operation.lease_expires_at) > now,
+            col(Operation.finished_at).is_(None),
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -170,7 +175,7 @@ async def complete(session: AsyncSession, operation: Operation) -> bool:
     now = datetime.now(UTC)
     result = cast(
         CursorResult[tuple[object, ...]],
-        await session.execute(_leased_operation_update(operation.id, now).values(finished_at=now, lease_expires_at=None)),
+        await session.execute(_leased_operation_update(operation, now).values(finished_at=now, lease_expires_at=None)),
     )
     if result.rowcount != 1:
         return False
@@ -214,7 +219,7 @@ async def release(session: AsyncSession, operation: Operation) -> bool:
     # Release only work still owned by this worker.
     now = datetime.now(UTC)
     result = cast(
-        CursorResult[tuple[object, ...]], await session.execute(_leased_operation_update(operation.id, now).values(lease_expires_at=None))
+        CursorResult[tuple[object, ...]], await session.execute(_leased_operation_update(operation, now).values(lease_expires_at=None))
     )
     return result.rowcount == 1
 
@@ -227,7 +232,7 @@ async def fail(session: AsyncSession, operation: Operation, reason: str) -> bool
     result = cast(
         CursorResult[tuple[object, ...]],
         await session.execute(
-            _leased_operation_update(operation.id, now).values(
+            _leased_operation_update(operation, now).values(
                 failed=(reason.strip() or "Operation failed")[:500], finished_at=now, lease_expires_at=None
             )
         ),
@@ -239,11 +244,22 @@ async def fail(session: AsyncSession, operation: Operation, reason: str) -> bool
 
     # Expose failed creation on its target without changing deletion lifecycle state.
     if operation.kind == OperationKind.organization_create:
-        await session.execute(
-            update(Organization)
-            .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
-            .values(status=Status.failed)
+        pending = await session.scalar(
+            select(col(Operation.id))
+            .where(
+                col(Operation.target_id) == operation.target_id,
+                col(Operation.kind) == OperationKind.organization_create,
+                col(Operation.finished_at).is_(None),
+                col(Operation.allocation).is_not(None),
+            )
+            .limit(1)
         )
+        if pending is None:
+            await session.execute(
+                update(Organization)
+                .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
+                .values(status=Status.failed)
+            )
 
     # Persist recovery alongside failure, including timeout failures from jobs.execute.
     # A failed restoration remains failed and never recursively schedules itself.

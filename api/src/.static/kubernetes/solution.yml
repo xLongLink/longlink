@@ -40,7 +40,7 @@ spec:
                           ephemeral-storage: 256Mi
                           memory: 128Mi
                       limits:
-                          cpu: 500m
+                          cpu: '${cpu_millicores}m'
                           ephemeral-storage: 512Mi
                           memory: 256Mi
                   envFrom:
@@ -104,7 +104,7 @@ spec:
                           ephemeral-storage: 256Mi
                           memory: 128Mi
                       limits:
-                          cpu: 500m
+                          cpu: '${cpu_millicores}m'
                           ephemeral-storage: 512Mi
                           memory: 256Mi
                   startupProbe:

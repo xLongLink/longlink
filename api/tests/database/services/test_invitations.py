@@ -1,4 +1,5 @@
 import pytest
+import secrets
 from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime, timedelta
@@ -13,6 +14,35 @@ from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
+
+
+async def test_cardless_organization_can_invite_more_than_five_members(users: tuple[User, User, User]) -> None:
+    """Invitations do not require a card or consume a billed resource allowance."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        for index in range(4):
+            member = User(email=f"member-{index}@example.com", password=secrets.token_urlsafe(32))
+            session.add(member)
+            session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await invitations.create(
+            session, organization.id, OrganizationInvitationCreate(email=invitee.email, role=OrganizationRoles.write), owner.id
+        )
+        await session.commit()
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(col(OrganizationInvitation.organization_id) == organization.id)
+        )
+        assert invitation is not None
+
+    # Assert
+    assert invitation.email == invitee.email
+    assert invitation.role == OrganizationRoles.write
 
 
 async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:

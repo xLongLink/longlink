@@ -19,12 +19,14 @@ from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
-async def queue_operation(*, kind: OperationKind = OperationKind.organization_create, target_id: UUID) -> Operation:
+async def queue_operation(
+    *, kind: OperationKind = OperationKind.organization_create, target_id: UUID, allocation: dict[str, int] | None = None
+) -> Operation:
     """Queue one standalone Operation through an explicit test transaction."""
 
     # Tests without a resource command transaction commit their queued work here.
     async with session_scope() as session:
-        operation = await operations.enqueue(session, kind=kind, target_id=target_id)
+        operation = await operations.enqueue(session, kind=kind, target_id=target_id, allocation=allocation)
         await session.commit()
         return operation
 

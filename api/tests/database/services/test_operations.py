@@ -277,8 +277,9 @@ async def test_operations_service_complete_reenqueues_stale_effective_revision()
         await session.commit()
 
     # Arrange
-    outdated = await queue(kind=OperationKind.solution_deploy, target_id=deployed_revision.id)
-    assert await claim_operation() is not None
+    await queue(kind=OperationKind.solution_deploy, target_id=deployed_revision.id)
+    outdated = await claim_operation()
+    assert outdated is not None
 
     # Act
     completed = await complete_operation(outdated)

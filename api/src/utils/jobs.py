@@ -1,5 +1,7 @@
 import asyncio
 import contextlib
+from uuid import UUID
+from typing import cast
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from functools import partial
@@ -7,6 +9,7 @@ from src.operations import handlers
 from collections.abc import Callable, Awaitable
 from src.database.session import session_scope
 from src.database.services import users, operations
+from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
@@ -55,7 +58,12 @@ async def execute(operation: Operation) -> None:
     # Bound one complete handler execution under its worker lease.
     try:
         async with asyncio.timeout(OPERATION_TIMEOUT_SECONDS):
-            await handlers[operation.kind](operation.target_id)
+            if operation.kind == OperationKind.organization_create:
+                handler = cast(Callable[[Operation], Awaitable[None]], handlers[operation.kind])
+                await handler(operation)
+            else:
+                handler = cast(Callable[[UUID], Awaitable[None]], handlers[operation.kind])
+                await handler(operation.target_id)
 
     # Graceful shutdown leaves interrupted work available for the next scheduler.
     except asyncio.CancelledError:
@@ -98,7 +106,6 @@ async def run_operation_scheduler() -> None:
     # Keep polling after transient failures so the worker remains available.
     while True:
         try:
-
             # Publish the lease before dispatching work outside the transaction.
             async with session_scope() as session:
                 operation = await operations.claim(session)
@@ -114,7 +121,6 @@ async def run_operation_scheduler() -> None:
 
         # Startup retries transient database failures without terminating the API.
         except Exception:
-
             # Back off before retrying administrator initialization.
             await asyncio.sleep(1)
 
@@ -125,7 +131,6 @@ async def run_administrator_reconciler() -> None:
     # Retry database initialization without delaying process startup and static route serving.
     while True:
         try:
-
             # Retry initialization until the configured administrator is persisted.
             async with session_scope() as session:
                 await users.ensure_administrator(session)

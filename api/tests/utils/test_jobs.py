@@ -31,10 +31,10 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     release = asyncio.Event()
     complete = operation_worker.operations.complete
 
-    async def complete_handler(target_id: UUID) -> None:
+    async def complete_handler(claimed: Operation) -> None:
         """Complete one claimed Operation."""
 
-        assert target_id == operation.target_id
+        assert claimed.id == operation.id
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
 
@@ -138,10 +138,10 @@ async def test_execute_persists_handler_failure(
     """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
     # Arrange
-    async def failing_handler(target_id: UUID) -> None:
+    async def failing_handler(claimed: Operation) -> None:
         """Raise one expected terminal failure."""
 
-        assert target_id == operation.target_id
+        assert claimed.id == operation.id
         raise failure
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
@@ -165,10 +165,10 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
     cancelled = asyncio.Event()
     monkeypatch.setattr(operation_worker, "OPERATION_TIMEOUT_SECONDS", 0.01)
 
-    async def stalled_handler(target_id: UUID) -> None:
+    async def stalled_handler(claimed: Operation) -> None:
         """Wait for the worker deadline to interrupt a real pending handler."""
 
-        assert target_id == operation.target_id
+        assert claimed.id == operation.id
         try:
             await asyncio.Event().wait()
         finally:
@@ -200,10 +200,10 @@ async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch:
     handler_release = asyncio.Event()
     handler_finished = asyncio.Event()
 
-    async def cancelled_handler(target_id: UUID) -> None:
+    async def cancelled_handler(claimed: Operation) -> None:
         """Keep real handler work suspended until its worker is externally cancelled."""
 
-        assert target_id == operation.target_id
+        assert claimed.id == operation.id
         handler_started.set()
         try:
             await handler_release.wait()
@@ -262,10 +262,10 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
     """Reject a terminal outcome that could not release the claimed operation lock."""
 
     # Arrange
-    async def complete_handler(target_id: UUID) -> None:
+    async def complete_handler(claimed: Operation) -> None:
         """Complete successfully after another transaction releases the worker lease."""
 
-        assert target_id == operation.target_id
+        assert claimed.id == operation.id
 
         # Commit the lost lease before the worker attempts its real terminal transition.
         async with operation_worker.session_scope() as session:

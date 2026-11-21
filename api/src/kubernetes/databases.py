@@ -1,5 +1,6 @@
 import json
 import asyncio
+from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from src.utils import postgres, templates
@@ -16,19 +17,48 @@ if TYPE_CHECKING:
 ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
 
 
-async def apply(client: "Kubernetes", organization_id: UUID, password: str, storage_class: str, *, size_mib: int = 100) -> None:
+async def apply(
+    client: "Kubernetes",
+    organization_id: UUID,
+    password: str,
+    storage_class: str,
+    *,
+    storage_bytes: int,
+    cpu_millicores: int,
+    ram_bytes: int,
+) -> None:
     """Create the database boundary and submit the PostgreSQL cluster."""
 
     # Render the isolated database boundary before accessing Kubernetes.
+    if min(storage_bytes, cpu_millicores, ram_bytes) <= 0:
+        raise ValueError("Database storage, CPU and RAM capacity must be positive")
     database_namespace = namespace.database(organization_id)
+    existing = ClusterResource("database", namespace=database_namespace, api=await client.api())
+    try:
+        await existing.refresh()
+    except NotFoundError:
+        pass
+    else:
+        if utils.quantity(existing.spec["storage"]["size"]) > storage_bytes:
+            raise ValueError("Database persistent storage cannot be reduced")
+
+        # The Organization reconciler orders existing compute changes against the app remainder.
+        return
+
+    # Only a missing cluster permits bootstrap credentials and initial database manifests.
     documents = templates.readyml_list(
         files("src").joinpath(".static", "kubernetes", "database.yml"),
         namespace=database_namespace,
         compute_namespace=namespace.compute(organization_id),
         storage_class=json.dumps(storage_class),
-        size_mib=size_mib,
+        storage_bytes=storage_bytes,
+        cpu_millicores=cpu_millicores,
+        ram_bytes=ram_bytes,
+        request_ram_bytes=min(ram_bytes, 256 * 1024**2),
         # Reserve storage for an additional instance during replacement.
-        quota_storage_mib=size_mib * 2,
+        quota_storage_bytes=storage_bytes * 2,
+        quota_cpu_millicores=cpu_millicores * 3,
+        quota_ram_bytes=ram_bytes * 3,
     )
     api = await client.api()
 
@@ -55,16 +85,58 @@ async def apply(client: "Kubernetes", organization_id: UUID, password: str, stor
     await utils.apply(cluster)
 
 
-async def resize(client: "Kubernetes", organization_id: UUID, *, size_mib: int) -> None:
-    """Apply monotonically increasing desired database capacity without reprovisioning credentials."""
+async def resize(client: "Kubernetes", organization_id: UUID, *, storage_bytes: int, cpu_millicores: int, ram_bytes: int) -> None:
+    """Reconcile running database resources without shrinking persistent storage."""
 
-    # Desired capacity is retained on downgrades; expand namespace admission before CNPG requests larger PVCs.
+    # Reject unsafe PVC shrink before mutating any quota or database configuration.
+    if min(storage_bytes, cpu_millicores, ram_bytes) <= 0:
+        raise ValueError("Database storage, CPU and RAM capacity must be positive")
     api = await client.api()
     database_namespace = namespace.database(organization_id)
-    quota = ResourceQuota("longlink-database", namespace=database_namespace, api=api)
-    await quota.patch({"spec": {"hard": {"requests.storage": f"{size_mib * 2}Mi"}}})
     cluster = ClusterResource("database", namespace=database_namespace, api=api)
-    await cluster.patch({"spec": {"storage": {"size": f"{size_mib}Mi"}}})
+    await cluster.refresh()
+    if utils.quantity(cluster.spec["storage"]["size"]) > storage_bytes:
+        raise ValueError("Database persistent storage cannot be reduced")
+
+    # Admit replacement Pods and PVC expansion before updating the live CNPG cluster.
+    quota = ResourceQuota("longlink-database", namespace=database_namespace, api=api)
+    await quota.patch(
+        {
+            "spec": {
+                "hard": {
+                    "requests.storage": str(storage_bytes * 2),
+                    "requests.cpu": f"{cpu_millicores * 3}m",
+                    "limits.cpu": f"{cpu_millicores * 3}m",
+                    "requests.memory": str(ram_bytes * 3),
+                    "limits.memory": str(ram_bytes * 3),
+                }
+            }
+        }
+    )
+    requests = {"cpu": f"{cpu_millicores}m", "memory": str(min(ram_bytes, 256 * 1024**2))}
+    limits = {"cpu": f"{cpu_millicores}m", "memory": str(ram_bytes)}
+    await cluster.patch({"spec": {"storage": {"size": str(storage_bytes)}, "resources": {"requests": requests, "limits": limits}}})
+
+
+async def provisioned_storage_bytes(client: "Kubernetes", organization_id: UUID) -> int:
+    """Read the current persistent allocation before accepting a capacity update."""
+
+    # Preserve historic binary allocations exactly when validating decimal-byte requests.
+    api = await client.api()
+    cluster = ClusterResource("database", namespace=namespace.database(organization_id), api=api)
+    await cluster.refresh()
+    return int(utils.quantity(cluster.spec["storage"]["size"]))
+
+
+async def compute_capacity(client: "Kubernetes", organization_id: UUID) -> tuple[int, int]:
+    """Read the live database CPU and RAM reservation before reallocating its share."""
+
+    # Existing Cluster resources retain their current reservation until a verified resize.
+    api = await client.api()
+    cluster = ClusterResource("database", namespace=namespace.database(organization_id), api=api)
+    await cluster.refresh()
+    limits = cluster.spec["resources"]["limits"]
+    return int(utils.quantity(limits["cpu"]) * 1000), int(utils.quantity(limits["memory"]))
 
 
 async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
@@ -107,6 +179,22 @@ async def wait_ready(client: "Kubernetes", organization_id: UUID) -> None:
                         )
                     ):
                         break
+
+                    # An old ready Pod cannot acknowledge a just-updated database allocation.
+                    desired_resources = cluster.spec.get("resources", {})
+                    if desired_resources:
+                        postgres_container = next(
+                            (container for container in pod.spec.get("containers", []) if container.get("name") == "postgres"), None
+                        )
+                        if postgres_container is None:
+                            break
+                        actual_resources = postgres_container.get("resources", {})
+                        if any(
+                            utils.quantity(actual_resources.get(section, {}).get(resource, "0")) != utils.quantity(capacity)
+                            for section, allocations in desired_resources.items()
+                            for resource, capacity in allocations.items()
+                        ):
+                            break
                     ready_pods += 1
                 else:
                     # Every configured PostgreSQL instance must be ready.

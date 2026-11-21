@@ -19,7 +19,6 @@ from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import payments
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.organizations import Organization
 
@@ -226,10 +225,81 @@ async def assert_card_registration_unchanged(organization: Organization) -> None
         assert persisted.storage_quota_bytes == organization.storage_quota_bytes
 
 
-async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_reconciliation(
+@pytest.mark.usefixtures("configured_stripe")
+async def test_new_checkout_obtains_allocation_billing_consent(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], card_organization: Organization, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """New checkout authorizes allocation billing rather than the obsolete excess-usage terms."""
+
+    # Arrange
+    async with session_scope() as session:
+        organization = await session.get(Organization, card_organization.id)
+        assert organization is not None
+        organization.stripe_checkout_id = None
+        await session.commit()
+    connection = MagicMock()
+    connection.v1.checkout.sessions.create_async = AsyncMock(
+        return_value=stripe.checkout.Session.construct_from(
+            {"id": "cs_allocations", "status": "open", "url": "https://stripe.example/allocations"}, None
+        )
+    )
+    provider = MagicMock()
+    provider.return_value.__aenter__.return_value = connection
+    monkeypatch.setattr(stripe_provider, "client", provider)
+
+    # Act
+    response = await clients[1].post(f"/api/v1/organizations/{card_organization.id}/cards/checkout")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"url": "https://stripe.example/allocations"}
+    parameters = connection.v1.checkout.sessions.create_async.await_args.args[0]
+    consent = parameters["custom_text"]["submit"]["message"]
+    assert "month-end application and database CPU at CHF 10/vCPU" in consent
+    assert "RAM at CHF 5/GiB" in consent
+    assert "file storage plus database disk at CHF 0.01/GiB" in consent
+    assert "above the free allowances" not in consent
+    assert "No payment is taken now." in consent
+    async with session_scope() as session:
+        organization = await session.get(Organization, card_organization.id)
+        assert organization is not None
+        assert organization.stripe_checkout_id == "cs_allocations"
+        assert organization.stripe_payment_method_id is None
+        assert organization.invoice_due_at is None
+
+
+async def test_delayed_pre_cutover_checkout_cannot_restore_payment_authorization(
     client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch, configured_stripe: str
 ) -> None:
-    """Persist verified card registration without duplicating reconciliation on replay."""
+    """Cleared legacy checkout ownership cannot authorize new allocation charges."""
+
+    # Arrange
+    async with session_scope() as session:
+        organization = await session.get(Organization, card_organization.id)
+        assert organization is not None
+        organization.stripe_checkout_id = None
+        organization.stripe_checkout_key = None
+        await session.commit()
+    reject_provider_construction(monkeypatch, (stripe_provider, "client"))
+    body, signature = signed_webhook(configured_stripe)
+
+    # Act
+    response = await client.post("/api/v1/stripe/webhook", content=body, headers={"stripe-signature": signature})
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        organization = await session.get(Organization, card_organization.id)
+        assert organization is not None
+        assert organization.stripe_checkout_id is None
+        assert organization.stripe_payment_method_id is None
+        assert organization.invoice_due_at is None
+
+
+async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_capacity(
+    client: AsyncClient, card_organization: Organization, monkeypatch: pytest.MonkeyPatch, configured_stripe: str
+) -> None:
+    """Register payment authorization without changing allocations or queuing infrastructure work."""
 
     # Arrange
     clock = MagicMock(wraps=datetime)
@@ -274,12 +344,12 @@ async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_re
         assert persisted is not None
         assert persisted.stripe_payment_method_id == "pm_acme"
         assert persisted.invoice_due_at == datetime(2026, 12, 1, tzinfo=UTC)
-        assert persisted.database_size_mib == 25600
-        assert persisted.storage_quota_bytes == 107374182400
+        assert persisted.database_storage_bytes == card_organization.database_storage_bytes
+        assert persisted.storage_bytes == card_organization.storage_bytes
+        assert persisted.compute_cpu_millicores == card_organization.compute_cpu_millicores
+        assert persisted.compute_ram_bytes == card_organization.compute_ram_bytes
     recorded_operations = await fetch_operations()
-    assert [(operation.kind, operation.target_id) for operation in recorded_operations] == [
-        (OperationKind.organization_create, card_organization.id)
-    ]
+    assert recorded_operations == []
     retrieve_checkout.assert_awaited_once_with("cs_acme")
     retrieve_intent.assert_awaited_once_with("seti_acme")
     update_customer.assert_awaited_once_with(
@@ -298,8 +368,8 @@ async def test_signed_webhook_registers_card_and_replay_preserves_billing_and_re
         assert persisted is not None
         assert persisted.stripe_payment_method_id == "pm_acme"
         assert persisted.invoice_due_at == datetime(2026, 12, 1, tzinfo=UTC)
-        assert persisted.database_size_mib == 25600
-        assert persisted.storage_quota_bytes == 107374182400
+        assert persisted.database_storage_bytes == card_organization.database_storage_bytes
+        assert persisted.storage_bytes == card_organization.storage_bytes
     await assert_no_new_operations(recorded_operations)
     retrieve_checkout.assert_awaited_with("cs_acme")
     retrieve_intent.assert_awaited_with("seti_acme")

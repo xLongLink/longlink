@@ -22,6 +22,7 @@ from src.models.organizations import (
     DatabaseState,
     OrganizationUsage,
     OrganizationByteUsage,
+    OrganizationUsageUpdate,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
     OrganizationInvitationResponse,
@@ -60,7 +61,7 @@ async def get_organization_solutions(session: auth.Session, membership: auth.Org
 
 
 @router.get("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
-async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int | bool | None]:
+async def get_organization_usage(session: auth.Session, membership: auth.OrganizationMember) -> dict[str, int | bool | str | None]:
     """Show current users, Solutions, and the same monthly rates used for invoicing."""
 
     # Read membership counts and payment authorization for this Organization.
@@ -70,17 +71,31 @@ async def get_organization_usage(session: auth.Session, membership: auth.Organiz
         .select_from(Solution)
         .where(col(Solution.organization_id) == membership.organization_id, col(Solution.deleted_at).is_(None))
     )
-    payment_method_id = await session.scalar(
-        select(col(Organization.stripe_payment_method_id)).where(col(Organization.id) == membership.organization_id)
+    capacity = await session.execute(
+        select(
+            col(Organization.compute_ram_bytes),
+            col(Organization.storage_bytes),
+            col(Organization.compute_cpu_millicores),
+            col(Organization.database_ram_bytes),
+            col(Organization.database_storage_bytes),
+            col(Organization.database_cpu_millicores),
+            col(Organization.stripe_payment_method_id).is_not(None).label("has_payment_method"),
+            col(Organization.status),
+        ).where(col(Organization.id) == membership.organization_id)
     )
+    return {**capacity.mappings().one(), "users": users, "solutions": solutions, "stripe_enabled": env.stripe_enabled}
 
-    # Return counts and billing availability without payment credentials.
-    return {
-        "users": users,
-        "solutions": solutions,
-        "stripe_enabled": env.stripe_enabled,
-        "has_payment_method": payment_method_id is not None,
-    }
+
+@router.patch("/organizations/{organization_id}/usage", response_model=OrganizationUsage)
+async def update_organization_usage(
+    session: auth.Session, payload: OrganizationUsageUpdate, membership: auth.OrganizationOwner
+) -> dict[str, int | bool | str | None]:
+    """Change purchased capacity and reconcile the Organization's resource limits."""
+
+    # Revalidate ownership under the Organization lock before changing billable capacity.
+    await organizations.update_usage(session, membership.organization_id, membership.user_id, payload)
+    await session.commit()
+    return await get_organization_usage(session, membership)
 
 
 @router.get("/organizations/{organization_id}/storage", response_model=OrganizationByteUsage)
@@ -140,8 +155,8 @@ async def get_organization_database_usage(session: auth.Session, membership: aut
     ) as exc:
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
 
-    # Convert provisioned MiB capacity to the usage response's byte unit.
-    return {"space_used": usage, "quota_bytes": organization.database_size_mib * 1024 * 1024}
+    # Report the configured byte capacity without legacy MiB rounding.
+    return {"space_used": usage, "quota_bytes": organization.database_storage_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

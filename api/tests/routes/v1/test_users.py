@@ -3,7 +3,6 @@ from httpx2 import AsyncClient
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
 from src.models.roles import OrganizationRoles
-from src.models.pricing import FREE_USERS
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.database.models.users import User
@@ -286,10 +285,10 @@ async def test_my_invitation_actions_reject_other_accounts(
     assert membership is None
 
 
-async def test_accept_my_invitation_reports_free_member_limit(
+async def test_accept_my_invitation_has_no_cardless_member_limit(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
 ) -> None:
-    """Keep the invitation and report the Free member limit instead of admitting another member."""
+    """Admit an invited sixth member without requiring a payment method."""
 
     # Arrange
     owner, invitee = users[0], users[1]
@@ -297,7 +296,7 @@ async def test_accept_my_invitation_reports_free_member_limit(
     invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write)
     invitation_id = invitation.id
     async with session_scope() as session:
-        for index in range(FREE_USERS - 1):
+        for index in range(4):
             member = User(name=f"Member {index}", email=f"member-{index}@example.com", password=owner.password)
 
             # Persist each member before returning paginated membership summaries.
@@ -313,7 +312,7 @@ async def test_accept_my_invitation_reports_free_member_limit(
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
 
     # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "This organization has reached its member limit. Ask an owner to register a card."}
-    assert remaining_invitation is not None
-    assert membership is None
+    assert response.status_code == 204
+    assert remaining_invitation is None
+    assert membership is not None
+    assert membership.role == OrganizationRoles.write

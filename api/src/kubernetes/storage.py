@@ -100,7 +100,13 @@ class Storage:
 
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.
         name = self.bucket_name(organization)
+        if quota_bytes <= 0:
+            raise ValueError("File storage capacity must be positive")
         await self._storage.create_bucket(name)
+
+        # Existing objects must fit the new file share before admitting a smaller quota.
+        if await self._storage.usage(name) > quota_bytes:
+            raise ValueError("File storage capacity cannot shrink below current object usage")
 
         # Reuse one transport until RustFS acknowledges the hard quota.
         async with self._admin() as admin:
@@ -113,7 +119,6 @@ class Storage:
         name = self.bucket_name(organization)
         if solutions:
             async with self._admin() as admin:
-
                 # Revoke every workload credential before deleting tenant data.
                 for solution in solutions:
                     await admin.revoke(solution)
