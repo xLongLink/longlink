@@ -124,7 +124,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
     return (
         <Dialog open onOpenChange={onOpenChange} title={`Update ${item.name}`} showHeader={false} bodyPadding={false}>
             <div className="grid min-h-full grid-cols-1 sm:grid-cols-2">
-                <div className="flex min-w-0 flex-col justify-center gap-4 p-6">
+                <Stack justify="center" gap={4} padding={6} className="min-w-0">
                     <Heading level={2} size={4} align="center">
                         Update {item.name}
                     </Heading>
@@ -154,7 +154,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                             aria-busy={form.formState.isSubmitting}
                         >
                             {step === 0 ? (
-                                <div className="flex min-w-0 items-center gap-3">
+                                <Stack direction="horizontal" align="center" gap={3} className="min-w-0">
                                     <span className="min-w-0 flex-1 break-all text-center font-mono text-sm text-muted-foreground">
                                         {candidate.current_version || imageDigest(candidate.current_image)}
                                     </span>
@@ -162,7 +162,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                     <span className="min-w-0 flex-1 break-all text-center font-mono text-sm">
                                         {candidate.metadata.version || imageDigest(candidate.metadata.image)}
                                     </span>
-                                </div>
+                                </Stack>
                             ) : (
                                 <fieldset
                                     disabled={form.formState.isSubmitting}
@@ -197,7 +197,12 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                                             data-disabled={isRemoved || undefined}
                                                             data-invalid={fieldState.invalid}
                                                         >
-                                                            <div className="flex items-start justify-between gap-2">
+                                                            <Stack
+                                                                direction="horizontal"
+                                                                align="start"
+                                                                justify="between"
+                                                                gap={2}
+                                                            >
                                                                 <FieldLabel htmlFor={field.name}>
                                                                     {environment.name}
                                                                 </FieldLabel>
@@ -209,7 +214,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                                                         {environment.description}
                                                                     </FieldDescription>
                                                                 )}
-                                                            </div>
+                                                            </Stack>
                                                             <Input
                                                                 {...field}
                                                                 id={field.name}
@@ -280,7 +285,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                             <FieldError errors={[form.formState.errors.root]} />
                         </form>
                     )}
-                    <div className="flex items-center justify-between gap-2">
+                    <Stack direction="horizontal" align="center" justify="between" gap={2}>
                         <Button
                             type="button"
                             variant="link"
@@ -293,7 +298,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                             {candidate && step > 0 ? 'Back' : 'Cancel'}
                         </Button>
                         {candidate ? (
-                            <div className="flex items-center gap-2">
+                            <Stack direction="horizontal" align="center" gap={2}>
                                 <Button
                                     type="submit"
                                     form={formId}
@@ -303,7 +308,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                 >
                                     {step === 2 ? 'Update solution' : 'Next'}
                                 </Button>
-                            </div>
+                            </Stack>
                         ) : (
                             !isPending && (
                                 <Button type="button" onClick={() => void refetch()}>
@@ -311,9 +316,16 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                                 </Button>
                             )
                         )}
-                    </div>
-                </div>
-                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                    </Stack>
+                </Stack>
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    align="center"
+                    justify="center"
+                    padding={6}
+                    className="h-full bg-black/10 dark:bg-black/20"
+                >
                     <img
                         src="/images/solution.png"
                         alt=""
@@ -322,7 +334,7 @@ export default function DeploymentReview({ item, onSuccess, onOpenChange }: Depl
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"
                     />
-                </div>
+                </Stack>
             </div>
         </Dialog>
     );

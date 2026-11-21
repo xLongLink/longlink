@@ -156,7 +156,7 @@ export default function VerifyEmail() {
             <Stack gap={3}>
                 <Separator />
                 <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
-                    <div className="flex flex-col gap-2">
+                    <Stack gap={2}>
                         <TextField
                             {...form.register('name')}
                             error={form.formState.errors.name?.message}
@@ -175,7 +175,7 @@ export default function VerifyEmail() {
                         <Button className="w-full" type="submit">
                             Create account
                         </Button>
-                    </div>
+                    </Stack>
                 </form>
                 <Separator />
                 <Text as="p" size="xs" align="center" tone="muted">

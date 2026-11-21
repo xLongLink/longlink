@@ -161,7 +161,7 @@ function CapacityCards({
                             <Heading level={3} size={4}>
                                 {title}
                             </Heading>
-                            <div className="flex flex-wrap justify-end gap-2 sm:ml-auto">
+                            <Stack direction="horizontal" wrap="wrap" justify="end" gap={2} className="sm:ml-auto">
                                 {section === 'compute' && (
                                     <Link variant="outline" size="sm" href="/pricing/" target="_blank">
                                         See prices
@@ -199,7 +199,7 @@ function CapacityCards({
                                         Edit
                                     </Button>
                                 )}
-                            </div>
+                            </Stack>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                             {section === 'compute' && (
@@ -304,14 +304,20 @@ function CapacityCards({
                                 const name = `${editing}_${key}`;
                                 return (
                                     <Field key={name} data-invalid={Boolean(form.formState.errors[key])}>
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <Stack
+                                            direction="horizontal"
+                                            wrap="wrap"
+                                            align="center"
+                                            justify="between"
+                                            gap={2}
+                                        >
                                             <FieldLabel htmlFor={`capacity-${name}`}>
                                                 {label} ({unit})
                                             </FieldLabel>
                                             <FieldDescription>
                                                 Minimum {minimum} {unit}
                                             </FieldDescription>
-                                        </div>
+                                        </Stack>
                                         <Input
                                             {...form.register(key, {
                                                 valueAsNumber: true,
@@ -336,23 +342,23 @@ function CapacityCards({
                                 );
                             })}
                             <FieldError errors={[form.formState.errors.root]} />
-                            <div className="flex flex-wrap items-center justify-between gap-2">
+                            <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
                                 <Link disabled={form.formState.isSubmitting} onClick={() => setEditor(null)}>
                                     Cancel
                                 </Link>
                                 <Button type="submit" disabled={form.formState.isSubmitting}>
                                     Save capacity
                                 </Button>
-                            </div>
+                            </Stack>
                         </fieldset>
-                        <div className="flex items-center justify-center p-6">
+                        <Stack direction="horizontal" gap={0} align="center" justify="center" padding={6}>
                             <img
                                 src={sections[editing].image}
                                 alt=""
                                 decoding="async"
                                 className="w-full max-w-72 object-contain invert dark:invert-0"
                             />
-                        </div>
+                        </Stack>
                     </form>
                 </Dialog>
             )}

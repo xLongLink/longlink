@@ -69,8 +69,13 @@ export default function OrganizationSolution() {
         return (
             <Platform action={action} breadcrumb={breadcrumb}>
                 <title>{`${solutionAccess.name} | LongLink`}</title>
-                <div
-                    className={`flex min-h-[calc(100vh-14rem)] w-full justify-center p-6 ${solutionAccess.status === 'failed' ? 'items-stretch' : 'items-center'}`}
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    justify="center"
+                    align={solutionAccess.status === 'failed' ? 'stretch' : 'center'}
+                    padding={6}
+                    className="min-h-[calc(100vh-14rem)] w-full"
                 >
                     <Stack gap={6} className="w-full max-w-[1200px]">
                         {solutionAccess.status === 'failed' && canMaintain ? (
@@ -84,7 +89,7 @@ export default function OrganizationSolution() {
                             notice
                         )}
                     </Stack>
-                </div>
+                </Stack>
             </Platform>
         );
     }

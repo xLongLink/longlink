@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Stack } from '@/components/longlink/layout/stack';
 import type { PublicationPage } from '@/platform/publications';
 import { useId, type KeyboardEvent, type ReactNode } from 'react';
 
@@ -97,15 +98,17 @@ function PublicationNavigationSection({ title, children }: { title: string; chil
     const headingId = useId();
 
     return (
-        <section className="flex flex-col py-1" aria-labelledby={headingId}>
+        <Stack as="section" gap={0} paddingBlock={1} aria-labelledby={headingId}>
             <h2
                 className="m-0 px-2 py-1 text-sm leading-(--text-sm--line-height) font-semibold text-muted-foreground"
                 id={headingId}
             >
                 {title}
             </h2>
-            <section className="flex flex-col gap-0.5">{children}</section>
-        </section>
+            <Stack as="section" gap={0.5}>
+                {children}
+            </Stack>
+        </Stack>
     );
 }
 

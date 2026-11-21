@@ -4,6 +4,7 @@ import * as tabs from '@/platform/tabs';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
@@ -131,7 +132,7 @@ export function SolutionTags({
                         )}
                     />
                     <FieldError errors={[form.formState.errors.root]} />
-                    <div className="flex items-center justify-between gap-2">
+                    <Stack direction="horizontal" align="center" justify="between" gap={2}>
                         <Button
                             type="button"
                             variant="link"
@@ -143,9 +144,16 @@ export function SolutionTags({
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             Save
                         </Button>
-                    </div>
+                    </Stack>
                 </fieldset>
-                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    align="center"
+                    justify="center"
+                    padding={6}
+                    className="h-full bg-black/10 dark:bg-black/20"
+                >
                     <img
                         src="/images/tabs.png"
                         alt=""
@@ -154,7 +162,7 @@ export function SolutionTags({
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"
                     />
-                </div>
+                </Stack>
             </form>
         </Dialog>
     );

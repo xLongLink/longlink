@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import ViewLayout from './view-layout';
+import { Grid } from '@/components/longlink/layout/grid';
 import { componentDocumentation } from '@/platform/publications';
 import { Card, CardHeader, CardTitle } from '@/components/shadcn/card';
 
@@ -10,7 +11,7 @@ export default function HooksPage() {
             <h2 className="font-semibold tracking-tight text-3xl" id="hooks">
                 Hooks
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Grid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
                 {componentDocumentation
                     .filter((component) => component.category === 'Hooks')
                     .map((component) => (
@@ -26,7 +27,7 @@ export default function HooksPage() {
                             </Card>
                         </Link>
                     ))}
-            </div>
+            </Grid>
         </ViewLayout>
     );
 }

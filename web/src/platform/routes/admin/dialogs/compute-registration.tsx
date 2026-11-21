@@ -6,6 +6,7 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Textarea } from '@/components/shadcn/textarea';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
@@ -160,7 +161,7 @@ export function ComputeRegistration({
                         <FieldError errors={[form.formState.errors.kubeconfig]} />
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
-                    <div className="flex items-center justify-between gap-2">
+                    <Stack direction="horizontal" gap={2} align="center" justify="between">
                         <Button
                             type="button"
                             variant="link"
@@ -175,7 +176,7 @@ export function ComputeRegistration({
                         >
                             Register
                         </Button>
-                    </div>
+                    </Stack>
                 </fieldset>
                 <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
                     <img

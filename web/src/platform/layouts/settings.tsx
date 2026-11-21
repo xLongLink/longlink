@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/shadcn/button';
+import { Stack } from '@/components/longlink/layout/stack';
 
 export function SettingsLayout({ navigation, children }: { navigation: ReactNode; children: ReactNode }) {
     return (
@@ -8,7 +9,9 @@ export function SettingsLayout({ navigation, children }: { navigation: ReactNode
             <nav aria-label="Settings sections" className="flex min-w-0 flex-col gap-0.5 pe-4">
                 {navigation}
             </nav>
-            <div className="flex min-w-0 flex-col gap-3">{children}</div>
+            <Stack gap={3} className="min-w-0">
+                {children}
+            </Stack>
         </div>
     );
 }

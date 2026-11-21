@@ -7,6 +7,7 @@ import { Input } from '@/components/shadcn/input';
 import { UserRound, Building2 } from 'lucide-react';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Avatar } from '@/components/longlink/display/avatar';
 import { Field, FieldLabel } from '@/components/shadcn/field';
 import OrganizationManagement from './organization-management';
@@ -46,18 +47,18 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
 
     // Keep account editing independent of organization loading and failures.
     return (
-        <div className="flex flex-col gap-8">
-            <div className="flex items-center gap-3">
+        <Stack gap={8}>
+            <Stack direction="horizontal" align="center" gap={3}>
                 <Avatar name={name} src={user.avatar} />
-                <div className="flex flex-col gap-0">
+                <Stack gap={0}>
                     <Heading level={1} size={4}>
                         {name}
                     </Heading>
                     <Text size="xs" tone="muted">
                         {user.email}
                     </Text>
-                </div>
-            </div>
+                </Stack>
+            </Stack>
             <SettingsLayout
                 navigation={
                     <>
@@ -77,13 +78,13 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                         <OrganizationManagement presentation="settings" />
                     </ApiBoundary>
                 ) : (
-                    <div className="flex flex-col gap-8">
-                        <div className="flex flex-col gap-4">
-                            <div className="flex min-h-8 flex-col justify-end">
+                    <Stack gap={8}>
+                        <Stack gap={4}>
+                            <Stack gap={0} justify="end" className="min-h-8">
                                 <Heading level={2} trim>
                                     Account
                                 </Heading>
-                            </div>
+                            </Stack>
                             <Separator />
                             <Field className="min-w-0">
                                 <FieldLabel htmlFor="account-name">Username</FieldLabel>
@@ -97,11 +98,11 @@ function SettingsPage({ user }: { user: z.output<typeof schemas.zCurrentUser> })
                                     onBlur={saveAccount}
                                 />
                             </Field>
-                        </div>
+                        </Stack>
                         <AppearanceSettings />
-                    </div>
+                    </Stack>
                 )}
             </SettingsLayout>
-        </div>
+        </Stack>
     );
 }

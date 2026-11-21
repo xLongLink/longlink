@@ -113,13 +113,13 @@ export default function OrganizationSettings() {
                                     <ChevronDown className="ms-auto in-data-open:rotate-180" aria-hidden="true" />
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
-                                    <div className="flex flex-col gap-0.5 ps-6">
+                                    <Stack gap={0.5} className="ps-6">
                                         {group.sections.map((item) => (
                                             <SettingsLink active={section.id} id={item.id} key={item.id}>
                                                 {item.label}
                                             </SettingsLink>
                                         ))}
-                                    </div>
+                                    </Stack>
                                 </CollapsibleContent>
                             </Collapsible>
                         ))}

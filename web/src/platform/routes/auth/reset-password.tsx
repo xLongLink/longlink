@@ -106,8 +106,13 @@ export default function ResetPassword() {
                 </Button>
             ) : form.formState.isSubmitSuccessful ? (
                 <Stack gap={4}>
-                    <div
-                        className="native-auth-banner flex max-w-full items-start gap-2 rounded-xl bg-success/10 px-4 py-3 font-[inherit] text-success-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
+                    <Stack
+                        direction="horizontal"
+                        gap={2}
+                        align="start"
+                        paddingInline={4}
+                        paddingBlock={3}
+                        className="native-auth-banner max-w-full rounded-xl bg-success/10 font-[inherit] text-success-foreground forced-colors:outline forced-colors:outline-offset-[-1px] forced-colors:outline-[CanvasText]"
                         data-status="success"
                     >
                         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
@@ -118,7 +123,7 @@ export default function ResetPassword() {
                         >
                             {confirmation}
                         </p>
-                    </div>
+                    </Stack>
                     <Link href="/login" variant="primary">
                         Back to sign in
                     </Link>

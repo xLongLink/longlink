@@ -5,6 +5,7 @@ import { Input } from '@/components/shadcn/input';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Button } from '@/components/longlink/action/button';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
@@ -47,7 +48,7 @@ export function RegistryForm({
                         </Heading>
                     </div>
                     <Field data-invalid={Boolean(form.formState.errors.credential)}>
-                        <div className="flex items-center justify-between gap-2">
+                        <Stack direction="horizontal" align="center" justify="between" gap={2}>
                             <FieldLabel htmlFor="registry-credential">Personal access token (classic)</FieldLabel>
                             <TooltipProvider>
                                 <Tooltip>
@@ -61,7 +62,7 @@ export function RegistryForm({
                                     <TooltipContent>Requires the read:packages scope.</TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
-                        </div>
+                        </Stack>
                         <Input
                             {...form.register('credential')}
                             id="registry-credential"
@@ -73,14 +74,21 @@ export function RegistryForm({
                         <FieldError errors={[form.formState.errors.credential]} />
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
-                    <div className="flex items-center justify-between gap-2">
+                    <Stack direction="horizontal" align="center" justify="between" gap={2}>
                         <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
                             Cancel
                         </Link>
                         <Button type="submit">Save</Button>
-                    </div>
+                    </Stack>
                 </fieldset>
-                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    align="center"
+                    justify="center"
+                    padding={6}
+                    className="h-full bg-black/10 dark:bg-black/20"
+                >
                     <img
                         src="/images/lock.png"
                         alt=""
@@ -89,7 +97,7 @@ export function RegistryForm({
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"
                     />
-                </div>
+                </Stack>
             </form>
         </Dialog>
     );

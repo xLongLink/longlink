@@ -15,6 +15,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { emailSchema, passwordSchema } from './validation';
+import { Stack } from '@/components/longlink/layout/stack';
 import { FieldSeparator } from '@/components/shadcn/field';
 import { useCurrentUser } from '@/platform/hooks/use-user';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -95,19 +96,19 @@ export default function Login() {
             description={null}
         >
             <title>Sign In | LongLink</title>
-            <div className="flex flex-col gap-4">
+            <Stack gap={4}>
                 <Separator />
-                <div className="flex flex-col gap-2">
+                <Stack gap={2}>
                     <form noValidate onSubmit={form.handleSubmit(save)} aria-busy={form.formState.isSubmitting}>
-                        <div className="flex flex-col gap-2">
+                        <Stack gap={2}>
                             <TextField
                                 {...form.register('email')}
                                 error={form.formState.errors.email?.message}
                                 label="Email"
                                 type="email"
                             />
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between">
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={0} align="center" justify="between">
                                     <Text size="sm" weight="medium">
                                         Password
                                     </Text>
@@ -117,8 +118,8 @@ export default function Login() {
                                     >
                                         Forgot password?
                                     </Link>
-                                </div>
-                                <div className="relative flex flex-col">
+                                </Stack>
+                                <Stack gap={0} className="relative">
                                     <TextField
                                         {...form.register('password')}
                                         error={form.formState.errors.password?.message}
@@ -144,18 +145,18 @@ export default function Login() {
                                             <Eye aria-hidden="true" size={16} />
                                         )}
                                     </button>
-                                </div>
-                            </div>
+                                </Stack>
+                            </Stack>
                             <Button className="w-full max-w-full" type="submit" variant="primary">
                                 <LogIn aria-hidden="true" size={16} />
                                 Sign In
                             </Button>
-                        </div>
+                        </Stack>
                     </form>
                     {availableOAuthProviders.length > 0 ? (
-                        <div className="flex flex-col gap-2">
+                        <Stack gap={2}>
                             <FieldSeparator>or</FieldSeparator>
-                            <div className="flex flex-col gap-2">
+                            <Stack gap={2}>
                                 {availableOAuthProviders.map((provider) => (
                                     <Button
                                         key={provider.availability}
@@ -172,10 +173,10 @@ export default function Login() {
                                         {provider.label}
                                     </Button>
                                 ))}
-                            </div>
-                        </div>
+                            </Stack>
+                        </Stack>
                     ) : null}
-                </div>
+                </Stack>
 
                 <FieldSeparator>
                     New to LongLink?{' '}
@@ -186,7 +187,7 @@ export default function Login() {
                         Create account
                     </Link>
                 </FieldSeparator>
-            </div>
+            </Stack>
         </AuthLayout>
     );
 }
