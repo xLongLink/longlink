@@ -36,11 +36,6 @@ class Organization(AuditTable, table=True):
     compute_ram_bytes: int = Field(default=pricing.DEFAULT_COMPUTE_RAM_BYTES, gt=0, sa_type=BigInteger)
     compute_cpu_millicores: int = Field(default=pricing.DEFAULT_COMPUTE_CPU_MILLICORES, gt=0)
 
-    # Last successfully reconciled billing allocation
-    applied_ram_bytes: int | None = Field(default=None, ge=0, sa_type=BigInteger)
-    applied_storage_bytes: int | None = Field(default=None, ge=0, sa_type=BigInteger)
-    applied_cpu_millicores: int | None = Field(default=None, ge=0)
-
     # Database allocation
     database_ram_bytes: int = Field(default=pricing.DEFAULT_DATABASE_RAM_BYTES, gt=0, sa_type=BigInteger)
     database_storage_bytes: int = Field(default=pricing.DEFAULT_DATABASE_STORAGE_BYTES, gt=0, sa_type=BigInteger)
@@ -64,6 +59,9 @@ class Organization(AuditTable, table=True):
 
     # Monthly usage snapshot deadline
     invoice_due_at: datetime | None = Field(default=None, index=True)
+
+    # First successfully provisioned allocation
+    provisioned_at: datetime | None = Field(default=None)
 
     # State
     status: Status = Field(

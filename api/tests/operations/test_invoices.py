@@ -23,7 +23,10 @@ from src.database.models.invoices import Invoice
 from src.database.models.organizations import Organization
 
 
-async def test_snapshot_freezes_total_allocations_once_without_measuring_consumption(users: tuple[User, User, User]) -> None:
+@pytest.mark.parametrize("status", [Status.running, Status.creating, Status.failed])
+async def test_snapshot_freezes_total_allocations_once_without_measuring_consumption(
+    users: tuple[User, User, User], status: Status
+) -> None:
     """Freeze allocations once without requiring available databases, storage, or per-user usage."""
 
     # Arrange
@@ -32,7 +35,7 @@ async def test_snapshot_freezes_total_allocations_once_without_measuring_consump
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.status = Status.failed
+        persisted.status = status
         persisted.stripe_customer_id = "cus_usage"
         persisted.stripe_payment_method_id = "pm_usage"
         persisted.compute_cpu_millicores = 2000
@@ -41,9 +44,7 @@ async def test_snapshot_freezes_total_allocations_once_without_measuring_consump
         persisted.database_cpu_millicores = 1000
         persisted.database_ram_bytes = 1024**3
         persisted.database_storage_bytes = 5 * 1024**3
-        persisted.applied_cpu_millicores = 2500
-        persisted.applied_ram_bytes = 1_750_000_000
-        persisted.applied_storage_bytes = 12_500_000_000
+        persisted.provisioned_at = period_end
         persisted.database_state = DatabaseState.failed
 
         # Make the captured Organization eligible for the closed billing period.
@@ -67,7 +68,7 @@ async def test_snapshot_freezes_total_allocations_once_without_measuring_consump
         assert invoice.customer_id == "cus_usage"
         assert invoice.period_end == period_end
         assert invoice.pricing_version == 3
-        assert (invoice.cpu_millicores, invoice.ram_bytes, invoice.storage_bytes) == (2500, 1_750_000_000, 12_500_000_000)
+        assert (invoice.cpu_millicores, invoice.ram_bytes, invoice.storage_bytes) == (3000, 2_823_741_824, 17_868_709_120)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
 
@@ -89,9 +90,7 @@ async def test_snapshot_skips_cardless_or_unprovisioned_periods(users: tuple[Use
         persisted.stripe_customer_id = "cus_unconsented"
         persisted.invoice_due_at = period_end
         if missing == "card":
-            persisted.applied_cpu_millicores = persisted.compute_cpu_millicores + persisted.database_cpu_millicores
-            persisted.applied_ram_bytes = persisted.compute_ram_bytes + persisted.database_ram_bytes
-            persisted.applied_storage_bytes = persisted.storage_bytes + persisted.database_storage_bytes
+            persisted.provisioned_at = period_end
         else:
             persisted.stripe_payment_method_id = "pm_new_consent"
         await session.commit()
@@ -102,9 +101,7 @@ async def test_snapshot_skips_cardless_or_unprovisioned_periods(users: tuple[Use
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.stripe_payment_method_id = "pm_new_consent"
-        persisted.applied_cpu_millicores = persisted.compute_cpu_millicores + persisted.database_cpu_millicores
-        persisted.applied_ram_bytes = persisted.compute_ram_bytes + persisted.database_ram_bytes
-        persisted.applied_storage_bytes = persisted.storage_bytes + persisted.database_storage_bytes
+        persisted.provisioned_at = period_end
         await session.commit()
     await invoices.snapshot(organization.id, period_end)
 
@@ -117,7 +114,7 @@ async def test_snapshot_skips_cardless_or_unprovisioned_periods(users: tuple[Use
         assert persisted.invoice_due_at == datetime(2026, 12, 1, tzinfo=UTC)
 
 
-async def test_capture_and_applied_allocation_update_share_the_callers_transaction(users: tuple[User, User, User]) -> None:
+async def test_capture_and_confirmed_allocation_update_share_the_callers_transaction(users: tuple[User, User, User]) -> None:
     """Capture the closed month before publishing new totals, without committing the caller's work."""
 
     # Arrange
@@ -129,18 +126,22 @@ async def test_capture_and_applied_allocation_update_share_the_callers_transacti
         persisted.stripe_customer_id = "cus_transition"
         persisted.stripe_payment_method_id = "pm_transition"
         persisted.invoice_due_at = period_end
-        persisted.applied_cpu_millicores = 2000
-        persisted.applied_ram_bytes = 2_000_000_000
-        persisted.applied_storage_bytes = 10_000_000_000
+        persisted.provisioned_at = period_end
+        persisted.compute_cpu_millicores = 1000
+        persisted.database_cpu_millicores = 1000
+        persisted.compute_ram_bytes = 1_000_000_000
+        persisted.database_ram_bytes = 1_000_000_000
+        persisted.storage_bytes = 5_000_000_000
+        persisted.database_storage_bytes = 5_000_000_000
         await session.commit()
 
     # Act
     async with session_scope() as session:
         persisted = await organizations.lock(session, organization.id)
         invoices.capture(session, persisted, period_end)
-        persisted.applied_cpu_millicores = 4000
-        persisted.applied_ram_bytes = 4_000_000_000
-        persisted.applied_storage_bytes = 20_000_000_000
+        persisted.compute_cpu_millicores = 3000
+        persisted.compute_ram_bytes = 3_000_000_000
+        persisted.storage_bytes = 15_000_000_000
         result = await session.scalars(select(Invoice))
         captured = result.one()
 
@@ -155,7 +156,8 @@ async def test_capture_and_applied_allocation_update_share_the_callers_transacti
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.invoice_due_at == period_end
-        assert persisted.applied_cpu_millicores == 2000
+        assert persisted.compute_cpu_millicores == 1000
+        assert persisted.provisioned_at == period_end
 
 
 @pytest.mark.parametrize(

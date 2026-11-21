@@ -3,83 +3,126 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import stripe
+from sqlalchemy import or_, select
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import select
 from src.kubernetes import utils, namespace, organizations
 from src.kubernetes import databases as database_resources
 from src.operations import invoices, databases, registries
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.kubernetes.client import Kubernetes
+from src.models.operations import OperationKind
 from src.kubernetes.storage import Storage
+from src.models.organizations import OrganizationUsageUpdate
 from src.database.models.solutions import Solution
+from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def reconcile(organization_id: UUID) -> None:
+async def reconcile(operation: Operation) -> None:
     """Provision the Organization database, then reconcile its boundary and publish it."""
 
-    # Provision the database before Solutions receive scoped credentials.
-    if not await databases.ready(organization_id):
-        return
-
-    # Skip removed Organizations.
+    # Read only this claimed request, never another request's desired allocation.
     async with session_scope() as session:
-        target = await src.database.services.organizations.infrastructure(session, organization_id)
-    if target is None:
+        claimed = await session.get(Operation, operation.id)
+        if (
+            claimed is None
+            or claimed.kind != OperationKind.organization_create
+            or claimed.target_id != operation.target_id
+            or claimed.finished_at is not None
+            or claimed.lease_expires_at != operation.lease_expires_at
+            or claimed.lease_expires_at is None
+            or claimed.lease_expires_at <= datetime.now(UTC)
+        ):
+            raise RuntimeError("Operation lease was lost")
+        allocation = OrganizationUsageUpdate.model_validate(claimed.allocation) if claimed.allocation is not None else None
+
+    # Initial database preparation uses confirmed defaults, before applying purchased capacity.
+    if not await databases.ready(operation.target_id):
         return
-    organization, compute = target
-    if organization.deleted_at is not None:
-        return
 
-    # Converge the Organization bucket before Solutions receive scoped credentials.
-    cluster = Kubernetes(compute.kubeconfig)
-
-    # Reconcile the independent application and file pools directly.
-    await database_resources.wait_ready(cluster, organization.id)
-    await organizations.apply(
-        cluster, organization.id, cpu_millicores=organization.compute_cpu_millicores, ram_bytes=organization.compute_ram_bytes
-    )
-    storage = Storage(compute, cluster)
-    await storage.apply(organization.id, quota_bytes=organization.storage_bytes)
-
-    # Reconcile the database pool separately.
-    await database_resources.resize(
-        cluster,
-        organization.id,
-        storage_bytes=organization.database_storage_bytes,
-        cpu_millicores=organization.database_cpu_millicores,
-        ram_bytes=organization.database_ram_bytes,
-    )
-    await database_resources.wait_ready(cluster, organization.id)
-
-    # Apply shared tenant infrastructure after storage capacity is configured.
-    await registries.synchronize(cluster, organization.id)
-
-    # Publish only the allocation snapshot that actually converged across providers.
-    async with session_scope() as session:
-        current = await src.database.services.organizations.lock_row(session, organization.id)
-        if current is None or current.deleted_at is not None:
+    # Fence every capacity change against deletion and competing database transitions.
+    async with databases.reconciling(operation.target_id) as lease:
+        if lease is None:
             return
-        fields = (
-            "compute_cpu_millicores",
-            "compute_ram_bytes",
-            "storage_bytes",
-            "database_cpu_millicores",
-            "database_ram_bytes",
-            "database_storage_bytes",
+
+        # Capture confirmed state and detached desired capacity before provider I/O.
+        async with session_scope() as session:
+            target = await src.database.services.organizations.infrastructure(session, operation.target_id)
+        if target is None:
+            return
+        organization, compute = target
+        if organization.deleted_at is not None:
+            return
+        desired = allocation or OrganizationUsageUpdate.model_validate(organization, from_attributes=True)
+
+        # Reconcile independent pools using only the frozen desired snapshot.
+        cluster = Kubernetes(compute.kubeconfig)
+        await lease.check()
+        await database_resources.wait_ready(cluster, organization.id)
+        await organizations.apply(
+            cluster, organization.id, cpu_millicores=desired.compute_cpu_millicores, ram_bytes=desired.compute_ram_bytes
         )
-        if any(getattr(current, field) != getattr(organization, field) for field in fields):
-            return
+        storage = Storage(compute, cluster)
+        await storage.apply(organization.id, quota_bytes=desired.storage_bytes)
+        await database_resources.resize(
+            cluster,
+            organization.id,
+            storage_bytes=desired.database_storage_bytes,
+            cpu_millicores=desired.database_cpu_millicores,
+            ram_bytes=desired.database_ram_bytes,
+        )
+        await database_resources.wait_ready(cluster, organization.id)
+        await registries.synchronize(cluster, organization.id)
 
-        # Close elapsed billing periods using the previous successfully applied allocation.
-        period_end = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        invoices.capture(session, current, period_end)
-        current.applied_cpu_millicores = organization.compute_cpu_millicores + organization.database_cpu_millicores
-        current.applied_ram_bytes = organization.compute_ram_bytes + organization.database_ram_bytes
-        current.applied_storage_bytes = organization.storage_bytes + organization.database_storage_bytes
-        current.status = Status.running
-        await session.commit()
+        # Lock both ownership records before publishing any confirmed capacity.
+        async with session_scope() as session:
+            current = await src.database.services.organizations.lock_row(session, organization.id)
+            claimed = await session.get(Operation, operation.id, populate_existing=True, with_for_update=True)
+            if (
+                current is None
+                or current.deleted_at is not None
+                or not await lease.owned(session)
+                or claimed is None
+                or claimed.finished_at is not None
+                or claimed.lease_expires_at != operation.lease_expires_at
+                or claimed.lease_expires_at is None
+                or claimed.lease_expires_at <= datetime.now(UTC)
+            ):
+                raise RuntimeError("Operation lease was lost")
+
+            # A different allocation request supersedes these provider results without lending its payload.
+            pending_statement = select(col(Operation.id)).where(
+                col(Operation.id) != operation.id,
+                col(Operation.target_id) == organization.id,
+                col(Operation.kind) == OperationKind.organization_create,
+                col(Operation.allocation).is_not(None),
+            )
+            if allocation is not None:
+                pending_statement = pending_statement.where(
+                    or_(
+                        col(Operation.created_at) > claimed.created_at,
+                        (col(Operation.created_at) == claimed.created_at) & (col(Operation.id) > claimed.id),
+                    )
+                )
+            else:
+                pending_statement = pending_statement.where(col(Operation.finished_at).is_(None))
+            pending = await session.scalar(pending_statement.limit(1))
+            if pending is not None:
+                return
+
+            # Close elapsed billing periods using the old confirmed allocation.
+            period_end = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            invoices.capture(session, current, period_end)
+            if allocation is not None:
+                for name, value in allocation.model_dump().items():
+                    setattr(current, name, value)
+            if current.provisioned_at is None:
+                current.provisioned_at = datetime.now(UTC)
+                current.status = Status.running
+            elif allocation is not None:
+                current.status = Status.running
+            await session.commit()
 
 
 async def delete(organization_id: UUID) -> None:

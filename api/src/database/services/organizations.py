@@ -399,13 +399,23 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
     # Serialize payment authorization, capacity changes, and ownership revocation.
     organization, _ = await lock_active_access(session, user_id, organization_id, OrganizationRoles.owner)
     values = payload.model_dump()
-    if organization.status not in (Status.running, Status.failed):
+    pending = await session.scalar(
+        select(col(Operation.id))
+        .where(
+            col(Operation.target_id) == organization_id,
+            col(Operation.kind) == OperationKind.organization_create,
+            col(Operation.finished_at).is_(None),
+            col(Operation.allocation).is_not(None),
+        )
+        .limit(1)
+    )
+    if pending is not None or organization.status not in (Status.running, Status.failed):
         raise HTTPException(status_code=409, detail="Organization capacity reconciliation is pending")
     if organization.status == Status.running and all(getattr(organization, name) == value for name, value in values.items()):
         return
 
     # PostgreSQL PVC capacity is irreversible even when its logical data would fit.
-    if organization.status != Status.failed and payload.database_storage_bytes < organization.database_storage_bytes:
+    if payload.database_storage_bytes < organization.database_storage_bytes:
         raise HTTPException(status_code=409, detail="Database storage cannot be reduced")
 
     # Require payment authorization for any pool increase, including transfers between pools.
@@ -439,11 +449,9 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
         if quota_bytes < used_bytes:
             raise HTTPException(status_code=409, detail="Storage capacity cannot be reduced below current usage")
 
-    # Persist the whole allocation atomically with its durable reconciliation request.
-    for name, value in values.items():
-        setattr(organization, name, value)
+    # Freeze desired capacity without changing the last confirmed allocation.
     organization.status = Status.creating
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization_id, allocation=values)
 
 
 async def update_member_role(session: AsyncSession, organization_id: UUID, member_id: UUID, role: OrganizationRoles, user_id: UUID) -> None:
@@ -593,7 +601,8 @@ async def create(session: AsyncSession, name: str, user: User) -> Organization:
     session.add(OrganizationTag(organization_id=organization.id, name="All", kind=TagKind.all, icon=TagIcon.app_window))
 
     # Queue infrastructure creation in the caller's transaction after persisting the Organization.
-    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
+    allocation = OrganizationUsageUpdate.model_validate(organization, from_attributes=True)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id, allocation=allocation.model_dump())
     return organization
 
 

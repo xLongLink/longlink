@@ -26,27 +26,25 @@ def storage_quantity(used: int) -> int:
 
 
 def capture(session: AsyncSession, organization: Organization, period_end: datetime) -> None:
-    """Freeze a due month's applied allocations under the caller's Organization lock without committing."""
+    """Freeze a due month's confirmed allocations under the caller's Organization lock without committing."""
 
     # The persisted deadline serializes replicas and excludes pre-consent or already captured months.
     if organization.deleted_at is not None or organization.invoice_due_at is None or organization.invoice_due_at > period_end:
         return
 
-    # Only renewed authorization and successfully applied allocations permit charges.
+    # Only renewed authorization and successful initial provisioning permit charges.
     if (
         organization.stripe_customer_id is not None
         and organization.stripe_payment_method_id is not None
-        and organization.applied_ram_bytes is not None
-        and organization.applied_storage_bytes is not None
-        and organization.applied_cpu_millicores is not None
+        and organization.provisioned_at is not None
     ):
         invoice = Invoice(
             organization_id=organization.id,
             customer_id=organization.stripe_customer_id,
             period_end=period_end,
-            cpu_millicores=organization.applied_cpu_millicores,
-            ram_bytes=organization.applied_ram_bytes,
-            storage_bytes=organization.applied_storage_bytes,
+            cpu_millicores=organization.compute_cpu_millicores + organization.database_cpu_millicores,
+            ram_bytes=organization.compute_ram_bytes + organization.database_ram_bytes,
+            storage_bytes=organization.storage_bytes + organization.database_storage_bytes,
         )
         session.add(invoice)
 

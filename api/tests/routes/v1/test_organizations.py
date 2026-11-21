@@ -15,7 +15,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, organizations
+from src.database.services import operations, invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.tags import OrganizationTag
 from src.models.organizations import DatabaseState
@@ -193,7 +193,9 @@ async def test_usage_edit_accepts_database_pools_larger_than_compute_and_files(
 
     # Assert
     assert response.status_code == 200
-    assert all(response.json()[name] == value for name, value in capacity.items())
+    [operation] = await fetch_operations()
+    assert operation.allocation == capacity
+    assert response.json()["storage_bytes"] == organization.storage_bytes
     assert response.json()["status"] == "creating"
 
 
@@ -239,7 +241,7 @@ async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
     assert "provisioned" in provisioned_response.json()["detail"]
     provisioned.assert_awaited_once()
 
-    # Failed growth can be undone when the actual PVC never expanded.
+    # Failed reconciliation cannot reduce the previously confirmed database capacity.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -247,8 +249,7 @@ async def test_usage_edit_rejects_desired_and_provisioned_database_shrinking(
         await session.commit()
     provisioned.return_value = smaller["database_storage_bytes"]
     restored = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=smaller)
-    assert restored.status_code == 200
-    assert restored.json()["database_storage_bytes"] == smaller["database_storage_bytes"]
+    assert restored.status_code == 409
 
 
 async def test_usage_edit_preserves_current_files_on_downsize(
@@ -279,7 +280,7 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     capacity["storage_bytes"] //= 2
     quota = capacity["storage_bytes"]
     monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
-    measurement = AsyncMock(side_effect=[quota + 1, quota])
+    measurement = AsyncMock(side_effect=[quota + 1, quota, quota])
     monkeypatch.setattr(s3.S3, "usage", measurement)
 
     # Act
@@ -292,12 +293,14 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     assert accepted.status_code == 200
     assert accepted.json()["status"] == "creating"
     assert pending.status_code == 409
-    assert accepted.json()["storage_bytes"] == capacity["storage_bytes"]
+    assert accepted.json()["storage_bytes"] == capacity["storage_bytes"] * 2
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == quota
-        persisted.status = Status.failed
+        assert persisted.storage_quota_bytes == quota * 2
+        operation = await operations.claim(session)
+        assert operation is not None
+        await operations.fail(session, operation, "Provider failed")
         await session.commit()
 
     # Failed reconciliation remains explicitly retryable with the same desired allocation.
@@ -379,11 +382,13 @@ async def test_usage_edit_accepts_minimum_workload_capacity_and_positive_file_sh
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["compute_cpu_millicores"] == 250
+    assert response.json()["compute_cpu_millicores"] == organization.compute_cpu_millicores
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == 1
+        assert persisted.storage_quota_bytes == organization.storage_bytes
+    [operation] = await fetch_operations()
+    assert operation.allocation == capacity
 
 
 async def test_usage_edit_can_update_desired_capacity_before_month_end_snapshot(
@@ -400,7 +405,7 @@ async def test_usage_edit_can_update_desired_capacity_before_month_end_snapshot(
         persisted.status = Status.running
         persisted.stripe_payment_method_id = "pm_authorized"
         persisted.invoice_due_at = datetime(2020, 1, 1, tzinfo=UTC)
-        persisted.applied_storage_bytes = persisted.storage_bytes
+        persisted.provisioned_at = datetime.now(UTC)
         await session.commit()
     usage = await clients[0].get(f"/api/v1/organizations/{organization.id}/usage")
     capacity = {
@@ -427,7 +432,7 @@ async def test_usage_edit_can_update_desired_capacity_before_month_end_snapshot(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.applied_storage_bytes == capacity["storage_bytes"] * 2
+        assert persisted.storage_bytes == capacity["storage_bytes"] * 2
 
 
 async def test_create_organization_enforces_the_per_user_beta_limit(

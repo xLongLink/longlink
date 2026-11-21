@@ -23,9 +23,11 @@ def upgrade() -> None:
         batch.add_column(sa.Column("database_cpu_millicores", sa.Integer(), nullable=False, server_default="1000"))
         batch.add_column(sa.Column("database_ram_bytes", sa.BigInteger(), nullable=False, server_default="1073741824"))
         batch.add_column(sa.Column("database_storage_bytes", sa.BigInteger(), nullable=True))
-        batch.add_column(sa.Column("applied_cpu_millicores", sa.Integer(), nullable=True))
-        batch.add_column(sa.Column("applied_ram_bytes", sa.BigInteger(), nullable=True))
-        batch.add_column(sa.Column("applied_storage_bytes", sa.BigInteger(), nullable=True))
+        batch.add_column(sa.Column("provisioned_at", UTCDateTime(), nullable=True))
+
+    # Pending operations carry desired allocations separately from confirmed organization capacities.
+    with op.batch_alter_table("operations") as batch:
+        batch.add_column(sa.Column("allocation", sa.JSON(), nullable=True))
 
     # Use bigint arithmetic so existing paid database volumes cannot overflow PostgreSQL integers.
     organizations = sa.table(
@@ -37,9 +39,7 @@ def upgrade() -> None:
         sa.column("database_ram_bytes", sa.BigInteger()),
         sa.column("database_cpu_millicores", sa.Integer()),
         sa.column("status", sa.String()),
-        sa.column("applied_ram_bytes", sa.BigInteger()),
-        sa.column("applied_storage_bytes", sa.BigInteger()),
-        sa.column("applied_cpu_millicores", sa.Integer()),
+        sa.column("provisioned_at", UTCDateTime()),
         sa.column("database_size_mib", sa.Integer()),
         sa.column("storage_quota_bytes", sa.BigInteger()),
         sa.column("storage_bytes", sa.BigInteger()),
@@ -74,15 +74,7 @@ def upgrade() -> None:
     op.execute(organizations.update().values(compute_cpu_millicores=500 + slots * 1000, compute_ram_bytes=536870912 + slots * 536870912))
 
     # Only previously running tenants have a known successfully provisioned allocation.
-    op.execute(
-        organizations.update()
-        .where(organizations.c.status == "running")
-        .values(
-            applied_cpu_millicores=organizations.c.compute_cpu_millicores + organizations.c.database_cpu_millicores,
-            applied_ram_bytes=organizations.c.compute_ram_bytes + organizations.c.database_ram_bytes,
-            applied_storage_bytes=organizations.c.storage_bytes + organizations.c.database_storage_bytes,
-        )
-    )
+    op.execute(organizations.update().where(organizations.c.status == "running").values(provisioned_at=datetime.now(UTC)))
 
     # Reconcile every retained active tenant even when no future settings edit occurs.
     connection = op.get_bind()
@@ -161,9 +153,10 @@ def downgrade() -> None:
         batch.drop_column("database_cpu_millicores")
         batch.drop_column("database_ram_bytes")
         batch.drop_column("database_storage_bytes")
-        batch.drop_column("applied_cpu_millicores")
-        batch.drop_column("applied_ram_bytes")
-        batch.drop_column("applied_storage_bytes")
+        batch.drop_column("provisioned_at")
+
+    with op.batch_alter_table("operations") as batch:
+        batch.drop_column("allocation")
 
     with op.batch_alter_table("invoices") as batch:
         batch.drop_column("pricing_version")

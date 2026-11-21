@@ -349,19 +349,15 @@ async def create_invoice(organization_id: UUID) -> None:
             # Example invoicing requires completed development payment setup.
             if organization.stripe_customer_id is None or organization.stripe_payment_method_id is None:
                 raise RuntimeError("Register the development test card before creating an example invoice")
-            if (
-                organization.applied_ram_bytes is None
-                or organization.applied_storage_bytes is None
-                or organization.applied_cpu_millicores is None
-            ):
+            if organization.provisioned_at is None:
                 raise RuntimeError("Wait for the development Organization's allocations to reconcile before creating an example invoice")
             invoice = Invoice(
                 organization_id=organization_id,
                 customer_id=organization.stripe_customer_id,
                 period_end=datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
-                ram_bytes=organization.applied_ram_bytes,
-                storage_bytes=organization.applied_storage_bytes,
-                cpu_millicores=organization.applied_cpu_millicores,
+                ram_bytes=organization.compute_ram_bytes + organization.database_ram_bytes,
+                storage_bytes=organization.storage_bytes + organization.database_storage_bytes,
+                cpu_millicores=organization.compute_cpu_millicores + organization.database_cpu_millicores,
             )
             database.add(invoice)
             await database.commit()

@@ -168,7 +168,7 @@ async def test_downgrade_rejects_allocation_invoices_without_losing_charges(
 
 
 async def test_independent_allocations_preserve_legacy_capacity_and_billing(monkeypatch: pytest.MonkeyPatch, migration_urls: str) -> None:
-    """Split independent pools without losing legacy disk capacity or changing the applied total bill."""
+    """Split independent pools without losing legacy disk capacity or provisioning state."""
 
     # Arrange
     monkeypatch.setattr(env, "DATABASE_URL", migration_urls)
@@ -265,16 +265,12 @@ async def test_independent_allocations_preserve_legacy_capacity_and_billing(monk
             assert running["compute_ram_bytes"] == 2 * 1024**3
             assert running["database_cpu_millicores"] == 1000
             assert running["database_ram_bytes"] == 1024**3
-            assert running["applied_cpu_millicores"] == 4500
-            assert running["applied_ram_bytes"] == 3 * 1024**3
-            assert running["applied_storage_bytes"] == 5000 * 1024**2 + 3 * 1024**3 + 7
+            assert running["provisioned_at"] is not None
             result = await connection.execute(current.select().where(current.c.id == failed_id))
             failed = result.mappings().one()
             assert failed["compute_cpu_millicores"] == 1500
             assert failed["compute_ram_bytes"] == 1024**3
-            assert failed["applied_cpu_millicores"] is None
-            assert failed["applied_ram_bytes"] is None
-            assert failed["applied_storage_bytes"] is None
+            assert failed["provisioned_at"] is None
             result = await connection.execute(sqlalchemy.select(models.metadata.tables["operations"].c.target_id))
             assert set(result.scalars()) == {running_id, failed_id}
 
