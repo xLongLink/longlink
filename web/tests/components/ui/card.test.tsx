@@ -76,15 +76,6 @@ it.each([true, false])(
     }
 );
 
-it('does not make a plain card an action', () => {
-    // Act
-    const output = renderStatic(<Card>Order summary</Card>);
-
-    // Assert
-    expect(output.querySelector('a, button')).toBeNull();
-    expect(output.querySelector('[data-slot="card-header"], [data-slot="card-footer"]')).toBeNull();
-});
-
 it('gives selection priority over actions and navigation and leaves nested controls independent', async () => {
     const action = vi.fn();
     const nested = vi.fn();

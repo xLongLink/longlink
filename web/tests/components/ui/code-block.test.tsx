@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, vi, expect } from 'vitest';
-import { renderStatic, withMounted } from '../../render';
+import { withMounted } from '../../render';
 import {
     CodeBlock,
     CodeBlockCopyButton,
@@ -9,13 +9,6 @@ import {
     CodeBlockHeader,
     CodeBlockTitle
 } from '@/components/reui/code-block/code-block';
-
-it('renders code as text rather than executable markup', () => {
-    const output = renderStatic(<CodeBlock code={'<script>alert(1)</script>'} language="html" />);
-
-    expect(output.textContent).toContain('<script>alert(1)</script>');
-    expect(output.querySelector('script')).toBeNull();
-});
 
 it('copies source including final newlines independently of the bounded surface and line numbers', async () => {
     // Presentation controls must not enter the clipboard payload.

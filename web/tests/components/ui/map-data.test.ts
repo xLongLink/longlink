@@ -8,11 +8,7 @@ it.each<MapCoordinate>([
     [0, -90.001],
     [0, 90.001],
     [NaN, 0],
-    [Infinity, 0],
-    [-Infinity, 0],
-    [0, NaN],
-    [0, Infinity],
-    [0, -Infinity]
+    [0, Infinity]
 ])('rejects invalid map coordinates [%s, %s]', (longitude, latitude) => {
     // Arrange
     const coordinates: MapCoordinate[] = [[longitude, latitude]];

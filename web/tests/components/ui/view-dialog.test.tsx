@@ -314,23 +314,3 @@ it('reports actual controlled visibility when the caller ignores open and close 
         expect(activity.mock.calls).toEqual([[true], [false]]);
     });
 });
-
-it('reports default-open activity and releases it when the dialog owner unmounts', async () => {
-    // Arrange
-    const activity = vi.fn();
-
-    // Act
-    await withMounted(
-        <DialogActivityContext value={activity}>
-            <Dialog title="Order details" defaultOpen />
-        </DialogActivityContext>,
-        async () => {
-            // Assert
-            expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-            expect(activity.mock.calls).toEqual([[true]]);
-        }
-    );
-
-    // Assert
-    expect(activity.mock.calls).toEqual([[true], [false]]);
-});

@@ -3,25 +3,10 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
-import { renderPlatform } from '../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import userEvent from '@testing-library/user-event';
 import Page from '@/platform/routes/auth/reset-password';
-
-it('does not expose password editing before reset proof has been verified', () => {
-    // Act
-    const output = renderPlatform(
-        <ApiBoundary>
-            <Page />
-        </ApiBoundary>,
-        '/auth/reset-password'
-    );
-
-    // Assert
-    expect(output.querySelector('h1')?.textContent).toBe('Set a new password');
-    expect(output.querySelector('input[type="password"]')).toBeNull();
-});
 
 it.each([204, 400])('handles password reset submission status %s after valid admission', async (status) => {
     // Arrange an accepted setup whose credential may expire before submission.

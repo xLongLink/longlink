@@ -38,7 +38,7 @@ it.each([
     });
 });
 
-it('keeps authored companion references in separate tables without merging published properties', async () => {
+it('switches between the example and authored companion references without merging published properties', async () => {
     const user = userEvent.setup();
 
     await withMounted(
@@ -50,12 +50,16 @@ it('keeps authored companion references in separate tables without merging publi
                 { name: 'ButtonGroup.orientation', type: '"horizontal" | "vertical"' },
                 { name: 'ButtonGroupSeparator.orientation', type: '"horizontal" | "vertical"' }
             ]}
+            example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,
         async (output) => {
-            const propertiesTab = output.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
+            const [exampleTab, propertiesTab] = output.querySelectorAll<HTMLButtonElement>('[role="tab"]');
 
-            if (!propertiesTab) throw new Error('Expected properties tab');
+            if (!exampleTab || !propertiesTab) throw new Error('Expected example and properties tabs');
+            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
+            expect(output.querySelector('table')).toBeNull();
             await act(async () => user.click(propertiesTab));
+            expect(output.textContent).not.toContain('Order details');
             expect(Array.from(output.querySelectorAll('h3'), (heading) => heading.textContent)).toEqual([
                 'Button',
                 'ButtonGroup',
@@ -78,6 +82,9 @@ it('keeps authored companion references in separate tables without merging publi
                 ['orientation', '"horizontal" | "vertical"', '"horizontal"'],
                 ['orientation', '"horizontal" | "vertical"', '"vertical"']
             ]);
+            await act(async () => user.click(exampleTab));
+            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
+            expect(output.querySelector('table')).toBeNull();
         }
     );
 });
@@ -105,37 +112,6 @@ it('keeps an edited preview mounted while its code switch changes modes', async 
             expect(output.textContent).not.toContain(code);
             expect(output.querySelector('input[aria-label="Preview draft"]')).toBe(input);
             expect(input.value).toBe('Keep this draft');
-        }
-    );
-});
-
-it('opens the example first and lets readers switch to the property reference and back', async () => {
-    const user = userEvent.setup();
-
-    await withMounted(
-        <ViewLayout
-            name="Button"
-            properties={[
-                { name: 'size', type: '"default" | "sm" | "lg"' },
-                { name: 'focusableWhenDisabled', type: 'boolean' },
-                { name: 'children', type: 'ReactNode' }
-            ]}
-            example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
-        />,
-        async (output) => {
-            const [exampleTab, propertiesTab] = output.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-
-            if (!exampleTab || !propertiesTab) throw new Error('Expected example and properties tabs');
-            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
-            expect(output.querySelector('table')).toBeNull();
-
-            await act(async () => user.click(propertiesTab));
-            expect(output.querySelector('table[aria-label="Button properties"]')).not.toBeNull();
-            expect(output.textContent).not.toContain('Order details');
-
-            await act(async () => user.click(exampleTab));
-            expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');
-            expect(output.querySelector('table')).toBeNull();
         }
     );
 });
