@@ -90,7 +90,7 @@ export default function Registries({ base, canMaintain }: { base: string; canMai
                     </TableBody>
                 </Table>
             </Stack>
-            {action && <RegistryForm base={base} onSuccess={onSuccess} onOpenChange={closeAction} />}
+            {action && <RegistryForm base={base} onSuccess={onSuccess} onClose={closeAction} />}
             {confirmation.element}
         </>
     );

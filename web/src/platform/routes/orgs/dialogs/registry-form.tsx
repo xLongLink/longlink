@@ -16,9 +16,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function RegistryForm({
     base,
     onSuccess,
-    onOpenChange
+    onClose
 }: {
-    onOpenChange: (open: boolean) => void;
+    onClose: () => void;
     base: string;
     onSuccess: () => Promise<void>;
 }) {
@@ -34,7 +34,15 @@ export function RegistryForm({
     });
 
     return (
-        <Dialog open onOpenChange={onOpenChange} title="Connect a registry" showHeader={false} bodyPadding={false}>
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+            title="Connect a registry"
+            showHeader={false}
+            bodyPadding={false}
+        >
             <form
                 className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
                 onSubmit={form.handleSubmit(submit)}
@@ -75,7 +83,7 @@ export function RegistryForm({
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
                     <Stack direction="horizontal" align="center" justify="between" gap={2}>
-                        <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
+                        <Link disabled={form.formState.isSubmitting} onClick={onClose}>
                             Cancel
                         </Link>
                         <Button type="submit">Save</Button>

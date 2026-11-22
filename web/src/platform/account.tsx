@@ -1,23 +1,20 @@
 import type { z } from 'zod';
 import { useEffect } from 'react';
+import { ApiError } from '@/lib/api';
 import type { ReactNode } from 'react';
-import { api, ApiError } from '@/lib/api';
 import { AppearanceProvider } from '@/components/appearance';
 import { CurrentUserContext } from '@/platform/hooks/use-user';
-import { useQuery, useIsMutating } from '@tanstack/react-query';
-import { currentUserKey, currentUserPath } from '@/lib/react-query';
+import { apiQueryOptions, currentUserPath } from '@/lib/react-query';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useQuery, useIsMutating, type UseQueryResult } from '@tanstack/react-query';
 import { appearanceCacheKey, clearAppearanceCache, defaultAppearance } from '@/lib/appearance';
 
 /** Owns account identity and synchronizes preferences across focus and session changes. */
 export function AccountProvider({ children }: { children: ReactNode }) {
     // Keep one identity observer for both appearance and route access decisions.
-    const currentUser = useQuery<z.output<typeof zCurrentUser> | null>({
-        queryKey: currentUserKey,
-        queryFn: ({ signal }) => api(currentUserPath, { signal }).json(zCurrentUser),
-        staleTime: 0,
-        refetchOnWindowFocus: true,
-        retry: false
+    const currentUser: UseQueryResult<z.output<typeof zCurrentUser> | null> = useQuery({
+        ...apiQueryOptions(currentUserPath, zCurrentUser),
+        refetchOnWindowFocus: true
     });
 
     const { data: user, error, refetch } = currentUser;
