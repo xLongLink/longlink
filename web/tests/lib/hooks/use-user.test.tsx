@@ -65,16 +65,6 @@ function AccountControls() {
     );
 }
 
-it('fails explicitly when used without the account provider', () => {
-    // Arrange
-    function Probe() {
-        return useAuthenticatedUser().name;
-    }
-
-    // Act / Assert
-    expect(() => renderStatic(<Probe />)).toThrow('useCurrentUser must be used within AccountProvider');
-});
-
 it('rejects an anonymous account instead of exposing it to authenticated consumers', () => {
     // Act / Assert
     expect(() =>

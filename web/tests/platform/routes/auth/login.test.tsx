@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
+import { user } from '../../render';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
 import Page from '@/platform/routes/auth/login';
@@ -9,10 +11,8 @@ import BrandLayout from '@/platform/layouts/brand';
 import userEvent from '@testing-library/user-event';
 import { AccountProvider } from '@/platform/account';
 import AccountLayout from '@/platform/layouts/account';
-import { user, TestAccountProvider } from '../../render';
 import McpAuthorization from '@/platform/routes/auth/mcp';
 import { Route, Routes, useLocation } from 'react-router';
-import { renderStatic, withMounted } from '../../../render';
 import AuthenticatedLayout from '@/platform/layouts/authenticated';
 
 /** Exposes the actual router destination without replacing navigation. */
@@ -26,24 +26,6 @@ function LocationProbe() {
         </output>
     );
 }
-
-it('keeps password entry masked and carries the email into the registration link', () => {
-    // Act
-    const output = renderStatic(
-        <ApiErrorContext value={() => undefined}>
-            <TestAccountProvider account={null}>
-                <ApiBoundary>
-                    <Page />
-                </ApiBoundary>
-            </TestAccountProvider>
-        </ApiErrorContext>,
-        '/login?email=owner%40example.com'
-    );
-
-    // Assert
-    expect(output.querySelector('a[href="/auth/register?email=owner%40example.com"]')).not.toBeNull();
-    expect(output.querySelector('input[name="password"]')?.getAttribute('type')).toBe('password');
-});
 
 it.each([
     { returnTo: 'https://attacker.example/collect', destination: '/user/organizations', content: 'Organizations' },

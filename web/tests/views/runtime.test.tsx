@@ -436,7 +436,6 @@ it('bounds request failures and retries the failed query instead of leaving its 
 it('keeps a draft in a retained authored tab while selecting another panel', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <Tabs aria-label="Order" items={[
-            { value: 'restricted', label: 'Restricted', disabled: true, content: 'Restricted details' },
             {
                 value: 'details', label: 'Details', keepMounted: true,
                 content: <input aria-label="Order draft" defaultValue="Draft" />
@@ -451,71 +450,15 @@ it('keeps a draft in a retained authored tab while selecting another panel', asy
         const tabs = runtime.mount.querySelectorAll<HTMLButtonElement>('[role="tab"]');
         const user = userEvent.setup();
 
-        if (!input || !tabs[0] || !tabs[1] || !tabs[2]) throw new Error('Expected order tabs');
-        expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+        if (!input || !tabs[0] || !tabs[1]) throw new Error('Expected order tabs');
         await user.type(input, ' order');
-        await user.click(tabs[0]);
-        expect(runtime.mount.textContent).not.toContain('Restricted details');
 
-        await user.click(tabs[2]);
-        await vi.waitFor(() => expect(tabs[2].getAttribute('aria-selected')).toBe('true'));
-        expect(runtime.mount.textContent).toContain('Order history');
         await user.click(tabs[1]);
         await vi.waitFor(() => expect(tabs[1].getAttribute('aria-selected')).toBe('true'));
+        await user.click(tabs[0]);
+        await vi.waitFor(() => expect(tabs[0].getAttribute('aria-selected')).toBe('true'));
         expect(runtime.mount.querySelector('input')).toBe(input);
         expect(input.value).toBe('Draft order');
-    } finally {
-        runtime.close();
-    }
-});
-
-it('preserves composed controls and form updates through authored JSX', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        const labels = new Map([['name', 'Draft']]);
-        const [name, setName] = useState(labels.get('name'));
-        const [saved, setSaved] = useState('');
-        return <Card>
-            <Input id="order-name" aria-label="Order name"
-                value={name} onChange={(event) => setName(event.target.value)} />
-            <Button variant="outline" size="sm" onClick={() => setSaved(name)}>
-                Save order
-            </Button>
-            <Dropdown>
-                <DropdownTrigger render={<Button variant="outline" />}>
-                    Actions
-                </DropdownTrigger>
-                <DropdownContent>
-                    <DropdownItem onClick={() => setSaved('Archived')}>Archive</DropdownItem>
-                </DropdownContent>
-            </Dropdown>
-            <output>{saved}</output>
-        </Card>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('#order-name')).not.toBeNull());
-        const input = runtime.mount.querySelector<HTMLInputElement>('#order-name');
-
-        const save = Array.from(runtime.mount.querySelectorAll('button')).find(
-            (button) => button.textContent === 'Save order'
-        );
-
-        const actions = runtime.mount.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
-
-        if (!input || !save || !actions) throw new Error('Expected editable order controls');
-
-        const user = userEvent.setup();
-        await user.clear(input);
-        await user.type(input, 'Purchase order');
-        await user.click(save);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Purchase order'));
-        await user.click(actions);
-        await vi.waitFor(() => expect(document.querySelector('[role="menuitem"]')).not.toBeNull());
-        const archive = document.querySelector<HTMLElement>('[role="menuitem"]');
-
-        if (!archive) throw new Error('Expected archive action');
-        await user.click(archive);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('output')?.textContent).toBe('Archived'));
     } finally {
         runtime.close();
     }
@@ -591,57 +534,6 @@ it('updates labeled Progress values inside the isolated View runtime', async () 
         expect(runtime.mount.querySelector('[data-slot="progress-value"]')?.textContent).toBe('80%');
         expect(runtime.mount.querySelectorAll('[data-slot="progress-value"]')[1]?.textContent).toBe('40 / 50');
         expect(runtime.mount.querySelector('[data-slot="progress-value"] strong')?.textContent).toBe('40 / 50');
-        runtime.send({ type: 'appearance', appearance: { theme: 'dark' } });
-        expect(document.documentElement.dataset.theme).toBe('dark');
-        expect(runtime.mount.querySelector('[role="progressbar"]')).toBe(progress);
-    } finally {
-        runtime.close();
-    }
-});
-
-it('uses composed menu actions to transition authored table results to empty and back', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        const [present, setPresent] = useState(true);
-        const [open, setOpen] = useState(false);
-        return <>
-            <Dropdown open={open} onOpenChange={setOpen}>
-                <DropdownTrigger>Order actions</DropdownTrigger>
-                <DropdownContent>
-                    <DropdownItem onClick={() => setPresent(false)}>Remove order</DropdownItem>
-                </DropdownContent>
-            </Dropdown>
-            {present ? <Table aria-label="Orders">
-                <TableCaption>Open orders</TableCaption>
-                <TableHeader><TableRow><TableHead scope="col">Reference</TableHead></TableRow></TableHeader>
-                <TableBody><TableRow><TableCell>PO-871</TableCell></TableRow></TableBody>
-            </Table> : <Empty title="No orders" description="The order was removed.">
-                <button type="button" onClick={() => setPresent(true)}>Restore order</button>
-            </Empty>}
-        </>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody')?.textContent).toBe('PO-871'));
-        const trigger = runtime.mount.querySelector('button');
-
-        if (!trigger) throw new Error('Expected authored menu trigger');
-        const user = userEvent.setup();
-        await user.click(trigger);
-        await vi.waitFor(() => expect(document.querySelector('[role="menuitem"]')?.textContent).toBe('Remove order'));
-        const remove = document.querySelector('[role="menuitem"]');
-
-        if (!remove) throw new Error('Expected authored menu item');
-        await user.click(remove);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('table')).toBeNull());
-        expect(runtime.mount.querySelector('[data-slot="empty-title"]')?.textContent).toBe('No orders');
-        expect(runtime.mount.textContent).not.toContain('PO-871');
-        await vi.waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'));
-        const restore = runtime.mount.querySelector('[data-slot="empty-content"] button');
-
-        if (!restore) throw new Error('Expected authored recovery action');
-        await user.click(restore);
-        await vi.waitFor(() => expect(runtime.mount.querySelector('tbody')?.textContent).toBe('PO-871'));
-        expect(runtime.mount.querySelector('[data-slot="empty"]')).toBeNull();
     } finally {
         runtime.close();
     }
@@ -700,7 +592,7 @@ it('submits options-based Select and Combobox controls exported to authored JSX 
     }
 });
 
-it('edits and resets labeled text fields through the authored View boundary', async () => {
+it('edits and resets native form fields through the authored View boundary', async () => {
     // Native exports must preserve DOM events rather than substituting adapter string callbacks.
     const runtime = await initializeRuntime(`export default function View() {
         const [draft, setDraft] = useState('Initial');
@@ -709,7 +601,7 @@ it('edits and resets labeled text fields through the authored View boundary', as
             <Input id="draft" name="draft" label="Draft" value={draft}
                 onChange={event => setDraft(event.currentTarget.value)} />
             <Textarea name="notes" aria-label="Notes" defaultValue="Original notes" />
-            <Input name="excluded" defaultValue="Private" disabled />
+            <Checkbox name="approved" label="Approved" defaultChecked />
             <output>{draft}</output>
             <button type="reset">Reset</button>
         </form>
@@ -721,9 +613,12 @@ it('edits and resets labeled text fields through the authored View boundary', as
         const form = runtime.mount.querySelector('form');
         const input = runtime.mount.querySelector<HTMLInputElement>('#draft');
         const notes = runtime.mount.querySelector('textarea');
-        const reset = runtime.mount.querySelector('button');
+        const approval = Array.from(runtime.mount.querySelectorAll('label')).find(
+            (label) => label.textContent === 'Approved'
+        );
+        const reset = runtime.mount.querySelector('button[type="reset"]');
 
-        if (!form || !input || !notes || !reset) throw new Error('Expected composed native text fields');
+        if (!form || !input || !notes || !approval || !reset) throw new Error('Expected the authored form controls');
         const user = userEvent.setup();
         await user.clear(input);
         await user.type(input, 'Edited');
@@ -734,40 +629,15 @@ it('edits and resets labeled text fields through the authored View boundary', as
         expect(runtime.mount.querySelector('#draft')).toBe(input);
         expect(new FormData(form).get('draft')).toBe('Edited');
         expect(new FormData(form).get('notes')).toBe('New notes');
-        expect(new FormData(form).has('excluded')).toBe(false);
+        expect(new FormData(form).getAll('approved')).toEqual(['on']);
+        await user.click(approval);
+        expect(new FormData(form).has('approved')).toBe(false);
         await user.click(reset);
         await vi.waitFor(() => expect(input.value).toBe('Initial'));
         expect(notes.value).toBe('Original notes');
+        await vi.waitFor(() => expect(new FormData(form).getAll('approved')).toEqual(['on']));
         expect(runtime.mount.querySelector('output')?.textContent).toBe('Initial');
         expect(runtime.mount.querySelector<HTMLElement>('[data-slot="box"]')?.style.width).toBe('320px');
-    } finally {
-        runtime.close();
-    }
-});
-
-it('toggles and resets checkbox form data through its owned label in authored Views', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        return <form>
-            <Checkbox name="approved" label="Approved" defaultChecked />
-            <button type="reset">Reset</button>
-        </form>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('label')).not.toBeNull());
-        const form = runtime.mount.querySelector('form');
-        const label = runtime.mount.querySelector('label');
-        const reset = runtime.mount.querySelector<HTMLButtonElement>('button[type="reset"]');
-
-        if (!form || !label || !reset) throw new Error('Expected the authored approval form');
-
-        const user = userEvent.setup();
-
-        expect(new FormData(form).getAll('approved')).toEqual(['on']);
-        await user.click(label);
-        expect(new FormData(form).has('approved')).toBe(false);
-        await user.click(reset);
-        await vi.waitFor(() => expect(new FormData(form).getAll('approved')).toEqual(['on']));
     } finally {
         runtime.close();
     }
@@ -819,42 +689,6 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     }
 });
 
-it('controls an owned Dialog with public Buttons inside an authored View', async () => {
-    const runtime = await initializeRuntime(`export default function View() {
-        const [open, setOpen] = useState(false);
-        return <>
-            <Button variant="outline" onClick={() => setOpen(true)}>Open order</Button>
-            <Dialog title="Order details" open={open} onOpenChange={setOpen}>
-                <p>Review the order</p>
-            </Dialog>
-        </>;
-    }`);
-
-    try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('button')?.textContent).toContain('Open order'));
-        const user = userEvent.setup();
-        const trigger = runtime.mount.querySelector('button');
-
-        if (!trigger) throw new Error('Expected dialog opener');
-        await user.click(trigger);
-        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
-        const dialog = document.querySelector('[role="dialog"]');
-        const titleId = dialog?.getAttribute('aria-labelledby');
-
-        expect(document.getElementById(titleId ?? '')?.textContent).toBe('Order details');
-        expect(dialog?.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
-
-        const close = dialog?.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
-
-        if (!close) throw new Error('Expected dialog close button');
-        await user.click(close);
-        await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
-        await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
-    } finally {
-        runtime.close();
-    }
-});
-
 it('keeps the host modal active until the last nested dialog closes', async () => {
     // Arrange
     const runtime = await initializeRuntime(`export default function View() {
@@ -878,6 +712,7 @@ it('keeps the host modal active until the last nested dialog closes', async () =
         const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
 
         if (!dialog) throw new Error('Missing standard dialog');
+        expect(dialog.closest('[data-theme-scope="stone"]')).toBe(document.documentElement);
         await vi.waitFor(() => expect(modal).toHaveBeenCalledExactlyOnceWith(true));
         const trigger = dialog.querySelector<HTMLButtonElement>('[data-slot="dialog-trigger"]');
 

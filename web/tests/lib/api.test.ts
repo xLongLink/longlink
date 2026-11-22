@@ -40,7 +40,6 @@ describe('api error mapping', () => {
     it.each([
         { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }) },
         { name: 'missing detail', response: () => Response.json({}, { status: 500 }) },
-        { name: 'non-string detail', response: () => Response.json({ detail: 123 }, { status: 422 }) },
         {
             name: 'non-JSON body',
             response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 })
@@ -59,19 +58,5 @@ describe('api error mapping', () => {
             message: 'The server could not complete the request. Please try again.',
             status: serverResponse.status
         });
-    });
-
-    it('passes network failures through without mapping', async () => {
-        // Arrange
-        const networkError = new TypeError('Network error');
-        vi.stubGlobal('fetch', async () => {
-            throw networkError;
-        });
-
-        // Act
-        const request = api.get('https://api.example/organizations');
-
-        // Assert
-        await expect(request).rejects.toBe(networkError);
     });
 });

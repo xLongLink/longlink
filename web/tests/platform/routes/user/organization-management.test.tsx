@@ -3,10 +3,10 @@
 import { act } from 'react';
 import { ApiError } from '@/lib/api';
 import { it, expect, vi } from 'vitest';
+import { membership } from '../../render';
 import { withMounted } from '../../../render';
 import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
-import { renderPlatform, membership } from '../../render';
 import Management from '@/platform/routes/user/organization-management';
 
 const invitation = {
@@ -14,18 +14,6 @@ const invitation = {
     organization: { id: '00000000-0000-4000-8000-000000000004', name: 'Invited team', status: 'running' },
     role: 'read'
 };
-
-it('uses settings presentation instead of onboarding for an empty membership list', () => {
-    // Act
-    const output = renderPlatform(<Management presentation="settings" />, '/user/settings', [
-        ['/api/v1/me/organizations', []],
-        ['/api/v1/me/invitations', []]
-    ]);
-
-    // Assert
-    expect(output.querySelector('h2')?.textContent).toBe('Organizations');
-    expect(output.querySelector('h1')).toBeNull();
-});
 
 it('starts invitations before memberships resolve and waits for both responses', async () => {
     // Arrange

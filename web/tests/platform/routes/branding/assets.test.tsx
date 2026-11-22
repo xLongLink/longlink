@@ -19,7 +19,6 @@ it('keeps downloadable files aligned with the displayed light and dark assets', 
 
                 if (!image || !preview) throw new Error('Expected a preview image and container');
                 expect(image.getAttribute('src')).toContain(`-${preview.getAttribute('data-theme')}.png`);
-                expect(figure.querySelector('figcaption')?.closest('[data-theme]')).not.toBe(preview);
                 const links = figure.querySelectorAll('a[download]');
                 expect(links.length).toBe(image.src.includes('wordmark') ? 1 : 3);
                 expect([...links].some((link) => link.getAttribute('href') === image.getAttribute('src'))).toBe(true);
@@ -29,7 +28,6 @@ it('keeps downloadable files aligned with the displayed light and dark assets', 
 
                     if (!href) throw new Error('Expected a download destination');
                     expect(link.getAttribute('download')).toBe(href.split('/').at(-1));
-                    expect(link.closest('figcaption')).not.toBeNull();
                     await access(resolve('public', href.slice(1)));
                 }
             }

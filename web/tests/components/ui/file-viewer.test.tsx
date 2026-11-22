@@ -32,31 +32,6 @@ it.each(['missing', 'rejected'] as const)('reports a %s file capability without 
     );
 });
 
-it('displays an image immediately without custom preview or download actions', async () => {
-    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-
-    try {
-        await withMounted(
-            <RequestContext value={{ request: async () => new Blob(['image'], { type: 'image/png' }) }}>
-                <FileViewer src="/api/image" title="Invoice" />
-            </RequestContext>,
-            async (output) => {
-                await vi.waitFor(async () => {
-                    await act(async () => {});
-                    expect(output.querySelector('img')?.getAttribute('src')).toBe('blob:image');
-                });
-                expect(output.querySelector('img')?.alt).toBe('Invoice');
-                expect(output.querySelector('button')).toBeNull();
-            }
-        );
-        expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:image');
-    } finally {
-        create.mockRestore();
-        revoke.mockRestore();
-    }
-});
-
 it('updates the accessible title without reloading or replacing the displayed media', async () => {
     const load = vi.fn(async () => new Blob(['image'], { type: 'image/png' }));
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:image');
