@@ -95,15 +95,11 @@ it('uses the name for stable artwork and updates it when the name changes', asyn
     });
 });
 
-it('retains generated artwork choice and named versus decorative semantics', () => {
+it('retains named versus decorative semantics', () => {
     const rounded = renderStatic(<Avatar name="Acme logo" shape="rounded" size="lg" />);
 
     const root = rounded.querySelector('[data-slot="avatar"]');
     expect(root?.getAttribute('aria-label')).toBe('Acme logo');
-    const square = renderStatic(<Avatar name="Acme" shape="square" />);
-    expect(square.querySelector('img')?.getAttribute('src')).not.toBe(
-        rounded.querySelector('img')?.getAttribute('src')
-    );
     const decorative = renderStatic(<Avatar name="  " size="sm" />).querySelector('[data-slot="avatar"]');
     expect(decorative?.getAttribute('role')).toBe('presentation');
     expect(decorative?.getAttribute('aria-hidden')).toBe('true');

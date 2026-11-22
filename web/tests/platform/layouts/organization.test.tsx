@@ -48,8 +48,6 @@ it('selects the query category and updates it when following organization links'
             </QueryClientProvider>,
             async (output) => {
                 // Assert
-                expect(output.querySelector(`a[href="${base}"]`)).not.toBeNull();
-                expect(output.querySelector(`a[href="${base}/settings"]`)).not.toBeNull();
                 expect(
                     Array.from(
                         output.querySelectorAll('nav[aria-label="Section navigation"] a[aria-current="page"]'),

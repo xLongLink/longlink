@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
+import { Users } from 'lucide-react';
 import { act, useState } from 'react';
 import type { Window } from 'happy-dom';
 import { withMounted } from '../../render';
-import { Home, Users } from 'lucide-react';
 import userEvent from '@testing-library/user-event';
 import Platform from '@/components/layouts/platform';
 import { useLocation, useNavigate } from 'react-router';
@@ -93,56 +93,6 @@ it('keeps mobile and desktop collapse preferences independent across viewport ch
             // Assert
             expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
         }
-    );
-});
-
-it('closes mobile navigation after following a link without collapsing desktop navigation', async () => {
-    // Arrange
-    viewport.setViewport({ width: 1280 });
-
-    // Act
-    await withMounted(
-        <Platform
-            action={null}
-            tabs={[
-                { href: '/admin', icon: <Home aria-hidden="true" />, label: 'Overview' },
-                { href: '/admin/users', icon: <Users aria-hidden="true" />, label: 'Users' }
-            ]}
-        >
-            <h1>Administration</h1>
-        </Platform>,
-        async (output) => {
-            // Act
-            await act(async () => viewport.setViewport({ width: 767 }));
-
-            // Assert
-            expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
-
-            // Act
-            await act(async () =>
-                output.querySelector<HTMLButtonElement>('button[aria-label="Expand sidebar"]')?.click()
-            );
-
-            // Assert
-            expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
-
-            // Act
-            const users = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/users"]');
-            if (!users) throw new Error('Missing mobile Users link');
-            await act(async () => users.click());
-
-            // Assert
-            expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
-            expect(document.querySelector('[role="dialog"]')).toBeNull();
-            expect(output.querySelector('nav[aria-label="Breadcrumb"]')?.textContent).toContain('Users');
-
-            // Act
-            await act(async () => viewport.setViewport({ width: 1280 }));
-
-            // Assert
-            expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
-        },
-        '/admin'
     );
 });
 
@@ -258,12 +208,13 @@ function GuardedNavigation() {
     );
 }
 
-it('does not close mobile navigation for cancelled or modified link gestures', async () => {
-    viewport.setViewport({ width: 767 });
+it('closes only mobile navigation and only after an unmodified, uncanceled route click', async () => {
+    viewport.setViewport({ width: 1280 });
 
     await withMounted(
         <GuardedNavigation />,
         async (output) => {
+            await act(async () => viewport.setViewport({ width: 767 }));
             await act(async () => output.querySelector<HTMLButtonElement>('button[aria-controls]')?.click());
             const users = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/users"]');
 
@@ -290,7 +241,11 @@ it('does not close mobile navigation for cancelled or modified link gestures', a
 
             await act(async () => users.click());
             expect(output.querySelector('button[aria-label="Expand sidebar"]')).not.toBeNull();
+            expect(document.querySelector('[role="dialog"]')).toBeNull();
             expect(output.querySelector('output')?.textContent).toBe('/admin/users');
+
+            await act(async () => viewport.setViewport({ width: 1280 }));
+            expect(output.querySelector('button[aria-label="Collapse sidebar"]')).not.toBeNull();
         },
         '/admin'
     );

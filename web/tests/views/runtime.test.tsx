@@ -351,12 +351,13 @@ it('keeps authored state and unsaved input through live appearance updates and r
     // A theme provider replacement must not discard View state or an uncontrolled draft.
     const runtime = await initializeRuntime(`export default function View() {
         if (typeof Fragment !== 'undefined' || typeof useContext !== 'undefined' ||
-            typeof bindViewCapabilities !== 'undefined' || typeof RequestContext !== 'undefined') {
+            typeof bindViewCapabilities !== 'undefined' || typeof RequestContext !== 'undefined' ||
+            typeof FileRequestContext !== 'undefined' || typeof Root !== 'undefined') {
             throw new Error('Internal APIs must not be exposed to Views');
         }
         const [count, setCount] = useState(0);
-        return <><input aria-label="Draft" defaultValue="" />
-            <button onClick={() => setCount(count + 1)}>Count {count}</button></>;
+        return <Stack><input aria-label="Draft" defaultValue="" />
+            <button onClick={() => setCount(count + 1)}>Count {count}</button></Stack>;
     }`);
 
     const user = userEvent.setup();
@@ -694,8 +695,8 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
         await user.click(report);
         await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'reports_report.pdf'));
         expect(navigation).toHaveBeenCalledTimes(1);
-        const items = Array.from(runtime.mount.querySelectorAll('a')).find((button) => button.textContent === 'Items');
-        if (!items) throw new Error('Expected the authored navigation button');
+        const items = Array.from(runtime.mount.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Items');
+        if (!items) throw new Error('Expected the authored navigation link');
         await user.click(items);
         await vi.waitFor(() => expect(navigation).toHaveBeenLastCalledWith('/items'));
     } finally {

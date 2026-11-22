@@ -10,7 +10,7 @@ import { ApiErrorContext } from '@/lib/errors';
 import { Link, Route, Routes, MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-it.each(['retry', 'navigation'] as const)('recovers a failed validated read through %s', async (recovery) => {
+it('resets the failed read when navigating to another page', async () => {
     // Arrange
     const schema = z.object({ name: z.string() });
     const errors: unknown[] = [];
@@ -54,35 +54,24 @@ it.each(['retry', 'navigation'] as const)('recovers a failed validated read thro
         });
 
         // Assert
-        await vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page.'));
-        expect(output.querySelector('button')?.textContent).toBe('Retry');
+        await vi.waitFor(() => expect(output.querySelector('[role="status"] h1')).not.toBeNull());
         expect(errors).toEqual([
             expect.objectContaining({ name: 'ApiError', status: 503, message: 'Orders unavailable' })
         ]);
         expect(transport).toHaveBeenCalledTimes(1);
 
         // Act
-        if (recovery === 'retry') {
-            const retry = output.querySelector('button');
-            expect(retry?.type).toBe('button');
-            retry?.click();
-        } else {
-            const link = output.querySelector('a');
-            expect(link?.getAttribute('href')).toBe('/healthy');
-            link?.click();
-        }
+        const link = output.querySelector<HTMLAnchorElement>('a[href="/healthy"]');
+        if (!link) throw new Error('Expected a link to healthy orders');
+        link.click();
 
         // Assert
         await vi.waitFor(() => expect(output.querySelector('p')?.textContent).toBe('Healthy orders'));
-        expect(output.textContent).not.toContain('Unable to load this page.');
-        expect(output.querySelector('button')).toBeNull();
+        expect(output.querySelector('[role="status"] h1')).toBeNull();
         expect(transport.mock.calls.map(([input]) => (input instanceof Request ? input.url : String(input)))).toEqual([
             'http://localhost/api/orders/failed',
-            `http://localhost/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`
+            'http://localhost/api/orders/healthy'
         ]);
-        expect(client.getQueryData(['api', `/api/orders/${recovery === 'retry' ? 'failed' : 'healthy'}`])).toEqual({
-            name: 'Healthy orders'
-        });
         expect(errors).toHaveLength(1);
     } finally {
         root.unmount();

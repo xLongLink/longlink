@@ -3,12 +3,16 @@
 import { act } from 'react';
 import { user } from '../../render';
 import { it, expect, vi } from 'vitest';
+import { Route, Routes } from 'react-router';
 import { withMounted } from '../../../render';
+import { ApiBoundary } from '@/components/api';
 import { ApiErrorContext } from '@/lib/errors';
+import { useQuery } from '@tanstack/react-query';
 import Page from '@/platform/routes/user/settings';
 import userEvent from '@testing-library/user-event';
+import { AccountProvider } from '@/platform/account';
+import Authenticated from '@/platform/layouts/authenticated';
 import { CurrentUserContext } from '@/platform/hooks/use-user';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 /** Publishes authoritative profile responses through the account observer. */
 function AccountSettings() {
@@ -18,7 +22,6 @@ function AccountSettings() {
         <CurrentUserContext value={currentUser}>
             <Page />
             <output aria-label="Authenticated account name">{currentUser.data.name}</output>
-            <output aria-label="Authenticated account theme">{currentUser.data.theme}</output>
         </CurrentUserContext>
     );
 }
@@ -112,86 +115,113 @@ it('trims blur saves, locks the pending field, and publishes the canonical accou
     }
 });
 
-/** Publishes profile changes through the same cache observed by the authenticated route. */
-function AccountChanges() {
-    const client = useQueryClient();
+it('saves theme by keyboard without discarding the name draft, then resets the draft for a new account', async () => {
+    let account = user;
+    const writes: unknown[] = [];
+    const submitted = vi.fn();
+    const appearanceKey = 'longlink:appearance';
+    const cached = localStorage.getItem(appearanceKey);
+    const savedAccount = { ...user, theme: 'light' } satisfies typeof user;
+    let resolveSave: (response: Response) => void = () => undefined;
+    const save = new Promise<Response>((resolve) => {
+        resolveSave = resolve;
+    });
+    const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+        const request = input instanceof Request ? input : new Request(input, options);
 
-    return (
-        <>
-            <button
-                type="button"
-                onClick={() => client.setQueryData(['api', '/api/v1/me'], { ...user, theme: 'dark' })}
-            >
-                Update appearance
-            </button>
-            <button
-                type="button"
-                onClick={() =>
-                    client.setQueryData(['api', '/api/v1/me'], {
-                        ...user,
-                        id: '00000000-0000-4000-8000-000000000003',
-                        name: 'Another Owner',
-                        email: 'another@example.com'
-                    })
-                }
-            >
-                Switch account
-            </button>
-        </>
-    );
-}
+        if (new URL(request.url).pathname !== '/api/v1/me') throw new Error(`Unexpected request: ${request.url}`);
+        if (request.method === 'GET') return Response.json(account);
+        if (request.method !== 'PATCH') throw new Error(`Unexpected method: ${request.method}`);
+        writes.push(await request.json());
 
-it('preserves a name draft through same-account appearance updates but resets it for a new identity', async () => {
-    const transport = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected profile write'));
+        return (await save).clone();
+    });
 
     try {
         await withMounted(
-            <ApiErrorContext value={() => undefined}>
-                <AccountSettings />
-                <AccountChanges />
+            <ApiErrorContext
+                value={(error) => {
+                    throw error;
+                }}
+            >
+                <AccountProvider>
+                    <ApiBoundary>
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                submitted();
+                            }}
+                        >
+                            <Routes>
+                                <Route element={<Authenticated />}>
+                                    <Route path="/user/settings" element={<Page />} />
+                                </Route>
+                            </Routes>
+                        </form>
+                    </ApiBoundary>
+                </AccountProvider>
             </ApiErrorContext>,
             async (output) => {
                 const events = userEvent.setup();
-                const input = output.querySelector('input');
+                await vi.waitFor(() => expect(output.querySelector('#account-name')).not.toBeNull());
+                const name = output.querySelector<HTMLInputElement>('#account-name');
+                const dark = output.querySelector<HTMLInputElement>('input[aria-label="Dark"]');
+                const light = output.querySelector<HTMLInputElement>('input[aria-label="Light"]');
 
-                if (!input) throw new Error('Username input is missing');
-
-                const updateAppearance = Array.from(output.querySelectorAll('button')).find(
-                    (button) => button.textContent === 'Update appearance'
-                );
-
-                if (!updateAppearance) throw new Error('Appearance update control is missing');
+                if (!name || !dark || !light) throw new Error('Expected username and theme settings');
                 await act(async () => {
-                    await events.clear(input);
-                    await events.type(input, 'Unsaved Owner');
-                    updateAppearance.click();
+                    dark.focus();
+                    await events.keyboard('{Enter}');
                 });
                 await vi.waitFor(() => {
-                    expect(output.querySelector('[aria-label="Authenticated account theme"]')?.textContent).toBe(
-                        'dark'
-                    );
-                    expect(output.querySelector('input')).toBe(input);
-                    expect(input.value).toBe('Unsaved Owner');
-                    expect(output.querySelector('output')?.textContent).toBe('Owner');
+                    expect(dark.getAttribute('aria-disabled')).toBe('true');
+                    expect(document.documentElement.dataset.theme).toBe('dark');
                 });
+                expect(writes).toEqual([{ theme: 'dark' }]);
 
-                const switchAccount = Array.from(output.querySelectorAll('button')).find(
-                    (button) => button.textContent === 'Switch account'
-                );
+                await act(async () => {
+                    await events.keyboard('{Enter} ');
+                    light.click();
+                    await events.clear(name);
+                    await events.type(name, 'Unsaved Owner');
+                });
+                expect(writes).toHaveLength(1);
+                expect(submitted).not.toHaveBeenCalled();
 
-                if (!switchAccount) throw new Error('Account switch control is missing');
-                await act(async () => switchAccount.click());
+                await act(async () => resolveSave(Response.json(savedAccount)));
                 await vi.waitFor(() => {
-                    expect(output.querySelector('input')?.value).toBe('Another Owner');
-                    expect(output.querySelector('h1')?.textContent).toBe('Another Owner');
+                    expect(dark.getAttribute('aria-disabled')).toBeNull();
+                    expect(light.checked).toBe(true);
+                    expect(localStorage.getItem(appearanceKey)).toBe(JSON.stringify({ theme: 'light' }));
+                });
+                expect(document.documentElement.dataset.theme).toBe('light');
+                expect(output.querySelector('#account-name')).toBe(name);
+                expect(name.value).toBe('Unsaved Owner');
+
+                await act(async () => {
+                    account = {
+                        ...savedAccount,
+                        id: '00000000-0000-4000-8000-000000000003',
+                        name: 'Another Owner',
+                        email: 'another@example.com'
+                    };
+                    localStorage.setItem(appearanceKey, JSON.stringify({ theme: 'dark' }));
+                    window.dispatchEvent(new StorageEvent('storage', { key: appearanceKey }));
+                });
+                await vi.waitFor(() => {
+                    expect(output.querySelector<HTMLInputElement>('#account-name')?.value).toBe('Another Owner');
                     expect(output.textContent).toContain('another@example.com');
+                    expect(localStorage.getItem(appearanceKey)).toBe(JSON.stringify({ theme: 'light' }));
                 });
-                expect(transport).not.toHaveBeenCalled();
+                expect(writes).toHaveLength(1);
             },
             '/user/settings'
         );
     } finally {
+        resolveSave(Response.json(savedAccount));
         transport.mockRestore();
+        if (cached === null) localStorage.removeItem(appearanceKey);
+        else localStorage.setItem(appearanceKey, cached);
     }
 });
 

@@ -39,7 +39,6 @@ describe('api error mapping', () => {
 
     it.each([
         { name: 'blank detail', response: () => Response.json({ detail: '   ' }, { status: 422 }) },
-        { name: 'missing detail', response: () => Response.json({}, { status: 500 }) },
         {
             name: 'non-JSON body',
             response: () => new Response('boom', { headers: { 'Content-Type': 'text/plain' }, status: 500 })

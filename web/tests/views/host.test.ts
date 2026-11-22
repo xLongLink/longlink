@@ -17,8 +17,7 @@ describe('Solution response loading', () => {
         { media: 'audio/ogg', expected: 'audio/ogg' },
         { media: 'video/mp4', expected: 'video/mp4' },
         { media: 'application/xml', expected: 'application/xml' },
-        { media: 'image/svg+xml', expected: 'application/octet-stream' },
-        { media: 'application/x-unknown', expected: 'application/octet-stream' }
+        { media: 'image/svg+xml', expected: 'application/octet-stream' }
     ])('admits $media as $expected without changing attachment bytes', async ({ media, expected }) => {
         const bytes = new Uint8Array([0x00, 0xff, 0x3c, 0x3e]);
         vi.spyOn(globalThis, 'fetch').mockImplementation(

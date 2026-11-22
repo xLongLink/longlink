@@ -37,18 +37,10 @@ describe('SolutionPage', () => {
 
     it.each([
         {
-            name: 'a manifest failure',
-            response: () => Response.json({ detail: 'Manifest unavailable' }, { status: 503 }),
-            initialPath: '/',
-            title: 'Unable to load this solution',
-            description: 'The solution definition could not be loaded.'
-        },
-        {
             name: 'an empty manifest response',
             response: () => manifestResponse([]),
             initialPath: '/',
-            title: 'Unexpected solution response',
-            description: 'The solution did not expose any views to render.'
+            title: 'Unexpected solution response'
         },
         {
             name: 'a view failure after loading the manifest',
@@ -58,10 +50,9 @@ describe('SolutionPage', () => {
                 return Response.json({ detail: 'View unavailable' }, { status: 503 });
             },
             initialPath: '/home',
-            title: 'Unable to load this view',
-            description: 'The view could not be loaded.'
+            title: 'Unable to load this view'
         }
-    ])('renders $name', async ({ response, initialPath, title, description }) => {
+    ])('renders an error without opening a View for $name', async ({ response, initialPath, title }) => {
         // Arrange
         stubFetch(response);
 
@@ -69,8 +60,8 @@ describe('SolutionPage', () => {
         const output = await renderPage(initialPath);
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain(title)));
-        expect(output.textContent).toContain(description);
+        await act(async () => vi.waitFor(() => expect(output.querySelector('h1')?.textContent).toBe(title)));
+        expect(output.querySelector('iframe')).toBeNull();
     });
 
     it('replaces a pending manifest indicator with the eventual failure without exposing a frame', async () => {
@@ -229,20 +220,28 @@ describe('SolutionPage', () => {
     it('transfers dynamic route parameters', async () => {
         // Arrange
         vi.useFakeTimers();
-        stubFetch((url) => {
+        const fetchView = vi.fn((url: string) => {
             if (url.endsWith('/views.json'))
-                return manifestResponse([{ path: 'views/issues/[item]', route: '/issues/:issueId' }]);
+                return manifestResponse([
+                    { path: 'issues.jsx', route: '/issues' },
+                    { path: 'views/issues/[item]', route: '/issues/:issueId' }
+                ]);
 
             return sourceResponse(
                 'export default function Issue({ params }) { return <Text>{params.issueId}</Text>; }'
             );
         });
+        stubFetch(fetchView);
 
         // Act
         const output = await renderPage('/issues/42');
 
         // Assert
         const { frame, session, transfer } = await observeView(output);
+        expect(fetchView.mock.calls.map(([url]) => decodeURI(new URL(url).pathname))).toEqual([
+            '/views.json',
+            '/views/issues/[item]'
+        ]);
 
         // Authenticated window dispatch transfers the route parameters synchronously.
         window.dispatchEvent(

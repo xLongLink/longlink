@@ -66,23 +66,34 @@ it.each(['create', 'edit'] as const)(
                     expect(writes).toEqual([]);
                     expect(completed).not.toHaveBeenCalled();
 
-                    await act(async () => {
-                        await events.type(input, '  Finance  ');
-                        await events.click(submit);
-                    });
+                    await act(async () => events.type(input, '  Finance  '));
+                    if (mode === 'create') {
+                        const icon = document.getElementById('tag-icon');
+
+                        if (!icon) throw new Error('Expected the tab icon picker');
+                        await act(async () => {
+                            await events.clear(icon);
+                            await events.type(icon, 'Tools');
+                        });
+                        const tools = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+                            (option) => option.textContent === 'Tools'
+                        );
+
+                        if (!tools) throw new Error('Expected the searched Tools icon');
+                        await act(async () => events.click(tools));
+                    }
+                    await act(async () => events.click(submit));
                     await vi.waitFor(() => expect(dialog?.textContent).toContain('Could not save the tab.'));
                     expect(input.getAttribute('aria-invalid')).toBe('false');
                     expect(input.value).toBe('  Finance  ');
-                    expect(writes).toEqual([{ name: 'Finance', icon: mode === 'edit' ? 'wrench' : 'tag' }]);
+                    const payload = { name: 'Finance', icon: 'wrench' };
+                    expect(writes).toEqual([payload]);
                     expect(completed).not.toHaveBeenCalled();
 
                     // Retry the retained draft through the real footer action.
                     await act(async () => events.click(submit));
                     await vi.waitFor(() => expect(completed).toHaveBeenCalledOnce());
-                    expect(writes).toEqual([
-                        { name: 'Finance', icon: mode === 'edit' ? 'wrench' : 'tag' },
-                        { name: 'Finance', icon: mode === 'edit' ? 'wrench' : 'tag' }
-                    ]);
+                    expect(writes).toEqual([payload, payload]);
                 }
             );
         } finally {

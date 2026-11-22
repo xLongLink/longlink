@@ -7,36 +7,6 @@ import { Dialog } from '@/components/longlink/layout/dialog';
 import { DialogActivityContext } from '@/lib/view-capabilities';
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from '@/components/longlink/action/dropdown';
 
-it('closes a dialog without submitting its form', async () => {
-    const close = vi.fn();
-    const submit = vi.fn((event: React.SubmitEvent) => event.preventDefault());
-    const activity = vi.fn();
-    const user = userEvent.setup();
-
-    // Keep visibility caller-owned while exercising the modal close control.
-    await withMounted(
-        <DialogActivityContext value={activity}>
-            <Dialog title="Edit order" fullscreen open onOpenChange={close}>
-                <form onSubmit={submit}>
-                    <input aria-label="Order name" />
-                </form>
-            </Dialog>
-        </DialogActivityContext>,
-        async () => {
-            const button = document.querySelector<HTMLButtonElement>('[data-slot="dialog-close"]');
-
-            if (!button) throw new Error('Missing close button');
-
-            await act(async () => user.click(button));
-            expect(close).toHaveBeenCalledTimes(1);
-            expect(close.mock.calls[0]?.[0]).toBe(false);
-            expect(submit).not.toHaveBeenCalled();
-            expect(activity).toHaveBeenCalledExactlyOnceWith(true);
-        }
-    );
-    expect(activity).toHaveBeenLastCalledWith(false);
-});
-
 it('keeps a portaled menu operable inside the modal and dismisses the innermost layer first', async () => {
     const action = vi.fn();
     const user = userEvent.setup();

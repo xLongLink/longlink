@@ -27,32 +27,23 @@ it('forwards native image attributes without allowing alternate network sources'
     expect(output.querySelector('img')?.getAttribute('srcset')).toBeNull();
 });
 
-it.each(['data:image/png;base64,AA==', 'blob:caller-owned'])(
-    'renders inline image %s without requesting host capability',
-    async (src) => {
-        // Arrange
-        const requests: string[] = [];
-        const files = {
-            request: async (path: string) => {
-                requests.push(path);
+it('renders an inline data image without requesting host capability', async () => {
+    // Arrange
+    const src = 'data:image/png;base64,AA==';
+    const request = vi.fn(async () => new Blob());
 
-                return new Blob();
-            }
-        };
-
-        // Act
-        await withMounted(
-            <RequestContext value={files}>
-                <Image src={src} alt="Photo" />
-            </RequestContext>,
-            async (output) => {
-                // Assert
-                expect(output.querySelector('img')?.getAttribute('src')).toBe(src);
-                expect(requests).toEqual([]);
-            }
-        );
-    }
-);
+    // Act
+    await withMounted(
+        <RequestContext value={{ request }}>
+            <Image src={src} alt="Photo" />
+        </RequestContext>,
+        async (output) => {
+            // Assert
+            expect(output.querySelector('img')?.getAttribute('src')).toBe(src);
+            expect(request).not.toHaveBeenCalled();
+        }
+    );
+});
 
 it('releases owned previews on source changes and ignores late responses', async () => {
     // Hold host responses independently so stale requests cannot overwrite the current photo.
@@ -148,17 +139,18 @@ it('recovers from an inline decode failure on source change without revoking cal
     // A failed image must not leave the next source stuck in its placeholder state.
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const onError = vi.fn();
+    const request = vi.fn(async () => new Blob());
 
     function Photo() {
         const [src, setSrc] = useState('blob:broken');
 
         return (
-            <>
+            <RequestContext value={{ request }}>
                 <button type="button" onClick={() => setSrc('blob:replacement')}>
                     Replace
                 </button>
                 <Image src={src} alt="" onError={onError} />
-            </>
+            </RequestContext>
         );
     }
 
@@ -179,6 +171,7 @@ it('recovers from an inline decode failure on source change without revoking cal
         });
 
         expect(revoke).not.toHaveBeenCalled();
+        expect(request).not.toHaveBeenCalled();
     } finally {
         revoke.mockRestore();
     }

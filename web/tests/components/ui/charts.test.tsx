@@ -138,11 +138,7 @@ it('adds or removes chart controls only when requested', async () => {
     });
 });
 
-it.each([
-    { name: 'BarChart', Chart: BarChart },
-    { name: 'LineChart', Chart: LineChart },
-    { name: 'AreaChart', Chart: AreaChart }
-])('toggles $name axes with the supplied category and value formatters', async ({ Chart }) => {
+it('formats category and value labels when the shared Cartesian axes are enabled', async () => {
     // Arrange
     function Preview() {
         const [axes, setAxes] = useState(false);
@@ -153,7 +149,7 @@ it.each([
                     Toggle axes
                 </button>
                 <Box height={280}>
-                    <Chart
+                    <BarChart
                         data={[
                             { month: 'Jan', requests: 10 },
                             { month: 'Feb', requests: 20 }

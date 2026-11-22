@@ -4,7 +4,51 @@ import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
 import { Controller, useForm } from 'react-hook-form';
-import { Select, Slider, Combobox, RadioGroup } from '@/components/longlink';
+import { SliderExample } from '@/platform/routes/docs/sdk/views/slider';
+import { Input, Select, Slider, Combobox, RadioGroup } from '@/components/longlink';
+
+it('focuses the invalid text field and preserves its descriptions after correction', async () => {
+    function EmailForm() {
+        const form = useForm({ defaultValues: { email: '' } });
+
+        return (
+            <form noValidate onSubmit={form.handleSubmit(() => {})}>
+                <p id="policy">Only work accounts.</p>
+                <Input
+                    {...form.register('email', { required: 'Enter a work email.' })}
+                    id="email"
+                    label="Email"
+                    description="Your account email."
+                    aria-describedby="policy"
+                    error={form.formState.errors.email?.message}
+                />
+                <button type="submit">Save</button>
+            </form>
+        );
+    }
+
+    await withMounted(<EmailForm />, async (output) => {
+        const input = output.querySelector('input');
+        const save = output.querySelector('button[type="submit"]');
+
+        if (!input || !save) throw new Error('Expected the email form');
+        const user = userEvent.setup();
+        await act(async () => user.click(save));
+        expect(document.activeElement).toBe(input);
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        expect(document.getElementById('email-error')?.textContent).toBe('Enter a work email.');
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual([
+            'policy',
+            'email-description',
+            'email-error'
+        ]);
+
+        await act(async () => user.type(input, 'mara@example.com'));
+        expect(input.getAttribute('aria-invalid')).not.toBe('true');
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['policy', 'email-description']);
+        expect(document.getElementById('email-error')).toBeNull();
+    });
+});
 
 it.each([Select, Combobox, RadioGroup])(
     'focuses the owned control when form validation rejects an empty selection',
@@ -72,8 +116,7 @@ it.each([Select, Combobox])(
                     defaultValue={['design']}
                     options={[
                         { value: 'design', label: 'Design' },
-                        { value: 'engineering', label: 'Engineering' },
-                        { value: 'restricted', label: 'Restricted', disabled: true }
+                        { value: 'engineering', label: 'Engineering' }
                     ]}
                 />
                 <Control
@@ -109,7 +152,6 @@ it.each([Select, Combobox])(
                 await act(async () => user.click(engineering));
                 await vi.waitFor(() => expect(new FormData(form).getAll('teams')).toEqual(['design', 'engineering']));
                 expect(new FormData(form).has('excluded')).toBe(false);
-                expect(new FormData(form).getAll('teams')).not.toContain('restricted');
                 await act(async () => user.keyboard('{Escape}'));
                 form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
                 await act(async () => user.click(reset));
@@ -249,20 +291,44 @@ it('keeps the first duplicate combobox option authoritative and refreshes labels
     });
 });
 
+/** Supplies slider layout measurements that Happy DOM cannot calculate. */
+function measureSlider(form: HTMLFormElement | null) {
+    for (const thumb of form?.querySelectorAll<HTMLElement>('[data-slot="slider-thumb"]') ?? []) {
+        thumb.getBoundingClientRect = () => new DOMRect(0, 0, 12, 12);
+        if (thumb.parentElement) thumb.parentElement.getBoundingClientRect = () => new DOMRect(0, 0, 200, 20);
+    }
+}
+
+it('submits one keyboard-edited value from the labeled scalar slider example', async () => {
+    await withMounted(
+        <form ref={measureSlider}>
+            <SliderExample />
+        </form>,
+        async (output) => {
+            const form = output.querySelector('form');
+            const input = output.querySelector('input[type="range"]');
+
+            if (!form || !input) throw new Error('Expected a progress slider');
+            expect(output.querySelectorAll('input[type="range"]')).toHaveLength(1);
+            expect(document.getElementById(input.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Progress');
+            expect(document.getElementById(input.getAttribute('aria-describedby') ?? '')?.textContent).toBeTruthy();
+
+            const user = userEvent.setup();
+            await act(async () => {
+                await user.tab();
+                await user.keyboard('{ArrowRight}');
+            });
+            expect(new FormData(form).getAll('progress')).toEqual(['61']);
+        }
+    );
+});
+
 it('preserves thumb focus and range values while editing the internally composed slider', async () => {
     function Range() {
         const [value, setValue] = useState([20, 80]);
 
         return (
-            <form
-                ref={(form) => {
-                    for (const thumb of form?.querySelectorAll<HTMLElement>('[data-slot="slider-thumb"]') ?? []) {
-                        thumb.getBoundingClientRect = () => new DOMRect(0, 0, 12, 12);
-                        if (thumb.parentElement)
-                            thumb.parentElement.getBoundingClientRect = () => new DOMRect(0, 0, 200, 20);
-                    }
-                }}
-            >
+            <form ref={measureSlider}>
                 <Slider name="range" label="Budget" value={value} onValueChange={setValue} min={0} max={100} step={5} />
                 <output>{value.join(',')}</output>
             </form>

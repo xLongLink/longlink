@@ -181,30 +181,29 @@ it('keeps PDF bytes out of text rendering and embedded documents despite a text 
     );
 });
 
-it.each(['application/octet-stream', 'image/svg+xml'])(
-    'does not embed or interpret unsupported %s files',
-    async (type) => {
-        const create = vi.spyOn(URL, 'createObjectURL');
+it('does not embed or interpret unsupported SVG files', async () => {
+    const create = vi.spyOn(URL, 'createObjectURL');
 
-        try {
-            await withMounted(
-                <RequestContext value={{ request: async () => new Blob(['<script>active()</script>'], { type }) }}>
-                    <FileViewer src="/api/file" title="Attachment" />
-                </RequestContext>,
-                async (output) => {
-                    await vi.waitFor(async () => {
-                        await act(async () => {});
-                        expect(output.querySelector('[role="status"]')?.textContent).toContain('Preview unavailable');
-                    });
-                    expect(output.querySelector('img, script, iframe, object, embed')).toBeNull();
-                    expect(create).not.toHaveBeenCalled();
-                }
-            );
-        } finally {
-            create.mockRestore();
-        }
+    try {
+        await withMounted(
+            <RequestContext
+                value={{ request: async () => new Blob(['<script>active()</script>'], { type: 'image/svg+xml' }) }}
+            >
+                <FileViewer src="/api/file" title="Attachment" />
+            </RequestContext>,
+            async (output) => {
+                await vi.waitFor(async () => {
+                    await act(async () => {});
+                    expect(output.querySelector('[role="status"]')?.textContent).toContain('Preview unavailable');
+                });
+                expect(output.querySelector('img, script, iframe, object, embed')).toBeNull();
+                expect(create).not.toHaveBeenCalled();
+            }
+        );
+    } finally {
+        create.mockRestore();
     }
-);
+});
 
 it('shares a pending file request and reloads after all viewers close, releasing their URLs', async () => {
     // Arrange

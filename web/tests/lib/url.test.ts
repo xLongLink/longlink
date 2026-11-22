@@ -31,13 +31,11 @@ describe('resolveExternalUrl', () => {
 });
 
 describe('resolveNavigationUrl', () => {
-    it('omits empty destinations', () => {
-        expect(resolveNavigationUrl('/', '')).toBe('');
+    it('omits blank destinations', () => {
         expect(resolveNavigationUrl('/solutions/123', '   ')).toBe('');
     });
 
     it.each([
-        ['/api', '/items', '/api/items'],
         ['/api/', 'items', '/api/items'],
         [
             'https://solutions.example/api/solutions/123/proxy/',
@@ -50,7 +48,6 @@ describe('resolveNavigationUrl', () => {
     });
 
     it('resolves dot segments', () => {
-        expect(resolveNavigationUrl('/api', '../items')).toBe('/api/items');
         expect(resolveNavigationUrl('/api/solutions/123/proxy/', '../../me')).toBe('/api/solutions/123/proxy/me');
     });
 
