@@ -15,6 +15,7 @@ from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.storage import Storage
+from src.models.organizations import MAX_SOLUTION_CPU_MILLICORES
 from src.database.models.solutions import Revision, Solution
 
 
@@ -127,7 +128,7 @@ async def deploy(revision_id: UUID) -> None:
         runtime_environment,
         # Replays reuse the captured release and skip already-completed migrations.
         revision_id=revision.id,
-        cpu_millicores=min(500, organization.compute_cpu_millicores),
+        cpu_millicores=min(MAX_SOLUTION_CPU_MILLICORES, organization.compute_cpu_millicores),
         migrate=revision.deployed_at is None,
         registry_connection_id=revision.registry_connection_id,
     )

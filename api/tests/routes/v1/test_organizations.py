@@ -5,17 +5,22 @@ from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import col, select
 from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
-from src.utils import s3, mail
+from src.utils import s3, mail, postgres
+from contextlib import asynccontextmanager
 from sqlalchemy import func
 from urllib.parse import urlencode
 from unittest.mock import AsyncMock
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import object_session
 from src.kubernetes import databases
+from collections.abc import AsyncGenerator
 from src.models.tags import TagKind
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations, invitations, organizations
+from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.database.models.tags import OrganizationTag
 from src.models.organizations import DatabaseState
@@ -886,6 +891,92 @@ async def test_organization_storage_endpoint_rejects_non_members(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
+
+
+@pytest.mark.parametrize("usage", [4096, TimeoutError(), OSError("tunnel closed"), SQLAlchemyError("database unavailable")])
+async def test_organization_database_usage_measures_after_commit_and_releases_tunnel(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    usage: int | Exception,
+) -> None:
+    """Measure the authorized tenant outside its read transaction and close failed tunnels."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_state = DatabaseState.available
+        persisted.database_storage_bytes = 1_000_000_001
+        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+    released: list[UUID] = []
+
+    async def measure(_database: postgres.Postgres, organization_id: UUID) -> int:
+        """Measure or fail at the external SQL boundary."""
+
+        assert organization_id == organization.id
+        if isinstance(usage, Exception):
+            raise usage
+        return usage
+
+    @asynccontextmanager
+    async def connection(target: Organization, _cluster: Kubernetes) -> AsyncGenerator[postgres.Postgres]:
+        """Provide the external tunnel while checking the caller released its transaction."""
+
+        assert target.id == organization.id
+        session = object_session(target)
+        assert session is not None
+        assert not session.in_transaction()
+        database = postgres.Postgres(host="localhost", port=5432, username="postgres", password=target.database_password)
+        try:
+            yield database
+        finally:
+            released.append(target.id)
+
+    monkeypatch.setattr(databases, "connection", connection)
+    monkeypatch.setattr(postgres.Postgres, "usage", measure)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/organizations/{organization.id}/database")
+
+    # Assert
+    if isinstance(usage, Exception):
+        assert response.status_code == 503
+        assert response.json() == {"detail": "Database usage unavailable"}
+    else:
+        assert response.status_code == 200
+        assert response.json() == {"space_used": 4096, "quota_bytes": 1_000_000_001}
+    assert released == [organization.id]
+    assert await fetch_operations() == []
+
+
+async def test_organization_database_usage_rejects_nonmembers_and_unavailable_state_before_provider_io(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject foreign and unavailable database inspection without provisioning or repair."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    def unexpected_provider(*_args: object) -> object:
+        """Reject any provider construction for denied or unavailable inspection."""
+
+        raise AssertionError("database usage reached a provider")
+
+    monkeypatch.setattr(organizations, "Kubernetes", unexpected_provider)
+
+    # Act
+    denied = await clients[1].get(f"/api/v1/organizations/{organization.id}/database")
+    unavailable = await clients[0].get(f"/api/v1/organizations/{organization.id}/database")
+
+    # Assert
+    assert denied.status_code == 403
+    assert denied.json() == {"detail": "Access required"}
+    assert unavailable.status_code == 503
+    assert unavailable.json() == {"detail": "Database usage unavailable"}
+    assert await fetch_operations() == []
 
 
 async def test_get_organization_invitations_restricts_visibility(

@@ -17,6 +17,24 @@ if TYPE_CHECKING:
 ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
 
 
+def _allocation(storage_bytes: int, cpu_millicores: int, ram_bytes: int) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
+    """Build database quota and instance resources for bootstrap and resize."""
+
+    # Admit replacement work while keeping the instance's memory request bounded.
+    quota = {
+        "requests.storage": str(storage_bytes * 2),
+        "requests.cpu": f"{cpu_millicores * 3}m",
+        "limits.cpu": f"{cpu_millicores * 3}m",
+        "requests.memory": str(ram_bytes * 3),
+        "limits.memory": str(ram_bytes * 3),
+    }
+    resources = {
+        "requests": {"cpu": f"{cpu_millicores}m", "memory": str(min(ram_bytes, 256 * 1024**2))},
+        "limits": {"cpu": f"{cpu_millicores}m", "memory": str(ram_bytes)},
+    }
+    return quota, resources
+
+
 async def apply(
     client: "Kubernetes",
     organization_id: UUID,
@@ -46,19 +64,15 @@ async def apply(
         return
 
     # Only a missing cluster permits bootstrap credentials and initial database manifests.
+    quota, resources = _allocation(storage_bytes, cpu_millicores, ram_bytes)
     documents = templates.readyml_list(
         files("src").joinpath(".static", "kubernetes", "database.yml"),
         namespace=database_namespace,
         compute_namespace=namespace.compute(organization_id),
         storage_class=json.dumps(storage_class),
         storage_bytes=storage_bytes,
-        cpu_millicores=cpu_millicores,
-        ram_bytes=ram_bytes,
-        request_ram_bytes=min(ram_bytes, 256 * 1024**2),
-        # Reserve storage for an additional instance during replacement.
-        quota_storage_bytes=storage_bytes * 2,
-        quota_cpu_millicores=cpu_millicores * 3,
-        quota_ram_bytes=ram_bytes * 3,
+        quota=json.dumps({"pods": "3", "persistentvolumeclaims": "2", **quota}),
+        resources=json.dumps(resources),
     )
     api = await client.api()
 
@@ -99,23 +113,10 @@ async def resize(client: "Kubernetes", organization_id: UUID, *, storage_bytes: 
         raise ValueError("Database persistent storage cannot be reduced")
 
     # Admit replacement Pods and PVC expansion before updating the live CNPG cluster.
+    capacity, resources = _allocation(storage_bytes, cpu_millicores, ram_bytes)
     quota = ResourceQuota("longlink-database", namespace=database_namespace, api=api)
-    await quota.patch(
-        {
-            "spec": {
-                "hard": {
-                    "requests.storage": str(storage_bytes * 2),
-                    "requests.cpu": f"{cpu_millicores * 3}m",
-                    "limits.cpu": f"{cpu_millicores * 3}m",
-                    "requests.memory": str(ram_bytes * 3),
-                    "limits.memory": str(ram_bytes * 3),
-                }
-            }
-        }
-    )
-    requests = {"cpu": f"{cpu_millicores}m", "memory": str(min(ram_bytes, 256 * 1024**2))}
-    limits = {"cpu": f"{cpu_millicores}m", "memory": str(ram_bytes)}
-    await cluster.patch({"spec": {"storage": {"size": str(storage_bytes)}, "resources": {"requests": requests, "limits": limits}}})
+    await quota.patch({"spec": {"hard": capacity}})
+    await cluster.patch({"spec": {"storage": {"size": str(storage_bytes)}, "resources": resources}})
 
 
 async def provisioned_storage_bytes(client: "Kubernetes", organization_id: UUID) -> int:

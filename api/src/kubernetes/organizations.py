@@ -5,7 +5,7 @@ from src.utils import templates
 from src.kubernetes import utils, namespace
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Namespace, NetworkPolicy, ResourceQuota
-from src.models.organizations import MAX_SOLUTIONS
+from src.models.organizations import MAX_SOLUTIONS, MAX_SOLUTION_CPU_MILLICORES
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -18,7 +18,7 @@ async def apply(client: "Kubernetes", organization_id: UUID, *, cpu_millicores: 
     compute_namespace = namespace.compute(organization_id)
     if cpu_millicores <= 0 or ram_bytes <= 0:
         raise ValueError("Applications require positive CPU and RAM capacity")
-    application_cpu = min(500, cpu_millicores)
+    application_cpu = min(MAX_SOLUTION_CPU_MILLICORES, cpu_millicores)
     slots = min(MAX_SOLUTIONS, cpu_millicores // application_cpu, ram_bytes // (256 * 1024**2))
     if slots < 1:
         raise ValueError("Applications require at least 256Mi RAM capacity")

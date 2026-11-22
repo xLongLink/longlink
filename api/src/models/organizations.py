@@ -10,6 +10,7 @@ from src.models.users import UserIdentity
 from src.models.statuses import Status
 
 MAX_SOLUTIONS = 9
+MAX_SOLUTION_CPU_MILLICORES = 500
 
 
 class DatabaseState(StrEnum):

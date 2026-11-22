@@ -9,6 +9,7 @@ from sqlmodel import col
 from src.utils import s3, roles
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import defer, load_only, joinedload, selectinload, contains_eager
 from src.kubernetes import databases
 from collections.abc import Sequence
@@ -26,7 +27,7 @@ from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.database.models.tags import OrganizationTag
-from src.models.organizations import OrganizationUsageUpdate
+from src.models.organizations import DatabaseState, OrganizationUsageUpdate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
@@ -210,6 +211,33 @@ async def database_infrastructure(session: AsyncSession, organization_id: UUID) 
     if target is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     return target
+
+
+async def database_usage(organization: Organization, compute: ComputeRegistry) -> int:
+    """Measure database bytes without provisioning or repairing unavailable infrastructure."""
+
+    # Usage reads never provision or repair an unavailable database.
+    if organization.database_state != DatabaseState.available:
+        raise HTTPException(status_code=503, detail="Database usage unavailable")
+
+    # Bound tunnel establishment and SQL measurement, releasing connections on every outcome.
+    try:
+        async with asyncio.timeout(15):
+            cluster = Kubernetes(compute.kubeconfig)
+            async with databases.connection(organization, cluster) as database:
+                return await database.usage(organization.id)
+    except (
+        TimeoutError,
+        OSError,
+        RuntimeError,
+        SQLAlchemyError,
+        ServerError,
+        NotFoundError,
+        APITimeoutError,
+        ConnectionClosedError,
+        httpx.HTTPError,
+    ) as exc:
+        raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
 
 
 def _infrastructure_query() -> Select[Organization, ComputeRegistry]:
