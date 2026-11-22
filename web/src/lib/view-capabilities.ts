@@ -1,6 +1,8 @@
 import { createContext } from 'react';
 import type { ViewData, RequestOptions } from '@/views/protocol';
 
+export type { ViewData, RequestOptions } from '@/views/protocol';
+
 export const RequestContext = createContext<{
     request: (path: string, options?: RequestOptions) => Promise<ViewData>;
 } | null>(null);

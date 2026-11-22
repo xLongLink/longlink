@@ -8,10 +8,10 @@ import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
 import type { ViewData } from '@/views/protocol';
 import userEvent from '@testing-library/user-event';
-import { useSubmit } from '@/views/hooks/use-submit';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/longlink/form/input';
 import { RequestContext } from '@/lib/view-capabilities';
+import { useSubmit } from '@/components/longlink/hooks/use-submit';
 
 it('blocks invalid data, surfaces a failed write, and retries the preserved draft without reporting success early', async () => {
     const request = vi

@@ -34,75 +34,6 @@ declare namespace React {
     }
 }
 
-/** Groups JSX children without a DOM wrapper. @category Runtime @group Functions */
-declare const Fragment: ViewComponent<{
-    key?: string | number;
-}>;
-
-/**
- * Returns the current state and a setter. Pass a value or an initializer function; updates can use the previous state.
- * @category Runtime
- * @group Hooks
- */
-declare function useState<T = undefined>(initial?: T | (() => T)): [T, (value: T | ((previous: T) => T)) => void];
-
-/**
- * Synchronizes with external systems after rendering. Return a cleanup function to release timers or subscriptions. Include every reactive value used by the effect in its dependencies.
- * @category Runtime
- * @group Hooks
- */
-declare function useEffect(effect: () => void | (() => void), dependencies?: readonly unknown[]): void;
-
-/**
- * Caches a calculated value until its dependencies change. Use it for expensive calculations, not required application state.
- * @category Runtime
- * @group Hooks
- */
-declare function useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
-
-/**
- * Returns a stable object with a mutable current property. Changing current does not trigger a render.
- * @category Runtime
- * @group Hooks
- */
-declare function useRef<T>(initial: T): { current: T };
-
-/**
- * Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.
- * @category Runtime
- * @group Functions
- */
-declare function navigate(path: string): void;
-
-/**
- * Saves a scoped Solution attachment through the host using a sanitized filename.
- * @category Runtime
- * @group Functions
- */
-declare function download(path: string, filename: string): Promise<void>;
-
-/**
- * Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.
- * @category Runtime
- * @group Functions
- */
-declare function request<T = unknown>(
-    path: string,
-    options?: {
-        method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-        json?: unknown;
-        form?: [string, string | Blob][];
-        binary?: boolean;
-    }
-): Promise<T>;
-
-/**
- * Returns Solution data and an awaitable invalidator scoped to the full request path. The renderer handles initial loading, errors, and retry.
- * @category Runtime
- * @group Hooks
- */
-declare function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>];
-
 /** @category Display */
 declare function Text(props: Parameters<typeof NativeFrontend.Text>[0]): React.JSX.Element;
 
@@ -205,6 +136,7 @@ import SortingState = NativeFrontend.SortingState;
 import Stack = NativeFrontend.Stack;
 import StackItem = NativeFrontend.StackItem;
 import StreetMap = NativeFrontend.StreetMap;
+import SubmitOptions = NativeFrontend.SubmitOptions;
 import Switch = NativeFrontend.Switch;
 import Table = NativeFrontend.Table;
 import TableBody = NativeFrontend.TableBody;
@@ -217,12 +149,21 @@ import TableRow = NativeFrontend.TableRow;
 import Tabs = NativeFrontend.Tabs;
 import Textarea = NativeFrontend.Textarea;
 import Timestamp = NativeFrontend.Timestamp;
+import ViewCapabilities = NativeFrontend.ViewCapabilities;
 import createFilterQuery = NativeFrontend.createFilterQuery;
 import dataGridFeatures = NativeFrontend.dataGridFeatures;
 import flattenFilterConditions = NativeFrontend.flattenFilterConditions;
+import useApi = NativeFrontend.useApi;
 import useConfirm = NativeFrontend.useConfirm;
+import useEffect = NativeFrontend.useEffect;
 import useForm = NativeFrontend.useForm;
+import useMemo = NativeFrontend.useMemo;
+import useRef = NativeFrontend.useRef;
+import useState = NativeFrontend.useState;
 import useSubmit = NativeFrontend.useSubmit;
 import useTable = NativeFrontend.useTable;
 import z = NativeFrontend.z;
 import zodResolver = NativeFrontend.zodResolver;
+
+declare const download: NativeFrontend.ViewCapabilities['download'];
+declare const navigate: NativeFrontend.ViewCapabilities['navigate'];

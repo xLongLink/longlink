@@ -8,6 +8,7 @@ import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
+import { bindViewCapabilities } from '@/components/longlink/capabilities';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
@@ -274,7 +275,7 @@ function initialize(event: MessageEvent<unknown>): void {
             transforms: ['jsx', 'imports'],
             jsxRuntime: 'classic',
             jsxPragma: '__jsx',
-            jsxFragmentPragma: 'Fragment',
+            jsxFragmentPragma: '__fragment',
             production: true
         }).code;
 
@@ -282,11 +283,10 @@ function initialize(event: MessageEvent<unknown>): void {
             // Keep JSX compilation separate from the public View API.
             __jsx: (type: React.ElementType, props: React.Attributes | null, ...children: React.ReactNode[]) =>
                 React.createElement(Object.is(type, globalThis.Map) ? components.Map : type, props, ...children),
+            __fragment: React.Fragment,
             ...components,
             Map: globalThis.Map,
-            request,
-            download,
-            navigate
+            ...bindViewCapabilities({ download, navigate })
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;

@@ -2,9 +2,9 @@
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../render';
-import { useSubmit } from '@/views/hooks/use-submit';
 import { RequestContext } from '@/lib/view-capabilities';
-import type { SubmitOptions } from '@/views/hooks/use-submit';
+import { useSubmit } from '@/components/longlink/hooks/use-submit';
+import type { SubmitOptions } from '@/components/longlink/hooks/use-submit';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',
