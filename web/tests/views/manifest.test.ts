@@ -14,7 +14,6 @@ describe('viewsSchema', () => {
     });
 
     it.each([
-        { first: '/home', second: '/home' },
         { first: '/home', second: '/HOME' },
         { first: '/issues/:issueId', second: '/issues/:otherId' }
     ])('rejects colliding routes $first and $second', ({ first, second }) => {

@@ -9,7 +9,7 @@ import { TextField } from '@/platform/routes/auth/field';
 import { emailPayloadSchema, type EmailPayload } from '@/platform/routes/auth/validation';
 
 /** Exercises the same resolver and field ownership used by account email forms. */
-function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload) => void; labelHidden: boolean }) {
+function EmailForm({ onSubmit }: { onSubmit: (payload: EmailPayload) => void }) {
     const form = useForm<EmailPayload>({ defaultValues: { email: '' }, resolver: zodResolver(emailPayloadSchema) });
 
     return (
@@ -19,7 +19,7 @@ function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload
                 {...form.register('email')}
                 error={form.formState.errors.email?.message}
                 label="Email"
-                labelHidden={labelHidden}
+                labelHidden
                 description="Work address"
                 aria-describedby="email-help"
                 required
@@ -31,30 +31,21 @@ function EmailForm({ onSubmit, labelHidden }: { onSubmit: (payload: EmailPayload
     );
 }
 
-it.each([false, true])('associates the email label with labelHidden=%s', async (labelHidden) => {
-    await withMounted(<EmailForm labelHidden={labelHidden} onSubmit={() => {}} />, async (output) => {
-        const email = output.querySelector<HTMLInputElement>('input[name="email"]');
-        const label = output.querySelector('label');
-
-        if (!email || !label) throw new Error('Missing email field');
-
-        expect(label.htmlFor).toBe(email.id);
-        expect(label.textContent).toBe('Email');
-        expect(label.classList.contains('sr-only')).toBe(labelHidden);
-        expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')).toBe(label);
-    });
-});
-
 it('recovers invalid auth input without losing accessible field text', async () => {
     const submissions: EmailPayload[] = [];
 
-    await withMounted(<EmailForm labelHidden onSubmit={(payload) => submissions.push(payload)} />, async (output) => {
+    await withMounted(<EmailForm onSubmit={(payload) => submissions.push(payload)} />, async (output) => {
         const events = userEvent.setup();
         const email = output.querySelector<HTMLInputElement>('input[name="email"]');
+        const label = output.querySelector('label');
         const submit = output.querySelector('button');
 
-        if (!email || !submit) throw new Error('Missing email form');
+        if (!email || !label || !submit) throw new Error('Missing email form');
 
+        expect(label.classList.contains('sr-only')).toBe(true);
+        expect(document.getElementById(email.getAttribute('aria-labelledby') ?? '')).toBe(label);
+        await act(async () => events.click(label));
+        expect(document.activeElement).toBe(email);
         expect(email.required).toBe(true);
         expect(email.getAttribute('aria-required')).toBe('true');
 

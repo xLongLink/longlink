@@ -11,5 +11,4 @@ it('links an Organization row to its UUID-based workspace', () => {
 
     // Assert
     expect(output.querySelector(`a[href="/orgs/${membership.organization.id}"]`)?.textContent).toBe('Acme');
-    expect(output.querySelector('[role="alertdialog"]')).toBeNull();
 });

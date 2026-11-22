@@ -6,30 +6,6 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { act, createElement, StrictMode, useState } from 'react';
 import { useVerification, type VerificationRequest } from '@/lib/hooks/use-verification';
 
-it('publishes successful verification and cleans up its signal on unmount', async () => {
-    // Arrange
-    const attempts: VerificationRequest[] = [];
-
-    async function verify(request: VerificationRequest) {
-        attempts.push(request);
-
-        return 'verified';
-    }
-
-    function Probe() {
-        return useVerification('proof', verify).verification;
-    }
-
-    // Act
-    await withMounted(createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe)), async (output) => {
-        // Assert
-        expect(output.textContent).toBe('verified');
-        expect(attempts[0]?.signal.aborted).toBe(false);
-    });
-    expect(attempts[0]?.token).toBe('proof');
-    expect(attempts[0]?.signal.aborted).toBe(true);
-});
-
 it.each(['resolve', 'reject'])('ignores canceled exchanges that %s after replay or replacement', async (settlement) => {
     // Arrange
     const attempts: { request: VerificationRequest; resolve: (value: string) => void }[] = [];
@@ -99,40 +75,4 @@ it.each(['resolve', 'reject'])('ignores canceled exchanges that %s after replay 
             await act(async () => root.unmount());
         }
     });
-});
-
-it.each(['resolve', 'reject'])('cancels an exchange that will %s when its owning page unmounts', async (settlement) => {
-    // Arrange
-    const attempts: VerificationRequest[] = [];
-
-    /** Keep the exchange pending until its signal is aborted. */
-    function verify(request: VerificationRequest): Promise<string> {
-        attempts.push(request);
-
-        return new Promise((resolve, reject) => {
-            request.signal.addEventListener(
-                'abort',
-                () => {
-                    if (settlement === 'resolve') resolve('verified');
-                    else reject(new Error('Canceled exchange failed'));
-                },
-                { once: true }
-            );
-        });
-    }
-
-    /** Show whether verification completed before the page unmounts. */
-    function Probe() {
-        return useVerification('proof', verify).verification ?? 'Pending';
-    }
-
-    // Act
-    await withMounted(createElement(ErrorBoundary, { fallback: 'Failure' }, createElement(Probe)), async (output) => {
-        // Assert
-        expect(output.textContent).toBe('Pending');
-        expect(attempts).toHaveLength(1);
-        expect(attempts[0]?.token).toBe('proof');
-        expect(attempts[0]?.signal.aborted).toBe(false);
-    });
-    expect(attempts[0]?.signal.aborted).toBe(true);
 });

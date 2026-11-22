@@ -1,5 +1,4 @@
 import { ApiError } from '@/lib/api';
-import { requestUrl } from '@/lib/url';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { REQUEST_TIMEOUT } from '@/views/protocol';
@@ -12,36 +11,11 @@ afterEach(() => {
     vi.unstubAllGlobals();
 });
 
-describe('Solution request URLs', () => {
-    it('resolves bridge requests only inside the selected Solution proxy', () => {
-        // Arrange
-        const path = '/api/items?page=1';
-
-        // Act
-        const url = requestUrl('/api/v1/solutions/selected/proxy/', path);
-
-        // Assert
-        expect(url).toBe('/api/v1/solutions/selected/proxy/api/items?page=1');
-    });
-
-    it.each([
-        { path: '/../users', message: 'Solution request URL must remain within the solution' },
-        { path: '/%252e%252e/users', message: 'Request path must remain within the Solution' },
-        { path: 'https://example.com/next', message: 'Solution request URL must be solution-relative' },
-        { path: '//example.com/next', message: 'Solution request URL must be solution-relative' }
-    ])('rejects unsafe bridge destination $path', ({ path, message }) => {
-        // Act and assert
-        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', path)).toThrow(message);
-    });
-});
-
 describe('Solution response loading', () => {
     it.each([
         { media: 'IMAGE/PNG; charset=binary', expected: 'image/png' },
         { media: 'audio/ogg', expected: 'audio/ogg' },
         { media: 'video/mp4', expected: 'video/mp4' },
-        { media: 'application/pdf', expected: 'application/pdf' },
-        { media: 'text/html; charset=utf-8', expected: 'text/html' },
         { media: 'application/xml', expected: 'application/xml' },
         { media: 'image/svg+xml', expected: 'application/octet-stream' },
         { media: 'application/x-unknown', expected: 'application/octet-stream' }

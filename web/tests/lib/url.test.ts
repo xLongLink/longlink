@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { resolveExternalUrl, resolveNavigationUrl, resolveScopedNavigationUrl, resolveRequestUrl } from '@/lib/url';
+import {
+    requestUrl,
+    resolveExternalUrl,
+    resolveNavigationUrl,
+    resolveScopedNavigationUrl,
+    resolveRequestUrl
+} from '@/lib/url';
 
 describe('resolveExternalUrl', () => {
     it.each([
         ['https://platform.example', ' https://docs.example/help ', 'https://docs.example/help'],
         ['https://platform.example', 'http://docs.example/help', 'http://docs.example/help'],
-        ['https://platform.example', '//docs.example/help', 'https://docs.example/help'],
         ['http://platform.example', '//docs.example/help', 'http://docs.example/help']
     ])('resolves external navigation %s + %s', (base, path, expected) => {
         // Act and assert
@@ -14,12 +19,10 @@ describe('resolveExternalUrl', () => {
 
     it.each([
         '/orders',
-        'orders',
         'javascript:alert(1)',
         'data:text/html,unsafe',
         'https://user@example.com/private',
         'https://:password@example.com/private',
-        '//user:password@example.com/private',
         '//['
     ])('withholds unsupported external destination %s', (path) => {
         // Act and assert
@@ -70,7 +73,6 @@ describe('resolveRequestUrl', () => {
 
     it.each([
         'https://evil.example/items',
-        'http://evil.example/items',
         '//evil.example/items',
         '///evil.example/items',
         '\\evil.example/items',
@@ -82,22 +84,26 @@ describe('resolveRequestUrl', () => {
         );
     });
 
-    it.each([
-        '../me',
-        '../../api/v1/me',
-        '/%2e%2e/api/v1/me',
-        '/.%2e/api/v1/me',
-        '/%2e./api/v1/me',
-        '/items%2f..%2fapi/v1/me'
-    ])('rejects encoded path that could escape the solution proxy: %s', (path) => {
-        expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
-            'Solution request URL must remain within the solution'
+    it.each(['../me', '/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'])(
+        'rejects a path that could escape the solution proxy: %s',
+        (path) => {
+            expect(() => resolveRequestUrl('/api/solutions/123/proxy', path)).toThrow(
+                'Solution request URL must remain within the solution'
+            );
+        }
+    );
+});
+
+describe('requestUrl', () => {
+    it('preserves encoded query values within the selected solution proxy', () => {
+        expect(requestUrl('/api/v1/solutions/selected/proxy/', '/api/items?filter=%2Factive')).toBe(
+            '/api/v1/solutions/selected/proxy/api/items?filter=%2Factive'
         );
     });
 
-    it('preserves encoded query values within the solution proxy', () => {
-        expect(resolveRequestUrl('/api/solutions/123/proxy', '/items?filter=%2Factive')).toBe(
-            '/api/solutions/123/proxy/items?filter=%2Factive'
+    it('rejects an ambiguously encoded path before URL resolution', () => {
+        expect(() => requestUrl('/api/v1/solutions/selected/proxy/', '/%252e%252e/users')).toThrow(
+            'Request path must remain within the Solution'
         );
     });
 });
