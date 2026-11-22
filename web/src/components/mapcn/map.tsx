@@ -423,7 +423,7 @@ type MapMarkerProps = {
     longitude: number;
     /** Latitude coordinate for marker position */
     latitude: number;
-    /** Marker subcomponents (MarkerContent, MarkerPopup, MarkerTooltip, MarkerLabel) */
+    /** Marker subcomponents (MarkerContent, MarkerPopup) */
     children: ReactNode;
     /** Callback when marker is clicked */
     onClick?: (e: MouseEvent) => void;
@@ -634,100 +634,6 @@ function MarkerPopup({ children, className, closeButton = false, ...popupOptions
     );
 }
 
-type MarkerTooltipProps = {
-    /** Tooltip content */
-    children: ReactNode;
-    /** Additional CSS classes for the tooltip container */
-    className?: string;
-} & Omit<PopupOptions, 'className' | 'closeButton' | 'closeOnClick'>;
-
-function MarkerTooltip({ children, className, ...popupOptions }: MarkerTooltipProps) {
-    const { marker, map } = useMarkerContext();
-    const { Popup } = useMapLib();
-    const container = useMemo(() => document.createElement('div'), []);
-    const { offset, maxWidth } = popupOptions;
-
-    const tooltip = useMemo(() => {
-        const tooltipInstance = new Popup({
-            offset: 16,
-            ...popupOptions,
-            closeOnClick: true,
-            closeButton: false
-        }).setMaxWidth('none');
-
-        return tooltipInstance;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        if (!map) return;
-
-        tooltip.setDOMContent(container);
-
-        const handleMouseEnter = () => {
-            tooltip.setLngLat(marker.getLngLat()).addTo(map);
-        };
-        const handleMouseLeave = () => tooltip.remove();
-
-        marker.getElement()?.addEventListener('mouseenter', handleMouseEnter);
-        marker.getElement()?.addEventListener('mouseleave', handleMouseLeave);
-
-        return () => {
-            marker.getElement()?.removeEventListener('mouseenter', handleMouseEnter);
-            marker.getElement()?.removeEventListener('mouseleave', handleMouseLeave);
-            tooltip.remove();
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
-
-    // Sync tooltip options when they change.
-    useEffect(() => {
-        tooltip.setOffset(offset ?? 16);
-        if (maxWidth) {
-            tooltip.setMaxWidth(maxWidth);
-        }
-    }, [tooltip, offset, maxWidth]);
-
-    return createPortal(
-        <div
-            className={cn(
-                'bg-foreground text-background pointer-events-none rounded-md px-2 py-1 text-xs text-balance shadow-md',
-                'animate-in fade-in-0 zoom-in-95 duration-200 ease-out',
-                className
-            )}
-        >
-            {children}
-        </div>,
-        container
-    );
-}
-
-type MarkerLabelProps = {
-    /** Label text content */
-    children: ReactNode;
-    /** Additional CSS classes for the label */
-    className?: string;
-    /** Position of the label relative to the marker (default: "top") */
-    position?: 'top' | 'bottom';
-};
-
-function MarkerLabel({ children, className, position = 'top' }: MarkerLabelProps) {
-    const positionClasses = { top: 'bottom-full mb-1', bottom: 'top-full mt-1' };
-
-    return (
-        <div
-            className={cn(
-                'absolute left-1/2 -translate-x-1/2 whitespace-nowrap',
-                'text-foreground text-[10px] font-medium',
-                positionClasses[position],
-                className
-            )}
-        >
-            {children}
-        </div>
-    );
-}
-
 type MapControlsProps = {
     /** Position of the controls on the map (default: "bottom-right") */
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -920,107 +826,6 @@ function CompassButton({ onClick }: { onClick: () => void }) {
     );
 }
 
-type MapPopupProps = {
-    /** Longitude coordinate for popup position */
-    longitude: number;
-    /** Latitude coordinate for popup position */
-    latitude: number;
-    /** Callback when popup is closed */
-    onClose?: () => void;
-    /** Popup content */
-    children: ReactNode;
-    /** Additional CSS classes for the popup container */
-    className?: string;
-    /** Show a close button in the popup (default: false) */
-    closeButton?: boolean;
-} & Omit<PopupOptions, 'className' | 'closeButton'>;
-
-function MapPopup({
-    longitude,
-    latitude,
-    onClose,
-    children,
-    className,
-    closeButton = false,
-    ...popupOptions
-}: MapPopupProps) {
-    const { map } = useMap();
-    const { Popup } = useMapLib();
-    const onCloseRef = useRef(onClose);
-    onCloseRef.current = onClose;
-    const container = useMemo(() => document.createElement('div'), []);
-    const { offset, maxWidth } = popupOptions;
-
-    const popup = useMemo(() => {
-        const popupInstance = new Popup({ offset: 16, ...popupOptions, closeButton: false })
-            .setMaxWidth('none')
-            .setLngLat([longitude, latitude]);
-
-        return popupInstance;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        if (!map) return;
-
-        const onCloseProp = () => onCloseRef.current?.();
-
-        popup.on('close', onCloseProp);
-
-        popup.setDOMContent(container);
-        popup.addTo(map);
-
-        return () => {
-            popup.off('close', onCloseProp);
-            if (popup.isOpen()) {
-                popup.remove();
-            }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
-
-    // Sync popup position and options when they change.
-    useEffect(() => {
-        const current = popup.getLngLat();
-        if (!current || current.lng !== longitude || current.lat !== latitude) {
-            popup.setLngLat([longitude, latitude]);
-        }
-        popup.setOffset(offset ?? 16);
-        if (maxWidth) {
-            popup.setMaxWidth(maxWidth);
-        }
-    }, [popup, longitude, latitude, offset, maxWidth]);
-
-    const handleClose = () => {
-        popup.remove();
-    };
-
-    return createPortal(
-        <div
-            className={cn(
-                'bg-popover text-popover-foreground relative max-w-62 rounded-md border p-3 shadow-md',
-                'animate-in fade-in-0 zoom-in-95 duration-200 ease-out',
-                className
-            )}
-        >
-            {closeButton && <PopupCloseButton onClick={handleClose} />}
-            {children}
-        </div>,
-        container
-    );
-}
-
-/** A position along a route: an endpoint, the progress cut, or a 0-1 fraction. */
-type RouteAnchor = 'start' | 'end' | 'progress' | number;
-
-type RouteMeasure = {
-    /** Distance from the first coordinate to each vertex. */
-    cumulative: number[];
-    /** Length of the whole route. `0` for routes with fewer than two vertices. */
-    total: number;
-};
-
-const EMPTY_ROUTE_MEASURE: RouteMeasure = { cumulative: [], total: 0 };
 const EMPTY_COORDINATES: [number, number][] = [];
 
 /**
@@ -1031,121 +836,6 @@ const EMPTY_COORDINATES: [number, number][] = [];
  */
 function resolveBeforeId(map: MapLibreGL.Map, beforeId: string | undefined) {
     return beforeId && map.getLayer(beforeId) ? beforeId : undefined;
-}
-
-function clampFraction(value: number) {
-    if (!Number.isFinite(value)) return 0;
-    return Math.min(1, Math.max(0, value));
-}
-
-/**
- * Cumulative length along the route. Segment lengths use an equirectangular
- * approximation (longitude scaled by cos(latitude)) — accurate enough for
- * splitting a route at a fraction, and much cheaper than haversine.
- */
-function measureRoute(coordinates: [number, number][]): RouteMeasure {
-    if (coordinates.length < 2) return EMPTY_ROUTE_MEASURE;
-
-    const cumulative = [0];
-    let total = 0;
-
-    for (let i = 1; i < coordinates.length; i += 1) {
-        const [lng1, lat1] = coordinates[i - 1];
-        const [lng2, lat2] = coordinates[i];
-        const midLat = ((lat1 + lat2) / 2) * (Math.PI / 180);
-        total += Math.hypot((lng2 - lng1) * Math.cos(midLat), lat2 - lat1);
-        cumulative.push(total);
-    }
-
-    return { cumulative, total };
-}
-
-/** Index of the segment that contains `distance`, clamped to the route. */
-function findSegmentIndex(cumulative: number[], distance: number) {
-    let low = 0;
-    let high = cumulative.length - 1;
-
-    while (low < high) {
-        const mid = Math.floor((low + high) / 2);
-        if (cumulative[mid] < distance) low = mid + 1;
-        else high = mid;
-    }
-
-    return Math.min(low === 0 ? 0 : low - 1, cumulative.length - 2);
-}
-
-/** The [longitude, latitude] sitting `fraction` of the way along the route. */
-function pointAtFraction(
-    coordinates: [number, number][],
-    measure: RouteMeasure,
-    fraction: number
-): [number, number] | null {
-    if (coordinates.length === 0) return null;
-    if (coordinates.length === 1 || measure.total === 0) return coordinates[0];
-
-    const target = measure.total * clampFraction(fraction);
-    const index = findSegmentIndex(measure.cumulative, target);
-    const [lng1, lat1] = coordinates[index];
-    const [lng2, lat2] = coordinates[index + 1];
-    const segment = measure.cumulative[index + 1] - measure.cumulative[index];
-    const ratio = segment === 0 ? 0 : (target - measure.cumulative[index]) / segment;
-
-    return [lng1 + (lng2 - lng1) * ratio, lat1 + (lat2 - lat1) * ratio];
-}
-
-/**
- * The portion of the route up to `fraction`. The final point is interpolated,
- * so the slice ends exactly at the fraction rather than at the nearest vertex.
- */
-function sliceAtFraction(coordinates: [number, number][], measure: RouteMeasure, fraction: number): [number, number][] {
-    if (coordinates.length < 2) return [];
-
-    const t = clampFraction(fraction);
-    if (t <= 0 || measure.total === 0) return [];
-    if (t >= 1) return coordinates;
-
-    const target = measure.total * t;
-    const index = findSegmentIndex(measure.cumulative, target);
-    const point = pointAtFraction(coordinates, measure, t);
-    const traveled = coordinates.slice(0, index + 1);
-    if (point) traveled.push(point);
-
-    return traveled;
-}
-
-type RouteContextValue = {
-    /** Resolved route id — child layers namespace themselves with it. */
-    id: string;
-    /** True once the base source and layer are on the map. */
-    ready: boolean;
-    coordinates: [number, number][];
-    /** The traveled slice of the route. Empty when `progress` is unset. */
-    traveled: [number, number][];
-    progress: number | undefined;
-    /** Base line style, with `active` overrides already applied. */
-    color: string;
-    width: number;
-    opacity: number;
-    dashArray: [number, number] | undefined;
-    /** Layer the route sits below. Child layers insert before it too. */
-    beforeId: string | undefined;
-    /**
-     * Resolves an anchor to a coordinate. `null` when the route is empty, or
-     * for `"progress"` while `progress` is unset.
-     */
-    pointAt: (at: RouteAnchor) => [number, number] | null;
-    /** Registers a child layer so it follows the route when `active` flips. */
-    registerLayer: (layerId: string) => () => void;
-};
-
-const RouteContext = createContext<RouteContextValue | null>(null);
-
-function useMapRoute() {
-    const context = useContext(RouteContext);
-    if (!context) {
-        throw new Error('Route components must be used within MapRoute');
-    }
-    return context;
 }
 
 type MapRouteProps = {
@@ -1165,11 +855,6 @@ type MapRouteProps = {
     opacity?: number;
     /** Dash pattern [dash length, gap length] for dashed lines */
     dashArray?: [number, number];
-    /**
-     * Fraction of the route already covered, from 0 to 1. Drives `RouteProgress`
-     * and the `"progress"` anchor on `RouteMarker`.
-     */
-    progress?: number;
     /**
      * Marks this route as the selected one: it moves above sibling routes and
      * switches to the `active*` styles below. (default: false)
@@ -1193,8 +878,6 @@ type MapRouteProps = {
     onMouseLeave?: () => void;
     /** Whether the route is interactive - shows pointer cursor on hover (default: true) */
     interactive?: boolean;
-    /** Route subcomponents (RouteProgress, RouteMarker) */
-    children?: ReactNode;
 };
 
 function MapRoute({
@@ -1204,7 +887,6 @@ function MapRoute({
     width = 3,
     opacity = 0.8,
     dashArray,
-    progress,
     active = false,
     activeColor,
     activeWidth,
@@ -1214,8 +896,7 @@ function MapRoute({
     onClick,
     onMouseEnter,
     onMouseLeave,
-    interactive = true,
-    children
+    interactive = true
 }: MapRouteProps) {
     const { map, isLoaded } = useMap();
     const autoId = useId();
@@ -1232,36 +913,6 @@ function MapRoute({
     const resolvedWidth = active ? (activeWidth ?? width) : width;
     const resolvedOpacity = active ? (activeOpacity ?? opacity) : opacity;
     const resolvedDashArray = active ? (activeDashArray ?? dashArray) : dashArray;
-
-    const measure = useMemo(() => measureRoute(coordinates), [coordinates]);
-    const traveled = useMemo(
-        () => (progress === undefined ? [] : sliceAtFraction(coordinates, measure, progress)),
-        [coordinates, measure, progress]
-    );
-
-    const pointAt = useCallback(
-        (at: RouteAnchor) => {
-            if (coordinates.length === 0) return null;
-            if (at === 'start') return coordinates[0];
-            if (at === 'end') return coordinates[coordinates.length - 1];
-            if (at === 'progress') {
-                if (progress === undefined) return null;
-                return pointAtFraction(coordinates, measure, progress);
-            }
-            return pointAtFraction(coordinates, measure, at);
-        },
-        [coordinates, measure, progress]
-    );
-
-    // Child layers, in the order they mounted. Kept in a ref so registering one
-    // doesn't re-render the route.
-    const childLayersRef = useRef<string[]>([]);
-    const registerLayer = useCallback((childLayerId: string) => {
-        childLayersRef.current = [...childLayersRef.current, childLayerId];
-        return () => {
-            childLayersRef.current = childLayersRef.current.filter((entry) => entry !== childLayerId);
-        };
-    }, []);
 
     // Add source and layer on mount
     useEffect(() => {
@@ -1288,8 +939,6 @@ function MapRoute({
             resolveBeforeId(map, beforeId)
         );
 
-        // Children add their layers once this is set, which keeps them above the
-        // base line: child effects would otherwise run before this one.
         setReady(true);
 
         return () => {
@@ -1327,7 +976,7 @@ function MapRoute({
         map.setPaintProperty(layerId, 'line-dasharray', resolvedDashArray);
     }, [isLoaded, map, layerId, resolvedColor, resolvedWidth, resolvedOpacity, resolvedDashArray]);
 
-    // Raise the active route (and anything it owns) above its siblings. With a
+    // Raise the active route above its siblings. With a
     // `beforeId` it moves to the top of the group below that layer instead.
     // Siblings that mount later (alternatives arriving from a request) add
     // their layers on top, so the raise also re-runs on style changes.
@@ -1348,15 +997,13 @@ function MapRoute({
             if (layerSet === lastLayerSet) return;
             lastLayerSet = layerSet;
 
-            const owned = [layerId, ...childLayersRef.current].filter((entry) => map.getLayer(entry));
-            if (owned.length === 0) return;
+            if (!map.getLayer(layerId)) return;
 
             const before = resolveBeforeId(map, beforeId);
             const limit = before ? order.indexOf(before) : order.length;
-            const top = order.slice(Math.max(0, limit - owned.length), limit);
-            if (owned.every((entry, index) => top[index] === entry)) return;
+            if (order[limit - 1] === layerId) return;
 
-            for (const entry of owned) map.moveLayer(entry, before);
+            map.moveLayer(layerId, before);
         };
 
         raise();
@@ -1394,158 +1041,7 @@ function MapRoute({
         };
     }, [isLoaded, map, layerId, onClick, onMouseEnter, onMouseLeave, interactive]);
 
-    const contextValue = useMemo(
-        () => ({
-            id,
-            ready,
-            coordinates,
-            traveled,
-            progress,
-            color: resolvedColor,
-            width: resolvedWidth,
-            opacity: resolvedOpacity,
-            dashArray: resolvedDashArray,
-            beforeId,
-            pointAt,
-            registerLayer
-        }),
-        [
-            id,
-            ready,
-            coordinates,
-            traveled,
-            progress,
-            resolvedColor,
-            resolvedWidth,
-            resolvedOpacity,
-            resolvedDashArray,
-            beforeId,
-            pointAt,
-            registerLayer
-        ]
-    );
-
-    return <RouteContext.Provider value={contextValue}>{children}</RouteContext.Provider>;
-}
-
-type RouteProgressProps = {
-    /** Line color for the traveled portion. Defaults to the route's color. */
-    color?: string;
-    /** Line width in pixels. Defaults to the route's width. */
-    width?: number;
-    /** Line opacity from 0 to 1. Defaults to the route's opacity. */
-    opacity?: number;
-    /** Dash pattern [dash length, gap length] for dashed lines. */
-    dashArray?: [number, number];
-};
-
-/**
- * Draws the traveled portion of the parent `MapRoute` on top of the base line.
- * Renders nothing until the route has a `progress` value.
- */
-function RouteProgress({ color, width, opacity, dashArray }: RouteProgressProps) {
-    const { map, isLoaded } = useMap();
-    const route = useMapRoute();
-    const { ready, traveled, registerLayer, beforeId } = route;
-
-    const sourceId = `route-progress-source-${route.id}`;
-    const layerId = `route-progress-layer-${route.id}`;
-
-    const resolvedColor = color ?? route.color;
-    const resolvedWidth = width ?? route.width;
-    const resolvedOpacity = opacity ?? route.opacity;
-
-    // Added only once the parent's layer exists, so this always paints above it.
-    useEffect(() => {
-        if (!ready || !map) return;
-
-        map.addSource(sourceId, {
-            type: 'geojson',
-            data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } }
-        });
-
-        // Sits directly above the parent line: same `beforeId` boundary, added
-        // after it.
-        map.addLayer(
-            {
-                id: layerId,
-                type: 'line',
-                source: sourceId,
-                layout: { 'line-join': 'round', 'line-cap': 'round' },
-                paint: {
-                    'line-color': resolvedColor,
-                    'line-width': resolvedWidth,
-                    'line-opacity': resolvedOpacity,
-                    ...(dashArray && { 'line-dasharray': dashArray })
-                }
-            },
-            resolveBeforeId(map, beforeId)
-        );
-
-        const unregister = registerLayer(layerId);
-
-        return () => {
-            unregister();
-            try {
-                if (map.getLayer(layerId)) map.removeLayer(layerId);
-                if (map.getSource(sourceId)) map.removeSource(sourceId);
-            } catch {
-                // ignore
-            }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ready, map]);
-
-    useEffect(() => {
-        if (!ready || !map) return;
-
-        const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
-        if (source) {
-            void source.setData({
-                type: 'Feature',
-                properties: {},
-                geometry: { type: 'LineString', coordinates: traveled.length < 2 ? [] : traveled }
-            });
-        }
-    }, [ready, map, traveled, sourceId]);
-
-    useEffect(() => {
-        if (!isLoaded || !map || !map.getLayer(layerId)) return;
-
-        map.setPaintProperty(layerId, 'line-color', resolvedColor);
-        map.setPaintProperty(layerId, 'line-width', resolvedWidth);
-        map.setPaintProperty(layerId, 'line-opacity', resolvedOpacity);
-        map.setPaintProperty(layerId, 'line-dasharray', dashArray);
-    }, [isLoaded, map, layerId, resolvedColor, resolvedWidth, resolvedOpacity, dashArray]);
-
     return null;
-}
-
-type RouteMarkerProps = {
-    /**
-     * Where to pin the marker: an endpoint, the route's progress point, or a
-     * 0-1 fraction along the line.
-     */
-    at: RouteAnchor;
-} & Omit<MapMarkerProps, 'longitude' | 'latitude'>;
-
-/**
- * A `MapMarker` anchored to a position along the parent `MapRoute`. Takes the
- * same children as `MapMarker` (`MarkerContent`, `MarkerPopup`, ...).
- */
-function RouteMarker({ at, children, ...markerProps }: RouteMarkerProps) {
-    const { pointAt } = useMapRoute();
-    const position = pointAt(at);
-
-    // Nothing to pin to yet: the route is empty (coordinates usually arrive
-    // from a request), or `at="progress"` is waiting on a `progress` value.
-    if (!position) return null;
-
-    return (
-        <MapMarker longitude={position[0]} latitude={position[1]} {...markerProps}>
-            {children}
-        </MapMarker>
-    );
 }
 
 type MapGeoJSONData<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonProperties> =
@@ -2339,13 +1835,8 @@ export {
     MapMarker,
     MarkerContent,
     MarkerPopup,
-    MarkerTooltip,
-    MarkerLabel,
-    MapPopup,
     MapControls,
     MapRoute,
-    RouteProgress,
-    RouteMarker,
     MapArc,
     MapGeoJSON,
     MapClusterLayer
@@ -2364,14 +1855,8 @@ export type {
     MapMarkerProps,
     MarkerContentProps,
     MarkerPopupProps,
-    MarkerTooltipProps,
-    MarkerLabelProps,
     MapControlsProps,
-    MapPopupProps,
     MapRouteProps,
-    RouteProgressProps,
-    RouteMarkerProps,
-    RouteAnchor,
     MapArcProps,
     MapGeoJSONProps,
     MapClusterLayerProps

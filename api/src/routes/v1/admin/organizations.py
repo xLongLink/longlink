@@ -23,11 +23,18 @@ async def list_organizations(
 
 
 @router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
-async def get_organization_quotas(session: auth.Session, organization_id: UUID) -> Organization:
+async def get_organization_quotas(session: auth.Session, organization_id: UUID) -> dict[str, UUID | int]:
     """Return Organization quotas for administrator views."""
 
     # Read Organization quotas without touching provider boundaries.
     organization = await session.get(Organization, organization_id)
     if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    return organization
+
+    # Preserve legacy quota units and round up without losing allocated bytes.
+    return {
+        "id": organization.id,
+        "database_size_mib": (organization.database_storage_bytes + 1024**2 - 1) // 1024**2,
+        "database_instances": 1,
+        "storage_quota_bytes": organization.storage_bytes,
+    }

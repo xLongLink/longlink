@@ -7,17 +7,17 @@ import { withMounted } from '../../render';
 import * as mapcn from '@/components/mapcn/map';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
+import { RouteLayer } from '@/components/longlink/maps/routes';
+import type { MapRoute } from '@/components/longlink/maps/types';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
-import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import atlas from '../../../../sdk/longlink/.static/new/src/assets/world.json';
 import modelSource from '../../../../sdk/longlink/.static/new/src/views/models.jsx?raw';
+import type { Feature, FeatureCollection, LineString, Polygon, MultiPolygon } from 'geojson';
 import analyticsFixture from '../../../../sdk/longlink/.static/new/src/assets/analytics.json';
 
 type Layer = { id: string; type: string; source: string; paint: Record<string, unknown> };
-type Source = {
-    data: FeatureCollection<Polygon, { name: string }>;
-    setData: (data: FeatureCollection<Polygon, { name: string }>) => Promise<void>;
-};
+type MapData = FeatureCollection<Polygon, { name: string }> | Feature<LineString>;
+type Source = { data: MapData; setData: (data: MapData) => Promise<void> };
 type Listener = (event?: unknown) => void;
 type Engine = {
     removed: boolean;
@@ -26,6 +26,8 @@ type Engine = {
     sources: Map<string, Source>;
     listeners: Map<string, Set<Listener>>;
     getCenter: () => { lng: number; lat: number };
+    getCanvas: () => HTMLCanvasElement;
+    getLayersOrder: () => string[];
     fire: (event: string, layer?: string, value?: unknown) => void;
 };
 
@@ -86,16 +88,36 @@ vi.mock('maplibre-gl', () => ({
             return this.sources.get(id);
         }
         removeSource(id: string) {
+            if ([...this.layers.values()].some((layer) => layer.source === id)) {
+                throw new Error('Cannot remove a source with live layers');
+            }
             this.sources.delete(id);
         }
-        addLayer(layer: Layer) {
+        addLayer(layer: Layer, before?: string) {
+            if (before && !this.layers.has(before)) throw new Error('Expected insertion layer');
             this.layers.set(layer.id, layer);
+            if (before) this.moveLayer(layer.id, before);
+            this.fire('styledata');
         }
         getLayer(id: string) {
             return this.layers.get(id);
         }
         removeLayer(id: string) {
             this.layers.delete(id);
+            this.fire('styledata');
+        }
+        getLayersOrder() {
+            return [...this.layers.keys()];
+        }
+        moveLayer(id: string, before?: string) {
+            const layer = this.layers.get(id);
+            if (!layer) throw new Error('Expected live map layer');
+            this.layers.delete(id);
+            const following = before ? [...this.layers.values()].slice(this.getLayersOrder().indexOf(before)) : [];
+            for (const entry of following) this.layers.delete(entry.id);
+            this.layers.set(id, layer);
+            for (const entry of following) this.layers.set(entry.id, entry);
+            this.fire('styledata');
         }
         setPaintProperty(id: string, name: string, value: unknown) {
             const layer = this.layers.get(id);
@@ -139,7 +161,7 @@ const countries = [
     { id: '12', name: 'West', flag: '🇺🇸', share: 60, center: [-10, 10], zoom: 2 },
     { id: 'east', name: 'East', flag: '🇯🇵', share: 40, center: [30, 10], zoom: 2 }
 ];
-const geography: Source['data'] = {
+const geography: FeatureCollection<Polygon, { name: string }> = {
     type: 'FeatureCollection',
     features: [
         {
@@ -244,6 +266,142 @@ function ThemeSelectionMap({ initialTheme }: { initialTheme?: 'light' | 'dark' }
         </>
     );
 }
+
+it('updates route geometry and selection, then releases its events, layer, and source while the map stays mounted', async () => {
+    // Arrange
+    const initial: MapRoute = {
+        id: 'delivery',
+        coordinates: [
+            [-10, 10],
+            [0, 20]
+        ]
+    };
+    const revised: MapRoute = {
+        ...initial,
+        coordinates: [
+            [-10, 10],
+            [15, 30],
+            [30, 10]
+        ]
+    };
+    const select = vi.fn();
+    const user = userEvent.setup();
+
+    function Routes() {
+        const [routes, setRoutes] = React.useState([initial]);
+        return (
+            <>
+                <button type="button" onClick={() => setRoutes([revised])}>
+                    Reroute
+                </button>
+                <button type="button" onClick={() => setRoutes([{ ...initial, coordinates: [[0, 0]] }])}>
+                    Clear line
+                </button>
+                <button type="button" onClick={() => setRoutes([])}>
+                    Remove route
+                </button>
+                <mapcn.Map theme="light" center={[0, 0]} zoom={2}>
+                    <RouteLayer data={routes} onSelect={select} />
+                </mapcn.Map>
+            </>
+        );
+    }
+
+    await withMounted(<Routes />, async (output) => {
+        const map = await loadMap();
+        const layer = selectionLayer(map);
+        const source = map.sources.get(layer.source);
+        if (!source) throw new Error('Expected route source');
+        const [reroute, clear, remove] = output.querySelectorAll('button');
+        if (!reroute || !clear || !remove) throw new Error('Expected route controls');
+        expect(source.data).toMatchObject({ geometry: { coordinates: initial.coordinates } });
+
+        // Act
+        await act(async () => user.click(reroute));
+        await act(async () => map.fire('click', layer.id));
+
+        // Assert
+        expect(map.sources.get(layer.source)).toBe(source);
+        expect(map.layers.get(layer.id)).toBe(layer);
+        expect(source.data).toMatchObject({ geometry: { coordinates: revised.coordinates } });
+        expect(select).toHaveBeenLastCalledWith(revised);
+        await act(async () => map.fire('mouseenter', layer.id));
+        expect(map.getCanvas().style.cursor).toBe('pointer');
+        await act(async () => map.fire('mouseleave', layer.id));
+        expect(map.getCanvas().style.cursor).toBe('');
+
+        // Act
+        await act(async () => user.click(clear));
+        expect(source.data).toMatchObject({ geometry: { coordinates: [] } });
+        select.mockClear();
+        await act(async () => user.click(remove));
+        await act(async () => {
+            map.fire('click', layer.id);
+            map.fire('mouseenter', layer.id);
+        });
+
+        // Assert
+        expect(map.removed).toBe(false);
+        expect(map.layers.size).toBe(0);
+        expect(map.sources.size).toBe(0);
+        expect(select).not.toHaveBeenCalled();
+        expect(map.getCanvas().style.cursor).toBe('');
+        for (const event of ['click', 'mouseenter', 'mouseleave']) {
+            expect(map.listeners.get(`${event}:${layer.id}`)?.size).toBe(0);
+        }
+    });
+});
+
+it('keeps an active route above later alternatives and removes its ordering listener on unmount', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const coordinates: [number, number][] = [
+        [0, 0],
+        [10, 10]
+    ];
+    function Routes() {
+        const [alternative, setAlternative] = React.useState(false);
+        const [selected, setSelected] = React.useState(true);
+        return (
+            <>
+                <button type="button" onClick={() => setAlternative(true)}>
+                    Add alternative
+                </button>
+                <button type="button" onClick={() => setSelected(false)}>
+                    Remove selected route
+                </button>
+                <mapcn.Map theme="light" center={[0, 0]} zoom={2}>
+                    {selected && <mapcn.MapRoute coordinates={coordinates} active beforeId="missing-labels" />}
+                    {alternative && <mapcn.MapRoute coordinates={coordinates} />}
+                </mapcn.Map>
+            </>
+        );
+    }
+
+    await withMounted(<Routes />, async (output) => {
+        const map = await loadMap();
+        const selected = selectionLayer(map);
+        const [add, remove] = output.querySelectorAll('button');
+        if (!add || !remove) throw new Error('Expected alternative controls');
+
+        // Act
+        await act(async () => user.click(add));
+
+        // Assert
+        expect(map.layers.size).toBe(2);
+        expect(map.getLayersOrder().at(-1)).toBe(selected.id);
+
+        // Act
+        await act(async () => user.click(remove));
+        await act(async () => map.fire('styledata'));
+
+        // Assert
+        expect(map.layers.has(selected.id)).toBe(false);
+        expect(map.sources.has(selected.source)).toBe(false);
+        expect(map.layers.size).toBe(1);
+        expect(map.listeners.get('styledata')?.size).toBe(0);
+    });
+});
 
 it.each(['light', 'dark'] as const)(
     'falls back from document themes to the %s system theme without recreating the map or losing selection',
@@ -396,7 +554,9 @@ it('coordinates the composed starter country panel and recovers its map without 
         });
         expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#1 West');
         const layer = selectionLayer(map);
-        const feature = map.sources.get(layer.source)?.data.features.find((feature) => feature.id === 'east');
+        const data = map.sources.get(layer.source)?.data;
+        const feature =
+            data?.type === 'FeatureCollection' ? data.features.find((feature) => feature.id === 'east') : undefined;
         if (!feature) throw new Error('Expected the selectable East boundary');
         await act(async () => map.fire('click', layer.id, { features: [feature], lngLat: { lng: 30, lat: 10 } }));
         expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');

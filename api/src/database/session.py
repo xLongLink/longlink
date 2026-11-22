@@ -1,9 +1,7 @@
-import contextlib
 from typing import Protocol
 from src.utils import urls
 from sqlalchemy import event
 from sqlalchemy.orm import Session as SyncSession
-from collections.abc import AsyncGenerator
 from src.environments import env
 from longlink.database import audit
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -78,15 +76,12 @@ async def dispose_engine() -> None:
         await engine.dispose()
 
 
-@contextlib.asynccontextmanager
-async def session_scope() -> AsyncGenerator[AsyncSession, None]:
-    """Yield one SQLAlchemy session from the shared session factory."""
+def session_scope() -> AsyncSession:
+    """Create one SQLAlchemy session from the shared session factory."""
 
     session_factory = get_session()
 
-    # Open one session for the caller's scoped work.
-    async with session_factory() as session:
-        yield session
+    return session_factory()
 
 
 # Register shared audit listeners after the Platform audit models are available.

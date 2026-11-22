@@ -29,7 +29,6 @@ import { cn } from 'cn';
 
 import { Button } from '@/components/shadcn/button';
 import { Checkbox } from '@/components/shadcn/checkbox';
-import { Spinner } from '@/components/shadcn/spinner';
 import { PlusIcon } from 'lucide-react';
 
 // Static spacing lookups; called once per cell, so they stay plain string
@@ -46,9 +45,6 @@ const bodyCellSpacingVariants = ({ size }: { size?: 'dense' | 'default' }) =>
 // at - including custom cells that pull into the padding the same way.
 const bodyCellTruncateWrapVariants = ({ size }: { size?: 'dense' | 'default' }) =>
     size === 'dense' ? '-mx-2 -my-1.5 truncate px-2 py-1.5' : '-mx-3 -my-2 truncate px-3 py-2';
-
-const footerCellSpacingVariants = ({ size }: { size?: 'dense' | 'default' }) =>
-    size === 'dense' ? 'px-2 py-1.5' : 'px-3 py-2';
 
 function getPinningStyles<TData extends object>(column: Column<DataGridFeatures, TData, unknown>): CSSProperties {
     const isPinned = column.getIsPinned();
@@ -751,21 +747,6 @@ function DataGridTableFillBodyCell() {
         <td
             aria-hidden="true"
             data-slot="data-grid-table-fill-body-cell"
-            style={{ width: hasDataGridFillColumn(table) ? 0 : 'var(--data-grid-fill-size, 0px)' }}
-            className="p-0"
-        />
-    );
-}
-
-function DataGridTableFillFootCell() {
-    const { props, table } = useDataGrid();
-
-    if (!props.tableLayout?.columnsResizable) return null;
-
-    return (
-        <td
-            aria-hidden="true"
-            data-slot="data-grid-table-fill-foot-cell"
             style={{ width: hasDataGridFillColumn(table) ? 0 : 'var(--data-grid-fill-size, 0px)' }}
             className="p-0"
         />
@@ -1628,62 +1609,6 @@ function DataGridTableFoot({ children }: { children: ReactNode }) {
     );
 }
 
-function DataGridTableFootRow({ children }: { children: ReactNode }) {
-    const { props, table } = useDataGrid();
-    const footRowBottomBorderClasses = '[&:not(:last-child)>td]:border-b';
-
-    return (
-        <tr
-            data-slot="data-grid-table-foot-row"
-            className={cn(
-                props.tableLayout?.footerBackground &&
-                    'bg-muted/40 dark:bg-[color:var(--data-grid-surface,var(--data-grid-card-surface,var(--background)))]',
-                props.tableLayout?.rowBorder && footRowBottomBorderClasses,
-                props.tableLayout?.cellBorder && '*:last:border-e-0',
-                // The fill foot cell is the :last child, so the rule above only
-                // strips the filler; the real last cell needs the same treatment or
-                // its border floats into the strip while thead and tbody suppress
-                // theirs. Same pin-affordance gate as the cell-level suppressors.
-                props.tableLayout?.cellBorder &&
-                    props.tableLayout?.columnsResizable &&
-                    (props.tableLayout?.columnsPinnable || !hasDataGridTableRightPinnedColumns(table)) &&
-                    '[&>td:has(+td[data-slot=data-grid-table-fill-foot-cell])]:border-e-0'
-            )}
-        >
-            {children}
-            <DataGridTableFillFootCell />
-        </tr>
-    );
-}
-
-function DataGridTableFootRowCell({
-    children,
-    colSpan,
-    className
-}: {
-    children?: ReactNode;
-    colSpan?: number;
-    className?: string;
-}) {
-    const { props } = useDataGrid();
-    const spacing = footerCellSpacingVariants({ size: props.tableLayout?.dense ? 'dense' : 'default' });
-    return (
-        <td
-            colSpan={colSpan}
-            className={cn(
-                'text-secondary-foreground/80 align-middle font-medium',
-                spacing,
-                props.tableLayout?.footerBackground &&
-                    'bg-muted/40 dark:bg-[color:var(--data-grid-surface,var(--data-grid-card-surface,var(--background)))]',
-                props.tableLayout?.cellBorder && 'border-e',
-                className
-            )}
-        >
-            {children}
-        </td>
-    );
-}
-
 function DataGridTableBodyRowSkeleton({ children }: { children: ReactNode }) {
     const { props } = useDataGrid();
 
@@ -2198,73 +2123,6 @@ function DataGridTableEmpty() {
     );
 }
 
-function DataGridTableLoader() {
-    const { i18n, props } = useDataGrid();
-
-    return (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="text-muted-foreground bg-card rounded-lg flex items-center gap-2 border px-4 py-2 text-sm leading-none font-medium">
-                <Spinner className="size-5 opacity-60" />
-                {props.loadingMessage || i18n.labels.loading}
-            </div>
-        </div>
-    );
-}
-
-function DataGridTableRowPin<TData extends object>({ row }: { row: Row<DataGridFeatures, TData> }) {
-    const { i18n } = useDataGrid();
-    const isPinned = row.getIsPinned();
-
-    return (
-        <button
-            type="button"
-            aria-label={isPinned ? i18n.labels.unpinRow : i18n.labels.pinRow}
-            onClick={(event) => {
-                // Pinning must not bubble into the row's onRowClick handler.
-                event.stopPropagation();
-
-                if (isPinned) {
-                    row.pin(false);
-                } else {
-                    row.pin('top');
-                }
-            }}
-            className={cn(
-                'text-muted-foreground hover:text-foreground rounded-lg inline-flex size-7 items-center justify-center transition-colors',
-                isPinned && 'text-primary hover:text-primary/80'
-            )}
-        >
-            {isPinned ? (
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    stroke="none"
-                >
-                    <path d="M16 2l4.585 4.586-2.122 2.121L17.05 7.293l-3.535 3.536 1.413 5.658-2.12 2.121-4.244-4.243L4.322 18.6l-1.414-1.41 4.242-4.244-4.243-4.243 2.122-2.121 5.656 1.414 3.536-3.536-1.414-1.414z" />
-                </svg>
-            ) : (
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <line x1="12" y1="17" x2="12" y2="22" />
-                    <path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z" />
-                </svg>
-            )}
-        </button>
-    );
-}
-
 /**
  * Selection cell.
  *
@@ -2493,55 +2351,6 @@ const MemoizedDataGridTableBodyRows = memo(
     (_prev, next) => !!next.table.state.columnResizing?.isResizingColumn || next.table._isSelectingCells === true
 ) as typeof DataGridTableBodyRows;
 
-function DataGridTableHeader<_TData extends object>() {
-    const { table, props } = useDataGrid();
-    const mergedHeaderGroups = getDataGridTableMergedHeaderGroups(table);
-    const hasRightPinnedColumns = hasDataGridTableRightPinnedColumns(table);
-
-    return (
-        <DataGridTableViewport>
-            <DataGridTableBase>
-                <DataGridTableHead>
-                    {mergedHeaderGroups.map((headerGroup, rowIndex) => {
-                        // The fill strip is one cell spanning every head row, so only
-                        // the first row renders it.
-                        const fillHeadCell =
-                            props.tableLayout?.columnsResizable && rowIndex === 0 ? (
-                                <DataGridTableFillHeadCell rowSpan={mergedHeaderGroups.length} />
-                            ) : null;
-                        const renderHeadCell = (header: (typeof headerGroup.startHeaders)[number]) => {
-                            const coveredHeaders = headerGroup.coveredHeaders.get(header.id);
-                            const resizeHeader = getDataGridHeadCellResizeHeader(header, coveredHeaders);
-
-                            return (
-                                <DataGridTableHeadRowCell
-                                    header={header}
-                                    coveredHeaders={coveredHeaders}
-                                    key={header.id}
-                                >
-                                    {renderDataGridTableHeadCellContent(header)}
-                                    {props.tableLayout?.columnsResizable && resizeHeader.column.getCanResize() && (
-                                        <DataGridTableHeadRowCellResize header={resizeHeader} />
-                                    )}
-                                </DataGridTableHeadRowCell>
-                            );
-                        };
-
-                        return (
-                            <DataGridTableHeadRow key={headerGroup.id} rowId={headerGroup.id}>
-                                {[...headerGroup.startHeaders, ...headerGroup.centerHeaders].map(renderHeadCell)}
-                                {hasRightPinnedColumns ? fillHeadCell : null}
-                                {headerGroup.endHeaders.map(renderHeadCell)}
-                                {!hasRightPinnedColumns ? fillHeadCell : null}
-                            </DataGridTableHeadRow>
-                        );
-                    })}
-                </DataGridTableHead>
-            </DataGridTableBase>
-        </DataGridTableViewport>
-    );
-}
-
 function DataGridTable<_TData extends object>({
     footerContent,
     renderHeader = true
@@ -2626,16 +2435,11 @@ export {
     DataGridTableFillBodyCell,
     DataGridTableFillHeadCell,
     DataGridTableFoot,
-    DataGridTableFootRow,
-    DataGridTableFootRowCell,
-    DataGridTableHeader,
     DataGridTableHead,
     DataGridTableHeadRow,
     DataGridTableHeadRowCell,
     DataGridTableHeadRowCellResize,
-    DataGridTableLoader,
     DataGridTableRowExpand,
-    DataGridTableRowPin,
     DataGridTableRowSelect,
     DataGridTableRowSelectAll,
     DataGridTableRowSpacer,

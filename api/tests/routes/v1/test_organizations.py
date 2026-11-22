@@ -300,7 +300,7 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == quota * 2
+        assert persisted.storage_bytes == quota * 2
         operation = await operations.claim(session)
         assert operation is not None
         await operations.fail(session, operation, "Provider failed")
@@ -389,7 +389,7 @@ async def test_usage_edit_accepts_minimum_workload_capacity_and_positive_file_sh
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == organization.storage_bytes
+        assert persisted.storage_bytes == organization.storage_bytes
     [operation] = await fetch_operations()
     assert operation.allocation == capacity
 
@@ -609,8 +609,15 @@ async def test_get_organization_solutions_rejects_another_organization_owner(
     assert response.json() == {"detail": "Access required"}
 
 
+@pytest.mark.parametrize(
+    ("database_storage_bytes", "database_size_mib"),
+    [pytest.param(512 * 1024**2, 512, id="whole-mib"), pytest.param(512 * 1024**2 + 1, 513, id="partial-mib")],
+)
 async def test_get_organization_quotas_requires_platform_administrator(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User]
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    database_storage_bytes: int,
+    database_size_mib: int,
 ) -> None:
     """Return quotas only to platform administrators without membership."""
 
@@ -619,7 +626,7 @@ async def test_get_organization_quotas_requires_platform_administrator(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_storage_bytes = 512 * 1024**2
+        persisted.database_storage_bytes = database_storage_bytes
         persisted.storage_bytes = 4096
         await session.commit()
 
@@ -631,7 +638,7 @@ async def test_get_organization_quotas_requires_platform_administrator(
     assert administrator_response.status_code == 200
     assert administrator_response.json() == {
         "id": str(organization.id),
-        "database_size_mib": 512,
+        "database_size_mib": database_size_mib,
         "database_instances": 1,
         "storage_quota_bytes": 4096,
     }
@@ -828,7 +835,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = {"space_used": expected_usage, "quota_bytes": organization.storage_quota_bytes}
+        expected_payload = {"space_used": expected_usage, "quota_bytes": organization.storage_bytes}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -862,7 +869,7 @@ async def test_organization_storage_endpoint_allows_members(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"space_used": 0, "quota_bytes": organization.storage_quota_bytes}
+    assert response.json() == {"space_used": 0, "quota_bytes": organization.storage_bytes}
 
 
 async def test_organization_storage_endpoint_rejects_non_members(

@@ -61,3 +61,32 @@ async def test_sqlite_sessions_enforce_foreign_keys_and_reuse_factory(monkeypatc
     finally:
         await session.dispose_engine()
     assert session.Session is None
+
+
+async def test_session_scope_requires_explicit_commit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Discard uncommitted work while preserving explicitly committed changes."""
+
+    # Arrange
+    monkeypatch.setattr(session.env, "DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    monkeypatch.setattr(session, "Session", None)
+    try:
+        async with session.session_scope() as database:
+            await database.execute(text("CREATE TABLE changes (value INTEGER NOT NULL)"))
+            await database.commit()
+
+        # Act
+        async with session.session_scope() as database:
+            await database.execute(text("INSERT INTO changes VALUES (1)"))
+
+        async with session.session_scope() as database:
+            uncommitted_count = await database.scalar(text("SELECT COUNT(*) FROM changes"))
+            await database.execute(text("INSERT INTO changes VALUES (2)"))
+            await database.commit()
+
+        # Assert
+        async with session.session_scope() as database:
+            committed_value = await database.scalar(text("SELECT value FROM changes"))
+        assert uncommitted_count == 0
+        assert committed_value == 2
+    finally:
+        await session.dispose_engine()

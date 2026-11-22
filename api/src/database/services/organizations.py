@@ -450,7 +450,7 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
 
     # File downsizing must retain every currently stored object.
     quota_bytes = payload.storage_bytes
-    if quota_bytes < organization.storage_quota_bytes:
+    if quota_bytes < organization.storage_bytes:
         compute = await storage_infrastructure(session, organization_id)
         used_bytes = await storage_usage(compute, organization_id)
         if quota_bytes < used_bytes:

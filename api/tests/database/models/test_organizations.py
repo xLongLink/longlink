@@ -42,7 +42,7 @@ async def test_database_growth_preserves_file_and_compute_capacity(users: tuple[
     async with session_scope() as session:
         restored = await session.get(Organization, organization.id)
         assert restored is not None
-        assert restored.storage_quota_bytes == organization.storage_bytes
+        assert restored.storage_bytes == organization.storage_bytes
         assert restored.compute_ram_bytes == organization.compute_ram_bytes
         assert restored.compute_cpu_millicores == organization.compute_cpu_millicores
-        assert restored.database_size_mib == 4096
+        assert restored.database_storage_bytes == 4 * 1024**3

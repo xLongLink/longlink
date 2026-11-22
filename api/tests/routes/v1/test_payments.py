@@ -223,8 +223,8 @@ async def assert_card_registration_unchanged(organization: Organization) -> None
         assert persisted.invoice_due_at is None
 
         # Ignored events must not expand infrastructure quotas.
-        assert persisted.database_size_mib == organization.database_size_mib
-        assert persisted.storage_quota_bytes == organization.storage_quota_bytes
+        assert persisted.database_storage_bytes == organization.database_storage_bytes
+        assert persisted.storage_bytes == organization.storage_bytes
 
 
 @pytest.mark.usefixtures("configured_stripe")
