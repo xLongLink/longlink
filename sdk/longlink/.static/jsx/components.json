@@ -2047,7 +2047,7 @@
             "name": "Confirmation",
             "description": "Ask for Continue or Cancel before a scoped Solution operation, without managing dialog-open state.",
             "keywords": ["confirmation", "confirm", "continue cancel", "alert dialog"],
-            "components": ["Hooks", "Button", "Functions"],
+            "components": ["Hooks", "Button"],
             "steps": [
                 "Call useConfirm() at the top level and render its element once beside the trigger Button.",
                 "Call show({ title, actionLabel, cancelLabel, onAction }) from the trigger. Description is optional; use translated labels when needed.",
@@ -2087,7 +2087,7 @@
             "name": "Approval queue",
             "description": "Show pending work and make the next authorized action clear.",
             "keywords": ["approval", "approval queue", "approve", "review queue", "pending approvals"],
-            "components": ["Table", "Badge", "Button", "Hooks", "Functions"],
+            "components": ["Table", "Badge", "Button", "Hooks"],
             "steps": [
                 "Load pending records with the documented Hooks API and display their states as Table rows with Badge values.",
                 "Add explicit approve/reject actions through Button callbacks and scoped requests.",
