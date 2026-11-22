@@ -1,6 +1,7 @@
 import { Card } from '@/components/longlink/layout/card';
 import { Text } from '@/components/longlink/display/text';
 import { useUpdateUser } from '@/platform/hooks/use-user';
+import { Stack } from '@/components/longlink/layout/stack';
 import { useAppearance } from '@/lib/hooks/use-appearance';
 import { Heading } from '@/components/longlink/display/heading';
 
@@ -10,12 +11,12 @@ export default function AppearanceSettings() {
     const userUpdate = useUpdateUser();
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3" role="group" aria-label="Theme">
+        <Stack gap={6}>
+            <Stack gap={3} role="group" aria-label="Theme">
                 <Heading level={3} size={4}>
                     Theme
                 </Heading>
-                <div className="flex flex-wrap gap-3">
+                <Stack direction="horizontal" wrap="wrap" gap={3}>
                     {(
                         [
                             { value: 'system', label: 'System', image: 'theme_auto.png' },
@@ -34,7 +35,7 @@ export default function AppearanceSettings() {
                                     userUpdate.mutate({ theme: value });
                             }}
                         >
-                            <div className="flex flex-col gap-2">
+                            <Stack gap={2}>
                                 <Text>{label}</Text>
                                 <img
                                     src={`/images/${image}`}
@@ -43,16 +44,16 @@ export default function AppearanceSettings() {
                                     height={1024}
                                     className="aspect-3/2 w-40 max-w-full rounded-md object-cover"
                                 />
-                            </div>
+                            </Stack>
                         </Card>
                     ))}
-                </div>
-            </div>
+                </Stack>
+            </Stack>
             {userUpdate.isPending && (
                 <Text role="status" size="xs" tone="muted">
                     Saving theme…
                 </Text>
             )}
-        </div>
+        </Stack>
     );
 }

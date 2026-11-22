@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/shadcn/button';
 import { apiQueryOptions } from '@/lib/react-query';
 import { Skeleton } from '@/components/shadcn/skeleton';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Badge } from '@/components/longlink/display/badge';
 import { Empty } from '@/components/longlink/display/empty';
 import { Avatar } from '@/components/longlink/display/avatar';
@@ -21,35 +22,40 @@ export default function ExploreSolutions() {
     const total = data?.total ?? 0;
 
     return (
-        <section
-            className="mx-auto flex w-full min-w-0 max-w-[800px] flex-col gap-4 p-6"
+        <Stack
+            as="section"
+            gap={4}
+            padding={6}
+            className="mx-auto w-full min-w-0 max-w-[800px]"
             aria-label="Public solutions"
             aria-busy={isPending}
         >
             {isPending ? (
-                <div className="flex min-w-0 flex-col gap-4" role="status" aria-label="Loading solutions">
+                <Stack gap={4} className="min-w-0" role="status" aria-label="Loading solutions">
                     {[0, 1, 2].map((index) => (
-                        <div
+                        <Stack
                             key={index}
-                            className="flex min-w-0 flex-col gap-4 overflow-clip border border-border bg-card p-6"
+                            gap={4}
+                            padding={6}
+                            className="min-w-0 overflow-clip border border-border bg-card"
                         >
-                            <div className="flex min-w-0 items-start justify-between gap-4">
-                                <div className="flex w-2/3 min-w-0 flex-col gap-2">
+                            <Stack direction="horizontal" align="start" justify="between" gap={4} className="min-w-0">
+                                <Stack gap={2} className="w-2/3 min-w-0">
                                     <Skeleton className="h-7 w-full" />
-                                    <div className="flex items-center gap-2">
+                                    <Stack direction="horizontal" align="center" gap={2}>
                                         <Skeleton className="size-6 shrink-0 rounded-lg" />
                                         <Skeleton className="h-5 w-1/2" />
-                                    </div>
-                                </div>
+                                    </Stack>
+                                </Stack>
                                 <Skeleton className="h-4 w-12" />
-                            </div>
-                            <div className="flex flex-col gap-2">
+                            </Stack>
+                            <Stack gap={2}>
                                 <Skeleton className="h-5 w-full" />
                                 <Skeleton className="h-5 w-3/4" />
-                            </div>
-                        </div>
+                            </Stack>
+                        </Stack>
                     ))}
-                </div>
+                </Stack>
             ) : isError ? (
                 <div className="min-w-0 overflow-clip border border-border bg-transparent p-4" role="status">
                     <Empty title="Unable to load solutions">
@@ -88,12 +94,18 @@ export default function ExploreSolutions() {
                                     to={`/explore/solutions/${solution.id}`}
                                     className="group flex min-w-0 flex-col gap-4 border border-border bg-card p-6 text-foreground hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                 >
-                                    <div className="flex min-w-0 items-start justify-between gap-4">
-                                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                                    <Stack
+                                        direction="horizontal"
+                                        align="start"
+                                        justify="between"
+                                        gap={4}
+                                        className="min-w-0"
+                                    >
+                                        <Stack gap={1} className="min-w-0 flex-1">
                                             <h2 className="text-xl leading-snug font-semibold tracking-tight [overflow-wrap:anywhere] group-hover:underline group-focus-visible:underline">
                                                 {solution.name}
                                             </h2>
-                                            <div className="flex min-w-0 items-center gap-2">
+                                            <Stack direction="horizontal" align="center" gap={2} className="min-w-0">
                                                 <Avatar
                                                     shape="rounded"
                                                     size="sm"
@@ -103,8 +115,8 @@ export default function ExploreSolutions() {
                                                 <p className="min-w-0 text-sm leading-normal text-muted-foreground [overflow-wrap:anywhere]">
                                                     {solution.organization.name}
                                                 </p>
-                                            </div>
-                                        </div>
+                                            </Stack>
+                                        </Stack>
                                         {solution.deployed_version && (
                                             <Badge
                                                 variant="outline"
@@ -115,7 +127,7 @@ export default function ExploreSolutions() {
                                                 </span>
                                             </Badge>
                                         )}
-                                    </div>
+                                    </Stack>
                                     {solution.description && (
                                         <p className="text-sm leading-relaxed text-foreground/80 [overflow-wrap:anywhere]">
                                             {solution.description}
@@ -130,6 +142,6 @@ export default function ExploreSolutions() {
                     )}
                 </>
             )}
-        </section>
+        </Stack>
     );
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Text } from '@/components/longlink/display/text';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Heading } from '@/components/longlink/display/heading';
 
 /** Renders the shared standalone account page frame. */
@@ -15,12 +16,20 @@ export function AuthLayout({
     headingSize?: 1 | 3;
 }) {
     return (
-        <div className="flex min-h-(--surface-content-height) w-full items-center justify-center">
-            <div
-                className="box-border flex w-full max-w-96 flex-col gap-4 px-4 py-8 data-[description=none]:gap-2"
-                data-description={description === null ? 'none' : undefined}
+        <Stack
+            direction="horizontal"
+            gap={0}
+            align="center"
+            justify="center"
+            className="min-h-(--surface-content-height) w-full"
+        >
+            <Stack
+                gap={description === null ? 2 : 4}
+                paddingInline={4}
+                paddingBlock={8}
+                className="box-border w-full max-w-96"
             >
-                <div className="flex flex-col gap-1 font-sans wrap-anywhere text-foreground">
+                <Stack gap={1} className="font-sans wrap-anywhere text-foreground">
                     <Heading level={1} size={headingSize} align="center">
                         {title}
                     </Heading>
@@ -31,9 +40,9 @@ export function AuthLayout({
                     ) : (
                         description
                     )}
-                </div>
+                </Stack>
                 {children}
-            </div>
-        </div>
+            </Stack>
+        </Stack>
     );
 }

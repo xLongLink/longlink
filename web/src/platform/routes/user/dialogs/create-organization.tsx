@@ -6,6 +6,7 @@ import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@/components/longlink/action/link';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
 import { Field, FieldError, FieldLabel } from '@/components/shadcn/field';
@@ -61,16 +62,23 @@ export default function CreateOrganization({
                         <FieldError errors={[form.formState.errors.name]} />
                     </Field>
                     <FieldError errors={[form.formState.errors.root]} />
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
                         <Link disabled={form.formState.isSubmitting} onClick={() => onOpenChange(false)}>
                             Cancel
                         </Link>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             Create organization
                         </Button>
-                    </div>
+                    </Stack>
                 </fieldset>
-                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    align="center"
+                    justify="center"
+                    padding={6}
+                    className="h-full bg-black/10 dark:bg-black/20"
+                >
                     <img
                         src="/images/new-organization.png"
                         alt=""
@@ -79,7 +87,7 @@ export default function CreateOrganization({
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"
                     />
-                </div>
+                </Stack>
             </form>
         </Dialog>
     );

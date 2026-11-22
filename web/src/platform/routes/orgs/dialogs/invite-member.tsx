@@ -6,6 +6,7 @@ import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { Stack } from '@/components/longlink/layout/stack';
 import { Dialog } from '@/components/longlink/layout/dialog';
 import { Heading } from '@/components/longlink/display/heading';
 import * as schemas from '@/lib/generated/platform-api-v1/zod.gen';
@@ -115,14 +116,21 @@ export function InviteMember({
                         )}
                     />
                     <FieldError errors={[form.formState.errors.root]} />
-                    <div className="flex items-center justify-between gap-2">
+                    <Stack direction="horizontal" align="center" justify="between" gap={2}>
                         <Button type="button" variant="link" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
                         <Button type="submit">Invite</Button>
-                    </div>
+                    </Stack>
                 </fieldset>
-                <div className="flex h-full items-center justify-center bg-black/10 p-6 dark:bg-black/20">
+                <Stack
+                    direction="horizontal"
+                    gap={0}
+                    align="center"
+                    justify="center"
+                    padding={6}
+                    className="h-full bg-black/10 dark:bg-black/20"
+                >
                     <img
                         src="/images/organization.png"
                         alt=""
@@ -131,7 +139,7 @@ export function InviteMember({
                         decoding="async"
                         className="w-full max-w-72 object-contain invert dark:invert-0"
                     />
-                </div>
+                </Stack>
             </form>
         </Dialog>
     );

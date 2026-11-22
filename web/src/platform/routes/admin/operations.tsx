@@ -89,9 +89,9 @@ export default function Operations() {
                         )}
                     </TableBody>
                 </Table>
-                <footer className="flex flex-col items-center py-2">
+                <Stack as="footer" gap={0} align="center" paddingBlock={2}>
                     <Pagination {...pagination} totalItems={operations.total} />
-                </footer>
+                </Stack>
             </Stack>
             {metadata && (
                 <Dialog
