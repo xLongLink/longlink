@@ -1,19 +1,11 @@
 import re
 import urllib.parse
-from enum import StrEnum
 from typing import Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 # Match disjoint algorithm and digest segments without backtracking on untrusted values.
 IMAGE_DIGEST_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9]*+(?:[+._-][A-Za-z][A-Za-z0-9]*+)*+:[A-Za-z0-9=_+.-]++")
-
-
-class DatabaseSSLMode(StrEnum):
-    """Supported PostgreSQL SSL modes."""
-
-    disable = "disable"
-    require = "require"
 
 
 class Image(str):

@@ -86,11 +86,11 @@ async def forward(
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
-            # Register resources directly with the request scope, in acquisition order.
-            try:
+            # Close partial acquisitions immediately if request submission fails or is cancelled.
+            async with AsyncExitStack() as acquisition:
                 tls = ssl.create_default_context(cadata=registry.gateway_certificate)
                 client = httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
-                runtime.push_async_callback(client.aclose)
+                acquisition.push_async_callback(client.aclose)
 
                 # Sign platform identity while keeping Knative's Host independent of the verified TLS hostname.
                 headers = {
@@ -124,12 +124,11 @@ async def forward(
                 # Build the upstream request with the original method and encoded request target.
                 upstream_request = client.build_request(request.method, url, content=request.stream(), headers=headers)
                 upstream = await client.send(upstream_request, stream=True)
-                runtime.push_async_callback(upstream.aclose)
+                acquisition.push_async_callback(upstream.aclose)
 
-            # Close partial acquisitions before translating failures or leaving the request timeout.
-            except BaseException:
-                await runtime.aclose()
-                raise
+                # Keep acquired resources open until the streamed response finishes.
+                resources = acquisition.pop_all()
+                runtime.push_async_callback(resources.aclose)
 
     # Keep transport failures behind stable browser-facing errors.
     except TimeoutError as exc:

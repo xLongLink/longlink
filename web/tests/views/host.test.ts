@@ -135,7 +135,10 @@ describe('Solution response loading', () => {
             const address = server.address() as AddressInfo;
 
             // Observe settlement without leaving an unhandled rejection on a failed assertion.
-            const pending = load(`http://127.0.0.1:${address.port}/items`, { signal: caller.signal });
+            const pending = (async () => {
+                const response = await load(`http://127.0.0.1:${address.port}/items`, { signal: caller.signal });
+                return await response.blob();
+            })();
 
             let settled = false;
             let rejection: unknown;
