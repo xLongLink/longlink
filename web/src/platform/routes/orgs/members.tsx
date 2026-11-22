@@ -1,11 +1,11 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useApi } from '@/lib/hooks/use-api';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
 import { useQueryClient } from '@tanstack/react-query';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -32,10 +32,10 @@ export default function MembersSection({ base, role }: { base: string; role: Org
     const canAdminister = permissions.canAdminister(role);
     const canManageOwners = role === 'owner';
 
-    const [member, setMember] = useState<{
+    const [member, setMember, closeMember] = useSelection<{
         id: string;
         action: { kind: 'role'; role: permissions.AssignableRole } | { kind: 'remove' };
-    } | null>(null);
+    }>();
 
     // Load and invalidate members independently of pending invitations.
     const [members, invalidateMembers] = useApi(`${base}/members`, schemas.zOrganizationMemberAccessResponse.array());
@@ -143,7 +143,7 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                             : `Change ${selectedMember.user.name} to ${member.action.role}?`
                     }
                     actionLabel={member.action.kind === 'remove' ? 'Remove member' : 'Confirm'}
-                    onOpenChange={() => setMember(null)}
+                    onOpenChange={closeMember}
                     onConfirm={async () => {
                         // Update access on the server before refreshing the member list.
                         if (member.action.kind === 'remove') {
@@ -177,7 +177,7 @@ export default function MembersSection({ base, role }: { base: string; role: Org
                         }
 
                         await Promise.all(refreshes);
-                        setMember((current) => (current === member ? null : current));
+                        closeMember();
                     }}
                 />
             )}

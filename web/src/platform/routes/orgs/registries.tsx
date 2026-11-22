@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
@@ -14,13 +14,8 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 /** Lists organization-owned registry connections without loading credentials. */
 export default function Registries({ base, canMaintain }: { base: string; canMaintain: boolean }) {
     const [connections, invalidate] = useApi(`${base}/registries`, schemas.zRegistryResponse.array());
-    const [action, setAction] = useState<{ kind: 'create' } | null>(null);
+    const [action, setAction, closeAction] = useSelection<{ kind: 'create' }>();
     const confirmation = useConfirm();
-
-    function closeAction() {
-        // Leave replacement dialogs open when an older operation finishes.
-        setAction((current) => (current === action ? null : current));
-    }
 
     async function onSuccess() {
         // Keep the active dialog and its draft when refreshing fails.

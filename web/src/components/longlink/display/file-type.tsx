@@ -673,12 +673,4 @@ function FileType({ type, variant = 'outline', size = 'md', label, glyph, icon, 
     );
 }
 
-export {
-    FILE_TYPE_CATEGORIES,
-    FileType,
-    fileTypeVariants,
-    type FileTypeCategory,
-    type FileTypeName,
-    type FileTypeProps,
-    type FileTypeVariant
-};
+export { FileType };

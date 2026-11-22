@@ -1,10 +1,9 @@
 import { cn } from 'cn';
-import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/shadcn/skeleton';
-import { RequestContext } from '@/lib/view-capabilities';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
+import { useBinaryQuery } from '@/lib/hooks/use-binary-query';
 import { AspectRatio } from '@/components/shadcn/aspect-ratio';
-import { useContext, useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 
 type ImageProps = Omit<ComponentProps<'img'>, 'src' | 'alt'> & {
     /** Scoped Solution image path, or an image data/blob URL. */
@@ -29,23 +28,9 @@ export function Image(props: ImageProps) {
 }
 
 function ScopedImage(props: ImageProps) {
-    const request = useContext(RequestContext)?.request;
-    const { data, isError } = useQuery({
-        queryKey: ['api', props.src, 'binary', 'image'],
-        queryFn: async () => {
-            if (!request) throw new Error('Image preview unavailable');
-            const body = await request(props.src, { binary: true });
-            if (!(body instanceof Blob) || !body.type.startsWith('image/'))
-                throw new Error('Image preview unavailable');
-            return body;
-        },
-        retry: false,
-        gcTime: 0,
-        staleTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false
-    });
-    return <ImageContent {...props} src={undefined} body={data} unavailable={isError} />;
+    const { data, isError } = useBinaryQuery(props.src);
+    const body = data?.type.startsWith('image/') ? data : undefined;
+    return <ImageContent {...props} src={undefined} body={body} unavailable={isError || !!(data && !body)} />;
 }
 
 function ImageContent({

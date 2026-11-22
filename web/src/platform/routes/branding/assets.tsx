@@ -88,7 +88,7 @@ export default function Assets() {
                                 data-theme-scope="stone"
                                 data-theme={mode}
                             >
-                                <Wordmark size="heading" mode={mode} />
+                                <Wordmark mode={mode} />
                             </div>
                             <figcaption className="font-sans text-sm leading-(--text-sm--line-height) font-normal wrap-break-word text-muted-foreground opacity-90">
                                 {mode === 'light' ? 'Light mode' : 'Dark mode'} ·{' '}

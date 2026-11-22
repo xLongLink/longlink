@@ -13,7 +13,7 @@ export function Footer({ maxWidth = 1000 }: { maxWidth?: number }) {
                 <div className="flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:justify-center">
                     <div className="flex items-center gap-4 max-sm:flex-col max-sm:justify-center">
                         <RouterLink className="site-footer-home text-inherit" to="/" aria-label="LongLink home">
-                            <Wordmark size="heading" />
+                            <Wordmark />
                         </RouterLink>
                         <ul className="m-0 flex list-none items-center gap-3 p-0">
                             <li>

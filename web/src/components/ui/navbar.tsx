@@ -71,7 +71,7 @@ export function Navbar({
                             aria-label="LongLink home"
                             className="flex min-w-fit flex-1 items-center text-inherit no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid focus-visible:outline-offset-2"
                         >
-                            <Wordmark size="heading" />
+                            <Wordmark />
                         </RouterLink>
                         <div className="ms-auto flex max-w-full items-center justify-end gap-1">
                             <div className="hidden items-center gap-6 sm:flex">

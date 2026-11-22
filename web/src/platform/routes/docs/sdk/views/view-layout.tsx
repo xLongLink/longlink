@@ -16,6 +16,18 @@ type ViewProperty = { name: string; type: string };
 
 type ViewExample = { title: string; code: string; preview: ReactNode };
 
+const propertyDefaults = new Map(
+    viewCatalog.components.flatMap((entry) =>
+        (entry.properties ?? []).map(
+            (property) =>
+                [
+                    property.name.includes('.') ? property.name : `${entry.name}.${property.name}`,
+                    'default' in property ? property.default : undefined
+                ] as const
+        )
+    )
+);
+
 /** Keeps an example's showcase mounted while switching between preview and code. */
 function ExampleWindow({ example }: { example: ViewExample }) {
     const [showCode, setShowCode] = useState(false);
@@ -92,19 +104,6 @@ export default function ViewLayout({
 
     // Read published defaults without duplicating component configuration in each documentation page.
     const catalogComponent = viewCatalog.components.find((entry) => entry.name === name);
-    const defaults = new Map(
-        viewCatalog.components.flatMap((entry) =>
-            (entry.properties ?? []).map(
-                (property) =>
-                    [
-                        entry.name === name || property.name.includes('.')
-                            ? property.name
-                            : `${entry.name}.${property.name}`,
-                        'default' in property ? property.default : undefined
-                    ] as const
-            )
-        )
-    );
 
     // Prepare property tables for the reference tab.
     const groups = new Map<string, ViewProperty[]>();
@@ -181,9 +180,7 @@ export default function ViewLayout({
                                         </TableHeader>
                                         <TableBody>
                                             {properties.map((row) => {
-                                                const defaultValue = defaults.get(
-                                                    group === name ? row.name : `${group}.${row.name}`
-                                                );
+                                                const defaultValue = propertyDefaults.get(`${group}.${row.name}`);
 
                                                 return (
                                                     <TableRow key={row.name}>

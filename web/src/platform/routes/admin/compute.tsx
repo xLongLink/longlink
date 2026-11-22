@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { useApi } from '@/lib/hooks/use-api';
 import { useListControls } from './use-list-controls';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
@@ -19,7 +19,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 export default function Compute() {
     const { suffix, searchField, pagination } = useListControls('compute', 'Search by name or endpoint');
 
-    const [dialog, setDialog] = useState<{ kind: 'registration' } | { kind: 'metadata'; id: string } | null>(null);
+    const [dialog, setDialog, closeDialog] = useSelection<
+        { kind: 'registration' } | { kind: 'metadata'; id: string }
+    >();
     const confirmation = useConfirm();
 
     const path = `/api/v1/computes${suffix}`;
@@ -87,19 +89,16 @@ export default function Compute() {
                     onSuccess={async () => {
                         // Refresh the list before closing only this registration attempt.
                         await invalidate();
-                        setDialog((current) => (current === dialog ? null : current));
+                        closeDialog();
                     }}
-                    onOpenChange={() => {
-                        // An obsolete registration cannot dismiss a replacement dialog selection.
-                        setDialog((current) => (current === dialog ? null : current));
-                    }}
+                    onOpenChange={closeDialog}
                 />
             )}
             {metadata && (
                 <Dialog
                     open
                     onOpenChange={(open) => {
-                        if (!open) setDialog(null);
+                        if (!open) closeDialog();
                     }}
                     title="Compute metadata"
                     footer={
@@ -107,7 +106,7 @@ export default function Compute() {
                             type="button"
                             variant="destructive"
                             onClick={() => {
-                                setDialog(null);
+                                closeDialog();
                                 confirmation.show({
                                     title: 'Delete compute',
                                     description: `Remove compute ${metadata.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,

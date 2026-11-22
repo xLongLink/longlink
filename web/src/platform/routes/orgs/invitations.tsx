@@ -1,9 +1,10 @@
 import { api } from '@/lib/api';
+import { useTransition } from 'react';
 import { useApi } from '@/lib/hooks/use-api';
-import { useState, useTransition } from 'react';
 import { useSubmit } from '@/lib/hooks/use-submit';
 import { Button } from '@/components/shadcn/button';
 import * as permissions from '@/platform/permissions';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Text } from '@/components/longlink/display/text';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
@@ -16,7 +17,7 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/longlink/dis
 
 /** Owns invitation drafts and actions only while their section is active. */
 export default function InvitationsSection({ base, role }: { base: string; role: OrganizationContext['role'] }) {
-    const [invitationAttempt, setInvitationAttempt] = useState<symbol | null>(null);
+    const [invitationAttempt, setInvitationAttempt, closeInvitation] = useSelection<symbol>();
     const canMaintain = permissions.canMaintain(role);
     const canInviteAdmin = permissions.canAdminister(role);
 
@@ -35,11 +36,6 @@ export default function InvitationsSection({ base, role }: { base: string; role:
         },
         { onError: () => {} }
     );
-
-    /** Closes only the invitation attempt that owns this callback. */
-    function closeInvitation() {
-        setInvitationAttempt((current) => (current === invitationAttempt ? null : current));
-    }
 
     return (
         <>

@@ -32,7 +32,8 @@ it('switches between the example and authored companion references without mergi
             name="Button"
             properties={[
                 { name: 'size', type: 'AuthoredButtonSize' },
-                { name: 'ButtonGroup.orientation', type: 'AuthoredOrientation' }
+                { name: 'ButtonGroup.orientation', type: 'AuthoredOrientation' },
+                { name: 'ButtonGroupSeparator.orientation', type: 'AuthoredSeparatorOrientation' }
             ]}
             example={{ title: 'Plain card', code: '<Card />', preview: <p>Order details</p> }}
         />,
@@ -46,7 +47,8 @@ it('switches between the example and authored companion references without mergi
             expect(output.textContent).not.toContain('Order details');
             expect(Array.from(output.querySelectorAll('table'), (table) => table.getAttribute('aria-label'))).toEqual([
                 'Button properties',
-                'ButtonGroup properties'
+                'ButtonGroup properties',
+                'ButtonGroupSeparator properties'
             ]);
             expect(
                 Array.from(output.querySelectorAll('tbody tr'), (row) =>
@@ -54,7 +56,8 @@ it('switches between the example and authored companion references without mergi
                 )
             ).toEqual([
                 ['size', 'AuthoredButtonSize', '"default"'],
-                ['orientation', 'AuthoredOrientation', '"horizontal"']
+                ['orientation', 'AuthoredOrientation', '"horizontal"'],
+                ['orientation', 'AuthoredSeparatorOrientation', '"vertical"']
             ]);
             await act(async () => user.click(exampleTab));
             expect(output.querySelector('[role="tabpanel"]')?.textContent).toContain('Order details');

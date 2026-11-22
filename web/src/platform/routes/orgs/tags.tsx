@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { useState } from 'react';
 import * as tabs from '@/platform/tabs';
 import { useApiError } from '@/lib/errors';
+import { useSelection } from '@/lib/hooks/use-selection';
 import { Separator } from '@/components/shadcn/separator';
 import { Stack } from '@/components/longlink/layout/stack';
 import { Empty } from '@/components/longlink/display/empty';
@@ -28,7 +28,7 @@ type TagAction = { kind: 'create' } | { kind: 'edit'; tag: Tag };
 /** Lists and manages the shared tags used as top-level Organization tabs. */
 export default function TabsSection({ base, tags, canMaintain }: { base: string; tags: Tag[]; canMaintain: boolean }) {
     const queryClient = useQueryClient();
-    const [action, setAction] = useState<TagAction | null>(null);
+    const [action, setAction, closeAction] = useSelection<TagAction>();
     const confirmation = useConfirm();
     const reportError = useApiError();
 
@@ -160,11 +160,11 @@ export default function TabsSection({ base, tags, canMaintain }: { base: string;
                     key={action.kind === 'create' ? 'create' : action.tag.id}
                     base={base}
                     tag={action.kind === 'create' ? null : action.tag}
-                    onOpenChange={() => setAction(null)}
+                    onOpenChange={closeAction}
                     onSuccess={async () => {
                         // Refresh shared data before dismissing only the completed edit.
                         await queryClient.invalidateQueries({ queryKey: ['api', `${base}/tags`], exact: true });
-                        setAction((current) => (current === action ? null : current));
+                        closeAction();
                     }}
                 />
             )}
