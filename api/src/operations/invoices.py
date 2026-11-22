@@ -128,29 +128,32 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
             elif invoice.pricing_version in {2, 3}:
                 byte_unit = pricing.GB_BYTES if invoice.pricing_version == 2 else pricing.GIB_BYTES
                 unit_name = "GB" if invoice.pricing_version == 2 else "GiB"
+                cpu_amount, ram_amount, storage_amount = pricing.allocation_amounts(
+                    invoice.cpu_millicores, invoice.ram_bytes, invoice.storage_bytes, byte_unit=byte_unit
+                )
                 resources = (
                     (
                         "cpu",
                         f"CPU: {Decimal(invoice.cpu_millicores) / 1000:f} vCPU × CHF {pricing.CPU_MONTHLY_PRICE / 100:f}/vCPU",
-                        invoice.cpu_millicores,
+                        1,
                         0,
-                        pricing.CPU_MONTHLY_PRICE / 1000,
+                        cpu_amount,
                     ),
                     (
                         "ram",
                         f"RAM: {Decimal(invoice.ram_bytes) / byte_unit:f} {unit_name} "
                         f"× CHF {pricing.RAM_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
-                        invoice.ram_bytes,
+                        1,
                         0,
-                        pricing.RAM_GIB_MONTHLY_PRICE / byte_unit,
+                        ram_amount,
                     ),
                     (
                         "storage",
                         f"Storage: {Decimal(invoice.storage_bytes) / byte_unit:f} {unit_name} "
                         f"× CHF {pricing.STORAGE_GIB_MONTHLY_PRICE / 100:f}/{unit_name}",
-                        invoice.storage_bytes,
+                        1,
                         0,
-                        pricing.STORAGE_GIB_MONTHLY_PRICE / byte_unit,
+                        storage_amount,
                     ),
                 )
             else:
@@ -168,11 +171,6 @@ async def issue(session: AsyncSession, invoice_id: UUID) -> None:
                 net = (billable * unit_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
                 discount += int(gross - net)
                 total += int(net)
-
-                # Allocation lines use a single readable charge, avoiding provider limits on byte quantities.
-                if invoice.pricing_version in {2, 3}:
-                    quantity = 1
-                    unit_price = gross
 
                 # Recover each resource line independently to avoid duplicate charges.
                 matched = [item for item in existing_items if (item.to_dict().get("metadata") or {}).get("resource") == resource]

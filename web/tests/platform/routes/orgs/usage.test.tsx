@@ -32,11 +32,19 @@ it('edits independent pools atomically, validates steps, and preserves failed ed
     const requests: unknown[] = [];
     const reportError = vi.fn();
     let releaseFailure: ((response: Response) => void) | undefined;
+    let releaseRefresh: ((response: Response) => void) | undefined;
     let saved = usage;
     const transport = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
         const request = input instanceof Request ? input : new Request(input, options);
         if (new URL(request.url).pathname !== `${base}/usage`) throw new Error('Unexpected request');
-        if (request.method === 'GET') return Response.json(saved);
+        if (request.method === 'GET') {
+            if (requests.length === 2) {
+                return await new Promise<Response>((resolve) => {
+                    releaseRefresh = resolve;
+                });
+            }
+            return Response.json(saved);
+        }
         if (request.method !== 'PATCH') throw new Error('Unexpected method');
         const json = schemas.zOrganizationUsageUpdate.parse(await request.json());
         requests.push(json);
@@ -116,17 +124,27 @@ it('edits independent pools atomically, validates steps, and preserves failed ed
                 await vi.waitFor(() => expect(dialog?.textContent).toContain('Unavailable'));
                 expect(cpu.value).toBe('0.5');
                 expect(reportError).toHaveBeenCalledOnce();
+                saved = { ...saved, compute_cpu_millicores: 2000, storage_bytes: 21474836480 };
+                await act(async () => {
+                    client.setQueryData(['api', `${base}/usage`], saved);
+                });
+                await vi.waitFor(() => expect(compute?.textContent).toContain('- / 2 vCPU'));
+                expect(cpu.value).toBe('0.5');
                 await act(async () => save.click());
+                await vi.waitFor(() => expect(releaseRefresh).toBeTypeOf('function'));
+                expect(document.querySelector('[role="dialog"]')).toBe(dialog);
+                expect(save.disabled).toBe(true);
+                await act(async () => releaseRefresh?.(Response.json(saved)));
                 await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
                 const computeUpdate = {
                     compute_cpu_millicores: 500,
                     compute_ram_bytes: 268435456,
-                    storage_bytes: usage.storage_bytes,
+                    storage_bytes: saved.storage_bytes,
                     database_cpu_millicores: usage.database_cpu_millicores,
                     database_ram_bytes: usage.database_ram_bytes,
                     database_storage_bytes: usage.database_storage_bytes
                 };
-                expect(requests).toEqual([computeUpdate, computeUpdate]);
+                expect(requests).toEqual([{ ...computeUpdate, storage_bytes: usage.storage_bytes }, computeUpdate]);
 
                 const editDatabase = database?.querySelector('button');
                 if (!editDatabase) throw new Error('Expected database editor');
@@ -246,10 +264,23 @@ it('keeps database editing available with failed metrics and cancels without sav
                 // Act
                 await act(async () => edit.click());
                 const dialog = document.querySelector('[role="dialog"]');
+                const cpu = dialog?.querySelector<HTMLInputElement>('#capacity-database_cpu');
+                if (!cpu) throw new Error('Expected database CPU field');
+                const events = userEvent.setup();
+                await act(async () => {
+                    await events.clear(cpu);
+                    await events.type(cpu, '4');
+                });
                 const cancel = Array.from(dialog?.querySelectorAll('button') ?? []).find(
                     (button) => button.textContent === 'Cancel'
                 );
                 await act(async () => cancel?.click());
+                await act(async () => edit.click());
+                expect(document.querySelector<HTMLInputElement>('#capacity-database_cpu')?.value).toBe('1');
+                const reopenedCancel = Array.from(
+                    document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')
+                ).find((button) => button.textContent === 'Cancel');
+                await act(async () => reopenedCancel?.click());
                 metricsAvailable = true;
                 const retry = Array.from(output.querySelectorAll('button')).find(
                     (button) => button.textContent === 'Retry database usage'

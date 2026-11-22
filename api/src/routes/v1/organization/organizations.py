@@ -6,18 +6,16 @@ from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedEr
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col
-from src.utils import s3, mail, roles
+from src.utils import mail, roles
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from src.kubernetes import databases
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import OrganizationRoles
-from botocore.exceptions import ClientError, BotoCoreError
 from src.models.resources import OrganizationSolutionSummary
 from src.database.services import invitations, organizations
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.storage import Storage
 from src.models.organizations import (
     DatabaseState,
     OrganizationUsage,
@@ -106,16 +104,8 @@ async def get_organization_storage_usage(session: auth.Session, membership: auth
     compute = await organizations.storage_infrastructure(session, membership.organization_id)
     await session.commit()
 
-    # Bound member-triggered full-bucket scans so slow storage cannot exhaust request capacity.
-    try:
-        async with asyncio.timeout(15):
-            credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
-            storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
-            usage = await storage.usage(Storage.bucket_name(membership.organization_id))
-
-    # Storage outages share one stable API error without provider diagnostics.
-    except (TimeoutError, BotoCoreError, ClientError) as exc:
-        raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
+    # Measure outside the read transaction.
+    usage = await organizations.storage_usage(compute, membership.organization_id)
 
     # Report the measured usage alongside the tenant's configured quota.
     return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
