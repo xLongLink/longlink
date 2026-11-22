@@ -8,17 +8,14 @@ import { REQUEST_TIMEOUT, responseSchema, type ViewData, type RequestCommand, ty
 export async function load(
     url: string,
     options: Pick<Options, 'headers' | 'method' | 'json' | 'body' | 'cache'> & { signal: AbortSignal }
-): Promise<Blob> {
+): Promise<Response> {
     // Bound the complete response lifetime, including a server that stalls after sending headers.
-    const response = await api(url, {
+    return await api(url, {
         ...options,
         signal: AbortSignal.any([options.signal, AbortSignal.timeout(REQUEST_TIMEOUT)]),
         redirect: 'error',
         timeout: false
     });
-
-    // Read the complete response within the request lifetime.
-    return response.blob();
 }
 
 /** Executes one validated request using only host-owned credentials and fixed options. */
@@ -34,7 +31,7 @@ export async function request(base: string, command: RequestCommand, signal: Abo
     }
 
     // Revalidate binary previews when files change without changing their URLs.
-    const body = await load(url, {
+    const response = await load(url, {
         method: command.method,
         json: command.json,
         body: form,
@@ -43,12 +40,13 @@ export async function request(base: string, command: RequestCommand, signal: Abo
     });
 
     if (command.binary) {
+        const body = await response.blob();
         const media = body.type.split(';', 1)[0].trim().toLowerCase();
         const type = previewKind(media) !== undefined ? media : 'application/octet-stream';
 
         return body.slice(0, body.size, type);
     }
-    const text = await body.text();
+    const text = await response.text();
 
     // Validate the serialized response before sending it over the capability channel.
     return text ? responseSchema.parse(JSON.parse(text)) : null;
@@ -57,7 +55,8 @@ export async function request(base: string, command: RequestCommand, signal: Abo
 /** Downloads Solution bytes in the host without granting sandbox navigation or downloads. */
 export async function download(base: string, command: DownloadCommand, signal: AbortSignal): Promise<null> {
     // Treat every download as inert attachment bytes, including HTML and SVG documents.
-    const body = await load(requestUrl(base, command.path), { signal });
+    const response = await load(requestUrl(base, command.path), { signal });
+    const body = await response.blob();
     signal.throwIfAborted();
     const url = URL.createObjectURL(new Blob([body], { type: 'application/octet-stream' }));
     const link = document.createElement('a');

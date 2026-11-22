@@ -1,5 +1,6 @@
+import type { ComponentProps } from 'react';
 import { Input } from '@/components/shadcn/input';
-import { useId, type ComponentProps } from 'react';
+import { useField } from '@/components/longlink/form/fields';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/shadcn/field';
 
 type TextFieldProps = ComponentProps<typeof Input> & {
@@ -10,32 +11,17 @@ type TextFieldProps = ComponentProps<typeof Input> & {
 };
 
 /** Connects an auth form string field to its native control and validation feedback. */
-export function TextField({ label, error, description, labelHidden, id: providedId, ...props }: TextFieldProps) {
-    const generatedId = useId();
-    const id = providedId ?? generatedId;
+export function TextField({ label, error, description, labelHidden, ...props }: TextFieldProps) {
+    const field = useField({ ...props, label, error, description });
+    const { id } = field;
 
     return (
-        <Field
-            className="min-w-0"
-            data-disabled={props.disabled || undefined}
-            data-invalid={Boolean(error) || props['aria-invalid']}
-        >
+        <Field className="min-w-0" data-disabled={props.disabled || undefined} data-invalid={field['aria-invalid']}>
             <FieldLabel id={`${id}-label`} htmlFor={id} className={labelHidden ? 'sr-only' : undefined}>
                 {label}
             </FieldLabel>
             {description && <FieldDescription id={`${id}-description`}>{description}</FieldDescription>}
-            <Input
-                {...props}
-                id={id}
-                aria-required={props.required || undefined}
-                aria-labelledby={`${id}-label`}
-                aria-describedby={
-                    [props['aria-describedby'], description && `${id}-description`, error && `${id}-error`]
-                        .filter(Boolean)
-                        .join(' ') || undefined
-                }
-                aria-invalid={Boolean(error) || props['aria-invalid']}
-            />
+            <Input {...props} {...field} aria-required={props.required || undefined} aria-labelledby={`${id}-label`} />
             {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
         </Field>
     );

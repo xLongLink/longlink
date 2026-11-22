@@ -24,8 +24,8 @@ it.each([
             .update(`${script}\n${modules ? `\n${JSON.stringify(modules)}` : ''}`)
             .digest('hex');
         const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
-            if (url.includes('/views/runtime.js?')) return new Blob([script]);
-            if (url.includes('/views/runtime.css?')) return new Blob(['']);
+            if (url.includes('/views/runtime.js?')) return new Response(script);
+            if (url.includes('/views/runtime.css?')) return new Response('');
             throw new Error('Unexpected asset request');
         });
         const NativeMessageChannel = globalThis.MessageChannel;
@@ -121,10 +121,10 @@ it('keeps execution isolated and transfers only verified Solution modules', asyn
     const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
         fetched.push(new URL(url).pathname);
 
-        if (url.includes('/views/runtime.js?')) return new Blob([script]);
-        if (url.includes('/views/runtime.css?')) return new Blob([styles]);
-        if (url.includes('/views/entry.js?')) return new Blob([module]);
-        if (url.includes('/views/stale.js?')) return new Blob(['export const value = "wrong deployment";']);
+        if (url.includes('/views/runtime.js?')) return new Response(script);
+        if (url.includes('/views/runtime.css?')) return new Response(styles);
+        if (url.includes('/views/entry.js?')) return new Response(module);
+        if (url.includes('/views/stale.js?')) return new Response('export const value = "wrong deployment";');
         throw new Error('Unexpected asset request');
     });
 
@@ -271,8 +271,8 @@ it('accepts v0.9.6 navigation commands with newTab:false and navigates within th
     const script = '/* v0.9.6 navigation bootstrap */';
     const version = createHash('sha256').update(`${script}\n`).digest('hex');
     const load = vi.spyOn(host, 'load').mockImplementation(async (url) => {
-        if (url.includes('/views/runtime.js?')) return new Blob([script]);
-        if (url.includes('/views/runtime.css?')) return new Blob(['']);
+        if (url.includes('/views/runtime.js?')) return new Response(script);
+        if (url.includes('/views/runtime.css?')) return new Response('');
         throw new Error('Unexpected asset request');
     });
 

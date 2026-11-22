@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 // @vitest-environment-options {"url":"http://localhost","settings":{"navigation":{"disableChildPageNavigation":true}}}
-import { act } from 'react';
 import { user } from '../../render';
+import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
 import { withMounted } from '../../../render';
 import { ApiErrorContext } from '@/lib/errors';
@@ -11,10 +11,63 @@ import userEvent from '@testing-library/user-event';
 import { AccountProvider } from '@/platform/account';
 import AccountLayout from '@/platform/layouts/account';
 import Register from '@/platform/routes/auth/register';
+import { TextField } from '@/platform/routes/auth/field';
 import McpAuthorization from '@/platform/routes/auth/mcp';
 import { Route, Routes, useLocation } from 'react-router';
 import { ApiBoundary, ApiProvider } from '@/components/api';
 import AuthenticatedLayout from '@/platform/layouts/authenticated';
+
+it('keeps the auth-owned label and external descriptions when clearing a field error', async () => {
+    // Arrange
+    function Example() {
+        const [error, setError] = useState<string | undefined>('Enter an email.');
+
+        return (
+            <>
+                <p id="policy">Use your work email.</p>
+                <p id="external-label">External label</p>
+                <TextField
+                    label="Email"
+                    labelHidden
+                    required
+                    description="Your account email."
+                    error={error}
+                    aria-labelledby="external-label"
+                    aria-describedby="policy"
+                    onChange={() => setError(undefined)}
+                />
+            </>
+        );
+    }
+
+    await withMounted(<Example />, async (output) => {
+        const input = output.querySelector('input');
+        const label = output.querySelector('label');
+
+        if (!input || !label) throw new Error('Expected the auth field');
+        const user = userEvent.setup();
+
+        // Act
+        await act(async () => user.click(label));
+
+        // Assert
+        expect(document.activeElement).toBe(input);
+        expect(label.classList.contains('sr-only')).toBe(true);
+        expect(input.getAttribute('aria-labelledby')).toBe(label.id);
+        expect(input.getAttribute('aria-required')).toBe('true');
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual([
+            'policy',
+            `${input.id}-description`,
+            `${input.id}-error`
+        ]);
+
+        await act(async () => user.type(input, 'mara@example.com'));
+        expect(input.getAttribute('aria-invalid')).not.toBe('true');
+        expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual(['policy', `${input.id}-description`]);
+        expect(document.getElementById(`${input.id}-error`)).toBeNull();
+    });
+});
 
 /** Exposes the actual router destination without replacing navigation. */
 function LocationProbe() {

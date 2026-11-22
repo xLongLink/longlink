@@ -2,10 +2,9 @@ import httpx2
 import asyncio
 import secrets
 from uuid import UUID
-from typing import Literal
 from pathlib import Path
 from datetime import UTC, datetime
-from pydantic import Field, BaseModel
+from pydantic import Field
 from sqlmodel import col
 from src.utils import stripe
 from sqlalchemy import select
@@ -15,8 +14,11 @@ from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.models.resources import OrganizationIdentity
+from src.models.computes import ComputeRegistryResponse
+from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 from src.database.services import users, payments, invitations, organizations
+from src.models.operations import OperationResponse
+from src.models.pagination import Page
 from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.invoices import Invoice
 from src.database.models.association import UserOrganization
@@ -27,44 +29,6 @@ DEVELOPMENT_COMPUTE = "development compute"
 DEVELOPMENT_ORGANIZATION = "ACME Ink"
 INVITED_ORGANIZATION = "ACME Studio"
 SAMPLE_SOLUTION = "Invoices"
-
-
-class Resource(BaseModel):
-    """Describe the resource fields used by local provisioning."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str | None = None
-
-    # State
-    status: Literal["creating", "failed", "running"] | None = None
-
-
-class Page(BaseModel):
-    """Describe one paginated API response."""
-
-    # Results
-    items: list[Resource]
-
-
-class Operation(BaseModel):
-    """Describe the cleanup state needed before recreating a sample."""
-
-    # Reference
-    target_id: UUID
-
-    # State
-    status: Literal["active", "completed", "failed", "scheduled"]
-    failed: str | None = None
-
-
-class OperationPage(BaseModel):
-    """Validate the administrator cleanup operation listing."""
-
-    # Results
-    items: list[Operation]
 
 
 class SeedSettings(BaseSettings):
@@ -82,12 +46,12 @@ class SeedSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=API_ENVIRONMENT, env_file_encoding="utf-8", extra="ignore")
 
 
-async def development_compute(client: httpx2.AsyncClient) -> Resource | None:
+async def development_compute(client: httpx2.AsyncClient) -> ComputeRegistryResponse | None:
     """Return the local development Compute when registered."""
 
     response = await client.get("/api/v1/computes", params={"page_size": 100})
     response.raise_for_status()
-    computes = Page.model_validate(response.json()).items
+    computes = Page[ComputeRegistryResponse].model_validate(response.json()).items
     return next((compute for compute in computes if compute.name == DEVELOPMENT_COMPUTE), None)
 
 
@@ -151,7 +115,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
     # Find only the seeded sample; leave other Organization Solutions untouched.
     response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
     response.raise_for_status()
-    solutions = [Resource.model_validate(payload) for payload in response.json()]
+    solutions = [OrganizationSolutionSummary.model_validate(payload) for payload in response.json()]
     previous_ids = {solution.id for solution in solutions}
     matches = [solution for solution in solutions if solution.name == SAMPLE_SOLUTION]
     if len(matches) > 1:
@@ -168,7 +132,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
             while True:
                 response = await client.get("/api/v1/operations", params={"search": "solution.delete", "page_size": 100})
                 response.raise_for_status()
-                operations = OperationPage.model_validate(response.json()).items
+                operations = Page[OperationResponse].model_validate(response.json()).items
 
                 # Wait for the actual deletion operation before recreating the sample.
                 operation = next((operation for operation in operations if operation.target_id == solution.id), None)
@@ -204,7 +168,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
     response.raise_for_status()
     matches = [
         solution
-        for solution in (Resource.model_validate(payload) for payload in response.json())
+        for solution in (OrganizationSolutionSummary.model_validate(payload) for payload in response.json())
         if solution.name == SAMPLE_SOLUTION and solution.id not in previous_ids
     ]
     if len(matches) != 1:
@@ -224,7 +188,7 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 (
                     solution
                     # Validate response entries before selecting the recreated sample.
-                    for solution in (Resource.model_validate(payload) for payload in response.json())
+                    for solution in (OrganizationSolutionSummary.model_validate(payload) for payload in response.json())
                     if solution.id == created.id
                 ),
                 None,
