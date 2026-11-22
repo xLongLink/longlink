@@ -65,6 +65,7 @@ TYPESCRIPT:
 UI/COMPONENTS:
 - Use tailwindcss for styling.
 - USE react-error-boundary for errors.
+- DO NOT modify ReUI, ShadcnUI, or MapCN components for simplification (`web/src/components/reui`, `web/src/components/shadcn`, `web/src/components/mapcn`).
 - ReUI reference: https://reui.io/llms.txt.
 - MapCN reference: https://www.mapcn.dev/llms.txt
 - ShadcnUI reference: https://ui.shadcn.com/llms.txt.
