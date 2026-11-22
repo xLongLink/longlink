@@ -17,7 +17,7 @@ export default function LinkPage() {
   return (
     <Stack>
       <Link href="/orders">Orders</Link>
-      <Link onClick={() => download("/api/documents/sample", "sample-document.txt")}>
+      <Link href="/api/documents/sample" download="sample-document.txt">
         sample-document.txt
       </Link>
       <Link onClick={() => setIsOpen(true)} aria-haspopup="dialog">Preview document</Link>

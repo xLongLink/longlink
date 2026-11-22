@@ -260,24 +260,24 @@ export default function Item({ params }) {
                 </CodeBlock>
                 <Collapsible>
                     <CollapsibleTrigger render={<Button type="button" variant="ghost" />}>
-                        API reference
+                        Navigation and downloads
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                         <Table wrap>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>API</TableHead>
+                                    <TableHead>Example</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {[
                                     {
-                                        name: 'navigate(path)',
+                                        name: '<Link href="/reports">Reports</Link>',
                                         description:
                                             'Navigates within the current Solution or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
                                     },
                                     {
-                                        name: 'download(path, filename)',
+                                        name: '<Link href="/exports/report" download="report.csv">Report</Link>',
                                         description:
                                             'Downloads a Solution attachment to the supplied filename without opening it inside the View.'
                                     }

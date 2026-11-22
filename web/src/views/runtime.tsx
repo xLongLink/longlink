@@ -284,9 +284,7 @@ function initialize(event: MessageEvent<unknown>): void {
                 React.createElement(Object.is(type, globalThis.Map) ? components.Map : type, props, ...children),
             __fragment: React.Fragment,
             ...components,
-            Map: globalThis.Map,
-            download,
-            navigate
+            Map: globalThis.Map
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
@@ -335,7 +333,9 @@ function initialize(event: MessageEvent<unknown>): void {
                                     </div>
                                 }
                             >
-                                <LinkNavigationContext value={{ baseUrl: parsed.data.navigationBaseUrl, navigate }}>
+                                <LinkNavigationContext
+                                    value={{ baseUrl: parsed.data.navigationBaseUrl, navigate, download }}
+                                >
                                     <MenuNavigationProvider>
                                         <DialogActivityContext value={modalActivity}>
                                             <RequestContext value={requests}>

@@ -13,7 +13,7 @@ it('delegates ordinary solution navigation while preserving canceled, modified a
     let cancel = false;
 
     await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download: vi.fn() }}>
             <Link href="/invoices" onClick={(event) => cancel && event.preventDefault()}>
                 Invoices
             </Link>
@@ -52,7 +52,7 @@ it.each(['javascript:alert(1)', 'https://user:password@example.com/private', '..
         const navigate = vi.fn();
 
         await withMounted(
-            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
+            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download: vi.fn() }}>
                 <Link href={href}>Unsafe</Link>
             </LinkNavigationContext>,
             async (output) => {
@@ -73,7 +73,7 @@ it.each(['javascript:alert(1)', 'https://user:password@example.com/private', '..
 
 it('opens validated external destinations outside the frame without an opener', () => {
     const output = renderStatic(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn(), download: vi.fn() }}>
             <Link href="https://example.com/docs">Docs</Link>
         </LinkNavigationContext>
     );
@@ -133,12 +133,23 @@ it('leaves downloads, mail targets and new tabs to the browser inside the Platfo
     );
 });
 
-it('preserves native download links and allows canceling without navigating', async () => {
+it('allows canceling scoped downloads while preserving refs and handlers', async () => {
     const navigate = vi.fn();
+    const download = vi.fn();
+    const ref = createRef<HTMLElement>();
+    let activated: HTMLElement | undefined;
 
     await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
-            <Link href="/invoice.pdf" download="invoice.pdf" onClick={(event) => event.preventDefault()}>
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download }}>
+            <Link
+                ref={ref}
+                href="/invoice.pdf"
+                download="invoice.pdf"
+                onClick={(event) => {
+                    activated = event.currentTarget;
+                    event.preventDefault();
+                }}
+            >
                 Invoice
             </Link>
         </LinkNavigationContext>,
@@ -149,13 +160,19 @@ it('preserves native download links and allows canceling without navigating', as
             expect(control.getAttribute('download')).toBe('invoice.pdf');
             expect(control.getAttribute('href')).toBe('/solutions/orders/invoice.pdf');
             expect(output.querySelector('button')).toBeNull();
+            ref.current?.focus();
             const event = new MouseEvent('click', { bubbles: true, cancelable: true });
             await act(async () => control.dispatchEvent(event));
+            expect(ref.current).toBe(control);
+            expect(activated).toBe(control);
+            expect(document.activeElement).toBe(control);
             expect(event.defaultPrevented).toBe(true);
             expect(control.hasAttribute('aria-busy')).toBe(false);
             expect(navigate).not.toHaveBeenCalled();
+            expect(download).not.toHaveBeenCalled();
         }
     );
+    expect(ref.current).toBeNull();
 });
 
 it.each([false, true])(
@@ -166,7 +183,7 @@ it.each([false, true])(
 
         await withMounted(
             file ? (
-                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn() }}>
+                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn(), download: vi.fn() }}>
                     <Link href="/invoice.pdf" download="invoice.pdf" disabled onClick={action}>
                         Unavailable
                     </Link>
@@ -249,7 +266,7 @@ it('blocks disabled navigation and its callback until enabled', async () => {
         const [disabled, setDisabled] = useState(true);
 
         return (
-            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
+            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download: vi.fn() }}>
                 <Link href="/orders" disabled={disabled} onClick={action}>
                     Orders
                 </Link>
@@ -324,7 +341,7 @@ it('preserves native anchor props and ref without wrapping caller-owned content'
     const navigate = vi.fn();
 
     await withMounted(
-        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate }}>
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download: vi.fn() }}>
             <Link href="/invoices" ref={anchorRef} target="_blank" rel="nofollow" title="Invoices">
                 <strong>Invoices</strong>
             </Link>
@@ -371,4 +388,143 @@ it.each([false, true])('recovers from an already-reported action failure (async:
         await act(async () => output.querySelector('button')?.click());
         expect(action).toHaveBeenCalledTimes(2);
     });
+});
+
+it.each(['invoice.pdf', true] as const)(
+    'downloads scoped attachments with pending protection (filename: %s)',
+    async (filename) => {
+        // Arrange
+        let release = () => {};
+        const pending = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        const download = vi.fn(async () => await pending);
+        const navigate = vi.fn();
+
+        try {
+            await withMounted(
+                <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download }}>
+                    <Link href="/invoice.pdf" download={filename}>
+                        Invoice
+                    </Link>
+                </LinkNavigationContext>,
+                async (output) => {
+                    const anchor = output.querySelector('a');
+                    if (!anchor) throw new Error('Expected attachment link');
+                    const first = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+
+                    // Act
+                    await act(async () => {
+                        anchor.dispatchEvent(first);
+                        anchor.click();
+                    });
+
+                    // Assert
+                    expect(first.defaultPrevented).toBe(true);
+                    expect(download).toHaveBeenCalledExactlyOnceWith(
+                        '/invoice.pdf',
+                        filename === true ? 'attachment' : filename
+                    );
+                    expect(navigate).not.toHaveBeenCalled();
+                    expect(anchor.getAttribute('aria-busy')).toBe('true');
+                    await act(async () => {
+                        release();
+                        await pending;
+                    });
+                    expect(anchor.hasAttribute('aria-busy')).toBe(false);
+                    expect(anchor.getAttribute('href')).toBe('/solutions/orders/invoice.pdf');
+                    const auxiliary = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
+                    await act(async () => anchor.dispatchEvent(auxiliary));
+                    expect(auxiliary.defaultPrevented).toBe(true);
+                    expect(download).toHaveBeenCalledTimes(1);
+                }
+            );
+        } finally {
+            release();
+        }
+    }
+);
+
+it.each(['https://example.com/invoice.pdf', '//example.com/invoice.pdf', '../invoice.pdf', 'javascript:alert(1)'])(
+    'blocks native fallback for unsupported scoped downloads: %s',
+    async (href) => {
+        // Arrange
+        const download = vi.fn();
+        const navigate = vi.fn();
+        await withMounted(
+            <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate, download }}>
+                <Link href={href} download="invoice.pdf">
+                    Invoice
+                </Link>
+            </LinkNavigationContext>,
+            async (output) => {
+                const anchor = output.querySelector('a');
+                if (!anchor) throw new Error('Expected attachment link');
+                const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+
+                // Act
+                await act(async () => anchor.dispatchEvent(event));
+
+                // Assert
+                expect(event.defaultPrevented).toBe(true);
+                expect(anchor.hasAttribute('href')).toBe(false);
+                expect(download).not.toHaveBeenCalled();
+                expect(navigate).not.toHaveBeenCalled();
+            }
+        );
+    }
+);
+
+it('recovers from an already-reported scoped download failure', async () => {
+    // Arrange
+    const download = vi.fn().mockRejectedValue(new ReportedError('Already reported'));
+    await withMounted(
+        <LinkNavigationContext value={{ baseUrl: '/solutions/orders', navigate: vi.fn(), download }}>
+            <Link href="/invoice.pdf" download="invoice.pdf">
+                Invoice
+            </Link>
+        </LinkNavigationContext>,
+        async (output) => {
+            const anchor = output.querySelector('a');
+            if (!anchor) throw new Error('Expected attachment link');
+
+            // Act
+            await act(async () => anchor.click());
+            await act(async () => anchor.click());
+
+            // Assert
+            expect(download).toHaveBeenCalledTimes(2);
+            expect(anchor.hasAttribute('aria-busy')).toBe(false);
+        }
+    );
+});
+
+it.each([true, false, 'invoice.pdf'])('preserves native download semantics outside Views: %s', async (download) => {
+    // Arrange
+    await withMounted(
+        <Link href="/invoice.pdf" download={download}>
+            Invoice
+        </Link>,
+        async (output) => {
+            const anchor = output.querySelector('a');
+            if (!anchor) throw new Error('Expected native attachment link');
+            let prevented = true;
+            output.addEventListener(
+                'click',
+                (event) => {
+                    prevented = event.defaultPrevented;
+                    event.preventDefault();
+                },
+                { once: true }
+            );
+
+            // Act
+            await act(async () => anchor.click());
+
+            // Assert
+            expect(prevented).toBe(download === false);
+            expect(anchor.getAttribute('download')).toBe(download === false ? null : download === true ? '' : download);
+            expect(anchor.getAttribute('href')).toBe('/invoice.pdf');
+        }
+    );
 });
