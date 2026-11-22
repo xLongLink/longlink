@@ -7,6 +7,7 @@ import { withMounted } from '../../render';
 import * as mapcn from '@/components/mapcn/map';
 import userEvent from '@testing-library/user-event';
 import { it, expect, vi, beforeEach } from 'vitest';
+import { StreetMap } from '@/components/longlink/maps/street';
 import { createExpression } from '@maplibre/maplibre-gl-style-spec';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import atlas from '../../../../sdk/longlink/.static/new/src/assets/world.json';
@@ -423,6 +424,50 @@ it('coordinates the composed starter country panel and recovers its map without 
         expect(opacity(recovered, 'east')).toBeGreaterThan(opacity(recovered, '12'));
         expect(card.querySelector('[aria-live="polite"]')?.textContent).toContain('#2 East');
     });
+});
+
+it('recovers a street map resource failure without discarding sibling input', async () => {
+    const user = userEvent.setup();
+    await withMounted(
+        <>
+            <input aria-label="Location note" />
+            <StreetMap controls={false} center={[30, 10]} aria-label="Street map" />
+        </>,
+        async (output) => {
+            // Arrange
+            const note = output.querySelector('input');
+            const region = output.querySelector('[aria-label="Street map"]');
+            if (!note || !region) throw new Error('Expected street map and sibling input');
+            expect(region.querySelector('[role="status"]')?.textContent).toBe('Loading map');
+            const map = await loadMap();
+            await act(async () => user.type(note, 'East'));
+            expect(region.querySelector('[role="status"]')).toBeNull();
+
+            // Act
+            await act(async () => map.fire('error'));
+
+            // Assert
+            expect(region.querySelector('[role="alert"]')?.textContent).toContain('Unable to load map');
+            expect(map.removed).toBe(true);
+            expect(note.value).toBe('East');
+            const retry = region.querySelector('button');
+            if (!retry) throw new Error('Expected street map recovery');
+
+            // Act
+            await act(async () => user.click(retry));
+            expect(region.querySelector('[role="status"]')?.textContent).toBe('Loading map');
+            const recovered = await loadMap();
+
+            // Assert
+            expect(recovered).not.toBe(map);
+            expect(recovered.removed).toBe(false);
+            expect(recovered.getCenter()).toEqual({ lng: 30, lat: 10 });
+            expect(region.querySelector('[role="alert"]')).toBeNull();
+            expect(region.querySelector('[role="status"]')).toBeNull();
+            expect(output.querySelector('input')).toBe(note);
+            expect(note.value).toBe('East');
+        }
+    );
 });
 
 it('keeps bundled country boundaries from stretching across the map at the date line', () => {

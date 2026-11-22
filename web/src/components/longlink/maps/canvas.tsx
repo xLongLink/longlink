@@ -1,26 +1,25 @@
 import { coordinateError } from './data';
 import type { MapOptions } from './types';
 import * as mapcn from '@/components/mapcn/map';
+import { useEffect, type ReactNode } from 'react';
 import { Button } from '@/components/shadcn/button';
-import { ErrorBoundary } from 'react-error-boundary';
-import { useEffect, useState, type ReactNode } from 'react';
+import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
 
 /** Reports asynchronous map resource failures inside the map region. */
 function MapStatus() {
     const { map, isLoaded } = mapcn.useMap();
-    const [failed, setFailed] = useState(false);
+    const { showBoundary } = useErrorBoundary();
 
     // MapLibre reports tile and style failures through events rather than React errors.
     useEffect(() => {
         if (!map) return;
-        const fail = () => setFailed(true);
+        const fail = () => showBoundary(new Error('Map resources could not be loaded.'));
         map.on('error', fail);
         return () => {
             map.off('error', fail);
         };
-    }, [map]);
+    }, [map, showBoundary]);
 
-    if (failed) throw new Error('Map resources could not be loaded.');
     return isLoaded ? null : (
         <span role="status" className="sr-only">
             Loading map

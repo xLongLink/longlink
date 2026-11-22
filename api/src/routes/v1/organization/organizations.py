@@ -1,23 +1,16 @@
-import httpx
-import asyncio
 import aiosmtplib
 from src import auth
-from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col
 from src.utils import mail, roles
 from sqlalchemy import func, select
-from sqlalchemy.exc import SQLAlchemyError
-from src.kubernetes import databases
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.resources import OrganizationSolutionSummary
 from src.database.services import invitations, organizations
-from src.kubernetes.client import Kubernetes
 from src.models.organizations import (
-    DatabaseState,
     OrganizationUsage,
     OrganizationByteUsage,
     OrganizationUsageUpdate,
@@ -119,31 +112,8 @@ async def get_organization_database_usage(session: auth.Session, membership: aut
     organization, compute = await organizations.database_infrastructure(session, membership.organization_id)
     await session.commit()
 
-    # Usage reads never provision or repair an unavailable database.
-    if organization.database_state != DatabaseState.available:
-        raise HTTPException(status_code=503, detail="Database usage unavailable")
-
-    # Bound both tunnel establishment and SQL measurement, releasing connections on every outcome.
-    try:
-        async with asyncio.timeout(15):
-            cluster = Kubernetes(compute.kubeconfig)
-
-            # Measure PostgreSQL through a workflow-owned tunnel.
-            async with databases.connection(organization, cluster) as database:
-                usage = await database.usage(organization.id)
-    except (
-        TimeoutError,
-        # Network and cluster lookup failures all make database usage unavailable.
-        OSError,
-        RuntimeError,
-        SQLAlchemyError,
-        ServerError,
-        NotFoundError,
-        APITimeoutError,
-        ConnectionClosedError,
-        httpx.HTTPError,
-    ) as exc:
-        raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
+    # Measure outside the read transaction.
+    usage = await organizations.database_usage(organization, compute)
 
     # Report the configured byte capacity without legacy MiB rounding.
     return {"space_used": usage, "quota_bytes": organization.database_storage_bytes}
