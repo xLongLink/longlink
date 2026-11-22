@@ -1160,21 +1160,21 @@
         {
             "name": "Functions",
             "category": "Runtime",
-            "introduction": "Scoped Solution requests and navigation capabilities.",
-            "keywords": ["request", "api", "mutation", "navigation", "navigate", "server"],
-            "guidance": "Requests and scoped navigation target the current Solution. External HTTP(S) navigation requires user activation. Server routes own authorization and business rules.",
+            "introduction": "Scoped Solution downloads and navigation capabilities.",
+            "keywords": ["download", "navigation", "navigate", "attachment"],
+            "guidance": "Downloads and scoped navigation target the current Solution. External HTTP(S) navigation requires user activation. Server routes own authorization and business rules.",
             "members": [
                 {
                     "name": "navigate(path)",
                     "description": "Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer."
                 },
                 {
-                    "name": "request(path, options)",
-                    "description": "Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message."
+                    "name": "download(path, filename)",
+                    "description": "Saves a scoped Solution attachment through the host using a sanitized filename."
                 }
             ],
             "source": "custom",
-            "justification": "Provides capabilities scoped to the current Solution, including requests, downloads, and navigation."
+            "justification": "Provides downloads and navigation scoped to the current Solution."
         },
         {
             "name": "Grid",
@@ -1288,7 +1288,7 @@
                 },
                 {
                     "name": "useConfirm()",
-                    "description": "Returns show(options), hide(), isOpen, and element; render element once in JSX. Options require title, actionLabel, and onAction: () => void | Promise<void>. Optional description, cancelLabel (default Cancel), and actionVariant: default | destructive (default default). Cancel receives initial focus; Escape cancels and backdrop clicks do not dismiss. Async actions show loading, prevent duplicate submissions, and close only after success. Failure keeps the dialog open for retry; scoped request errors are reported by the host, other errors appear inside the dialog. While pending, Cancel, Escape, show(), and hide() are ignored. Example: const confirmation = useConfirm(); confirmation.show({ title: 'Conferma variante A', cancelLabel: 'Annulla', actionLabel: 'Continua', onAction: async () => { await request('/api/variants', { method: 'POST', json: { variant: 'A' } }); } }); Render {confirmation.element} beside the trigger Button."
+                    "description": "Returns show(options), hide(), isOpen, and element; render element once in JSX. Options require title, actionLabel, and onAction: () => void | Promise<void>. Optional description, cancelLabel (default Cancel), and actionVariant: default | destructive (default default). Cancel receives initial focus; Escape cancels and backdrop clicks do not dismiss. Async actions show loading, prevent duplicate submissions, and close only after success. Failure keeps the dialog open for retry; scoped request errors are reported by the host, other errors appear inside the dialog. While pending, Cancel, Escape, show(), and hide() are ignored. Example: const confirmation = useConfirm(); const submit = useSubmit('/api/variants'); confirmation.show({ title: 'Conferma variante A', cancelLabel: 'Annulla', actionLabel: 'Continua', onAction: async () => { const data = new FormData(); data.set('variant', 'A'); await submit(data); } }); Render {confirmation.element} beside the trigger Button."
                 }
             ],
             "source": "custom",
@@ -2070,7 +2070,7 @@
             "steps": [
                 "Call useConfirm() at the top level and render its element once beside the trigger Button.",
                 "Call show({ title, actionLabel, cancelLabel, onAction }) from the trigger. Description is optional; use translated labels when needed.",
-                "Await request(path, { method: 'POST', json: payload }) inside onAction. Successful actions dismiss automatically; failures stay open for retry."
+                "Create a submission with useSubmit(path) at the top level, then await submit(formData) inside onAction. Successful actions dismiss automatically; failures stay open for retry."
             ]
         },
         {

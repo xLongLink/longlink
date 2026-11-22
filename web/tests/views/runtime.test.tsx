@@ -101,13 +101,14 @@ it('loads gallery images concurrently with Solution-owned icons', async () => {
     }
 }, 30_000);
 
-it('rejects an unfinished authored request with View closed on pagehide before its deadline', async () => {
+it('rejects an unfinished authored submission with View closed on pagehide before its deadline', async () => {
     // Arrange
     const started = performance.now();
 
     const runtime = await initializeRuntime(`export default function View() {
+        const submit = useSubmit('/api/pending');
         useEffect(() => {
-            request('/api/pending').then(
+            submit(new FormData()).then(
                 () => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: 'Request completed' })),
                 error => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: error.message }))
             );
@@ -129,7 +130,7 @@ it('rejects an unfinished authored request with View closed on pagehide before i
         // Act
         await vi.waitFor(() =>
             expect(received).toHaveBeenCalledExactlyOnceWith(
-                expect.objectContaining({ type: 'request', path: '/api/pending', method: 'GET' })
+                expect.objectContaining({ type: 'request', path: '/api/pending', method: 'POST' })
             )
         );
         expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('Request pending');
@@ -162,11 +163,12 @@ it('shares scoped image bytes without colliding with JSON and refreshes them onl
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const runtime = await initializeRuntime(`export default function View() {
         const [data] = useApi('/api/photo');
+        const submit = useSubmit('/api/photo');
         return <>
             <p>Version {data.version}</p>
             <Image src="/api/photo" alt="First" />
             <Image src="/api/photo" alt="Second" />
-            <Link onClick={async () => { await request('/api/photo', { method: 'POST' }); }}>Update</Link>
+            <Link onClick={async () => { await submit(new FormData()); }}>Update</Link>
         </>;
     }`);
     runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
@@ -348,6 +350,10 @@ async function initializeRuntime(source: string) {
 it('keeps authored state and unsaved input through live appearance updates and returning to system mode', async () => {
     // A theme provider replacement must not discard View state or an uncontrolled draft.
     const runtime = await initializeRuntime(`export default function View() {
+        if (typeof Fragment !== 'undefined' || typeof useContext !== 'undefined' ||
+            typeof bindViewCapabilities !== 'undefined' || typeof RequestContext !== 'undefined') {
+            throw new Error('Internal APIs must not be exposed to Views');
+        }
         const [count, setCount] = useState(0);
         return <><input aria-label="Draft" defaultValue="" />
             <button onClick={() => setCount(count + 1)}>Count {count}</button></>;
@@ -646,7 +652,9 @@ it('edits and resets native form fields through the authored View boundary', asy
 it('keeps navigation and attachment downloads on distinct scoped capabilities in authored Views', async () => {
     const runtime = await initializeRuntime(`export default function View() {
         return <>
+            <p role="status">{typeof request}</p>
             <Link href="/orders" aria-label="Orders"><span>Orders</span></Link>
+            <Button onClick={() => navigate('/items')}>Items</Button>
             <Link onClick={() => download("/api/report", "reports/report.pdf")}>Download report</Link>
         </>;
     }`);
@@ -666,7 +674,7 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
     };
 
     try {
-        await vi.waitFor(() => expect(runtime.mount.querySelector('button')?.textContent).toBe('Download report'));
+        await vi.waitFor(() => expect(runtime.mount.querySelector('[role="status"]')?.textContent).toBe('undefined'));
         const orders = runtime.mount.querySelector<HTMLAnchorElement>('a[aria-label="Orders"]');
 
         const report = Array.from(runtime.mount.querySelectorAll('button')).find(
@@ -684,6 +692,12 @@ it('keeps navigation and attachment downloads on distinct scoped capabilities in
         await user.click(report);
         await vi.waitFor(() => expect(downloads).toHaveBeenCalledExactlyOnceWith('/api/report', 'reports_report.pdf'));
         expect(navigation).toHaveBeenCalledTimes(1);
+        const items = Array.from(runtime.mount.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Items'
+        );
+        if (!items) throw new Error('Expected the authored navigation button');
+        await user.click(items);
+        await vi.waitFor(() => expect(navigation).toHaveBeenLastCalledWith('/items'));
     } finally {
         runtime.close();
     }

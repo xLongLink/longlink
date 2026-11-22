@@ -1,10 +1,9 @@
-import type { ViewData } from '../protocol';
 import { useCallback, useContext } from 'react';
 import { RequestContext } from '@/lib/view-capabilities';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
-/** Loads Solution data and invalidates only the complete request path within this View. */
-export function useApi(path: string): readonly [ViewData, () => Promise<void>] {
+/** Loads Solution data with a caller-declared response shape and invalidates the complete request path. */
+export function useApi<T = unknown>(path: string): readonly [T, () => Promise<void>] {
     const request = useContext(RequestContext)?.request;
     const client = useQueryClient();
 
@@ -18,5 +17,5 @@ export function useApi(path: string): readonly [ViewData, () => Promise<void>] {
         [client, path]
     );
 
-    return [data, invalidate];
+    return [data as T, invalidate];
 }

@@ -9,9 +9,8 @@ const functions = [
             'Navigates within the current Solution using a scoped path, or opens an HTTP(S) URL in a new tab. External URLs require user activation and open without an opener or referrer.'
     },
     {
-        name: 'request(path, options)',
-        description:
-            'Requests a Solution operation and returns its data. Options support the HTTP method, JSON, form data, and binary responses. Successful writes automatically refresh cached View data. Failed HTTP requests reject with an Error containing an optional numeric status and a bounded client-facing message.'
+        name: 'download(path, filename)',
+        description: 'Downloads a Solution attachment to the supplied filename without opening it inside the View.'
     }
 ];
 

@@ -4,8 +4,8 @@ import { it, expect, vi } from 'vitest';
 import type { ContextType } from 'react';
 import { ApiErrorContext } from '@/lib/errors';
 import { ReportedError } from '@/lib/reported';
-import { useSubmit } from '@/views/hooks/use-submit';
 import { RequestContext } from '@/lib/view-capabilities';
+import { useSubmit } from '@/components/longlink/hooks/use-submit';
 
 it.each([
     { cause: new Error('Unavailable'), reports: 1 },

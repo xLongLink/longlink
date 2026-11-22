@@ -71273,5617 +71273,6 @@ export declare function Pagination(props: {
 	/** Accessible navigation label; defaults to Pagination. */
 	label?: string;
 }): React$1.JSX.Element | null;
-declare const EVENTS: {
-	readonly BLUR: "blur";
-	readonly FOCUS_OUT: "focusout";
-	readonly CHANGE: "change";
-	readonly SUBMIT: "submit";
-	readonly TRIGGER: "trigger";
-	readonly VALID: "valid";
-};
-declare const VALIDATION_MODE: {
-	readonly onBlur: "onBlur";
-	readonly onChange: "onChange";
-	readonly onSubmit: "onSubmit";
-	readonly onTouched: "onTouched";
-	readonly all: "all";
-};
-type Observer<T> = {
-	next: (value: T) => void;
-};
-type Subscription$1 = {
-	unsubscribe: Noop;
-};
-type Subject<T> = {
-	readonly observers: Observer<T>[];
-	subscribe: (value: Observer<T>) => Subscription$1;
-	unsubscribe: Noop;
-} & Observer<T>;
-type EventType = "focus" | "blur" | "change" | "changeText" | "valueChange" | "contentSizeChange" | "endEditing" | "keyPress" | "submitEditing" | "layout" | "selectionChange" | "longPress" | "press" | "pressIn" | "pressOut" | "momentumScrollBegin" | "momentumScrollEnd" | "scroll" | "scrollBeginDrag" | "scrollEndDrag" | "load" | "error" | "progress" | "custom";
-type Prev = [
-	never,
-	0,
-	1,
-	2,
-	3,
-	4,
-	5,
-	6,
-	7,
-	8,
-	...0[]
-];
-type IsTuple<T extends ReadonlyArray<unknown>> = number extends T["length"] ? false : true;
-type ArrayKey = number;
-type TupleKeys<T extends ReadonlyArray<unknown>> = Exclude<keyof T, keyof unknown[]>;
-type AnyIsEqual<T1, T2> = T1 extends T2 ? IsEqual<T1, T2> extends true ? true : never : never;
-type PathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive | BrowserNativeObject | OpaqueType ? `${K}` : true extends AnyIsEqual<TraversedTypes, V> ? `${K}` : `${K}` | `${K}.${PathInternal<V, TraversedTypes | V, Prev[D]>}`;
-type PathInternal<T, TraversedTypes = T, D extends number = 9> = [
-	D
-] extends [
-	never
-] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
-	[K in TupleKeys<T>]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
-}[TupleKeys<T>] : PathImpl<ArrayKey, V, TraversedTypes, D> : {
-	[K in keyof T]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
-}[keyof T];
-type Path<T> = T extends unknown ? PathInternal<T> : never;
-type FieldPath<TFieldValues extends FieldValues> = Path<TFieldValues>;
-type ArrayPathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive | BrowserNativeObject | OpaqueType ? IsAny$1<V> extends true ? string : never : V extends ReadonlyArray<infer U> ? U extends Primitive | BrowserNativeObject | OpaqueType ? IsAny$1<V> extends true ? string : never : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}` | `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}` : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}`;
-type ArrayPathInternal<T, TraversedTypes = T, D extends number = 9> = [
-	D
-] extends [
-	never
-] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
-	[K in TupleKeys<T>]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
-}[TupleKeys<T>] : ArrayPathImpl<ArrayKey, V, TraversedTypes, D> : {
-	[K in keyof T]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
-}[keyof T];
-type ArrayPath<T> = T extends unknown ? ArrayPathInternal<T> : never;
-type FieldArrayPath<TFieldValues extends FieldValues> = ArrayPath<TFieldValues>;
-type PathValue<T, P extends Path<T> | ArrayPath<T>> = PathValueImpl<T, P>;
-type PathValueImpl<T, P extends string> = T extends unknown ? P extends `${infer K}.${infer R}` ? K extends keyof T ? undefined extends T[K] ? PathValueImpl<T[K], R> | undefined : PathValueImpl<T[K], R> : K extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? PathValueImpl<V, R> | (TupleKeys<T> extends never ? Extract<V, undefined> : never) : never : never : P extends keyof T ? T[P] : P extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? V : T extends undefined ? undefined : never : never : never;
-type FieldPathValue<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = PathValue<TFieldValues, TFieldPath>;
-type FieldArrayPathValue<TFieldValues extends FieldValues, TFieldArrayPath extends FieldArrayPath<TFieldValues>> = PathValue<TFieldValues, TFieldArrayPath>;
-type FieldPathValues<TFieldValues extends FieldValues, TPath extends FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[]> = {} & {
-	[K in keyof TPath]: FieldPathValue<TFieldValues, TPath[K] & FieldPath<TFieldValues>>;
-};
-type FieldArray<TFieldValues extends FieldValues = FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>> = FieldArrayPathValue<TFieldValues, TFieldArrayName> extends ReadonlyArray<infer U> | null | undefined ? U : never;
-type ResolverSuccess<TTransformedValues> = {
-	values: TTransformedValues;
-	errors: Record<string, never>;
-};
-type ResolverError<TFieldValues extends FieldValues = FieldValues> = {
-	values: Record<string, never>;
-	errors: FieldErrors<TFieldValues>;
-};
-type ResolverResult<TFieldValues extends FieldValues = FieldValues, TTransformedValues = TFieldValues> = ResolverSuccess<TTransformedValues> | ResolverError<TFieldValues>;
-interface ResolverOptions<TFieldValues extends FieldValues> {
-	criteriaMode?: CriteriaMode;
-	fields: Record<InternalFieldName, Field["_f"]>;
-	names?: FieldName<TFieldValues>[];
-	shouldUseNativeValidation: boolean | undefined;
-}
-type Resolver<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = (values: TFieldValues, context: TContext | undefined, options: ResolverOptions<TFieldValues>) => Promise<ResolverResult<TFieldValues, TTransformedValues>> | ResolverResult<TFieldValues, TTransformedValues>;
-declare const $NestedValue: unique symbol;
-type NestedValue<TValue extends object = object> = {
-	[$NestedValue]: never;
-} & TValue;
-type DefaultValues<TFieldValues> = TFieldValues extends AsyncDefaultValues<TFieldValues> ? DeepPartial<Awaited<TFieldValues>> : DeepPartial<TFieldValues>;
-type InternalNameSet = Set<InternalFieldName>;
-type ValidationMode = typeof VALIDATION_MODE;
-type Mode = keyof ValidationMode;
-type CriteriaMode = "firstError" | "all";
-type SubmitHandler<T, TResult = unknown> = (data: T, event?: React$1.BaseSyntheticEvent) => TResult;
-type SubmitErrorHandler<TFieldValues extends FieldValues> = (errors: FieldErrors<TFieldValues>, event?: React$1.BaseSyntheticEvent) => unknown | Promise<unknown>;
-type SetValueConfig = Partial<{
-	shouldValidate: boolean;
-	shouldDirty: boolean;
-	shouldTouch: boolean;
-	delayError: boolean;
-}>;
-type TriggerConfig = Partial<{
-	shouldFocus: boolean;
-	shouldTouch: boolean;
-}>;
-type ResetFieldConfig<TFieldValues extends FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
-	keepDirty: boolean;
-	keepTouched: boolean;
-	keepError: boolean;
-	defaultValue: FieldPathValue<TFieldValues, TFieldName>;
-}>;
-type ChangeHandler = (event: {
-	target: any;
-	type?: any;
-}) => Promise<void | boolean>;
-type AsyncDefaultValues<TFieldValues> = (payload?: unknown) => Promise<TFieldValues>;
-type UseFormProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = Partial<{
-	mode: Mode;
-	disabled: boolean;
-	reValidateMode: Exclude<Mode, "onTouched" | "all">;
-	defaultValues: DefaultValues<TFieldValues> | AsyncDefaultValues<TFieldValues>;
-	values: TFieldValues;
-	errors: FieldErrors<TFieldValues>;
-	resetOptions: Parameters<UseFormReset<TFieldValues>>[1];
-	resolver: Resolver<TFieldValues, TContext, TTransformedValues>;
-	context: TContext;
-	shouldFocusError: boolean;
-	shouldUnregister: boolean;
-	shouldUseNativeValidation: boolean;
-	progressive: boolean;
-	criteriaMode: CriteriaMode;
-	delayError: number;
-	formControl?: Omit<UseFormReturn<TFieldValues, TContext, TTransformedValues>, "formState">;
-	validate: ValidateForm<TFieldValues>;
-}>;
-type FieldNamesMarkedBoolean<TFieldValues extends FieldValues> = DeepMap<DeepPartial<TFieldValues>, boolean>;
-type FormStateProxy<TFieldValues extends FieldValues = FieldValues> = {
-	isDirty: boolean;
-	isValidating: boolean;
-	dirtyFields: FieldNamesMarkedBoolean<TFieldValues>;
-	touchedFields: FieldNamesMarkedBoolean<TFieldValues>;
-	validatingFields: FieldNamesMarkedBoolean<TFieldValues>;
-	errors: boolean;
-	isValid: boolean;
-};
-type ReadFormState = {
-	[K in keyof FormStateProxy]: boolean | "all";
-} & {
-	values?: boolean;
-	defaultValues?: boolean | "all";
-	isSubmitted?: boolean | "all";
-	submitCount?: boolean | "all";
-};
-type FormState$1<TFieldValues extends FieldValues> = {
-	isDirty: boolean;
-	isLoading: boolean;
-	isSubmitted: boolean;
-	isSubmitSuccessful: boolean;
-	isSubmitting: boolean;
-	isValidating: boolean;
-	isValid: boolean;
-	disabled: boolean;
-	submitCount: number;
-	defaultValues?: undefined | Readonly<DeepPartial<TFieldValues>>;
-	dirtyFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
-	touchedFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
-	validatingFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
-	errors: FieldErrors<TFieldValues>;
-	isReady: boolean;
-};
-type KeepStateOptions = Partial<{
-	keepDirtyValues: boolean;
-	keepErrors: boolean;
-	keepDirty: boolean;
-	keepValues: boolean;
-	keepDefaultValues: boolean;
-	keepIsSubmitted: boolean;
-	keepIsSubmitSuccessful: boolean;
-	keepTouched: boolean;
-	keepIsValidating: boolean;
-	keepIsValid: boolean;
-	keepSubmitCount: boolean;
-	keepFieldsRef: boolean;
-}>;
-type RefCallBack = (instance: any) => void;
-type UseFormRegisterReturn<TFieldName extends InternalFieldName = InternalFieldName> = {
-	onChange: ChangeHandler;
-	onBlur: ChangeHandler;
-	ref: RefCallBack;
-	name: TFieldName;
-	min?: string | number;
-	max?: string | number;
-	maxLength?: number;
-	minLength?: number;
-	pattern?: string;
-	required?: boolean;
-	disabled?: boolean;
-};
-type UseFormRegister<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: RegisterOptions<TFieldValues, TFieldName>) => UseFormRegisterReturn<TFieldName>;
-type SetFocusOptions = Partial<{
-	shouldSelect: boolean;
-}>;
-type UseFormSetFocus<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: SetFocusOptions) => void;
-type EitherOption<T> = {
-	[K in keyof T]: {
-		[P in K]: T[P];
-	} & Partial<Record<Exclude<keyof T, K>, never>>;
-}[keyof T];
-type GetValuesConfig = EitherOption<{
-	dirtyFields: boolean;
-	touchedFields: boolean;
-}>;
-type UseFormGetValues<TFieldValues extends FieldValues> = {
-	/**
-	 * Get the entire form values when no argument is supplied to this function.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
-	 *
-	 * @returns Form values.
-	 *
-	 * @example
-	 * ```tsx
-	 * <button onClick={() => getValues()}>getValues</button>
-	 *
-	 * <input {...register("name", {
-	 *   validate: (value, formValues) => formValues.otherField === value
-	 * })} />
-	 * ```
-	 */
-	(name?: undefined, config?: GetValuesConfig): TFieldValues;
-	/**
-	 * Get a single field value.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
-	 *
-	 * @param name - The path name to the form field value.
-	 * @param config - Return touched or dirty fields.
-	 *
-	 * @returns the single field value
-	 *
-	 * @example
-	 * ```tsx
-	 * <button onClick={() => getValues("name")}>getValues</button>
-	 *
-	 * <input {...register("name", {
-	 *   validate: () => getValues('otherField') === "test"
-	 * })} />
-	 * ```
-	 */
-	<TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, config?: GetValuesConfig): FieldPathValue<TFieldValues, TFieldName>;
-	/**
-	 * Get an array of field values.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
-	 *
-	 * @param names - an array of field names
-	 * @param config - return touched or dirty fields
-	 *
-	 * @returns An array of field values
-	 *
-	 * @example
-	 * ```tsx
-	 * <button onClick={() => getValues(["name", "name1"])}>getValues</button>
-	 *
-	 * <input {...register("name", {
-	 *   validate: () => getValues(["fieldA", "fieldB"]).includes("test")
-	 * })} />
-	 * ```
-	 */
-	<TFieldNames extends FieldPath<TFieldValues>[]>(names: readonly [
-		...TFieldNames
-	], config?: GetValuesConfig): [
-		...FieldPathValues<TFieldValues, TFieldNames>
-	];
-};
-type ErrorNamespacePath = "root" | `root.${string}` | "form" | `form.${string}`;
-type GetErrorsResult<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues> | ErrorNamespacePath> = TName extends "root" ? (Record<string, GlobalError> & GlobalError) | undefined : TName extends ErrorNamespacePath ? GlobalError | undefined : TName extends FieldPath<TFieldValues> ? FieldPathError<TFieldValues, TName> | undefined : never;
-type UseFormGetErrors<TFieldValues extends FieldValues> = {
-	/**
-	 * Get all currently stored form errors without subscribing or running validation.
-	 *
-	 * @returns Form errors.
-	 *
-	 * @example
-	 * ```tsx
-	 * const errors = getErrors();
-	 * ```
-	 */
-	(name?: undefined): FieldErrors<TFieldValues>;
-	/**
-	 * Get a currently stored field or global error without subscribing or running validation.
-	 *
-	 * @param name - The path to the error.
-	 *
-	 * @returns The error at the given path.
-	 *
-	 * @example
-	 * ```tsx
-	 * const emailError = getErrors("email");
-	 * ```
-	 */
-	<TName extends FieldPath<TFieldValues> | ErrorNamespacePath>(name: TName): GetErrorsResult<TFieldValues, TName>;
-	/**
-	 * Get currently stored errors for multiple paths without subscribing or running validation.
-	 *
-	 * @param names - An array of error paths.
-	 *
-	 * @returns Errors for the given paths in the same order.
-	 *
-	 * @example
-	 * ```tsx
-	 * const [emailError, nameError] = getErrors(["email", "name"]);
-	 * ```
-	 */
-	<TNames extends (FieldPath<TFieldValues> | ErrorNamespacePath)[]>(names: readonly [
-		...TNames
-	]): {
-		[K in keyof TNames]: GetErrorsResult<TFieldValues, TNames[K]>;
-	};
-};
-type UseFormGetFieldState<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, formState?: FormState$1<TFieldValues>) => {
-	invalid: boolean;
-	isDirty: boolean;
-	isTouched: boolean;
-	isValidating: boolean;
-	error?: FieldPathError<TFieldValues, TFieldName>;
-};
-type UseFormSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
-	name?: readonly [
-		...TFieldNames
-	] | TFieldNames[number];
-	formState?: Partial<ReadFormState>;
-	callback: (data: Partial<FormState$1<TFieldValues>> & {
-		values: TFieldValues;
-		name?: InternalFieldName;
-		type?: EventType;
-	}) => void;
-	exact?: boolean;
-}) => () => void;
-type UseFormWatch<TFieldValues extends FieldValues> = {
-	/**
-	 * Watch and subscribe to all form updates and changes based on onChange, and trigger re-renders at the useForm level.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
-	 *
-	 * @returns The entire form values.
-	 *
-	 * @example
-	 * ```tsx
-	 * const formValues = watch();
-	 * ```
-	 */
-	(): TFieldValues;
-	/**
-	 * Watch and subscribe to an array of fields used outside of render.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
-	 *
-	 * @param names - An array of field names.
-	 * @param defaultValue - DefaultValues for the entire form.
-	 *
-	 * @returns An array of field values.
-	 *
-	 * @example
-	 * ```tsx
-	 * const [name, name1] = watch(["name", "name1"]);
-	 * ```
-	 */
-	<TFieldNames extends readonly FieldPath<TFieldValues>[]>(names: readonly [
-		...TFieldNames
-	], defaultValue?: DeepPartial<TFieldValues>): FieldPathValues<TFieldValues, TFieldNames>;
-	/**
-	 * Watch and subscribe to a single field used outside of render.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
-	 *
-	 * @param name - the path name to the form field value.
-	 * @param defaultValue - defaultValues for the entire form
-	 *
-	 * @returns the single field value
-	 *
-	 * @example
-	 * ```tsx
-	 * const name = watch("name");
-	 * ```
-	 */
-	<TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, defaultValue?: FieldPathValue<TFieldValues, TFieldName>): FieldPathValue<TFieldValues, TFieldName>;
-	/**
-	 * Subscribe to field updates and changes without triggering a re-render.
-	 *
-	 * @remarks
-	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
-	 *
-	 * @param callback - Callback function to subscribe to all field changes and return an unsubscribe function.
-	 * @param defaultValues - DefaultValues for the entire form.
-	 *
-	 * @returns Unsubscribe function.
-	 *
-	 * @example
-	 * ```tsx
-	 * useEffect(() => {
-	 *   const { unsubscribe } = watch((value) => {
-	 *     console.log(value);
-	 *   });
-	 *   return () => unsubscribe();
-	 * }, [watch])
-	 * ```
-	 */
-	(callback: WatchObserver<TFieldValues>, defaultValues?: DeepPartial<TFieldValues>): Subscription$1;
-};
-type UseFormTrigger<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: TriggerConfig) => Promise<boolean>;
-type UseFormClearErrors<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[] | ErrorNamespacePath) => void;
-type UseFormSetValue<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, value: FieldPathValue<TFieldValues, TFieldName>, options?: SetValueConfig) => void;
-type UseFormSetValues<TFieldValues extends FieldValues> = (value: Partial<TFieldValues> | ResetAction<TFieldValues>, options?: SetValueConfig) => void;
-type UseFormSetError<TFieldValues extends FieldValues> = (name: FieldPath<TFieldValues> | ErrorNamespacePath, error: ErrorOption, options?: {
-	shouldFocus: boolean;
-}) => void;
-type UseFormUnregister<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: Omit<KeepStateOptions, "keepIsSubmitted" | "keepSubmitCount" | "keepValues" | "keepDefaultValues" | "keepErrors"> & {
-	keepValue?: boolean;
-	keepDefaultValue?: boolean;
-	keepError?: boolean;
-}) => void;
-type UseFormHandleSubmit<TFieldValues extends FieldValues, TTransformedValues = TFieldValues> = <TResult>(onValid: SubmitHandler<TTransformedValues, TResult>, onInvalid?: SubmitErrorHandler<TFieldValues>) => (e?: React$1.BaseSyntheticEvent) => Promise<Awaited<TResult> | undefined>;
-type UseFormResetField<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: ResetFieldConfig<TFieldValues, TFieldName>) => void;
-type ResetAction<TFieldValues> = (formValues: TFieldValues) => TFieldValues;
-type UseFormReset<TFieldValues extends FieldValues> = (values?: DefaultValues<TFieldValues> | TFieldValues | ResetAction<TFieldValues>, keepStateOptions?: KeepStateOptions) => void;
-type UseFormResetDefaultValues<TFieldValues extends FieldValues> = (values: DefaultValues<TFieldValues> | TFieldValues, options?: Partial<Pick<KeepStateOptions, "keepDirty" | "keepIsValid">>) => void;
-type WatchInternal<TFieldValues> = (fieldNames?: InternalFieldName | InternalFieldName[], defaultValue?: DeepPartial<TFieldValues>, isMounted?: boolean, isGlobal?: boolean) => FieldPathValue<FieldValues, InternalFieldName> | FieldPathValues<FieldValues, InternalFieldName[]>;
-type GetIsDirty = <TName extends InternalFieldName, TData>(name?: TName, data?: TData) => boolean;
-type FormStateSubjectRef<TFieldValues extends FieldValues> = Subject<Partial<FormState$1<TFieldValues>> & {
-	name?: InternalFieldName;
-	values?: TFieldValues;
-	type?: EventType;
-}>;
-type Subjects<TFieldValues extends FieldValues = FieldValues> = {
-	array: Subject<{
-		name?: InternalFieldName;
-		values?: FieldValues;
-	}>;
-	state: FormStateSubjectRef<TFieldValues>;
-};
-type Names = {
-	mount: InternalNameSet;
-	unMount: InternalNameSet;
-	disabled: InternalNameSet;
-	array: InternalNameSet;
-	watch: InternalNameSet;
-	registerName: InternalNameSet;
-	focus?: InternalFieldName;
-	watchAll?: boolean;
-};
-type BatchFieldArrayUpdate = <T extends Function, TFieldValues extends FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>>(name: InternalFieldName, updatedFieldArrayValues?: Partial<FieldArray<TFieldValues, TFieldArrayName>>[], method?: T, args?: Partial<{
-	argA: unknown;
-	argB: unknown;
-}>, shouldSetValue?: boolean, shouldUpdateFieldsAndErrors?: boolean) => void;
-type FromSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
-	name?: readonly [
-		...TFieldNames
-	] | TFieldNames[number];
-	formState?: Partial<ReadFormState>;
-	callback: (data: Partial<FormState$1<TFieldValues>> & {
-		values: TFieldValues;
-		name?: InternalFieldName;
-	}) => void;
-	exact?: boolean;
-	reRenderRoot?: boolean;
-}) => () => void;
-type Control<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
-	_subjects: Subjects<TFieldValues>;
-	_removeUnmounted: Noop;
-	_names: Names;
-	_state: {
-		mount: boolean;
-		action: boolean;
-		actionArrayLengths: Map<InternalFieldName, number>;
-		watch: boolean;
-	};
-	_reset: UseFormReset<TFieldValues>;
-	_options: UseFormProps<TFieldValues, TContext, TTransformedValues>;
-	_getDirty: GetIsDirty;
-	_resetDefaultValues: Noop;
-	_formState: FormState$1<TFieldValues>;
-	_setValid: (shouldUpdateValid?: boolean) => void;
-	_fields: FieldRefs;
-	_formValues: FieldValues;
-	_proxyFormState: ReadFormState;
-	_defaultValues: Partial<DefaultValues<TFieldValues>>;
-	_getWatch: WatchInternal<TFieldValues>;
-	_setFieldArray: BatchFieldArrayUpdate;
-	_getFieldArray: <TFieldArrayValues>(name: InternalFieldName) => Partial<TFieldArrayValues>[];
-	_setErrors: (errors: FieldErrors<TFieldValues>) => void;
-	_setDisabledField: (props: {
-		disabled?: boolean;
-		name: InternalFieldName;
-	}) => void;
-	_runSchema: (names: InternalFieldName[]) => Promise<{
-		errors: FieldErrors;
-	}>;
-	_updateIsValidating: (names?: InternalFieldName[], isValidating?: boolean) => void;
-	_focusError: () => boolean | undefined;
-	_disableForm: (disabled?: boolean) => void;
-	_subscribe: FromSubscribe<TFieldValues>;
-	register: UseFormRegister<TFieldValues>;
-	handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
-	unregister: UseFormUnregister<TFieldValues>;
-	getFieldState: UseFormGetFieldState<TFieldValues>;
-	setError: UseFormSetError<TFieldValues>;
-};
-type WatchObserver<TFieldValues extends FieldValues> = (value: DeepPartialSkipArrayKey<TFieldValues>, info: {
-	name?: FieldPath<TFieldValues>;
-	type?: EventType;
-	values?: unknown;
-}) => void;
-type UseFormReturn<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
-	watch: UseFormWatch<TFieldValues>;
-	getValues: UseFormGetValues<TFieldValues>;
-	getErrors: UseFormGetErrors<TFieldValues>;
-	getFieldState: UseFormGetFieldState<TFieldValues>;
-	setError: UseFormSetError<TFieldValues>;
-	clearErrors: UseFormClearErrors<TFieldValues>;
-	setValue: UseFormSetValue<TFieldValues>;
-	setValues: UseFormSetValues<TFieldValues>;
-	trigger: UseFormTrigger<TFieldValues>;
-	formState: FormState$1<TFieldValues>;
-	resetField: UseFormResetField<TFieldValues>;
-	reset: UseFormReset<TFieldValues>;
-	resetDefaultValues: UseFormResetDefaultValues<TFieldValues>;
-	handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
-	unregister: UseFormUnregister<TFieldValues>;
-	control: Control<TFieldValues, TContext, TTransformedValues>;
-	register: UseFormRegister<TFieldValues>;
-	setFocus: UseFormSetFocus<TFieldValues>;
-	subscribe: UseFormSubscribe<TFieldValues>;
-};
-type UseFormStateReturn<TFieldValues extends FieldValues> = FormState$1<TFieldValues>;
-type Noop = () => void;
-interface File$1 extends Blob {
-	readonly lastModified: number;
-	readonly name: string;
-}
-interface FileList$1 {
-	readonly length: number;
-	item(index: number): File$1 | null;
-	[index: number]: File$1;
-}
-type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-type BrowserNativeObject = Date | FileList$1 | File$1;
-interface OpaqueTypes {
-}
-type OpaqueType = OpaqueTypes[keyof OpaqueTypes];
-type NonUndefined<T> = T extends undefined ? never : T;
-type LiteralUnion<T extends U, U extends Primitive> = T | (U & {
-	_?: never;
-});
-type ExtractObjects<T> = T extends infer U ? U extends object ? U : never : never;
-type IsPrimitiveLike<T> = T extends Primitive ? true : false;
-type DeepPartial<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : {
-	[K in keyof T]?: ExtractObjects<T[K]> extends never ? T[K] : DeepPartial<T[K]>;
-};
-type DeepPartialSkipArrayKey<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : T extends ReadonlyArray<unknown> ? {
-	[K in keyof T]: DeepPartialSkipArrayKey<T[K]>;
-} : {
-	[K in keyof T]?: DeepPartialSkipArrayKey<T[K]>;
-};
-type IsAny$1<T> = 0 extends 1 & T ? true : false;
-type IsEqual<T1, T2> = T1 extends T2 ? (<G>() => G extends T1 ? 1 : 2) extends <G>() => G extends T2 ? 1 : 2 ? true : false : false;
-type DeepMap<T, TValue> = IsAny$1<T> extends true ? any : T extends BrowserNativeObject | NestedValue | OpaqueType ? TValue : T extends ReadonlyArray<infer U> ? Array<DeepMap<NonUndefined<U>, TValue> | undefined> : T extends object ? {
-	[K in keyof T]: DeepMap<NonUndefined<T[K]>, TValue>;
-} : TValue;
-type IsFlatObject<T extends object> = Extract<Exclude<T[keyof T], NestedValue | Date | FileList$1 | OpaqueType>, unknown[] | object> extends never ? true : false;
-type Merge<A, B> = {
-	[K in keyof A | keyof B]?: K extends keyof A & keyof B ? [
-		A[K],
-		B[K]
-	] extends [
-		object,
-		object
-	] ? Merge<A[K], B[K]> : B[K] : K extends keyof A ? A[K] : K extends keyof B ? B[K] : never;
-};
-type InternalFieldName = string;
-type FieldName<TFieldValues extends FieldValues> = IsFlatObject<TFieldValues> extends true ? Extract<keyof TFieldValues, string> : string;
-type CustomElement<TFieldValues extends FieldValues> = Partial<HTMLElement> & {
-	name: FieldName<TFieldValues>;
-	type?: string;
-	value?: any;
-	disabled?: boolean;
-	checked?: boolean;
-	options?: HTMLOptionsCollection;
-	files?: FileList | null;
-	focus?: Noop;
-};
-type FieldValues = Record<string, any>;
-type FieldElement<TFieldValues extends FieldValues = FieldValues> = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | CustomElement<TFieldValues>;
-type Ref = FieldElement;
-type Field = {
-	_f: {
-		ref: Ref;
-		name: InternalFieldName;
-		refs?: HTMLInputElement[];
-		mount?: boolean;
-		_c?: boolean;
-	} & RegisterOptions;
-};
-type FieldRefs = Partial<{
-	[key: InternalFieldName]: Field | FieldRefs;
-}>;
-type Message = string;
-type MultipleFieldErrors = {
-	[K in keyof RegisterOptions]?: ValidateResult;
-} & {
-	[key: string]: ValidateResult;
-};
-type FieldError = {
-	type: LiteralUnion<keyof RegisterOptions, string>;
-	root?: FieldError;
-	ref?: Ref;
-	types?: MultipleFieldErrors;
-	message?: Message;
-};
-type ErrorOption = {
-	message?: Message;
-	type?: LiteralUnion<keyof RegisterOptions, string>;
-	types?: MultipleFieldErrors;
-};
-type DeepRequired<T> = T extends BrowserNativeObject | Blob | OpaqueType ? T : {
-	[K in keyof T]-?: NonNullable<DeepRequired<T[K]>>;
-};
-type FieldErrorsImpl<T extends FieldValues = FieldValues> = {
-	[K in keyof T]?: T[K] extends BrowserNativeObject | Blob | OpaqueType ? FieldError : K extends "root" | `root.${string}` ? GlobalError : T[K] extends object ? Merge<FieldError, FieldErrorsImpl<T[K]>> : FieldError;
-};
-type GlobalError = Partial<{
-	type: string | number;
-	message: Message;
-}>;
-type FieldErrors<T extends FieldValues = FieldValues> = Partial<FieldErrorsImpl<DeepRequired<T>>> & {
-	root?: Record<string, GlobalError> & GlobalError;
-	form?: GlobalError & (string extends keyof T ? unknown : {
-		[K in keyof T]?: GlobalError;
-	});
-};
-type FieldPathError<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = TFieldPath extends FieldPath<TFieldValues> ? TFieldPath extends `${string}.root` ? GlobalError : DeepRequired<NonNullable<FieldPathValue<TFieldValues, TFieldPath>>> extends infer TFieldValue ? IsAny$1<TFieldValue> extends true ? FieldError : NonNullable<FieldErrorsImpl<{
-	value: TFieldValue;
-}>["value"]> : never : never;
-type ValidationValue = boolean | number | string | RegExp;
-type ValidationRule<TValidationValue extends ValidationValue = ValidationValue> = TValidationValue | ValidationValueMessage<TValidationValue>;
-type ValidationValueMessage<TValidationValue extends ValidationValue = ValidationValue> = {
-	value: TValidationValue | undefined;
-	message: Message;
-};
-type ValidateResult = Message | Message[] | boolean | undefined;
-type FormValidateResult<T> = Partial<Record<keyof T, {
-	message: Message | Message[] | boolean | undefined;
-	type?: string;
-}>> | string | boolean;
-type Validate<TFieldValue, TFormValues> = (value: TFieldValue, formValues: TFormValues) => ValidateResult | Promise<ValidateResult>;
-type ValidateFormEventType = (typeof EVENTS)[keyof typeof EVENTS];
-type ValidateForm<TFormValues extends FieldValues, TFieldName extends FieldPath<TFormValues> = FieldPath<TFormValues>> = (props: {
-	formValues: TFormValues;
-	formState: FormState$1<TFormValues>;
-	eventType?: ValidateFormEventType;
-	name?: TFieldName | TFieldName[];
-}) => FormValidateResult<TFormValues> | Promise<FormValidateResult<TFormValues>>;
-type RegisterOptions<TFieldValues extends FieldValues = FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
-	required: Message | ValidationRule<boolean>;
-	min: ValidationRule<number | string>;
-	max: ValidationRule<number | string>;
-	maxLength: ValidationRule<number>;
-	minLength: ValidationRule<number>;
-	validate: Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues> | Record<string, Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues>>;
-	value: FieldPathValue<TFieldValues, TFieldName>;
-	setValueAs: (value: any) => any;
-	shouldUnregister?: boolean;
-	onChange?: (event: any) => void;
-	onBlur?: (event: any) => void;
-	disabled: boolean;
-	deps: FieldPath<TFieldValues> | FieldPath<TFieldValues>[];
-}> & ({
-	pattern?: ValidationRule<RegExp>;
-	valueAsNumber?: false;
-	valueAsDate?: false;
-} | {
-	pattern?: undefined;
-	valueAsNumber?: false;
-	valueAsDate?: true;
-} | {
-	pattern?: undefined;
-	valueAsNumber?: true;
-	valueAsDate?: false;
-});
-type ControllerFieldState = {
-	invalid: boolean;
-	isTouched: boolean;
-	isDirty: boolean;
-	isValidating: boolean;
-	error?: FieldError;
-};
-type ControllerRenderProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = {
-	onChange: (...event: any[]) => void;
-	onBlur: Noop;
-	value: FieldPathValue<TFieldValues, TName>;
-	disabled?: boolean;
-	name: TName;
-	ref: RefCallBack;
-};
-type UseControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
-	name: TName;
-	rules?: Omit<RegisterOptions<TFieldValues, TName>, "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled">;
-	shouldUnregister?: boolean;
-	defaultValue?: FieldPathValue<TFieldValues, TName>;
-	control?: Control<TFieldValues, any, TTransformedValues>;
-	disabled?: boolean;
-	exact?: boolean;
-};
-type ControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
-	render: ({ field, fieldState, formState, }: {
-		field: ControllerRenderProps<TFieldValues, TName>;
-		fieldState: ControllerFieldState;
-		formState: UseFormStateReturn<TFieldValues>;
-	}) => React$1.ReactElement;
-} & UseControllerProps<TFieldValues, TName, TTransformedValues>;
-/**
- * Component wrapper around `useController` for controlled inputs.
- *
- * @see [API](https://react-hook-form.com/docs/usecontroller/controller)
- *
- * @example
- * ```tsx
- * <Controller
- *   control={control}
- *   name="test"
- *   render={({ field, fieldState, formState }) => <input {...field} />}
- * />
- * ```
- */
-export declare const Controller: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues>(props: ControllerProps<TFieldValues, TName, TTransformedValues>) => React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
-/**
- * Core hook for managing a form. Returns all methods and state for
- * registration, validation, and submission.
- *
- * @see [API](https://react-hook-form.com/docs/useform)
- *
- * @example
- * ```tsx
- * const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
- * <form onSubmit={handleSubmit(onSubmit)}>
- *   <input {...register("email", { required: true })} />
- * </form>
- * ```
- */
-export declare function useForm<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues>(props?: UseFormProps<TFieldValues, TContext, TTransformedValues>): UseFormReturn<TFieldValues, TContext, TTransformedValues>;
-type FieldProps = Pick<React$1.AriaAttributes, "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-invalid"> & {
-	id?: string;
-	label?: string;
-	description?: string;
-	error?: string;
-};
-export type FormOption = {
-	value: string;
-	label: string;
-	disabled?: boolean;
-};
-declare function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
-/** Preserves native input events, refs, constraints, and submission with owned field presentation. */
-declare function Input$1({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Input>, "children" | "className" | "style"> & FieldProps): React$1.JSX.Element;
-declare function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
-/** Preserves native textarea behavior with automatically associated field feedback. */
-declare function Textarea$1({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Textarea>, "children" | "className" | "style"> & FieldProps): React$1.JSX.Element;
-declare function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
-/** Keeps checked state and native form participation inside the installed checkbox. */
-declare function Checkbox$2({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Checkbox$1>, "children" | "className" | "style" | "render"> & FieldProps): React$1.JSX.Element;
-declare function Switch$1({ className, size, ...props }: Switch.Root.Props & {
-	size?: "sm" | "default";
-}): React$1.JSX.Element;
-/** Presents a labeled boolean control without duplicating checked state. */
-declare function Switch$2({ label, description, error, size, ...props }: Omit<React$1.ComponentProps<typeof Switch$1>, "children" | "className" | "style" | "render" | "size"> & FieldProps & {
-	size?: "sm" | "md";
-}): React$1.JSX.Element;
-declare function SliderThumb$1({ className, ...props }: SliderThumb.Props): React$1.JSX.Element;
-/** Builds one thumb per value and associates every thumb with field feedback. */
-export declare function Slider<Value extends number | readonly number[] = number>({ label, description, error, min, value, defaultValue, ref, onBlur, onFocus, ...props }: FieldProps & Omit<SliderRoot.Props<Value>, "children" | "className" | "style" | "render" | "ref" | "onBlur" | "onFocus"> & Pick<React$1.ComponentProps<typeof SliderThumb$1>, "onBlur" | "onFocus"> & {
-	ref?: React$1.ComponentProps<typeof SliderThumb$1>["inputRef"];
-}): React$1.JSX.Element;
-declare function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
-	size?: "sm" | "default";
-}): React$1.JSX.Element;
-/** Owns select composition while preserving single and multiple selection contracts. */
-export declare function Select<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, size, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<SelectRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef"> & Pick<React$1.ComponentProps<typeof SelectTrigger$1>, "ref" | "onBlur" | "onFocus" | "size"> & {
-	options: readonly FormOption[];
-	placeholder?: string;
-}): React$1.JSX.Element;
-declare function ComboboxInput$1({ className, children, disabled, showTrigger, showClear, ...props }: ComboboxInput.Props & {
-	showTrigger?: boolean;
-	showClear?: boolean;
-}): React$1.JSX.Element;
-/** Keeps search, keyboard selection, and chips inside a single options-based control. */
-export declare function Combobox<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, emptyText, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<ComboboxRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef" | "inputValue" | "onInputValueChange"> & Pick<React$1.ComponentProps<typeof ComboboxInput$1>, "ref" | "onBlur" | "onFocus"> & {
-	options: readonly FormOption[];
-	placeholder?: string;
-	emptyText?: string;
-}): React$1.JSX.Element;
-/** Builds a named radio group from string options with independent option labels. */
-declare function RadioGroup$1({ options, label, description, error, ref, ...props }: FieldProps & Omit<RadioGroup.Props<string>, "children" | "className" | "style" | "render" | "ref" | "inputRef"> & {
-	options: readonly FormOption[];
-	ref?: RadioGroup.Props<string>["inputRef"];
-}): React$1.JSX.Element;
-export type ChartConfig = Record<string, {
-	label?: React$1.ReactNode;
-	icon?: React$1.ComponentType;
-} & ({
-	color?: string;
-	theme?: never;
-} | {
-	color?: never;
-	theme: Record<"light" | "dark", string>;
-})>;
-type ChartKey<Row> = Extract<keyof Row, string>;
-type ChartValueKey<Row> = {
-	[Key in keyof Row]-?: NonNullable<Row[Key]> extends number ? Key : never;
-}[keyof Row] & string;
-export type ChartSeries<Row> = {
-	key: ChartValueKey<Row>;
-	label?: string;
-};
-type ChartCurve = "linear" | "monotone" | "step";
-type ChartOptions = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "className" | "style"> & {
-	legend?: boolean;
-	tooltip?: boolean;
-};
-type CartesianChartProps<Row extends object> = ChartOptions & {
-	axes?: boolean;
-	padding?: number;
-	xTickFormatter?: (value: string | number) => string;
-	yTickFormatter?: (value: number) => string;
-	data: readonly Row[];
-	xKey: ChartKey<Row>;
-	series: readonly ChartSeries<Row>[];
-};
-type ValueChartProps<Row extends object> = ChartOptions & {
-	data: readonly Row[];
-	nameKey: ChartKey<Row>;
-	valueKey: ChartValueKey<Row>;
-};
-export type SankeyNode = {
-	name: string;
-};
-export type SankeyLink = {
-	source: number;
-	target: number;
-	value: number;
-};
-export declare function AreaChart<Row extends object>({ curve, fill, ...props }: CartesianChartProps<Row> & {
-	curve?: ChartCurve;
-	fill?: "solid" | "gradient";
-}): React$1.JSX.Element;
-export declare function BarChart<Row extends object>(props: CartesianChartProps<Row>): React$1.JSX.Element;
-export declare function LineChart<Row extends object>({ curve, ...props }: CartesianChartProps<Row> & {
-	curve?: ChartCurve;
-}): React$1.JSX.Element;
-/** Shows nonnegative contributions without letting data supply its own colors. */
-export declare function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, center, ...props }: ValueChartProps<Row> & {
-	center?: React$1.ReactNode;
-}): React$1.JSX.Element;
-/** Compares numeric series across named categories on shared polar axes. */
-export declare function RadarChart<Row extends object>({ data: rows, categoryKey, series, axes, legend, tooltip, ...props }: ChartOptions & {
-	data: readonly Row[];
-	categoryKey: ChartKey<Row>;
-	series: readonly ChartSeries<Row>[];
-	axes?: boolean;
-}): React$1.JSX.Element;
-/** Shows radial values against an explicit zero-to-max scale rather than an inferred percentage. */
-export declare function RadialBarChart<Row extends object>({ data: rows, nameKey, valueKey, max, legend, tooltip, ...props }: ValueChartProps<Row> & {
-	max: number;
-}): React$1.JSX.Element;
-/** Renders validated acyclic flows with fixed node and link presentation. */
-export declare function Sankey({ nodes, links, tooltip, ...props }: Omit<ChartOptions, "legend"> & {
-	nodes: readonly SankeyNode[];
-	links: readonly SankeyLink[];
-}): React$1.JSX.Element;
-/** Renders chart labels independently of chart layout using the same ordered theme colors. */
-export declare function ChartLegend<Row extends object>({ series, data, nameKey, valueKey, formatValue, orientation, ...props }: Omit<React$1.ComponentPropsWithoutRef<"ul">, "children" | "className" | "style"> & {
-	orientation?: "horizontal" | "vertical";
-} & ({
-	series: readonly {
-		key: string;
-		label?: string;
-	}[];
-	data?: never;
-	nameKey?: never;
-	valueKey?: never;
-	formatValue?: never;
-} | {
-	series?: never;
-	data: readonly Row[];
-	nameKey: ChartKey<Row>;
-	valueKey?: ChartValueKey<Row>;
-	formatValue?: (value: number) => React$1.ReactNode;
-})): React$1.JSX.Element | null;
-export type MapCoordinate = [
-	longitude: number,
-	latitude: number
-];
-type MapViewport$1 = {
-	center: MapCoordinate;
-	zoom: number;
-	bearing: number;
-	pitch: number;
-};
-export type MapMarker = {
-	id: string;
-	coordinates: MapCoordinate;
-	label: string;
-	description?: string;
-};
-export type MapRoute = {
-	id: string;
-	coordinates: MapCoordinate[];
-	label?: string;
-};
-export type MapArc = {
-	id: string;
-	from: MapCoordinate;
-	to: MapCoordinate;
-};
-export type MapGeography = FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties>;
-export type MapControlsOptions = Omit<MapControlsProps, "className">;
-type MapOptions$1 = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "className" | "style" | "onError" | "onSelect"> & {
-	center?: MapCoordinate;
-	zoom?: number;
-	controls?: boolean | MapControlsOptions;
-	interactive?: boolean;
-	blank?: boolean;
-	projection?: "mercator" | "globe";
-	viewport?: Partial<MapViewport$1>;
-	onViewportChange?: (viewport: MapViewport$1) => void;
-};
-/** Displays one street map with optional location, route, cluster, and connection layers. */
-export declare function StreetMap({ locations, routes, clusters, connections, onSelectLocation, ...props }: MapOptions$1 & {
-	locations?: readonly MapMarker[];
-	routes?: readonly MapRoute[];
-	clusters?: readonly MapMarker[];
-	connections?: readonly MapArc[];
-	onSelectLocation?: (location: MapMarker) => void;
-}): React$1.JSX.Element;
-/** Displays named locations with keyboard-accessible markers and optional popups. */
-export declare function MarkerMap({ data, onSelect, ...props }: MapOptions$1 & {
-	data: readonly MapMarker[];
-	onSelect?: (marker: MapMarker) => void;
-}): React$1.JSX.Element;
-/** Draws supplied route geometry without requesting a routing service. */
-export declare function RouteMap({ data, onSelect, ...props }: MapOptions$1 & {
-	data: readonly MapRoute[];
-	onSelect?: (route: MapRoute) => void;
-}): React$1.JSX.Element;
-/** Groups nearby locations on the map and expands clusters when activated. */
-export declare function ClusterMap({ data, onSelect, radius, ...props }: MapOptions$1 & {
-	data: readonly MapMarker[];
-	radius?: number;
-	onSelect?: (marker: MapMarker) => void;
-}): React$1.JSX.Element;
-/** Connects supplied origin and destination pairs with curved lines. */
-export declare function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
-	data: readonly MapArc[];
-	curvature?: number;
-	onSelect?: (arc: MapArc) => void;
-}): React$1.JSX.Element;
-interface DataGridI18nLabels {
-	sortAscending: string;
-	sortDescending: string;
-	pinColumnStart: string;
-	pinColumnEnd: string;
-	moveColumnStart: string;
-	moveColumnEnd: string;
-	columnsMenu: string;
-	unpinColumn: (title: string) => string;
-	toggleColumns: string;
-	rowCreate: string;
-	pinRow: string;
-	unpinRow: string;
-	selectRow: string;
-	selectAll: string;
-	expandRow: string;
-	collapseRow: string;
-	dragToReorder: string;
-	dragToReorderRow: string;
-	reorderingUnavailable: string;
-	loading: string;
-	empty: string;
-	allRowsLoaded: string;
-	rowsPerPage: string;
-	paginationInfo: (info: {
-		from: number;
-		to: number;
-		count: number;
-	}) => string;
-	previousPage: string;
-	nextPage: string;
-	goToPage: (page: number) => string;
-	paginationEllipsis: string;
-	filterSelectedCount: (count: number) => string;
-	filterNoResults: string;
-	filterClear: string;
-}
-type DataGridI18nOverrides = {
-	labels?: Partial<DataGridI18nLabels>;
-};
-type Updater<T> = T | ((old: T) => T);
-type OnChangeFn<T> = (updaterOrValue: Updater<T>) => void;
-type RowData = Record<string, any> | Array<any>;
-type CellData = unknown;
-type TransformDataValueFn = (dataValue: any) => any;
-type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends ((x: infer R) => any) ? R : never;
-type NoInfer$1<T> = [
-	T
-][T extends any ? 0 : never];
-type Getter<TValue> = <TTValue = TValue>() => NoInfer$1<TTValue>;
-declare const coreColumnsFeature: TableFeature;
-declare const coreHeadersFeature: TableFeature;
-declare const coreRowModelsFeature: TableFeature;
-declare const coreRowsFeature: TableFeature;
-declare const coreTablesFeature: TableFeature;
-interface InteropSubscribable<T> {
-	subscribe: (observer: Observer$1<T>) => Subscription$2;
-}
-type Observer$1<T> = {
-	next?: (value: T) => void;
-	error?: (err: unknown) => void;
-	complete?: () => void;
-};
-interface Subscription$2 {
-	unsubscribe: () => void;
-}
-interface Subscribable<T> extends InteropSubscribable<T> {
-	subscribe: ((observer: Observer$1<T>) => Subscription$2) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$2);
-}
-interface Readable<T> extends Subscribable<T> {
-	get: () => T;
-}
-interface BaseAtom<T> extends Subscribable<T>, Readable<T> {
-}
-interface Atom<T> extends BaseAtom<T> {
-	/** Sets the value of the atom using a function. */
-	set: ((fn: (prevVal: T) => T) => void) & ((value: T) => void);
-}
-interface AtomOptions<T> {
-	compare?: (prev: T, next: T) => boolean;
-}
-interface ReadonlyAtom<T> extends BaseAtom<T> {
-}
-type StoreAction = (...args: Array<any>) => any;
-type StoreActionMap = Record<string, StoreAction>;
-type StoreActionsFactory<T, TActions extends StoreActionMap> = (store: {
-	setState: Store$1<T>["setState"];
-	get: Store$1<T>["get"];
-}) => TActions;
-type NonFunction<T> = T extends ((...args: Array<any>) => any) ? never : T;
-declare class Store$1<T, TActions extends StoreActionMap = never> {
-	private atom;
-	readonly actions: TActions;
-	constructor(getValue: (prev?: NoInfer<T>) => T);
-	constructor(initialValue: T);
-	constructor(initialValue: NonFunction<T>, actionsFactory: StoreActionsFactory<T, TActions>);
-	setState(updater: (prev: T) => T): void;
-	get state(): T;
-	get(): T;
-	subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$2;
-}
-declare class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
-	private atom;
-	constructor(getValue: (prev?: NoInfer<T>) => T);
-	constructor(initialValue: T);
-	get state(): T;
-	get(): T;
-	subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$2;
-}
-interface TableAtomOptions<T> extends AtomOptions<T> {
-	/**
-	 * A debug name for the atom, useful for debugging.
-	 */
-	debugName: string;
-}
-interface TableReactivityBindings {
-	createOptionsStore: boolean;
-	wrapExternalAtoms: boolean;
-	/**
-	 * Invalidates readonly atoms whose compute reads non-reactive inputs (plain
-	 * options). Render-phase adapters call this after publishing captured
-	 * controlled state from a host commit, including when no base atom changed,
-	 * so controlled ownership changes still reach subscribers.
-	 */
-	commit?: () => void;
-	addSubscription: (subscription: Subscription$2) => void;
-	/**
-	 * Creates a writable atom with an initial value.
-	 */
-	createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
-	/**
-	 * Creates a readonly/derived atom from a compute function.
-	 */
-	createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
-	/**
-	 * Evaluates a function without tracking reactive dependencies.
-	 */
-	untrack: <T>(fn: () => T) => T;
-	/**
-	 * Batches reactive updates to avoid intermediate recomputation.
-	 */
-	batch: (fn: () => void) => void;
-	/**
-	 * Schedules a function to run. This is used to defer updates after the current call stack (render, etc.) has finished
-	 */
-	schedule: (fn: () => void) => void;
-	/**
-	 * Unmounts the table, performing any necessary cleanup. This is called when the table is destroyed or unmounted in the framework adapter.
-	 */
-	unmount?: () => void;
-}
-interface CoreFeatures {
-	coreReactivityFeature?: TableReactivityBindings;
-	coreCellsFeature: typeof coreCellsFeature;
-	coreColumnsFeature: typeof coreColumnsFeature;
-	coreHeadersFeature: typeof coreHeadersFeature;
-	coreRowModelsFeature: typeof coreRowModelsFeature;
-	coreRowsFeature: typeof coreRowsFeature;
-	coreTablesFeature: typeof coreTablesFeature;
-}
-declare const sortFns: {
-	alphanumeric: CreatedSortFn<any, any>;
-	alphanumericCaseSensitive: CreatedSortFn<any, any>;
-	basic: CreatedSortFn<any, any>;
-	datetime: CreatedSortFn<any, any>;
-	text: CreatedSortFn<any, any>;
-	textCaseSensitive: CreatedSortFn<any, any>;
-};
-type BuiltInSortFn = keyof typeof sortFns;
-interface TableState_ColumnSizing {
-	columnSizing: ColumnSizingState;
-}
-type ColumnSizingState = Record<string, number>;
-interface ColumnOffsets {
-	/**
-	 * Offset from the start edge of the region to each column's start edge,
-	 * keyed by column id.
-	 */
-	starts: Record<string, number>;
-	/**
-	 * Offset from the end edge of the region to each column's end edge, keyed by
-	 * column id.
-	 */
-	afters: Record<string, number>;
-}
-interface ColumnOffsetsByPosition {
-	/**
-	 * Offsets across all visible leaf columns, ignoring pinning regions.
-	 */
-	all: ColumnOffsets;
-	/**
-	 * Offsets within the center (unpinned) region.
-	 */
-	center: ColumnOffsets;
-	/**
-	 * Offsets within the logical start pinned region.
-	 *
-	 * In LTR languages/layouts, start usually corresponds to left. In RTL
-	 * languages/layouts, start usually corresponds to right.
-	 */
-	start: ColumnOffsets;
-	/**
-	 * Offsets within the logical end pinned region.
-	 *
-	 * In LTR languages/layouts, end usually corresponds to right. In RTL
-	 * languages/layouts, end usually corresponds to left.
-	 */
-	end: ColumnOffsets;
-}
-interface TableOptions_ColumnSizing {
-	/**
-	 * Called with an updater when committed column sizing state changes. Pair
-	 * this with `state.columnSizing` when using external state; external atoms
-	 * can own the slice without this callback.
-	 */
-	onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
-}
-interface Table_ColumnSizing {
-	/**
-	 * Sums the current sizes of visible center-region leaf columns.
-	 */
-	getCenterTotalSize: () => number;
-	/**
-	 * Returns memoized column offset maps (start and after offsets keyed by
-	 * column id) for each pinning region plus the full visible leaf column list.
-	 *
-	 * Backs `column.getStart()` and `column.getAfter()` with O(1) lookups.
-	 */
-	getColumnOffsets: () => ColumnOffsetsByPosition;
-	/**
-	 * Sums the current sizes of visible logical start-pinned leaf columns.
-	 */
-	getStartTotalSize: () => number;
-	/**
-	 * Sums the current sizes of visible logical end-pinned leaf columns.
-	 */
-	getEndTotalSize: () => number;
-	/**
-	 * Sums the current sizes of all visible leaf columns.
-	 */
-	getTotalSize: () => number;
-	/**
-	 * Resets column sizing to `initialState.columnSizing`. Pass `true` to reset
-	 * to the feature default of `{}`.
-	 */
-	resetColumnSizing: (defaultState?: boolean) => void;
-	/**
-	 * Updates committed column sizing state with a next map or updater function.
-	 */
-	setColumnSizing: (updater: Updater<ColumnSizingState>) => void;
-}
-interface ColumnDef_ColumnSizing {
-	/**
-	 * Upper bound used when resolving this column's size.
-	 */
-	maxSize?: number;
-	/**
-	 * Lower bound used when resolving this column's size.
-	 */
-	minSize?: number;
-	/**
-	 * Initial size used before column sizing state overrides it.
-	 */
-	size?: number;
-}
-interface Column_ColumnSizing {
-	/**
-	 * Measures the offset from this column's end edge to the end of its region.
-	 *
-	 * Pass a pinned region to measure within that logical region. The value is
-	 * the sum of visible leaf column sizes after this column.
-	 */
-	getAfter: (position?: ColumnPinningPosition | "center") => number;
-	/**
-	 * Resolves the column's current size after state and min/max constraints.
-	 */
-	getSize: () => number;
-	/**
-	 * Measures the offset from the start of this column's region to its start
-	 * edge.
-	 *
-	 * Pass a pinned region to measure within that logical region. The value is
-	 * the sum of visible leaf column sizes before this column.
-	 */
-	getStart: (position?: ColumnPinningPosition | "center") => number;
-	/**
-	 * Resets the column to its initial size.
-	 */
-	resetSize: () => void;
-}
-interface Header_ColumnSizing {
-	/**
-	 * Computes this header's rendered size from its leaf columns.
-	 */
-	getSize: () => number;
-	/**
-	 * Returns the offset measurement along the row-axis (usually the x-axis for standard tables) for the header. This is effectively a sum of the offset measurements of all preceding headers.
-	 */
-	getStart: (position?: ColumnPinningPosition) => number;
-}
-interface TableState_ColumnResizing {
-	columnResizing: columnResizingState;
-}
-interface columnResizingState {
-	columnSizingStart: Array<[
-		string,
-		number
-	]>;
-	deltaOffset: null | number;
-	deltaPercentage: null | number;
-	isResizingColumn: false | string;
-	startOffset: null | number;
-	startSize: null | number;
-}
-type ColumnResizeMode = "onChange" | "onEnd";
-type ColumnResizeDirection = "ltr" | "rtl";
-interface TableOptions_ColumnResizing {
-	/**
-	 * Determines when committed `columnSizing` values are updated. `onChange`
-	 * commits sizes while the resize handle is dragged; `onEnd` commits when the
-	 * resize interaction finishes.
-	 */
-	columnResizeMode?: ColumnResizeMode;
-	/**
-	 * Enables or disables column resizing for the whole table.
-	 */
-	enableColumnResizing?: boolean;
-	/**
-	 * Sets the resize direction used to calculate drag offsets. Defaults to `ltr`.
-	 */
-	columnResizeDirection?: ColumnResizeDirection;
-	/**
-	 * Called with an updater when the transient `columnResizing` state changes.
-	 * Pair this with `state.columnResizing` when using external state; external
-	 * atoms can own the slice without this callback.
-	 */
-	onColumnResizingChange?: OnChangeFn<columnResizingState>;
-}
-interface Table_ColumnResizing {
-	/**
-	 * Resets `columnResizing` to `initialState.columnResizing`.
-	 *
-	 * Pass `true` to ignore initial state and reset to the no-drag default state.
-	 */
-	resetHeaderSizeInfo: (defaultState?: boolean) => void;
-	/**
-	 * Updates transient resize interaction state with a next state or updater function.
-	 */
-	setColumnResizing: (updater: Updater<columnResizingState>) => void;
-}
-interface ColumnDef_ColumnResizing {
-	/**
-	 * Enables or disables column resizing for the column.
-	 */
-	enableResizing?: boolean;
-}
-interface Column_ColumnResizing {
-	/**
-	 * Checks whether this column can start a resize interaction.
-	 */
-	getCanResize: () => boolean;
-	/**
-	 * Checks whether this column is the active resize target.
-	 */
-	getIsResizing: () => boolean;
-}
-interface Header_ColumnResizing {
-	/**
-	 * Creates the `onMouseDown`/`onTouchStart` handler for a resize handle.
-	 *
-	 * Dragging and release listeners are installed and cleaned up automatically.
-	 */
-	getResizeHandler: (context?: Document) => (event: unknown) => void;
-}
-interface Header_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
-}
-interface Header_FeatureMap {
-	columnSizingFeature: Header_ColumnSizing;
-	columnResizingFeature: Header_ColumnResizing;
-}
-type Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Header_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Header_FeatureMap>;
-type ExpandedState = true | Record<string, boolean>;
-interface TableState_RowExpanding {
-	expanded: ExpandedState;
-}
-interface Row_RowExpanding {
-	/**
-	 * Checks whether this row can be expanded.
-	 */
-	getCanExpand: () => boolean;
-	/**
-	 * Checks whether every ancestor of this row is expanded.
-	 */
-	getIsAllParentsExpanded: () => boolean;
-	/**
-	 * Checks whether this row is currently expanded.
-	 */
-	getIsExpanded: () => boolean;
-	/**
-	 * Creates a handler that toggles this row's expanded state.
-	 */
-	getToggleExpandedHandler: () => () => void;
-	/**
-	 * Toggles the expanded state (or sets it if `expanded` is provided) for the row.
-	 */
-	toggleExpanded: (expanded?: boolean) => void;
-}
-interface TableOptions_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Enables automatic expanded-state resets when page-altering table state changes.
-	 */
-	autoResetExpanded?: boolean;
-	/**
-	 * Allows rows with subRows to be expanded.
-	 */
-	enableExpanding?: boolean;
-	/**
-	 * If provided, allows you to override the default behavior of determining whether a row is currently expanded.
-	 */
-	getIsRowExpanded?: (row: Row<TFeatures, TData>) => boolean;
-	/**
-	 * If provided, allows you to override the default behavior of determining whether a row can be expanded.
-	 */
-	getRowCanExpand?: (row: Row<TFeatures, TData>) => boolean;
-	/**
-	 * Enables manual row expansion. If this is set to `true`, `getExpandedRowModel` will not be used to expand rows and you would be expected to perform the expansion in your own data model. This is useful if you are doing server-side expansion.
-	 */
-	manualExpanding?: boolean;
-	/**
-	 * Called with an updater when expanded state changes. Pair this with
-	 * `state.expanded` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onExpandedChange?: OnChangeFn<ExpandedState>;
-	/**
-	 * If `true` expanded rows will be paginated along with the rest of the table (which means expanded rows may span multiple pages). If `false` expanded rows will not be considered for pagination (which means expanded rows will always render on their parent's page). This also means more rows will be rendered than the set page size.
-	 */
-	paginateExpandedRows?: boolean;
-}
-interface Table_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Lists expanded sub-rows inline below their parents. Row display order and
-	 * the paginated row model expand rows through it.
-	 *
-	 * @internal
-	 */
-	_expandRows: (rowModel: RowModel<TFeatures, TData>) => RowModel<TFeatures, TData>;
-	/**
-	 * Resets expanded state after the table data or grouping changes.
-	 *
-	 * Honors `autoResetAll`, `autoResetExpanded`, and `manualExpanding`. Called
-	 * by the row models; you rarely need to invoke it yourself.
-	 */
-	autoResetExpanded: () => void;
-	/**
-	 * Checks whether at least one row can be expanded.
-	 */
-	getCanSomeRowsExpand: () => boolean;
-	/**
-	 * Computes the deepest expanded row id depth.
-	 */
-	getExpandedDepth: () => number;
-	/**
-	 * Checks whether all rows in the current row model are expanded.
-	 */
-	getIsAllRowsExpanded: () => boolean;
-	/**
-	 * Checks whether any row is currently expanded.
-	 */
-	getIsSomeRowsExpanded: () => boolean;
-	/**
-	 * Creates a handler that toggles all rows expanded.
-	 */
-	getToggleAllRowsExpandedHandler: () => (event: unknown) => void;
-	/**
-	 * Resets `expanded` to `initialState.expanded`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `{}`.
-	 */
-	resetExpanded: (defaultState?: boolean) => void;
-	/**
-	 * Updates expanded state with `true`, a row-id map, or an updater function.
-	 */
-	setExpanded: (updater: Updater<ExpandedState>) => void;
-	/**
-	 * Toggles the expanded state for all rows.
-	 */
-	toggleAllRowsExpanded: (expanded?: boolean) => void;
-}
-interface Table_RowModels_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Resolves the row model after expanded rows have been flattened into view.
-	 */
-	getExpandedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Reads the row model immediately before expansion.
-	 */
-	getPreExpandedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	expandedRowModel: () => RowModel<TFeatures, TData>;
-}
-declare const filterFns: {
-	arrIncludes: CreatedFilterFn<any, any>;
-	arrIncludesAll: CreatedFilterFn<any, any>;
-	arrHas: CreatedFilterFn<any, any>;
-	arrIncludesSome: CreatedFilterFn<any, any>;
-	between: CreatedFilterFn<any, any>;
-	betweenInclusive: CreatedFilterFn<any, any>;
-	empty: CreatedFilterFn<any, any>;
-	endsWith: CreatedFilterFn<any, any>;
-	equals: CreatedFilterFn<any, any>;
-	equalsString: CreatedFilterFn<any, any>;
-	equalsStringSensitive: CreatedFilterFn<any, any>;
-	inDateRange: CreatedFilterFn<any, any>;
-	inNumberRange: CreatedFilterFn<any, any>;
-	includesString: CreatedFilterFn<any, any>;
-	includesStringSensitive: CreatedFilterFn<any, any>;
-	notEmpty: CreatedFilterFn<any, any>;
-	startsWith: CreatedFilterFn<any, any>;
-	weakEquals: CreatedFilterFn<any, any>;
-};
-type BuiltInFilterFn = keyof typeof filterFns;
-interface FilterMeta {
-}
-type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$2<TFeatures> extends true ? FilterMeta : TFeatures extends {
-	filterMeta: infer TFilterMeta extends object;
-} ? TFilterMeta : FilterMeta;
-interface FilterFns {
-}
-interface TableState_ColumnFiltering {
-	columnFilters: ColumnFiltersState;
-}
-type ColumnFiltersState = Array<ColumnFilter>;
-interface ColumnFilter {
-	id: string;
-	value: unknown;
-}
-interface RowModelFns_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	filterFns: Record<string, FilterFn<TFeatures, TData>>;
-}
-interface FilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	(row: Row<TFeatures, TData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void): boolean;
-	/**
-	 * Removes the filter from `state.columnFilters` when the filter value fails
-	 * this test (e.g. empty strings for text filters).
-	 *
-	 * When provided, this test is authoritative: values it keeps stay in filter
-	 * state even when they are empty strings, which the default heuristic would
-	 * otherwise remove. An `undefined` filter value always clears the filter
-	 * regardless.
-	 */
-	autoRemove?: ColumnFilterAutoRemoveTestFn<TFeatures, TData>;
-	/**
-	 * Normalizes the filter value before filtering runs.
-	 *
-	 * The table applies this once per filter (not per row) and passes the
-	 * resolved value to the filter function as `filterValue`.
-	 */
-	resolveFilterValue?: TransformFilterValueFn<TFeatures, TData>;
-	/**
-	 * Normalizes each row's value before it is compared against the filter
-	 * value. Only honored by filter functions built with `constructFilterFn`
-	 * (including all built-in filter functions).
-	 */
-	resolveDataValue?: TransformDataValueFn;
-}
-interface FilterFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	filter: (dataValue: any, filterValue: any, row: Row<TFeatures, TData>, columnId: string, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void) => boolean;
-	autoRemove?: (filterValue: any) => boolean;
-	resolveFilterValue?: (filterValue: any) => any;
-	resolveDataValue?: TransformDataValueFn;
-}
-interface CreatedFilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends FilterFnDef<TFeatures, TData> {
-	<TRowFeatures extends TableFeatures, TRowData extends RowData>(row: Row<TRowFeatures, TRowData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TRowFeatures>) => void): boolean;
-}
-type TransformFilterValueFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => TValue;
-type ColumnFilterAutoRemoveTestFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => boolean;
-type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$2<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
-	filterFns: infer TFilterFns extends object;
-} ? Extract<keyof TFilterFns, string> : keyof FilterFns;
-type FilterFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractFilterFnKeys<TFeatures> | FilterFn<TFeatures, TData>;
-interface ColumnDef_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Enables this column to participate in column-specific filtering.
-	 *
-	 * Defaults to `true`; table-level `enableColumnFilters` and `enableFilters`
-	 * must also allow filtering.
-	 */
-	enableColumnFilter?: boolean;
-	/**
-	 * The filter function to use with this column. Can be the name of a built-in filter function or a custom filter function.
-	 */
-	filterFn?: FilterFnOption<TFeatures, TData>;
-}
-interface Column_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Returns an automatically calculated filter function for the column based off of the columns first known value.
-	 */
-	getAutoFilterFn: () => FilterFn<TFeatures, TData>;
-	/**
-	 * Checks whether this accessor column can currently be column-filtered.
-	 */
-	getCanFilter: () => boolean;
-	/**
-	 * Returns the filter function (either user-defined or automatic, depending on configuration) for the columnId specified.
-	 */
-	getFilterFn: () => FilterFn<TFeatures, TData>;
-	/**
-	 * Returns the index (including `-1`) of the column filter in the table's `state.columnFilters` array.
-	 */
-	getFilterIndex: () => number;
-	/**
-	 * Reads this column's current value from `state.columnFilters`.
-	 */
-	getFilterValue: () => unknown;
-	/**
-	 * Checks whether this column has an active entry in `state.columnFilters`.
-	 */
-	getIsFiltered: () => boolean;
-	/**
-	 * Adds, updates, or removes this column's filter value.
-	 *
-	 * Updater functions receive the previous filter value. Values that satisfy
-	 * the filter function's `autoRemove` rule are removed from filter state.
-	 */
-	setFilterValue: (updater: Updater<any>) => void;
-}
-interface Row_ColumnFiltering<in out TFeatures extends TableFeatures, in out _TData extends RowData> {
-	/**
-	 * The column filters map for the row. This object tracks whether a row is passing/failing specific filters by their column ID.
-	 */
-	columnFilters: Record<string, boolean>;
-	/**
-	 * The column filters meta map for the row. This object tracks any filter meta for a row as optionally provided during the filtering process.
-	 */
-	columnFiltersMeta: Record<string, ExtractFilterMeta<TFeatures>>;
-}
-interface TableOptions_ColumnFiltering<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
-	/**
-	 * Enables column-specific filtering for all columns that also allow it.
-	 */
-	enableColumnFilters?: boolean;
-	/**
-	 * Enables all filtering features for the table.
-	 *
-	 * Set this to `false` to disable both column filtering and global filtering.
-	 */
-	enableFilters?: boolean;
-	/**
-	 * By default, filtering is done from parent rows down (so if a parent row is filtered out, all of its children will be filtered out as well). Setting this option to `true` will cause filtering to be done from leaf rows up (which means parent rows will be included so long as one of their child or grand-child rows is also included).
-	 */
-	filterFromLeafRows?: boolean;
-	/**
-	 * Disables the `getFilteredRowModel` from being used to filter data. This may be useful if your table needs to dynamically support both client-side and server-side filtering.
-	 */
-	manualFiltering?: boolean;
-	/**
-	 * By default, filtering is done for all rows (max depth of 100), no matter if they are root level parent rows or the child leaf rows of a parent row. Setting this option to `0` will cause filtering to only be applied to the root level parent rows, with all sub-rows remaining unfiltered. Similarly, setting this option to `1` will cause filtering to only be applied to child leaf rows 1 level deep, and so on.
-	 * This is useful for situations where you want a row's entire child hierarchy to be visible regardless of the applied filter.
-	 */
-	maxLeafRowFilterDepth?: number;
-	/**
-	 * Called with an updater when column filter state changes. Pair this with
-	 * `state.columnFilters` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
-}
-interface Table_ColumnFiltering {
-	/**
-	 * Resets `columnFilters` to `initialState.columnFilters`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `[]`.
-	 */
-	resetColumnFilters: (defaultState?: boolean) => void;
-	/**
-	 * Updates column filter state with a next array or updater function.
-	 */
-	setColumnFilters: (updater: Updater<ColumnFiltersState>) => void;
-}
-interface Table_RowModels_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Resolves the row model after column and global filters have been applied.
-	 */
-	getFilteredRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Reads the row model immediately before filtering.
-	 */
-	getPreFilteredRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	filteredRowModel: () => RowModel<TFeatures, TData>;
-}
-interface PaginationState {
-	pageIndex: number;
-	/**
-	 * The number of rows per page. Set to `Infinity` to place all rows on a
-	 * single page.
-	 */
-	pageSize: number;
-}
-interface TableState_RowPagination {
-	pagination: PaginationState;
-}
-interface TableOptions_RowPagination {
-	/**
-	 * If set to `true`, pagination will be reset to the first page when page-altering state changes e.g. `data` is updated, filters change, grouping changes, etc.
-	 */
-	autoResetPageIndex?: boolean;
-	/**
-	 * Enables manual pagination. If this option is set to `true`, the table will not automatically paginate rows using `getPaginatedRowModel()` and instead will expect you to manually paginate the rows before passing them to the table. This is useful if you are doing server-side pagination and aggregation.
-	 */
-	manualPagination?: boolean;
-	/**
-	 * Called with an updater when pagination state changes. Pair this with
-	 * `state.pagination` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onPaginationChange?: OnChangeFn<PaginationState>;
-	/**
-	 * When manually controlling pagination, you can supply a total `pageCount` value to the table if you know it (Or supply a `rowCount` and `pageCount` will be calculated). If you do not know how many pages there are, you can set this to `-1`.
-	 */
-	pageCount?: number;
-	/**
-	 * When manually controlling pagination, you can supply a total `rowCount` value to the table if you know it. The `pageCount` can be calculated from this value and the `pageSize`.
-	 */
-	rowCount?: number;
-}
-interface Table_RowPagination<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
-	/**
-	 * Resets the page index to `0` after page-altering changes such as new
-	 * data, filtering, sorting, or grouping.
-	 *
-	 * Honors `autoResetAll`, `autoResetPageIndex`, and `manualPagination`.
-	 * Called by the row models; you rarely need to invoke it yourself.
-	 */
-	autoResetPageIndex: () => void;
-	/**
-	 * Checks whether the current page index can move forward.
-	 */
-	getCanNextPage: () => boolean;
-	/**
-	 * Checks whether a known, finite last page exists after the current page.
-	 */
-	getCanLastPage: () => boolean;
-	/**
-	 * Checks whether the current page index can move backward.
-	 */
-	getCanPreviousPage: () => boolean;
-	/**
-	 * Resolves the current page count from `options.pageCount` or row count and
-	 * page size.
-	 */
-	getPageCount: () => number;
-	/**
-	 * Resolves the row count used for pagination math.
-	 *
-	 * `options.rowCount` wins; otherwise the pre-paginated row model is counted.
-	 */
-	getRowCount: () => number;
-	/**
-	 * Builds zero-based page indexes for the current page count.
-	 */
-	getPageOptions: () => Array<number>;
-	/**
-	 * Increments the page index by one, if possible.
-	 */
-	nextPage: () => void;
-	/**
-	 * Decrements the page index by one, if possible.
-	 */
-	previousPage: () => void;
-	/**
-	 * Sets the page index to `0`.
-	 */
-	firstPage: () => void;
-	/**
-	 * Sets the page index to the last known page. Does nothing when the page
-	 * count is unknown, empty, or non-finite.
-	 */
-	lastPage: () => void;
-	/**
-	 * Resets `pagination.pageIndex` to initial state, or to `0` when
-	 * `defaultState` is `true`.
-	 */
-	resetPageIndex: (defaultState?: boolean) => void;
-	/**
-	 * Resets `pagination.pageSize` to initial state, or to `10` when
-	 * `defaultState` is `true`.
-	 */
-	resetPageSize: (defaultState?: boolean) => void;
-	/**
-	 * Resets `pagination` to `initialState.pagination`.
-	 *
-	 * Pass `true` to ignore initial state and reset to
-	 * `{ pageIndex: 0, pageSize: 10 }`.
-	 */
-	resetPagination: (defaultState?: boolean) => void;
-	/**
-	 * Updates `pagination.pageIndex` using a value or updater.
-	 */
-	setPageIndex: (updater: Updater<number>) => void;
-	/**
-	 * Updates `pagination.pageSize` using a value or updater.
-	 */
-	setPageSize: (updater: Updater<number>) => void;
-	/**
-	 * Updates pagination state with a next state or updater function.
-	 */
-	setPagination: (updater: Updater<PaginationState>) => void;
-}
-interface Table_RowModels_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Resolves the row model after pagination has sliced the current page.
-	 */
-	getPaginatedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Reads the row model immediately before pagination.
-	 */
-	getPrePaginatedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	paginatedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface Column_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Computes min/max numeric facet values for this column.
-	 */
-	getFacetedMinMaxValues: () => undefined | [
-		number,
-		number
-	];
-	/**
-	 * Computes the row model used to derive this column's facet values.
-	 *
-	 * Other column filters are applied, while this column's own filter is
-	 * excluded.
-	 */
-	getFacetedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Computes unique facet values and occurrence counts for this column.
-	 */
-	getFacetedUniqueValues: () => Map<any, number>;
-}
-interface Table_RowModels_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Computes min/max numeric facet values for the active faceting context.
-	 *
-	 * Requires a `facetedMinMaxValues` row-model factory on the `features` option.
-	 */
-	getFacetedMinMaxValues: () => undefined | [
-		number,
-		number
-	];
-	/**
-	 * Computes the row model used to derive facet values.
-	 *
-	 * Requires a `facetedRowModel` row-model factory on the `features` option.
-	 */
-	getFacetedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Computes unique facet values and occurrence counts.
-	 *
-	 * Requires a `facetedUniqueValues` row-model factory on the `features` option.
-	 */
-	getFacetedUniqueValues: () => Map<any, number>;
-}
-interface CachedRowModel_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	facetedRowModels?: Record<string, () => RowModel<TFeatures, TData>>;
-	facetedMinMaxValues?: Record<string, () => undefined | [
-		number,
-		number
-	]>;
-	facetedUniqueValues?: Record<string, () => Map<any, number>>;
-	globalFacetedRowModel?: () => RowModel<TFeatures, TData>;
-	globalFacetedMinMaxValues?: () => undefined | [
-		number,
-		number
-	];
-	globalFacetedUniqueValues?: () => Map<any, number>;
-}
-interface Table_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Returns the min and max values for the global filter.
-	 */
-	getGlobalFacetedMinMaxValues: () => undefined | [
-		number,
-		number
-	];
-	/**
-	 * Computes the row model used to derive global facet values.
-	 */
-	getGlobalFacetedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Returns the faceted unique values for the global filter.
-	 */
-	getGlobalFacetedUniqueValues: () => Map<any, number>;
-}
-interface RowModel<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	rows: Array<Row<TFeatures, TData>>;
-	flatRows: Array<Row<TFeatures, TData>>;
-	rowsById: Record<string, Row<TFeatures, TData>>;
-}
-interface CachedRowModel_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	coreRowModel: () => RowModel<TFeatures, TData>;
-}
-interface Table_RowModels_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Returns the core row model before any processing has been applied.
-	 */
-	getCoreRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Returns the final model after all processing from other used features has been applied. This is the row model that is most commonly used for rendering.
-	 */
-	getRowModel: () => RowModel<TFeatures, TData>;
-}
-type Table_RowModels<TFeatures extends TableFeatures, TData extends RowData> = Table_RowModels_Core<TFeatures, TData> & Table_RowModels_Faceted<TFeatures, TData> & Table_RowModels_Filtered<TFeatures, TData> & Table_RowModels_Grouped<TFeatures, TData> & Table_RowModels_Expanded<TFeatures, TData> & Table_RowModels_Paginated<TFeatures, TData> & Table_RowModels_Sorted<TFeatures, TData>;
-type GroupingState = Array<string>;
-interface TableState_ColumnGrouping {
-	grouping: GroupingState;
-}
-interface ColumnDef_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Allows this column to be added to grouping state.
-	 *
-	 * Defaults to `true`; table-level `enableGrouping` must also allow grouping.
-	 */
-	enableGrouping?: boolean;
-	/**
-	 * Returns the value used to group rows for this column.
-	 *
-	 * When omitted, grouping uses the value derived from this column's
-	 * `accessorKey` or `accessorFn`.
-	 */
-	getGroupingValue?: (originalRow: TData, index: number, row: Row<TFeatures, TData>) => any;
-}
-interface Column_ColumnGrouping {
-	/**
-	 * Checks whether this column can currently be grouped.
-	 */
-	getCanGroup: () => boolean;
-	/**
-	 * Finds this column's position in the ordered grouping state.
-	 */
-	getGroupedIndex: () => number;
-	/**
-	 * Checks whether this column id is present in grouping state.
-	 */
-	getIsGrouped: () => boolean;
-	/**
-	 * Returns a function that toggles the grouping state of the column. This is useful for passing to the `onClick` prop of a button.
-	 */
-	getToggleGroupingHandler: () => () => void;
-	/**
-	 * Toggles the grouping state of the column.
-	 */
-	toggleGrouping: () => void;
-}
-interface Row_ColumnGrouping {
-	_groupingValuesCache: Record<string, any>;
-	/**
-	 * Reads the value used to group this row for a column id.
-	 */
-	getGroupingValue: (columnId: string) => unknown;
-	/**
-	 * Checks whether this row represents a grouped row.
-	 */
-	getIsGrouped: () => boolean;
-	/**
-	 * If this row is grouped, this is the id of the column that this row is grouped by.
-	 */
-	groupingColumnId?: string;
-	/**
-	 * If this row is grouped, this is the unique/shared value for the `groupingColumnId` for all of the rows in this group.
-	 */
-	groupingValue?: unknown;
-}
-interface Cell_ColumnGrouping {
-	/**
-	 * Checks whether this cell represents the active grouping column.
-	 */
-	getIsGrouped: () => boolean;
-	/**
-	 * Checks whether this cell is hidden as a grouping placeholder.
-	 */
-	getIsPlaceholder: () => boolean;
-}
-interface TableOptions_ColumnGrouping {
-	/**
-	 * Allows columns to be grouped for this table.
-	 */
-	enableGrouping?: boolean;
-	/**
-	 * Grouping columns are automatically reordered by default to the start of the columns list. If you would rather remove them or leave them as-is, set the appropriate mode here.
-	 */
-	groupedColumnMode?: false | "reorder" | "remove";
-	/**
-	 * Enables manual grouping. If this option is set to `true`, the table will not automatically group rows using `getGroupedRowModel()` and instead will expect you to manually group the rows before passing them to the table. This is useful if you are doing server-side grouping and aggregation.
-	 */
-	manualGrouping?: boolean;
-	/**
-	 * Called with an updater when grouping state changes. Pair this with
-	 * `state.grouping` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onGroupingChange?: OnChangeFn<GroupingState>;
-}
-interface Table_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Moves grouped leaf columns as `groupedColumnMode` sets. Leaf column order
-	 * falls back to it when the column ordering feature is not registered.
-	 *
-	 * @internal
-	 */
-	_orderGroupedColumns: (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Resets `grouping` to `initialState.grouping`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `[]`.
-	 */
-	resetGrouping: (defaultState?: boolean) => void;
-	/**
-	 * Updates grouping state with a next ordered id array or updater function.
-	 */
-	setGrouping: (updater: Updater<GroupingState>) => void;
-}
-interface Table_RowModels_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Resolves the row model after grouping has been applied.
-	 */
-	getGroupedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Reads the row model immediately before grouping.
-	 */
-	getPreGroupedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	groupedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface TableState_GlobalFiltering {
-	globalFilter: any;
-}
-interface ColumnDef_GlobalFiltering {
-	/**
-	 * Allows this column to be scanned by global filtering.
-	 *
-	 * Defaults to `true`; table-level global filtering and `enableFilters` must
-	 * also allow filtering.
-	 */
-	enableGlobalFilter?: boolean;
-}
-interface Column_GlobalFiltering {
-	/**
-	 * Checks whether this accessor column participates in global filtering.
-	 */
-	getCanGlobalFilter: () => boolean;
-}
-interface TableOptions_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Enables global filtering across columns that allow it.
-	 */
-	enableGlobalFilter?: boolean;
-	/**
-	 * If provided, this function will be called with the column and should return `true` or `false` to indicate whether this column should be used for global filtering.
-	 * This is useful if the column can contain data that is not `string` or `number` (i.e. `undefined`).
-	 */
-	getColumnCanGlobalFilter?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => boolean;
-	/**
-	 * The filter function to use for global filtering.
-	 * - A `string` referencing a built-in filter function
-	 * - A `string` that references a custom filter functions provided via the `tableOptions.filterFns` option
-	 * - A custom filter function
-	 */
-	globalFilterFn?: FilterFnOption<TFeatures, TData>;
-	/**
-	 * Called with an updater when global filter state changes. Pair this with
-	 * `state.globalFilter` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onGlobalFilterChange?: OnChangeFn<any>;
-}
-interface Table_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Currently, this function returns the built-in `includesString` filter function. In future releases, it may return more dynamic filter functions based on the nature of the data provided.
-	 */
-	getGlobalAutoFilterFn: () => FilterFn<TFeatures, TData> | undefined;
-	/**
-	 * Returns the filter function (either user-defined or automatic, depending on configuration) for the global filter.
-	 */
-	getGlobalFilterFn: () => FilterFn<TFeatures, TData> | undefined;
-	/**
-	 * Resets `globalFilter` to `initialState.globalFilter`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `undefined`.
-	 */
-	resetGlobalFilter: (defaultState?: boolean) => void;
-	/**
-	 * Updates global filter state with a next value or updater function.
-	 */
-	setGlobalFilter: (updater: Updater<any>) => void;
-}
-type RangeValue = Date | number;
-declare const aggregationFns: {
-	sum: AggregationFnDef<any, any, unknown, number>;
-	min: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
-	max: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
-	extent: AggregationFnDef<any, any, unknown, [
-		RangeValue | undefined,
-		RangeValue | undefined
-	]>;
-	mean: AggregationFnDef<any, any, unknown, number | undefined>;
-	median: AggregationFnDef<any, any, unknown, number | undefined>;
-	unique: AggregationFnDef<any, any, unknown, unknown[]>;
-	uniqueCount: AggregationFnDef<any, any, unknown, number>;
-	count: AggregationFnDef<any, any, unknown, number>;
-	first: AggregationFnDef<any, any, unknown, unknown>;
-	last: AggregationFnDef<any, any, unknown, unknown>;
-};
-type BuiltInAggregationFn = keyof typeof aggregationFns;
-declare function aggregateColumnValue<TFeatures extends TableFeatures, TData extends RowData>(args: {
-	maxDepth?: number;
-	subRows?: ReadonlyArray<Row<TFeatures, TData>>;
-	column: Column<TFeatures, TData, unknown>;
-	groupingRow?: Row<TFeatures, TData>;
-	rows: ReadonlyArray<Row<TFeatures, TData>>;
-	/**
-	 * Marks `rows` as distinct nodes of a single row tree (rows the table's own
-	 * row models produced), enabling frontier selection without the
-	 * duplicate-id guard. Caller-supplied row arrays must omit this.
-	 */
-	uniqueRows?: boolean;
-}): unknown;
-interface AggregationFns {
-}
-interface AggregationContext<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> {
-	/** The column whose values are being aggregated. */
-	column: Column<TFeatures, TData, TValue>;
-	/** Convenience alias for `column.id`. */
-	columnId: string;
-	/** Maximum relative sub-row depth used to select `rows`. */
-	maxDepth: number;
-	/**
-	 * Immediate sub-rows for grouped aggregation. This property is omitted
-	 * for root or caller-supplied-row aggregation. At a terminal grouping level
-	 * these are the direct data rows; at a nested level they are sub-row groups.
-	 */
-	subRows?: ReadonlyArray<Row<TFeatures, TData>>;
-	/** Reads this column's value from one of `rows`. */
-	getValue: (row: Row<TFeatures, TData>) => TValue;
-	/**
-	 * The synthetic grouped row receiving this result. This property is omitted
-	 * for root or caller-supplied-row aggregation. Its `depth` identifies the
-	 * grouping level when grouped aggregation needs that distinction.
-	 */
-	groupingRow?: Row<TFeatures, TData>;
-	/**
-	 * Unique rows selected at `maxDepth`. Branches that end before `maxDepth`
-	 * contribute their deepest available row.
-	 */
-	rows: ReadonlyArray<Row<TFeatures, TData>>;
-	/** The table that owns the column and rows. */
-	table: Table$1<TFeatures, TData>;
-}
-interface AggregationMergeContext<TFeatures extends TableFeatures, TData extends RowData, TValue, TResult> extends AggregationContext<TFeatures, TData, TValue> {
-	/** Results produced for each immediate sub-row group, in sub-row order. */
-	subRowResults: ReadonlyArray<TResult>;
-	/** Immediate sub-row groups corresponding to `subRowResults`. */
-	subRows: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface AggregationFnDef<TFeatures extends TableFeatures = any, TData extends RowData = any, TValue = unknown, TResult = unknown> {
-	/** Computes a result directly from the selected `rows`. */
-	aggregate: (context: AggregationContext<TFeatures, TData, TValue>) => TResult;
-	/**
-	 * Combines already-computed immediate sub-row results. When omitted,
-	 * nested grouping falls back to `aggregate` over the group's selected rows.
-	 */
-	merge?: (context: AggregationMergeContext<TFeatures, TData, TValue, TResult>) => TResult;
-}
-interface RowModelFns_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	aggregationFns: Record<string, AggregationFnDef<TFeatures, TData, any, any>>;
-}
-type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$2<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
-	aggregationFns: infer TAggregationFns extends object;
-} ? Extract<keyof TAggregationFns, string> : keyof AggregationFns;
-type AggregationFnRef<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDef<TFeatures, TData, TValue, TResult>;
-interface AggregationFnDescriptor<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> {
-	/** The named, automatic, or inline definition to execute. */
-	aggregationFn: AggregationFnRef<TFeatures, TData, TValue, TResult>;
-	/** Stable key used in the object returned by a multiple aggregation. */
-	id: string;
-}
-type AggregationFnListItem<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDescriptor<TFeatures, TData, TValue, any>;
-type AggregationFnOption<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = AggregationFnRef<TFeatures, TData, TValue, any> | ReadonlyArray<AggregationFnListItem<TFeatures, TData, TValue>>;
-type AggregationResultOf<TDefinition> = TDefinition extends AggregationFnDef<any, any, any, infer TResult> ? TResult : unknown;
-type RegisteredAggregationResult<TFeatures extends TableFeatures> = TFeatures extends {
-	aggregationFns: infer TRegistry extends Record<string, unknown>;
-} ? AggregationResultOf<TRegistry[keyof TRegistry]> : unknown;
-type ColumnAggregationValue<TFeatures extends TableFeatures> = RegisteredAggregationResult<TFeatures> | Record<string, RegisteredAggregationResult<TFeatures> | undefined> | undefined;
-interface ResolvedAggregationFn<TFeatures extends TableFeatures, TData extends RowData> {
-	/** Resolved definition, or `undefined` when configuration is invalid. */
-	aggregationFn: AggregationFnDef<TFeatures, TData, any, any> | undefined;
-	/** Key used for a multiple result; scalar inline definitions have no id. */
-	id: string | undefined;
-}
-interface ColumnDef_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/** Renderer used for a grouped row's aggregated cell. */
-	aggregatedCell?: ColumnDefTemplate<ReturnType<Cell<TFeatures, TData, TValue>["getContext"]>>;
-	/**
-	 * One aggregation reference for a scalar result, or an array for a keyed
-	 * result object. Inline definitions in an array require an explicit `id`.
-	 */
-	aggregationFn?: AggregationFnOption<TFeatures, TData, TValue>;
-	/**
-	 * Maximum relative sub-row depth used for grouped aggregation and cached
-	 * default totals. `0` selects the supplied root rows, `1` their direct
-	 * sub-rows, and so on. Defaults to `0`.
-	 */
-	maxAggregationDepth?: number;
-	/**
-	 * Optionally supplies a precomputed aggregation value for this column.
-	 * Return `{ value }` to handle the request, including `{ value: undefined }`;
-	 * return `undefined` to use the local aggregation fallback.
-	 */
-	getAggregationValue?: (context: AggregationValueContext<TFeatures, TData, TValue>) => AggregationValueResult | undefined;
-}
-interface Column_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/** Resolves the configured scalar or multiple aggregation definitions. */
-	getAggregationFns: () => ReadonlyArray<ResolvedAggregationFn<TFeatures, TData>>;
-	/**
-	 * Aggregates this column over the default pre-grouped row model, or over a
-	 * caller-provided array of rows. `options.maxDepth` overrides the column's
-	 * `maxAggregationDepth`. Explicit-row calls are intentionally not cached.
-	 */
-	getAggregationValue: <TResult = ColumnAggregationValue<TFeatures>>(options?: AggregationValueOptions<TFeatures, TData>) => TResult;
-	/** Infers `sum` for a numeric first row and `extent` for a Date first row. */
-	getAutoAggregationFn: () => AggregationFnDef<TFeatures, TData, any, any> | undefined;
-}
-interface AggregationValueOptions<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/** Overrides the column's `maxAggregationDepth` for this request. */
-	maxDepth?: number;
-	/** Rows to aggregate instead of the default pre-grouped row model. */
-	rows?: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface Cell_RowAggregation {
-	/** Whether this cell displays an aggregate on a synthetic grouped row. */
-	getIsAggregated: () => boolean;
-}
-interface Row_RowAggregation {
-	/** Cached aggregate results keyed by column id; created lazily on grouped rows. */
-	_aggregationValuesCache?: Record<string, unknown>;
-}
-interface Table_RowAggregation {
-	/**
-	 * Runs a column's configured aggregations over a set of rows. The grouped
-	 * row model aggregates through it, so tables that group without
-	 * `rowAggregationFeature` don't bundle the aggregation executor.
-	 *
-	 * @internal
-	 */
-	_aggregateColumnValue: typeof aggregateColumnValue;
-}
-interface AggregationValueContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-	/** The column whose value was requested. */
-	column: Column<TFeatures, TData, TValue>;
-	/** Maximum relative sub-row depth used for the request. */
-	maxDepth: number;
-	/** Caller-provided rows, or `undefined` for the default row model. */
-	rows?: ReadonlyArray<Row<TFeatures, TData>>;
-	/** The table that owns the column. */
-	table: Table$1<TFeatures, TData>;
-}
-interface AggregationValueResult<TResult = unknown> {
-	/** The supplied value. `undefined` is still a handled result. */
-	value: TResult;
-}
-interface TableOptions_RowAggregation {
-	/**
-	 * Disables local `column.getAggregationValue()` calculation when a column
-	 * override does not handle the request. Group values supplied by manually
-	 * grouped rows remain the responsibility of the data owner.
-	 */
-	manualAggregation?: boolean;
-}
-type ColumnOrderState = Array<string>;
-interface ColumnIndexes {
-	/**
-	 * Maps each visible leaf column id to its index in the full visible column list.
-	 */
-	all: Record<string, number>;
-	/**
-	 * Maps each unpinned visible leaf column id to its index within the center region.
-	 */
-	center: Record<string, number>;
-	/**
-	 * Maps each start-pinned visible leaf column id to its index within the start region.
-	 */
-	start: Record<string, number>;
-	/**
-	 * Maps each end-pinned visible leaf column id to its index within the end region.
-	 */
-	end: Record<string, number>;
-}
-interface TableState_ColumnOrdering {
-	columnOrder: ColumnOrderState;
-}
-interface TableOptions_ColumnOrdering {
-	/**
-	 * Called with an updater when column order state changes. Pair this with
-	 * `state.columnOrder` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
-}
-interface Column_ColumnOrdering {
-	/**
-	 * Finds this column's zero-based index among visible columns.
-	 *
-	 * Pass `'start'`, `'center'`, or `'end'` to measure within that pinned
-	 * region instead of the full visible leaf order.
-	 */
-	getIndex: (position?: ColumnPinningPosition | "center") => number;
-	/**
-	 * Checks whether this column is the first visible column.
-	 *
-	 * Pass a pinned region to check the first column within that region.
-	 */
-	getIsFirstColumn: (position?: ColumnPinningPosition | "center") => boolean;
-	/**
-	 * Checks whether this column is the last visible column.
-	 *
-	 * Pass a pinned region to check the last column within that region.
-	 */
-	getIsLastColumn: (position?: ColumnPinningPosition | "center") => boolean;
-}
-interface Table_ColumnOrdering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Builds column-id to index records for each visible pinning region.
-	 *
-	 * This is the memoized source that `column.getIndex` reads from; most apps
-	 * will not need to call it directly.
-	 */
-	getColumnIndexes: () => ColumnIndexes;
-	/**
-	 * Returns a function that orders leaf columns by `columnOrder`, after moving
-	 * grouped columns as `groupedColumnMode` sets.
-	 *
-	 * Leaf column order reads it; most apps will not need to call it directly.
-	 */
-	getOrderColumnsFn: () => (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Resets `columnOrder` to `initialState.columnOrder`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `[]`.
-	 */
-	resetColumnOrder: (defaultState?: boolean) => void;
-	/**
-	 * Updates column order state with a next ordered id array or updater function.
-	 */
-	setColumnOrder: (updater: Updater<ColumnOrderState>) => void;
-}
-interface Column_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * The resolved accessor function to use when extracting the value for the column from each row. Will only be defined if the column def has a valid accessor key or function defined.
-	 */
-	accessorFn?: AccessorFn<TData, TValue>;
-	/**
-	 * The original column def used to create the column.
-	 */
-	columnDef: ColumnDef<TFeatures, TData, TValue>;
-	/**
-	 * The child column (if the column is a group column). Will be an empty array if the column is not a group column.
-	 */
-	columns: Array<Column<TFeatures, TData, TValue>>;
-	/**
-	 * The depth of the column (if grouped) relative to the root column def array.
-	 */
-	depth: number;
-	/**
-	   * The resolved unique identifier for the column resolved in this priority:
-		  - A manual `id` property from the column def
-		  - The accessor key from the column def
-		  - The header string from the column def
-	   */
-	id: string;
-	/**
-	 * The parent column for this column. Will be undefined if this is a root column.
-	 */
-	parent?: Column<TFeatures, TData, TValue>;
-	/**
-	 * Reference to the parent table instance.
-	 */
-	table: Table$1<TFeatures, TData>;
-}
-interface Column_Column<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
-	/**
-	 * Flattens this column and every descendant column into a single array.
-	 */
-	getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
-	/**
-	 * Collects the terminal leaf columns below this column, or the column itself
-	 * when it has no children.
-	 */
-	getLeafColumns: () => Array<Column<TFeatures, TData, TValue>>;
-}
-interface TableOptions_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * The array of column defs to use for the table.
-	 */
-	columns: ReadonlyArray<ColumnDef<TFeatures, TData, TValue>>;
-	/**
-	 * Default column options to use for all column defs supplied to the table.
-	 */
-	defaultColumn?: Partial<ColumnDef<TFeatures, TData, TValue>>;
-}
-interface Table_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Returns a map of all flat columns by their ID.
-	 */
-	getAllFlatColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
-	/**
-	 * Resolves built-in, feature-level, and user-defined default column options.
-	 */
-	getDefaultColumnDef: () => Partial<ColumnDef<TFeatures, TData, unknown>>;
-	/**
-	 * Normalizes `options.columns` into the table's nested column hierarchy.
-	 */
-	getAllColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Flattens the nested column hierarchy, including parent/group columns.
-	 */
-	getAllFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Collects all terminal leaf columns, excluding parent/group columns.
-	 */
-	getAllLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Returns a map of all leaf-node columns by their ID. This does not include parent columns.
-	 */
-	getAllLeafColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
-	/**
-	 * Returns a single column by its ID.
-	 */
-	getColumn: (columnId: string) => Column<TFeatures, TData, unknown> | undefined;
-}
-type ColumnVisibilityState = Record<string, boolean>;
-interface TableState_ColumnVisibility {
-	columnVisibility: ColumnVisibilityState;
-}
-interface TableOptions_ColumnVisibility {
-	/**
-	 * Whether to enable column hiding. Defaults to `true`.
-	 */
-	enableHiding?: boolean;
-	/**
-	 * Called with an updater when column visibility state changes. Pair this with
-	 * `state.columnVisibility` when using external state; external atoms can own
-	 * the slice without this callback.
-	 */
-	onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
-}
-interface Table_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Checks whether every leaf column is currently visible.
-	 */
-	getIsAllColumnsVisible: () => boolean;
-	/**
-	 * Checks whether at least one leaf column is currently visible.
-	 */
-	getIsSomeColumnsVisible: () => boolean;
-	/**
-	 * Creates a checkbox-style handler that shows or hides all columns.
-	 */
-	getToggleAllColumnsVisibilityHandler: () => (event: unknown) => void;
-	/**
-	 * Lists visible columns in flat table order, including parent columns that
-	 * have visible descendants.
-	 */
-	getVisibleFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Lists visible leaf columns in the order used for row cells and headers.
-	 */
-	getVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Resets `columnVisibility` to `initialState.columnVisibility`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `{}`.
-	 */
-	resetColumnVisibility: (defaultState?: boolean) => void;
-	/**
-	 * Updates column visibility state with a next map or updater function.
-	 */
-	setColumnVisibility: (updater: Updater<ColumnVisibilityState>) => void;
-	/**
-	 * Toggles the visibility of all columns.
-	 */
-	toggleAllColumnsVisible: (value?: boolean) => void;
-}
-interface ColumnDef_ColumnVisibility {
-	/**
-	 * Allows this column to be hidden. Defaults to `true`.
-	 */
-	enableHiding?: boolean;
-}
-interface Row_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Gets this row's cells for currently visible columns.
-	 */
-	getVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Maps this row's currently visible cells by column id.
-	 */
-	getVisibleCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
-}
-interface Column_ColumnVisibility {
-	/**
-	 * Checks whether this column is allowed to be hidden.
-	 */
-	getCanHide: () => boolean;
-	/**
-	 * Checks whether this column is currently visible.
-	 */
-	getIsVisible: () => boolean;
-	/**
-	 * Creates a checkbox-style handler that toggles this column's visibility.
-	 */
-	getToggleVisibilityHandler: () => (event: unknown) => void;
-	/**
-	 * Toggles the visibility of the column.
-	 */
-	toggleVisibility: (value?: boolean) => void;
-}
-type RowPinningPosition = false | "top" | "bottom";
-interface RowPinningState {
-	bottom: Array<string>;
-	top: Array<string>;
-}
-interface TableState_RowPinning {
-	rowPinning: RowPinningState;
-}
-interface TableOptions_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Allows rows to be pinned to top or bottom regions.
-	 *
-	 * Provide a predicate to decide per row. Defaults to `true`.
-	 */
-	enableRowPinning?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-	/**
-	 * When `false`, pinned rows will not be visible if they are filtered or paginated out of the table. When `true`, pinned rows will always be visible regardless of filtering or pagination. Defaults to `true`.
-	 */
-	keepPinnedRows?: boolean;
-	/**
-	 * Called with an updater when row pinning state changes. Pair this with
-	 * `state.rowPinning` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onRowPinningChange?: OnChangeFn<RowPinningState>;
-}
-interface Row_RowPinning {
-	/**
-	 * Checks whether this row can be pinned.
-	 */
-	getCanPin: () => boolean;
-	/**
-	 * Returns the pinned position of the row. (`'top'`, `'bottom'` or `false`)
-	 */
-	getIsPinned: () => RowPinningPosition;
-	/**
-	 * Returns the numeric pinned index of the row within a pinned row group.
-	 */
-	getPinnedIndex: () => number;
-	/**
-	 * Pins a row to the `'top'` or `'bottom'`, or unpins the row to the center if `false` is passed.
-	 */
-	pin: (position: RowPinningPosition, includeLeafRows?: boolean, includeParentRows?: boolean) => void;
-}
-interface Table_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Gets rows pinned to the bottom region.
-	 */
-	getBottomRows: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Gets rows that are not pinned to the top or bottom region.
-	 */
-	getCenterRows: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Checks whether any rows are pinned, optionally limited to one region.
-	 */
-	getIsSomeRowsPinned: (position?: RowPinningPosition) => boolean;
-	/**
-	 * Gets rows pinned to the top region.
-	 */
-	getTopRows: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Resets `rowPinning` to `initialState.rowPinning`.
-	 *
-	 * Pass `true` to ignore initial state and reset to empty top/bottom arrays.
-	 */
-	resetRowPinning: (defaultState?: boolean) => void;
-	/**
-	 * Updates row pinning state with a next state or updater function.
-	 */
-	setRowPinning: (updater: Updater<RowPinningState>) => void;
-}
-//#region src/features/row-selection/rowSelectionFeature.types.d.ts
-export type RowSelectionState = Record<string, true>;
-interface ToggleSelectedOptions {
-	/**
-	 * Whether selectable child rows should be toggled recursively. Defaults to
-	 * `true`.
-	 */
-	selectChildren?: boolean;
-	/**
-	 * Whether ancestor row ids should be removed from the selection when this
-	 * row is deselected. Useful after a parent cascade wrote the parent id into
-	 * state and a child is later deselected. Defaults to `false`.
-	 *
-	 * Ancestor ids are removed even when the ancestor itself cannot be selected.
-	 * Like the other targeted deselection paths, pruning is not gated by
-	 * `enableRowSelection`; only the bulk select-all paths preserve
-	 * non-selectable rows.
-	 */
-	deselectParents?: boolean;
-}
-interface TableState_RowSelection {
-	rowSelection: RowSelectionState;
-}
-interface TableOptions_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Enables inclusive row range selection through
-	 * `row.getToggleSelectedHandler()`. Defaults to `true`.
-	 */
-	enableRowRangeSelection?: boolean;
-	/**
-	 * Allows rows to be selected alongside other rows.
-	 *
-	 * Provide a predicate to decide per row. Defaults to `true`.
-	 */
-	enableMultiRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-	/**
-	 * Allows rows to be selected.
-	 *
-	 * Provide a predicate to decide per row. Defaults to `true`.
-	 */
-	enableRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-	/**
-	 * Controls whether selecting a parent row also selects its subRows.
-	 *
-	 * Provide a predicate to decide per row. This is most useful with expanding or
-	 * grouping features and defaults to `true`. Select-all and the all-selected
-	 * getters also skip descendants of parents that block sub-row selection.
-	 */
-	enableSubRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
-	/**
-	 * Determines whether a row-selection handler event should select or
-	 * deselect the inclusive range from the most recent handler interaction.
-	 *
-	 * By default, events with `shiftKey` directly on the event or on
-	 * `event.nativeEvent` are treated as range-selection events.
-	 */
-	isRowRangeSelectionEvent?: (event: unknown) => boolean;
-	/**
-	 * Called with an updater when row selection state changes. Pair this with
-	 * `state.rowSelection` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-}
-interface Row_RowSelection {
-	/**
-	 * Checks whether this row can be selected alongside other rows.
-	 */
-	getCanMultiSelect: () => boolean;
-	/**
-	 * Checks whether this row can currently be selected.
-	 */
-	getCanSelect: () => boolean;
-	/**
-	 * Checks whether selecting this row should also select its subRows.
-	 */
-	getCanSelectSubRows: () => boolean;
-	/**
-	 * Checks whether all selectable descendants are selected.
-	 */
-	getIsAllSubRowsSelected: () => boolean;
-	/**
-	 * Checks whether this row id is selected.
-	 */
-	getIsSelected: () => boolean;
-	/**
-	 * Checks whether some selectable descendants are selected.
-	 */
-	getIsSomeSelected: () => boolean;
-	/**
-	 * Creates a checkbox-style handler that toggles this row's selected state.
-	 * Pass the original checkbox click event, or a framework event whose
-	 * `nativeEvent` is that click, so Shift range selection can detect the
-	 * modifier key.
-	 */
-	getToggleSelectedHandler: (opts?: ToggleSelectedOptions) => (event: unknown) => void;
-	/**
-	 * Selects/deselects the row.
-	 */
-	toggleSelected: (value?: boolean, opts?: ToggleSelectedOptions) => void;
-}
-interface Table_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * The most recent row interacted with through the row selection handler.
-	 *
-	 * @internal
-	 */
-	_lastSelectedRowId: string | null;
-	/**
-	 * Builds a selected-row model from rows after filtering.
-	 */
-	getFilteredSelectedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Builds a selected-row model from rows after grouping.
-	 */
-	getGroupedSelectedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Returns the ids of all selected rows.
-	 */
-	getSelectedRowIds: () => Array<string>;
-	/**
-	 * Checks whether every selectable row on the current page is selected.
-	 * Sub-rows whose ancestors block sub-row selection are ignored.
-	 */
-	getIsAllPageRowsSelected: () => boolean;
-	/**
-	 * Checks whether every selectable filtered row is selected.
-	 * Sub-rows whose ancestors block sub-row selection are ignored.
-	 */
-	getIsAllRowsSelected: () => boolean;
-	/**
-	 * Checks whether at least one selectable row on the current page is selected.
-	 */
-	getIsSomePageRowsSelected: () => boolean;
-	/**
-	 * Checks whether at least one row id is selected.
-	 */
-	getIsSomeRowsSelected: () => boolean;
-	/**
-	 * Returns the core row model of all rows before row selection has been applied.
-	 */
-	getPreSelectedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Builds a selected-row model from the core row model.
-	 */
-	getSelectedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Creates a checkbox-style handler that toggles all current-page rows.
-	 */
-	getToggleAllPageRowsSelectedHandler: () => (event: unknown) => void;
-	/**
-	 * Creates a checkbox-style handler that toggles all selectable rows.
-	 */
-	getToggleAllRowsSelectedHandler: () => (event: unknown) => void;
-	/**
-	 * Resets `rowSelection` to `initialState.rowSelection`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `{}`.
-	 */
-	resetRowSelection: (defaultState?: boolean) => void;
-	/**
-	 * Updates row selection state with a next map or updater function.
-	 */
-	setRowSelection: (updater: Updater<RowSelectionState>) => void;
-	/**
-	 * Selects/deselects all rows on the current page.
-	 */
-	toggleAllPageRowsSelected: (value?: boolean, opts?: {
-		deselectAll?: boolean;
-	}) => void;
-	/**
-	 * Selects/deselects all rows in the table.
-	 *
-	 * Deselecting keeps rows that cannot be selected in the selection map unless
-	 * `opts.deselectAll` is `true`.
-	 */
-	toggleAllRowsSelected: (value?: boolean, opts?: {
-		deselectAll?: boolean;
-	}) => void;
-}
-interface Row_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	_cellsCache?: WeakMap<Column<TFeatures, TData, unknown>, Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Internal cache used while resolving the current display order.
-	 *
-	 * This value may be stale until display order is recomputed. Use
-	 * `row.getDisplayIndex()` instead; it refreshes and validates the cached
-	 * position before returning it.
-	 *
-	 * @internal
-	 */
-	_displayIndexCache: number;
-	_uniqueValuesCache: Record<string, unknown>;
-	_valuesCache: Record<string, unknown>;
-	/**
-	 * The depth of the row (if nested or grouped) relative to the root row array.
-	 */
-	depth: number;
-	/**
-	 * The resolved unique identifier for the row resolved via the `options.getRowId` option. Defaults to the row's index (or relative index if it is a subRow).
-	 */
-	id: string;
-	/**
-	 * The index of the row within its parent array (or the root data array).
-	 */
-	index: number;
-	/**
-	 * The original row object provided to the table. If the row is a grouped row, the original row object will be the first original in the group.
-	 */
-	original: TData;
-	/**
-	 * An array of the original subRows as returned by the `options.getSubRows` option.
-	 */
-	originalSubRows?: ReadonlyArray<TData>;
-	/**
-	 * If nested, this row's parent row id.
-	 */
-	parentId?: string;
-	/**
-	 * An array of subRows for the row as returned and created by the `options.getSubRows` option.
-	 */
-	subRows: Array<Row<TFeatures, TData>>;
-	/**
-	 * Reference to the parent table instance.
-	 */
-	table: Table$1<TFeatures, TData>;
-}
-interface Row_Row<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
-	/**
-	 * Returns the zero-based index of the row in the current display order
-	 * before pagination, or `-1` if the row is not in that model. Use this for
-	 * display row-number columns instead of `row.index` or the internal
-	 * `_displayIndexCache` field.
-	 */
-	getDisplayIndex: () => number;
-	/**
-	 * Builds a lookup of this row's cells keyed by leaf column id.
-	 */
-	getAllCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Builds one cell for each leaf column, including cells for hidden columns.
-	 */
-	getAllCells: () => Array<Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Returns the leaf rows for the row, not including any parent rows.
-	 */
-	getLeafRows: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Returns the parent row for the row, if it exists.
-	 */
-	getParentRow: () => Row<TFeatures, TData> | undefined;
-	/**
-	 * Returns the parent rows for the row, all the way up to a root row.
-	 */
-	getParentRows: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Reads the values this row contributes to faceting/grouping for a column.
-	 */
-	getUniqueValues: <TValue>(columnId: string) => Array<TValue>;
-	/**
-	 * Reads this row's accessor value for a column id and caches the result.
-	 */
-	getValue: <TValue>(columnId: string) => TValue;
-	/**
-	 * Renders the value for the row in a given columnId the same as `getValue`, but will return the `renderFallbackValue` if no value is found.
-	 */
-	renderValue: <TValue>(columnId: string) => TValue;
-}
-interface TableOptions_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * This optional function is used to derive a unique ID for any given row. If not provided the row's index is used (nested rows join together with `.` using their grandparents' index e.g. `index.index.index`). If you need to identify individual rows that are originating from any server-side operations, it's suggested you use this function to return an ID that makes sense regardless of network IO/ambiguity e.g. a userId, taskId, database ID field, etc.
-	 * @example getRowId: row => row.userId
-	 */
-	getRowId?: (originalRow: TData, index: number, parent?: Row<TFeatures, TData>) => string;
-	/**
-	 * This optional function is used to access the sub rows for any given row. If you are using nested rows, you will need to use this function to return the sub rows object (or undefined) from the row.
-	 * @example getSubRows: row => row.subRows
-	 */
-	getSubRows?: (originalRow: TData, index: number) => undefined | ReadonlyArray<TData>;
-}
-interface Table_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Returns the deepest structural row depth in the core row model.
-	 * Root rows are depth `0`, direct sub-rows are depth `1`, and so on.
-	 */
-	getMaxSubRowDepth: () => number;
-	/**
-	 * Returns the rows in the current display order and assigns their display
-	 * indexes. When expanded rows bypass pagination, expanded descendants are
-	 * included in this order. This is the memoized source for
-	 * `row.getDisplayIndex()`.
-	 */
-	getRowsInDisplayOrder: () => Array<Row<TFeatures, TData>>;
-	/**
-	 * Returns the row id for a given row.
-	 */
-	getRowId: (_: TData, index: number, parent?: Row<TFeatures, TData>) => string;
-	/**
-	 * Returns the row with the given ID.
-	 */
-	getRow: (id: string, searchAll?: boolean) => Row<TFeatures, TData>;
-}
-interface CachedRowModels_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	columnFacetingFeature: CachedRowModel_Faceted<TFeatures, TData>;
-	columnFilteringFeature: CachedRowModel_Filtered<TFeatures, TData>;
-	rowExpandingFeature: CachedRowModel_Expanded<TFeatures, TData>;
-	columnGroupingFeature: CachedRowModel_Grouped<TFeatures, TData>;
-	rowPaginationFeature: CachedRowModel_Paginated<TFeatures, TData>;
-	rowSortingFeature: CachedRowModel_Sorted<TFeatures, TData>;
-}
-type CachedRowModels<TFeatures extends TableFeatures, TData extends RowData> = Partial<CachedRowModel_Core<TFeatures, TData>> & ExtractFeatureMapTypes<TFeatures, CachedRowModels_FeatureMap<TFeatures, TData>>;
-interface RowModelFns_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	rowAggregationFeature: RowModelFns_RowAggregation<TFeatures, TData>;
-	columnFilteringFeature: RowModelFns_ColumnFiltering<TFeatures, TData>;
-	rowSortingFeature: RowModelFns_RowSorting<TFeatures, TData>;
-}
-type RowModelFns<TFeatures extends TableFeatures, TData extends RowData> = Partial<ExtractFeatureMapTypes<TFeatures, RowModelFns_FeatureMap<TFeatures, TData>>>;
-interface TableState_FeatureMap {
-	cellSelectionFeature: TableState_CellSelection;
-	columnFilteringFeature: TableState_ColumnFiltering;
-	columnGroupingFeature: TableState_ColumnGrouping;
-	columnOrderingFeature: TableState_ColumnOrdering;
-	columnPinningFeature: TableState_ColumnPinning;
-	columnResizingFeature: TableState_ColumnResizing;
-	columnSizingFeature: TableState_ColumnSizing;
-	columnVisibilityFeature: TableState_ColumnVisibility;
-	globalFilteringFeature: TableState_GlobalFiltering;
-	rowExpandingFeature: TableState_RowExpanding;
-	rowPaginationFeature: TableState_RowPagination;
-	rowPinningFeature: TableState_RowPinning;
-	rowSelectionFeature: TableState_RowSelection;
-	rowSortingFeature: TableState_RowSorting;
-}
-type TableState<TFeatures extends TableFeatures> = ExtractFeatureMapTypes<TFeatures, TableState_FeatureMap>;
-interface TableState_All extends Partial<TableState_CellSelection & TableState_ColumnFiltering & TableState_ColumnGrouping & TableState_ColumnOrdering & TableState_ColumnPinning & TableState_ColumnResizing & TableState_ColumnSizing & TableState_ColumnVisibility & TableState_GlobalFiltering & TableState_RowExpanding & TableState_RowPagination & TableState_RowPinning & TableState_RowSelection & TableState_RowSorting> {
-}
-interface TableMeta<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-}
-type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$2<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
-	tableMeta: infer TMeta extends object;
-} ? TMeta : TableMeta<TFeatures, TData>;
-type BaseAtoms<TFeatures extends TableFeatures> = {
-	[K in keyof TableState<TFeatures>]-?: Atom<TableState<TFeatures>[K]>;
-};
-type Atoms<TFeatures extends TableFeatures> = {
-	[K in keyof TableState<TFeatures>]-?: ReadonlyAtom<TableState<TFeatures>[K]>;
-};
-type ExternalAtoms<TFeatures extends TableFeatures> = Partial<{
-	[K in keyof TableState<TFeatures>]: Atom<TableState<TFeatures>[K]>;
-}>;
-interface TableOptions_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * The feature modules registered on this table instance.
-	 *
-	 * Feature registration controls which state slices, options, and prototype
-	 * APIs are available. This object also carries the table's row model
-	 * factories (`sortedRowModel`, `filteredRowModel`, etc.), row model function
-	 * registries (`sortFns`, `filterFns`, `aggregationFns`), and type-only meta
-	 * slots (`tableMeta`, `columnMeta`).
-	 */
-	readonly features: TFeatures & ValidateFeatureSlots<TFeatures>;
-	/**
-	 * Optionally, provide your own external writable atoms for individual state slices.
-	 * When an atom is provided for a given slice, it takes precedence over `options.state[key]`
-	 * and the internal base atom for that slice. Feature state update APIs write through
-	 * the corresponding atom updater, so external atoms are the preferred v9 ownership
-	 * model for app-managed table state slices.
-	 */
-	readonly atoms?: ExternalAtoms<TFeatures>;
-	/**
-	 * Set this option to override any of the `autoReset...` feature options.
-	 */
-	readonly autoResetAll?: boolean;
-	/**
-	 * The data for the table to display. When the `data` option changes reference, the table will reprocess the data.
-	 */
-	readonly data: ReadonlyArray<TData>;
-	/**
-	 * Optional key used to identify this table instance.
-	 *
-	 * This is used by TanStack Table Devtools to register and select tables. It is
-	 * not required unless the table is passed to devtools.
-	 */
-	readonly key?: string;
-	/**
-	 * Optionally provide starting values for registered table state slices.
-	 * Feature reset APIs use this value by default, and many reset APIs accept
-	 * `true` to reset to that feature's blank/default state instead. Changing this
-	 * object later does not reset table state, so it does not need to be stable.
-	 */
-	readonly initialState?: Partial<TableState<TFeatures>>;
-	/**
-	 * This option is used to optionally implement the merging of table options.
-	 */
-	readonly mergeOptions?: (defaultOptions: TableOptions<TFeatures, TData>, options: Partial<TableOptions<TFeatures, TData>>) => TableOptions<TFeatures, TData>;
-	/**
-	 * You can pass any object to `options.meta` and access it anywhere the `table` is available via `table.options.meta`.
-	 *
-	 * Declare its type per-table via the `tableMeta` type-only slot on the
-	 * `features` option, or globally via declaration merging on `TableMeta`.
-	 */
-	readonly meta?: ExtractTableMeta<TFeatures, TData>;
-	/**
-	 * Optionally provide externally managed values for individual state slices.
-	 *
-	 * Pair each slice with its matching `on[State]Change` callback so table state
-	 * updates can be persisted outside the table. External atoms take precedence
-	 * over this option when both are provided for the same slice.
-	 */
-	readonly state?: Partial<TableState<TFeatures>>;
-}
-interface Table_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Table reactivity bindings for interacting with TanStack Store.
-	 */
-	readonly _reactivity: TableReactivityBindings;
-	/**
-	 * Cache of the `initCellInstanceData` functions for features that define one.
-	 */
-	_cellInstanceInitFns: Array<NonNullable<TableFeature["initCellInstanceData"]>>;
-	/**
-	 * Prototype cache for Cell objects - shared by all cells in this table
-	 */
-	_cellPrototype?: object;
-	/**
-	 * Cache of the `initColumnInstanceData` functions for features that define one.
-	 */
-	_columnInstanceInitFns: Array<NonNullable<TableFeature["initColumnInstanceData"]>>;
-	/**
-	 * Prototype cache for Column objects - shared by all columns in this table
-	 */
-	_columnPrototype?: object;
-	/**
-	 * The features that are enabled for the table.
-	 */
-	readonly _features: Partial<CoreFeatures> & TFeatures;
-	/**
-	 * Cache of the `initHeaderGroupInstanceData` functions for features that define one.
-	 */
-	_headerGroupInstanceInitFns: Array<NonNullable<TableFeature["initHeaderGroupInstanceData"]>>;
-	/**
-	 * Cache of the `initHeaderInstanceData` functions for features that define one.
-	 */
-	_headerInstanceInitFns: Array<NonNullable<TableFeature["initHeaderInstanceData"]>>;
-	/**
-	 * Prototype cache for Header objects - shared by all headers in this table
-	 */
-	_headerPrototype?: object;
-	/**
-	 * The row model processing functions that are used to process the data by features.
-	 */
-	readonly _rowModelFns: RowModelFns<TFeatures, TData>;
-	/**
-	 * The row models that are enabled for the table.
-	 */
-	readonly _rowModels: CachedRowModels<TFeatures, TData>;
-	/**
-	 * Prototype cache for Row objects - shared by all rows in this table
-	 */
-	_rowPrototype?: object;
-	/**
-	 * Cache of the `initRowInstanceData` functions for features that define one.
-	 */
-	_rowInstanceInitFns: Array<NonNullable<TableFeature["initRowInstanceData"]>>;
-	/**
-	 * The readonly derived atoms for each `TableState` slice. Each derives from
-	 * its corresponding `baseAtom` plus, optionally, a per-slice external atom or
-	 * external state value (precedence: external atom > external state > base atom).
-	 */
-	readonly atoms: Atoms<TFeatures>;
-	/**
-	 * The internal writable atoms for each `TableState` slice. This is the library's
-	 * single write surface — all state mutations from features land here.
-	 */
-	readonly baseAtoms: BaseAtoms<TFeatures>;
-	/**
-	 * This is the resolved initial state of the table.
-	 */
-	readonly initialState: TableState<TFeatures>;
-	/**
-	 * A read-only reference to the table's current options.
-	 */
-	readonly options: TableOptions<TFeatures, TData>;
-	/**
-	 * Writable atom for table options. Only created when `createOptionsStore` is
-	 * true on the active core reactivity bindings. Adapters that opt out keep
-	 * options as plain resolved data instead of backing them with an atom.
-	 */
-	readonly optionsStore?: Atom<TableOptions<TFeatures, TData>> | undefined;
-	/**
-	 * The readonly flat store for the table state. Derives from `table.atoms`
-	 * only; never reads external state directly.
-	 */
-	readonly store: ReadonlyStore<TableState<TFeatures>>;
-}
-interface Table_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
-	/**
-	 * Resets the table's internal base atoms to `table.initialState`.
-	 *
-	 * Prefer feature-specific reset APIs, such as `resetPagination`, when a state
-	 * slice may be owned by an external atom or needs that feature's blank/default
-	 * reset behavior. After resetting internal atoms, this also invokes feature
-	 * reset hooks for mutable, transient table-instance data.
-	 */
-	reset: () => void;
-	/**
-	 * Updates the table options by applying a value or updater to the current
-	 * resolved options and then merging them through `options.mergeOptions`.
-	 */
-	setOptions: (newOptions: Updater<TableOptions<TFeatures, TData>>) => void;
-}
-interface CellSpanIndex<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Column spans per render-order row position, indexed by render-order column
-	 * position. Holes are the common case: only rows that declared a column span
-	 * get an array. In a stored array, the spanning cell holds its span and the
-	 * cells it covers hold `0`; every other cell holds `1`.
-	 */
-	colSpans: Array<Int32Array | undefined>;
-	/**
-	 * Render-order index for every visible column id. Hidden columns are absent.
-	 */
-	columnIndexes: Record<string, number>;
-	/**
-	 * Row spans per column id, indexed by render-order row position. Only columns
-	 * that produced at least one run longer than one row appear here; a missing
-	 * column means every cell in it spans exactly one row. In a stored array, the
-	 * run's anchor row holds the run length and the rows it covers hold `0`.
-	 */
-	rowSpans: Record<string, Int32Array>;
-	/**
-	 * The exact ordered rows this index was built from, in render order:
-	 * top-pinned rows, then the (paginated) center rows, then bottom-pinned
-	 * rows. Cell reads compare against this to reject stale row positions.
-	 */
-	rows: ReadonlyArray<Row<TFeatures, TData>>;
-}
-interface RowSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	anchorRow: Row<TFeatures, TData>;
-	anchorValue: TValue;
-	column: Column<TFeatures, TData, TValue>;
-	previousRow: Row<TFeatures, TData>;
-	row: Row<TFeatures, TData>;
-	table: Table$1<TFeatures, TData>;
-	value: TValue;
-}
-interface ColSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	column: Column<TFeatures, TData, TValue>;
-	row: Row<TFeatures, TData>;
-	table: Table$1<TFeatures, TData>;
-}
-interface ColumnDef_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * Turns this column off for cell spanning even when the table allows it.
-	 * Defaults to `true`.
-	 */
-	enableCellSpanning?: boolean;
-	/**
-	 * Makes this column's cell span the given number of columns per row,
-	 * starting at itself and counted in the order columns actually render.
-	 *
-	 * Return `1` or less for no span. Larger values are clamped to the end of
-	 * the cell's pinned region, so a span can never cross the start-pinned,
-	 * center, or end-pinned boundary; pass `Infinity` for "the rest of my
-	 * region". Hidden columns are not counted.
-	 *
-	 * @example
-	 * ```ts
-	 * { accessorKey: 'label', spanColumns: ({ row }) => row.original.isSummary ? Infinity : 1 }
-	 * ```
-	 */
-	spanColumns?: number | ((context: ColSpanContext<TFeatures, TData, TValue>) => number);
-	/**
-	 * Merges adjacent rows in this column into a single vertically spanning
-	 * cell.
-	 *
-	 * `true` merges rows whose values for this column are the same value
-	 * (`Object.is`). Nullish values never merge under the default comparison.
-	 *
-	 * A predicate replaces the comparison entirely and decides whether `row`
-	 * joins the run anchored at `anchorRow`; it may merge nullish values. It is
-	 * called once per candidate row each time the span index rebuilds, and each
-	 * call allocates one context object, so keep it cheap.
-	 *
-	 * Spans are always recomputed from the rows that are actually rendered, so
-	 * sorting, filtering, and paging only change which rows are adjacent. Runs
-	 * never cross a page boundary, a pinned-row section boundary, a change of
-	 * position in the row tree, or a grouped row. Ignored while this column is
-	 * grouped.
-	 *
-	 * @example
-	 * ```ts
-	 * { accessorKey: 'department', spanRows: true }
-	 * ```
-	 */
-	spanRows?: boolean | ((context: RowSpanContext<TFeatures, TData, TValue>) => boolean);
-}
-interface TableOptions_CellSpanning {
-	/**
-	 * Allows cells to span rows or columns. When `false` every cell reports a
-	 * span of `1` and the span index is never built. Defaults to `true`.
-	 */
-	enableCellSpanning?: boolean;
-}
-interface Cell_CellSpanning {
-	/**
-	 * Number of columns this cell spans when rendered. `1` when it does not
-	 * span, and `0` when another cell's column span covers it.
-	 *
-	 * Never render a `0` as a `colSpan` attribute; skip the cell instead. See
-	 * `getIsCovered`.
-	 */
-	getColSpan: () => number;
-	/**
-	 * Whether another cell's span covers this cell. Skip rendering covered
-	 * cells; the cell that covers them carries the content and the span
-	 * attributes.
-	 */
-	getIsCovered: () => boolean;
-	/**
-	 * Number of rows this cell spans when rendered. `1` when it does not span,
-	 * and `0` when a spanning cell above it covers it, matching the
-	 * `header.rowSpan` convention.
-	 *
-	 * Never render a `0` as a `rowSpan` attribute: in HTML, `rowspan="0"` means
-	 * "span to the end of the row group", which merges the cell down the entire
-	 * table section. Skip the cell instead. See `getIsCovered`.
-	 */
-	getRowSpan: () => number;
-}
-interface Table_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * The memoized span index for the rows that are currently rendered.
-	 */
-	getCellSpanIndex: () => CellSpanIndex<TFeatures, TData>;
-}
-interface TableOptions_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
-}
-type DebugKeysFor<TFeatures extends TableFeatures> = {
-	[K in Exclude<keyof TFeatures & string, NonFeatureKeys> as `debug${Capitalize<K>}`]?: boolean;
-};
-type DebugOptions<TFeatures extends TableFeatures> = {
-	debugAll?: boolean;
-	debugCache?: boolean;
-	debugCells?: boolean;
-	debugColumns?: boolean;
-	debugHeaders?: boolean;
-	debugRows?: boolean;
-	debugTable?: boolean;
-} & DebugKeysFor<CoreFeatures & TFeatures>;
-interface TableOptions_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	cellSelectionFeature: TableOptions_CellSelection<TFeatures, TData>;
-	cellSpanningFeature: TableOptions_CellSpanning;
-	columnFilteringFeature: TableOptions_ColumnFiltering<TFeatures, TData>;
-	columnGroupingFeature: TableOptions_ColumnGrouping;
-	columnOrderingFeature: TableOptions_ColumnOrdering;
-	columnPinningFeature: TableOptions_ColumnPinning;
-	columnResizingFeature: TableOptions_ColumnResizing;
-	columnSizingFeature: TableOptions_ColumnSizing;
-	columnVisibilityFeature: TableOptions_ColumnVisibility;
-	globalFilteringFeature: TableOptions_GlobalFiltering<TFeatures, TData>;
-	rowAggregationFeature: TableOptions_RowAggregation;
-	rowExpandingFeature: TableOptions_RowExpanding<TFeatures, TData>;
-	rowPaginationFeature: TableOptions_RowPagination;
-	rowPinningFeature: TableOptions_RowPinning<TFeatures, TData>;
-	rowSelectionFeature: TableOptions_RowSelection<TFeatures, TData>;
-	rowSortingFeature: TableOptions_RowSorting;
-}
-type TableOptions_StockFeatureKeys = "cellSelectionFeature" | "cellSpanningFeature" | "columnFilteringFeature" | "columnGroupingFeature" | "columnOrderingFeature" | "columnPinningFeature" | "columnResizingFeature" | "columnSizingFeature" | "columnVisibilityFeature" | "globalFilteringFeature" | "rowAggregationFeature" | "rowExpandingFeature" | "rowPaginationFeature" | "rowPinningFeature" | "rowSelectionFeature" | "rowSortingFeature";
-type TableOptions_PluginFeatureMapTypes<TFeatures extends TableFeatures, TData extends RowData> = [
-	Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>
-] extends [
-	never
-] ? unknown : UnionToIntersection<TableOptions_FeatureMap<TFeatures, TData>[Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>]>;
-type TableOptions<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, TableOptions_FeatureMap<TFeatures, TData>> & DebugOptions<TFeatures>;
-type TableOptions_All<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & Partial<TableOptions_RowAggregation & TableOptions_CellSelection<TFeatures, TData> & TableOptions_CellSpanning & TableOptions_ColumnFiltering<TFeatures, TData> & TableOptions_ColumnGrouping & TableOptions_ColumnOrdering & TableOptions_ColumnPinning & TableOptions_ColumnResizing & TableOptions_ColumnSizing & TableOptions_ColumnVisibility & TableOptions_GlobalFiltering<TFeatures, TData> & TableOptions_RowExpanding<TFeatures, TData> & TableOptions_RowPagination & TableOptions_RowPinning<TFeatures, TData> & TableOptions_RowSelection<TFeatures, TData> & TableOptions_RowSorting & TableOptions_PluginFeatureMapTypes<TFeatures, TData>>;
-interface Table_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
-}
-interface Table_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	cellSelectionFeature: Table_CellSelection<TFeatures, TData>;
-	cellSpanningFeature: Table_CellSpanning<TFeatures, TData>;
-	columnFacetingFeature: Table_ColumnFaceting<TFeatures, TData>;
-	columnFilteringFeature: Table_ColumnFiltering;
-	columnGroupingFeature: Table_ColumnGrouping<TFeatures, TData>;
-	columnOrderingFeature: Table_ColumnOrdering<TFeatures, TData>;
-	columnPinningFeature: Table_ColumnPinning<TFeatures, TData>;
-	columnResizingFeature: Table_ColumnResizing;
-	columnSizingFeature: Table_ColumnSizing;
-	columnVisibilityFeature: Table_ColumnVisibility<TFeatures, TData>;
-	globalFilteringFeature: Table_GlobalFiltering<TFeatures, TData>;
-	rowAggregationFeature: Table_RowAggregation;
-	rowExpandingFeature: Table_RowExpanding<TFeatures, TData>;
-	rowPaginationFeature: Table_RowPagination<TFeatures, TData>;
-	rowPinningFeature: Table_RowPinning<TFeatures, TData>;
-	rowSelectionFeature: Table_RowSelection<TFeatures, TData>;
-	rowSortingFeature: Table_RowSorting<TFeatures, TData>;
-}
-type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
-//#region src/core/cells/coreCellsFeature.types.d.ts
-export interface CellContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	cell: Cell<TFeatures, TData, TValue>;
-	column: Column<TFeatures, TData, TValue>;
-	getValue: Getter<TValue>;
-	renderValue: Getter<TValue | null>;
-	row: Row<TFeatures, TData>;
-	table: Table$1<TFeatures, TData>;
-}
-interface Cell_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * The associated Column object for the cell.
-	 */
-	column: Column<TFeatures, TData, TValue>;
-	/**
-	 * The unique ID for the cell across the entire table.
-	 */
-	id: string;
-	/**
-	 * The associated Row object for the cell.
-	 */
-	row: Row<TFeatures, TData>;
-	/**
-	 * Reference to the parent table instance.
-	 */
-	table: Table$1<TFeatures, TData>;
-}
-interface Cell_Cell<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
-	/**
-	 * Returns the rendering context (or props) for cell-based components like cells and aggregated cells. Use these props with your framework's `flexRender` utility to render these using the template of your choice:
-	 */
-	getContext: () => CellContext<TFeatures, TData, TValue>;
-	/**
-	 * Returns the value for the cell, accessed via the associated column's accessor key or accessor function.
-	 */
-	getValue: CellContext<TFeatures, TData, TValue>["getValue"];
-	/**
-	 * Renders the value for a cell the same as `getValue`, but will return the `renderFallbackValue` if no value is found.
-	 */
-	renderValue: CellContext<TFeatures, TData, TValue>["renderValue"];
-}
-interface TableOptions_Cell {
-	/**
-	 * Value used when the desired value is not found in the data.
-	 */
-	renderFallbackValue?: any;
-}
-interface Cell_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
-}
-interface Cell_FeatureMap {
-	cellSelectionFeature: Cell_CellSelection;
-	cellSpanningFeature: Cell_CellSpanning;
-	columnGroupingFeature: Cell_ColumnGrouping;
-	rowAggregationFeature: Cell_RowAggregation;
-}
-type Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Cell_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Cell_FeatureMap>;
-interface CellSelectionRange {
-	anchorColumnId: string;
-	anchorRowId: string;
-	focusColumnId: string;
-	focusRowId: string;
-	/**
-	 * How this range changes the selection produced by the ranges before it.
-	 * Defaults to `include`.
-	 */
-	operation?: CellSelectionRangeOperation;
-}
-type CellSelectionRangeOperation = "include" | "exclude";
-type CellSelectionState = Array<CellSelectionRange>;
-interface TableState_CellSelection {
-	cellSelection: CellSelectionState;
-}
-interface CellSelectionBounds {
-	maxColumnIndex: number;
-	maxRowIndex: number;
-	minColumnIndex: number;
-	minRowIndex: number;
-}
-interface CellSelectionEdges {
-	bottom: boolean;
-	left: boolean;
-	right: boolean;
-	top: boolean;
-}
-type CellSelectionDirection = "up" | "down" | "left" | "right";
-type CellSelectionRangeMode = "replace" | "include" | "exclude";
-interface SelectCellRangeOptions {
-	/**
-	 * Whether to replace the selection, add the range, or subtract the range.
-	 * Defaults to `replace`.
-	 */
-	mode?: CellSelectionRangeMode;
-	/**
-	 * Whether the range should be added alongside existing ranges rather than
-	 * replacing them. Defaults to `false`.
-	 *
-	 * @deprecated Use `mode: 'include'` instead.
-	 */
-	additive?: boolean;
-}
-interface TableOptions_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Resets cell selection to `initialState.cellSelection` whenever `data`
-	 * changes. Defaults to `true`.
-	 *
-	 * Ranges are stored as row and column ids, so new data would otherwise leave
-	 * a selection pointing at rows that no longer exist, or silently re-select
-	 * cells if the new data happens to reuse ids. Set to `false` to keep ranges
-	 * across data changes, and note `autoResetAll` overrides this.
-	 */
-	autoResetCellSelection?: boolean;
-	/**
-	 * Enables inclusive cell range selection through shift-click and drag.
-	 * Defaults to `true`.
-	 */
-	enableCellRangeSelection?: boolean;
-	/**
-	 * Allows cells to be selected.
-	 *
-	 * Provide a predicate to decide per cell. A column def may also opt out with
-	 * its own `enableCellSelection: false`. Defaults to `true`.
-	 */
-	enableCellSelection?: boolean | ((cell: Cell<TFeatures, TData, any>) => boolean);
-	/**
-	 * Enables extending a selection by dragging across cells. Defaults to `true`.
-	 */
-	enableCellSelectionDrag?: boolean;
-	/**
-	 * Allows modifier interactions to add or subtract ranges. Defaults to `true`.
-	 */
-	enableMultiCellRangeSelection?: boolean;
-	/**
-	 * Determines whether a selection-start event should extend the active range
-	 * instead of replacing the selection.
-	 *
-	 * By default, events with `shiftKey` directly on the event or on
-	 * `event.nativeEvent` are treated as range-selection events.
-	 */
-	isCellRangeSelectionEvent?: (event: unknown) => boolean;
-	/**
-	 * Determines whether a selection-start event should add or subtract a new
-	 * rectangle. The operation depends on whether the starting cell is selected.
-	 *
-	 * By default, events with `ctrlKey` or `metaKey` directly on the event or on
-	 * `event.nativeEvent` are treated as multi-range events.
-	 */
-	isMultiCellRangeSelectionEvent?: (event: unknown) => boolean;
-	/**
-	 * Called with an updater when cell selection state changes. Pair this with
-	 * `state.cellSelection` when using external state; external atoms can own the
-	 * slice without this callback.
-	 *
-	 * A drag emits one change per cell crossed. Subscribe to
-	 * `table.atoms.cellSelection` for finer-grained reads when that matters.
-	 */
-	onCellSelectionChange?: OnChangeFn<CellSelectionState>;
-}
-interface ColumnDef_CellSelection {
-	/**
-	 * Allows cells in this column to be selected. Defaults to `true`.
-	 */
-	enableCellSelection?: boolean;
-}
-interface Cell_CellSelection {
-	/**
-	 * Checks whether this cell can currently be selected.
-	 */
-	getCanSelect: () => boolean;
-	/**
-	 * Checks whether this cell is the active cell, i.e. the anchor of the most
-	 * recent range.
-	 */
-	getIsFocused: () => boolean;
-	/**
-	 * Checks whether this cell falls inside the final positive selection.
-	 */
-	getIsSelected: () => boolean;
-	/**
-	 * Returns which sides of this cell sit on the outer boundary of the
-	 * selection, for rendering a spreadsheet-style outline without each cell
-	 * inspecting its neighbours.
-	 *
-	 * All sides are `false` when the cell is not selected.
-	 */
-	getSelectionEdges: () => CellSelectionEdges;
-	/**
-	 * Creates a handler that extends the active range to this cell while a drag
-	 * is in progress. Bind it to `mouseenter`.
-	 *
-	 * The handler no-ops unless a drag is open, and skips redundant writes when
-	 * the active range already focuses this cell.
-	 */
-	getSelectionExtendHandler: () => (event: unknown) => void;
-	/**
-	 * Creates a handler that begins a selection at this cell. Bind it to
-	 * `mousedown`.
-	 *
-	 * Pass the original mouse event, or a framework event whose `nativeEvent` is
-	 * that event, so modifier keys can be detected. The handler attaches its own
-	 * document-level `mouseup` listener so a drag released outside the table
-	 * still ends correctly; pass `contextDocument` when the table renders into
-	 * another document, such as an iframe or popout window.
-	 */
-	getSelectionStartHandler: (contextDocument?: Document) => (event: unknown) => void;
-	/**
-	 * Returns `0` for the focused cell and `-1` otherwise, for roving tabindex.
-	 */
-	getTabIndex: () => number;
-}
-interface Table_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Whether a drag selection is currently open.
-	 *
-	 * Non-reactive instance data rather than state: only the mouse handlers read
-	 * it, nothing renders from it, and keeping it out of the slice means a
-	 * selection persisted mid-drag cannot rehydrate into a stuck drag.
-	 *
-	 * @internal
-	 */
-	_isSelectingCells: boolean;
-	/**
-	 * Schedules a cell selection reset after `data` changes.
-	 *
-	 * Honors `autoResetAll` and `autoResetCellSelection`. Called by the core row
-	 * model; you rarely need to invoke it yourself.
-	 */
-	autoResetCellSelection: () => void;
-	/**
-	 * Extends the active range one step in a direction, keeping its anchor fixed.
-	 */
-	extendCellSelection: (direction: CellSelectionDirection) => void;
-	/**
-	 * Returns the final positive selection as disjoint, inclusive display-order
-	 * index rectangles after all include and exclude operations are applied.
-	 *
-	 * This is the memoized cache every per-cell read goes through. Ranges whose
-	 * corners no longer resolve are omitted.
-	 */
-	getCellSelectionBounds: () => Array<CellSelectionBounds>;
-	/**
-	 * Returns the merged-cell rectangles of the rendered rows in selection's
-	 * display-order index space, or an empty array when `cellSpanningFeature`
-	 * is not registered.
-	 *
-	 * Selection rectangles expand to fully enclose these, so a merged cell is
-	 * always entirely selected or entirely unselected.
-	 */
-	getCellSelectionMergeBounds: () => Array<CellSelectionBounds>;
-	/**
-	 * Returns the ids of all columns intersected by the selection.
-	 */
-	getCellSelectionColumnIds: () => Array<string>;
-	/**
-	 * Returns a column id to display-index map for the current column order.
-	 *
-	 * Registered so the lookup stays memoized even when `columnOrderingFeature`
-	 * is absent, since its `getColumnIndexes` static rebuilds on every call.
-	 *
-	 * @internal
-	 */
-	getCellSelectionColumnIndexes: () => Record<string, number>;
-	/**
-	 * Returns the ids of all rows intersected by the selection.
-	 */
-	getCellSelectionRowIds: () => Array<string>;
-	/**
-	 * Returns the active cell, i.e. the anchor of the most recent operation.
-	 * An exclusion's active cell is focused even though it is not selected.
-	 */
-	getFocusedCell: () => Cell<TFeatures, TData, any> | undefined;
-	/**
-	 * Returns the number of selected cells.
-	 *
-	 * Computed with rectangle arithmetic unless a per-cell
-	 * `enableCellSelection` predicate requires enumeration.
-	 */
-	getSelectedCellCount: () => number;
-	/**
-	 * Returns the unique ids of all selected cells, in row-major order.
-	 *
-	 * This expands the selection, so it costs one pass over the selected area.
-	 * It is memoized and never runs unless called.
-	 */
-	getSelectedCellIds: () => Array<string>;
-	/**
-	 * Returns each final positive selection region's values as a row-major grid.
-	 *
-	 * Indexed as `[regionIndex][rowIndex][columnIndex]`. Serializing this to
-	 * clipboard text is left to userland, since the delimiter, the null
-	 * representation, and any quoting rules are application decisions.
-	 */
-	getSelectedCellRangesData: () => Array<Array<Array<unknown>>>;
-	/**
-	 * Moves the selection one step in a direction, collapsing it to a single
-	 * cell. Columns that cannot be selected are skipped over.
-	 */
-	moveCellSelection: (direction: CellSelectionDirection) => void;
-	/**
-	 * Resets `cellSelection` to `initialState.cellSelection`.
-	 *
-	 * Pass `true` to ignore initial state and reset to an empty selection.
-	 */
-	resetCellSelection: (defaultState?: boolean) => void;
-	/**
-	 * Selects every selectable cell in the table as one range.
-	 */
-	selectAllCells: () => void;
-	/**
-	 * Selects a rectangle using the requested replace/include/exclude mode.
-	 */
-	selectCellRange: (range: CellSelectionRange, opts?: SelectCellRangeOptions) => void;
-	/**
-	 * Updates cell selection state with a next value or updater function.
-	 */
-	setCellSelection: (updater: Updater<CellSelectionState>) => void;
-	/**
-	 * Collapses the selection to a single cell at the given coordinates.
-	 */
-	setFocusedCell: (rowId: string, columnId: string) => void;
-}
-interface ColumnMeta<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-}
-type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$2<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
-	columnMeta: infer TMeta extends object;
-} ? TMeta : ColumnMeta<TFeatures, TData, TValue>;
-type AccessorFn<TData extends RowData, TValue extends CellData = CellData> = (originalRow: TData, index: number) => TValue;
-type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any);
-type StringOrTemplateHeader<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = string | ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
-interface StringHeaderIdentifier {
-	/**
-	 * Header text used both for rendering and as a fallback column id.
-	 */
-	header: string;
-	/**
-	 * Optional explicit id that overrides the header-derived id.
-	 */
-	id?: string;
-}
-interface IdIdentifier<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * Explicit stable column id.
-	 */
-	id: string;
-	/**
-	 * Header text or template used to render this column's header.
-	 */
-	header?: StringOrTemplateHeader<TFeatures, TData, TValue>;
-}
-type ColumnIdentifiers<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IdIdentifier<TFeatures, TData, TValue> | StringHeaderIdentifier;
-interface ColumnDefBase_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * Produces the values used by faceting/grouping for this column.
-	 *
-	 * When omitted, the normal accessor value is wrapped in a single-item array.
-	 */
-	getUniqueValues?: AccessorFn<TData, ReadonlyArray<unknown>>;
-	/**
-	 * Footer template rendered with header context.
-	 */
-	footer?: ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
-	/**
-	 * Cell template rendered with cell context.
-	 */
-	cell?: ColumnDefTemplate<CellContext<TFeatures, TData, TValue>>;
-	/**
-	 * User-defined metadata available on the resolved column definition.
-	 *
-	 * Declare its type per-table via the `columnMeta` type-only slot on the
-	 * `features` option, or globally via declaration merging on `ColumnMeta`.
-	 */
-	meta?: ExtractColumnMeta<TFeatures, TData, TValue>;
-}
-interface ColumnDef_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData> {
-	cellSelectionFeature: ColumnDef_CellSelection;
-	cellSpanningFeature: ColumnDef_CellSpanning<TFeatures, TData, TValue>;
-	columnFilteringFeature: ColumnDef_ColumnFiltering<TFeatures, TData>;
-	columnGroupingFeature: ColumnDef_ColumnGrouping<TFeatures, TData>;
-	columnPinningFeature: ColumnDef_ColumnPinning;
-	columnResizingFeature: ColumnDef_ColumnResizing;
-	columnSizingFeature: ColumnDef_ColumnSizing;
-	columnVisibilityFeature: ColumnDef_ColumnVisibility;
-	globalFilteringFeature: ColumnDef_GlobalFiltering;
-	rowAggregationFeature: ColumnDef_RowAggregation<TFeatures, TData, TValue>;
-	rowSortingFeature: ColumnDef_RowSorting<TFeatures, TData>;
-}
-type ColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, ColumnDef_FeatureMap<TFeatures, TData, TValue>>;
-type ColumnDefBase_All<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & Partial<ColumnDef_RowAggregation<TFeatures, TData, TValue> & ColumnDef_CellSelection & ColumnDef_CellSpanning<TFeatures, TData, TValue> & ColumnDef_ColumnVisibility & ColumnDef_ColumnPinning & ColumnDef_ColumnFiltering<TFeatures, TData> & ColumnDef_GlobalFiltering & ColumnDef_RowSorting<TFeatures, TData> & ColumnDef_ColumnGrouping<TFeatures, TData> & ColumnDef_ColumnSizing & ColumnDef_ColumnResizing>;
-type DisplayColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type GroupColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-	columns?: ReadonlyArray<ColumnDef<TFeatures, TData, unknown>>;
-};
-type GroupColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = GroupColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type AccessorFnColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-	accessorFn: AccessorFn<TData, TValue>;
-};
-type AccessorFnColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorFnColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
-type AccessorKeyColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
-	id?: string;
-	accessorKey: (string & {}) | keyof TData;
-};
-type AccessorKeyColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDefBase<TFeatures, TData, TValue> & Partial<ColumnIdentifiers<TFeatures, TData, TValue>>;
-type AccessorColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDef<TFeatures, TData, TValue> | AccessorFnColumnDef<TFeatures, TData, TValue>;
-export type ColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = DisplayColumnDef<TFeatures, TData, TValue> | GroupColumnDef<TFeatures, TData, TValue> | AccessorColumnDef<TFeatures, TData, TValue>;
-interface Column_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
-}
-interface Column_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	rowAggregationFeature: Column_RowAggregation<TFeatures, TData>;
-	columnFacetingFeature: Column_ColumnFaceting<TFeatures, TData>;
-	columnFilteringFeature: Column_ColumnFiltering<TFeatures, TData>;
-	columnGroupingFeature: Column_ColumnGrouping;
-	columnOrderingFeature: Column_ColumnOrdering;
-	columnPinningFeature: Column_ColumnPinning;
-	columnResizingFeature: Column_ColumnResizing;
-	columnSizingFeature: Column_ColumnSizing;
-	columnVisibilityFeature: Column_ColumnVisibility;
-	globalFilteringFeature: Column_GlobalFiltering;
-	rowSortingFeature: Column_RowSorting<TFeatures, TData>;
-}
-type Column<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = Column_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Column_FeatureMap<TFeatures, TData>>;
-interface Table_Headers<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Builds the visible header groups for the current column tree, visibility,
-	 * and pinning state.
-	 */
-	getHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Builds footer groups by reversing the current header group order.
-	 */
-	getFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Flattens every header from every header group, including parent and
-	 * placeholder headers.
-	 */
-	getFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Collects only leaf headers, excluding parent/group headers.
-	 */
-	getLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-}
-interface HeaderContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * An instance of a column.
-	 */
-	column: Column<TFeatures, TData, TValue>;
-	/**
-	 * An instance of a header.
-	 */
-	header: Header<TFeatures, TData, TValue>;
-	/**
-	 * The table instance.
-	 */
-	table: Table$1<TFeatures, TData>;
-}
-interface Header_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	/**
-	 * The col-span for the header.
-	 */
-	colSpan: number;
-	/**
-	 * The header's associated column object.
-	 */
-	column: Column<TFeatures, TData, TValue>;
-	/**
-	 * The depth of the header, zero-indexed.
-	 */
-	depth: number;
-	/**
-	 * The header's associated header group object.
-	 */
-	headerGroup: HeaderGroup<TFeatures, TData> | null;
-	/**
-	 * The unique identifier for the header.
-	 */
-	id: string;
-	/**
-	 * The index for the header within the header group.
-	 */
-	index: number;
-	/**
-	 * A boolean denoting if the header is a placeholder header. Placeholder
-	 * headers fill the rows above a shallow leaf column's real header so that
-	 * every header group row accounts for every visible column. Render them as
-	 * empty cells, or use `header.rowSpan` to merge each chain of placeholders
-	 * into one vertically spanning header cell.
-	 */
-	isPlaceholder: boolean;
-	/**
-	 * If the header is a placeholder header, this will be a unique header ID that does not conflict with any other headers across the table.
-	 */
-	placeholderId?: string;
-	/**
-	 * The number of header group rows the header should span when merging header
-	 * cells vertically. A leaf column that is shallower than the deepest leaf
-	 * column produces a chain of placeholder headers above its real header; the
-	 * placeholder at the top of the chain reports the chain's full span, and
-	 * every header it covers (including the real leaf header in the bottom row)
-	 * reports 0. To merge vertically, skip headers with a rowSpan of 0 and
-	 * render every other header with the `rowSpan` attribute and its column's
-	 * header content, even when it is a placeholder. Headers in even column
-	 * trees always report 1.
-	 */
-	rowSpan: number;
-	/**
-	 * The header's hierarchical sub/child headers. Will be empty if the header's associated column is a leaf-column.
-	 */
-	subHeaders: Array<Header<TFeatures, TData, TValue>>;
-	/**
-	 * Reference to the parent table instance.
-	 */
-	table: Table$1<TFeatures, TData>;
-}
-interface Header_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
-	/**
-	 * Returns the rendering context (or props) for column-based components like headers, footers and filters.
-	 */
-	getContext: () => HeaderContext<TFeatures, TData, TValue>;
-	/**
-	 * Returns the leaf headers hierarchically nested under this header.
-	 */
-	getLeafHeaders: () => Array<Header<TFeatures, TData, TValue>>;
-}
-interface HeaderGroup_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
-	depth: number;
-	headers: Array<Header<TFeatures, TData, TValue>>;
-	id: string;
-}
-interface HeaderGroup_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
-}
-interface HeaderGroup<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
-}
-type ColumnPinningPosition = false | "start" | "end";
-interface ColumnPinningState {
-	start: Array<string>;
-	end: Array<string>;
-}
-interface TableState_ColumnPinning {
-	columnPinning: ColumnPinningState;
-}
-interface TableOptions_ColumnPinning {
-	/**
-	 * Allows columns to be pinned into logical start and end regions.
-	 *
-	 * In LTR languages/layouts, start usually corresponds to left and end to
-	 * right. In RTL languages/layouts, start usually corresponds to right and end
-	 * to left.
-	 *
-	 * Defaults to `true`; column-level `enablePinning` can still opt individual
-	 * columns out.
-	 */
-	enableColumnPinning?: boolean;
-	/**
-	 * Called with an updater when column pinning state changes. Pair this with
-	 * `state.columnPinning` when using external state; external atoms can own the
-	 * slice without this callback.
-	 */
-	onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
-}
-interface ColumnDef_ColumnPinning {
-	/**
-	 * Allows this column's leaf columns to be pinned.
-	 *
-	 * Defaults to `true`; table-level `enableColumnPinning` must also allow
-	 * pinning.
-	 */
-	enablePinning?: boolean;
-}
-interface Column_ColumnPinning {
-	/**
-	 * Checks whether this column or any of its leaves can be pinned.
-	 */
-	getCanPin: () => boolean;
-	/**
-	 * Reads the column's logical pinned position: `'start'`, `'end'`, or `false`.
-	 */
-	getIsPinned: () => ColumnPinningPosition;
-	/**
-	 * Finds this column's index within its pinned region.
-	 */
-	getPinnedIndex: () => number;
-	/**
-	 * Pins this column's leaf columns to logical start or end, or unpins them
-	 * when `false` is passed.
-	 */
-	pin: (position: ColumnPinningPosition) => void;
-}
-interface Row_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Gets visible row cells whose columns are not pinned start or end.
-	 */
-	getCenterVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Gets visible row cells whose columns are pinned to logical start.
-	 */
-	getStartVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-	/**
-	 * Gets visible row cells whose columns are pinned to logical end.
-	 */
-	getEndVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
-}
-interface Table_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Orders items that each belong to a leaf column, such as visible leaf
-	 * columns or a row's visible cells: start-pinned items in pinning order, then
-	 * unpinned items in their given order, then end-pinned items in pinning
-	 * order. The core headers, row visible cells, and cell selection order
-	 * through it.
-	 *
-	 * `getItemsByColumnId` can return an existing lookup of the same items. It
-	 * is only read when something is pinned.
-	 *
-	 * @internal
-	 */
-	_orderByColumnPinning: <TItem>(items: Array<TItem>, getColumnId: (item: TItem) => string, getItemsByColumnId?: () => Record<string, TItem | undefined>) => Array<TItem>;
-	/**
-	 * Builds flat center-region headers for columns that are not pinned,
-	 * including parent headers.
-	 */
-	getCenterFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Builds footer groups for the center region of unpinned columns.
-	 */
-	getCenterFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Builds header groups for the center region of unpinned columns.
-	 */
-	getCenterHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Gets leaf columns that are not pinned start or end.
-	 */
-	getCenterLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Builds center-region leaf headers for columns that are not pinned.
-	 */
-	getCenterLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Lists visible leaf columns in the unpinned center region.
-	 */
-	getCenterVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Checks whether any columns are pinned, optionally limited to one side.
-	 */
-	getIsSomeColumnsPinned: (position?: ColumnPinningPosition) => boolean;
-	/**
-	 * Builds flat logical start-region headers for pinned columns, including parent
-	 * headers.
-	 */
-	getStartFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Builds footer groups for logical start-pinned columns.
-	 */
-	getStartFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Builds header groups for logical start-pinned columns.
-	 */
-	getStartHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Gets leaf columns pinned to the logical start region in pinning-state order.
-	 */
-	getStartLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Builds leaf headers for logical start-pinned columns.
-	 */
-	getStartLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Lists visible leaf columns in the logical start pinned region.
-	 */
-	getStartVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Builds flat logical end-region headers for pinned columns, including parent
-	 * headers.
-	 */
-	getEndFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Builds footer groups for logical end-pinned columns.
-	 */
-	getEndFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Builds header groups for logical end-pinned columns.
-	 */
-	getEndHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
-	/**
-	 * Gets leaf columns pinned to the logical end region in pinning-state order.
-	 */
-	getEndLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Builds leaf headers for logical end-pinned columns.
-	 */
-	getEndLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
-	/**
-	 * Lists visible leaf columns in the logical end pinned region.
-	 */
-	getEndVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Resets `columnPinning` to `initialState.columnPinning`.
-	 *
-	 * Pass `true` to ignore initial state and reset to empty start/end arrays.
-	 */
-	resetColumnPinning: (defaultState?: boolean) => void;
-	/**
-	 * Updates column pinning state with a next state or updater function.
-	 */
-	setColumnPinning: (updater: Updater<ColumnPinningState>) => void;
-	/**
-	 * Returns pinned leaf columns for the requested pinning region.
-	 */
-	getPinnedLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
-	/**
-	 * Lists visible leaf columns for the requested pinning region.
-	 */
-	getPinnedVisibleLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
-}
-interface Row_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_Row<TFeatures, TData> {
-}
-interface Row_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	rowAggregationFeature: Row_RowAggregation;
-	columnFilteringFeature: Row_ColumnFiltering<TFeatures, TData>;
-	columnGroupingFeature: Row_ColumnGrouping;
-	columnPinningFeature: Row_ColumnPinning<TFeatures, TData>;
-	columnVisibilityFeature: Row_ColumnVisibility<TFeatures, TData>;
-	rowExpandingFeature: Row_RowExpanding;
-	rowPinningFeature: Row_RowPinning;
-	rowSelectionFeature: Row_RowSelection;
-}
-type Row<TFeatures extends TableFeatures, TData extends RowData> = Row_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Row_FeatureMap<TFeatures, TData>>;
-type SortDirection = "asc" | "desc";
-interface ColumnSort {
-	desc: boolean;
-	id: string;
-}
-export type SortingState = Array<ColumnSort>;
-interface TableState_RowSorting {
-	sorting: SortingState;
-}
-interface RowModelFns_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	sortFns: Record<string, SortFn<TFeatures, TData>>;
-}
-interface SortFns {
-}
-interface SortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	(rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string): number;
-	/**
-	 * Normalizes each row's value before the two sides are compared. Only
-	 * honored by sorting functions built with `constructSortFn` (including all
-	 * built-in sorting functions).
-	 */
-	resolveDataValue?: TransformDataValueFn;
-}
-interface SortFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	sort: (dataValueA: any, dataValueB: any, rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string) => number;
-	resolveDataValue?: TransformDataValueFn;
-}
-interface CreatedSortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends SortFnDef<TFeatures, TData> {
-	<TRowFeatures extends TableFeatures, TRowData extends RowData>(rowA: Row<TRowFeatures, TRowData>, rowB: Row<TRowFeatures, TRowData>, columnId: string): number;
-}
-type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$2<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
-	sortFns: infer TSortFns extends object;
-} ? Extract<keyof TSortFns, string> : keyof SortFns;
-type SortFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractSortFnKeys<TFeatures> | SortFn<TFeatures, TData>;
-interface ColumnDef_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Enables/Disables multi-sorting for this column.
-	 */
-	enableMultiSort?: boolean;
-	/**
-	 * Enables/Disables sorting for this column.
-	 */
-	enableSorting?: boolean;
-	/**
-	 * Inverts the order of the sorting for this column. This is useful for values that have an inverted best/worst scale where lower numbers are better, e.g. a ranking (1st, 2nd, 3rd) or golf-like scoring
-	 */
-	invertSorting?: boolean;
-	/**
-	 * Set to `true` for sorting toggles on this column to start in the descending direction.
-	 */
-	sortDescFirst?: boolean;
-	/**
-	 * The sorting function to use with this column.
-	 * - A `string` referencing a built-in sorting function
-	 * - A custom sorting function
-	 */
-	sortFn?: SortFnOption<TFeatures, TData>;
-	/**
-	 * The priority of undefined values when sorting this column.
-	 * - `false`
-	 *   - Undefined values will be passed to the sorting function like any other value with no special handling; the sorting function is responsible for handling them
-	 * - `-1`
-	 *   - Undefined values will be sorted with higher priority (ascending) (if ascending, undefined will appear on the beginning of the list)
-	 * - `1`
-	 *   - Undefined values will be sorted with lower priority (descending) (if ascending, undefined will appear on the end of the list)
-	 * - `'first'`
-	 *   - Undefined values will be pushed to the beginning of the list regardless of sort direction
-	 * - `'last'`
-	 *   - Undefined values will be pushed to the end of the list regardless of sort direction
-	 */
-	sortUndefined?: false | -1 | 1 | "first" | "last";
-}
-interface Column_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Removes this column from the table's sorting state
-	 */
-	clearSorting: () => void;
-	/**
-	 * Returns a sort direction automatically inferred based on the columns values.
-	 */
-	getAutoSortDir: () => SortDirection;
-	/**
-	 * Returns a sorting function automatically inferred based on the columns values.
-	 */
-	getAutoSortFn: () => SortFn<TFeatures, TData>;
-	/**
-	 * Returns whether this column can be multi-sorted.
-	 */
-	getCanMultiSort: () => boolean;
-	/**
-	 * Returns whether this column can be sorted.
-	 */
-	getCanSort: () => boolean;
-	/**
-	 * Returns the first direction that should be used when sorting this column.
-	 */
-	getFirstSortDir: () => SortDirection;
-	/**
-	 * Reads this column's current sort direction, or `false` when unsorted.
-	 */
-	getIsSorted: () => false | SortDirection;
-	/**
-	 * Returns the next sorting order. Pass `multi` to resolve the order for a
-	 * multi-sort toggle, where `enableMultiRemove` governs whether the cycle can
-	 * remove the sort.
-	 */
-	getNextSortingOrder: (multi?: boolean) => SortDirection | false;
-	/**
-	 * Finds this column's position in the ordered sorting state.
-	 */
-	getSortIndex: () => number;
-	/**
-	 * Returns the resolved sorting function to be used for this column
-	 */
-	getSortFn: () => SortFn<TFeatures, TData>;
-	/**
-	 * Creates a header/control handler that toggles this column's sorting state.
-	 */
-	getToggleSortingHandler: () => undefined | ((event: unknown) => void);
-	/**
-	 * Toggles this column's sorting state. If `desc` is provided, it will force the sort direction to that value. If `isMulti` is provided, it will additively multi-sort the column (or toggle it if it is already sorted).
-	 */
-	toggleSorting: (desc?: boolean, isMulti?: boolean) => void;
-}
-interface TableOptions_RowSorting {
-	/**
-	 * Resets sorting to its initial state when the `data` option changes.
-	 *
-	 * This is disabled by default. `autoResetAll` overrides this option when it
-	 * is explicitly set.
-	 */
-	autoResetSorting?: boolean;
-	/**
-	 * Allows multi-sort toggles to remove a column from sorting state.
-	 */
-	enableMultiRemove?: boolean;
-	/**
-	 * Enables/Disables multi-sorting for the table.
-	 */
-	enableMultiSort?: boolean;
-	/**
-	 * Enables/Disables sorting for the table.
-	 */
-	enableSorting?: boolean;
-	/**
-	 * Enables/Disables the ability to remove sorting for the table.
-	 * - If `true` then changing sort order will cycle like: 'none' -> 'desc' -> 'asc' -> 'none' -> ...
-	 * - If `false` then changing sort order will cycle like: 'none' -> 'desc' -> 'asc' -> 'desc' -> 'asc' -> ...
-	 */
-	enableSortingRemoval?: boolean;
-	/**
-	 * Pass a custom function that will be used to determine if a multi-sort event should be triggered. It is passed the event from the sort toggle handler and should return `true` if the event should trigger a multi-sort.
-	 */
-	isMultiSortEvent?: (e: unknown) => boolean;
-	/**
-	 * Enables manual sorting for the table. If this is `true`, you will be expected to sort your data before it is passed to the table. This is useful if you are doing server-side sorting.
-	 */
-	manualSorting?: boolean;
-	/**
-	 * Set a maximum number of columns that can be multi-sorted.
-	 */
-	maxMultiSortColCount?: number;
-	/**
-	 * Called with an updater when sorting state changes. Pair this with
-	 * `state.sorting` when using external state; external atoms can own the slice
-	 * without this callback.
-	 */
-	onSortingChange?: OnChangeFn<SortingState>;
-	/**
-	 * If `true`, all sorts will default to descending as their first toggle state.
-	 */
-	sortDescFirst?: boolean;
-}
-interface Table_RowSorting<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
-	/**
-	 * Resets sorting after the table data changes when explicitly enabled.
-	 *
-	 * Honors `autoResetAll` and `autoResetSorting`; sorting is preserved by
-	 * default. Called by the core row model; you rarely need to invoke it
-	 * yourself.
-	 */
-	autoResetSorting: () => void;
-	/**
-	 * Resets `sorting` to `initialState.sorting`.
-	 *
-	 * Pass `true` to ignore initial state and reset to `[]`.
-	 */
-	resetSorting: (defaultState?: boolean) => void;
-	/**
-	 * Updates sorting state with a next ordered array or updater function.
-	 */
-	setSorting: (updater: Updater<SortingState>) => void;
-}
-interface Table_RowModels_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	/**
-	 * Reads the row model immediately before sorting.
-	 */
-	getPreSortedRowModel: () => RowModel<TFeatures, TData>;
-	/**
-	 * Resolves the row model after sorting has been applied.
-	 */
-	getSortedRowModel: () => RowModel<TFeatures, TData>;
-}
-interface CachedRowModel_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
-	sortedRowModel: () => RowModel<TFeatures, TData>;
-}
-declare const cellSelectionFeature: TableFeature;
-declare const cellSpanningFeature: TableFeature;
-declare const columnFacetingFeature: TableFeature;
-declare const rowAggregationFeature: TableFeature;
-declare const columnFilteringFeature: TableFeature;
-declare const columnGroupingFeature: TableFeature;
-declare const columnOrderingFeature: TableFeature;
-declare const columnPinningFeature: TableFeature;
-declare const columnResizingFeature: TableFeature;
-declare const columnSizingFeature: TableFeature;
-declare const columnVisibilityFeature: TableFeature;
-declare const globalFilteringFeature: TableFeature;
-declare const rowExpandingFeature: TableFeature;
-declare const rowPaginationFeature: TableFeature;
-declare const rowPinningFeature: TableFeature;
-declare const rowSelectionFeature: TableFeature;
-declare const rowSortingFeature: TableFeature;
-interface StockFeatures {
-	cellSelectionFeature: typeof cellSelectionFeature;
-	cellSpanningFeature: typeof cellSpanningFeature;
-	columnFacetingFeature: typeof columnFacetingFeature;
-	columnFilteringFeature: typeof columnFilteringFeature;
-	columnGroupingFeature: typeof columnGroupingFeature;
-	columnOrderingFeature: typeof columnOrderingFeature;
-	columnPinningFeature: typeof columnPinningFeature;
-	columnResizingFeature: typeof columnResizingFeature;
-	columnSizingFeature: typeof columnSizingFeature;
-	columnVisibilityFeature: typeof columnVisibilityFeature;
-	globalFilteringFeature: typeof globalFilteringFeature;
-	rowAggregationFeature: typeof rowAggregationFeature;
-	rowExpandingFeature: typeof rowExpandingFeature;
-	rowPaginationFeature: typeof rowPaginationFeature;
-	rowPinningFeature: typeof rowPinningFeature;
-	rowSelectionFeature: typeof rowSelectionFeature;
-	rowSortingFeature: typeof rowSortingFeature;
-}
-type IsAny$2<T> = 0 extends 1 & T ? true : false;
-type UnionToIntersectionOrEmpty<T> = [
-	T
-] extends [
-	never
-] ? {} : UnionToIntersection<T> & {};
-type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$2<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
-interface Plugins {
-}
-type NonFeatureKeys = "aggregationFns" | "columnMeta" | "coreRowModel" | "expandedRowModel" | "facetedMinMaxValues" | "facetedRowModel" | "facetedUniqueValues" | "filterFns" | "filterMeta" | "filteredRowModel" | "groupedRowModel" | "paginatedRowModel" | "sortFns" | "sortedRowModel" | "tableMeta";
-interface FeatureSlotPrereqs {
-	/**
-	 * Named aggregation functions require the independent aggregation feature.
-	 */
-	aggregationFns: "rowAggregationFeature";
-	/**
-	 * Column resizing builds on the column sizing state and APIs.
-	 */
-	columnResizingFeature: "columnSizingFeature";
-	/**
-	 * Expanded row-model factories require row expanding APIs and state.
-	 */
-	expandedRowModel: "rowExpandingFeature";
-	/**
-	 * Faceted min/max factories require column faceting APIs.
-	 */
-	facetedMinMaxValues: "columnFacetingFeature";
-	/**
-	 * Faceted row-model factories require column faceting APIs.
-	 */
-	facetedRowModel: "columnFacetingFeature";
-	/**
-	 * Faceted unique-value factories require column faceting APIs.
-	 */
-	facetedUniqueValues: "columnFacetingFeature";
-	/**
-	 * Filtered row-model factories require column filtering APIs and state.
-	 */
-	filteredRowModel: "columnFilteringFeature";
-	/**
-	 * Named filter functions are only meaningful when column filtering is enabled.
-	 */
-	filterFns: "columnFilteringFeature";
-	/**
-	 * Filter metadata types are only read and written by filtering features.
-	 */
-	filterMeta: "columnFilteringFeature";
-	/**
-	 * Global filtering builds on column filtering state and filter functions.
-	 */
-	globalFilteringFeature: "columnFilteringFeature";
-	/**
-	 * Grouped row-model factories require column grouping APIs and state.
-	 */
-	groupedRowModel: "columnGroupingFeature";
-	/**
-	 * Paginated row-model factories require row pagination APIs and state.
-	 */
-	paginatedRowModel: "rowPaginationFeature";
-	/**
-	 * Sorted row-model factories require row sorting APIs and state.
-	 */
-	sortedRowModel: "rowSortingFeature";
-	/**
-	 * Named sorting functions are only meaningful when row sorting is enabled.
-	 */
-	sortFns: "rowSortingFeature";
-}
-type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$2<TFeatures> extends true ? {} : {
-	[K in keyof TFeatures as K extends keyof FeatureSlotPrereqs ? K : never]: K extends keyof FeatureSlotPrereqs ? [
-		Extract<FeatureSlotPrereqs[K], keyof TFeatures>
-	] extends [
-		never
-	] ? `Error: '${K & string}' requires '${FeatureSlotPrereqs[K] & string}' to be included in this table's features.` : TFeatures[K] : never;
-};
-interface TableFeatures extends Partial<CoreFeatures>, Partial<StockFeatures>, Partial<Plugins> {
-	/**
-	 * Registry of aggregation functions available to this table by name.
-	 *
-	 * Keys registered here become the valid string values for `aggregationFn` on
-	 * column definitions, with full inference. Import the built-in aggregation
-	 * functions you use individually and register them by their conventional
-	 * names: `aggregationFns: { sum: aggregationFn_sum, myCustomAggregationFn }`.
-	 * Spreading the exported `aggregationFns` registry also works, but puts
-	 * every built-in aggregation function in your bundle.
-	 */
-	aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
-	/**
-	 * Type-only slot for declaring the type of `columnDef.meta` for all columns
-	 * of this table.
-	 *
-	 * Pass a phantom value: `columnMeta: {} as MyColumnMeta`. The value itself is
-	 * ignored and stripped from the table's registered features at runtime — only
-	 * its type is used, inferred wherever `TFeatures` flows.
-	 *
-	 * When omitted, the global declaration-merged `ColumnMeta` interface applies.
-	 */
-	columnMeta?: object;
-	/**
-	 * Factory for the table's core (unmodified) row model. Defaults to the
-	 * built-in `createCoreRowModel()` when omitted.
-	 */
-	coreRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Factory for the client-side expanded row model. Pass the exported
-	 * `createExpandedRowModel()` or implement your own. Not needed for
-	 * server-side expansion.
-	 */
-	expandedRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Factory for per-column faceted min/max values. Pass the exported
-	 * `createFacetedMinMaxValues()` or implement your own. Not needed for
-	 * server-side faceting.
-	 */
-	facetedMinMaxValues?: (table: any, columnId: string) => () => [
-		number,
-		number
-	] | undefined;
-	/**
-	 * Factory for the per-column faceted row model. Pass the exported
-	 * `createFacetedRowModel()` or implement your own. Not needed for
-	 * server-side faceting.
-	 */
-	facetedRowModel?: (table: any, columnId: string) => () => RowModel<any, any>;
-	/**
-	 * Factory for per-column faceted unique values. Pass the exported
-	 * `createFacetedUniqueValues()` or implement your own. Not needed for
-	 * server-side faceting.
-	 */
-	facetedUniqueValues?: (table: any, columnId: string) => () => Map<any, number>;
-	/**
-	 * Factory for the client-side filtered row model. Pass the exported
-	 * `createFilteredRowModel()` or implement your own. Not needed for
-	 * server-side filtering.
-	 */
-	filteredRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Registry of filter functions available to this table by name.
-	 *
-	 * Keys registered here become the valid string values for `filterFn` on
-	 * column definitions and the `globalFilterFn` option, with full inference.
-	 * Import the built-in filter functions you use individually and register
-	 * them by their conventional names:
-	 * `filterFns: { includesString: filterFn_includesString, myCustomFilterFn }`.
-	 * Spreading the exported `filterFns` registry also works, but puts every
-	 * built-in filter function in your bundle.
-	 */
-	filterFns?: Record<string, FilterFn<any, any>>;
-	/**
-	 * Type-only slot for declaring the type of the filter meta that filter
-	 * functions attach to rows via `addMeta` and that is read back from
-	 * `row.columnFiltersMeta`.
-	 *
-	 * Pass a phantom value: `filterMeta: {} as MyFilterMeta` (or
-	 * `metaHelper<MyFilterMeta>()`). The value itself is ignored and stripped
-	 * from the table's registered features at runtime; only its type is used.
-	 *
-	 * When omitted, the global declaration-merged `FilterMeta` interface applies.
-	 */
-	filterMeta?: object;
-	/**
-	 * Factory for the client-side grouped row model. Pass the exported
-	 * `createGroupedRowModel()` or implement your own. Not needed for
-	 * server-side grouping.
-	 */
-	groupedRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Factory for the client-side paginated row model. Pass the exported
-	 * `createPaginatedRowModel()` or implement your own. Not needed for
-	 * server-side pagination.
-	 */
-	paginatedRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Factory for the client-side sorted row model. Pass the exported
-	 * `createSortedRowModel()` or implement your own. Not needed for
-	 * server-side sorting.
-	 */
-	sortedRowModel?: (table: any) => () => RowModel<any, any>;
-	/**
-	 * Registry of sorting functions available to this table by name.
-	 *
-	 * Keys registered here become the valid string values for `sortFn` on column
-	 * definitions, with full inference. Import the built-in sorting functions
-	 * you use individually and register them by their conventional names:
-	 * `sortFns: { alphanumeric: sortFn_alphanumeric, myCustomSortFn }`. Spreading
-	 * the exported `sortFns` registry also works, but puts every built-in
-	 * sorting function in your bundle.
-	 */
-	sortFns?: Record<string, SortFn<any, any>>;
-	/**
-	 * Type-only slot for declaring the type of this table's `options.meta`.
-	 *
-	 * Pass a phantom value: `tableMeta: {} as MyTableMeta`. The value itself is
-	 * ignored and stripped from the table's registered features at runtime — only
-	 * its type is used, inferred wherever `TFeatures` flows.
-	 *
-	 * When omitted, the global declaration-merged `TableMeta` interface applies.
-	 */
-	tableMeta?: object;
-}
-interface TableFeature {
-	/**
-	 * Adds feature methods to the shared cell prototype for a table.
-	 *
-	 * This runs lazily the first time a cell is constructed for a table. Methods
-	 * assigned here are shared by every cell instance created by that table, so
-	 * this hook should be used for APIs and memoized methods rather than
-	 * per-cell mutable data.
-	 */
-	assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Adds feature methods to the shared column prototype for a table.
-	 *
-	 * This runs lazily the first time a column is constructed for a table.
-	 * Methods assigned here are shared by every column instance created by that
-	 * table, so this hook should be used for APIs and memoized methods rather
-	 * than per-column mutable data.
-	 */
-	assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Adds feature methods to the shared header prototype for a table.
-	 *
-	 * This runs lazily the first time a header is constructed for a table.
-	 * Methods assigned here are shared by every header instance created by that
-	 * table, so this hook should be used for APIs and memoized methods rather
-	 * than per-header mutable data.
-	 */
-	assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Adds feature methods to the shared row prototype for a table.
-	 *
-	 * This runs lazily the first time a row is constructed for a table. Methods
-	 * assigned here are shared by every row instance created by that table, so
-	 * this hook should be used for APIs and memoized methods rather than per-row
-	 * mutable data.
-	 */
-	assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Adds feature APIs directly to the table instance.
-	 *
-	 * The table is a singleton, unlike rows, columns, headers, and cells, so
-	 * table APIs are assigned directly instead of through a shared prototype.
-	 * This hook is exclusively for assigning table methods. It runs after
-	 * options, state atoms, and the store have been created and after every
-	 * feature's `initTableInstanceData` hook has completed.
-	 */
-	constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Returns default column definition options contributed by this feature.
-	 *
-	 * These defaults are merged into the table's default column definition before
-	 * `options.defaultColumn` and before each user-supplied column definition is
-	 * resolved, so users can override values supplied here.
-	 */
-	getDefaultColumnDef?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>() => ColumnDefBase_All<TFeatures, TData, TValue>;
-	/**
-	 * Returns default table options contributed by this feature.
-	 *
-	 * This runs while table options are being resolved. Use it for option
-	 * defaults such as feature enablement flags and default state-updater
-	 * callbacks. User-supplied table options take precedence over values returned
-	 * here.
-	 */
-	getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
-	/**
-	 * Returns this feature's initial table state.
-	 *
-	 * The incoming `initialState` contains state accumulated from earlier
-	 * features and user-provided initial state. Return a complete state object
-	 * for this feature, preserving `initialState` so user-provided values can
-	 * override feature defaults.
-	 */
-	getInitialState?: (initialState: Partial<TableState_All>) => TableState_All;
-	/**
-	 * Initializes mutable, non-reactive data owned by this feature on the table
-	 * instance.
-	 *
-	 * This runs once during table construction after options, state atoms, and
-	 * the store are available. Features are processed in a single pass in
-	 * registration order, with each feature's instance data initialized just
-	 * before its own `constructTableAPIs` hook, so this hook may rely on data
-	 * and APIs of features registered earlier. Use `constructTableAPIs`
-	 * exclusively for assigning table methods. Table resets do not rerun this
-	 * hook; use `resetTableInstanceData` to clear transient instance data
-	 * instead.
-	 */
-	initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-	/**
-	 * Initializes instance-specific data on each cell.
-	 *
-	 * This runs for every constructed cell after core cell fields such as `id`,
-	 * `column`, and `row` have been assigned. Cells are constructed lazily on
-	 * first access per row/column pair and cached, so this runs once per cell
-	 * instance. Use this for per-cell mutable data, caches, or annotations.
-	 * Shared methods should be assigned via `assignCellPrototype` instead.
-	 */
-	initCellInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(cell: Cell<TFeatures, TData, TValue>) => void;
-	/**
-	 * Initializes instance-specific data on each column.
-	 *
-	 * This runs for every constructed column after core column fields such as
-	 * `id`, `depth`, `parent`, `columnDef`, and `columns` have been assigned.
-	 * Use this for per-column mutable data, caches, or annotations. Shared
-	 * methods should be assigned via `assignColumnPrototype` instead.
-	 */
-	initColumnInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => void;
-	/**
-	 * Initializes instance-specific data on each header group.
-	 *
-	 * This runs for every constructed header group after `depth`, `id`, and the
-	 * fully populated `headers` array have been assigned. Header groups have no
-	 * shared prototype, so this is their only per-instance extension point.
-	 * Header groups are reconstructed whenever they recompute (e.g. column
-	 * visibility, order, or pinning changes), so this reruns on every rebuild.
-	 */
-	initHeaderGroupInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(headerGroup: HeaderGroup<TFeatures, TData>) => void;
-	/**
-	 * Initializes instance-specific data on each header.
-	 *
-	 * This runs for every constructed header after core header fields such as
-	 * `id`, `column`, `depth`, `index`, and `isPlaceholder` have been assigned,
-	 * but before `subHeaders` are populated and before `headerGroup` is linked.
-	 * Headers are reconstructed on every header group rebuild, so this reruns
-	 * on every rebuild. Use this for per-header mutable data, caches, or
-	 * annotations. Shared methods should be assigned via `assignHeaderPrototype`
-	 * instead.
-	 */
-	initHeaderInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(header: Header<TFeatures, TData, TValue>) => void;
-	/**
-	 * Initializes instance-specific data on each row.
-	 *
-	 * This runs for every constructed row after core row fields such as `id`,
-	 * `index`, `depth`, `original`, `parentId`, and `subRows` have been assigned.
-	 * Use this for per-row mutable data, caches, or annotations. Shared methods
-	 * should be assigned via `assignRowPrototype` instead.
-	 */
-	initRowInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(row: Row<TFeatures, TData>) => void;
-	/**
-	 * Resets mutable, non-reactive table-instance data owned by this feature.
-	 *
-	 * This runs after internally owned state atoms have been restored to
-	 * `table.initialState` by `table.reset()`. It is intended for transient
-	 * feature data, not table state slices or externally controlled state.
-	 */
-	resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
-}
-declare const coreCellsFeature: TableFeature;
-type FlexRenderProps<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = {
-	cell: Cell<TFeatures, TData, TValue>;
-	header?: never;
-	footer?: never;
-} | {
-	header: Header<TFeatures, TData, TValue>;
-	cell?: never;
-	footer?: never;
-} | {
-	footer: Header<TFeatures, TData, TValue>;
-	cell?: never;
-	header?: never;
-};
-type SubscribeSource<TValue> = Atom<TValue> | ReadonlyAtom<TValue> | Store$1<TValue> | ReadonlyStore<TValue>;
-type SubscribePropsWithStore<TFeatures extends TableFeatures, TSelected> = {
-	source: SubscribeSource<TableState<TFeatures>>;
-	/**
-	 * Select from full table state. Re-renders when the selected value changes
-	 * (shallow compare).
-	 *
-	 * Required in store mode so you never accidentally subscribe to the whole
-	 * store without an explicit projection.
-	 */
-	selector: (state: TableState<TFeatures>) => TSelected;
-	children: ((state: TSelected) => React$1.ReactNode) | React$1.ReactNode;
-};
-type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$1<TFeatures, TData>, "store"> & {
-	/**
-	 * @deprecated Prefer `table.state` for render reads,
-	 * `table.atoms.<slice>.get()` for slice snapshots, or
-	 * `table.Subscribe` / `useSelector(table.store, selector)` for explicit
-	 * subscriptions. `table.store.state` is a current-value snapshot and is easy
-	 * to misuse in render code.
-	 */
-	readonly store: Table$1<TFeatures, TData>["store"];
-	/**
-	 * A React HOC (Higher Order Component) that allows you to subscribe to the table state.
-	 *
-	 * This is useful for opting into state re-renders for specific parts of the table state.
-	 *
-	 * Pass `source` to subscribe to a single atom or store (e.g. `table.atoms.rowSelection`
-	 * or `table.optionsStore`) instead of the full `table.store`.
-	 *
-	 * @example
-	 * <table.Subscribe selector={(state) => ({ rowSelection: state.rowSelection })}>
-	 *   {({ rowSelection }) => (
-	 *     <tr key={row.id}>...</tr>
-	 *   )}
-	 * </table.Subscribe>
-	 *
-	 * @example
-	 * <table.Subscribe source={table.atoms.rowSelection}>
-	 *   {(rowSelection) => <div>...</div>}
-	 * </table.Subscribe>
-	 *
-	 * @example
-	 * <table.Subscribe source={table.atoms.rowSelection} selector={(s) => s?.[row.id]}>
-	 *   {() => <tr key={row.id}>...</tr>}
-	 * </table.Subscribe>
-	 */
-	/**
-	 * Overloads (not a single union) so `selector` callbacks get correct contextual
-	 * types in JSX; a union of two `selector` signatures degrades to implicit `any`.
-	 *
-	 * Source **without** `selector` is a separate overload so children receive `TSourceValue`
-	 * (identity projection). If `selector` were optional on one overload, `TSubSelected`
-	 * would default to `unknown` instead of inferring from the source.
-	 *
-	 * The **source** overloads are listed first so `TSourceValue` is inferred from `source`.
-	 */
-	Subscribe: {
-		<TSourceValue>(props: {
-			source: SubscribeSource<TSourceValue>;
-			selector?: undefined;
-			children: ((state: TSourceValue) => React$1.ReactNode) | React$1.ReactNode;
-		}): ReturnType<React$1.FunctionComponent>;
-		<TSourceValue, TSubSelected>(props: {
-			source: SubscribeSource<TSourceValue>;
-			selector: (state: TSourceValue) => TSubSelected;
-			children: ((state: TSubSelected) => React$1.ReactNode) | React$1.ReactNode;
-		}): ReturnType<React$1.FunctionComponent>;
-		<TSubSelected>(props: Omit<SubscribePropsWithStore<TFeatures, TSubSelected>, "source">): ReturnType<React$1.FunctionComponent>;
-	};
-	/**
-	 * A React component that renders headers, cells, or footers with custom markup.
-	 * Use this utility component instead of manually calling flexRender.
-	 *
-	 * @example
-	 * ```tsx
-	 * <table.FlexRender cell={cell} />
-	 * <table.FlexRender header={header} />
-	 * <table.FlexRender footer={footer} />
-	 * ```
-	 *
-	 * This replaces calling `flexRender` directly like this:
-	 * ```tsx
-	 * flexRender(cell.column.columnDef.cell, cell.getContext())
-	 * flexRender(header.column.columnDef.header, header.getContext())
-	 * flexRender(footer.column.columnDef.footer, footer.getContext())
-	 * ```
-	 */
-	FlexRender: <TValue extends CellData = CellData>(props: FlexRenderProps<TFeatures, TData, TValue>) => React$1.ReactNode;
-	/**
-	 * The selected state of the table. This state may not match the structure of
-	 * the full table state because it is selected by the selector function that
-	 * you pass as the 2nd argument to `useTable`.
-	 *
-	 * @example
-	 * const table = useTable(options, (state) => ({ globalFilter: state.globalFilter })) // only globalFilter is part of the selected state
-	 *
-	 * console.log(table.state.globalFilter)
-	 */
-	readonly state: Readonly<TSelected>;
-};
-/**
- * Creates a React table instance backed by TanStack Store atoms.
- *
- * The optional selector projects from `table.store`; the selected value is
- * exposed on `table.state` and compared shallowly for React re-renders. Omit
- * the selector to subscribe to every registered table state slice, or pass a
- * narrower selector and use `table.Subscribe` lower in the tree for targeted
- * subscriptions.
- *
- * @example
- * ```tsx
- * const table = useTable(
- *   {
- *     features,
- *     columns,
- *     data,
- *   },
- *   (state) => ({ pagination: state.pagination }),
- * )
- *
- * table.state.pagination
- * ```
- */
-export declare function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
-interface DataGridColumnCellEdit<TData> {
-	/**
-	 * Set false for a column that formats clipboard output but is never
-	 * written; a function decides per row, so locked rows (archived, another
-	 * user's, a totals row) reject like any read-only cell. Defaults to true.
-	 */
-	editable?: boolean | ((row: TData) => boolean);
-	/**
-	 * Clipboard or fill string to typed value. Return undefined to reject the
-	 * cell into `rejected`. Without it the raw string passes through unchanged -
-	 * a deliberate non-coercion, so a number column receives strings only when
-	 * the consumer chose not to parse.
-	 */
-	parse?: (raw: string, row: TData) => unknown;
-	/** Typed value to clipboard string. Fallback: String(value ?? ""). */
-	format?: (value: unknown, row: TData) => string;
-	/** Value dispatched by Delete/Backspace and cut. Defaults to null. */
-	clearValue?: unknown;
-	/**
-	 * Opt into the grid's built-in free-text editor: an overlay input (or
-	 * auto-growing textarea) flush over the focused cell, opened by Enter, F2,
-	 * typing, or double-click, committing through `onCellsChange` as source
-	 * `"edit"` with `parse` applied. Columns without it stay consumer-edited
-	 * via `onCellEditRequest` or their own cell renderers.
-	 */
-	control?: "text" | "textarea";
-}
-interface DataGridColumnMeta<TData> {
-	headerTitle?: string;
-	headerClassName?: string;
-	cellClassName?: string;
-	skeleton?: React$1.ReactNode;
-	expandedContent?: (row: TData) => React$1.ReactNode;
-	autoSize?: boolean;
-	/** Header spans this many leaves: this one and its next adjacent siblings. */
-	headerColSpan?: number;
-	cellEdit?: DataGridColumnCellEdit<TData>;
-	/**
-	 * Under `columnsResizable`, this column absorbs the free space the filler
-	 * strip would otherwise hold, so the grid always reads full-width and the
-	 * built-in editor covers the whole cell. One column per grid; while free
-	 * space remains, manual resizing of this column is visually a no-op (the
-	 * absorbed space compensates), the flex-column trade-off.
-	 */
-	fillWidth?: boolean;
-}
-declare const dataGridFeatures: {
-	columnVisibilityFeature: TableFeature;
-	columnOrderingFeature: TableFeature;
-	columnPinningFeature: TableFeature;
-	columnSizingFeature: TableFeature;
-	columnResizingFeature: TableFeature;
-	columnFilteringFeature: TableFeature;
-	columnFacetingFeature: TableFeature;
-	globalFilteringFeature: TableFeature;
-	rowSortingFeature: TableFeature;
-	rowPaginationFeature: TableFeature;
-	rowSelectionFeature: TableFeature;
-	rowExpandingFeature: TableFeature;
-	rowPinningFeature: TableFeature;
-	cellSelectionFeature: TableFeature;
-	sortedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-	filteredRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-	paginatedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-	expandedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
-	facetedRowModel: (table: Table$1<any, any>, columnId: string) => () => RowModel<any, any>;
-	facetedUniqueValues: (table: Table$1<TableFeatures, any>, columnId: string) => () => Map<any, number>;
-	sortFns: {
-		alphanumeric: CreatedSortFn<any, any>;
-		alphanumericCaseSensitive: CreatedSortFn<any, any>;
-		basic: CreatedSortFn<any, any>;
-		datetime: CreatedSortFn<any, any>;
-		text: CreatedSortFn<any, any>;
-		textCaseSensitive: CreatedSortFn<any, any>;
-	};
-	columnMeta: DataGridColumnMeta<any>;
-};
-type DataGridFeatures = typeof dataGridFeatures;
-/**
- * The grid's internal view of the table.
- *
- * `TFeatures` is invariant in v9 and an unresolved generic one collapses to a
- * union that includes the bare core arm, so no generic signature can call
- * `getVisibleCells()`, `getStartVisibleLeafColumns()` and friends. The public
- * components stay generic so consumers can pass any bundle they like; the
- * table is widened to this concrete type exactly once, on the way into
- * context, and every internal component reads it from there.
- */
-export type DataGridTableInstance<TData extends object> = ReactTable<DataGridFeatures, TData>;
-type DataGridCellsChangeSource = "paste" | "cut" | "clear" | "fill" | "edit";
-interface DataGridCellChange<TData> {
-	rowId: string;
-	columnId: string;
-	/** The consumer's row object, so immutable write-back needs no second lookup. */
-	row: TData;
-	/** Accessor value at dispatch time; enables consumer-side undo stacks. */
-	previousValue: unknown;
-	/** Typed value produced by `meta.cellEdit.parse`, or `clearValue` for clear/cut. */
-	value: unknown;
-}
-interface DataGridCopyDetails {
-	/** The TSV text that reached the clipboard. */
-	text: string;
-	/** The same content as a row-major grid of formatted fields. */
-	grid: string[][];
-	/** True when the write came from a cut, which clears the region next. */
-	cut: boolean;
-}
-interface DataGridCellSelectionBound {
-	minRowIndex: number;
-	maxRowIndex: number;
-	minColumnIndex: number;
-	maxColumnIndex: number;
-}
-interface DataGridCellSelectionSnapshot {
-	/** The virtually focused cell, the active range's anchor. Null when clear. */
-	focused: {
-		rowId: string;
-		columnId: string;
-	} | null;
-	/** Every positive region, geometric order. */
-	bounds: DataGridCellSelectionBound[];
-	/** The most recent region, the one copy and paste act on. */
-	activeBound: DataGridCellSelectionBound | null;
-	/**
-	 * Cells of the selection the view can show - the count that matches the
-	 * painted range and what a batch will touch.
-	 */
-	visibleCellCount: number;
-}
-interface DataGridCellRejection {
-	rowId: string;
-	columnId: string;
-	raw: string;
-	reason: "readonly" | "invalid";
-}
-type DataGridRowStatus = "new" | "dirty" | "deleted";
-type DataGridCellStatus = "dirty" | "invalid";
-interface DataGridCellEditRequest<TData> {
-	rowId: string;
-	columnId: string;
-	row: TData;
-	previousValue: unknown;
-	/** The typed character that started the edit; absent for Enter and F2. */
-	initialText?: string;
-}
-interface DataGridCellsChangeDetails<TData> {
-	source: DataGridCellsChangeSource;
-	changes: DataGridCellChange<TData>[];
-	rejected: DataGridCellRejection[];
-}
-interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
-	className?: string;
-	table?: Table$1<TFeatures, TData>;
-	children?: React$1.ReactNode;
-	onRowClick?: (row: TData) => void;
-	/**
-	 * Receives every spreadsheet write batch (paste, cut, clear, fill, edit).
-	 * Served through the props getter like `onRowClick`, so an inline identity
-	 * never republishes the context. Absent: copy still works, writes no-op.
-	 */
-	onCellsChange?: (details: DataGridCellsChangeDetails<TData>) => void;
-	/**
-	 * Opens the consumer's editor from the keyboard: Enter, F2, or typing on
-	 * the focused cell. Absent: Enter keeps moving down, typing does nothing.
-	 */
-	onCellEditRequest?: (request: DataGridCellEditRequest<TData>) => void;
-	/**
-	 * Fires on every cell-selection change (focus moves, ranges grow or
-	 * clear) with a resolved snapshot, so a selection count, formula bar or
-	 * context panel needs no reach into TanStack internals.
-	 */
-	onCellSelectionChange?: (snapshot: DataGridCellSelectionSnapshot) => void;
-	/**
-	 * Fires after the grid writes the clipboard (Cmd/Ctrl+C or X, or the
-	 * native copy and cut events), e.g. to confirm with a toast.
-	 */
-	onCellsCopy?: (details: DataGridCopyDetails) => void;
-	/**
-	 * Renders an "Add row" affordance as the table body's last row; clicking
-	 * it is the consumer's cue to start creating a row. Absent: no row.
-	 */
-	onRowCreate?: () => void;
-	/** Label of the onRowCreate affordance. Defaults to "Add row". */
-	rowCreateLabel?: React$1.ReactNode;
-	/**
-	 * Rendered inside the table body after the data rows: the slot a DRAFT
-	 * row lives in while it is being created, before it joins `data` and the
-	 * pagination math. Supply a `<tr>` of cells; the colgroup sizes them.
-	 */
-	appendRow?: React$1.ReactNode;
-	/**
-	 * Optional CRUD indication per row. Return undefined for no indication;
-	 * omit the prop entirely to render none anywhere.
-	 */
-	getRowStatus?: (row: TData) => DataGridRowStatus | undefined;
-	/**
-	 * Optional CRUD indication per cell: the classic corner mark on cells the
-	 * consumer tracks as edited or invalid.
-	 */
-	getCellStatus?: (row: TData, columnId: string) => DataGridCellStatus | undefined;
-	isLoading?: boolean;
-	/**
-	 * Overrides for every built-in string: menu items, aria labels,
-	 * pagination copy, state messages. Merged over the defaults; a more
-	 * specific component prop (`rowCreateLabel`, `loadingMessage`, the
-	 * pagination label props) still wins over its `i18n` counterpart.
-	 */
-	i18n?: DataGridI18nOverrides;
-	loadingMode?: "skeleton" | "spinner";
-	loadingMessage?: React$1.ReactNode | string;
-	fetchingMoreMessage?: React$1.ReactNode | string;
-	allRowsLoadedMessage?: React$1.ReactNode | string;
-	emptyMessage?: React$1.ReactNode | string;
-	tableLayout?: {
-		dense?: boolean;
-		cellBorder?: boolean;
-		rowBorder?: boolean;
-		rowRounded?: boolean;
-		stripped?: boolean;
-		headerBackground?: boolean;
-		footerBackground?: boolean;
-		headerBorder?: boolean;
-		headerSticky?: boolean;
-		width?: "auto" | "fixed";
-		columnsVisibility?: boolean;
-		columnsResizable?: boolean;
-		columnsPinnable?: boolean;
-		columnsMovable?: boolean;
-		columnsDraggable?: boolean;
-		rowsDraggable?: boolean;
-		rowsPinnable?: boolean;
-		/** Spreadsheet cell range selection: mouse ranges, keyboard, clipboard chrome. */
-		cellSelection?: boolean;
-		/**
-		 * "range" (default): drag, Shift and Ctrl/Cmd gestures and Shift+keys
-		 * grow multi-cell regions. "single": one focused cell only - every
-		 * gesture collapses to it and Ctrl/Cmd+A is inert.
-		 */
-		cellSelectionMode?: "single" | "range";
-		/** Drag-to-fill handle on the selection corner. Requires cellSelection. */
-		cellFillHandle?: boolean;
-		/**
-		 * How a cell opens its editor from the mouse: "dblclick" (default,
-		 * the spreadsheet standard - first click focuses, second edits) or
-		 * "click", opening the editor as soon as a plain click lands on the
-		 * focused cell; modifier clicks and drags still select.
-		 */
-		cellEditMode?: "dblclick" | "click";
-		/**
-		 * When true, committing an edit with Enter moves focus down (Shift+Enter
-		 * up), the Sheets and Excel convention. Off by default: the commit keeps
-		 * focus on the edited cell. Tab always commits and moves across.
-		 */
-		cellEditEnterAdvance?: boolean;
-		/**
-		 * The handle's look: "dot" is a solid primary dot kept inside the
-		 * cell corner; "ring" is the Sheets-style hollow circle riding the
-		 * corner point, clamped at the grid's own boundary; "square" is the
-		 * Excel-style solid square inside the corner. Default "dot".
-		 */
-		cellFillHandleVariant?: "dot" | "ring" | "square";
-	};
-	tableClassNames?: {
-		base?: string;
-		header?: string;
-		headerRow?: string;
-		headerSticky?: string;
-		body?: string;
-		bodyRow?: string;
-		footer?: string;
-		edgeCell?: string;
-		/** Override the getRowStatus tints; defaults are the warning-muted set. */
-		rowNew?: string;
-		rowDirty?: string;
-		rowDeleted?: string;
-		/**
-		 * Override the pinned-row chrome (muted tint, boundary shadow). A grid
-		 * that pins a draft row for quick-create wants it to read as an active
-		 * row, not a muted one.
-		 */
-		rowPinned?: string;
-		/** The onRowCreate affordance row, e.g. to match the grid's row height. */
-		rowCreate?: string;
-		/** The fill handle, e.g. to restyle or resize it beyond the built-in variants. */
-		cellFillHandle?: string;
-	};
-}
-declare function DataGrid<TFeatures extends TableFeatures, TData extends object>({ children, table, ...props }: DataGridProps<TFeatures, TData>): React$1.JSX.Element;
-declare function DataGridContainer({ children, className }: {
-	children: React$1.ReactNode;
-	className?: string;
-	/** Accepted for backwards compatibility; currently has no effect. */
-	border?: boolean;
-}): React$1.JSX.Element;
-declare const dataGridFeatures$1: Omit<DataGridFeatures, "columnMeta"> & {
-	columnMeta: PublicProps<DataGridFeatures["columnMeta"]>;
-};
-type DataGridFeatures$1 = typeof dataGridFeatures$1;
-/**
- * Selection cell.
- *
- * Selection is read through `row.getIsSelected()`, a builder call on a row
- * that keeps its identity across renders. A consumer's compiled component
- * around this checkbox caches it against that row and never renders it
- * again, which shows up as checkboxes that do not respond to clicks.
- * Subscribing to the row-selection atom makes selection a dependency of its
- * own. Note the standalone `Subscribe` rather than `table.Subscribe`: inside a
- * cell template the `table` handed to the column def is the core `Table`, which
- * has no `Subscribe` attached.
- */
-export declare function DataGridTableRowSelect<TData extends object>({ row }: {
-	row: Row<DataGridFeatures, TData>;
-}): React$1.JSX.Element;
-declare function DataGridTableRowSelectAll(): React$1.JSX.Element;
-export declare function DataGridTable<_TData extends object>({ footerContent, renderHeader }: {
-	footerContent?: React$1.ReactNode;
-	renderHeader?: boolean;
-}): React$1.JSX.Element;
-type DataGridScrollAreaOrientation = "horizontal" | "vertical" | "both";
-type DataGridScrollAreaProps = Omit<ScrollArea.Root.Props, "children"> & {
-	children: React$1.ReactNode;
-	orientation?: DataGridScrollAreaOrientation;
-};
-declare function DataGridScrollArea({ children, className, orientation, ...props }: DataGridScrollAreaProps): React$1.JSX.Element;
-type DataGridColumnHeaderProps<TData extends object, TValue> = React$1.HTMLAttributes<HTMLDivElement> & {
-	column: Column<DataGridFeatures, TData, TValue>;
-	/** When omitted, uses `column.columnDef.meta.headerTitle`, then a string `columnDef.header`, then `column.id`. */
-	title?: string;
-	icon?: React$1.ReactNode;
-	/** Reserved; pin controls are gated by tableLayout.columnsPinnable + column.getCanPin(). */
-	pinnable?: boolean;
-	filter?: React$1.ReactNode;
-	visibility?: boolean;
-};
-declare function DataGridColumnHeader<TData extends object, TValue>(props: DataGridColumnHeaderProps<TData, TValue>): React$1.JSX.Element;
-interface DataGridPaginationProps {
-	sizes?: number[];
-	sizesInfo?: string;
-	sizesLabel?: string;
-	sizesDescription?: string;
-	sizesSkeleton?: React$1.ReactNode;
-	more?: boolean;
-	/** Page buttons the truncated middle shows; the row adds first, last and
-	 *  an ellipsis for each hidden stretch. Clamped to a minimum of 3. */
-	moreLimit?: number;
-	info?: string;
-	infoSkeleton?: React$1.ReactNode;
-	className?: string;
-	rowsPerPageLabel?: string;
-	previousPageLabel?: string;
-	nextPageLabel?: string;
-	ellipsisText?: string;
-}
-declare function DataGridPagination(props: DataGridPaginationProps): React$1.JSX.Element;
-type DataGridProps$1<Features extends TableFeatures, Data extends object> = PublicProps<DataGridProps<Features, Data>>;
-type DataGridColumnMeta$1<Data> = PublicProps<DataGridColumnMeta<Data>>;
-declare const DataGrid$1: <Features extends TableFeatures, Data extends object>(props: DataGridProps$1<Features, Data>) => ReturnType<typeof DataGrid>;
-declare const DataGridContainer$1: PublicComponent<typeof DataGridContainer>;
-declare const DataGridTableRowSelectAll$1: PublicComponent<typeof DataGridTableRowSelectAll>;
-declare const DataGridColumnHeader$1: <Data extends object, Value>(props: PublicProps<Parameters<typeof DataGridColumnHeader<Data, Value>>[0]>) => ReturnType<typeof DataGridColumnHeader>;
-declare const DataGridPagination$1: PublicComponent<typeof DataGridPagination>;
-declare const DataGridScrollArea$1: PublicComponent<typeof DataGridScrollArea>;
-type FilterCombinator = "and" | "or";
-interface FilterRule<V = unknown> {
-	id: string;
-	type: "rule";
-	/** Field path, root first. `["name", "first"]` for a nested attribute. */
-	path: string[];
-	operator: string;
-	value: V | undefined;
-	/** Flips the meaning in place. Set by Negate when there is no `inverse`. */
-	negated?: boolean;
-}
-interface FilterGroupNode<V = unknown> {
-	id: string;
-	type: "group";
-	combinator: FilterCombinator;
-	rules: FilterNode<V>[];
-}
-type FilterNode<V = unknown> = FilterRule<V> | FilterGroupNode<V>;
-type FilterQuery<V = unknown> = FilterGroupNode<V>;
-type FilterChangeReason = "add" | "update" | "remove" | "duplicate" | "negate" | "reorder" | "combinator" | "clear";
-interface FilterChangeDetails<V = unknown, O = unknown> {
-	reason: FilterChangeReason;
-	/** The rule that changed, or null for whole-query changes like `clear`. */
-	rule: FilterRule<V> | null;
-	/** The field the rule points at, resolved. Null when the path is unknown. */
-	field: FilterField<V, O> | null;
-}
-type FilterOperatorArity = "none" | "one" | "many" | "range";
-interface FilterOperator {
-	value: string;
-	label: string;
-	/** Defaults to `"one"`. */
-	arity?: FilterOperatorArity;
-	/** The opposite operator. Negate flips to it, else sets `rule.negated`. */
-	inverse?: string;
-	/** Hidden from the operator list but still valid in a restored query. */
-	hidden?: boolean;
-}
-type FilterValueType = "text" | "number" | "range" | "select" | "multiselect" | "boolean";
-interface FilterOption<O = unknown> {
-	value: string;
-	label: string;
-	icon?: React$1.ReactNode;
-	description?: string;
-	keywords?: string[];
-	disabled?: boolean;
-	/**
-	 * The row that means NONE OF THE ABOVE: Unassigned, No label, No due date.
-	 * Picking it clears every other pick and picking anything else clears it, and
-	 * it is drawn apart under a rule of its own, because a list that wipes a
-	 * selection must not look like one that does not; hide that line with
-	 * `"[&_[data-slot=filter-menu-divider]]:hidden"`. Applied under EVERY
-	 * operator, negative ones included. The value must be RESOLVABLE, since the
-	 * rule runs through the option service: an option that exists only in an
-	 * unfetched `loadOptions` page is invisible to it.
-	 */
-	exclusive?: boolean;
-	/** Arbitrary payload, carried untouched through every render callback. */
-	data?: O;
-}
-interface FilterLoadContext {
-	/** Aborted when the query changes, the editor closes, or a load supersedes. */
-	signal: AbortSignal;
-	cursor?: string;
-}
-interface FilterLoadResult<O = unknown> {
-	items: FilterOption<O>[];
-	nextCursor?: string;
-	/** Defaults to whether `nextCursor` was supplied. */
-	hasMore?: boolean;
-}
-interface FilterField<V = unknown, O = unknown> {
-	/** Stable id. Unique among its siblings; the full path must be unique. */
-	id: string;
-	label: string;
-	icon?: React$1.ReactNode;
-	description?: string;
-	keywords?: string[];
-	/** Trailing count. Defaults to known children; set it when they are lazy. */
-	count?: number;
-	fields?: FilterField<V, O>[];
-	/** Whether a BRANCH is itself filterable. Leaves always are. */
-	selectable?: boolean;
-	disabled?: boolean;
-	type?: FilterValueType;
-	options?: FilterOption<O>[];
-	/** Async options, paged via `cursor`. Any `options` also seed the cache. */
-	loadOptions?: (query: string, context: FilterLoadContext) => FilterOption<O>[] | Promise<FilterOption<O>[] | FilterLoadResult<O>>;
-	/** Resolves stored values the loader never returned, for restored chips. */
-	resolveValues?: (values: string[]) => FilterOption<O>[] | Promise<FilterOption<O>[]>;
-	/** Operators for this field. Falls back to the catalog for its `type`. */
-	operators?: FilterOperator[] | ((field: FilterField<V, O>) => FilterOperator[]);
-	/**
-	 * The operator this field FALLS BACK to, not a way to preselect one. Both
-	 * create paths deliberately start a rule on `operator: ""` so the condition
-	 * menu opens with nothing chosen, so this is read when an existing rule
-	 * changes field, and it is the value `FilterFieldPicker` hands to `onSelect`.
-	 * Ignored, with a dev warning, when it names an operator the field does not
-	 * offer; the first visible operator wins instead.
-	 */
-	defaultOperator?: string;
-	/** Overrides the editor chosen from `type`. See `FilterEditorProps`. */
-	editor?: FilterEditorRef<V, O>;
-	renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
-	/** The value as PLAIN TEXT for a11y; the default is `String(value)`. */
-	valueText?: (context: FilterValueDisplayContext<V, O>) => string;
-	/** Placeholder for the value editor's input, or an option list's search. */
-	placeholder?: string;
-	/** SHOWS the search box (default true). Off keeps it, hidden: it owns focus. */
-	searchable?: boolean;
-	/**
-	 * Whether an option-backed editor STACKS the picks at the top of its list.
-	 * Off by default, because a short closed list is read as a whole and lifting
-	 * a row out of a memorised order costs more than it buys. The partition is
-	 * taken LIVE unless `sortSelected: "snapshot"`, so ticking a row moves the
-	 * rows below it and the highlight is carried across by VALUE. Exclusive
-	 * options never join the stack; they are grouped by ROLE.
-	 */
-	pinSelected?: boolean;
-	/**
-	 * How an option list is ordered INSIDE each group, plus WHEN the partition is
-	 * taken under `pinSelected`. With pinning off there is no partition, so
-	 * `"snapshot"` is the same thing as `"none"`.
-	 *
-	 * - `"none"` (default) keeps declaration order. Not alphabetical, because
-	 *   option order is usually semantic (To do, In progress, Done).
-	 * - `"label"` sorts with `localeCompare`, so "Ålesund" files next to
-	 *   "Alesund" rather than after "Zurich".
-	 * - `"snapshot"` keeps declaration order too, and freezes the partition as
-	 *   the menu opened it: a steady pointer target where the other two re-pin
-	 *   live.
-	 */
-	sortSelected?: "none" | "label" | "snapshot";
-	/**
-	 * This field's own validity check. Return a MESSAGE to mark the value cell
-	 * invalid, or `null` / `undefined` / `false` when the value is fine. A string
-	 * rather than a schema object keeps the primitive library-agnostic.
-	 *
-	 * ORDER MATTERS: the built-in checks run first and this runs only when they
-	 * pass, so a validator never re-answers "is there a value at all". Not called
-	 * for a valueless operator, nor for a rule whose field the schema no longer
-	 * has, and shown only once the user has committed a value to that rule.
-	 */
-	validate?: (context: FilterValidateContext<V, O>) => string | null | undefined | false;
-	/**
-	 * Reaches the value editor's PANEL. Merged last through tailwind-merge, so a
-	 * `w-*` here beats the default rather than losing to it on source order.
-	 *
-	 * HEIGHT IS A VARIABLE, NOT A UTILITY: a `max-h-*` here bounds the PANEL and
-	 * does nothing to the list inside it, which owns its own `max-height`. Write
-	 * `--cascader-max-height: 28rem` as an arbitrary property instead; the cap is
-	 * the SMALLER of that and the space the popup has.
-	 */
-	className?: string;
-	/** The storage column when it differs from the UI path. Never read here. */
-	column?: string;
-	data?: unknown;
-}
-type FilterEditorHost = "create" | "amend";
-interface FilterOptionsState<O = unknown> {
-	items: FilterOption<O>[];
-	loading: boolean;
-	error: boolean;
-	hasMore: boolean;
-	/** Current search text. Debounced before it reaches `loadOptions`. */
-	query: string;
-	setQuery: (query: string) => void;
-	loadMore: () => void;
-	retry: () => void;
-	/** Resolves a stored value to its option, from cache when possible. */
-	resolve: (value: string) => FilterOption<O> | undefined;
-}
-interface FilterCommitOptions {
-	/** Dismiss the host after writing. Defaults to true. */
-	close?: boolean;
-}
-interface FilterEditorProps<V = unknown, O = unknown> {
-	field: FilterField<V, O>;
-	operator: FilterOperator;
-	/** The DRAFT value. An editor edits a draft; the host commits it. */
-	value: V | undefined;
-	onValueChange: (value: V | undefined) => void;
-	host: FilterEditorHost;
-	/**
-	 * Spread onto whichever element should take focus, so no editor reaches for
-	 * `setTimeout`. A CALLBACK ref at `HTMLElement` is the one shape assignable
-	 * to every element's own ref prop, so it spreads onto an input, a slider or a
-	 * button without a cast.
-	 */
-	autoFocusProps: {
-		ref: React$1.RefCallback<HTMLElement>;
-		autoFocus: boolean;
-	};
-	/** Accept the draft. `{ close: false }` writes through without dismissing. */
-	commit: (value?: V, options?: FilterCommitOptions) => void;
-	cancel: () => void;
-	/** Step back. Only meaningful when `host === "create"`. */
-	back: () => void;
-	options: FilterOptionsState<O>;
-	labels: FilterLabels;
-}
-type FilterEditor<V = unknown, O = unknown> = React$1.ComponentType<FilterEditorProps<V, O>>;
-type AnyFilterEditor = React$1.ComponentType<FilterEditorProps<unknown, unknown>>;
-type FilterEditorRegistry = Record<string, AnyFilterEditor>;
-type FilterEditorRef<V = unknown, O = unknown> = string | FilterEditor<V, O> | FilterEditor<any, any>;
-interface FilterEmptyStateContext {
-	labels: FilterLabels;
-	/** The bar is locked. A custom state should not offer an action here. */
-	readOnly: boolean;
-	/** Which box the builder is in, for a state that wants to be denser inline. */
-	mode: "popover" | "inline";
-	/** Appends a condition and opens its attribute picker. */
-	addFilter: () => void;
-	addGroup: () => void;
-}
-interface FilterValueDisplayContext<V = unknown, O = unknown> {
-	value: V | undefined;
-	/** `value` normalised to an array, so callbacks never re-derive it. */
-	values: unknown[];
-	field: FilterField<V, O>;
-	operator: FilterOperator;
-	/** Options already resolved for `value`, when the field is option-backed. */
-	options: FilterOption<O>[];
-	labels: FilterLabels;
-}
-type FilterDraftStep = "field" | "operator" | "value";
-interface FilterLabels {
-	addFilter: string;
-	advancedFilter: string;
-	/** The line above the builder's rows, "In this view, show records". */
-	showRecords: string;
-	/** Empty-state title. The HINT below is withheld from a read-only bar. */
-	builderEmpty: string;
-	builderEmptyHint: string;
-	/** Appends a condition to the root group, from the builder's footer. */
-	addCondition: string;
-	addConditionGroup: string;
-	/** A group's own add button: the only keyboard route into a nested group. It
-	 * NAMES a button that shows `addCondition`, so a translation must contain
-	 * that string, which is what WCAG Label in Name asks for. */
-	addToGroup: string;
-	removeGroup: string;
-	wrapInGroup: string;
-	/** Dissolves a group into its parent. The inverse of `wrapInGroup`. */
-	ungroup: string;
-	/** Moves a condition to the root group. The keyboard path to that drag. */
-	moveToTopLevel: string;
-	/** Groups have no names, so they are numbered in document order, one-based. */
-	moveToGroup: (position: number) => string;
-	/** Accessible name of a row's or a group's drag handle. */
-	reorder: string;
-	/** Description on the drag handle, teaching the Alt+Arrow keyboard model. */
-	reorderHint: string;
-	groupAll: string;
-	groupAny: string;
-	groupPlaceholder: string;
-	/** Names a builder row. Depth is in it: indentation is invisible to AT. */
-	rowLabel: (condition: string, depth: number) => string;
-	groupLabel: (description: string, depth: number) => string;
-	groupAnnouncement: (added: boolean) => string;
-	/** Alt+Arrow is otherwise silent. The total says whether this is the end. */
-	reorderAnnouncement: (label: string, position: number, total: number) => string;
-	/** A cross-PARENT move; a plain reorder announcement cannot be told apart.
-	 * `destination` is the group's own headline, or the bar's label at the top
-	 * level. */
-	moveAnnouncement: (label: string, destination: string, position: number, total: number) => string;
-	clearAll: string;
-	/** Names a group's menu; distinct from `chipMenu`, which is per-rule. */
-	groupMenu: string;
-	searchFields: string;
-	searchOperators: string;
-	searchOptions: string;
-	back: string;
-	clear: string;
-	apply: string;
-	discard: string;
-	empty: string;
-	loading: string;
-	loadingMore: string;
-	loadMore: string;
-	error: string;
-	retry: string;
-	/** Leading word before the first chip, where a combinator would otherwise go. */
-	where: string;
-	and: string;
-	or: string;
-	/** Accessible name of the combinator toggle between two chips. */
-	combinator: string;
-	/** Builder combinator toggle. English "and" wants 58.72px of a 64px track,
-	 * so the name must CONTAIN the word: truncated, the pill shows "a...". */
-	combinatorLabel: (word: string) => string;
-	duplicate: string;
-	negate: string;
-	/** Chip kebab's route into the builder. Needs `onConvertToAdvanced`. */
-	convertToAdvanced: string;
-	remove: string;
-	/** Names a chip's menu button. The builder's row menu reads the same key. */
-	chipMenu: (fieldLabel: string) => string;
-	filtersLabel: string;
-	filterLabel: (condition: string) => string;
-	/** Prose, not ARIA: `aria-readonly` is invalid on toolbar, group and button. */
-	readOnly: string;
-	/** Joins ancestors in a nested field path, "Name > First", for the names
-	 * `formatFilterPath` builds. The chip draws a decorative chevron instead. */
-	pathSeparator: string;
-	valuePlaceholder: string;
-	/** Empty word for an OPTION value; `placeholder` is the search prompt. */
-	selectPlaceholder: string;
-	/** Spoken for an empty value: "contains enter text..." is not a name. */
-	noValue: string;
-	/** Shown in the operator segment before a condition has been chosen. */
-	selectCondition: string;
-	/** Appended to a chip with no condition, matching the dashed outline. */
-	incomplete: string;
-	/** Appended to a branch row's accessible name in the field picker. */
-	branchAffordance: string;
-	/** A FRAGMENT, appended after a comma to an exclusive row's accessible name.
-	 * Warns before the press; `exclusiveAnnouncement` is the receipt after. */
-	exclusiveHint: string;
-	/** The clearing moves nothing on screen, so it is otherwise silent. */
-	exclusiveAnnouncement: (label: string, cleared: number) => string;
-	itemCount: (count: number) => string;
-	fieldsLabel: string;
-	/** Live-region text after a query narrows an option list or the picker. */
-	resultsAnnouncement: (count: number) => string;
-	/** Accessible name of an option menu's footer (Load more, Retry). */
-	actionsLabel: string;
-	/** For a CONSUMER-composed wizard; the shipped flow announces counts. */
-	stepAnnouncement: (step: FilterDraftStep, label: string) => string;
-	countAnnouncement: (count: number) => string;
-	valueCount: (count: number) => string;
-	/** Spells out the list behind the `valueCount` summary, and contains it. */
-	valueDetail: (summary: string, values: string[]) => string;
-	valueRange: (from: string, to: string) => string;
-	rangeFrom: (fieldLabel: string) => string;
-	rangeTo: (fieldLabel: string) => string;
-	rangeSeparator: string;
-	/** Rendered for a `negated` rule, wrapping the operator label. */
-	negated: (operatorLabel: string) => string;
-	/** Guidance ("Choose a condition"), not diagnosis: shown three ways over. */
-	issueOperator: string;
-	issueValue: string;
-	issueRange: string;
-	issueRangeOrder: string;
-	issueEmptyGroup: string;
-	/** The roll-up, and the name of the button that jumps to the first issue. */
-	issueSummary: (count: number) => string;
-}
-interface FilterValidateContext<V = unknown, O = unknown> {
-	value: V | undefined;
-	values: unknown[];
-	field: FilterField<V, O>;
-	operator: FilterOperator;
-	/** How many values this operator takes, already resolved. */
-	arity: FilterOperatorArity;
-	rule: FilterRule<V>;
-	labels: FilterLabels;
-}
-type CascaderCollapse = "middle" | "start" | "none";
-type FilterPathCollapse = CascaderCollapse;
-type FilterOperatorLabels = Record<string, string>;
-/** An empty query. The root is always a group, never a bare array. */
-export declare function createFilterQuery<V = unknown>(rules?: FilterNode<V>[], combinator?: FilterCombinator, id?: string): FilterQuery<V>;
-interface FilterCondition {
-	/** Full field path, `["name", "first"]`. */
-	path: string[];
-	/** First path segment, for the common flat-schema case. */
-	field: string;
-	operator: string;
-	/** `[]` for an operator that takes no value. */
-	values: unknown[];
-	negated: boolean;
-}
-/**
- * Flattens a query to conditions. Lossy: safe only when the query is flat or
- * every group shares the root's combinator. Read `query.combinator` and walk
- * the tree yourself for anything else. Incomplete rules are left out.
- */
-export declare function flattenFilterConditions<V>(query: FilterQuery<V>): FilterCondition[];
-interface FiltersProps<V = unknown, O = unknown> {
-	/** The field schema. Nested via each field's own `fields`. */
-	fields: FilterField<V, O>[];
-	query?: FilterQuery<V>;
-	defaultQuery?: FilterQuery<V>;
-	onQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => void;
-	labels?: Partial<FilterLabels>;
-	/** Operator wording, overridden independently of the chrome copy. */
-	operatorLabels?: FilterOperatorLabels;
-	/** Extra or replacement value editors, resolved by a field's `editor` name. */
-	editors?: FilterEditorRegistry;
-	/**
-	 * Which chrome draws the query. `"basic"` is the flat chip row, joined by an
-	 * implicit AND and drawing no combinator, because a chip row has nowhere to
-	 * put a parenthesis, and it draws a nested rule at any depth as a flat chip.
-	 */
-	variant?: "basic" | "advanced";
-	/** Where the advanced builder lives. `"inline"` renders the panel in place. */
-	advancedMode?: "popover" | "inline";
-	/**
-	 * Where the panel sits against its trigger. Stating it settles a twin split:
-	 * on overflow Base UI flips edges, Radix only shifts along the axis.
-	 */
-	advancedAlign?: "start" | "center" | "end";
-	/**
-	 * Whether the advanced builder's rows can be REORDERED. Off by default: a
-	 * move changes nothing about what the query MEANS, and costs a grip on every
-	 * row plus a gesture a touch screen starts by accident. On, drag and
-	 * Alt+Arrow move any row but the lone root.
-	 */
-	reorderable?: boolean;
-	/**
-	 * The density of the whole bar, chips included. TWO RUNGS and no `lg`,
-	 * resolved through `filterControlSizes` to whatever the ACTIVE STYLE calls
-	 * that rung (nova 7/8, sera 9/10, mira 6/7, maia and luma 8/9, lyra and rhea
-	 * 7/8, vega 8/9). Chips need no `ButtonGroup` variant: `items-stretch` gives
-	 * the pill the height of its one definite-height child, the kebab.
-	 */
-	size?: "sm" | "default";
-	disabled?: boolean;
-	readOnly?: boolean;
-	/**
-	 * ONE VETO POINT for every change the BAR makes to the query, and only those.
-	 * Return `false` to refuse; anything else commits, and `details.reason` names
-	 * the action. One hook and not fourteen because every write goes through
-	 * `emit`: the Delete key, Alt+Arrow and a drag alike. It can only refuse, and
-	 * it sits BEHIND the lock, so a locked bar never asks it. Returning a
-	 * REPLACEMENT tree was rejected: the announcement is already computed from
-	 * the proposed tree, so the bar would say one thing and commit another.
-	 */
-	onBeforeQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => boolean | void;
-	/**
-	 * Offers "Convert to advanced filter" in every chip's kebab; its presence IS
-	 * the switch, since `variant` belongs to the consumer. Not drawn in advanced.
-	 */
-	onConvertToAdvanced?: () => void;
-	/**
-	 * Classes for the dropdown MENUS and the field PICKER panel, one prop each
-	 * rather than one per mount point. Merged after the default, so `w-*` wins.
-	 */
-	menuClassName?: string;
-	fieldPickerClassName?: string;
-	/**
-	 * How a NESTED attribute path is shortened when too deep to read. `"none"` is
-	 * the default, so an upgrade changes nothing under a consumer; the collapser
-	 * is the cascader's, and the full path survives as the accessible NAME.
-	 */
-	pathCollapse?: FilterPathCollapse;
-	/**
-	 * How many names survive the collapse, the elided run not counted. Inert
-	 * while `pathCollapse` is `"none"`. Three is the cascader's own default.
-	 */
-	maxPathSegments?: number;
-	/** Replaces the default Add filter button. */
-	trigger?: React$1.ReactNode;
-	/** Renders a Clear button once the query holds anything. */
-	showClear?: boolean;
-	renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
-	renderChip?: (rule: FilterRule<V>) => React$1.ReactNode;
-	/**
-	 * Replaces the advanced builder's empty state, which exists at all because a
-	 * builder with no rows is a footer floating in blank space. `null` for none.
-	 */
-	renderEmpty?: (context: FilterEmptyStateContext) => React$1.ReactNode;
-	className?: string;
-	children?: React$1.ReactNode;
-}
-declare function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
-declare const Filters$1: <Value = unknown, Option = unknown>(props: PublicProps<Parameters<typeof Filters<Value, Option>>[0]>) => ReturnType<typeof Filters>;
-declare const Box$1: PublicComponent<typeof Box>;
-declare const Stack$1: (props: Omit<PublicProps<Parameters<typeof Stack>[0]>, "as">) => React$1.ReactNode;
-declare const StackItem$1: PublicComponent<typeof StackItem>;
-declare const Grid$1: PublicComponent<typeof Grid>;
-declare const GridItem$1: PublicComponent<typeof GridItem>;
-declare const Heading$1: PublicComponent<typeof Heading>;
-declare const Text$2: PublicComponent<typeof Text$1>;
-declare const Avatar$2: PublicComponent<typeof Avatar$1>;
-declare const AvatarGroup$1: PublicComponent<typeof AvatarGroup>;
-declare const Image$2: PublicComponent<typeof Image$1>;
-declare const Badge$1: PublicComponent<typeof Badge>;
-declare const FileType$1: PublicComponent<typeof FileType>;
-declare const Card$2: PublicComponent<typeof Card$1>;
-declare const Button$3: PublicComponent<typeof Button$2>;
-export declare const Dropdown: PublicComponent<typeof DropdownMenu>;
-export declare const DropdownPortal: PublicComponent<typeof DropdownMenuPortal>;
-declare const DropdownTrigger$1: PublicComponent<typeof DropdownTrigger>;
-declare const DropdownContent$1: PublicComponent<typeof DropdownContent>;
-declare const DropdownGroup$1: PublicComponent<typeof DropdownGroup>;
-declare const DropdownLabel$1: PublicComponent<typeof DropdownLabel>;
-declare const DropdownItem$1: PublicComponent<typeof DropdownItem>;
-declare const DropdownCheckboxItem$1: PublicComponent<typeof DropdownCheckboxItem>;
-declare const DropdownRadioGroup$1: PublicComponent<typeof DropdownRadioGroup>;
-declare const DropdownRadioItem$1: PublicComponent<typeof DropdownRadioItem>;
-declare const DropdownSeparator$1: PublicComponent<typeof DropdownSeparator>;
-declare const DropdownShortcut$1: PublicComponent<typeof DropdownShortcut>;
-export declare const DropdownSub: PublicComponent<typeof DropdownMenuSub>;
-declare const DropdownSubTrigger$1: PublicComponent<typeof DropdownSubTrigger>;
-declare const DropdownSubContent$1: PublicComponent<typeof DropdownSubContent>;
-declare const Table$2: PublicComponent<typeof Table>;
-declare const TableHeader$1: PublicComponent<typeof TableHeader>;
-declare const TableBody$1: PublicComponent<typeof TableBody>;
-declare const TableFooter$1: PublicComponent<typeof TableFooter>;
-declare const TableRow$1: PublicComponent<typeof TableRow>;
-declare const TableHead$1: PublicComponent<typeof TableHead>;
-declare const TableCell$1: PublicComponent<typeof TableCell>;
-declare const TableCaption$1: PublicComponent<typeof TableCaption>;
-declare const Timestamp$1: PublicComponent<typeof Timestamp>;
-declare const Progress$2: PublicComponent<typeof Progress$1>;
-declare const Tabs$3: PublicComponent<typeof Tabs$2>;
-declare const Empty$1: PublicComponent<typeof Empty>;
-declare const Menu$1: PublicComponent<typeof Menu>;
-declare const Icon$1: PublicComponent<typeof Icon>;
-declare const Link$1: PublicComponent<typeof Link>;
-declare const Currency$1: PublicComponent<typeof Currency>;
-declare const FileViewer$1: PublicComponent<typeof FileViewer>;
-declare const ViewMap$1: PublicComponent<typeof ViewMap>;
-declare const Frame$2: PublicComponent<typeof Frame$1>;
 type Schema = ObjectSchema | ArraySchema | StringSchema | NumberSchema | IntegerSchema | BooleanSchema | NullSchema;
 type _JSONSchema = boolean | JSONSchema;
 type SchemaType = "object" | "array" | "string" | "number" | "boolean" | "null" | "integer";
@@ -77306,7 +71695,7 @@ type ToZodNormalize<T> = [
 ] ? {
 	[K in keyof T]: ToZodNormalize<T[K]>;
 } : T | typeof toZodDummy;
-type ToZodEqual<Output, T> = AssertEqual<Output, T> extends true ? true : IsAny$3<Output> extends true ? false : IsAny$3<T> extends true ? false : AssertEqual<ToZodNormalize<Output>, ToZodNormalize<T>>;
+type ToZodEqual<Output, T> = AssertEqual<Output, T> extends true ? true : IsAny$1<Output> extends true ? false : IsAny$1<T> extends true ? false : AssertEqual<ToZodNormalize<Output>, ToZodNormalize<T>>;
 type ToZodShape<Shape, T> = {
 	[K in keyof Shape]: Shape[K] extends schemas.$ZodType ? K extends keyof T ? ToZodEqual<Shape[K]["_zod"]["output"], T[K]> extends true ? Shape[K] : ToZodKeyMismatch<T[K], Shape[K]["_zod"]["output"]> : ToZodKeyMismatch<never, Shape[K]["_zod"]["output"]> : Shape[K];
 } & {
@@ -77316,7 +71705,7 @@ type ToZodExpand<X> = {
 	[K in keyof X]: X[K];
 } & {};
 type ToZodTarget<S extends schemas.$ZodType, T> = S extends schemas.$ZodObject<infer Shape, infer Config> ? T extends object ? AssertEqual<ToZodExpand<ToZodShape<Shape, T>>, ToZodExpand<Shape>> extends true ? S & ToZodMismatch<T, S> : schemas.$ZodObject<ToZodExpand<ToZodShape<Shape, T>>, Config> : S & ToZodMismatch<T, S> : S & ToZodMismatch<T, S>;
-type IsAny$3<T> = 0 extends 1 & T ? true : false;
+type IsAny$1<T> = 0 extends 1 & T ? true : false;
 type Omit$1<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type OmitKeys<T, K extends string> = Pick<T, Exclude<keyof T, K>>;
 type MakePartial<T, K extends keyof T> = Omit$1<T, K> & InexactPartial$1<Pick<T, K>>;
@@ -77398,8 +71787,8 @@ type KeysEnum<T extends object> = ToEnum<Exclude<keyof T, symbol>>;
 type KeysArray<T extends object> = Flatten<(keyof T & string)[]>;
 type Literal$1 = string | number | bigint | boolean | null | undefined;
 type LiteralArray = Array<Literal$1>;
-type Primitive$1 = string | number | symbol | bigint | boolean | null | undefined;
-type PrimitiveArray = Array<Primitive$1>;
+type Primitive = string | number | symbol | bigint | boolean | null | undefined;
+type PrimitiveArray = Array<Primitive>;
 type HasSize = {
 	size: number;
 };
@@ -77418,8 +71807,8 @@ type SafeParseError<T> = {
 	data?: never;
 	error: $ZodError<T>;
 };
-type PropValues = Record<string, Set<Primitive$1>>;
-type PrimitiveSet = Set<Primitive$1>;
+type PropValues = Record<string, Set<Primitive>>;
+type PrimitiveSet = Set<Primitive>;
 declare function assertEqual<A, B>(val: AssertEqual<A, B>): AssertEqual<A, B>;
 declare function assertNotEqual<A, B>(val: AssertNotEqual<A, B>): AssertNotEqual<A, B>;
 declare function toZod<T>(): <S extends schemas.$ZodType>(schema: ToZodEqual<S["_zod"]["output"], T> extends true ? S : ToZodTarget<S, T>) => S;
@@ -77427,7 +71816,7 @@ declare function assertIs<T>(_arg: T): void;
 declare function assertNever(_x: never): never;
 declare function assert<T>(_: any): asserts _ is T;
 declare function getEnumValues(entries: EnumLike): EnumValue[];
-declare function joinValues<T extends Primitive$1[]>(array: T, separator?: string): string;
+declare function joinValues<T extends Primitive[]>(array: T, separator?: string): string;
 declare function jsonStringifyReplacer(_: string, value: any): any;
 declare function cached<T>(getter: () => T): {
 	value: T;
@@ -78495,14 +72884,14 @@ type _File = typeof globalThis extends {
 	File: infer F extends new (...args: any[]) => any;
 } ? InstanceType<F> : {};
 /** Do not reference this directly. */
-interface File$2 extends _File {
+interface File$1 extends _File {
 	readonly type: string;
 	readonly size: number;
 }
 interface $ZodFileDef extends $ZodTypeDef {
 	type: "file";
 }
-interface $ZodFileInternals extends $ZodTypeInternals<File$2, File$2> {
+interface $ZodFileInternals extends $ZodTypeInternals<File$1, File$1> {
 	def: $ZodFileDef;
 	isst: $ZodIssueInvalidType;
 	bag: util.LoosePartial<{
@@ -81205,17 +75594,17 @@ interface FromJSONSchemaParams {
 /**
  * Converts a JSON Schema to a Zod schema. This function should be considered semi-experimental. It's behavior is liable to change. */
 declare function fromJSONSchema(schema: JSONSchema$1.JSONSchema | boolean, params?: FromJSONSchemaParams): ZodType;
-type DeepPartial$1<T extends core.SomeType> = T extends schemas$1.ZodObject<infer Shape, infer Config> ? schemas$1.ZodObject<{
-	-readonly [K in keyof Shape]: schemas$1.ZodOptional<DeepPartial$1<Shape[K]>>;
+type DeepPartial<T extends core.SomeType> = T extends schemas$1.ZodObject<infer Shape, infer Config> ? schemas$1.ZodObject<{
+	-readonly [K in keyof Shape]: schemas$1.ZodOptional<DeepPartial<Shape[K]>>;
 }, Config> : T extends schemas$1.ZodDiscriminatedUnion<infer Options, any> ? schemas$1.ZodUnion<{
-	-readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial$1<Options[I]> : Options[I];
+	-readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial<Options[I]> : Options[I];
 }> : T extends schemas$1.ZodUnion<infer Options> ? schemas$1.ZodUnion<{
-	-readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial$1<Options[I]> : Options[I];
-}> : T extends schemas$1.ZodArray<infer El> ? schemas$1.ZodArray<DeepPartial$1<El>> : T extends schemas$1.ZodTuple<infer Items, infer Rest> ? schemas$1.ZodTuple<{
-	-readonly [K in keyof Items]: Items[K] extends core.SomeType ? DeepPartial$1<Items[K]> : Items[K];
-}, Rest extends core.SomeType ? DeepPartial$1<Rest> : Rest> : T extends schemas$1.ZodIntersection<infer A, infer B> ? schemas$1.ZodIntersection<DeepPartial$1<A>, DeepPartial$1<B>> : T extends schemas$1.ZodRecord<infer K, infer V> ? schemas$1.ZodRecord<K, DeepPartial$1<V>> : T extends schemas$1.ZodMap<infer K, infer V> ? schemas$1.ZodMap<K, DeepPartial$1<V>> : T extends schemas$1.ZodSet<infer El> ? schemas$1.ZodSet<DeepPartial$1<El>> : T extends schemas$1.ZodOptional<infer Inner> ? schemas$1.ZodOptional<DeepPartial$1<Inner>> : T extends schemas$1.ZodNullable<infer Inner> ? schemas$1.ZodNullable<DeepPartial$1<Inner>> : T extends schemas$1.ZodDefault<infer Inner> ? schemas$1.ZodDefault<DeepPartial$1<Inner>> : T extends schemas$1.ZodPrefault<infer Inner> ? schemas$1.ZodPrefault<DeepPartial$1<Inner>> : T extends schemas$1.ZodNonOptional<infer Inner> ? schemas$1.ZodNonOptional<DeepPartial$1<Inner>> : T extends schemas$1.ZodCatch<infer Inner> ? schemas$1.ZodCatch<DeepPartial$1<Inner>> : T extends schemas$1.ZodReadonly<infer Inner> ? schemas$1.ZodReadonly<DeepPartial$1<Inner>> : T extends schemas$1.ZodSuccess<infer Inner> ? schemas$1.ZodSuccess<DeepPartial$1<Inner>> : T extends schemas$1.ZodPromise<infer Inner> ? schemas$1.ZodPromise<DeepPartial$1<Inner>> : T extends schemas$1.ZodCodec<infer A, infer B> ? schemas$1.ZodCodec<DeepPartial$1<A>, DeepPartial$1<B>> : T extends schemas$1.ZodPreprocess<infer B> ? schemas$1.ZodPreprocess<DeepPartial$1<B>> : T extends schemas$1.ZodPipe<infer A, infer B> ? schemas$1.ZodPipe<DeepPartial$1<A>, DeepPartial$1<B>> : T extends schemas$1.ZodLazy<infer Inner> ? schemas$1.ZodLazy<DeepPartial$1<Inner>> : T;
+	-readonly [I in keyof Options]: Options[I] extends core.SomeType ? DeepPartial<Options[I]> : Options[I];
+}> : T extends schemas$1.ZodArray<infer El> ? schemas$1.ZodArray<DeepPartial<El>> : T extends schemas$1.ZodTuple<infer Items, infer Rest> ? schemas$1.ZodTuple<{
+	-readonly [K in keyof Items]: Items[K] extends core.SomeType ? DeepPartial<Items[K]> : Items[K];
+}, Rest extends core.SomeType ? DeepPartial<Rest> : Rest> : T extends schemas$1.ZodIntersection<infer A, infer B> ? schemas$1.ZodIntersection<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodRecord<infer K, infer V> ? schemas$1.ZodRecord<K, DeepPartial<V>> : T extends schemas$1.ZodMap<infer K, infer V> ? schemas$1.ZodMap<K, DeepPartial<V>> : T extends schemas$1.ZodSet<infer El> ? schemas$1.ZodSet<DeepPartial<El>> : T extends schemas$1.ZodOptional<infer Inner> ? schemas$1.ZodOptional<DeepPartial<Inner>> : T extends schemas$1.ZodNullable<infer Inner> ? schemas$1.ZodNullable<DeepPartial<Inner>> : T extends schemas$1.ZodDefault<infer Inner> ? schemas$1.ZodDefault<DeepPartial<Inner>> : T extends schemas$1.ZodPrefault<infer Inner> ? schemas$1.ZodPrefault<DeepPartial<Inner>> : T extends schemas$1.ZodNonOptional<infer Inner> ? schemas$1.ZodNonOptional<DeepPartial<Inner>> : T extends schemas$1.ZodCatch<infer Inner> ? schemas$1.ZodCatch<DeepPartial<Inner>> : T extends schemas$1.ZodReadonly<infer Inner> ? schemas$1.ZodReadonly<DeepPartial<Inner>> : T extends schemas$1.ZodSuccess<infer Inner> ? schemas$1.ZodSuccess<DeepPartial<Inner>> : T extends schemas$1.ZodPromise<infer Inner> ? schemas$1.ZodPromise<DeepPartial<Inner>> : T extends schemas$1.ZodCodec<infer A, infer B> ? schemas$1.ZodCodec<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodPreprocess<infer B> ? schemas$1.ZodPreprocess<DeepPartial<B>> : T extends schemas$1.ZodPipe<infer A, infer B> ? schemas$1.ZodPipe<DeepPartial<A>, DeepPartial<B>> : T extends schemas$1.ZodLazy<infer Inner> ? schemas$1.ZodLazy<DeepPartial<Inner>> : T;
 /** Returns a copy of the schema with every nested object's properties made optional. */
-declare function deepPartial<T extends core.SomeType>(schema: T): DeepPartial$1<T>;
+declare function deepPartial<T extends core.SomeType>(schema: T): DeepPartial<T>;
 type input$1<T> = core.input<T>;
 type output$1<T> = core.output<T>;
 /** Returns a copy of the schema with every pipe replaced by its input side. A codec's checks are dropped: they constrain the decoded value the input side never produces. */
@@ -81241,6 +75630,770 @@ declare function bigint$2<T = unknown>(params?: string | core.$ZodBigIntParams):
 interface ZodCoercedDate<T = unknown> extends schemas$1._ZodDate<core.$ZodDateInternals<T>> {
 }
 declare function date$3<T = unknown>(params?: string | core.$ZodDateParams): ZodCoercedDate<T>;
+declare const EVENTS: {
+	readonly BLUR: "blur";
+	readonly FOCUS_OUT: "focusout";
+	readonly CHANGE: "change";
+	readonly SUBMIT: "submit";
+	readonly TRIGGER: "trigger";
+	readonly VALID: "valid";
+};
+declare const VALIDATION_MODE: {
+	readonly onBlur: "onBlur";
+	readonly onChange: "onChange";
+	readonly onSubmit: "onSubmit";
+	readonly onTouched: "onTouched";
+	readonly all: "all";
+};
+type Observer<T> = {
+	next: (value: T) => void;
+};
+type Subscription$1 = {
+	unsubscribe: Noop;
+};
+type Subject<T> = {
+	readonly observers: Observer<T>[];
+	subscribe: (value: Observer<T>) => Subscription$1;
+	unsubscribe: Noop;
+} & Observer<T>;
+type EventType = "focus" | "blur" | "change" | "changeText" | "valueChange" | "contentSizeChange" | "endEditing" | "keyPress" | "submitEditing" | "layout" | "selectionChange" | "longPress" | "press" | "pressIn" | "pressOut" | "momentumScrollBegin" | "momentumScrollEnd" | "scroll" | "scrollBeginDrag" | "scrollEndDrag" | "load" | "error" | "progress" | "custom";
+type Prev = [
+	never,
+	0,
+	1,
+	2,
+	3,
+	4,
+	5,
+	6,
+	7,
+	8,
+	...0[]
+];
+type IsTuple<T extends ReadonlyArray<unknown>> = number extends T["length"] ? false : true;
+type ArrayKey = number;
+type TupleKeys<T extends ReadonlyArray<unknown>> = Exclude<keyof T, keyof unknown[]>;
+type AnyIsEqual<T1, T2> = T1 extends T2 ? IsEqual<T1, T2> extends true ? true : never : never;
+type PathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive$1 | BrowserNativeObject | OpaqueType ? `${K}` : true extends AnyIsEqual<TraversedTypes, V> ? `${K}` : `${K}` | `${K}.${PathInternal<V, TraversedTypes | V, Prev[D]>}`;
+type PathInternal<T, TraversedTypes = T, D extends number = 9> = [
+	D
+] extends [
+	never
+] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
+	[K in TupleKeys<T>]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
+}[TupleKeys<T>] : PathImpl<ArrayKey, V, TraversedTypes, D> : {
+	[K in keyof T]-?: PathImpl<K & string, T[K], TraversedTypes, D>;
+}[keyof T];
+type Path<T> = T extends unknown ? PathInternal<T> : never;
+type FieldPath<TFieldValues extends FieldValues> = Path<TFieldValues>;
+type ArrayPathImpl<K extends string | number, V, TraversedTypes, D extends number = 9> = V extends Primitive$1 | BrowserNativeObject | OpaqueType ? IsAny$2<V> extends true ? string : never : V extends ReadonlyArray<infer U> ? U extends Primitive$1 | BrowserNativeObject | OpaqueType ? IsAny$2<V> extends true ? string : never : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}` | `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}` : true extends AnyIsEqual<TraversedTypes, V> ? never : `${K}.${ArrayPathInternal<V, TraversedTypes | V, Prev[D]>}`;
+type ArrayPathInternal<T, TraversedTypes = T, D extends number = 9> = [
+	D
+] extends [
+	never
+] ? never : T extends ReadonlyArray<infer V> ? IsTuple<T> extends true ? {
+	[K in TupleKeys<T>]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
+}[TupleKeys<T>] : ArrayPathImpl<ArrayKey, V, TraversedTypes, D> : {
+	[K in keyof T]-?: ArrayPathImpl<K & string, T[K], TraversedTypes, D>;
+}[keyof T];
+type ArrayPath<T> = T extends unknown ? ArrayPathInternal<T> : never;
+type FieldArrayPath<TFieldValues extends FieldValues> = ArrayPath<TFieldValues>;
+type PathValue<T, P extends Path<T> | ArrayPath<T>> = PathValueImpl<T, P>;
+type PathValueImpl<T, P extends string> = T extends unknown ? P extends `${infer K}.${infer R}` ? K extends keyof T ? undefined extends T[K] ? PathValueImpl<T[K], R> | undefined : PathValueImpl<T[K], R> : K extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? PathValueImpl<V, R> | (TupleKeys<T> extends never ? Extract<V, undefined> : never) : never : never : P extends keyof T ? T[P] : P extends `${ArrayKey}` ? T extends ReadonlyArray<infer V> ? V : T extends undefined ? undefined : never : never : never;
+type FieldPathValue<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = PathValue<TFieldValues, TFieldPath>;
+type FieldArrayPathValue<TFieldValues extends FieldValues, TFieldArrayPath extends FieldArrayPath<TFieldValues>> = PathValue<TFieldValues, TFieldArrayPath>;
+type FieldPathValues<TFieldValues extends FieldValues, TPath extends FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[]> = {} & {
+	[K in keyof TPath]: FieldPathValue<TFieldValues, TPath[K] & FieldPath<TFieldValues>>;
+};
+type FieldArray<TFieldValues extends FieldValues = FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>> = FieldArrayPathValue<TFieldValues, TFieldArrayName> extends ReadonlyArray<infer U> | null | undefined ? U : never;
+type ResolverSuccess<TTransformedValues> = {
+	values: TTransformedValues;
+	errors: Record<string, never>;
+};
+type ResolverError<TFieldValues extends FieldValues = FieldValues> = {
+	values: Record<string, never>;
+	errors: FieldErrors<TFieldValues>;
+};
+type ResolverResult<TFieldValues extends FieldValues = FieldValues, TTransformedValues = TFieldValues> = ResolverSuccess<TTransformedValues> | ResolverError<TFieldValues>;
+interface ResolverOptions<TFieldValues extends FieldValues> {
+	criteriaMode?: CriteriaMode;
+	fields: Record<InternalFieldName, Field["_f"]>;
+	names?: FieldName<TFieldValues>[];
+	shouldUseNativeValidation: boolean | undefined;
+}
+type Resolver<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = (values: TFieldValues, context: TContext | undefined, options: ResolverOptions<TFieldValues>) => Promise<ResolverResult<TFieldValues, TTransformedValues>> | ResolverResult<TFieldValues, TTransformedValues>;
+declare const $NestedValue: unique symbol;
+type NestedValue<TValue extends object = object> = {
+	[$NestedValue]: never;
+} & TValue;
+type DefaultValues<TFieldValues> = TFieldValues extends AsyncDefaultValues<TFieldValues> ? DeepPartial$1<Awaited<TFieldValues>> : DeepPartial$1<TFieldValues>;
+type InternalNameSet = Set<InternalFieldName>;
+type ValidationMode = typeof VALIDATION_MODE;
+type Mode = keyof ValidationMode;
+type CriteriaMode = "firstError" | "all";
+type SubmitHandler<T, TResult = unknown> = (data: T, event?: React$1.BaseSyntheticEvent) => TResult;
+type SubmitErrorHandler<TFieldValues extends FieldValues> = (errors: FieldErrors<TFieldValues>, event?: React$1.BaseSyntheticEvent) => unknown | Promise<unknown>;
+type SetValueConfig = Partial<{
+	shouldValidate: boolean;
+	shouldDirty: boolean;
+	shouldTouch: boolean;
+	delayError: boolean;
+}>;
+type TriggerConfig = Partial<{
+	shouldFocus: boolean;
+	shouldTouch: boolean;
+}>;
+type ResetFieldConfig<TFieldValues extends FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
+	keepDirty: boolean;
+	keepTouched: boolean;
+	keepError: boolean;
+	defaultValue: FieldPathValue<TFieldValues, TFieldName>;
+}>;
+type ChangeHandler = (event: {
+	target: any;
+	type?: any;
+}) => Promise<void | boolean>;
+type AsyncDefaultValues<TFieldValues> = (payload?: unknown) => Promise<TFieldValues>;
+type UseFormProps<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = Partial<{
+	mode: Mode;
+	disabled: boolean;
+	reValidateMode: Exclude<Mode, "onTouched" | "all">;
+	defaultValues: DefaultValues<TFieldValues> | AsyncDefaultValues<TFieldValues>;
+	values: TFieldValues;
+	errors: FieldErrors<TFieldValues>;
+	resetOptions: Parameters<UseFormReset<TFieldValues>>[1];
+	resolver: Resolver<TFieldValues, TContext, TTransformedValues>;
+	context: TContext;
+	shouldFocusError: boolean;
+	shouldUnregister: boolean;
+	shouldUseNativeValidation: boolean;
+	progressive: boolean;
+	criteriaMode: CriteriaMode;
+	delayError: number;
+	formControl?: Omit<UseFormReturn<TFieldValues, TContext, TTransformedValues>, "formState">;
+	validate: ValidateForm<TFieldValues>;
+}>;
+type FieldNamesMarkedBoolean<TFieldValues extends FieldValues> = DeepMap<DeepPartial$1<TFieldValues>, boolean>;
+type FormStateProxy<TFieldValues extends FieldValues = FieldValues> = {
+	isDirty: boolean;
+	isValidating: boolean;
+	dirtyFields: FieldNamesMarkedBoolean<TFieldValues>;
+	touchedFields: FieldNamesMarkedBoolean<TFieldValues>;
+	validatingFields: FieldNamesMarkedBoolean<TFieldValues>;
+	errors: boolean;
+	isValid: boolean;
+};
+type ReadFormState = {
+	[K in keyof FormStateProxy]: boolean | "all";
+} & {
+	values?: boolean;
+	defaultValues?: boolean | "all";
+	isSubmitted?: boolean | "all";
+	submitCount?: boolean | "all";
+};
+type FormState$1<TFieldValues extends FieldValues> = {
+	isDirty: boolean;
+	isLoading: boolean;
+	isSubmitted: boolean;
+	isSubmitSuccessful: boolean;
+	isSubmitting: boolean;
+	isValidating: boolean;
+	isValid: boolean;
+	disabled: boolean;
+	submitCount: number;
+	defaultValues?: undefined | Readonly<DeepPartial$1<TFieldValues>>;
+	dirtyFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+	touchedFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+	validatingFields: Partial<Readonly<FieldNamesMarkedBoolean<TFieldValues>>>;
+	errors: FieldErrors<TFieldValues>;
+	isReady: boolean;
+};
+type KeepStateOptions = Partial<{
+	keepDirtyValues: boolean;
+	keepErrors: boolean;
+	keepDirty: boolean;
+	keepValues: boolean;
+	keepDefaultValues: boolean;
+	keepIsSubmitted: boolean;
+	keepIsSubmitSuccessful: boolean;
+	keepTouched: boolean;
+	keepIsValidating: boolean;
+	keepIsValid: boolean;
+	keepSubmitCount: boolean;
+	keepFieldsRef: boolean;
+}>;
+type RefCallBack = (instance: any) => void;
+type UseFormRegisterReturn<TFieldName extends InternalFieldName = InternalFieldName> = {
+	onChange: ChangeHandler;
+	onBlur: ChangeHandler;
+	ref: RefCallBack;
+	name: TFieldName;
+	min?: string | number;
+	max?: string | number;
+	maxLength?: number;
+	minLength?: number;
+	pattern?: string;
+	required?: boolean;
+	disabled?: boolean;
+};
+type UseFormRegister<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: RegisterOptions<TFieldValues, TFieldName>) => UseFormRegisterReturn<TFieldName>;
+type SetFocusOptions = Partial<{
+	shouldSelect: boolean;
+}>;
+type UseFormSetFocus<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: SetFocusOptions) => void;
+type EitherOption<T> = {
+	[K in keyof T]: {
+		[P in K]: T[P];
+	} & Partial<Record<Exclude<keyof T, K>, never>>;
+}[keyof T];
+type GetValuesConfig = EitherOption<{
+	dirtyFields: boolean;
+	touchedFields: boolean;
+}>;
+type UseFormGetValues<TFieldValues extends FieldValues> = {
+	/**
+	 * Get the entire form values when no argument is supplied to this function.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
+	 *
+	 * @returns Form values.
+	 *
+	 * @example
+	 * ```tsx
+	 * <button onClick={() => getValues()}>getValues</button>
+	 *
+	 * <input {...register("name", {
+	 *   validate: (value, formValues) => formValues.otherField === value
+	 * })} />
+	 * ```
+	 */
+	(name?: undefined, config?: GetValuesConfig): TFieldValues;
+	/**
+	 * Get a single field value.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
+	 *
+	 * @param name - The path name to the form field value.
+	 * @param config - Return touched or dirty fields.
+	 *
+	 * @returns the single field value
+	 *
+	 * @example
+	 * ```tsx
+	 * <button onClick={() => getValues("name")}>getValues</button>
+	 *
+	 * <input {...register("name", {
+	 *   validate: () => getValues('otherField') === "test"
+	 * })} />
+	 * ```
+	 */
+	<TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, config?: GetValuesConfig): FieldPathValue<TFieldValues, TFieldName>;
+	/**
+	 * Get an array of field values.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/getvalues) • [Demo](https://codesandbox.io/s/react-hook-form-v7-ts-getvalues-txsfg)
+	 *
+	 * @param names - an array of field names
+	 * @param config - return touched or dirty fields
+	 *
+	 * @returns An array of field values
+	 *
+	 * @example
+	 * ```tsx
+	 * <button onClick={() => getValues(["name", "name1"])}>getValues</button>
+	 *
+	 * <input {...register("name", {
+	 *   validate: () => getValues(["fieldA", "fieldB"]).includes("test")
+	 * })} />
+	 * ```
+	 */
+	<TFieldNames extends FieldPath<TFieldValues>[]>(names: readonly [
+		...TFieldNames
+	], config?: GetValuesConfig): [
+		...FieldPathValues<TFieldValues, TFieldNames>
+	];
+};
+type ErrorNamespacePath = "root" | `root.${string}` | "form" | `form.${string}`;
+type GetErrorsResult<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues> | ErrorNamespacePath> = TName extends "root" ? (Record<string, GlobalError> & GlobalError) | undefined : TName extends ErrorNamespacePath ? GlobalError | undefined : TName extends FieldPath<TFieldValues> ? FieldPathError<TFieldValues, TName> | undefined : never;
+type UseFormGetErrors<TFieldValues extends FieldValues> = {
+	/**
+	 * Get all currently stored form errors without subscribing or running validation.
+	 *
+	 * @returns Form errors.
+	 *
+	 * @example
+	 * ```tsx
+	 * const errors = getErrors();
+	 * ```
+	 */
+	(name?: undefined): FieldErrors<TFieldValues>;
+	/**
+	 * Get a currently stored field or global error without subscribing or running validation.
+	 *
+	 * @param name - The path to the error.
+	 *
+	 * @returns The error at the given path.
+	 *
+	 * @example
+	 * ```tsx
+	 * const emailError = getErrors("email");
+	 * ```
+	 */
+	<TName extends FieldPath<TFieldValues> | ErrorNamespacePath>(name: TName): GetErrorsResult<TFieldValues, TName>;
+	/**
+	 * Get currently stored errors for multiple paths without subscribing or running validation.
+	 *
+	 * @param names - An array of error paths.
+	 *
+	 * @returns Errors for the given paths in the same order.
+	 *
+	 * @example
+	 * ```tsx
+	 * const [emailError, nameError] = getErrors(["email", "name"]);
+	 * ```
+	 */
+	<TNames extends (FieldPath<TFieldValues> | ErrorNamespacePath)[]>(names: readonly [
+		...TNames
+	]): {
+		[K in keyof TNames]: GetErrorsResult<TFieldValues, TNames[K]>;
+	};
+};
+type UseFormGetFieldState<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, formState?: FormState$1<TFieldValues>) => {
+	invalid: boolean;
+	isDirty: boolean;
+	isTouched: boolean;
+	isValidating: boolean;
+	error?: FieldPathError<TFieldValues, TFieldName>;
+};
+type UseFormSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
+	name?: readonly [
+		...TFieldNames
+	] | TFieldNames[number];
+	formState?: Partial<ReadFormState>;
+	callback: (data: Partial<FormState$1<TFieldValues>> & {
+		values: TFieldValues;
+		name?: InternalFieldName;
+		type?: EventType;
+	}) => void;
+	exact?: boolean;
+}) => () => void;
+type UseFormWatch<TFieldValues extends FieldValues> = {
+	/**
+	 * Watch and subscribe to all form updates and changes based on onChange, and trigger re-renders at the useForm level.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
+	 *
+	 * @returns The entire form values.
+	 *
+	 * @example
+	 * ```tsx
+	 * const formValues = watch();
+	 * ```
+	 */
+	(): TFieldValues;
+	/**
+	 * Watch and subscribe to an array of fields used outside of render.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
+	 *
+	 * @param names - An array of field names.
+	 * @param defaultValue - DefaultValues for the entire form.
+	 *
+	 * @returns An array of field values.
+	 *
+	 * @example
+	 * ```tsx
+	 * const [name, name1] = watch(["name", "name1"]);
+	 * ```
+	 */
+	<TFieldNames extends readonly FieldPath<TFieldValues>[]>(names: readonly [
+		...TFieldNames
+	], defaultValue?: DeepPartial$1<TFieldValues>): FieldPathValues<TFieldValues, TFieldNames>;
+	/**
+	 * Watch and subscribe to a single field used outside of render.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
+	 *
+	 * @param name - the path name to the form field value.
+	 * @param defaultValue - defaultValues for the entire form
+	 *
+	 * @returns the single field value
+	 *
+	 * @example
+	 * ```tsx
+	 * const name = watch("name");
+	 * ```
+	 */
+	<TFieldName extends FieldPath<TFieldValues>>(name: TFieldName, defaultValue?: FieldPathValue<TFieldValues, TFieldName>): FieldPathValue<TFieldValues, TFieldName>;
+	/**
+	 * Subscribe to field updates and changes without triggering a re-render.
+	 *
+	 * @remarks
+	 * [API](https://react-hook-form.com/docs/useform/watch) • [Demo](https://codesandbox.io/s/react-hook-form-watch-v7-ts-8et1d) • [Video](https://www.youtube.com/watch?v=3qLd69WMqKk)
+	 *
+	 * @param callback - Callback function to subscribe to all field changes and return an unsubscribe function.
+	 * @param defaultValues - DefaultValues for the entire form.
+	 *
+	 * @returns Unsubscribe function.
+	 *
+	 * @example
+	 * ```tsx
+	 * useEffect(() => {
+	 *   const { unsubscribe } = watch((value) => {
+	 *     console.log(value);
+	 *   });
+	 *   return () => unsubscribe();
+	 * }, [watch])
+	 * ```
+	 */
+	(callback: WatchObserver<TFieldValues>, defaultValues?: DeepPartial$1<TFieldValues>): Subscription$1;
+};
+type UseFormTrigger<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: TriggerConfig) => Promise<boolean>;
+type UseFormClearErrors<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[] | ErrorNamespacePath) => void;
+type UseFormSetValue<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, value: FieldPathValue<TFieldValues, TFieldName>, options?: SetValueConfig) => void;
+type UseFormSetValues<TFieldValues extends FieldValues> = (value: Partial<TFieldValues> | ResetAction<TFieldValues>, options?: SetValueConfig) => void;
+type UseFormSetError<TFieldValues extends FieldValues> = (name: FieldPath<TFieldValues> | ErrorNamespacePath, error: ErrorOption, options?: {
+	shouldFocus: boolean;
+}) => void;
+type UseFormUnregister<TFieldValues extends FieldValues> = (name?: FieldPath<TFieldValues> | FieldPath<TFieldValues>[] | readonly FieldPath<TFieldValues>[], options?: Omit<KeepStateOptions, "keepIsSubmitted" | "keepSubmitCount" | "keepValues" | "keepDefaultValues" | "keepErrors"> & {
+	keepValue?: boolean;
+	keepDefaultValue?: boolean;
+	keepError?: boolean;
+}) => void;
+type UseFormHandleSubmit<TFieldValues extends FieldValues, TTransformedValues = TFieldValues> = <TResult>(onValid: SubmitHandler<TTransformedValues, TResult>, onInvalid?: SubmitErrorHandler<TFieldValues>) => (e?: React$1.BaseSyntheticEvent) => Promise<Awaited<TResult> | undefined>;
+type UseFormResetField<TFieldValues extends FieldValues> = <TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(name: TFieldName, options?: ResetFieldConfig<TFieldValues, TFieldName>) => void;
+type ResetAction<TFieldValues> = (formValues: TFieldValues) => TFieldValues;
+type UseFormReset<TFieldValues extends FieldValues> = (values?: DefaultValues<TFieldValues> | TFieldValues | ResetAction<TFieldValues>, keepStateOptions?: KeepStateOptions) => void;
+type UseFormResetDefaultValues<TFieldValues extends FieldValues> = (values: DefaultValues<TFieldValues> | TFieldValues, options?: Partial<Pick<KeepStateOptions, "keepDirty" | "keepIsValid">>) => void;
+type WatchInternal<TFieldValues> = (fieldNames?: InternalFieldName | InternalFieldName[], defaultValue?: DeepPartial$1<TFieldValues>, isMounted?: boolean, isGlobal?: boolean) => FieldPathValue<FieldValues, InternalFieldName> | FieldPathValues<FieldValues, InternalFieldName[]>;
+type GetIsDirty = <TName extends InternalFieldName, TData>(name?: TName, data?: TData) => boolean;
+type FormStateSubjectRef<TFieldValues extends FieldValues> = Subject<Partial<FormState$1<TFieldValues>> & {
+	name?: InternalFieldName;
+	values?: TFieldValues;
+	type?: EventType;
+}>;
+type Subjects<TFieldValues extends FieldValues = FieldValues> = {
+	array: Subject<{
+		name?: InternalFieldName;
+		values?: FieldValues;
+	}>;
+	state: FormStateSubjectRef<TFieldValues>;
+};
+type Names = {
+	mount: InternalNameSet;
+	unMount: InternalNameSet;
+	disabled: InternalNameSet;
+	array: InternalNameSet;
+	watch: InternalNameSet;
+	registerName: InternalNameSet;
+	focus?: InternalFieldName;
+	watchAll?: boolean;
+};
+type BatchFieldArrayUpdate = <T extends Function, TFieldValues extends FieldValues, TFieldArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>>(name: InternalFieldName, updatedFieldArrayValues?: Partial<FieldArray<TFieldValues, TFieldArrayName>>[], method?: T, args?: Partial<{
+	argA: unknown;
+	argB: unknown;
+}>, shouldSetValue?: boolean, shouldUpdateFieldsAndErrors?: boolean) => void;
+type FromSubscribe<TFieldValues extends FieldValues> = <TFieldNames extends readonly FieldPath<TFieldValues>[]>(payload: {
+	name?: readonly [
+		...TFieldNames
+	] | TFieldNames[number];
+	formState?: Partial<ReadFormState>;
+	callback: (data: Partial<FormState$1<TFieldValues>> & {
+		values: TFieldValues;
+		name?: InternalFieldName;
+	}) => void;
+	exact?: boolean;
+	reRenderRoot?: boolean;
+}) => () => void;
+type Control<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
+	_subjects: Subjects<TFieldValues>;
+	_removeUnmounted: Noop;
+	_names: Names;
+	_state: {
+		mount: boolean;
+		action: boolean;
+		actionArrayLengths: Map<InternalFieldName, number>;
+		watch: boolean;
+	};
+	_reset: UseFormReset<TFieldValues>;
+	_options: UseFormProps<TFieldValues, TContext, TTransformedValues>;
+	_getDirty: GetIsDirty;
+	_resetDefaultValues: Noop;
+	_formState: FormState$1<TFieldValues>;
+	_setValid: (shouldUpdateValid?: boolean) => void;
+	_fields: FieldRefs;
+	_formValues: FieldValues;
+	_proxyFormState: ReadFormState;
+	_defaultValues: Partial<DefaultValues<TFieldValues>>;
+	_getWatch: WatchInternal<TFieldValues>;
+	_setFieldArray: BatchFieldArrayUpdate;
+	_getFieldArray: <TFieldArrayValues>(name: InternalFieldName) => Partial<TFieldArrayValues>[];
+	_setErrors: (errors: FieldErrors<TFieldValues>) => void;
+	_setDisabledField: (props: {
+		disabled?: boolean;
+		name: InternalFieldName;
+	}) => void;
+	_runSchema: (names: InternalFieldName[]) => Promise<{
+		errors: FieldErrors;
+	}>;
+	_updateIsValidating: (names?: InternalFieldName[], isValidating?: boolean) => void;
+	_focusError: () => boolean | undefined;
+	_disableForm: (disabled?: boolean) => void;
+	_subscribe: FromSubscribe<TFieldValues>;
+	register: UseFormRegister<TFieldValues>;
+	handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
+	unregister: UseFormUnregister<TFieldValues>;
+	getFieldState: UseFormGetFieldState<TFieldValues>;
+	setError: UseFormSetError<TFieldValues>;
+};
+type WatchObserver<TFieldValues extends FieldValues> = (value: DeepPartialSkipArrayKey<TFieldValues>, info: {
+	name?: FieldPath<TFieldValues>;
+	type?: EventType;
+	values?: unknown;
+}) => void;
+type UseFormReturn<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues> = {
+	watch: UseFormWatch<TFieldValues>;
+	getValues: UseFormGetValues<TFieldValues>;
+	getErrors: UseFormGetErrors<TFieldValues>;
+	getFieldState: UseFormGetFieldState<TFieldValues>;
+	setError: UseFormSetError<TFieldValues>;
+	clearErrors: UseFormClearErrors<TFieldValues>;
+	setValue: UseFormSetValue<TFieldValues>;
+	setValues: UseFormSetValues<TFieldValues>;
+	trigger: UseFormTrigger<TFieldValues>;
+	formState: FormState$1<TFieldValues>;
+	resetField: UseFormResetField<TFieldValues>;
+	reset: UseFormReset<TFieldValues>;
+	resetDefaultValues: UseFormResetDefaultValues<TFieldValues>;
+	handleSubmit: UseFormHandleSubmit<TFieldValues, TTransformedValues>;
+	unregister: UseFormUnregister<TFieldValues>;
+	control: Control<TFieldValues, TContext, TTransformedValues>;
+	register: UseFormRegister<TFieldValues>;
+	setFocus: UseFormSetFocus<TFieldValues>;
+	subscribe: UseFormSubscribe<TFieldValues>;
+};
+type UseFormStateReturn<TFieldValues extends FieldValues> = FormState$1<TFieldValues>;
+type Noop = () => void;
+interface File$2 extends Blob {
+	readonly lastModified: number;
+	readonly name: string;
+}
+interface FileList$1 {
+	readonly length: number;
+	item(index: number): File$2 | null;
+	[index: number]: File$2;
+}
+type Primitive$1 = null | undefined | string | number | boolean | symbol | bigint;
+type BrowserNativeObject = Date | FileList$1 | File$2;
+interface OpaqueTypes {
+}
+type OpaqueType = OpaqueTypes[keyof OpaqueTypes];
+type NonUndefined<T> = T extends undefined ? never : T;
+type LiteralUnion<T extends U, U extends Primitive$1> = T | (U & {
+	_?: never;
+});
+type ExtractObjects<T> = T extends infer U ? U extends object ? U : never : never;
+type IsPrimitiveLike<T> = T extends Primitive$1 ? true : false;
+type DeepPartial$1<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : {
+	[K in keyof T]?: ExtractObjects<T[K]> extends never ? T[K] : DeepPartial$1<T[K]>;
+};
+type DeepPartialSkipArrayKey<T> = IsPrimitiveLike<T> extends true ? T : T extends BrowserNativeObject | NestedValue | OpaqueType ? T : T extends ReadonlyArray<unknown> ? {
+	[K in keyof T]: DeepPartialSkipArrayKey<T[K]>;
+} : {
+	[K in keyof T]?: DeepPartialSkipArrayKey<T[K]>;
+};
+type IsAny$2<T> = 0 extends 1 & T ? true : false;
+type IsEqual<T1, T2> = T1 extends T2 ? (<G>() => G extends T1 ? 1 : 2) extends <G>() => G extends T2 ? 1 : 2 ? true : false : false;
+type DeepMap<T, TValue> = IsAny$2<T> extends true ? any : T extends BrowserNativeObject | NestedValue | OpaqueType ? TValue : T extends ReadonlyArray<infer U> ? Array<DeepMap<NonUndefined<U>, TValue> | undefined> : T extends object ? {
+	[K in keyof T]: DeepMap<NonUndefined<T[K]>, TValue>;
+} : TValue;
+type IsFlatObject<T extends object> = Extract<Exclude<T[keyof T], NestedValue | Date | FileList$1 | OpaqueType>, unknown[] | object> extends never ? true : false;
+type Merge<A, B> = {
+	[K in keyof A | keyof B]?: K extends keyof A & keyof B ? [
+		A[K],
+		B[K]
+	] extends [
+		object,
+		object
+	] ? Merge<A[K], B[K]> : B[K] : K extends keyof A ? A[K] : K extends keyof B ? B[K] : never;
+};
+type InternalFieldName = string;
+type FieldName<TFieldValues extends FieldValues> = IsFlatObject<TFieldValues> extends true ? Extract<keyof TFieldValues, string> : string;
+type CustomElement<TFieldValues extends FieldValues> = Partial<HTMLElement> & {
+	name: FieldName<TFieldValues>;
+	type?: string;
+	value?: any;
+	disabled?: boolean;
+	checked?: boolean;
+	options?: HTMLOptionsCollection;
+	files?: FileList | null;
+	focus?: Noop;
+};
+type FieldValues = Record<string, any>;
+type FieldElement<TFieldValues extends FieldValues = FieldValues> = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | CustomElement<TFieldValues>;
+type Ref = FieldElement;
+type Field = {
+	_f: {
+		ref: Ref;
+		name: InternalFieldName;
+		refs?: HTMLInputElement[];
+		mount?: boolean;
+		_c?: boolean;
+	} & RegisterOptions;
+};
+type FieldRefs = Partial<{
+	[key: InternalFieldName]: Field | FieldRefs;
+}>;
+type Message = string;
+type MultipleFieldErrors = {
+	[K in keyof RegisterOptions]?: ValidateResult;
+} & {
+	[key: string]: ValidateResult;
+};
+type FieldError = {
+	type: LiteralUnion<keyof RegisterOptions, string>;
+	root?: FieldError;
+	ref?: Ref;
+	types?: MultipleFieldErrors;
+	message?: Message;
+};
+type ErrorOption = {
+	message?: Message;
+	type?: LiteralUnion<keyof RegisterOptions, string>;
+	types?: MultipleFieldErrors;
+};
+type DeepRequired<T> = T extends BrowserNativeObject | Blob | OpaqueType ? T : {
+	[K in keyof T]-?: NonNullable<DeepRequired<T[K]>>;
+};
+type FieldErrorsImpl<T extends FieldValues = FieldValues> = {
+	[K in keyof T]?: T[K] extends BrowserNativeObject | Blob | OpaqueType ? FieldError : K extends "root" | `root.${string}` ? GlobalError : T[K] extends object ? Merge<FieldError, FieldErrorsImpl<T[K]>> : FieldError;
+};
+type GlobalError = Partial<{
+	type: string | number;
+	message: Message;
+}>;
+type FieldErrors<T extends FieldValues = FieldValues> = Partial<FieldErrorsImpl<DeepRequired<T>>> & {
+	root?: Record<string, GlobalError> & GlobalError;
+	form?: GlobalError & (string extends keyof T ? unknown : {
+		[K in keyof T]?: GlobalError;
+	});
+};
+type FieldPathError<TFieldValues extends FieldValues, TFieldPath extends FieldPath<TFieldValues>> = TFieldPath extends FieldPath<TFieldValues> ? TFieldPath extends `${string}.root` ? GlobalError : DeepRequired<NonNullable<FieldPathValue<TFieldValues, TFieldPath>>> extends infer TFieldValue ? IsAny$2<TFieldValue> extends true ? FieldError : NonNullable<FieldErrorsImpl<{
+	value: TFieldValue;
+}>["value"]> : never : never;
+type ValidationValue = boolean | number | string | RegExp;
+type ValidationRule<TValidationValue extends ValidationValue = ValidationValue> = TValidationValue | ValidationValueMessage<TValidationValue>;
+type ValidationValueMessage<TValidationValue extends ValidationValue = ValidationValue> = {
+	value: TValidationValue | undefined;
+	message: Message;
+};
+type ValidateResult = Message | Message[] | boolean | undefined;
+type FormValidateResult<T> = Partial<Record<keyof T, {
+	message: Message | Message[] | boolean | undefined;
+	type?: string;
+}>> | string | boolean;
+type Validate<TFieldValue, TFormValues> = (value: TFieldValue, formValues: TFormValues) => ValidateResult | Promise<ValidateResult>;
+type ValidateFormEventType = (typeof EVENTS)[keyof typeof EVENTS];
+type ValidateForm<TFormValues extends FieldValues, TFieldName extends FieldPath<TFormValues> = FieldPath<TFormValues>> = (props: {
+	formValues: TFormValues;
+	formState: FormState$1<TFormValues>;
+	eventType?: ValidateFormEventType;
+	name?: TFieldName | TFieldName[];
+}) => FormValidateResult<TFormValues> | Promise<FormValidateResult<TFormValues>>;
+type RegisterOptions<TFieldValues extends FieldValues = FieldValues, TFieldName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = Partial<{
+	required: Message | ValidationRule<boolean>;
+	min: ValidationRule<number | string>;
+	max: ValidationRule<number | string>;
+	maxLength: ValidationRule<number>;
+	minLength: ValidationRule<number>;
+	validate: Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues> | Record<string, Validate<FieldPathValue<TFieldValues, TFieldName>, TFieldValues>>;
+	value: FieldPathValue<TFieldValues, TFieldName>;
+	setValueAs: (value: any) => any;
+	shouldUnregister?: boolean;
+	onChange?: (event: any) => void;
+	onBlur?: (event: any) => void;
+	disabled: boolean;
+	deps: FieldPath<TFieldValues> | FieldPath<TFieldValues>[];
+}> & ({
+	pattern?: ValidationRule<RegExp>;
+	valueAsNumber?: false;
+	valueAsDate?: false;
+} | {
+	pattern?: undefined;
+	valueAsNumber?: false;
+	valueAsDate?: true;
+} | {
+	pattern?: undefined;
+	valueAsNumber?: true;
+	valueAsDate?: false;
+});
+type ControllerFieldState = {
+	invalid: boolean;
+	isTouched: boolean;
+	isDirty: boolean;
+	isValidating: boolean;
+	error?: FieldError;
+};
+type ControllerRenderProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>> = {
+	onChange: (...event: any[]) => void;
+	onBlur: Noop;
+	value: FieldPathValue<TFieldValues, TName>;
+	disabled?: boolean;
+	name: TName;
+	ref: RefCallBack;
+};
+type UseControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
+	name: TName;
+	rules?: Omit<RegisterOptions<TFieldValues, TName>, "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled">;
+	shouldUnregister?: boolean;
+	defaultValue?: FieldPathValue<TFieldValues, TName>;
+	control?: Control<TFieldValues, any, TTransformedValues>;
+	disabled?: boolean;
+	exact?: boolean;
+};
+type ControllerProps<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues> = {
+	render: ({ field, fieldState, formState, }: {
+		field: ControllerRenderProps<TFieldValues, TName>;
+		fieldState: ControllerFieldState;
+		formState: UseFormStateReturn<TFieldValues>;
+	}) => React$1.ReactElement;
+} & UseControllerProps<TFieldValues, TName, TTransformedValues>;
+/**
+ * Component wrapper around `useController` for controlled inputs.
+ *
+ * @see [API](https://react-hook-form.com/docs/usecontroller/controller)
+ *
+ * @example
+ * ```tsx
+ * <Controller
+ *   control={control}
+ *   name="test"
+ *   render={({ field, fieldState, formState }) => <input {...field} />}
+ * />
+ * ```
+ */
+export declare const Controller: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>, TTransformedValues = TFieldValues>(props: ControllerProps<TFieldValues, TName, TTransformedValues>) => React$1.ReactElement<unknown, string | React$1.JSXElementConstructor<any>>;
+/**
+ * Core hook for managing a form. Returns all methods and state for
+ * registration, validation, and submission.
+ *
+ * @see [API](https://react-hook-form.com/docs/useform)
+ *
+ * @example
+ * ```tsx
+ * const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+ * <form onSubmit={handleSubmit(onSubmit)}>
+ *   <input {...register("email", { required: true })} />
+ * </form>
+ * ```
+ */
+export declare function useForm<TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues>(props?: UseFormProps<TFieldValues, TContext, TTransformedValues>): UseFormReturn<TFieldValues, TContext, TTransformedValues>;
 type Primitive$2 = string | number | symbol | bigint | boolean | null | undefined;
 type Scalars = Primitive$2 | Primitive$2[];
 declare namespace util$1 {
@@ -82889,12 +78042,17 @@ export declare function zodResolver<Input extends FieldValues, Context, Output, 
 resolverOptions?: NonRawResolverOptions): Resolver<z4.input<T>, Context, z4.output<T>>;
 export declare function zodResolver<Input extends FieldValues, Context, Output, T extends Zod4Type<Output, Input> = Zod4Type<Output, Input>>(schema: Zod4Type<Output, Input>, schemaOptions: Zod4ParseParams | undefined, // already partial
 resolverOptions: RawResolverOptions): Resolver<z4.input<T>, Context, z4.input<T>>;
-declare const responseSchema: z.ZodUnion<readonly [
-	z.ZodJSONSchema,
-	z.ZodInstanceOf<Blob>
+/** Loads Solution data with a caller-declared response shape and invalidates the complete request path. */
+export declare function useApi<T = unknown>(path: string): readonly [
+	T,
+	() => Promise<void>
+];
+declare const responseSchema: z$1.ZodUnion<readonly [
+	z$1.ZodJSONSchema,
+	z$1.ZodInstanceOf<Blob>
 ]>;
-type ViewData = z.output<typeof responseSchema>;
-type SubmitOptions = {
+type ViewData = z$1.output<typeof responseSchema>;
+export type SubmitOptions = {
 	method?: "POST" | "PUT" | "PATCH" | "DELETE";
 	onSuccess?: (data: ViewData) => void | Promise<void>;
 	onError?: (error: Error) => void | Promise<void>;
@@ -82924,6 +78082,4861 @@ export declare function useConfirm(): {
 	isOpen: boolean;
 	element: React$1.JSX.Element | null;
 };
+export type ViewCapabilities = {
+	download: (path: string, filename: string) => Promise<void>;
+	navigate: (path: string) => void;
+};
+type FieldProps = Pick<React$1.AriaAttributes, "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-invalid"> & {
+	id?: string;
+	label?: string;
+	description?: string;
+	error?: string;
+};
+export type FormOption = {
+	value: string;
+	label: string;
+	disabled?: boolean;
+};
+declare function Input({ className, type, ...props }: React$1.ComponentProps<"input">): React$1.JSX.Element;
+/** Preserves native input events, refs, constraints, and submission with owned field presentation. */
+declare function Input$1({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Input>, "children" | "className" | "style"> & FieldProps): React$1.JSX.Element;
+declare function Textarea({ className, ...props }: React$1.ComponentProps<"textarea">): React$1.JSX.Element;
+/** Preserves native textarea behavior with automatically associated field feedback. */
+declare function Textarea$1({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Textarea>, "children" | "className" | "style"> & FieldProps): React$1.JSX.Element;
+declare function Checkbox$1({ className, indeterminate, ...props }: Checkbox.Root.Props): React$1.JSX.Element;
+/** Keeps checked state and native form participation inside the installed checkbox. */
+declare function Checkbox$2({ label, description, error, ...props }: Omit<React$1.ComponentProps<typeof Checkbox$1>, "children" | "className" | "style" | "render"> & FieldProps): React$1.JSX.Element;
+declare function Switch$1({ className, size, ...props }: Switch.Root.Props & {
+	size?: "sm" | "default";
+}): React$1.JSX.Element;
+/** Presents a labeled boolean control without duplicating checked state. */
+declare function Switch$2({ label, description, error, size, ...props }: Omit<React$1.ComponentProps<typeof Switch$1>, "children" | "className" | "style" | "render" | "size"> & FieldProps & {
+	size?: "sm" | "md";
+}): React$1.JSX.Element;
+declare function SliderThumb$1({ className, ...props }: SliderThumb.Props): React$1.JSX.Element;
+/** Builds one thumb per value and associates every thumb with field feedback. */
+export declare function Slider<Value extends number | readonly number[] = number>({ label, description, error, min, value, defaultValue, ref, onBlur, onFocus, ...props }: FieldProps & Omit<SliderRoot.Props<Value>, "children" | "className" | "style" | "render" | "ref" | "onBlur" | "onFocus"> & Pick<React$1.ComponentProps<typeof SliderThumb$1>, "onBlur" | "onFocus"> & {
+	ref?: React$1.ComponentProps<typeof SliderThumb$1>["inputRef"];
+}): React$1.JSX.Element;
+declare function SelectTrigger$1({ className, size, children, ...props }: SelectTrigger.Props & {
+	size?: "sm" | "default";
+}): React$1.JSX.Element;
+/** Owns select composition while preserving single and multiple selection contracts. */
+export declare function Select<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, size, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<SelectRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef"> & Pick<React$1.ComponentProps<typeof SelectTrigger$1>, "ref" | "onBlur" | "onFocus" | "size"> & {
+	options: readonly FormOption[];
+	placeholder?: string;
+}): React$1.JSX.Element;
+declare function ComboboxInput$1({ className, children, disabled, showTrigger, showClear, ...props }: ComboboxInput.Props & {
+	showTrigger?: boolean;
+	showClear?: boolean;
+}): React$1.JSX.Element;
+/** Keeps search, keyboard selection, and chips inside a single options-based control. */
+export declare function Combobox<Multiple extends boolean = false>({ options, label, description, error, id, placeholder, emptyText, ref, onBlur, onFocus, "aria-label": ariaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-invalid": invalid, ...props }: FieldProps & Pick<ComboboxRoot.Props<string, Multiple>, "name" | "form" | "autoComplete" | "required" | "readOnly" | "disabled" | "multiple" | "value" | "defaultValue" | "onValueChange" | "inputRef" | "inputValue" | "onInputValueChange"> & Pick<React$1.ComponentProps<typeof ComboboxInput$1>, "ref" | "onBlur" | "onFocus"> & {
+	options: readonly FormOption[];
+	placeholder?: string;
+	emptyText?: string;
+}): React$1.JSX.Element;
+/** Builds a named radio group from string options with independent option labels. */
+declare function RadioGroup$1({ options, label, description, error, ref, ...props }: FieldProps & Omit<RadioGroup.Props<string>, "children" | "className" | "style" | "render" | "ref" | "inputRef"> & {
+	options: readonly FormOption[];
+	ref?: RadioGroup.Props<string>["inputRef"];
+}): React$1.JSX.Element;
+export type ChartConfig = Record<string, {
+	label?: React$1.ReactNode;
+	icon?: React$1.ComponentType;
+} & ({
+	color?: string;
+	theme?: never;
+} | {
+	color?: never;
+	theme: Record<"light" | "dark", string>;
+})>;
+type ChartKey<Row> = Extract<keyof Row, string>;
+type ChartValueKey<Row> = {
+	[Key in keyof Row]-?: NonNullable<Row[Key]> extends number ? Key : never;
+}[keyof Row] & string;
+export type ChartSeries<Row> = {
+	key: ChartValueKey<Row>;
+	label?: string;
+};
+type ChartCurve = "linear" | "monotone" | "step";
+type ChartOptions = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "className" | "style"> & {
+	legend?: boolean;
+	tooltip?: boolean;
+};
+type CartesianChartProps<Row extends object> = ChartOptions & {
+	axes?: boolean;
+	padding?: number;
+	xTickFormatter?: (value: string | number) => string;
+	yTickFormatter?: (value: number) => string;
+	data: readonly Row[];
+	xKey: ChartKey<Row>;
+	series: readonly ChartSeries<Row>[];
+};
+type ValueChartProps<Row extends object> = ChartOptions & {
+	data: readonly Row[];
+	nameKey: ChartKey<Row>;
+	valueKey: ChartValueKey<Row>;
+};
+export type SankeyNode = {
+	name: string;
+};
+export type SankeyLink = {
+	source: number;
+	target: number;
+	value: number;
+};
+export declare function AreaChart<Row extends object>({ curve, fill, ...props }: CartesianChartProps<Row> & {
+	curve?: ChartCurve;
+	fill?: "solid" | "gradient";
+}): React$1.JSX.Element;
+export declare function BarChart<Row extends object>(props: CartesianChartProps<Row>): React$1.JSX.Element;
+export declare function LineChart<Row extends object>({ curve, ...props }: CartesianChartProps<Row> & {
+	curve?: ChartCurve;
+}): React$1.JSX.Element;
+/** Shows nonnegative contributions without letting data supply its own colors. */
+export declare function PieChart<Row extends object>({ data: rows, nameKey, valueKey, legend, tooltip, center, ...props }: ValueChartProps<Row> & {
+	center?: React$1.ReactNode;
+}): React$1.JSX.Element;
+/** Compares numeric series across named categories on shared polar axes. */
+export declare function RadarChart<Row extends object>({ data: rows, categoryKey, series, axes, legend, tooltip, ...props }: ChartOptions & {
+	data: readonly Row[];
+	categoryKey: ChartKey<Row>;
+	series: readonly ChartSeries<Row>[];
+	axes?: boolean;
+}): React$1.JSX.Element;
+/** Shows radial values against an explicit zero-to-max scale rather than an inferred percentage. */
+export declare function RadialBarChart<Row extends object>({ data: rows, nameKey, valueKey, max, legend, tooltip, ...props }: ValueChartProps<Row> & {
+	max: number;
+}): React$1.JSX.Element;
+/** Renders validated acyclic flows with fixed node and link presentation. */
+export declare function Sankey({ nodes, links, tooltip, ...props }: Omit<ChartOptions, "legend"> & {
+	nodes: readonly SankeyNode[];
+	links: readonly SankeyLink[];
+}): React$1.JSX.Element;
+/** Renders chart labels independently of chart layout using the same ordered theme colors. */
+export declare function ChartLegend<Row extends object>({ series, data, nameKey, valueKey, formatValue, orientation, ...props }: Omit<React$1.ComponentPropsWithoutRef<"ul">, "children" | "className" | "style"> & {
+	orientation?: "horizontal" | "vertical";
+} & ({
+	series: readonly {
+		key: string;
+		label?: string;
+	}[];
+	data?: never;
+	nameKey?: never;
+	valueKey?: never;
+	formatValue?: never;
+} | {
+	series?: never;
+	data: readonly Row[];
+	nameKey: ChartKey<Row>;
+	valueKey?: ChartValueKey<Row>;
+	formatValue?: (value: number) => React$1.ReactNode;
+})): React$1.JSX.Element | null;
+export type MapCoordinate = [
+	longitude: number,
+	latitude: number
+];
+type MapViewport$1 = {
+	center: MapCoordinate;
+	zoom: number;
+	bearing: number;
+	pitch: number;
+};
+export type MapMarker = {
+	id: string;
+	coordinates: MapCoordinate;
+	label: string;
+	description?: string;
+};
+export type MapRoute = {
+	id: string;
+	coordinates: MapCoordinate[];
+	label?: string;
+};
+export type MapArc = {
+	id: string;
+	from: MapCoordinate;
+	to: MapCoordinate;
+};
+export type MapGeography = FeatureCollection<Polygon | MultiPolygon, GeoJsonProperties>;
+export type MapControlsOptions = Omit<MapControlsProps, "className">;
+type MapOptions$1 = Omit<React$1.ComponentPropsWithoutRef<"div">, "children" | "className" | "style" | "onError" | "onSelect"> & {
+	center?: MapCoordinate;
+	zoom?: number;
+	controls?: boolean | MapControlsOptions;
+	interactive?: boolean;
+	blank?: boolean;
+	projection?: "mercator" | "globe";
+	viewport?: Partial<MapViewport$1>;
+	onViewportChange?: (viewport: MapViewport$1) => void;
+};
+/** Displays one street map with optional location, route, cluster, and connection layers. */
+export declare function StreetMap({ locations, routes, clusters, connections, onSelectLocation, ...props }: MapOptions$1 & {
+	locations?: readonly MapMarker[];
+	routes?: readonly MapRoute[];
+	clusters?: readonly MapMarker[];
+	connections?: readonly MapArc[];
+	onSelectLocation?: (location: MapMarker) => void;
+}): React$1.JSX.Element;
+/** Displays named locations with keyboard-accessible markers and optional popups. */
+export declare function MarkerMap({ data, onSelect, ...props }: MapOptions$1 & {
+	data: readonly MapMarker[];
+	onSelect?: (marker: MapMarker) => void;
+}): React$1.JSX.Element;
+/** Draws supplied route geometry without requesting a routing service. */
+export declare function RouteMap({ data, onSelect, ...props }: MapOptions$1 & {
+	data: readonly MapRoute[];
+	onSelect?: (route: MapRoute) => void;
+}): React$1.JSX.Element;
+/** Groups nearby locations on the map and expands clusters when activated. */
+export declare function ClusterMap({ data, onSelect, radius, ...props }: MapOptions$1 & {
+	data: readonly MapMarker[];
+	radius?: number;
+	onSelect?: (marker: MapMarker) => void;
+}): React$1.JSX.Element;
+/** Connects supplied origin and destination pairs with curved lines. */
+export declare function ArcMap({ data, onSelect, curvature, ...props }: MapOptions$1 & {
+	data: readonly MapArc[];
+	curvature?: number;
+	onSelect?: (arc: MapArc) => void;
+}): React$1.JSX.Element;
+interface DataGridI18nLabels {
+	sortAscending: string;
+	sortDescending: string;
+	pinColumnStart: string;
+	pinColumnEnd: string;
+	moveColumnStart: string;
+	moveColumnEnd: string;
+	columnsMenu: string;
+	unpinColumn: (title: string) => string;
+	toggleColumns: string;
+	rowCreate: string;
+	pinRow: string;
+	unpinRow: string;
+	selectRow: string;
+	selectAll: string;
+	expandRow: string;
+	collapseRow: string;
+	dragToReorder: string;
+	dragToReorderRow: string;
+	reorderingUnavailable: string;
+	loading: string;
+	empty: string;
+	allRowsLoaded: string;
+	rowsPerPage: string;
+	paginationInfo: (info: {
+		from: number;
+		to: number;
+		count: number;
+	}) => string;
+	previousPage: string;
+	nextPage: string;
+	goToPage: (page: number) => string;
+	paginationEllipsis: string;
+	filterSelectedCount: (count: number) => string;
+	filterNoResults: string;
+	filterClear: string;
+}
+type DataGridI18nOverrides = {
+	labels?: Partial<DataGridI18nLabels>;
+};
+type Updater<T> = T | ((old: T) => T);
+type OnChangeFn<T> = (updaterOrValue: Updater<T>) => void;
+type RowData = Record<string, any> | Array<any>;
+type CellData = unknown;
+type TransformDataValueFn = (dataValue: any) => any;
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends ((x: infer R) => any) ? R : never;
+type NoInfer$1<T> = [
+	T
+][T extends any ? 0 : never];
+type Getter<TValue> = <TTValue = TValue>() => NoInfer$1<TTValue>;
+declare const coreColumnsFeature: TableFeature;
+declare const coreHeadersFeature: TableFeature;
+declare const coreRowModelsFeature: TableFeature;
+declare const coreRowsFeature: TableFeature;
+declare const coreTablesFeature: TableFeature;
+interface InteropSubscribable<T> {
+	subscribe: (observer: Observer$1<T>) => Subscription$2;
+}
+type Observer$1<T> = {
+	next?: (value: T) => void;
+	error?: (err: unknown) => void;
+	complete?: () => void;
+};
+interface Subscription$2 {
+	unsubscribe: () => void;
+}
+interface Subscribable<T> extends InteropSubscribable<T> {
+	subscribe: ((observer: Observer$1<T>) => Subscription$2) & ((next: (value: T) => void, error?: (error: any) => void, complete?: () => void) => Subscription$2);
+}
+interface Readable<T> extends Subscribable<T> {
+	get: () => T;
+}
+interface BaseAtom<T> extends Subscribable<T>, Readable<T> {
+}
+interface Atom<T> extends BaseAtom<T> {
+	/** Sets the value of the atom using a function. */
+	set: ((fn: (prevVal: T) => T) => void) & ((value: T) => void);
+}
+interface AtomOptions<T> {
+	compare?: (prev: T, next: T) => boolean;
+}
+interface ReadonlyAtom<T> extends BaseAtom<T> {
+}
+type StoreAction = (...args: Array<any>) => any;
+type StoreActionMap = Record<string, StoreAction>;
+type StoreActionsFactory<T, TActions extends StoreActionMap> = (store: {
+	setState: Store$1<T>["setState"];
+	get: Store$1<T>["get"];
+}) => TActions;
+type NonFunction<T> = T extends ((...args: Array<any>) => any) ? never : T;
+declare class Store$1<T, TActions extends StoreActionMap = never> {
+	private atom;
+	readonly actions: TActions;
+	constructor(getValue: (prev?: NoInfer<T>) => T);
+	constructor(initialValue: T);
+	constructor(initialValue: NonFunction<T>, actionsFactory: StoreActionsFactory<T, TActions>);
+	setState(updater: (prev: T) => T): void;
+	get state(): T;
+	get(): T;
+	subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$2;
+}
+declare class ReadonlyStore<T> implements Omit<Store$1<T>, "setState" | "actions"> {
+	private atom;
+	constructor(getValue: (prev?: NoInfer<T>) => T);
+	constructor(initialValue: T);
+	get state(): T;
+	get(): T;
+	subscribe(observerOrFn: Observer$1<T> | ((value: T) => void)): Subscription$2;
+}
+interface TableAtomOptions<T> extends AtomOptions<T> {
+	/**
+	 * A debug name for the atom, useful for debugging.
+	 */
+	debugName: string;
+}
+interface TableReactivityBindings {
+	createOptionsStore: boolean;
+	wrapExternalAtoms: boolean;
+	/**
+	 * Invalidates readonly atoms whose compute reads non-reactive inputs (plain
+	 * options). Render-phase adapters call this after publishing captured
+	 * controlled state from a host commit, including when no base atom changed,
+	 * so controlled ownership changes still reach subscribers.
+	 */
+	commit?: () => void;
+	addSubscription: (subscription: Subscription$2) => void;
+	/**
+	 * Creates a writable atom with an initial value.
+	 */
+	createWritableAtom: <T>(initialValue: T, options?: TableAtomOptions<T>) => Atom<T>;
+	/**
+	 * Creates a readonly/derived atom from a compute function.
+	 */
+	createReadonlyAtom: <T>(fn: () => T, options?: TableAtomOptions<T>) => ReadonlyAtom<T>;
+	/**
+	 * Evaluates a function without tracking reactive dependencies.
+	 */
+	untrack: <T>(fn: () => T) => T;
+	/**
+	 * Batches reactive updates to avoid intermediate recomputation.
+	 */
+	batch: (fn: () => void) => void;
+	/**
+	 * Schedules a function to run. This is used to defer updates after the current call stack (render, etc.) has finished
+	 */
+	schedule: (fn: () => void) => void;
+	/**
+	 * Unmounts the table, performing any necessary cleanup. This is called when the table is destroyed or unmounted in the framework adapter.
+	 */
+	unmount?: () => void;
+}
+interface CoreFeatures {
+	coreReactivityFeature?: TableReactivityBindings;
+	coreCellsFeature: typeof coreCellsFeature;
+	coreColumnsFeature: typeof coreColumnsFeature;
+	coreHeadersFeature: typeof coreHeadersFeature;
+	coreRowModelsFeature: typeof coreRowModelsFeature;
+	coreRowsFeature: typeof coreRowsFeature;
+	coreTablesFeature: typeof coreTablesFeature;
+}
+declare const sortFns: {
+	alphanumeric: CreatedSortFn<any, any>;
+	alphanumericCaseSensitive: CreatedSortFn<any, any>;
+	basic: CreatedSortFn<any, any>;
+	datetime: CreatedSortFn<any, any>;
+	text: CreatedSortFn<any, any>;
+	textCaseSensitive: CreatedSortFn<any, any>;
+};
+type BuiltInSortFn = keyof typeof sortFns;
+interface TableState_ColumnSizing {
+	columnSizing: ColumnSizingState;
+}
+type ColumnSizingState = Record<string, number>;
+interface ColumnOffsets {
+	/**
+	 * Offset from the start edge of the region to each column's start edge,
+	 * keyed by column id.
+	 */
+	starts: Record<string, number>;
+	/**
+	 * Offset from the end edge of the region to each column's end edge, keyed by
+	 * column id.
+	 */
+	afters: Record<string, number>;
+}
+interface ColumnOffsetsByPosition {
+	/**
+	 * Offsets across all visible leaf columns, ignoring pinning regions.
+	 */
+	all: ColumnOffsets;
+	/**
+	 * Offsets within the center (unpinned) region.
+	 */
+	center: ColumnOffsets;
+	/**
+	 * Offsets within the logical start pinned region.
+	 *
+	 * In LTR languages/layouts, start usually corresponds to left. In RTL
+	 * languages/layouts, start usually corresponds to right.
+	 */
+	start: ColumnOffsets;
+	/**
+	 * Offsets within the logical end pinned region.
+	 *
+	 * In LTR languages/layouts, end usually corresponds to right. In RTL
+	 * languages/layouts, end usually corresponds to left.
+	 */
+	end: ColumnOffsets;
+}
+interface TableOptions_ColumnSizing {
+	/**
+	 * Called with an updater when committed column sizing state changes. Pair
+	 * this with `state.columnSizing` when using external state; external atoms
+	 * can own the slice without this callback.
+	 */
+	onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
+}
+interface Table_ColumnSizing {
+	/**
+	 * Sums the current sizes of visible center-region leaf columns.
+	 */
+	getCenterTotalSize: () => number;
+	/**
+	 * Returns memoized column offset maps (start and after offsets keyed by
+	 * column id) for each pinning region plus the full visible leaf column list.
+	 *
+	 * Backs `column.getStart()` and `column.getAfter()` with O(1) lookups.
+	 */
+	getColumnOffsets: () => ColumnOffsetsByPosition;
+	/**
+	 * Sums the current sizes of visible logical start-pinned leaf columns.
+	 */
+	getStartTotalSize: () => number;
+	/**
+	 * Sums the current sizes of visible logical end-pinned leaf columns.
+	 */
+	getEndTotalSize: () => number;
+	/**
+	 * Sums the current sizes of all visible leaf columns.
+	 */
+	getTotalSize: () => number;
+	/**
+	 * Resets column sizing to `initialState.columnSizing`. Pass `true` to reset
+	 * to the feature default of `{}`.
+	 */
+	resetColumnSizing: (defaultState?: boolean) => void;
+	/**
+	 * Updates committed column sizing state with a next map or updater function.
+	 */
+	setColumnSizing: (updater: Updater<ColumnSizingState>) => void;
+}
+interface ColumnDef_ColumnSizing {
+	/**
+	 * Upper bound used when resolving this column's size.
+	 */
+	maxSize?: number;
+	/**
+	 * Lower bound used when resolving this column's size.
+	 */
+	minSize?: number;
+	/**
+	 * Initial size used before column sizing state overrides it.
+	 */
+	size?: number;
+}
+interface Column_ColumnSizing {
+	/**
+	 * Measures the offset from this column's end edge to the end of its region.
+	 *
+	 * Pass a pinned region to measure within that logical region. The value is
+	 * the sum of visible leaf column sizes after this column.
+	 */
+	getAfter: (position?: ColumnPinningPosition | "center") => number;
+	/**
+	 * Resolves the column's current size after state and min/max constraints.
+	 */
+	getSize: () => number;
+	/**
+	 * Measures the offset from the start of this column's region to its start
+	 * edge.
+	 *
+	 * Pass a pinned region to measure within that logical region. The value is
+	 * the sum of visible leaf column sizes before this column.
+	 */
+	getStart: (position?: ColumnPinningPosition | "center") => number;
+	/**
+	 * Resets the column to its initial size.
+	 */
+	resetSize: () => void;
+}
+interface Header_ColumnSizing {
+	/**
+	 * Computes this header's rendered size from its leaf columns.
+	 */
+	getSize: () => number;
+	/**
+	 * Returns the offset measurement along the row-axis (usually the x-axis for standard tables) for the header. This is effectively a sum of the offset measurements of all preceding headers.
+	 */
+	getStart: (position?: ColumnPinningPosition) => number;
+}
+interface TableState_ColumnResizing {
+	columnResizing: columnResizingState;
+}
+interface columnResizingState {
+	columnSizingStart: Array<[
+		string,
+		number
+	]>;
+	deltaOffset: null | number;
+	deltaPercentage: null | number;
+	isResizingColumn: false | string;
+	startOffset: null | number;
+	startSize: null | number;
+}
+type ColumnResizeMode = "onChange" | "onEnd";
+type ColumnResizeDirection = "ltr" | "rtl";
+interface TableOptions_ColumnResizing {
+	/**
+	 * Determines when committed `columnSizing` values are updated. `onChange`
+	 * commits sizes while the resize handle is dragged; `onEnd` commits when the
+	 * resize interaction finishes.
+	 */
+	columnResizeMode?: ColumnResizeMode;
+	/**
+	 * Enables or disables column resizing for the whole table.
+	 */
+	enableColumnResizing?: boolean;
+	/**
+	 * Sets the resize direction used to calculate drag offsets. Defaults to `ltr`.
+	 */
+	columnResizeDirection?: ColumnResizeDirection;
+	/**
+	 * Called with an updater when the transient `columnResizing` state changes.
+	 * Pair this with `state.columnResizing` when using external state; external
+	 * atoms can own the slice without this callback.
+	 */
+	onColumnResizingChange?: OnChangeFn<columnResizingState>;
+}
+interface Table_ColumnResizing {
+	/**
+	 * Resets `columnResizing` to `initialState.columnResizing`.
+	 *
+	 * Pass `true` to ignore initial state and reset to the no-drag default state.
+	 */
+	resetHeaderSizeInfo: (defaultState?: boolean) => void;
+	/**
+	 * Updates transient resize interaction state with a next state or updater function.
+	 */
+	setColumnResizing: (updater: Updater<columnResizingState>) => void;
+}
+interface ColumnDef_ColumnResizing {
+	/**
+	 * Enables or disables column resizing for the column.
+	 */
+	enableResizing?: boolean;
+}
+interface Column_ColumnResizing {
+	/**
+	 * Checks whether this column can start a resize interaction.
+	 */
+	getCanResize: () => boolean;
+	/**
+	 * Checks whether this column is the active resize target.
+	 */
+	getIsResizing: () => boolean;
+}
+interface Header_ColumnResizing {
+	/**
+	 * Creates the `onMouseDown`/`onTouchStart` handler for a resize handle.
+	 *
+	 * Dragging and release listeners are installed and cleaned up automatically.
+	 */
+	getResizeHandler: (context?: Document) => (event: unknown) => void;
+}
+interface Header_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_Header<TFeatures, TData, TValue> {
+}
+interface Header_FeatureMap {
+	columnSizingFeature: Header_ColumnSizing;
+	columnResizingFeature: Header_ColumnResizing;
+}
+type Header<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Header_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Header_FeatureMap>;
+type ExpandedState = true | Record<string, boolean>;
+interface TableState_RowExpanding {
+	expanded: ExpandedState;
+}
+interface Row_RowExpanding {
+	/**
+	 * Checks whether this row can be expanded.
+	 */
+	getCanExpand: () => boolean;
+	/**
+	 * Checks whether every ancestor of this row is expanded.
+	 */
+	getIsAllParentsExpanded: () => boolean;
+	/**
+	 * Checks whether this row is currently expanded.
+	 */
+	getIsExpanded: () => boolean;
+	/**
+	 * Creates a handler that toggles this row's expanded state.
+	 */
+	getToggleExpandedHandler: () => () => void;
+	/**
+	 * Toggles the expanded state (or sets it if `expanded` is provided) for the row.
+	 */
+	toggleExpanded: (expanded?: boolean) => void;
+}
+interface TableOptions_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Enables automatic expanded-state resets when page-altering table state changes.
+	 */
+	autoResetExpanded?: boolean;
+	/**
+	 * Allows rows with subRows to be expanded.
+	 */
+	enableExpanding?: boolean;
+	/**
+	 * If provided, allows you to override the default behavior of determining whether a row is currently expanded.
+	 */
+	getIsRowExpanded?: (row: Row<TFeatures, TData>) => boolean;
+	/**
+	 * If provided, allows you to override the default behavior of determining whether a row can be expanded.
+	 */
+	getRowCanExpand?: (row: Row<TFeatures, TData>) => boolean;
+	/**
+	 * Enables manual row expansion. If this is set to `true`, `getExpandedRowModel` will not be used to expand rows and you would be expected to perform the expansion in your own data model. This is useful if you are doing server-side expansion.
+	 */
+	manualExpanding?: boolean;
+	/**
+	 * Called with an updater when expanded state changes. Pair this with
+	 * `state.expanded` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onExpandedChange?: OnChangeFn<ExpandedState>;
+	/**
+	 * If `true` expanded rows will be paginated along with the rest of the table (which means expanded rows may span multiple pages). If `false` expanded rows will not be considered for pagination (which means expanded rows will always render on their parent's page). This also means more rows will be rendered than the set page size.
+	 */
+	paginateExpandedRows?: boolean;
+}
+interface Table_RowExpanding<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Lists expanded sub-rows inline below their parents. Row display order and
+	 * the paginated row model expand rows through it.
+	 *
+	 * @internal
+	 */
+	_expandRows: (rowModel: RowModel<TFeatures, TData>) => RowModel<TFeatures, TData>;
+	/**
+	 * Resets expanded state after the table data or grouping changes.
+	 *
+	 * Honors `autoResetAll`, `autoResetExpanded`, and `manualExpanding`. Called
+	 * by the row models; you rarely need to invoke it yourself.
+	 */
+	autoResetExpanded: () => void;
+	/**
+	 * Checks whether at least one row can be expanded.
+	 */
+	getCanSomeRowsExpand: () => boolean;
+	/**
+	 * Computes the deepest expanded row id depth.
+	 */
+	getExpandedDepth: () => number;
+	/**
+	 * Checks whether all rows in the current row model are expanded.
+	 */
+	getIsAllRowsExpanded: () => boolean;
+	/**
+	 * Checks whether any row is currently expanded.
+	 */
+	getIsSomeRowsExpanded: () => boolean;
+	/**
+	 * Creates a handler that toggles all rows expanded.
+	 */
+	getToggleAllRowsExpandedHandler: () => (event: unknown) => void;
+	/**
+	 * Resets `expanded` to `initialState.expanded`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `{}`.
+	 */
+	resetExpanded: (defaultState?: boolean) => void;
+	/**
+	 * Updates expanded state with `true`, a row-id map, or an updater function.
+	 */
+	setExpanded: (updater: Updater<ExpandedState>) => void;
+	/**
+	 * Toggles the expanded state for all rows.
+	 */
+	toggleAllRowsExpanded: (expanded?: boolean) => void;
+}
+interface Table_RowModels_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Resolves the row model after expanded rows have been flattened into view.
+	 */
+	getExpandedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Reads the row model immediately before expansion.
+	 */
+	getPreExpandedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Expanded<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	expandedRowModel: () => RowModel<TFeatures, TData>;
+}
+declare const filterFns: {
+	arrIncludes: CreatedFilterFn<any, any>;
+	arrIncludesAll: CreatedFilterFn<any, any>;
+	arrHas: CreatedFilterFn<any, any>;
+	arrIncludesSome: CreatedFilterFn<any, any>;
+	between: CreatedFilterFn<any, any>;
+	betweenInclusive: CreatedFilterFn<any, any>;
+	empty: CreatedFilterFn<any, any>;
+	endsWith: CreatedFilterFn<any, any>;
+	equals: CreatedFilterFn<any, any>;
+	equalsString: CreatedFilterFn<any, any>;
+	equalsStringSensitive: CreatedFilterFn<any, any>;
+	inDateRange: CreatedFilterFn<any, any>;
+	inNumberRange: CreatedFilterFn<any, any>;
+	includesString: CreatedFilterFn<any, any>;
+	includesStringSensitive: CreatedFilterFn<any, any>;
+	notEmpty: CreatedFilterFn<any, any>;
+	startsWith: CreatedFilterFn<any, any>;
+	weakEquals: CreatedFilterFn<any, any>;
+};
+type BuiltInFilterFn = keyof typeof filterFns;
+interface FilterMeta {
+}
+type ExtractFilterMeta<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? FilterMeta : TFeatures extends {
+	filterMeta: infer TFilterMeta extends object;
+} ? TFilterMeta : FilterMeta;
+interface FilterFns {
+}
+interface TableState_ColumnFiltering {
+	columnFilters: ColumnFiltersState;
+}
+type ColumnFiltersState = Array<ColumnFilter>;
+interface ColumnFilter {
+	id: string;
+	value: unknown;
+}
+interface RowModelFns_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	filterFns: Record<string, FilterFn<TFeatures, TData>>;
+}
+interface FilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	(row: Row<TFeatures, TData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void): boolean;
+	/**
+	 * Removes the filter from `state.columnFilters` when the filter value fails
+	 * this test (e.g. empty strings for text filters).
+	 *
+	 * When provided, this test is authoritative: values it keeps stay in filter
+	 * state even when they are empty strings, which the default heuristic would
+	 * otherwise remove. An `undefined` filter value always clears the filter
+	 * regardless.
+	 */
+	autoRemove?: ColumnFilterAutoRemoveTestFn<TFeatures, TData>;
+	/**
+	 * Normalizes the filter value before filtering runs.
+	 *
+	 * The table applies this once per filter (not per row) and passes the
+	 * resolved value to the filter function as `filterValue`.
+	 */
+	resolveFilterValue?: TransformFilterValueFn<TFeatures, TData>;
+	/**
+	 * Normalizes each row's value before it is compared against the filter
+	 * value. Only honored by filter functions built with `constructFilterFn`
+	 * (including all built-in filter functions).
+	 */
+	resolveDataValue?: TransformDataValueFn;
+}
+interface FilterFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	filter: (dataValue: any, filterValue: any, row: Row<TFeatures, TData>, columnId: string, addMeta?: (meta: ExtractFilterMeta<TFeatures>) => void) => boolean;
+	autoRemove?: (filterValue: any) => boolean;
+	resolveFilterValue?: (filterValue: any) => any;
+	resolveDataValue?: TransformDataValueFn;
+}
+interface CreatedFilterFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends FilterFnDef<TFeatures, TData> {
+	<TRowFeatures extends TableFeatures, TRowData extends RowData>(row: Row<TRowFeatures, TRowData>, columnId: string, filterValue: any, addMeta?: (meta: ExtractFilterMeta<TRowFeatures>) => void): boolean;
+}
+type TransformFilterValueFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => TValue;
+type ColumnFilterAutoRemoveTestFn<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = (value: any, column?: Column<TFeatures, TData, TValue>) => boolean;
+type ExtractFilterFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof FilterFns | BuiltInFilterFn : TFeatures extends {
+	filterFns: infer TFilterFns extends object;
+} ? Extract<keyof TFilterFns, string> : keyof FilterFns;
+type FilterFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractFilterFnKeys<TFeatures> | FilterFn<TFeatures, TData>;
+interface ColumnDef_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Enables this column to participate in column-specific filtering.
+	 *
+	 * Defaults to `true`; table-level `enableColumnFilters` and `enableFilters`
+	 * must also allow filtering.
+	 */
+	enableColumnFilter?: boolean;
+	/**
+	 * The filter function to use with this column. Can be the name of a built-in filter function or a custom filter function.
+	 */
+	filterFn?: FilterFnOption<TFeatures, TData>;
+}
+interface Column_ColumnFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Returns an automatically calculated filter function for the column based off of the columns first known value.
+	 */
+	getAutoFilterFn: () => FilterFn<TFeatures, TData>;
+	/**
+	 * Checks whether this accessor column can currently be column-filtered.
+	 */
+	getCanFilter: () => boolean;
+	/**
+	 * Returns the filter function (either user-defined or automatic, depending on configuration) for the columnId specified.
+	 */
+	getFilterFn: () => FilterFn<TFeatures, TData>;
+	/**
+	 * Returns the index (including `-1`) of the column filter in the table's `state.columnFilters` array.
+	 */
+	getFilterIndex: () => number;
+	/**
+	 * Reads this column's current value from `state.columnFilters`.
+	 */
+	getFilterValue: () => unknown;
+	/**
+	 * Checks whether this column has an active entry in `state.columnFilters`.
+	 */
+	getIsFiltered: () => boolean;
+	/**
+	 * Adds, updates, or removes this column's filter value.
+	 *
+	 * Updater functions receive the previous filter value. Values that satisfy
+	 * the filter function's `autoRemove` rule are removed from filter state.
+	 */
+	setFilterValue: (updater: Updater<any>) => void;
+}
+interface Row_ColumnFiltering<in out TFeatures extends TableFeatures, in out _TData extends RowData> {
+	/**
+	 * The column filters map for the row. This object tracks whether a row is passing/failing specific filters by their column ID.
+	 */
+	columnFilters: Record<string, boolean>;
+	/**
+	 * The column filters meta map for the row. This object tracks any filter meta for a row as optionally provided during the filtering process.
+	 */
+	columnFiltersMeta: Record<string, ExtractFilterMeta<TFeatures>>;
+}
+interface TableOptions_ColumnFiltering<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+	/**
+	 * Enables column-specific filtering for all columns that also allow it.
+	 */
+	enableColumnFilters?: boolean;
+	/**
+	 * Enables all filtering features for the table.
+	 *
+	 * Set this to `false` to disable both column filtering and global filtering.
+	 */
+	enableFilters?: boolean;
+	/**
+	 * By default, filtering is done from parent rows down (so if a parent row is filtered out, all of its children will be filtered out as well). Setting this option to `true` will cause filtering to be done from leaf rows up (which means parent rows will be included so long as one of their child or grand-child rows is also included).
+	 */
+	filterFromLeafRows?: boolean;
+	/**
+	 * Disables the `getFilteredRowModel` from being used to filter data. This may be useful if your table needs to dynamically support both client-side and server-side filtering.
+	 */
+	manualFiltering?: boolean;
+	/**
+	 * By default, filtering is done for all rows (max depth of 100), no matter if they are root level parent rows or the child leaf rows of a parent row. Setting this option to `0` will cause filtering to only be applied to the root level parent rows, with all sub-rows remaining unfiltered. Similarly, setting this option to `1` will cause filtering to only be applied to child leaf rows 1 level deep, and so on.
+	 * This is useful for situations where you want a row's entire child hierarchy to be visible regardless of the applied filter.
+	 */
+	maxLeafRowFilterDepth?: number;
+	/**
+	 * Called with an updater when column filter state changes. Pair this with
+	 * `state.columnFilters` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
+}
+interface Table_ColumnFiltering {
+	/**
+	 * Resets `columnFilters` to `initialState.columnFilters`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `[]`.
+	 */
+	resetColumnFilters: (defaultState?: boolean) => void;
+	/**
+	 * Updates column filter state with a next array or updater function.
+	 */
+	setColumnFilters: (updater: Updater<ColumnFiltersState>) => void;
+}
+interface Table_RowModels_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Resolves the row model after column and global filters have been applied.
+	 */
+	getFilteredRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Reads the row model immediately before filtering.
+	 */
+	getPreFilteredRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Filtered<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	filteredRowModel: () => RowModel<TFeatures, TData>;
+}
+interface PaginationState {
+	pageIndex: number;
+	/**
+	 * The number of rows per page. Set to `Infinity` to place all rows on a
+	 * single page.
+	 */
+	pageSize: number;
+}
+interface TableState_RowPagination {
+	pagination: PaginationState;
+}
+interface TableOptions_RowPagination {
+	/**
+	 * If set to `true`, pagination will be reset to the first page when page-altering state changes e.g. `data` is updated, filters change, grouping changes, etc.
+	 */
+	autoResetPageIndex?: boolean;
+	/**
+	 * Enables manual pagination. If this option is set to `true`, the table will not automatically paginate rows using `getPaginatedRowModel()` and instead will expect you to manually paginate the rows before passing them to the table. This is useful if you are doing server-side pagination and aggregation.
+	 */
+	manualPagination?: boolean;
+	/**
+	 * Called with an updater when pagination state changes. Pair this with
+	 * `state.pagination` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onPaginationChange?: OnChangeFn<PaginationState>;
+	/**
+	 * When manually controlling pagination, you can supply a total `pageCount` value to the table if you know it (Or supply a `rowCount` and `pageCount` will be calculated). If you do not know how many pages there are, you can set this to `-1`.
+	 */
+	pageCount?: number;
+	/**
+	 * When manually controlling pagination, you can supply a total `rowCount` value to the table if you know it. The `pageCount` can be calculated from this value and the `pageSize`.
+	 */
+	rowCount?: number;
+}
+interface Table_RowPagination<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+	/**
+	 * Resets the page index to `0` after page-altering changes such as new
+	 * data, filtering, sorting, or grouping.
+	 *
+	 * Honors `autoResetAll`, `autoResetPageIndex`, and `manualPagination`.
+	 * Called by the row models; you rarely need to invoke it yourself.
+	 */
+	autoResetPageIndex: () => void;
+	/**
+	 * Checks whether the current page index can move forward.
+	 */
+	getCanNextPage: () => boolean;
+	/**
+	 * Checks whether a known, finite last page exists after the current page.
+	 */
+	getCanLastPage: () => boolean;
+	/**
+	 * Checks whether the current page index can move backward.
+	 */
+	getCanPreviousPage: () => boolean;
+	/**
+	 * Resolves the current page count from `options.pageCount` or row count and
+	 * page size.
+	 */
+	getPageCount: () => number;
+	/**
+	 * Resolves the row count used for pagination math.
+	 *
+	 * `options.rowCount` wins; otherwise the pre-paginated row model is counted.
+	 */
+	getRowCount: () => number;
+	/**
+	 * Builds zero-based page indexes for the current page count.
+	 */
+	getPageOptions: () => Array<number>;
+	/**
+	 * Increments the page index by one, if possible.
+	 */
+	nextPage: () => void;
+	/**
+	 * Decrements the page index by one, if possible.
+	 */
+	previousPage: () => void;
+	/**
+	 * Sets the page index to `0`.
+	 */
+	firstPage: () => void;
+	/**
+	 * Sets the page index to the last known page. Does nothing when the page
+	 * count is unknown, empty, or non-finite.
+	 */
+	lastPage: () => void;
+	/**
+	 * Resets `pagination.pageIndex` to initial state, or to `0` when
+	 * `defaultState` is `true`.
+	 */
+	resetPageIndex: (defaultState?: boolean) => void;
+	/**
+	 * Resets `pagination.pageSize` to initial state, or to `10` when
+	 * `defaultState` is `true`.
+	 */
+	resetPageSize: (defaultState?: boolean) => void;
+	/**
+	 * Resets `pagination` to `initialState.pagination`.
+	 *
+	 * Pass `true` to ignore initial state and reset to
+	 * `{ pageIndex: 0, pageSize: 10 }`.
+	 */
+	resetPagination: (defaultState?: boolean) => void;
+	/**
+	 * Updates `pagination.pageIndex` using a value or updater.
+	 */
+	setPageIndex: (updater: Updater<number>) => void;
+	/**
+	 * Updates `pagination.pageSize` using a value or updater.
+	 */
+	setPageSize: (updater: Updater<number>) => void;
+	/**
+	 * Updates pagination state with a next state or updater function.
+	 */
+	setPagination: (updater: Updater<PaginationState>) => void;
+}
+interface Table_RowModels_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Resolves the row model after pagination has sliced the current page.
+	 */
+	getPaginatedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Reads the row model immediately before pagination.
+	 */
+	getPrePaginatedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Paginated<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	paginatedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface Column_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Computes min/max numeric facet values for this column.
+	 */
+	getFacetedMinMaxValues: () => undefined | [
+		number,
+		number
+	];
+	/**
+	 * Computes the row model used to derive this column's facet values.
+	 *
+	 * Other column filters are applied, while this column's own filter is
+	 * excluded.
+	 */
+	getFacetedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Computes unique facet values and occurrence counts for this column.
+	 */
+	getFacetedUniqueValues: () => Map<any, number>;
+}
+interface Table_RowModels_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Computes min/max numeric facet values for the active faceting context.
+	 *
+	 * Requires a `facetedMinMaxValues` row-model factory on the `features` option.
+	 */
+	getFacetedMinMaxValues: () => undefined | [
+		number,
+		number
+	];
+	/**
+	 * Computes the row model used to derive facet values.
+	 *
+	 * Requires a `facetedRowModel` row-model factory on the `features` option.
+	 */
+	getFacetedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Computes unique facet values and occurrence counts.
+	 *
+	 * Requires a `facetedUniqueValues` row-model factory on the `features` option.
+	 */
+	getFacetedUniqueValues: () => Map<any, number>;
+}
+interface CachedRowModel_Faceted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	facetedRowModels?: Record<string, () => RowModel<TFeatures, TData>>;
+	facetedMinMaxValues?: Record<string, () => undefined | [
+		number,
+		number
+	]>;
+	facetedUniqueValues?: Record<string, () => Map<any, number>>;
+	globalFacetedRowModel?: () => RowModel<TFeatures, TData>;
+	globalFacetedMinMaxValues?: () => undefined | [
+		number,
+		number
+	];
+	globalFacetedUniqueValues?: () => Map<any, number>;
+}
+interface Table_ColumnFaceting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Returns the min and max values for the global filter.
+	 */
+	getGlobalFacetedMinMaxValues: () => undefined | [
+		number,
+		number
+	];
+	/**
+	 * Computes the row model used to derive global facet values.
+	 */
+	getGlobalFacetedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Returns the faceted unique values for the global filter.
+	 */
+	getGlobalFacetedUniqueValues: () => Map<any, number>;
+}
+interface RowModel<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	rows: Array<Row<TFeatures, TData>>;
+	flatRows: Array<Row<TFeatures, TData>>;
+	rowsById: Record<string, Row<TFeatures, TData>>;
+}
+interface CachedRowModel_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	coreRowModel: () => RowModel<TFeatures, TData>;
+}
+interface Table_RowModels_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Returns the core row model before any processing has been applied.
+	 */
+	getCoreRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Returns the final model after all processing from other used features has been applied. This is the row model that is most commonly used for rendering.
+	 */
+	getRowModel: () => RowModel<TFeatures, TData>;
+}
+type Table_RowModels<TFeatures extends TableFeatures, TData extends RowData> = Table_RowModels_Core<TFeatures, TData> & Table_RowModels_Faceted<TFeatures, TData> & Table_RowModels_Filtered<TFeatures, TData> & Table_RowModels_Grouped<TFeatures, TData> & Table_RowModels_Expanded<TFeatures, TData> & Table_RowModels_Paginated<TFeatures, TData> & Table_RowModels_Sorted<TFeatures, TData>;
+type GroupingState = Array<string>;
+interface TableState_ColumnGrouping {
+	grouping: GroupingState;
+}
+interface ColumnDef_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Allows this column to be added to grouping state.
+	 *
+	 * Defaults to `true`; table-level `enableGrouping` must also allow grouping.
+	 */
+	enableGrouping?: boolean;
+	/**
+	 * Returns the value used to group rows for this column.
+	 *
+	 * When omitted, grouping uses the value derived from this column's
+	 * `accessorKey` or `accessorFn`.
+	 */
+	getGroupingValue?: (originalRow: TData, index: number, row: Row<TFeatures, TData>) => any;
+}
+interface Column_ColumnGrouping {
+	/**
+	 * Checks whether this column can currently be grouped.
+	 */
+	getCanGroup: () => boolean;
+	/**
+	 * Finds this column's position in the ordered grouping state.
+	 */
+	getGroupedIndex: () => number;
+	/**
+	 * Checks whether this column id is present in grouping state.
+	 */
+	getIsGrouped: () => boolean;
+	/**
+	 * Returns a function that toggles the grouping state of the column. This is useful for passing to the `onClick` prop of a button.
+	 */
+	getToggleGroupingHandler: () => () => void;
+	/**
+	 * Toggles the grouping state of the column.
+	 */
+	toggleGrouping: () => void;
+}
+interface Row_ColumnGrouping {
+	_groupingValuesCache: Record<string, any>;
+	/**
+	 * Reads the value used to group this row for a column id.
+	 */
+	getGroupingValue: (columnId: string) => unknown;
+	/**
+	 * Checks whether this row represents a grouped row.
+	 */
+	getIsGrouped: () => boolean;
+	/**
+	 * If this row is grouped, this is the id of the column that this row is grouped by.
+	 */
+	groupingColumnId?: string;
+	/**
+	 * If this row is grouped, this is the unique/shared value for the `groupingColumnId` for all of the rows in this group.
+	 */
+	groupingValue?: unknown;
+}
+interface Cell_ColumnGrouping {
+	/**
+	 * Checks whether this cell represents the active grouping column.
+	 */
+	getIsGrouped: () => boolean;
+	/**
+	 * Checks whether this cell is hidden as a grouping placeholder.
+	 */
+	getIsPlaceholder: () => boolean;
+}
+interface TableOptions_ColumnGrouping {
+	/**
+	 * Allows columns to be grouped for this table.
+	 */
+	enableGrouping?: boolean;
+	/**
+	 * Grouping columns are automatically reordered by default to the start of the columns list. If you would rather remove them or leave them as-is, set the appropriate mode here.
+	 */
+	groupedColumnMode?: false | "reorder" | "remove";
+	/**
+	 * Enables manual grouping. If this option is set to `true`, the table will not automatically group rows using `getGroupedRowModel()` and instead will expect you to manually group the rows before passing them to the table. This is useful if you are doing server-side grouping and aggregation.
+	 */
+	manualGrouping?: boolean;
+	/**
+	 * Called with an updater when grouping state changes. Pair this with
+	 * `state.grouping` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onGroupingChange?: OnChangeFn<GroupingState>;
+}
+interface Table_ColumnGrouping<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Moves grouped leaf columns as `groupedColumnMode` sets. Leaf column order
+	 * falls back to it when the column ordering feature is not registered.
+	 *
+	 * @internal
+	 */
+	_orderGroupedColumns: (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Resets `grouping` to `initialState.grouping`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `[]`.
+	 */
+	resetGrouping: (defaultState?: boolean) => void;
+	/**
+	 * Updates grouping state with a next ordered id array or updater function.
+	 */
+	setGrouping: (updater: Updater<GroupingState>) => void;
+}
+interface Table_RowModels_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Resolves the row model after grouping has been applied.
+	 */
+	getGroupedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Reads the row model immediately before grouping.
+	 */
+	getPreGroupedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Grouped<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	groupedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface TableState_GlobalFiltering {
+	globalFilter: any;
+}
+interface ColumnDef_GlobalFiltering {
+	/**
+	 * Allows this column to be scanned by global filtering.
+	 *
+	 * Defaults to `true`; table-level global filtering and `enableFilters` must
+	 * also allow filtering.
+	 */
+	enableGlobalFilter?: boolean;
+}
+interface Column_GlobalFiltering {
+	/**
+	 * Checks whether this accessor column participates in global filtering.
+	 */
+	getCanGlobalFilter: () => boolean;
+}
+interface TableOptions_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Enables global filtering across columns that allow it.
+	 */
+	enableGlobalFilter?: boolean;
+	/**
+	 * If provided, this function will be called with the column and should return `true` or `false` to indicate whether this column should be used for global filtering.
+	 * This is useful if the column can contain data that is not `string` or `number` (i.e. `undefined`).
+	 */
+	getColumnCanGlobalFilter?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => boolean;
+	/**
+	 * The filter function to use for global filtering.
+	 * - A `string` referencing a built-in filter function
+	 * - A `string` that references a custom filter functions provided via the `tableOptions.filterFns` option
+	 * - A custom filter function
+	 */
+	globalFilterFn?: FilterFnOption<TFeatures, TData>;
+	/**
+	 * Called with an updater when global filter state changes. Pair this with
+	 * `state.globalFilter` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onGlobalFilterChange?: OnChangeFn<any>;
+}
+interface Table_GlobalFiltering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Currently, this function returns the built-in `includesString` filter function. In future releases, it may return more dynamic filter functions based on the nature of the data provided.
+	 */
+	getGlobalAutoFilterFn: () => FilterFn<TFeatures, TData> | undefined;
+	/**
+	 * Returns the filter function (either user-defined or automatic, depending on configuration) for the global filter.
+	 */
+	getGlobalFilterFn: () => FilterFn<TFeatures, TData> | undefined;
+	/**
+	 * Resets `globalFilter` to `initialState.globalFilter`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `undefined`.
+	 */
+	resetGlobalFilter: (defaultState?: boolean) => void;
+	/**
+	 * Updates global filter state with a next value or updater function.
+	 */
+	setGlobalFilter: (updater: Updater<any>) => void;
+}
+type RangeValue = Date | number;
+declare const aggregationFns: {
+	sum: AggregationFnDef<any, any, unknown, number>;
+	min: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
+	max: AggregationFnDef<any, any, unknown, RangeValue | undefined>;
+	extent: AggregationFnDef<any, any, unknown, [
+		RangeValue | undefined,
+		RangeValue | undefined
+	]>;
+	mean: AggregationFnDef<any, any, unknown, number | undefined>;
+	median: AggregationFnDef<any, any, unknown, number | undefined>;
+	unique: AggregationFnDef<any, any, unknown, unknown[]>;
+	uniqueCount: AggregationFnDef<any, any, unknown, number>;
+	count: AggregationFnDef<any, any, unknown, number>;
+	first: AggregationFnDef<any, any, unknown, unknown>;
+	last: AggregationFnDef<any, any, unknown, unknown>;
+};
+type BuiltInAggregationFn = keyof typeof aggregationFns;
+declare function aggregateColumnValue<TFeatures extends TableFeatures, TData extends RowData>(args: {
+	maxDepth?: number;
+	subRows?: ReadonlyArray<Row<TFeatures, TData>>;
+	column: Column<TFeatures, TData, unknown>;
+	groupingRow?: Row<TFeatures, TData>;
+	rows: ReadonlyArray<Row<TFeatures, TData>>;
+	/**
+	 * Marks `rows` as distinct nodes of a single row tree (rows the table's own
+	 * row models produced), enabling frontier selection without the
+	 * duplicate-id guard. Caller-supplied row arrays must omit this.
+	 */
+	uniqueRows?: boolean;
+}): unknown;
+interface AggregationFns {
+}
+interface AggregationContext<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> {
+	/** The column whose values are being aggregated. */
+	column: Column<TFeatures, TData, TValue>;
+	/** Convenience alias for `column.id`. */
+	columnId: string;
+	/** Maximum relative sub-row depth used to select `rows`. */
+	maxDepth: number;
+	/**
+	 * Immediate sub-rows for grouped aggregation. This property is omitted
+	 * for root or caller-supplied-row aggregation. At a terminal grouping level
+	 * these are the direct data rows; at a nested level they are sub-row groups.
+	 */
+	subRows?: ReadonlyArray<Row<TFeatures, TData>>;
+	/** Reads this column's value from one of `rows`. */
+	getValue: (row: Row<TFeatures, TData>) => TValue;
+	/**
+	 * The synthetic grouped row receiving this result. This property is omitted
+	 * for root or caller-supplied-row aggregation. Its `depth` identifies the
+	 * grouping level when grouped aggregation needs that distinction.
+	 */
+	groupingRow?: Row<TFeatures, TData>;
+	/**
+	 * Unique rows selected at `maxDepth`. Branches that end before `maxDepth`
+	 * contribute their deepest available row.
+	 */
+	rows: ReadonlyArray<Row<TFeatures, TData>>;
+	/** The table that owns the column and rows. */
+	table: Table$1<TFeatures, TData>;
+}
+interface AggregationMergeContext<TFeatures extends TableFeatures, TData extends RowData, TValue, TResult> extends AggregationContext<TFeatures, TData, TValue> {
+	/** Results produced for each immediate sub-row group, in sub-row order. */
+	subRowResults: ReadonlyArray<TResult>;
+	/** Immediate sub-row groups corresponding to `subRowResults`. */
+	subRows: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface AggregationFnDef<TFeatures extends TableFeatures = any, TData extends RowData = any, TValue = unknown, TResult = unknown> {
+	/** Computes a result directly from the selected `rows`. */
+	aggregate: (context: AggregationContext<TFeatures, TData, TValue>) => TResult;
+	/**
+	 * Combines already-computed immediate sub-row results. When omitted,
+	 * nested grouping falls back to `aggregate` over the group's selected rows.
+	 */
+	merge?: (context: AggregationMergeContext<TFeatures, TData, TValue, TResult>) => TResult;
+}
+interface RowModelFns_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	aggregationFns: Record<string, AggregationFnDef<TFeatures, TData, any, any>>;
+}
+type ExtractAggregationFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof AggregationFns | BuiltInAggregationFn : TFeatures extends {
+	aggregationFns: infer TAggregationFns extends object;
+} ? Extract<keyof TAggregationFns, string> : keyof AggregationFns;
+type AggregationFnRef<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDef<TFeatures, TData, TValue, TResult>;
+interface AggregationFnDescriptor<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown, TResult = unknown> {
+	/** The named, automatic, or inline definition to execute. */
+	aggregationFn: AggregationFnRef<TFeatures, TData, TValue, TResult>;
+	/** Stable key used in the object returned by a multiple aggregation. */
+	id: string;
+}
+type AggregationFnListItem<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = "auto" | ExtractAggregationFnKeys<TFeatures> | AggregationFnDescriptor<TFeatures, TData, TValue, any>;
+type AggregationFnOption<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = AggregationFnRef<TFeatures, TData, TValue, any> | ReadonlyArray<AggregationFnListItem<TFeatures, TData, TValue>>;
+type AggregationResultOf<TDefinition> = TDefinition extends AggregationFnDef<any, any, any, infer TResult> ? TResult : unknown;
+type RegisteredAggregationResult<TFeatures extends TableFeatures> = TFeatures extends {
+	aggregationFns: infer TRegistry extends Record<string, unknown>;
+} ? AggregationResultOf<TRegistry[keyof TRegistry]> : unknown;
+type ColumnAggregationValue<TFeatures extends TableFeatures> = RegisteredAggregationResult<TFeatures> | Record<string, RegisteredAggregationResult<TFeatures> | undefined> | undefined;
+interface ResolvedAggregationFn<TFeatures extends TableFeatures, TData extends RowData> {
+	/** Resolved definition, or `undefined` when configuration is invalid. */
+	aggregationFn: AggregationFnDef<TFeatures, TData, any, any> | undefined;
+	/** Key used for a multiple result; scalar inline definitions have no id. */
+	id: string | undefined;
+}
+interface ColumnDef_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/** Renderer used for a grouped row's aggregated cell. */
+	aggregatedCell?: ColumnDefTemplate<ReturnType<Cell<TFeatures, TData, TValue>["getContext"]>>;
+	/**
+	 * One aggregation reference for a scalar result, or an array for a keyed
+	 * result object. Inline definitions in an array require an explicit `id`.
+	 */
+	aggregationFn?: AggregationFnOption<TFeatures, TData, TValue>;
+	/**
+	 * Maximum relative sub-row depth used for grouped aggregation and cached
+	 * default totals. `0` selects the supplied root rows, `1` their direct
+	 * sub-rows, and so on. Defaults to `0`.
+	 */
+	maxAggregationDepth?: number;
+	/**
+	 * Optionally supplies a precomputed aggregation value for this column.
+	 * Return `{ value }` to handle the request, including `{ value: undefined }`;
+	 * return `undefined` to use the local aggregation fallback.
+	 */
+	getAggregationValue?: (context: AggregationValueContext<TFeatures, TData, TValue>) => AggregationValueResult | undefined;
+}
+interface Column_RowAggregation<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/** Resolves the configured scalar or multiple aggregation definitions. */
+	getAggregationFns: () => ReadonlyArray<ResolvedAggregationFn<TFeatures, TData>>;
+	/**
+	 * Aggregates this column over the default pre-grouped row model, or over a
+	 * caller-provided array of rows. `options.maxDepth` overrides the column's
+	 * `maxAggregationDepth`. Explicit-row calls are intentionally not cached.
+	 */
+	getAggregationValue: <TResult = ColumnAggregationValue<TFeatures>>(options?: AggregationValueOptions<TFeatures, TData>) => TResult;
+	/** Infers `sum` for a numeric first row and `extent` for a Date first row. */
+	getAutoAggregationFn: () => AggregationFnDef<TFeatures, TData, any, any> | undefined;
+}
+interface AggregationValueOptions<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/** Overrides the column's `maxAggregationDepth` for this request. */
+	maxDepth?: number;
+	/** Rows to aggregate instead of the default pre-grouped row model. */
+	rows?: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface Cell_RowAggregation {
+	/** Whether this cell displays an aggregate on a synthetic grouped row. */
+	getIsAggregated: () => boolean;
+}
+interface Row_RowAggregation {
+	/** Cached aggregate results keyed by column id; created lazily on grouped rows. */
+	_aggregationValuesCache?: Record<string, unknown>;
+}
+interface Table_RowAggregation {
+	/**
+	 * Runs a column's configured aggregations over a set of rows. The grouped
+	 * row model aggregates through it, so tables that group without
+	 * `rowAggregationFeature` don't bundle the aggregation executor.
+	 *
+	 * @internal
+	 */
+	_aggregateColumnValue: typeof aggregateColumnValue;
+}
+interface AggregationValueContext<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+	/** The column whose value was requested. */
+	column: Column<TFeatures, TData, TValue>;
+	/** Maximum relative sub-row depth used for the request. */
+	maxDepth: number;
+	/** Caller-provided rows, or `undefined` for the default row model. */
+	rows?: ReadonlyArray<Row<TFeatures, TData>>;
+	/** The table that owns the column. */
+	table: Table$1<TFeatures, TData>;
+}
+interface AggregationValueResult<TResult = unknown> {
+	/** The supplied value. `undefined` is still a handled result. */
+	value: TResult;
+}
+interface TableOptions_RowAggregation {
+	/**
+	 * Disables local `column.getAggregationValue()` calculation when a column
+	 * override does not handle the request. Group values supplied by manually
+	 * grouped rows remain the responsibility of the data owner.
+	 */
+	manualAggregation?: boolean;
+}
+type ColumnOrderState = Array<string>;
+interface ColumnIndexes {
+	/**
+	 * Maps each visible leaf column id to its index in the full visible column list.
+	 */
+	all: Record<string, number>;
+	/**
+	 * Maps each unpinned visible leaf column id to its index within the center region.
+	 */
+	center: Record<string, number>;
+	/**
+	 * Maps each start-pinned visible leaf column id to its index within the start region.
+	 */
+	start: Record<string, number>;
+	/**
+	 * Maps each end-pinned visible leaf column id to its index within the end region.
+	 */
+	end: Record<string, number>;
+}
+interface TableState_ColumnOrdering {
+	columnOrder: ColumnOrderState;
+}
+interface TableOptions_ColumnOrdering {
+	/**
+	 * Called with an updater when column order state changes. Pair this with
+	 * `state.columnOrder` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
+}
+interface Column_ColumnOrdering {
+	/**
+	 * Finds this column's zero-based index among visible columns.
+	 *
+	 * Pass `'start'`, `'center'`, or `'end'` to measure within that pinned
+	 * region instead of the full visible leaf order.
+	 */
+	getIndex: (position?: ColumnPinningPosition | "center") => number;
+	/**
+	 * Checks whether this column is the first visible column.
+	 *
+	 * Pass a pinned region to check the first column within that region.
+	 */
+	getIsFirstColumn: (position?: ColumnPinningPosition | "center") => boolean;
+	/**
+	 * Checks whether this column is the last visible column.
+	 *
+	 * Pass a pinned region to check the last column within that region.
+	 */
+	getIsLastColumn: (position?: ColumnPinningPosition | "center") => boolean;
+}
+interface Table_ColumnOrdering<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Builds column-id to index records for each visible pinning region.
+	 *
+	 * This is the memoized source that `column.getIndex` reads from; most apps
+	 * will not need to call it directly.
+	 */
+	getColumnIndexes: () => ColumnIndexes;
+	/**
+	 * Returns a function that orders leaf columns by `columnOrder`, after moving
+	 * grouped columns as `groupedColumnMode` sets.
+	 *
+	 * Leaf column order reads it; most apps will not need to call it directly.
+	 */
+	getOrderColumnsFn: () => (columns: Array<Column<TFeatures, TData, unknown>>) => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Resets `columnOrder` to `initialState.columnOrder`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `[]`.
+	 */
+	resetColumnOrder: (defaultState?: boolean) => void;
+	/**
+	 * Updates column order state with a next ordered id array or updater function.
+	 */
+	setColumnOrder: (updater: Updater<ColumnOrderState>) => void;
+}
+interface Column_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * The resolved accessor function to use when extracting the value for the column from each row. Will only be defined if the column def has a valid accessor key or function defined.
+	 */
+	accessorFn?: AccessorFn<TData, TValue>;
+	/**
+	 * The original column def used to create the column.
+	 */
+	columnDef: ColumnDef<TFeatures, TData, TValue>;
+	/**
+	 * The child column (if the column is a group column). Will be an empty array if the column is not a group column.
+	 */
+	columns: Array<Column<TFeatures, TData, TValue>>;
+	/**
+	 * The depth of the column (if grouped) relative to the root column def array.
+	 */
+	depth: number;
+	/**
+	   * The resolved unique identifier for the column resolved in this priority:
+		  - A manual `id` property from the column def
+		  - The accessor key from the column def
+		  - The header string from the column def
+	   */
+	id: string;
+	/**
+	 * The parent column for this column. Will be undefined if this is a root column.
+	 */
+	parent?: Column<TFeatures, TData, TValue>;
+	/**
+	 * Reference to the parent table instance.
+	 */
+	table: Table$1<TFeatures, TData>;
+}
+interface Column_Column<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Column_CoreProperties<TFeatures, TData, TValue> {
+	/**
+	 * Flattens this column and every descendant column into a single array.
+	 */
+	getFlatColumns: () => Array<Column<TFeatures, TData, TValue>>;
+	/**
+	 * Collects the terminal leaf columns below this column, or the column itself
+	 * when it has no children.
+	 */
+	getLeafColumns: () => Array<Column<TFeatures, TData, TValue>>;
+}
+interface TableOptions_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * The array of column defs to use for the table.
+	 */
+	columns: ReadonlyArray<ColumnDef<TFeatures, TData, TValue>>;
+	/**
+	 * Default column options to use for all column defs supplied to the table.
+	 */
+	defaultColumn?: Partial<ColumnDef<TFeatures, TData, TValue>>;
+}
+interface Table_Columns<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Returns a map of all flat columns by their ID.
+	 */
+	getAllFlatColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
+	/**
+	 * Resolves built-in, feature-level, and user-defined default column options.
+	 */
+	getDefaultColumnDef: () => Partial<ColumnDef<TFeatures, TData, unknown>>;
+	/**
+	 * Normalizes `options.columns` into the table's nested column hierarchy.
+	 */
+	getAllColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Flattens the nested column hierarchy, including parent/group columns.
+	 */
+	getAllFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Collects all terminal leaf columns, excluding parent/group columns.
+	 */
+	getAllLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Returns a map of all leaf-node columns by their ID. This does not include parent columns.
+	 */
+	getAllLeafColumnsById: () => Record<string, Column<TFeatures, TData, unknown>>;
+	/**
+	 * Returns a single column by its ID.
+	 */
+	getColumn: (columnId: string) => Column<TFeatures, TData, unknown> | undefined;
+}
+type ColumnVisibilityState = Record<string, boolean>;
+interface TableState_ColumnVisibility {
+	columnVisibility: ColumnVisibilityState;
+}
+interface TableOptions_ColumnVisibility {
+	/**
+	 * Whether to enable column hiding. Defaults to `true`.
+	 */
+	enableHiding?: boolean;
+	/**
+	 * Called with an updater when column visibility state changes. Pair this with
+	 * `state.columnVisibility` when using external state; external atoms can own
+	 * the slice without this callback.
+	 */
+	onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
+}
+interface Table_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Checks whether every leaf column is currently visible.
+	 */
+	getIsAllColumnsVisible: () => boolean;
+	/**
+	 * Checks whether at least one leaf column is currently visible.
+	 */
+	getIsSomeColumnsVisible: () => boolean;
+	/**
+	 * Creates a checkbox-style handler that shows or hides all columns.
+	 */
+	getToggleAllColumnsVisibilityHandler: () => (event: unknown) => void;
+	/**
+	 * Lists visible columns in flat table order, including parent columns that
+	 * have visible descendants.
+	 */
+	getVisibleFlatColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Lists visible leaf columns in the order used for row cells and headers.
+	 */
+	getVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Resets `columnVisibility` to `initialState.columnVisibility`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `{}`.
+	 */
+	resetColumnVisibility: (defaultState?: boolean) => void;
+	/**
+	 * Updates column visibility state with a next map or updater function.
+	 */
+	setColumnVisibility: (updater: Updater<ColumnVisibilityState>) => void;
+	/**
+	 * Toggles the visibility of all columns.
+	 */
+	toggleAllColumnsVisible: (value?: boolean) => void;
+}
+interface ColumnDef_ColumnVisibility {
+	/**
+	 * Allows this column to be hidden. Defaults to `true`.
+	 */
+	enableHiding?: boolean;
+}
+interface Row_ColumnVisibility<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Gets this row's cells for currently visible columns.
+	 */
+	getVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Maps this row's currently visible cells by column id.
+	 */
+	getVisibleCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
+}
+interface Column_ColumnVisibility {
+	/**
+	 * Checks whether this column is allowed to be hidden.
+	 */
+	getCanHide: () => boolean;
+	/**
+	 * Checks whether this column is currently visible.
+	 */
+	getIsVisible: () => boolean;
+	/**
+	 * Creates a checkbox-style handler that toggles this column's visibility.
+	 */
+	getToggleVisibilityHandler: () => (event: unknown) => void;
+	/**
+	 * Toggles the visibility of the column.
+	 */
+	toggleVisibility: (value?: boolean) => void;
+}
+type RowPinningPosition = false | "top" | "bottom";
+interface RowPinningState {
+	bottom: Array<string>;
+	top: Array<string>;
+}
+interface TableState_RowPinning {
+	rowPinning: RowPinningState;
+}
+interface TableOptions_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Allows rows to be pinned to top or bottom regions.
+	 *
+	 * Provide a predicate to decide per row. Defaults to `true`.
+	 */
+	enableRowPinning?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+	/**
+	 * When `false`, pinned rows will not be visible if they are filtered or paginated out of the table. When `true`, pinned rows will always be visible regardless of filtering or pagination. Defaults to `true`.
+	 */
+	keepPinnedRows?: boolean;
+	/**
+	 * Called with an updater when row pinning state changes. Pair this with
+	 * `state.rowPinning` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onRowPinningChange?: OnChangeFn<RowPinningState>;
+}
+interface Row_RowPinning {
+	/**
+	 * Checks whether this row can be pinned.
+	 */
+	getCanPin: () => boolean;
+	/**
+	 * Returns the pinned position of the row. (`'top'`, `'bottom'` or `false`)
+	 */
+	getIsPinned: () => RowPinningPosition;
+	/**
+	 * Returns the numeric pinned index of the row within a pinned row group.
+	 */
+	getPinnedIndex: () => number;
+	/**
+	 * Pins a row to the `'top'` or `'bottom'`, or unpins the row to the center if `false` is passed.
+	 */
+	pin: (position: RowPinningPosition, includeLeafRows?: boolean, includeParentRows?: boolean) => void;
+}
+interface Table_RowPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Gets rows pinned to the bottom region.
+	 */
+	getBottomRows: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Gets rows that are not pinned to the top or bottom region.
+	 */
+	getCenterRows: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Checks whether any rows are pinned, optionally limited to one region.
+	 */
+	getIsSomeRowsPinned: (position?: RowPinningPosition) => boolean;
+	/**
+	 * Gets rows pinned to the top region.
+	 */
+	getTopRows: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Resets `rowPinning` to `initialState.rowPinning`.
+	 *
+	 * Pass `true` to ignore initial state and reset to empty top/bottom arrays.
+	 */
+	resetRowPinning: (defaultState?: boolean) => void;
+	/**
+	 * Updates row pinning state with a next state or updater function.
+	 */
+	setRowPinning: (updater: Updater<RowPinningState>) => void;
+}
+//#region src/features/row-selection/rowSelectionFeature.types.d.ts
+export type RowSelectionState = Record<string, true>;
+interface ToggleSelectedOptions {
+	/**
+	 * Whether selectable child rows should be toggled recursively. Defaults to
+	 * `true`.
+	 */
+	selectChildren?: boolean;
+	/**
+	 * Whether ancestor row ids should be removed from the selection when this
+	 * row is deselected. Useful after a parent cascade wrote the parent id into
+	 * state and a child is later deselected. Defaults to `false`.
+	 *
+	 * Ancestor ids are removed even when the ancestor itself cannot be selected.
+	 * Like the other targeted deselection paths, pruning is not gated by
+	 * `enableRowSelection`; only the bulk select-all paths preserve
+	 * non-selectable rows.
+	 */
+	deselectParents?: boolean;
+}
+interface TableState_RowSelection {
+	rowSelection: RowSelectionState;
+}
+interface TableOptions_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Enables inclusive row range selection through
+	 * `row.getToggleSelectedHandler()`. Defaults to `true`.
+	 */
+	enableRowRangeSelection?: boolean;
+	/**
+	 * Allows rows to be selected alongside other rows.
+	 *
+	 * Provide a predicate to decide per row. Defaults to `true`.
+	 */
+	enableMultiRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+	/**
+	 * Allows rows to be selected.
+	 *
+	 * Provide a predicate to decide per row. Defaults to `true`.
+	 */
+	enableRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+	/**
+	 * Controls whether selecting a parent row also selects its subRows.
+	 *
+	 * Provide a predicate to decide per row. This is most useful with expanding or
+	 * grouping features and defaults to `true`. Select-all and the all-selected
+	 * getters also skip descendants of parents that block sub-row selection.
+	 */
+	enableSubRowSelection?: boolean | ((row: Row<TFeatures, TData>) => boolean);
+	/**
+	 * Determines whether a row-selection handler event should select or
+	 * deselect the inclusive range from the most recent handler interaction.
+	 *
+	 * By default, events with `shiftKey` directly on the event or on
+	 * `event.nativeEvent` are treated as range-selection events.
+	 */
+	isRowRangeSelectionEvent?: (event: unknown) => boolean;
+	/**
+	 * Called with an updater when row selection state changes. Pair this with
+	 * `state.rowSelection` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+}
+interface Row_RowSelection {
+	/**
+	 * Checks whether this row can be selected alongside other rows.
+	 */
+	getCanMultiSelect: () => boolean;
+	/**
+	 * Checks whether this row can currently be selected.
+	 */
+	getCanSelect: () => boolean;
+	/**
+	 * Checks whether selecting this row should also select its subRows.
+	 */
+	getCanSelectSubRows: () => boolean;
+	/**
+	 * Checks whether all selectable descendants are selected.
+	 */
+	getIsAllSubRowsSelected: () => boolean;
+	/**
+	 * Checks whether this row id is selected.
+	 */
+	getIsSelected: () => boolean;
+	/**
+	 * Checks whether some selectable descendants are selected.
+	 */
+	getIsSomeSelected: () => boolean;
+	/**
+	 * Creates a checkbox-style handler that toggles this row's selected state.
+	 * Pass the original checkbox click event, or a framework event whose
+	 * `nativeEvent` is that click, so Shift range selection can detect the
+	 * modifier key.
+	 */
+	getToggleSelectedHandler: (opts?: ToggleSelectedOptions) => (event: unknown) => void;
+	/**
+	 * Selects/deselects the row.
+	 */
+	toggleSelected: (value?: boolean, opts?: ToggleSelectedOptions) => void;
+}
+interface Table_RowSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * The most recent row interacted with through the row selection handler.
+	 *
+	 * @internal
+	 */
+	_lastSelectedRowId: string | null;
+	/**
+	 * Builds a selected-row model from rows after filtering.
+	 */
+	getFilteredSelectedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Builds a selected-row model from rows after grouping.
+	 */
+	getGroupedSelectedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Returns the ids of all selected rows.
+	 */
+	getSelectedRowIds: () => Array<string>;
+	/**
+	 * Checks whether every selectable row on the current page is selected.
+	 * Sub-rows whose ancestors block sub-row selection are ignored.
+	 */
+	getIsAllPageRowsSelected: () => boolean;
+	/**
+	 * Checks whether every selectable filtered row is selected.
+	 * Sub-rows whose ancestors block sub-row selection are ignored.
+	 */
+	getIsAllRowsSelected: () => boolean;
+	/**
+	 * Checks whether at least one selectable row on the current page is selected.
+	 */
+	getIsSomePageRowsSelected: () => boolean;
+	/**
+	 * Checks whether at least one row id is selected.
+	 */
+	getIsSomeRowsSelected: () => boolean;
+	/**
+	 * Returns the core row model of all rows before row selection has been applied.
+	 */
+	getPreSelectedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Builds a selected-row model from the core row model.
+	 */
+	getSelectedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Creates a checkbox-style handler that toggles all current-page rows.
+	 */
+	getToggleAllPageRowsSelectedHandler: () => (event: unknown) => void;
+	/**
+	 * Creates a checkbox-style handler that toggles all selectable rows.
+	 */
+	getToggleAllRowsSelectedHandler: () => (event: unknown) => void;
+	/**
+	 * Resets `rowSelection` to `initialState.rowSelection`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `{}`.
+	 */
+	resetRowSelection: (defaultState?: boolean) => void;
+	/**
+	 * Updates row selection state with a next map or updater function.
+	 */
+	setRowSelection: (updater: Updater<RowSelectionState>) => void;
+	/**
+	 * Selects/deselects all rows on the current page.
+	 */
+	toggleAllPageRowsSelected: (value?: boolean, opts?: {
+		deselectAll?: boolean;
+	}) => void;
+	/**
+	 * Selects/deselects all rows in the table.
+	 *
+	 * Deselecting keeps rows that cannot be selected in the selection map unless
+	 * `opts.deselectAll` is `true`.
+	 */
+	toggleAllRowsSelected: (value?: boolean, opts?: {
+		deselectAll?: boolean;
+	}) => void;
+}
+interface Row_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	_cellsCache?: WeakMap<Column<TFeatures, TData, unknown>, Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Internal cache used while resolving the current display order.
+	 *
+	 * This value may be stale until display order is recomputed. Use
+	 * `row.getDisplayIndex()` instead; it refreshes and validates the cached
+	 * position before returning it.
+	 *
+	 * @internal
+	 */
+	_displayIndexCache: number;
+	_uniqueValuesCache: Record<string, unknown>;
+	_valuesCache: Record<string, unknown>;
+	/**
+	 * The depth of the row (if nested or grouped) relative to the root row array.
+	 */
+	depth: number;
+	/**
+	 * The resolved unique identifier for the row resolved via the `options.getRowId` option. Defaults to the row's index (or relative index if it is a subRow).
+	 */
+	id: string;
+	/**
+	 * The index of the row within its parent array (or the root data array).
+	 */
+	index: number;
+	/**
+	 * The original row object provided to the table. If the row is a grouped row, the original row object will be the first original in the group.
+	 */
+	original: TData;
+	/**
+	 * An array of the original subRows as returned by the `options.getSubRows` option.
+	 */
+	originalSubRows?: ReadonlyArray<TData>;
+	/**
+	 * If nested, this row's parent row id.
+	 */
+	parentId?: string;
+	/**
+	 * An array of subRows for the row as returned and created by the `options.getSubRows` option.
+	 */
+	subRows: Array<Row<TFeatures, TData>>;
+	/**
+	 * Reference to the parent table instance.
+	 */
+	table: Table$1<TFeatures, TData>;
+}
+interface Row_Row<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_CoreProperties<TFeatures, TData> {
+	/**
+	 * Returns the zero-based index of the row in the current display order
+	 * before pagination, or `-1` if the row is not in that model. Use this for
+	 * display row-number columns instead of `row.index` or the internal
+	 * `_displayIndexCache` field.
+	 */
+	getDisplayIndex: () => number;
+	/**
+	 * Builds a lookup of this row's cells keyed by leaf column id.
+	 */
+	getAllCellsByColumnId: () => Record<string, Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Builds one cell for each leaf column, including cells for hidden columns.
+	 */
+	getAllCells: () => Array<Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Returns the leaf rows for the row, not including any parent rows.
+	 */
+	getLeafRows: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Returns the parent row for the row, if it exists.
+	 */
+	getParentRow: () => Row<TFeatures, TData> | undefined;
+	/**
+	 * Returns the parent rows for the row, all the way up to a root row.
+	 */
+	getParentRows: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Reads the values this row contributes to faceting/grouping for a column.
+	 */
+	getUniqueValues: <TValue>(columnId: string) => Array<TValue>;
+	/**
+	 * Reads this row's accessor value for a column id and caches the result.
+	 */
+	getValue: <TValue>(columnId: string) => TValue;
+	/**
+	 * Renders the value for the row in a given columnId the same as `getValue`, but will return the `renderFallbackValue` if no value is found.
+	 */
+	renderValue: <TValue>(columnId: string) => TValue;
+}
+interface TableOptions_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * This optional function is used to derive a unique ID for any given row. If not provided the row's index is used (nested rows join together with `.` using their grandparents' index e.g. `index.index.index`). If you need to identify individual rows that are originating from any server-side operations, it's suggested you use this function to return an ID that makes sense regardless of network IO/ambiguity e.g. a userId, taskId, database ID field, etc.
+	 * @example getRowId: row => row.userId
+	 */
+	getRowId?: (originalRow: TData, index: number, parent?: Row<TFeatures, TData>) => string;
+	/**
+	 * This optional function is used to access the sub rows for any given row. If you are using nested rows, you will need to use this function to return the sub rows object (or undefined) from the row.
+	 * @example getSubRows: row => row.subRows
+	 */
+	getSubRows?: (originalRow: TData, index: number) => undefined | ReadonlyArray<TData>;
+}
+interface Table_Rows<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Returns the deepest structural row depth in the core row model.
+	 * Root rows are depth `0`, direct sub-rows are depth `1`, and so on.
+	 */
+	getMaxSubRowDepth: () => number;
+	/**
+	 * Returns the rows in the current display order and assigns their display
+	 * indexes. When expanded rows bypass pagination, expanded descendants are
+	 * included in this order. This is the memoized source for
+	 * `row.getDisplayIndex()`.
+	 */
+	getRowsInDisplayOrder: () => Array<Row<TFeatures, TData>>;
+	/**
+	 * Returns the row id for a given row.
+	 */
+	getRowId: (_: TData, index: number, parent?: Row<TFeatures, TData>) => string;
+	/**
+	 * Returns the row with the given ID.
+	 */
+	getRow: (id: string, searchAll?: boolean) => Row<TFeatures, TData>;
+}
+interface CachedRowModels_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	columnFacetingFeature: CachedRowModel_Faceted<TFeatures, TData>;
+	columnFilteringFeature: CachedRowModel_Filtered<TFeatures, TData>;
+	rowExpandingFeature: CachedRowModel_Expanded<TFeatures, TData>;
+	columnGroupingFeature: CachedRowModel_Grouped<TFeatures, TData>;
+	rowPaginationFeature: CachedRowModel_Paginated<TFeatures, TData>;
+	rowSortingFeature: CachedRowModel_Sorted<TFeatures, TData>;
+}
+type CachedRowModels<TFeatures extends TableFeatures, TData extends RowData> = Partial<CachedRowModel_Core<TFeatures, TData>> & ExtractFeatureMapTypes<TFeatures, CachedRowModels_FeatureMap<TFeatures, TData>>;
+interface RowModelFns_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	rowAggregationFeature: RowModelFns_RowAggregation<TFeatures, TData>;
+	columnFilteringFeature: RowModelFns_ColumnFiltering<TFeatures, TData>;
+	rowSortingFeature: RowModelFns_RowSorting<TFeatures, TData>;
+}
+type RowModelFns<TFeatures extends TableFeatures, TData extends RowData> = Partial<ExtractFeatureMapTypes<TFeatures, RowModelFns_FeatureMap<TFeatures, TData>>>;
+interface TableState_FeatureMap {
+	cellSelectionFeature: TableState_CellSelection;
+	columnFilteringFeature: TableState_ColumnFiltering;
+	columnGroupingFeature: TableState_ColumnGrouping;
+	columnOrderingFeature: TableState_ColumnOrdering;
+	columnPinningFeature: TableState_ColumnPinning;
+	columnResizingFeature: TableState_ColumnResizing;
+	columnSizingFeature: TableState_ColumnSizing;
+	columnVisibilityFeature: TableState_ColumnVisibility;
+	globalFilteringFeature: TableState_GlobalFiltering;
+	rowExpandingFeature: TableState_RowExpanding;
+	rowPaginationFeature: TableState_RowPagination;
+	rowPinningFeature: TableState_RowPinning;
+	rowSelectionFeature: TableState_RowSelection;
+	rowSortingFeature: TableState_RowSorting;
+}
+type TableState<TFeatures extends TableFeatures> = ExtractFeatureMapTypes<TFeatures, TableState_FeatureMap>;
+interface TableState_All extends Partial<TableState_CellSelection & TableState_ColumnFiltering & TableState_ColumnGrouping & TableState_ColumnOrdering & TableState_ColumnPinning & TableState_ColumnResizing & TableState_ColumnSizing & TableState_ColumnVisibility & TableState_GlobalFiltering & TableState_RowExpanding & TableState_RowPagination & TableState_RowPinning & TableState_RowSelection & TableState_RowSorting> {
+}
+interface TableMeta<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+}
+type ExtractTableMeta<TFeatures extends TableFeatures, TData extends RowData> = IsAny$3<TFeatures> extends true ? TableMeta<TFeatures, TData> : TFeatures extends {
+	tableMeta: infer TMeta extends object;
+} ? TMeta : TableMeta<TFeatures, TData>;
+type BaseAtoms<TFeatures extends TableFeatures> = {
+	[K in keyof TableState<TFeatures>]-?: Atom<TableState<TFeatures>[K]>;
+};
+type Atoms<TFeatures extends TableFeatures> = {
+	[K in keyof TableState<TFeatures>]-?: ReadonlyAtom<TableState<TFeatures>[K]>;
+};
+type ExternalAtoms<TFeatures extends TableFeatures> = Partial<{
+	[K in keyof TableState<TFeatures>]: Atom<TableState<TFeatures>[K]>;
+}>;
+interface TableOptions_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * The feature modules registered on this table instance.
+	 *
+	 * Feature registration controls which state slices, options, and prototype
+	 * APIs are available. This object also carries the table's row model
+	 * factories (`sortedRowModel`, `filteredRowModel`, etc.), row model function
+	 * registries (`sortFns`, `filterFns`, `aggregationFns`), and type-only meta
+	 * slots (`tableMeta`, `columnMeta`).
+	 */
+	readonly features: TFeatures & ValidateFeatureSlots<TFeatures>;
+	/**
+	 * Optionally, provide your own external writable atoms for individual state slices.
+	 * When an atom is provided for a given slice, it takes precedence over `options.state[key]`
+	 * and the internal base atom for that slice. Feature state update APIs write through
+	 * the corresponding atom updater, so external atoms are the preferred v9 ownership
+	 * model for app-managed table state slices.
+	 */
+	readonly atoms?: ExternalAtoms<TFeatures>;
+	/**
+	 * Set this option to override any of the `autoReset...` feature options.
+	 */
+	readonly autoResetAll?: boolean;
+	/**
+	 * The data for the table to display. When the `data` option changes reference, the table will reprocess the data.
+	 */
+	readonly data: ReadonlyArray<TData>;
+	/**
+	 * Optional key used to identify this table instance.
+	 *
+	 * This is used by TanStack Table Devtools to register and select tables. It is
+	 * not required unless the table is passed to devtools.
+	 */
+	readonly key?: string;
+	/**
+	 * Optionally provide starting values for registered table state slices.
+	 * Feature reset APIs use this value by default, and many reset APIs accept
+	 * `true` to reset to that feature's blank/default state instead. Changing this
+	 * object later does not reset table state, so it does not need to be stable.
+	 */
+	readonly initialState?: Partial<TableState<TFeatures>>;
+	/**
+	 * This option is used to optionally implement the merging of table options.
+	 */
+	readonly mergeOptions?: (defaultOptions: TableOptions<TFeatures, TData>, options: Partial<TableOptions<TFeatures, TData>>) => TableOptions<TFeatures, TData>;
+	/**
+	 * You can pass any object to `options.meta` and access it anywhere the `table` is available via `table.options.meta`.
+	 *
+	 * Declare its type per-table via the `tableMeta` type-only slot on the
+	 * `features` option, or globally via declaration merging on `TableMeta`.
+	 */
+	readonly meta?: ExtractTableMeta<TFeatures, TData>;
+	/**
+	 * Optionally provide externally managed values for individual state slices.
+	 *
+	 * Pair each slice with its matching `on[State]Change` callback so table state
+	 * updates can be persisted outside the table. External atoms take precedence
+	 * over this option when both are provided for the same slice.
+	 */
+	readonly state?: Partial<TableState<TFeatures>>;
+}
+interface Table_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Table reactivity bindings for interacting with TanStack Store.
+	 */
+	readonly _reactivity: TableReactivityBindings;
+	/**
+	 * Cache of the `initCellInstanceData` functions for features that define one.
+	 */
+	_cellInstanceInitFns: Array<NonNullable<TableFeature["initCellInstanceData"]>>;
+	/**
+	 * Prototype cache for Cell objects - shared by all cells in this table
+	 */
+	_cellPrototype?: object;
+	/**
+	 * Cache of the `initColumnInstanceData` functions for features that define one.
+	 */
+	_columnInstanceInitFns: Array<NonNullable<TableFeature["initColumnInstanceData"]>>;
+	/**
+	 * Prototype cache for Column objects - shared by all columns in this table
+	 */
+	_columnPrototype?: object;
+	/**
+	 * The features that are enabled for the table.
+	 */
+	readonly _features: Partial<CoreFeatures> & TFeatures;
+	/**
+	 * Cache of the `initHeaderGroupInstanceData` functions for features that define one.
+	 */
+	_headerGroupInstanceInitFns: Array<NonNullable<TableFeature["initHeaderGroupInstanceData"]>>;
+	/**
+	 * Cache of the `initHeaderInstanceData` functions for features that define one.
+	 */
+	_headerInstanceInitFns: Array<NonNullable<TableFeature["initHeaderInstanceData"]>>;
+	/**
+	 * Prototype cache for Header objects - shared by all headers in this table
+	 */
+	_headerPrototype?: object;
+	/**
+	 * The row model processing functions that are used to process the data by features.
+	 */
+	readonly _rowModelFns: RowModelFns<TFeatures, TData>;
+	/**
+	 * The row models that are enabled for the table.
+	 */
+	readonly _rowModels: CachedRowModels<TFeatures, TData>;
+	/**
+	 * Prototype cache for Row objects - shared by all rows in this table
+	 */
+	_rowPrototype?: object;
+	/**
+	 * Cache of the `initRowInstanceData` functions for features that define one.
+	 */
+	_rowInstanceInitFns: Array<NonNullable<TableFeature["initRowInstanceData"]>>;
+	/**
+	 * The readonly derived atoms for each `TableState` slice. Each derives from
+	 * its corresponding `baseAtom` plus, optionally, a per-slice external atom or
+	 * external state value (precedence: external atom > external state > base atom).
+	 */
+	readonly atoms: Atoms<TFeatures>;
+	/**
+	 * The internal writable atoms for each `TableState` slice. This is the library's
+	 * single write surface — all state mutations from features land here.
+	 */
+	readonly baseAtoms: BaseAtoms<TFeatures>;
+	/**
+	 * This is the resolved initial state of the table.
+	 */
+	readonly initialState: TableState<TFeatures>;
+	/**
+	 * A read-only reference to the table's current options.
+	 */
+	readonly options: TableOptions<TFeatures, TData>;
+	/**
+	 * Writable atom for table options. Only created when `createOptionsStore` is
+	 * true on the active core reactivity bindings. Adapters that opt out keep
+	 * options as plain resolved data instead of backing them with an atom.
+	 */
+	readonly optionsStore?: Atom<TableOptions<TFeatures, TData>> | undefined;
+	/**
+	 * The readonly flat store for the table state. Derives from `table.atoms`
+	 * only; never reads external state directly.
+	 */
+	readonly store: ReadonlyStore<TableState<TFeatures>>;
+}
+interface Table_Table<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_CoreProperties<TFeatures, TData> {
+	/**
+	 * Resets the table's internal base atoms to `table.initialState`.
+	 *
+	 * Prefer feature-specific reset APIs, such as `resetPagination`, when a state
+	 * slice may be owned by an external atom or needs that feature's blank/default
+	 * reset behavior. After resetting internal atoms, this also invokes feature
+	 * reset hooks for mutable, transient table-instance data.
+	 */
+	reset: () => void;
+	/**
+	 * Updates the table options by applying a value or updater to the current
+	 * resolved options and then merging them through `options.mergeOptions`.
+	 */
+	setOptions: (newOptions: Updater<TableOptions<TFeatures, TData>>) => void;
+}
+interface CellSpanIndex<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Column spans per render-order row position, indexed by render-order column
+	 * position. Holes are the common case: only rows that declared a column span
+	 * get an array. In a stored array, the spanning cell holds its span and the
+	 * cells it covers hold `0`; every other cell holds `1`.
+	 */
+	colSpans: Array<Int32Array | undefined>;
+	/**
+	 * Render-order index for every visible column id. Hidden columns are absent.
+	 */
+	columnIndexes: Record<string, number>;
+	/**
+	 * Row spans per column id, indexed by render-order row position. Only columns
+	 * that produced at least one run longer than one row appear here; a missing
+	 * column means every cell in it spans exactly one row. In a stored array, the
+	 * run's anchor row holds the run length and the rows it covers hold `0`.
+	 */
+	rowSpans: Record<string, Int32Array>;
+	/**
+	 * The exact ordered rows this index was built from, in render order:
+	 * top-pinned rows, then the (paginated) center rows, then bottom-pinned
+	 * rows. Cell reads compare against this to reject stale row positions.
+	 */
+	rows: ReadonlyArray<Row<TFeatures, TData>>;
+}
+interface RowSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	anchorRow: Row<TFeatures, TData>;
+	anchorValue: TValue;
+	column: Column<TFeatures, TData, TValue>;
+	previousRow: Row<TFeatures, TData>;
+	row: Row<TFeatures, TData>;
+	table: Table$1<TFeatures, TData>;
+	value: TValue;
+}
+interface ColSpanContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	column: Column<TFeatures, TData, TValue>;
+	row: Row<TFeatures, TData>;
+	table: Table$1<TFeatures, TData>;
+}
+interface ColumnDef_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * Turns this column off for cell spanning even when the table allows it.
+	 * Defaults to `true`.
+	 */
+	enableCellSpanning?: boolean;
+	/**
+	 * Makes this column's cell span the given number of columns per row,
+	 * starting at itself and counted in the order columns actually render.
+	 *
+	 * Return `1` or less for no span. Larger values are clamped to the end of
+	 * the cell's pinned region, so a span can never cross the start-pinned,
+	 * center, or end-pinned boundary; pass `Infinity` for "the rest of my
+	 * region". Hidden columns are not counted.
+	 *
+	 * @example
+	 * ```ts
+	 * { accessorKey: 'label', spanColumns: ({ row }) => row.original.isSummary ? Infinity : 1 }
+	 * ```
+	 */
+	spanColumns?: number | ((context: ColSpanContext<TFeatures, TData, TValue>) => number);
+	/**
+	 * Merges adjacent rows in this column into a single vertically spanning
+	 * cell.
+	 *
+	 * `true` merges rows whose values for this column are the same value
+	 * (`Object.is`). Nullish values never merge under the default comparison.
+	 *
+	 * A predicate replaces the comparison entirely and decides whether `row`
+	 * joins the run anchored at `anchorRow`; it may merge nullish values. It is
+	 * called once per candidate row each time the span index rebuilds, and each
+	 * call allocates one context object, so keep it cheap.
+	 *
+	 * Spans are always recomputed from the rows that are actually rendered, so
+	 * sorting, filtering, and paging only change which rows are adjacent. Runs
+	 * never cross a page boundary, a pinned-row section boundary, a change of
+	 * position in the row tree, or a grouped row. Ignored while this column is
+	 * grouped.
+	 *
+	 * @example
+	 * ```ts
+	 * { accessorKey: 'department', spanRows: true }
+	 * ```
+	 */
+	spanRows?: boolean | ((context: RowSpanContext<TFeatures, TData, TValue>) => boolean);
+}
+interface TableOptions_CellSpanning {
+	/**
+	 * Allows cells to span rows or columns. When `false` every cell reports a
+	 * span of `1` and the span index is never built. Defaults to `true`.
+	 */
+	enableCellSpanning?: boolean;
+}
+interface Cell_CellSpanning {
+	/**
+	 * Number of columns this cell spans when rendered. `1` when it does not
+	 * span, and `0` when another cell's column span covers it.
+	 *
+	 * Never render a `0` as a `colSpan` attribute; skip the cell instead. See
+	 * `getIsCovered`.
+	 */
+	getColSpan: () => number;
+	/**
+	 * Whether another cell's span covers this cell. Skip rendering covered
+	 * cells; the cell that covers them carries the content and the span
+	 * attributes.
+	 */
+	getIsCovered: () => boolean;
+	/**
+	 * Number of rows this cell spans when rendered. `1` when it does not span,
+	 * and `0` when a spanning cell above it covers it, matching the
+	 * `header.rowSpan` convention.
+	 *
+	 * Never render a `0` as a `rowSpan` attribute: in HTML, `rowspan="0"` means
+	 * "span to the end of the row group", which merges the cell down the entire
+	 * table section. Skip the cell instead. See `getIsCovered`.
+	 */
+	getRowSpan: () => number;
+}
+interface Table_CellSpanning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * The memoized span index for the rows that are currently rendered.
+	 */
+	getCellSpanIndex: () => CellSpanIndex<TFeatures, TData>;
+}
+interface TableOptions_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends TableOptions_Table<TFeatures, TData>, TableOptions_Cell, TableOptions_Columns<TFeatures, TData>, TableOptions_Rows<TFeatures, TData> {
+}
+type DebugKeysFor<TFeatures extends TableFeatures> = {
+	[K in Exclude<keyof TFeatures & string, NonFeatureKeys> as `debug${Capitalize<K>}`]?: boolean;
+};
+type DebugOptions<TFeatures extends TableFeatures> = {
+	debugAll?: boolean;
+	debugCache?: boolean;
+	debugCells?: boolean;
+	debugColumns?: boolean;
+	debugHeaders?: boolean;
+	debugRows?: boolean;
+	debugTable?: boolean;
+} & DebugKeysFor<CoreFeatures & TFeatures>;
+interface TableOptions_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	cellSelectionFeature: TableOptions_CellSelection<TFeatures, TData>;
+	cellSpanningFeature: TableOptions_CellSpanning;
+	columnFilteringFeature: TableOptions_ColumnFiltering<TFeatures, TData>;
+	columnGroupingFeature: TableOptions_ColumnGrouping;
+	columnOrderingFeature: TableOptions_ColumnOrdering;
+	columnPinningFeature: TableOptions_ColumnPinning;
+	columnResizingFeature: TableOptions_ColumnResizing;
+	columnSizingFeature: TableOptions_ColumnSizing;
+	columnVisibilityFeature: TableOptions_ColumnVisibility;
+	globalFilteringFeature: TableOptions_GlobalFiltering<TFeatures, TData>;
+	rowAggregationFeature: TableOptions_RowAggregation;
+	rowExpandingFeature: TableOptions_RowExpanding<TFeatures, TData>;
+	rowPaginationFeature: TableOptions_RowPagination;
+	rowPinningFeature: TableOptions_RowPinning<TFeatures, TData>;
+	rowSelectionFeature: TableOptions_RowSelection<TFeatures, TData>;
+	rowSortingFeature: TableOptions_RowSorting;
+}
+type TableOptions_StockFeatureKeys = "cellSelectionFeature" | "cellSpanningFeature" | "columnFilteringFeature" | "columnGroupingFeature" | "columnOrderingFeature" | "columnPinningFeature" | "columnResizingFeature" | "columnSizingFeature" | "columnVisibilityFeature" | "globalFilteringFeature" | "rowAggregationFeature" | "rowExpandingFeature" | "rowPaginationFeature" | "rowPinningFeature" | "rowSelectionFeature" | "rowSortingFeature";
+type TableOptions_PluginFeatureMapTypes<TFeatures extends TableFeatures, TData extends RowData> = [
+	Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>
+] extends [
+	never
+] ? unknown : UnionToIntersection<TableOptions_FeatureMap<TFeatures, TData>[Exclude<keyof TableOptions_FeatureMap<TFeatures, TData>, TableOptions_StockFeatureKeys>]>;
+type TableOptions<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, TableOptions_FeatureMap<TFeatures, TData>> & DebugOptions<TFeatures>;
+type TableOptions_All<TFeatures extends TableFeatures, TData extends RowData> = TableOptions_Core<TFeatures, TData> & Partial<TableOptions_RowAggregation & TableOptions_CellSelection<TFeatures, TData> & TableOptions_CellSpanning & TableOptions_ColumnFiltering<TFeatures, TData> & TableOptions_ColumnGrouping & TableOptions_ColumnOrdering & TableOptions_ColumnPinning & TableOptions_ColumnResizing & TableOptions_ColumnSizing & TableOptions_ColumnVisibility & TableOptions_GlobalFiltering<TFeatures, TData> & TableOptions_RowExpanding<TFeatures, TData> & TableOptions_RowPagination & TableOptions_RowPinning<TFeatures, TData> & TableOptions_RowSelection<TFeatures, TData> & TableOptions_RowSorting & TableOptions_PluginFeatureMapTypes<TFeatures, TData>>;
+interface Table_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Table_Table<TFeatures, TData>, Table_Columns<TFeatures, TData>, Table_Rows<TFeatures, TData>, Table_RowModels<TFeatures, TData>, Table_Headers<TFeatures, TData> {
+}
+interface Table_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	cellSelectionFeature: Table_CellSelection<TFeatures, TData>;
+	cellSpanningFeature: Table_CellSpanning<TFeatures, TData>;
+	columnFacetingFeature: Table_ColumnFaceting<TFeatures, TData>;
+	columnFilteringFeature: Table_ColumnFiltering;
+	columnGroupingFeature: Table_ColumnGrouping<TFeatures, TData>;
+	columnOrderingFeature: Table_ColumnOrdering<TFeatures, TData>;
+	columnPinningFeature: Table_ColumnPinning<TFeatures, TData>;
+	columnResizingFeature: Table_ColumnResizing;
+	columnSizingFeature: Table_ColumnSizing;
+	columnVisibilityFeature: Table_ColumnVisibility<TFeatures, TData>;
+	globalFilteringFeature: Table_GlobalFiltering<TFeatures, TData>;
+	rowAggregationFeature: Table_RowAggregation;
+	rowExpandingFeature: Table_RowExpanding<TFeatures, TData>;
+	rowPaginationFeature: Table_RowPagination<TFeatures, TData>;
+	rowPinningFeature: Table_RowPinning<TFeatures, TData>;
+	rowSelectionFeature: Table_RowSelection<TFeatures, TData>;
+	rowSortingFeature: Table_RowSorting<TFeatures, TData>;
+}
+type Table$1<TFeatures extends TableFeatures, TData extends RowData> = Table_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Table_FeatureMap<TFeatures, TData>>;
+//#region src/core/cells/coreCellsFeature.types.d.ts
+export interface CellContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	cell: Cell<TFeatures, TData, TValue>;
+	column: Column<TFeatures, TData, TValue>;
+	getValue: Getter<TValue>;
+	renderValue: Getter<TValue | null>;
+	row: Row<TFeatures, TData>;
+	table: Table$1<TFeatures, TData>;
+}
+interface Cell_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * The associated Column object for the cell.
+	 */
+	column: Column<TFeatures, TData, TValue>;
+	/**
+	 * The unique ID for the cell across the entire table.
+	 */
+	id: string;
+	/**
+	 * The associated Row object for the cell.
+	 */
+	row: Row<TFeatures, TData>;
+	/**
+	 * Reference to the parent table instance.
+	 */
+	table: Table$1<TFeatures, TData>;
+}
+interface Cell_Cell<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_CoreProperties<TFeatures, TData, TValue> {
+	/**
+	 * Returns the rendering context (or props) for cell-based components like cells and aggregated cells. Use these props with your framework's `flexRender` utility to render these using the template of your choice:
+	 */
+	getContext: () => CellContext<TFeatures, TData, TValue>;
+	/**
+	 * Returns the value for the cell, accessed via the associated column's accessor key or accessor function.
+	 */
+	getValue: CellContext<TFeatures, TData, TValue>["getValue"];
+	/**
+	 * Renders the value for a cell the same as `getValue`, but will return the `renderFallbackValue` if no value is found.
+	 */
+	renderValue: CellContext<TFeatures, TData, TValue>["renderValue"];
+}
+interface TableOptions_Cell {
+	/**
+	 * Value used when the desired value is not found in the data.
+	 */
+	renderFallbackValue?: any;
+}
+interface Cell_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Cell_Cell<TFeatures, TData, TValue> {
+}
+interface Cell_FeatureMap {
+	cellSelectionFeature: Cell_CellSelection;
+	cellSpanningFeature: Cell_CellSpanning;
+	columnGroupingFeature: Cell_ColumnGrouping;
+	rowAggregationFeature: Cell_RowAggregation;
+}
+type Cell<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = Cell_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Cell_FeatureMap>;
+interface CellSelectionRange {
+	anchorColumnId: string;
+	anchorRowId: string;
+	focusColumnId: string;
+	focusRowId: string;
+	/**
+	 * How this range changes the selection produced by the ranges before it.
+	 * Defaults to `include`.
+	 */
+	operation?: CellSelectionRangeOperation;
+}
+type CellSelectionRangeOperation = "include" | "exclude";
+type CellSelectionState = Array<CellSelectionRange>;
+interface TableState_CellSelection {
+	cellSelection: CellSelectionState;
+}
+interface CellSelectionBounds {
+	maxColumnIndex: number;
+	maxRowIndex: number;
+	minColumnIndex: number;
+	minRowIndex: number;
+}
+interface CellSelectionEdges {
+	bottom: boolean;
+	left: boolean;
+	right: boolean;
+	top: boolean;
+}
+type CellSelectionDirection = "up" | "down" | "left" | "right";
+type CellSelectionRangeMode = "replace" | "include" | "exclude";
+interface SelectCellRangeOptions {
+	/**
+	 * Whether to replace the selection, add the range, or subtract the range.
+	 * Defaults to `replace`.
+	 */
+	mode?: CellSelectionRangeMode;
+	/**
+	 * Whether the range should be added alongside existing ranges rather than
+	 * replacing them. Defaults to `false`.
+	 *
+	 * @deprecated Use `mode: 'include'` instead.
+	 */
+	additive?: boolean;
+}
+interface TableOptions_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Resets cell selection to `initialState.cellSelection` whenever `data`
+	 * changes. Defaults to `true`.
+	 *
+	 * Ranges are stored as row and column ids, so new data would otherwise leave
+	 * a selection pointing at rows that no longer exist, or silently re-select
+	 * cells if the new data happens to reuse ids. Set to `false` to keep ranges
+	 * across data changes, and note `autoResetAll` overrides this.
+	 */
+	autoResetCellSelection?: boolean;
+	/**
+	 * Enables inclusive cell range selection through shift-click and drag.
+	 * Defaults to `true`.
+	 */
+	enableCellRangeSelection?: boolean;
+	/**
+	 * Allows cells to be selected.
+	 *
+	 * Provide a predicate to decide per cell. A column def may also opt out with
+	 * its own `enableCellSelection: false`. Defaults to `true`.
+	 */
+	enableCellSelection?: boolean | ((cell: Cell<TFeatures, TData, any>) => boolean);
+	/**
+	 * Enables extending a selection by dragging across cells. Defaults to `true`.
+	 */
+	enableCellSelectionDrag?: boolean;
+	/**
+	 * Allows modifier interactions to add or subtract ranges. Defaults to `true`.
+	 */
+	enableMultiCellRangeSelection?: boolean;
+	/**
+	 * Determines whether a selection-start event should extend the active range
+	 * instead of replacing the selection.
+	 *
+	 * By default, events with `shiftKey` directly on the event or on
+	 * `event.nativeEvent` are treated as range-selection events.
+	 */
+	isCellRangeSelectionEvent?: (event: unknown) => boolean;
+	/**
+	 * Determines whether a selection-start event should add or subtract a new
+	 * rectangle. The operation depends on whether the starting cell is selected.
+	 *
+	 * By default, events with `ctrlKey` or `metaKey` directly on the event or on
+	 * `event.nativeEvent` are treated as multi-range events.
+	 */
+	isMultiCellRangeSelectionEvent?: (event: unknown) => boolean;
+	/**
+	 * Called with an updater when cell selection state changes. Pair this with
+	 * `state.cellSelection` when using external state; external atoms can own the
+	 * slice without this callback.
+	 *
+	 * A drag emits one change per cell crossed. Subscribe to
+	 * `table.atoms.cellSelection` for finer-grained reads when that matters.
+	 */
+	onCellSelectionChange?: OnChangeFn<CellSelectionState>;
+}
+interface ColumnDef_CellSelection {
+	/**
+	 * Allows cells in this column to be selected. Defaults to `true`.
+	 */
+	enableCellSelection?: boolean;
+}
+interface Cell_CellSelection {
+	/**
+	 * Checks whether this cell can currently be selected.
+	 */
+	getCanSelect: () => boolean;
+	/**
+	 * Checks whether this cell is the active cell, i.e. the anchor of the most
+	 * recent range.
+	 */
+	getIsFocused: () => boolean;
+	/**
+	 * Checks whether this cell falls inside the final positive selection.
+	 */
+	getIsSelected: () => boolean;
+	/**
+	 * Returns which sides of this cell sit on the outer boundary of the
+	 * selection, for rendering a spreadsheet-style outline without each cell
+	 * inspecting its neighbours.
+	 *
+	 * All sides are `false` when the cell is not selected.
+	 */
+	getSelectionEdges: () => CellSelectionEdges;
+	/**
+	 * Creates a handler that extends the active range to this cell while a drag
+	 * is in progress. Bind it to `mouseenter`.
+	 *
+	 * The handler no-ops unless a drag is open, and skips redundant writes when
+	 * the active range already focuses this cell.
+	 */
+	getSelectionExtendHandler: () => (event: unknown) => void;
+	/**
+	 * Creates a handler that begins a selection at this cell. Bind it to
+	 * `mousedown`.
+	 *
+	 * Pass the original mouse event, or a framework event whose `nativeEvent` is
+	 * that event, so modifier keys can be detected. The handler attaches its own
+	 * document-level `mouseup` listener so a drag released outside the table
+	 * still ends correctly; pass `contextDocument` when the table renders into
+	 * another document, such as an iframe or popout window.
+	 */
+	getSelectionStartHandler: (contextDocument?: Document) => (event: unknown) => void;
+	/**
+	 * Returns `0` for the focused cell and `-1` otherwise, for roving tabindex.
+	 */
+	getTabIndex: () => number;
+}
+interface Table_CellSelection<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Whether a drag selection is currently open.
+	 *
+	 * Non-reactive instance data rather than state: only the mouse handlers read
+	 * it, nothing renders from it, and keeping it out of the slice means a
+	 * selection persisted mid-drag cannot rehydrate into a stuck drag.
+	 *
+	 * @internal
+	 */
+	_isSelectingCells: boolean;
+	/**
+	 * Schedules a cell selection reset after `data` changes.
+	 *
+	 * Honors `autoResetAll` and `autoResetCellSelection`. Called by the core row
+	 * model; you rarely need to invoke it yourself.
+	 */
+	autoResetCellSelection: () => void;
+	/**
+	 * Extends the active range one step in a direction, keeping its anchor fixed.
+	 */
+	extendCellSelection: (direction: CellSelectionDirection) => void;
+	/**
+	 * Returns the final positive selection as disjoint, inclusive display-order
+	 * index rectangles after all include and exclude operations are applied.
+	 *
+	 * This is the memoized cache every per-cell read goes through. Ranges whose
+	 * corners no longer resolve are omitted.
+	 */
+	getCellSelectionBounds: () => Array<CellSelectionBounds>;
+	/**
+	 * Returns the merged-cell rectangles of the rendered rows in selection's
+	 * display-order index space, or an empty array when `cellSpanningFeature`
+	 * is not registered.
+	 *
+	 * Selection rectangles expand to fully enclose these, so a merged cell is
+	 * always entirely selected or entirely unselected.
+	 */
+	getCellSelectionMergeBounds: () => Array<CellSelectionBounds>;
+	/**
+	 * Returns the ids of all columns intersected by the selection.
+	 */
+	getCellSelectionColumnIds: () => Array<string>;
+	/**
+	 * Returns a column id to display-index map for the current column order.
+	 *
+	 * Registered so the lookup stays memoized even when `columnOrderingFeature`
+	 * is absent, since its `getColumnIndexes` static rebuilds on every call.
+	 *
+	 * @internal
+	 */
+	getCellSelectionColumnIndexes: () => Record<string, number>;
+	/**
+	 * Returns the ids of all rows intersected by the selection.
+	 */
+	getCellSelectionRowIds: () => Array<string>;
+	/**
+	 * Returns the active cell, i.e. the anchor of the most recent operation.
+	 * An exclusion's active cell is focused even though it is not selected.
+	 */
+	getFocusedCell: () => Cell<TFeatures, TData, any> | undefined;
+	/**
+	 * Returns the number of selected cells.
+	 *
+	 * Computed with rectangle arithmetic unless a per-cell
+	 * `enableCellSelection` predicate requires enumeration.
+	 */
+	getSelectedCellCount: () => number;
+	/**
+	 * Returns the unique ids of all selected cells, in row-major order.
+	 *
+	 * This expands the selection, so it costs one pass over the selected area.
+	 * It is memoized and never runs unless called.
+	 */
+	getSelectedCellIds: () => Array<string>;
+	/**
+	 * Returns each final positive selection region's values as a row-major grid.
+	 *
+	 * Indexed as `[regionIndex][rowIndex][columnIndex]`. Serializing this to
+	 * clipboard text is left to userland, since the delimiter, the null
+	 * representation, and any quoting rules are application decisions.
+	 */
+	getSelectedCellRangesData: () => Array<Array<Array<unknown>>>;
+	/**
+	 * Moves the selection one step in a direction, collapsing it to a single
+	 * cell. Columns that cannot be selected are skipped over.
+	 */
+	moveCellSelection: (direction: CellSelectionDirection) => void;
+	/**
+	 * Resets `cellSelection` to `initialState.cellSelection`.
+	 *
+	 * Pass `true` to ignore initial state and reset to an empty selection.
+	 */
+	resetCellSelection: (defaultState?: boolean) => void;
+	/**
+	 * Selects every selectable cell in the table as one range.
+	 */
+	selectAllCells: () => void;
+	/**
+	 * Selects a rectangle using the requested replace/include/exclude mode.
+	 */
+	selectCellRange: (range: CellSelectionRange, opts?: SelectCellRangeOptions) => void;
+	/**
+	 * Updates cell selection state with a next value or updater function.
+	 */
+	setCellSelection: (updater: Updater<CellSelectionState>) => void;
+	/**
+	 * Collapses the selection to a single cell at the given coordinates.
+	 */
+	setFocusedCell: (rowId: string, columnId: string) => void;
+}
+interface ColumnMeta<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+}
+type ExtractColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IsAny$3<TFeatures> extends true ? ColumnMeta<TFeatures, TData, TValue> : TFeatures extends {
+	columnMeta: infer TMeta extends object;
+} ? TMeta : ColumnMeta<TFeatures, TData, TValue>;
+type AccessorFn<TData extends RowData, TValue extends CellData = CellData> = (originalRow: TData, index: number) => TValue;
+type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any);
+type StringOrTemplateHeader<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = string | ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
+interface StringHeaderIdentifier {
+	/**
+	 * Header text used both for rendering and as a fallback column id.
+	 */
+	header: string;
+	/**
+	 * Optional explicit id that overrides the header-derived id.
+	 */
+	id?: string;
+}
+interface IdIdentifier<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * Explicit stable column id.
+	 */
+	id: string;
+	/**
+	 * Header text or template used to render this column's header.
+	 */
+	header?: StringOrTemplateHeader<TFeatures, TData, TValue>;
+}
+type ColumnIdentifiers<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = IdIdentifier<TFeatures, TData, TValue> | StringHeaderIdentifier;
+interface ColumnDefBase_Core<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * Produces the values used by faceting/grouping for this column.
+	 *
+	 * When omitted, the normal accessor value is wrapped in a single-item array.
+	 */
+	getUniqueValues?: AccessorFn<TData, ReadonlyArray<unknown>>;
+	/**
+	 * Footer template rendered with header context.
+	 */
+	footer?: ColumnDefTemplate<HeaderContext<TFeatures, TData, TValue>>;
+	/**
+	 * Cell template rendered with cell context.
+	 */
+	cell?: ColumnDefTemplate<CellContext<TFeatures, TData, TValue>>;
+	/**
+	 * User-defined metadata available on the resolved column definition.
+	 *
+	 * Declare its type per-table via the `columnMeta` type-only slot on the
+	 * `features` option, or globally via declaration merging on `ColumnMeta`.
+	 */
+	meta?: ExtractColumnMeta<TFeatures, TData, TValue>;
+}
+interface ColumnDef_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData> {
+	cellSelectionFeature: ColumnDef_CellSelection;
+	cellSpanningFeature: ColumnDef_CellSpanning<TFeatures, TData, TValue>;
+	columnFilteringFeature: ColumnDef_ColumnFiltering<TFeatures, TData>;
+	columnGroupingFeature: ColumnDef_ColumnGrouping<TFeatures, TData>;
+	columnPinningFeature: ColumnDef_ColumnPinning;
+	columnResizingFeature: ColumnDef_ColumnResizing;
+	columnSizingFeature: ColumnDef_ColumnSizing;
+	columnVisibilityFeature: ColumnDef_ColumnVisibility;
+	globalFilteringFeature: ColumnDef_GlobalFiltering;
+	rowAggregationFeature: ColumnDef_RowAggregation<TFeatures, TData, TValue>;
+	rowSortingFeature: ColumnDef_RowSorting<TFeatures, TData>;
+}
+type ColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, ColumnDef_FeatureMap<TFeatures, TData, TValue>>;
+type ColumnDefBase_All<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase_Core<TFeatures, TData, TValue> & Partial<ColumnDef_RowAggregation<TFeatures, TData, TValue> & ColumnDef_CellSelection & ColumnDef_CellSpanning<TFeatures, TData, TValue> & ColumnDef_ColumnVisibility & ColumnDef_ColumnPinning & ColumnDef_ColumnFiltering<TFeatures, TData> & ColumnDef_GlobalFiltering & ColumnDef_RowSorting<TFeatures, TData> & ColumnDef_ColumnGrouping<TFeatures, TData> & ColumnDef_ColumnSizing & ColumnDef_ColumnResizing>;
+type DisplayColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type GroupColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+	columns?: ReadonlyArray<ColumnDef<TFeatures, TData, unknown>>;
+};
+type GroupColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = GroupColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type AccessorFnColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+	accessorFn: AccessorFn<TData, TValue>;
+};
+type AccessorFnColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorFnColumnDefBase<TFeatures, TData, TValue> & ColumnIdentifiers<TFeatures, TData, TValue>;
+type AccessorKeyColumnDefBase<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = ColumnDefBase<TFeatures, TData, TValue> & {
+	id?: string;
+	accessorKey: (string & {}) | keyof TData;
+};
+type AccessorKeyColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDefBase<TFeatures, TData, TValue> & Partial<ColumnIdentifiers<TFeatures, TData, TValue>>;
+type AccessorColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = AccessorKeyColumnDef<TFeatures, TData, TValue> | AccessorFnColumnDef<TFeatures, TData, TValue>;
+export type ColumnDef<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = DisplayColumnDef<TFeatures, TData, TValue> | GroupColumnDef<TFeatures, TData, TValue> | AccessorColumnDef<TFeatures, TData, TValue>;
+interface Column_Core<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue = unknown> extends Column_Column<TFeatures, TData, TValue> {
+}
+interface Column_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	rowAggregationFeature: Column_RowAggregation<TFeatures, TData>;
+	columnFacetingFeature: Column_ColumnFaceting<TFeatures, TData>;
+	columnFilteringFeature: Column_ColumnFiltering<TFeatures, TData>;
+	columnGroupingFeature: Column_ColumnGrouping;
+	columnOrderingFeature: Column_ColumnOrdering;
+	columnPinningFeature: Column_ColumnPinning;
+	columnResizingFeature: Column_ColumnResizing;
+	columnSizingFeature: Column_ColumnSizing;
+	columnVisibilityFeature: Column_ColumnVisibility;
+	globalFilteringFeature: Column_GlobalFiltering;
+	rowSortingFeature: Column_RowSorting<TFeatures, TData>;
+}
+type Column<TFeatures extends TableFeatures, TData extends RowData, TValue = unknown> = Column_Core<TFeatures, TData, TValue> & ExtractFeatureMapTypes<TFeatures, Column_FeatureMap<TFeatures, TData>>;
+interface Table_Headers<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Builds the visible header groups for the current column tree, visibility,
+	 * and pinning state.
+	 */
+	getHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Builds footer groups by reversing the current header group order.
+	 */
+	getFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Flattens every header from every header group, including parent and
+	 * placeholder headers.
+	 */
+	getFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Collects only leaf headers, excluding parent/group headers.
+	 */
+	getLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+}
+interface HeaderContext<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * An instance of a column.
+	 */
+	column: Column<TFeatures, TData, TValue>;
+	/**
+	 * An instance of a header.
+	 */
+	header: Header<TFeatures, TData, TValue>;
+	/**
+	 * The table instance.
+	 */
+	table: Table$1<TFeatures, TData>;
+}
+interface Header_CoreProperties<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	/**
+	 * The col-span for the header.
+	 */
+	colSpan: number;
+	/**
+	 * The header's associated column object.
+	 */
+	column: Column<TFeatures, TData, TValue>;
+	/**
+	 * The depth of the header, zero-indexed.
+	 */
+	depth: number;
+	/**
+	 * The header's associated header group object.
+	 */
+	headerGroup: HeaderGroup<TFeatures, TData> | null;
+	/**
+	 * The unique identifier for the header.
+	 */
+	id: string;
+	/**
+	 * The index for the header within the header group.
+	 */
+	index: number;
+	/**
+	 * A boolean denoting if the header is a placeholder header. Placeholder
+	 * headers fill the rows above a shallow leaf column's real header so that
+	 * every header group row accounts for every visible column. Render them as
+	 * empty cells, or use `header.rowSpan` to merge each chain of placeholders
+	 * into one vertically spanning header cell.
+	 */
+	isPlaceholder: boolean;
+	/**
+	 * If the header is a placeholder header, this will be a unique header ID that does not conflict with any other headers across the table.
+	 */
+	placeholderId?: string;
+	/**
+	 * The number of header group rows the header should span when merging header
+	 * cells vertically. A leaf column that is shallower than the deepest leaf
+	 * column produces a chain of placeholder headers above its real header; the
+	 * placeholder at the top of the chain reports the chain's full span, and
+	 * every header it covers (including the real leaf header in the bottom row)
+	 * reports 0. To merge vertically, skip headers with a rowSpan of 0 and
+	 * render every other header with the `rowSpan` attribute and its column's
+	 * header content, even when it is a placeholder. Headers in even column
+	 * trees always report 1.
+	 */
+	rowSpan: number;
+	/**
+	 * The header's hierarchical sub/child headers. Will be empty if the header's associated column is a leaf-column.
+	 */
+	subHeaders: Array<Header<TFeatures, TData, TValue>>;
+	/**
+	 * Reference to the parent table instance.
+	 */
+	table: Table$1<TFeatures, TData>;
+}
+interface Header_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> extends Header_CoreProperties<TFeatures, TData, TValue> {
+	/**
+	 * Returns the rendering context (or props) for column-based components like headers, footers and filters.
+	 */
+	getContext: () => HeaderContext<TFeatures, TData, TValue>;
+	/**
+	 * Returns the leaf headers hierarchically nested under this header.
+	 */
+	getLeafHeaders: () => Array<Header<TFeatures, TData, TValue>>;
+}
+interface HeaderGroup_Header<in out TFeatures extends TableFeatures, in out TData extends RowData, TValue extends CellData = CellData> {
+	depth: number;
+	headers: Array<Header<TFeatures, TData, TValue>>;
+	id: string;
+}
+interface HeaderGroup_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Header<TFeatures, TData> {
+}
+interface HeaderGroup<in out TFeatures extends TableFeatures, in out TData extends RowData> extends HeaderGroup_Core<TFeatures, TData> {
+}
+type ColumnPinningPosition = false | "start" | "end";
+interface ColumnPinningState {
+	start: Array<string>;
+	end: Array<string>;
+}
+interface TableState_ColumnPinning {
+	columnPinning: ColumnPinningState;
+}
+interface TableOptions_ColumnPinning {
+	/**
+	 * Allows columns to be pinned into logical start and end regions.
+	 *
+	 * In LTR languages/layouts, start usually corresponds to left and end to
+	 * right. In RTL languages/layouts, start usually corresponds to right and end
+	 * to left.
+	 *
+	 * Defaults to `true`; column-level `enablePinning` can still opt individual
+	 * columns out.
+	 */
+	enableColumnPinning?: boolean;
+	/**
+	 * Called with an updater when column pinning state changes. Pair this with
+	 * `state.columnPinning` when using external state; external atoms can own the
+	 * slice without this callback.
+	 */
+	onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
+}
+interface ColumnDef_ColumnPinning {
+	/**
+	 * Allows this column's leaf columns to be pinned.
+	 *
+	 * Defaults to `true`; table-level `enableColumnPinning` must also allow
+	 * pinning.
+	 */
+	enablePinning?: boolean;
+}
+interface Column_ColumnPinning {
+	/**
+	 * Checks whether this column or any of its leaves can be pinned.
+	 */
+	getCanPin: () => boolean;
+	/**
+	 * Reads the column's logical pinned position: `'start'`, `'end'`, or `false`.
+	 */
+	getIsPinned: () => ColumnPinningPosition;
+	/**
+	 * Finds this column's index within its pinned region.
+	 */
+	getPinnedIndex: () => number;
+	/**
+	 * Pins this column's leaf columns to logical start or end, or unpins them
+	 * when `false` is passed.
+	 */
+	pin: (position: ColumnPinningPosition) => void;
+}
+interface Row_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Gets visible row cells whose columns are not pinned start or end.
+	 */
+	getCenterVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Gets visible row cells whose columns are pinned to logical start.
+	 */
+	getStartVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
+	/**
+	 * Gets visible row cells whose columns are pinned to logical end.
+	 */
+	getEndVisibleCells: () => Array<Cell<TFeatures, TData, unknown>>;
+}
+interface Table_ColumnPinning<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Orders items that each belong to a leaf column, such as visible leaf
+	 * columns or a row's visible cells: start-pinned items in pinning order, then
+	 * unpinned items in their given order, then end-pinned items in pinning
+	 * order. The core headers, row visible cells, and cell selection order
+	 * through it.
+	 *
+	 * `getItemsByColumnId` can return an existing lookup of the same items. It
+	 * is only read when something is pinned.
+	 *
+	 * @internal
+	 */
+	_orderByColumnPinning: <TItem>(items: Array<TItem>, getColumnId: (item: TItem) => string, getItemsByColumnId?: () => Record<string, TItem | undefined>) => Array<TItem>;
+	/**
+	 * Builds flat center-region headers for columns that are not pinned,
+	 * including parent headers.
+	 */
+	getCenterFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Builds footer groups for the center region of unpinned columns.
+	 */
+	getCenterFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Builds header groups for the center region of unpinned columns.
+	 */
+	getCenterHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Gets leaf columns that are not pinned start or end.
+	 */
+	getCenterLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Builds center-region leaf headers for columns that are not pinned.
+	 */
+	getCenterLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Lists visible leaf columns in the unpinned center region.
+	 */
+	getCenterVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Checks whether any columns are pinned, optionally limited to one side.
+	 */
+	getIsSomeColumnsPinned: (position?: ColumnPinningPosition) => boolean;
+	/**
+	 * Builds flat logical start-region headers for pinned columns, including parent
+	 * headers.
+	 */
+	getStartFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Builds footer groups for logical start-pinned columns.
+	 */
+	getStartFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Builds header groups for logical start-pinned columns.
+	 */
+	getStartHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Gets leaf columns pinned to the logical start region in pinning-state order.
+	 */
+	getStartLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Builds leaf headers for logical start-pinned columns.
+	 */
+	getStartLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Lists visible leaf columns in the logical start pinned region.
+	 */
+	getStartVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Builds flat logical end-region headers for pinned columns, including parent
+	 * headers.
+	 */
+	getEndFlatHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Builds footer groups for logical end-pinned columns.
+	 */
+	getEndFooterGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Builds header groups for logical end-pinned columns.
+	 */
+	getEndHeaderGroups: () => Array<HeaderGroup<TFeatures, TData>>;
+	/**
+	 * Gets leaf columns pinned to the logical end region in pinning-state order.
+	 */
+	getEndLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Builds leaf headers for logical end-pinned columns.
+	 */
+	getEndLeafHeaders: () => Array<Header<TFeatures, TData, unknown>>;
+	/**
+	 * Lists visible leaf columns in the logical end pinned region.
+	 */
+	getEndVisibleLeafColumns: () => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Resets `columnPinning` to `initialState.columnPinning`.
+	 *
+	 * Pass `true` to ignore initial state and reset to empty start/end arrays.
+	 */
+	resetColumnPinning: (defaultState?: boolean) => void;
+	/**
+	 * Updates column pinning state with a next state or updater function.
+	 */
+	setColumnPinning: (updater: Updater<ColumnPinningState>) => void;
+	/**
+	 * Returns pinned leaf columns for the requested pinning region.
+	 */
+	getPinnedLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
+	/**
+	 * Lists visible leaf columns for the requested pinning region.
+	 */
+	getPinnedVisibleLeafColumns: (position: ColumnPinningPosition | "center") => Array<Column<TFeatures, TData, unknown>>;
+}
+interface Row_Core<in out TFeatures extends TableFeatures, in out TData extends RowData> extends Row_Row<TFeatures, TData> {
+}
+interface Row_FeatureMap<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	rowAggregationFeature: Row_RowAggregation;
+	columnFilteringFeature: Row_ColumnFiltering<TFeatures, TData>;
+	columnGroupingFeature: Row_ColumnGrouping;
+	columnPinningFeature: Row_ColumnPinning<TFeatures, TData>;
+	columnVisibilityFeature: Row_ColumnVisibility<TFeatures, TData>;
+	rowExpandingFeature: Row_RowExpanding;
+	rowPinningFeature: Row_RowPinning;
+	rowSelectionFeature: Row_RowSelection;
+}
+type Row<TFeatures extends TableFeatures, TData extends RowData> = Row_Core<TFeatures, TData> & ExtractFeatureMapTypes<TFeatures, Row_FeatureMap<TFeatures, TData>>;
+type SortDirection = "asc" | "desc";
+interface ColumnSort {
+	desc: boolean;
+	id: string;
+}
+export type SortingState = Array<ColumnSort>;
+interface TableState_RowSorting {
+	sorting: SortingState;
+}
+interface RowModelFns_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	sortFns: Record<string, SortFn<TFeatures, TData>>;
+}
+interface SortFns {
+}
+interface SortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	(rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string): number;
+	/**
+	 * Normalizes each row's value before the two sides are compared. Only
+	 * honored by sorting functions built with `constructSortFn` (including all
+	 * built-in sorting functions).
+	 */
+	resolveDataValue?: TransformDataValueFn;
+}
+interface SortFnDef<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	sort: (dataValueA: any, dataValueB: any, rowA: Row<TFeatures, TData>, rowB: Row<TFeatures, TData>, columnId: string) => number;
+	resolveDataValue?: TransformDataValueFn;
+}
+interface CreatedSortFn<in out TFeatures extends TableFeatures, in out TData extends RowData> extends SortFnDef<TFeatures, TData> {
+	<TRowFeatures extends TableFeatures, TRowData extends RowData>(rowA: Row<TRowFeatures, TRowData>, rowB: Row<TRowFeatures, TRowData>, columnId: string): number;
+}
+type ExtractSortFnKeys<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? keyof SortFns | BuiltInSortFn : TFeatures extends {
+	sortFns: infer TSortFns extends object;
+} ? Extract<keyof TSortFns, string> : keyof SortFns;
+type SortFnOption<TFeatures extends TableFeatures, TData extends RowData> = "auto" | ExtractSortFnKeys<TFeatures> | SortFn<TFeatures, TData>;
+interface ColumnDef_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Enables/Disables multi-sorting for this column.
+	 */
+	enableMultiSort?: boolean;
+	/**
+	 * Enables/Disables sorting for this column.
+	 */
+	enableSorting?: boolean;
+	/**
+	 * Inverts the order of the sorting for this column. This is useful for values that have an inverted best/worst scale where lower numbers are better, e.g. a ranking (1st, 2nd, 3rd) or golf-like scoring
+	 */
+	invertSorting?: boolean;
+	/**
+	 * Set to `true` for sorting toggles on this column to start in the descending direction.
+	 */
+	sortDescFirst?: boolean;
+	/**
+	 * The sorting function to use with this column.
+	 * - A `string` referencing a built-in sorting function
+	 * - A custom sorting function
+	 */
+	sortFn?: SortFnOption<TFeatures, TData>;
+	/**
+	 * The priority of undefined values when sorting this column.
+	 * - `false`
+	 *   - Undefined values will be passed to the sorting function like any other value with no special handling; the sorting function is responsible for handling them
+	 * - `-1`
+	 *   - Undefined values will be sorted with higher priority (ascending) (if ascending, undefined will appear on the beginning of the list)
+	 * - `1`
+	 *   - Undefined values will be sorted with lower priority (descending) (if ascending, undefined will appear on the end of the list)
+	 * - `'first'`
+	 *   - Undefined values will be pushed to the beginning of the list regardless of sort direction
+	 * - `'last'`
+	 *   - Undefined values will be pushed to the end of the list regardless of sort direction
+	 */
+	sortUndefined?: false | -1 | 1 | "first" | "last";
+}
+interface Column_RowSorting<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Removes this column from the table's sorting state
+	 */
+	clearSorting: () => void;
+	/**
+	 * Returns a sort direction automatically inferred based on the columns values.
+	 */
+	getAutoSortDir: () => SortDirection;
+	/**
+	 * Returns a sorting function automatically inferred based on the columns values.
+	 */
+	getAutoSortFn: () => SortFn<TFeatures, TData>;
+	/**
+	 * Returns whether this column can be multi-sorted.
+	 */
+	getCanMultiSort: () => boolean;
+	/**
+	 * Returns whether this column can be sorted.
+	 */
+	getCanSort: () => boolean;
+	/**
+	 * Returns the first direction that should be used when sorting this column.
+	 */
+	getFirstSortDir: () => SortDirection;
+	/**
+	 * Reads this column's current sort direction, or `false` when unsorted.
+	 */
+	getIsSorted: () => false | SortDirection;
+	/**
+	 * Returns the next sorting order. Pass `multi` to resolve the order for a
+	 * multi-sort toggle, where `enableMultiRemove` governs whether the cycle can
+	 * remove the sort.
+	 */
+	getNextSortingOrder: (multi?: boolean) => SortDirection | false;
+	/**
+	 * Finds this column's position in the ordered sorting state.
+	 */
+	getSortIndex: () => number;
+	/**
+	 * Returns the resolved sorting function to be used for this column
+	 */
+	getSortFn: () => SortFn<TFeatures, TData>;
+	/**
+	 * Creates a header/control handler that toggles this column's sorting state.
+	 */
+	getToggleSortingHandler: () => undefined | ((event: unknown) => void);
+	/**
+	 * Toggles this column's sorting state. If `desc` is provided, it will force the sort direction to that value. If `isMulti` is provided, it will additively multi-sort the column (or toggle it if it is already sorted).
+	 */
+	toggleSorting: (desc?: boolean, isMulti?: boolean) => void;
+}
+interface TableOptions_RowSorting {
+	/**
+	 * Resets sorting to its initial state when the `data` option changes.
+	 *
+	 * This is disabled by default. `autoResetAll` overrides this option when it
+	 * is explicitly set.
+	 */
+	autoResetSorting?: boolean;
+	/**
+	 * Allows multi-sort toggles to remove a column from sorting state.
+	 */
+	enableMultiRemove?: boolean;
+	/**
+	 * Enables/Disables multi-sorting for the table.
+	 */
+	enableMultiSort?: boolean;
+	/**
+	 * Enables/Disables sorting for the table.
+	 */
+	enableSorting?: boolean;
+	/**
+	 * Enables/Disables the ability to remove sorting for the table.
+	 * - If `true` then changing sort order will cycle like: 'none' -> 'desc' -> 'asc' -> 'none' -> ...
+	 * - If `false` then changing sort order will cycle like: 'none' -> 'desc' -> 'asc' -> 'desc' -> 'asc' -> ...
+	 */
+	enableSortingRemoval?: boolean;
+	/**
+	 * Pass a custom function that will be used to determine if a multi-sort event should be triggered. It is passed the event from the sort toggle handler and should return `true` if the event should trigger a multi-sort.
+	 */
+	isMultiSortEvent?: (e: unknown) => boolean;
+	/**
+	 * Enables manual sorting for the table. If this is `true`, you will be expected to sort your data before it is passed to the table. This is useful if you are doing server-side sorting.
+	 */
+	manualSorting?: boolean;
+	/**
+	 * Set a maximum number of columns that can be multi-sorted.
+	 */
+	maxMultiSortColCount?: number;
+	/**
+	 * Called with an updater when sorting state changes. Pair this with
+	 * `state.sorting` when using external state; external atoms can own the slice
+	 * without this callback.
+	 */
+	onSortingChange?: OnChangeFn<SortingState>;
+	/**
+	 * If `true`, all sorts will default to descending as their first toggle state.
+	 */
+	sortDescFirst?: boolean;
+}
+interface Table_RowSorting<in out _TFeatures extends TableFeatures, in out _TData extends RowData> {
+	/**
+	 * Resets sorting after the table data changes when explicitly enabled.
+	 *
+	 * Honors `autoResetAll` and `autoResetSorting`; sorting is preserved by
+	 * default. Called by the core row model; you rarely need to invoke it
+	 * yourself.
+	 */
+	autoResetSorting: () => void;
+	/**
+	 * Resets `sorting` to `initialState.sorting`.
+	 *
+	 * Pass `true` to ignore initial state and reset to `[]`.
+	 */
+	resetSorting: (defaultState?: boolean) => void;
+	/**
+	 * Updates sorting state with a next ordered array or updater function.
+	 */
+	setSorting: (updater: Updater<SortingState>) => void;
+}
+interface Table_RowModels_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	/**
+	 * Reads the row model immediately before sorting.
+	 */
+	getPreSortedRowModel: () => RowModel<TFeatures, TData>;
+	/**
+	 * Resolves the row model after sorting has been applied.
+	 */
+	getSortedRowModel: () => RowModel<TFeatures, TData>;
+}
+interface CachedRowModel_Sorted<in out TFeatures extends TableFeatures, in out TData extends RowData> {
+	sortedRowModel: () => RowModel<TFeatures, TData>;
+}
+declare const cellSelectionFeature: TableFeature;
+declare const cellSpanningFeature: TableFeature;
+declare const columnFacetingFeature: TableFeature;
+declare const rowAggregationFeature: TableFeature;
+declare const columnFilteringFeature: TableFeature;
+declare const columnGroupingFeature: TableFeature;
+declare const columnOrderingFeature: TableFeature;
+declare const columnPinningFeature: TableFeature;
+declare const columnResizingFeature: TableFeature;
+declare const columnSizingFeature: TableFeature;
+declare const columnVisibilityFeature: TableFeature;
+declare const globalFilteringFeature: TableFeature;
+declare const rowExpandingFeature: TableFeature;
+declare const rowPaginationFeature: TableFeature;
+declare const rowPinningFeature: TableFeature;
+declare const rowSelectionFeature: TableFeature;
+declare const rowSortingFeature: TableFeature;
+interface StockFeatures {
+	cellSelectionFeature: typeof cellSelectionFeature;
+	cellSpanningFeature: typeof cellSpanningFeature;
+	columnFacetingFeature: typeof columnFacetingFeature;
+	columnFilteringFeature: typeof columnFilteringFeature;
+	columnGroupingFeature: typeof columnGroupingFeature;
+	columnOrderingFeature: typeof columnOrderingFeature;
+	columnPinningFeature: typeof columnPinningFeature;
+	columnResizingFeature: typeof columnResizingFeature;
+	columnSizingFeature: typeof columnSizingFeature;
+	columnVisibilityFeature: typeof columnVisibilityFeature;
+	globalFilteringFeature: typeof globalFilteringFeature;
+	rowAggregationFeature: typeof rowAggregationFeature;
+	rowExpandingFeature: typeof rowExpandingFeature;
+	rowPaginationFeature: typeof rowPaginationFeature;
+	rowPinningFeature: typeof rowPinningFeature;
+	rowSelectionFeature: typeof rowSelectionFeature;
+	rowSortingFeature: typeof rowSortingFeature;
+}
+type IsAny$3<T> = 0 extends 1 & T ? true : false;
+type UnionToIntersectionOrEmpty<T> = [
+	T
+] extends [
+	never
+] ? {} : UnionToIntersection<T> & {};
+type ExtractFeatureMapTypes<TFeatures extends TableFeatures, TFeatureMap extends object> = IsAny$3<TFeatures> extends true ? UnionToIntersection<TFeatureMap[keyof TFeatureMap]> : UnionToIntersectionOrEmpty<TFeatureMap[Extract<keyof TFeatures, keyof TFeatureMap>]>;
+interface Plugins {
+}
+type NonFeatureKeys = "aggregationFns" | "columnMeta" | "coreRowModel" | "expandedRowModel" | "facetedMinMaxValues" | "facetedRowModel" | "facetedUniqueValues" | "filterFns" | "filterMeta" | "filteredRowModel" | "groupedRowModel" | "paginatedRowModel" | "sortFns" | "sortedRowModel" | "tableMeta";
+interface FeatureSlotPrereqs {
+	/**
+	 * Named aggregation functions require the independent aggregation feature.
+	 */
+	aggregationFns: "rowAggregationFeature";
+	/**
+	 * Column resizing builds on the column sizing state and APIs.
+	 */
+	columnResizingFeature: "columnSizingFeature";
+	/**
+	 * Expanded row-model factories require row expanding APIs and state.
+	 */
+	expandedRowModel: "rowExpandingFeature";
+	/**
+	 * Faceted min/max factories require column faceting APIs.
+	 */
+	facetedMinMaxValues: "columnFacetingFeature";
+	/**
+	 * Faceted row-model factories require column faceting APIs.
+	 */
+	facetedRowModel: "columnFacetingFeature";
+	/**
+	 * Faceted unique-value factories require column faceting APIs.
+	 */
+	facetedUniqueValues: "columnFacetingFeature";
+	/**
+	 * Filtered row-model factories require column filtering APIs and state.
+	 */
+	filteredRowModel: "columnFilteringFeature";
+	/**
+	 * Named filter functions are only meaningful when column filtering is enabled.
+	 */
+	filterFns: "columnFilteringFeature";
+	/**
+	 * Filter metadata types are only read and written by filtering features.
+	 */
+	filterMeta: "columnFilteringFeature";
+	/**
+	 * Global filtering builds on column filtering state and filter functions.
+	 */
+	globalFilteringFeature: "columnFilteringFeature";
+	/**
+	 * Grouped row-model factories require column grouping APIs and state.
+	 */
+	groupedRowModel: "columnGroupingFeature";
+	/**
+	 * Paginated row-model factories require row pagination APIs and state.
+	 */
+	paginatedRowModel: "rowPaginationFeature";
+	/**
+	 * Sorted row-model factories require row sorting APIs and state.
+	 */
+	sortedRowModel: "rowSortingFeature";
+	/**
+	 * Named sorting functions are only meaningful when row sorting is enabled.
+	 */
+	sortFns: "rowSortingFeature";
+}
+type ValidateFeatureSlots<TFeatures extends TableFeatures> = IsAny$3<TFeatures> extends true ? {} : {
+	[K in keyof TFeatures as K extends keyof FeatureSlotPrereqs ? K : never]: K extends keyof FeatureSlotPrereqs ? [
+		Extract<FeatureSlotPrereqs[K], keyof TFeatures>
+	] extends [
+		never
+	] ? `Error: '${K & string}' requires '${FeatureSlotPrereqs[K] & string}' to be included in this table's features.` : TFeatures[K] : never;
+};
+interface TableFeatures extends Partial<CoreFeatures>, Partial<StockFeatures>, Partial<Plugins> {
+	/**
+	 * Registry of aggregation functions available to this table by name.
+	 *
+	 * Keys registered here become the valid string values for `aggregationFn` on
+	 * column definitions, with full inference. Import the built-in aggregation
+	 * functions you use individually and register them by their conventional
+	 * names: `aggregationFns: { sum: aggregationFn_sum, myCustomAggregationFn }`.
+	 * Spreading the exported `aggregationFns` registry also works, but puts
+	 * every built-in aggregation function in your bundle.
+	 */
+	aggregationFns?: Record<string, AggregationFnDef<any, any, any, any>>;
+	/**
+	 * Type-only slot for declaring the type of `columnDef.meta` for all columns
+	 * of this table.
+	 *
+	 * Pass a phantom value: `columnMeta: {} as MyColumnMeta`. The value itself is
+	 * ignored and stripped from the table's registered features at runtime — only
+	 * its type is used, inferred wherever `TFeatures` flows.
+	 *
+	 * When omitted, the global declaration-merged `ColumnMeta` interface applies.
+	 */
+	columnMeta?: object;
+	/**
+	 * Factory for the table's core (unmodified) row model. Defaults to the
+	 * built-in `createCoreRowModel()` when omitted.
+	 */
+	coreRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Factory for the client-side expanded row model. Pass the exported
+	 * `createExpandedRowModel()` or implement your own. Not needed for
+	 * server-side expansion.
+	 */
+	expandedRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Factory for per-column faceted min/max values. Pass the exported
+	 * `createFacetedMinMaxValues()` or implement your own. Not needed for
+	 * server-side faceting.
+	 */
+	facetedMinMaxValues?: (table: any, columnId: string) => () => [
+		number,
+		number
+	] | undefined;
+	/**
+	 * Factory for the per-column faceted row model. Pass the exported
+	 * `createFacetedRowModel()` or implement your own. Not needed for
+	 * server-side faceting.
+	 */
+	facetedRowModel?: (table: any, columnId: string) => () => RowModel<any, any>;
+	/**
+	 * Factory for per-column faceted unique values. Pass the exported
+	 * `createFacetedUniqueValues()` or implement your own. Not needed for
+	 * server-side faceting.
+	 */
+	facetedUniqueValues?: (table: any, columnId: string) => () => Map<any, number>;
+	/**
+	 * Factory for the client-side filtered row model. Pass the exported
+	 * `createFilteredRowModel()` or implement your own. Not needed for
+	 * server-side filtering.
+	 */
+	filteredRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Registry of filter functions available to this table by name.
+	 *
+	 * Keys registered here become the valid string values for `filterFn` on
+	 * column definitions and the `globalFilterFn` option, with full inference.
+	 * Import the built-in filter functions you use individually and register
+	 * them by their conventional names:
+	 * `filterFns: { includesString: filterFn_includesString, myCustomFilterFn }`.
+	 * Spreading the exported `filterFns` registry also works, but puts every
+	 * built-in filter function in your bundle.
+	 */
+	filterFns?: Record<string, FilterFn<any, any>>;
+	/**
+	 * Type-only slot for declaring the type of the filter meta that filter
+	 * functions attach to rows via `addMeta` and that is read back from
+	 * `row.columnFiltersMeta`.
+	 *
+	 * Pass a phantom value: `filterMeta: {} as MyFilterMeta` (or
+	 * `metaHelper<MyFilterMeta>()`). The value itself is ignored and stripped
+	 * from the table's registered features at runtime; only its type is used.
+	 *
+	 * When omitted, the global declaration-merged `FilterMeta` interface applies.
+	 */
+	filterMeta?: object;
+	/**
+	 * Factory for the client-side grouped row model. Pass the exported
+	 * `createGroupedRowModel()` or implement your own. Not needed for
+	 * server-side grouping.
+	 */
+	groupedRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Factory for the client-side paginated row model. Pass the exported
+	 * `createPaginatedRowModel()` or implement your own. Not needed for
+	 * server-side pagination.
+	 */
+	paginatedRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Factory for the client-side sorted row model. Pass the exported
+	 * `createSortedRowModel()` or implement your own. Not needed for
+	 * server-side sorting.
+	 */
+	sortedRowModel?: (table: any) => () => RowModel<any, any>;
+	/**
+	 * Registry of sorting functions available to this table by name.
+	 *
+	 * Keys registered here become the valid string values for `sortFn` on column
+	 * definitions, with full inference. Import the built-in sorting functions
+	 * you use individually and register them by their conventional names:
+	 * `sortFns: { alphanumeric: sortFn_alphanumeric, myCustomSortFn }`. Spreading
+	 * the exported `sortFns` registry also works, but puts every built-in
+	 * sorting function in your bundle.
+	 */
+	sortFns?: Record<string, SortFn<any, any>>;
+	/**
+	 * Type-only slot for declaring the type of this table's `options.meta`.
+	 *
+	 * Pass a phantom value: `tableMeta: {} as MyTableMeta`. The value itself is
+	 * ignored and stripped from the table's registered features at runtime — only
+	 * its type is used, inferred wherever `TFeatures` flows.
+	 *
+	 * When omitted, the global declaration-merged `TableMeta` interface applies.
+	 */
+	tableMeta?: object;
+}
+interface TableFeature {
+	/**
+	 * Adds feature methods to the shared cell prototype for a table.
+	 *
+	 * This runs lazily the first time a cell is constructed for a table. Methods
+	 * assigned here are shared by every cell instance created by that table, so
+	 * this hook should be used for APIs and memoized methods rather than
+	 * per-cell mutable data.
+	 */
+	assignCellPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Adds feature methods to the shared column prototype for a table.
+	 *
+	 * This runs lazily the first time a column is constructed for a table.
+	 * Methods assigned here are shared by every column instance created by that
+	 * table, so this hook should be used for APIs and memoized methods rather
+	 * than per-column mutable data.
+	 */
+	assignColumnPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Adds feature methods to the shared header prototype for a table.
+	 *
+	 * This runs lazily the first time a header is constructed for a table.
+	 * Methods assigned here are shared by every header instance created by that
+	 * table, so this hook should be used for APIs and memoized methods rather
+	 * than per-header mutable data.
+	 */
+	assignHeaderPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Adds feature methods to the shared row prototype for a table.
+	 *
+	 * This runs lazily the first time a row is constructed for a table. Methods
+	 * assigned here are shared by every row instance created by that table, so
+	 * this hook should be used for APIs and memoized methods rather than per-row
+	 * mutable data.
+	 */
+	assignRowPrototype?: <TFeatures extends TableFeatures, TData extends RowData>(prototype: Record<string, any>, table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Adds feature APIs directly to the table instance.
+	 *
+	 * The table is a singleton, unlike rows, columns, headers, and cells, so
+	 * table APIs are assigned directly instead of through a shared prototype.
+	 * This hook is exclusively for assigning table methods. It runs after
+	 * options, state atoms, and the store have been created and after every
+	 * feature's `initTableInstanceData` hook has completed.
+	 */
+	constructTableAPIs?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Returns default column definition options contributed by this feature.
+	 *
+	 * These defaults are merged into the table's default column definition before
+	 * `options.defaultColumn` and before each user-supplied column definition is
+	 * resolved, so users can override values supplied here.
+	 */
+	getDefaultColumnDef?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>() => ColumnDefBase_All<TFeatures, TData, TValue>;
+	/**
+	 * Returns default table options contributed by this feature.
+	 *
+	 * This runs while table options are being resolved. Use it for option
+	 * defaults such as feature enablement flags and default state-updater
+	 * callbacks. User-supplied table options take precedence over values returned
+	 * here.
+	 */
+	getDefaultTableOptions?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => Partial<TableOptions_All<TFeatures, TData>>;
+	/**
+	 * Returns this feature's initial table state.
+	 *
+	 * The incoming `initialState` contains state accumulated from earlier
+	 * features and user-provided initial state. Return a complete state object
+	 * for this feature, preserving `initialState` so user-provided values can
+	 * override feature defaults.
+	 */
+	getInitialState?: (initialState: Partial<TableState_All>) => TableState_All;
+	/**
+	 * Initializes mutable, non-reactive data owned by this feature on the table
+	 * instance.
+	 *
+	 * This runs once during table construction after options, state atoms, and
+	 * the store are available. Features are processed in a single pass in
+	 * registration order, with each feature's instance data initialized just
+	 * before its own `constructTableAPIs` hook, so this hook may rely on data
+	 * and APIs of features registered earlier. Use `constructTableAPIs`
+	 * exclusively for assigning table methods. Table resets do not rerun this
+	 * hook; use `resetTableInstanceData` to clear transient instance data
+	 * instead.
+	 */
+	initTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+	/**
+	 * Initializes instance-specific data on each cell.
+	 *
+	 * This runs for every constructed cell after core cell fields such as `id`,
+	 * `column`, and `row` have been assigned. Cells are constructed lazily on
+	 * first access per row/column pair and cached, so this runs once per cell
+	 * instance. Use this for per-cell mutable data, caches, or annotations.
+	 * Shared methods should be assigned via `assignCellPrototype` instead.
+	 */
+	initCellInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(cell: Cell<TFeatures, TData, TValue>) => void;
+	/**
+	 * Initializes instance-specific data on each column.
+	 *
+	 * This runs for every constructed column after core column fields such as
+	 * `id`, `depth`, `parent`, `columnDef`, and `columns` have been assigned.
+	 * Use this for per-column mutable data, caches, or annotations. Shared
+	 * methods should be assigned via `assignColumnPrototype` instead.
+	 */
+	initColumnInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(column: Column<TFeatures, TData, TValue>) => void;
+	/**
+	 * Initializes instance-specific data on each header group.
+	 *
+	 * This runs for every constructed header group after `depth`, `id`, and the
+	 * fully populated `headers` array have been assigned. Header groups have no
+	 * shared prototype, so this is their only per-instance extension point.
+	 * Header groups are reconstructed whenever they recompute (e.g. column
+	 * visibility, order, or pinning changes), so this reruns on every rebuild.
+	 */
+	initHeaderGroupInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(headerGroup: HeaderGroup<TFeatures, TData>) => void;
+	/**
+	 * Initializes instance-specific data on each header.
+	 *
+	 * This runs for every constructed header after core header fields such as
+	 * `id`, `column`, `depth`, `index`, and `isPlaceholder` have been assigned,
+	 * but before `subHeaders` are populated and before `headerGroup` is linked.
+	 * Headers are reconstructed on every header group rebuild, so this reruns
+	 * on every rebuild. Use this for per-header mutable data, caches, or
+	 * annotations. Shared methods should be assigned via `assignHeaderPrototype`
+	 * instead.
+	 */
+	initHeaderInstanceData?: <TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData>(header: Header<TFeatures, TData, TValue>) => void;
+	/**
+	 * Initializes instance-specific data on each row.
+	 *
+	 * This runs for every constructed row after core row fields such as `id`,
+	 * `index`, `depth`, `original`, `parentId`, and `subRows` have been assigned.
+	 * Use this for per-row mutable data, caches, or annotations. Shared methods
+	 * should be assigned via `assignRowPrototype` instead.
+	 */
+	initRowInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(row: Row<TFeatures, TData>) => void;
+	/**
+	 * Resets mutable, non-reactive table-instance data owned by this feature.
+	 *
+	 * This runs after internally owned state atoms have been restored to
+	 * `table.initialState` by `table.reset()`. It is intended for transient
+	 * feature data, not table state slices or externally controlled state.
+	 */
+	resetTableInstanceData?: <TFeatures extends TableFeatures, TData extends RowData>(table: Table$1<TFeatures, TData>) => void;
+}
+declare const coreCellsFeature: TableFeature;
+type FlexRenderProps<TFeatures extends TableFeatures, TData extends RowData, TValue extends CellData = CellData> = {
+	cell: Cell<TFeatures, TData, TValue>;
+	header?: never;
+	footer?: never;
+} | {
+	header: Header<TFeatures, TData, TValue>;
+	cell?: never;
+	footer?: never;
+} | {
+	footer: Header<TFeatures, TData, TValue>;
+	cell?: never;
+	header?: never;
+};
+type SubscribeSource<TValue> = Atom<TValue> | ReadonlyAtom<TValue> | Store$1<TValue> | ReadonlyStore<TValue>;
+type SubscribePropsWithStore<TFeatures extends TableFeatures, TSelected> = {
+	source: SubscribeSource<TableState<TFeatures>>;
+	/**
+	 * Select from full table state. Re-renders when the selected value changes
+	 * (shallow compare).
+	 *
+	 * Required in store mode so you never accidentally subscribe to the whole
+	 * store without an explicit projection.
+	 */
+	selector: (state: TableState<TFeatures>) => TSelected;
+	children: ((state: TSelected) => React$1.ReactNode) | React$1.ReactNode;
+};
+type ReactTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>> = Omit<Table$1<TFeatures, TData>, "store"> & {
+	/**
+	 * @deprecated Prefer `table.state` for render reads,
+	 * `table.atoms.<slice>.get()` for slice snapshots, or
+	 * `table.Subscribe` / `useSelector(table.store, selector)` for explicit
+	 * subscriptions. `table.store.state` is a current-value snapshot and is easy
+	 * to misuse in render code.
+	 */
+	readonly store: Table$1<TFeatures, TData>["store"];
+	/**
+	 * A React HOC (Higher Order Component) that allows you to subscribe to the table state.
+	 *
+	 * This is useful for opting into state re-renders for specific parts of the table state.
+	 *
+	 * Pass `source` to subscribe to a single atom or store (e.g. `table.atoms.rowSelection`
+	 * or `table.optionsStore`) instead of the full `table.store`.
+	 *
+	 * @example
+	 * <table.Subscribe selector={(state) => ({ rowSelection: state.rowSelection })}>
+	 *   {({ rowSelection }) => (
+	 *     <tr key={row.id}>...</tr>
+	 *   )}
+	 * </table.Subscribe>
+	 *
+	 * @example
+	 * <table.Subscribe source={table.atoms.rowSelection}>
+	 *   {(rowSelection) => <div>...</div>}
+	 * </table.Subscribe>
+	 *
+	 * @example
+	 * <table.Subscribe source={table.atoms.rowSelection} selector={(s) => s?.[row.id]}>
+	 *   {() => <tr key={row.id}>...</tr>}
+	 * </table.Subscribe>
+	 */
+	/**
+	 * Overloads (not a single union) so `selector` callbacks get correct contextual
+	 * types in JSX; a union of two `selector` signatures degrades to implicit `any`.
+	 *
+	 * Source **without** `selector` is a separate overload so children receive `TSourceValue`
+	 * (identity projection). If `selector` were optional on one overload, `TSubSelected`
+	 * would default to `unknown` instead of inferring from the source.
+	 *
+	 * The **source** overloads are listed first so `TSourceValue` is inferred from `source`.
+	 */
+	Subscribe: {
+		<TSourceValue>(props: {
+			source: SubscribeSource<TSourceValue>;
+			selector?: undefined;
+			children: ((state: TSourceValue) => React$1.ReactNode) | React$1.ReactNode;
+		}): ReturnType<React$1.FunctionComponent>;
+		<TSourceValue, TSubSelected>(props: {
+			source: SubscribeSource<TSourceValue>;
+			selector: (state: TSourceValue) => TSubSelected;
+			children: ((state: TSubSelected) => React$1.ReactNode) | React$1.ReactNode;
+		}): ReturnType<React$1.FunctionComponent>;
+		<TSubSelected>(props: Omit<SubscribePropsWithStore<TFeatures, TSubSelected>, "source">): ReturnType<React$1.FunctionComponent>;
+	};
+	/**
+	 * A React component that renders headers, cells, or footers with custom markup.
+	 * Use this utility component instead of manually calling flexRender.
+	 *
+	 * @example
+	 * ```tsx
+	 * <table.FlexRender cell={cell} />
+	 * <table.FlexRender header={header} />
+	 * <table.FlexRender footer={footer} />
+	 * ```
+	 *
+	 * This replaces calling `flexRender` directly like this:
+	 * ```tsx
+	 * flexRender(cell.column.columnDef.cell, cell.getContext())
+	 * flexRender(header.column.columnDef.header, header.getContext())
+	 * flexRender(footer.column.columnDef.footer, footer.getContext())
+	 * ```
+	 */
+	FlexRender: <TValue extends CellData = CellData>(props: FlexRenderProps<TFeatures, TData, TValue>) => React$1.ReactNode;
+	/**
+	 * The selected state of the table. This state may not match the structure of
+	 * the full table state because it is selected by the selector function that
+	 * you pass as the 2nd argument to `useTable`.
+	 *
+	 * @example
+	 * const table = useTable(options, (state) => ({ globalFilter: state.globalFilter })) // only globalFilter is part of the selected state
+	 *
+	 * console.log(table.state.globalFilter)
+	 */
+	readonly state: Readonly<TSelected>;
+};
+/**
+ * Creates a React table instance backed by TanStack Store atoms.
+ *
+ * The optional selector projects from `table.store`; the selected value is
+ * exposed on `table.state` and compared shallowly for React re-renders. Omit
+ * the selector to subscribe to every registered table state slice, or pass a
+ * narrower selector and use `table.Subscribe` lower in the tree for targeted
+ * subscriptions.
+ *
+ * @example
+ * ```tsx
+ * const table = useTable(
+ *   {
+ *     features,
+ *     columns,
+ *     data,
+ *   },
+ *   (state) => ({ pagination: state.pagination }),
+ * )
+ *
+ * table.state.pagination
+ * ```
+ */
+export declare function useTable<TFeatures extends TableFeatures, TData extends RowData, TSelected = TableState<TFeatures>>(tableOptions: TableOptions<TFeatures, TData>, selector?: (state: TableState<TFeatures>) => TSelected): ReactTable<TFeatures, TData, TSelected>;
+interface DataGridColumnCellEdit<TData> {
+	/**
+	 * Set false for a column that formats clipboard output but is never
+	 * written; a function decides per row, so locked rows (archived, another
+	 * user's, a totals row) reject like any read-only cell. Defaults to true.
+	 */
+	editable?: boolean | ((row: TData) => boolean);
+	/**
+	 * Clipboard or fill string to typed value. Return undefined to reject the
+	 * cell into `rejected`. Without it the raw string passes through unchanged -
+	 * a deliberate non-coercion, so a number column receives strings only when
+	 * the consumer chose not to parse.
+	 */
+	parse?: (raw: string, row: TData) => unknown;
+	/** Typed value to clipboard string. Fallback: String(value ?? ""). */
+	format?: (value: unknown, row: TData) => string;
+	/** Value dispatched by Delete/Backspace and cut. Defaults to null. */
+	clearValue?: unknown;
+	/**
+	 * Opt into the grid's built-in free-text editor: an overlay input (or
+	 * auto-growing textarea) flush over the focused cell, opened by Enter, F2,
+	 * typing, or double-click, committing through `onCellsChange` as source
+	 * `"edit"` with `parse` applied. Columns without it stay consumer-edited
+	 * via `onCellEditRequest` or their own cell renderers.
+	 */
+	control?: "text" | "textarea";
+}
+interface DataGridColumnMeta<TData> {
+	headerTitle?: string;
+	headerClassName?: string;
+	cellClassName?: string;
+	skeleton?: React$1.ReactNode;
+	expandedContent?: (row: TData) => React$1.ReactNode;
+	autoSize?: boolean;
+	/** Header spans this many leaves: this one and its next adjacent siblings. */
+	headerColSpan?: number;
+	cellEdit?: DataGridColumnCellEdit<TData>;
+	/**
+	 * Under `columnsResizable`, this column absorbs the free space the filler
+	 * strip would otherwise hold, so the grid always reads full-width and the
+	 * built-in editor covers the whole cell. One column per grid; while free
+	 * space remains, manual resizing of this column is visually a no-op (the
+	 * absorbed space compensates), the flex-column trade-off.
+	 */
+	fillWidth?: boolean;
+}
+declare const dataGridFeatures: {
+	columnVisibilityFeature: TableFeature;
+	columnOrderingFeature: TableFeature;
+	columnPinningFeature: TableFeature;
+	columnSizingFeature: TableFeature;
+	columnResizingFeature: TableFeature;
+	columnFilteringFeature: TableFeature;
+	columnFacetingFeature: TableFeature;
+	globalFilteringFeature: TableFeature;
+	rowSortingFeature: TableFeature;
+	rowPaginationFeature: TableFeature;
+	rowSelectionFeature: TableFeature;
+	rowExpandingFeature: TableFeature;
+	rowPinningFeature: TableFeature;
+	cellSelectionFeature: TableFeature;
+	sortedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
+	filteredRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
+	paginatedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
+	expandedRowModel: (table: Table$1<any, any>) => () => RowModel<any, any>;
+	facetedRowModel: (table: Table$1<any, any>, columnId: string) => () => RowModel<any, any>;
+	facetedUniqueValues: (table: Table$1<TableFeatures, any>, columnId: string) => () => Map<any, number>;
+	sortFns: {
+		alphanumeric: CreatedSortFn<any, any>;
+		alphanumericCaseSensitive: CreatedSortFn<any, any>;
+		basic: CreatedSortFn<any, any>;
+		datetime: CreatedSortFn<any, any>;
+		text: CreatedSortFn<any, any>;
+		textCaseSensitive: CreatedSortFn<any, any>;
+	};
+	columnMeta: DataGridColumnMeta<any>;
+};
+type DataGridFeatures = typeof dataGridFeatures;
+/**
+ * The grid's internal view of the table.
+ *
+ * `TFeatures` is invariant in v9 and an unresolved generic one collapses to a
+ * union that includes the bare core arm, so no generic signature can call
+ * `getVisibleCells()`, `getStartVisibleLeafColumns()` and friends. The public
+ * components stay generic so consumers can pass any bundle they like; the
+ * table is widened to this concrete type exactly once, on the way into
+ * context, and every internal component reads it from there.
+ */
+export type DataGridTableInstance<TData extends object> = ReactTable<DataGridFeatures, TData>;
+type DataGridCellsChangeSource = "paste" | "cut" | "clear" | "fill" | "edit";
+interface DataGridCellChange<TData> {
+	rowId: string;
+	columnId: string;
+	/** The consumer's row object, so immutable write-back needs no second lookup. */
+	row: TData;
+	/** Accessor value at dispatch time; enables consumer-side undo stacks. */
+	previousValue: unknown;
+	/** Typed value produced by `meta.cellEdit.parse`, or `clearValue` for clear/cut. */
+	value: unknown;
+}
+interface DataGridCopyDetails {
+	/** The TSV text that reached the clipboard. */
+	text: string;
+	/** The same content as a row-major grid of formatted fields. */
+	grid: string[][];
+	/** True when the write came from a cut, which clears the region next. */
+	cut: boolean;
+}
+interface DataGridCellSelectionBound {
+	minRowIndex: number;
+	maxRowIndex: number;
+	minColumnIndex: number;
+	maxColumnIndex: number;
+}
+interface DataGridCellSelectionSnapshot {
+	/** The virtually focused cell, the active range's anchor. Null when clear. */
+	focused: {
+		rowId: string;
+		columnId: string;
+	} | null;
+	/** Every positive region, geometric order. */
+	bounds: DataGridCellSelectionBound[];
+	/** The most recent region, the one copy and paste act on. */
+	activeBound: DataGridCellSelectionBound | null;
+	/**
+	 * Cells of the selection the view can show - the count that matches the
+	 * painted range and what a batch will touch.
+	 */
+	visibleCellCount: number;
+}
+interface DataGridCellRejection {
+	rowId: string;
+	columnId: string;
+	raw: string;
+	reason: "readonly" | "invalid";
+}
+type DataGridRowStatus = "new" | "dirty" | "deleted";
+type DataGridCellStatus = "dirty" | "invalid";
+interface DataGridCellEditRequest<TData> {
+	rowId: string;
+	columnId: string;
+	row: TData;
+	previousValue: unknown;
+	/** The typed character that started the edit; absent for Enter and F2. */
+	initialText?: string;
+}
+interface DataGridCellsChangeDetails<TData> {
+	source: DataGridCellsChangeSource;
+	changes: DataGridCellChange<TData>[];
+	rejected: DataGridCellRejection[];
+}
+interface DataGridProps<TFeatures extends TableFeatures, TData extends object> {
+	className?: string;
+	table?: Table$1<TFeatures, TData>;
+	children?: React$1.ReactNode;
+	onRowClick?: (row: TData) => void;
+	/**
+	 * Receives every spreadsheet write batch (paste, cut, clear, fill, edit).
+	 * Served through the props getter like `onRowClick`, so an inline identity
+	 * never republishes the context. Absent: copy still works, writes no-op.
+	 */
+	onCellsChange?: (details: DataGridCellsChangeDetails<TData>) => void;
+	/**
+	 * Opens the consumer's editor from the keyboard: Enter, F2, or typing on
+	 * the focused cell. Absent: Enter keeps moving down, typing does nothing.
+	 */
+	onCellEditRequest?: (request: DataGridCellEditRequest<TData>) => void;
+	/**
+	 * Fires on every cell-selection change (focus moves, ranges grow or
+	 * clear) with a resolved snapshot, so a selection count, formula bar or
+	 * context panel needs no reach into TanStack internals.
+	 */
+	onCellSelectionChange?: (snapshot: DataGridCellSelectionSnapshot) => void;
+	/**
+	 * Fires after the grid writes the clipboard (Cmd/Ctrl+C or X, or the
+	 * native copy and cut events), e.g. to confirm with a toast.
+	 */
+	onCellsCopy?: (details: DataGridCopyDetails) => void;
+	/**
+	 * Renders an "Add row" affordance as the table body's last row; clicking
+	 * it is the consumer's cue to start creating a row. Absent: no row.
+	 */
+	onRowCreate?: () => void;
+	/** Label of the onRowCreate affordance. Defaults to "Add row". */
+	rowCreateLabel?: React$1.ReactNode;
+	/**
+	 * Rendered inside the table body after the data rows: the slot a DRAFT
+	 * row lives in while it is being created, before it joins `data` and the
+	 * pagination math. Supply a `<tr>` of cells; the colgroup sizes them.
+	 */
+	appendRow?: React$1.ReactNode;
+	/**
+	 * Optional CRUD indication per row. Return undefined for no indication;
+	 * omit the prop entirely to render none anywhere.
+	 */
+	getRowStatus?: (row: TData) => DataGridRowStatus | undefined;
+	/**
+	 * Optional CRUD indication per cell: the classic corner mark on cells the
+	 * consumer tracks as edited or invalid.
+	 */
+	getCellStatus?: (row: TData, columnId: string) => DataGridCellStatus | undefined;
+	isLoading?: boolean;
+	/**
+	 * Overrides for every built-in string: menu items, aria labels,
+	 * pagination copy, state messages. Merged over the defaults; a more
+	 * specific component prop (`rowCreateLabel`, `loadingMessage`, the
+	 * pagination label props) still wins over its `i18n` counterpart.
+	 */
+	i18n?: DataGridI18nOverrides;
+	loadingMode?: "skeleton" | "spinner";
+	loadingMessage?: React$1.ReactNode | string;
+	fetchingMoreMessage?: React$1.ReactNode | string;
+	allRowsLoadedMessage?: React$1.ReactNode | string;
+	emptyMessage?: React$1.ReactNode | string;
+	tableLayout?: {
+		dense?: boolean;
+		cellBorder?: boolean;
+		rowBorder?: boolean;
+		rowRounded?: boolean;
+		stripped?: boolean;
+		headerBackground?: boolean;
+		footerBackground?: boolean;
+		headerBorder?: boolean;
+		headerSticky?: boolean;
+		width?: "auto" | "fixed";
+		columnsVisibility?: boolean;
+		columnsResizable?: boolean;
+		columnsPinnable?: boolean;
+		columnsMovable?: boolean;
+		columnsDraggable?: boolean;
+		rowsDraggable?: boolean;
+		rowsPinnable?: boolean;
+		/** Spreadsheet cell range selection: mouse ranges, keyboard, clipboard chrome. */
+		cellSelection?: boolean;
+		/**
+		 * "range" (default): drag, Shift and Ctrl/Cmd gestures and Shift+keys
+		 * grow multi-cell regions. "single": one focused cell only - every
+		 * gesture collapses to it and Ctrl/Cmd+A is inert.
+		 */
+		cellSelectionMode?: "single" | "range";
+		/** Drag-to-fill handle on the selection corner. Requires cellSelection. */
+		cellFillHandle?: boolean;
+		/**
+		 * How a cell opens its editor from the mouse: "dblclick" (default,
+		 * the spreadsheet standard - first click focuses, second edits) or
+		 * "click", opening the editor as soon as a plain click lands on the
+		 * focused cell; modifier clicks and drags still select.
+		 */
+		cellEditMode?: "dblclick" | "click";
+		/**
+		 * When true, committing an edit with Enter moves focus down (Shift+Enter
+		 * up), the Sheets and Excel convention. Off by default: the commit keeps
+		 * focus on the edited cell. Tab always commits and moves across.
+		 */
+		cellEditEnterAdvance?: boolean;
+		/**
+		 * The handle's look: "dot" is a solid primary dot kept inside the
+		 * cell corner; "ring" is the Sheets-style hollow circle riding the
+		 * corner point, clamped at the grid's own boundary; "square" is the
+		 * Excel-style solid square inside the corner. Default "dot".
+		 */
+		cellFillHandleVariant?: "dot" | "ring" | "square";
+	};
+	tableClassNames?: {
+		base?: string;
+		header?: string;
+		headerRow?: string;
+		headerSticky?: string;
+		body?: string;
+		bodyRow?: string;
+		footer?: string;
+		edgeCell?: string;
+		/** Override the getRowStatus tints; defaults are the warning-muted set. */
+		rowNew?: string;
+		rowDirty?: string;
+		rowDeleted?: string;
+		/**
+		 * Override the pinned-row chrome (muted tint, boundary shadow). A grid
+		 * that pins a draft row for quick-create wants it to read as an active
+		 * row, not a muted one.
+		 */
+		rowPinned?: string;
+		/** The onRowCreate affordance row, e.g. to match the grid's row height. */
+		rowCreate?: string;
+		/** The fill handle, e.g. to restyle or resize it beyond the built-in variants. */
+		cellFillHandle?: string;
+	};
+}
+declare function DataGrid<TFeatures extends TableFeatures, TData extends object>({ children, table, ...props }: DataGridProps<TFeatures, TData>): React$1.JSX.Element;
+declare function DataGridContainer({ children, className }: {
+	children: React$1.ReactNode;
+	className?: string;
+	/** Accepted for backwards compatibility; currently has no effect. */
+	border?: boolean;
+}): React$1.JSX.Element;
+declare const dataGridFeatures$1: Omit<DataGridFeatures, "columnMeta"> & {
+	columnMeta: PublicProps<DataGridFeatures["columnMeta"]>;
+};
+type DataGridFeatures$1 = typeof dataGridFeatures$1;
+/**
+ * Selection cell.
+ *
+ * Selection is read through `row.getIsSelected()`, a builder call on a row
+ * that keeps its identity across renders. A consumer's compiled component
+ * around this checkbox caches it against that row and never renders it
+ * again, which shows up as checkboxes that do not respond to clicks.
+ * Subscribing to the row-selection atom makes selection a dependency of its
+ * own. Note the standalone `Subscribe` rather than `table.Subscribe`: inside a
+ * cell template the `table` handed to the column def is the core `Table`, which
+ * has no `Subscribe` attached.
+ */
+export declare function DataGridTableRowSelect<TData extends object>({ row }: {
+	row: Row<DataGridFeatures, TData>;
+}): React$1.JSX.Element;
+declare function DataGridTableRowSelectAll(): React$1.JSX.Element;
+export declare function DataGridTable<_TData extends object>({ footerContent, renderHeader }: {
+	footerContent?: React$1.ReactNode;
+	renderHeader?: boolean;
+}): React$1.JSX.Element;
+type DataGridScrollAreaOrientation = "horizontal" | "vertical" | "both";
+type DataGridScrollAreaProps = Omit<ScrollArea.Root.Props, "children"> & {
+	children: React$1.ReactNode;
+	orientation?: DataGridScrollAreaOrientation;
+};
+declare function DataGridScrollArea({ children, className, orientation, ...props }: DataGridScrollAreaProps): React$1.JSX.Element;
+type DataGridColumnHeaderProps<TData extends object, TValue> = React$1.HTMLAttributes<HTMLDivElement> & {
+	column: Column<DataGridFeatures, TData, TValue>;
+	/** When omitted, uses `column.columnDef.meta.headerTitle`, then a string `columnDef.header`, then `column.id`. */
+	title?: string;
+	icon?: React$1.ReactNode;
+	/** Reserved; pin controls are gated by tableLayout.columnsPinnable + column.getCanPin(). */
+	pinnable?: boolean;
+	filter?: React$1.ReactNode;
+	visibility?: boolean;
+};
+declare function DataGridColumnHeader<TData extends object, TValue>(props: DataGridColumnHeaderProps<TData, TValue>): React$1.JSX.Element;
+interface DataGridPaginationProps {
+	sizes?: number[];
+	sizesInfo?: string;
+	sizesLabel?: string;
+	sizesDescription?: string;
+	sizesSkeleton?: React$1.ReactNode;
+	more?: boolean;
+	/** Page buttons the truncated middle shows; the row adds first, last and
+	 *  an ellipsis for each hidden stretch. Clamped to a minimum of 3. */
+	moreLimit?: number;
+	info?: string;
+	infoSkeleton?: React$1.ReactNode;
+	className?: string;
+	rowsPerPageLabel?: string;
+	previousPageLabel?: string;
+	nextPageLabel?: string;
+	ellipsisText?: string;
+}
+declare function DataGridPagination(props: DataGridPaginationProps): React$1.JSX.Element;
+type DataGridProps$1<Features extends TableFeatures, Data extends object> = PublicProps<DataGridProps<Features, Data>>;
+type DataGridColumnMeta$1<Data> = PublicProps<DataGridColumnMeta<Data>>;
+declare const DataGrid$1: <Features extends TableFeatures, Data extends object>(props: DataGridProps$1<Features, Data>) => ReturnType<typeof DataGrid>;
+declare const DataGridContainer$1: PublicComponent<typeof DataGridContainer>;
+declare const DataGridTableRowSelectAll$1: PublicComponent<typeof DataGridTableRowSelectAll>;
+declare const DataGridColumnHeader$1: <Data extends object, Value>(props: PublicProps<Parameters<typeof DataGridColumnHeader<Data, Value>>[0]>) => ReturnType<typeof DataGridColumnHeader>;
+declare const DataGridPagination$1: PublicComponent<typeof DataGridPagination>;
+declare const DataGridScrollArea$1: PublicComponent<typeof DataGridScrollArea>;
+type FilterCombinator = "and" | "or";
+interface FilterRule<V = unknown> {
+	id: string;
+	type: "rule";
+	/** Field path, root first. `["name", "first"]` for a nested attribute. */
+	path: string[];
+	operator: string;
+	value: V | undefined;
+	/** Flips the meaning in place. Set by Negate when there is no `inverse`. */
+	negated?: boolean;
+}
+interface FilterGroupNode<V = unknown> {
+	id: string;
+	type: "group";
+	combinator: FilterCombinator;
+	rules: FilterNode<V>[];
+}
+type FilterNode<V = unknown> = FilterRule<V> | FilterGroupNode<V>;
+type FilterQuery<V = unknown> = FilterGroupNode<V>;
+type FilterChangeReason = "add" | "update" | "remove" | "duplicate" | "negate" | "reorder" | "combinator" | "clear";
+interface FilterChangeDetails<V = unknown, O = unknown> {
+	reason: FilterChangeReason;
+	/** The rule that changed, or null for whole-query changes like `clear`. */
+	rule: FilterRule<V> | null;
+	/** The field the rule points at, resolved. Null when the path is unknown. */
+	field: FilterField<V, O> | null;
+}
+type FilterOperatorArity = "none" | "one" | "many" | "range";
+interface FilterOperator {
+	value: string;
+	label: string;
+	/** Defaults to `"one"`. */
+	arity?: FilterOperatorArity;
+	/** The opposite operator. Negate flips to it, else sets `rule.negated`. */
+	inverse?: string;
+	/** Hidden from the operator list but still valid in a restored query. */
+	hidden?: boolean;
+}
+type FilterValueType = "text" | "number" | "range" | "select" | "multiselect" | "boolean";
+interface FilterOption<O = unknown> {
+	value: string;
+	label: string;
+	icon?: React$1.ReactNode;
+	description?: string;
+	keywords?: string[];
+	disabled?: boolean;
+	/**
+	 * The row that means NONE OF THE ABOVE: Unassigned, No label, No due date.
+	 * Picking it clears every other pick and picking anything else clears it, and
+	 * it is drawn apart under a rule of its own, because a list that wipes a
+	 * selection must not look like one that does not; hide that line with
+	 * `"[&_[data-slot=filter-menu-divider]]:hidden"`. Applied under EVERY
+	 * operator, negative ones included. The value must be RESOLVABLE, since the
+	 * rule runs through the option service: an option that exists only in an
+	 * unfetched `loadOptions` page is invisible to it.
+	 */
+	exclusive?: boolean;
+	/** Arbitrary payload, carried untouched through every render callback. */
+	data?: O;
+}
+interface FilterLoadContext {
+	/** Aborted when the query changes, the editor closes, or a load supersedes. */
+	signal: AbortSignal;
+	cursor?: string;
+}
+interface FilterLoadResult<O = unknown> {
+	items: FilterOption<O>[];
+	nextCursor?: string;
+	/** Defaults to whether `nextCursor` was supplied. */
+	hasMore?: boolean;
+}
+interface FilterField<V = unknown, O = unknown> {
+	/** Stable id. Unique among its siblings; the full path must be unique. */
+	id: string;
+	label: string;
+	icon?: React$1.ReactNode;
+	description?: string;
+	keywords?: string[];
+	/** Trailing count. Defaults to known children; set it when they are lazy. */
+	count?: number;
+	fields?: FilterField<V, O>[];
+	/** Whether a BRANCH is itself filterable. Leaves always are. */
+	selectable?: boolean;
+	disabled?: boolean;
+	type?: FilterValueType;
+	options?: FilterOption<O>[];
+	/** Async options, paged via `cursor`. Any `options` also seed the cache. */
+	loadOptions?: (query: string, context: FilterLoadContext) => FilterOption<O>[] | Promise<FilterOption<O>[] | FilterLoadResult<O>>;
+	/** Resolves stored values the loader never returned, for restored chips. */
+	resolveValues?: (values: string[]) => FilterOption<O>[] | Promise<FilterOption<O>[]>;
+	/** Operators for this field. Falls back to the catalog for its `type`. */
+	operators?: FilterOperator[] | ((field: FilterField<V, O>) => FilterOperator[]);
+	/**
+	 * The operator this field FALLS BACK to, not a way to preselect one. Both
+	 * create paths deliberately start a rule on `operator: ""` so the condition
+	 * menu opens with nothing chosen, so this is read when an existing rule
+	 * changes field, and it is the value `FilterFieldPicker` hands to `onSelect`.
+	 * Ignored, with a dev warning, when it names an operator the field does not
+	 * offer; the first visible operator wins instead.
+	 */
+	defaultOperator?: string;
+	/** Overrides the editor chosen from `type`. See `FilterEditorProps`. */
+	editor?: FilterEditorRef<V, O>;
+	renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
+	/** The value as PLAIN TEXT for a11y; the default is `String(value)`. */
+	valueText?: (context: FilterValueDisplayContext<V, O>) => string;
+	/** Placeholder for the value editor's input, or an option list's search. */
+	placeholder?: string;
+	/** SHOWS the search box (default true). Off keeps it, hidden: it owns focus. */
+	searchable?: boolean;
+	/**
+	 * Whether an option-backed editor STACKS the picks at the top of its list.
+	 * Off by default, because a short closed list is read as a whole and lifting
+	 * a row out of a memorised order costs more than it buys. The partition is
+	 * taken LIVE unless `sortSelected: "snapshot"`, so ticking a row moves the
+	 * rows below it and the highlight is carried across by VALUE. Exclusive
+	 * options never join the stack; they are grouped by ROLE.
+	 */
+	pinSelected?: boolean;
+	/**
+	 * How an option list is ordered INSIDE each group, plus WHEN the partition is
+	 * taken under `pinSelected`. With pinning off there is no partition, so
+	 * `"snapshot"` is the same thing as `"none"`.
+	 *
+	 * - `"none"` (default) keeps declaration order. Not alphabetical, because
+	 *   option order is usually semantic (To do, In progress, Done).
+	 * - `"label"` sorts with `localeCompare`, so "Ålesund" files next to
+	 *   "Alesund" rather than after "Zurich".
+	 * - `"snapshot"` keeps declaration order too, and freezes the partition as
+	 *   the menu opened it: a steady pointer target where the other two re-pin
+	 *   live.
+	 */
+	sortSelected?: "none" | "label" | "snapshot";
+	/**
+	 * This field's own validity check. Return a MESSAGE to mark the value cell
+	 * invalid, or `null` / `undefined` / `false` when the value is fine. A string
+	 * rather than a schema object keeps the primitive library-agnostic.
+	 *
+	 * ORDER MATTERS: the built-in checks run first and this runs only when they
+	 * pass, so a validator never re-answers "is there a value at all". Not called
+	 * for a valueless operator, nor for a rule whose field the schema no longer
+	 * has, and shown only once the user has committed a value to that rule.
+	 */
+	validate?: (context: FilterValidateContext<V, O>) => string | null | undefined | false;
+	/**
+	 * Reaches the value editor's PANEL. Merged last through tailwind-merge, so a
+	 * `w-*` here beats the default rather than losing to it on source order.
+	 *
+	 * HEIGHT IS A VARIABLE, NOT A UTILITY: a `max-h-*` here bounds the PANEL and
+	 * does nothing to the list inside it, which owns its own `max-height`. Write
+	 * `--cascader-max-height: 28rem` as an arbitrary property instead; the cap is
+	 * the SMALLER of that and the space the popup has.
+	 */
+	className?: string;
+	/** The storage column when it differs from the UI path. Never read here. */
+	column?: string;
+	data?: unknown;
+}
+type FilterEditorHost = "create" | "amend";
+interface FilterOptionsState<O = unknown> {
+	items: FilterOption<O>[];
+	loading: boolean;
+	error: boolean;
+	hasMore: boolean;
+	/** Current search text. Debounced before it reaches `loadOptions`. */
+	query: string;
+	setQuery: (query: string) => void;
+	loadMore: () => void;
+	retry: () => void;
+	/** Resolves a stored value to its option, from cache when possible. */
+	resolve: (value: string) => FilterOption<O> | undefined;
+}
+interface FilterCommitOptions {
+	/** Dismiss the host after writing. Defaults to true. */
+	close?: boolean;
+}
+interface FilterEditorProps<V = unknown, O = unknown> {
+	field: FilterField<V, O>;
+	operator: FilterOperator;
+	/** The DRAFT value. An editor edits a draft; the host commits it. */
+	value: V | undefined;
+	onValueChange: (value: V | undefined) => void;
+	host: FilterEditorHost;
+	/**
+	 * Spread onto whichever element should take focus, so no editor reaches for
+	 * `setTimeout`. A CALLBACK ref at `HTMLElement` is the one shape assignable
+	 * to every element's own ref prop, so it spreads onto an input, a slider or a
+	 * button without a cast.
+	 */
+	autoFocusProps: {
+		ref: React$1.RefCallback<HTMLElement>;
+		autoFocus: boolean;
+	};
+	/** Accept the draft. `{ close: false }` writes through without dismissing. */
+	commit: (value?: V, options?: FilterCommitOptions) => void;
+	cancel: () => void;
+	/** Step back. Only meaningful when `host === "create"`. */
+	back: () => void;
+	options: FilterOptionsState<O>;
+	labels: FilterLabels;
+}
+type FilterEditor<V = unknown, O = unknown> = React$1.ComponentType<FilterEditorProps<V, O>>;
+type AnyFilterEditor = React$1.ComponentType<FilterEditorProps<unknown, unknown>>;
+type FilterEditorRegistry = Record<string, AnyFilterEditor>;
+type FilterEditorRef<V = unknown, O = unknown> = string | FilterEditor<V, O> | FilterEditor<any, any>;
+interface FilterEmptyStateContext {
+	labels: FilterLabels;
+	/** The bar is locked. A custom state should not offer an action here. */
+	readOnly: boolean;
+	/** Which box the builder is in, for a state that wants to be denser inline. */
+	mode: "popover" | "inline";
+	/** Appends a condition and opens its attribute picker. */
+	addFilter: () => void;
+	addGroup: () => void;
+}
+interface FilterValueDisplayContext<V = unknown, O = unknown> {
+	value: V | undefined;
+	/** `value` normalised to an array, so callbacks never re-derive it. */
+	values: unknown[];
+	field: FilterField<V, O>;
+	operator: FilterOperator;
+	/** Options already resolved for `value`, when the field is option-backed. */
+	options: FilterOption<O>[];
+	labels: FilterLabels;
+}
+type FilterDraftStep = "field" | "operator" | "value";
+interface FilterLabels {
+	addFilter: string;
+	advancedFilter: string;
+	/** The line above the builder's rows, "In this view, show records". */
+	showRecords: string;
+	/** Empty-state title. The HINT below is withheld from a read-only bar. */
+	builderEmpty: string;
+	builderEmptyHint: string;
+	/** Appends a condition to the root group, from the builder's footer. */
+	addCondition: string;
+	addConditionGroup: string;
+	/** A group's own add button: the only keyboard route into a nested group. It
+	 * NAMES a button that shows `addCondition`, so a translation must contain
+	 * that string, which is what WCAG Label in Name asks for. */
+	addToGroup: string;
+	removeGroup: string;
+	wrapInGroup: string;
+	/** Dissolves a group into its parent. The inverse of `wrapInGroup`. */
+	ungroup: string;
+	/** Moves a condition to the root group. The keyboard path to that drag. */
+	moveToTopLevel: string;
+	/** Groups have no names, so they are numbered in document order, one-based. */
+	moveToGroup: (position: number) => string;
+	/** Accessible name of a row's or a group's drag handle. */
+	reorder: string;
+	/** Description on the drag handle, teaching the Alt+Arrow keyboard model. */
+	reorderHint: string;
+	groupAll: string;
+	groupAny: string;
+	groupPlaceholder: string;
+	/** Names a builder row. Depth is in it: indentation is invisible to AT. */
+	rowLabel: (condition: string, depth: number) => string;
+	groupLabel: (description: string, depth: number) => string;
+	groupAnnouncement: (added: boolean) => string;
+	/** Alt+Arrow is otherwise silent. The total says whether this is the end. */
+	reorderAnnouncement: (label: string, position: number, total: number) => string;
+	/** A cross-PARENT move; a plain reorder announcement cannot be told apart.
+	 * `destination` is the group's own headline, or the bar's label at the top
+	 * level. */
+	moveAnnouncement: (label: string, destination: string, position: number, total: number) => string;
+	clearAll: string;
+	/** Names a group's menu; distinct from `chipMenu`, which is per-rule. */
+	groupMenu: string;
+	searchFields: string;
+	searchOperators: string;
+	searchOptions: string;
+	back: string;
+	clear: string;
+	apply: string;
+	discard: string;
+	empty: string;
+	loading: string;
+	loadingMore: string;
+	loadMore: string;
+	error: string;
+	retry: string;
+	/** Leading word before the first chip, where a combinator would otherwise go. */
+	where: string;
+	and: string;
+	or: string;
+	/** Accessible name of the combinator toggle between two chips. */
+	combinator: string;
+	/** Builder combinator toggle. English "and" wants 58.72px of a 64px track,
+	 * so the name must CONTAIN the word: truncated, the pill shows "a...". */
+	combinatorLabel: (word: string) => string;
+	duplicate: string;
+	negate: string;
+	/** Chip kebab's route into the builder. Needs `onConvertToAdvanced`. */
+	convertToAdvanced: string;
+	remove: string;
+	/** Names a chip's menu button. The builder's row menu reads the same key. */
+	chipMenu: (fieldLabel: string) => string;
+	filtersLabel: string;
+	filterLabel: (condition: string) => string;
+	/** Prose, not ARIA: `aria-readonly` is invalid on toolbar, group and button. */
+	readOnly: string;
+	/** Joins ancestors in a nested field path, "Name > First", for the names
+	 * `formatFilterPath` builds. The chip draws a decorative chevron instead. */
+	pathSeparator: string;
+	valuePlaceholder: string;
+	/** Empty word for an OPTION value; `placeholder` is the search prompt. */
+	selectPlaceholder: string;
+	/** Spoken for an empty value: "contains enter text..." is not a name. */
+	noValue: string;
+	/** Shown in the operator segment before a condition has been chosen. */
+	selectCondition: string;
+	/** Appended to a chip with no condition, matching the dashed outline. */
+	incomplete: string;
+	/** Appended to a branch row's accessible name in the field picker. */
+	branchAffordance: string;
+	/** A FRAGMENT, appended after a comma to an exclusive row's accessible name.
+	 * Warns before the press; `exclusiveAnnouncement` is the receipt after. */
+	exclusiveHint: string;
+	/** The clearing moves nothing on screen, so it is otherwise silent. */
+	exclusiveAnnouncement: (label: string, cleared: number) => string;
+	itemCount: (count: number) => string;
+	fieldsLabel: string;
+	/** Live-region text after a query narrows an option list or the picker. */
+	resultsAnnouncement: (count: number) => string;
+	/** Accessible name of an option menu's footer (Load more, Retry). */
+	actionsLabel: string;
+	/** For a CONSUMER-composed wizard; the shipped flow announces counts. */
+	stepAnnouncement: (step: FilterDraftStep, label: string) => string;
+	countAnnouncement: (count: number) => string;
+	valueCount: (count: number) => string;
+	/** Spells out the list behind the `valueCount` summary, and contains it. */
+	valueDetail: (summary: string, values: string[]) => string;
+	valueRange: (from: string, to: string) => string;
+	rangeFrom: (fieldLabel: string) => string;
+	rangeTo: (fieldLabel: string) => string;
+	rangeSeparator: string;
+	/** Rendered for a `negated` rule, wrapping the operator label. */
+	negated: (operatorLabel: string) => string;
+	/** Guidance ("Choose a condition"), not diagnosis: shown three ways over. */
+	issueOperator: string;
+	issueValue: string;
+	issueRange: string;
+	issueRangeOrder: string;
+	issueEmptyGroup: string;
+	/** The roll-up, and the name of the button that jumps to the first issue. */
+	issueSummary: (count: number) => string;
+}
+interface FilterValidateContext<V = unknown, O = unknown> {
+	value: V | undefined;
+	values: unknown[];
+	field: FilterField<V, O>;
+	operator: FilterOperator;
+	/** How many values this operator takes, already resolved. */
+	arity: FilterOperatorArity;
+	rule: FilterRule<V>;
+	labels: FilterLabels;
+}
+type CascaderCollapse = "middle" | "start" | "none";
+type FilterPathCollapse = CascaderCollapse;
+type FilterOperatorLabels = Record<string, string>;
+/** An empty query. The root is always a group, never a bare array. */
+export declare function createFilterQuery<V = unknown>(rules?: FilterNode<V>[], combinator?: FilterCombinator, id?: string): FilterQuery<V>;
+interface FilterCondition {
+	/** Full field path, `["name", "first"]`. */
+	path: string[];
+	/** First path segment, for the common flat-schema case. */
+	field: string;
+	operator: string;
+	/** `[]` for an operator that takes no value. */
+	values: unknown[];
+	negated: boolean;
+}
+/**
+ * Flattens a query to conditions. Lossy: safe only when the query is flat or
+ * every group shares the root's combinator. Read `query.combinator` and walk
+ * the tree yourself for anything else. Incomplete rules are left out.
+ */
+export declare function flattenFilterConditions<V>(query: FilterQuery<V>): FilterCondition[];
+interface FiltersProps<V = unknown, O = unknown> {
+	/** The field schema. Nested via each field's own `fields`. */
+	fields: FilterField<V, O>[];
+	query?: FilterQuery<V>;
+	defaultQuery?: FilterQuery<V>;
+	onQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => void;
+	labels?: Partial<FilterLabels>;
+	/** Operator wording, overridden independently of the chrome copy. */
+	operatorLabels?: FilterOperatorLabels;
+	/** Extra or replacement value editors, resolved by a field's `editor` name. */
+	editors?: FilterEditorRegistry;
+	/**
+	 * Which chrome draws the query. `"basic"` is the flat chip row, joined by an
+	 * implicit AND and drawing no combinator, because a chip row has nowhere to
+	 * put a parenthesis, and it draws a nested rule at any depth as a flat chip.
+	 */
+	variant?: "basic" | "advanced";
+	/** Where the advanced builder lives. `"inline"` renders the panel in place. */
+	advancedMode?: "popover" | "inline";
+	/**
+	 * Where the panel sits against its trigger. Stating it settles a twin split:
+	 * on overflow Base UI flips edges, Radix only shifts along the axis.
+	 */
+	advancedAlign?: "start" | "center" | "end";
+	/**
+	 * Whether the advanced builder's rows can be REORDERED. Off by default: a
+	 * move changes nothing about what the query MEANS, and costs a grip on every
+	 * row plus a gesture a touch screen starts by accident. On, drag and
+	 * Alt+Arrow move any row but the lone root.
+	 */
+	reorderable?: boolean;
+	/**
+	 * The density of the whole bar, chips included. TWO RUNGS and no `lg`,
+	 * resolved through `filterControlSizes` to whatever the ACTIVE STYLE calls
+	 * that rung (nova 7/8, sera 9/10, mira 6/7, maia and luma 8/9, lyra and rhea
+	 * 7/8, vega 8/9). Chips need no `ButtonGroup` variant: `items-stretch` gives
+	 * the pill the height of its one definite-height child, the kebab.
+	 */
+	size?: "sm" | "default";
+	disabled?: boolean;
+	readOnly?: boolean;
+	/**
+	 * ONE VETO POINT for every change the BAR makes to the query, and only those.
+	 * Return `false` to refuse; anything else commits, and `details.reason` names
+	 * the action. One hook and not fourteen because every write goes through
+	 * `emit`: the Delete key, Alt+Arrow and a drag alike. It can only refuse, and
+	 * it sits BEHIND the lock, so a locked bar never asks it. Returning a
+	 * REPLACEMENT tree was rejected: the announcement is already computed from
+	 * the proposed tree, so the bar would say one thing and commit another.
+	 */
+	onBeforeQueryChange?: (query: FilterQuery<V>, details: FilterChangeDetails<V, O>) => boolean | void;
+	/**
+	 * Offers "Convert to advanced filter" in every chip's kebab; its presence IS
+	 * the switch, since `variant` belongs to the consumer. Not drawn in advanced.
+	 */
+	onConvertToAdvanced?: () => void;
+	/**
+	 * Classes for the dropdown MENUS and the field PICKER panel, one prop each
+	 * rather than one per mount point. Merged after the default, so `w-*` wins.
+	 */
+	menuClassName?: string;
+	fieldPickerClassName?: string;
+	/**
+	 * How a NESTED attribute path is shortened when too deep to read. `"none"` is
+	 * the default, so an upgrade changes nothing under a consumer; the collapser
+	 * is the cascader's, and the full path survives as the accessible NAME.
+	 */
+	pathCollapse?: FilterPathCollapse;
+	/**
+	 * How many names survive the collapse, the elided run not counted. Inert
+	 * while `pathCollapse` is `"none"`. Three is the cascader's own default.
+	 */
+	maxPathSegments?: number;
+	/** Replaces the default Add filter button. */
+	trigger?: React$1.ReactNode;
+	/** Renders a Clear button once the query holds anything. */
+	showClear?: boolean;
+	renderValue?: (context: FilterValueDisplayContext<V, O>) => React$1.ReactNode;
+	renderChip?: (rule: FilterRule<V>) => React$1.ReactNode;
+	/**
+	 * Replaces the advanced builder's empty state, which exists at all because a
+	 * builder with no rows is a footer floating in blank space. `null` for none.
+	 */
+	renderEmpty?: (context: FilterEmptyStateContext) => React$1.ReactNode;
+	className?: string;
+	children?: React$1.ReactNode;
+}
+declare function Filters<V = unknown, O = unknown>({ fields, query: controlledQuery, defaultQuery, onQueryChange, labels: labelsProp, operatorLabels: operatorLabelsProp, editors: editorsProp, variant, advancedMode, advancedAlign, reorderable, size, disabled, readOnly, onBeforeQueryChange, onConvertToAdvanced, menuClassName, fieldPickerClassName, pathCollapse, maxPathSegments, trigger, showClear, renderValue, renderChip, renderEmpty, className, children }: FiltersProps<V, O>): React$1.JSX.Element;
+declare const Filters$1: <Value = unknown, Option = unknown>(props: PublicProps<Parameters<typeof Filters<Value, Option>>[0]>) => ReturnType<typeof Filters>;
+declare const Box$1: PublicComponent<typeof Box>;
+declare const Stack$1: (props: Omit<PublicProps<Parameters<typeof Stack>[0]>, "as">) => React$1.ReactNode;
+declare const StackItem$1: PublicComponent<typeof StackItem>;
+declare const Grid$1: PublicComponent<typeof Grid>;
+declare const GridItem$1: PublicComponent<typeof GridItem>;
+declare const Heading$1: PublicComponent<typeof Heading>;
+declare const Text$2: PublicComponent<typeof Text$1>;
+declare const Avatar$2: PublicComponent<typeof Avatar$1>;
+declare const AvatarGroup$1: PublicComponent<typeof AvatarGroup>;
+declare const Image$2: PublicComponent<typeof Image$1>;
+declare const Badge$1: PublicComponent<typeof Badge>;
+declare const FileType$1: PublicComponent<typeof FileType>;
+declare const Card$2: PublicComponent<typeof Card$1>;
+declare const Button$3: PublicComponent<typeof Button$2>;
+export declare const Dropdown: PublicComponent<typeof DropdownMenu>;
+export declare const DropdownPortal: PublicComponent<typeof DropdownMenuPortal>;
+declare const DropdownTrigger$1: PublicComponent<typeof DropdownTrigger>;
+declare const DropdownContent$1: PublicComponent<typeof DropdownContent>;
+declare const DropdownGroup$1: PublicComponent<typeof DropdownGroup>;
+declare const DropdownLabel$1: PublicComponent<typeof DropdownLabel>;
+declare const DropdownItem$1: PublicComponent<typeof DropdownItem>;
+declare const DropdownCheckboxItem$1: PublicComponent<typeof DropdownCheckboxItem>;
+declare const DropdownRadioGroup$1: PublicComponent<typeof DropdownRadioGroup>;
+declare const DropdownRadioItem$1: PublicComponent<typeof DropdownRadioItem>;
+declare const DropdownSeparator$1: PublicComponent<typeof DropdownSeparator>;
+declare const DropdownShortcut$1: PublicComponent<typeof DropdownShortcut>;
+export declare const DropdownSub: PublicComponent<typeof DropdownMenuSub>;
+declare const DropdownSubTrigger$1: PublicComponent<typeof DropdownSubTrigger>;
+declare const DropdownSubContent$1: PublicComponent<typeof DropdownSubContent>;
+declare const Table$2: PublicComponent<typeof Table>;
+declare const TableHeader$1: PublicComponent<typeof TableHeader>;
+declare const TableBody$1: PublicComponent<typeof TableBody>;
+declare const TableFooter$1: PublicComponent<typeof TableFooter>;
+declare const TableRow$1: PublicComponent<typeof TableRow>;
+declare const TableHead$1: PublicComponent<typeof TableHead>;
+declare const TableCell$1: PublicComponent<typeof TableCell>;
+declare const TableCaption$1: PublicComponent<typeof TableCaption>;
+declare const Timestamp$1: PublicComponent<typeof Timestamp>;
+declare const Progress$2: PublicComponent<typeof Progress$1>;
+declare const Tabs$3: PublicComponent<typeof Tabs$2>;
+declare const Empty$1: PublicComponent<typeof Empty>;
+declare const Menu$1: PublicComponent<typeof Menu>;
+declare const Icon$1: PublicComponent<typeof Icon>;
+declare const Link$1: PublicComponent<typeof Link>;
+declare const Currency$1: PublicComponent<typeof Currency>;
+declare const FileViewer$1: PublicComponent<typeof fileViewer.FileViewer>;
+declare const ViewMap$1: PublicComponent<typeof ViewMap>;
+declare const Frame$2: PublicComponent<typeof Frame$1>;
+export declare const useState: typeof React$1.useState;
+export declare const useEffect: typeof React$1.useEffect;
+export declare const useMemo: typeof React$1.useMemo;
+export declare const useRef: typeof React$1.useRef;
 export type FrontendElement = React$1.JSX.Element;
 export type FrontendElementType = React$1.JSX.ElementType;
 
@@ -82952,13 +82965,13 @@ declare namespace JSONSchema$1 {
 	export { ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, JSONSchema, NullSchema, NumberSchema, ObjectSchema, Schema, SchemaType, StringSchema, _JSONSchema };
 }
 declare namespace util {
-	export { AnyFunc, AssertEqual, AssertExtends, AssertNotEqual, BIGINT_FORMAT_RANGES, BuiltIn, CONSTANT_CATCH, Class, CleanKey, Constructor, EmptyObject, EmptyToNever, EnumLike, EnumValue, Exactly, Extend, ExtractIndexSignature, Flatten, FromCleanMap, HasLength, HasSize, HashAlgorithm, HashEncoding, HashFormat, IPVersion, Identity, InexactPartial$1 as InexactPartial, IsAny$3 as IsAny, IsProp, JSONType, JWTAlgorithm, KeyOf, Keys, KeysArray, KeysEnum, Literal$1 as Literal, LiteralArray, LoosePartial, MakePartial, MakeReadonly, MakeRequired, Mapped, Mask, MaybeAsync, MimeTypes, NUMBER_FORMAT_RANGES, NoNever, NoNeverKeys, NoUndefined, Normalize, Numeric, Omit$1 as Omit, OmitIndexSignature, OmitKeys, ParsedTypes, Prettify$2 as Prettify, Primitive$1 as Primitive, PrimitiveArray, PrimitiveSet, PropValues, ProtoOf, SafeParseError, SafeParseResult, SafeParseSuccess, SchemaClass, ShapeGetter, SomeObject, ToCleanMap, ToEnum, TupleItems, Whatever, Widen, Writeable, aborted, allowsEval, assert, assertEqual, assertIs, assertNever, assertNotEqual, assignProp, attachSchema, base64ToUint8Array, base64urlToUint8Array, cached, captureStackTrace, cleanEnum, cleanRegex, clone, cloneDef, codePointLength, constantCatch, createTransparentProxy, defineLazy, defineLazyInternal, derived, esc, escapeRegex, explicitlyAborted, extend, finalizeIssue, floatSafeRemainder, getElementAtPath, getEnumValues, getLengthableOrigin, getParsedType, getSizableOrigin, hexToUint8Array, hide, installLazyProp, isObject, isPlainObject, issue, joinValues, jsonStringifyReplacer, members, merge, mergeDefs, normalizeParams, nullish, numKeys, objectClone, omit, optionalKeys, own, parsedType, partial, pick, prefixIssues, primitiveTypes, promiseAllObject, propertyKeyTypes, randomString, rawShape, required, safeExtend, shallowClone, sizeCaps, slugify, stringifyPrimitive, toZod, uint8ArrayToBase64, uint8ArrayToBase64url, uint8ArrayToHex, unwrapMessage };
+	export { AnyFunc, AssertEqual, AssertExtends, AssertNotEqual, BIGINT_FORMAT_RANGES, BuiltIn, CONSTANT_CATCH, Class, CleanKey, Constructor, EmptyObject, EmptyToNever, EnumLike, EnumValue, Exactly, Extend, ExtractIndexSignature, Flatten, FromCleanMap, HasLength, HasSize, HashAlgorithm, HashEncoding, HashFormat, IPVersion, Identity, InexactPartial$1 as InexactPartial, IsAny$1 as IsAny, IsProp, JSONType, JWTAlgorithm, KeyOf, Keys, KeysArray, KeysEnum, Literal$1 as Literal, LiteralArray, LoosePartial, MakePartial, MakeReadonly, MakeRequired, Mapped, Mask, MaybeAsync, MimeTypes, NUMBER_FORMAT_RANGES, NoNever, NoNeverKeys, NoUndefined, Normalize, Numeric, Omit$1 as Omit, OmitIndexSignature, OmitKeys, ParsedTypes, Prettify$2 as Prettify, Primitive, PrimitiveArray, PrimitiveSet, PropValues, ProtoOf, SafeParseError, SafeParseResult, SafeParseSuccess, SchemaClass, ShapeGetter, SomeObject, ToCleanMap, ToEnum, TupleItems, Whatever, Widen, Writeable, aborted, allowsEval, assert, assertEqual, assertIs, assertNever, assertNotEqual, assignProp, attachSchema, base64ToUint8Array, base64urlToUint8Array, cached, captureStackTrace, cleanEnum, cleanRegex, clone, cloneDef, codePointLength, constantCatch, createTransparentProxy, defineLazy, defineLazyInternal, derived, esc, escapeRegex, explicitlyAborted, extend, finalizeIssue, floatSafeRemainder, getElementAtPath, getEnumValues, getLengthableOrigin, getParsedType, getSizableOrigin, hexToUint8Array, hide, installLazyProp, isObject, isPlainObject, issue, joinValues, jsonStringifyReplacer, members, merge, mergeDefs, normalizeParams, nullish, numKeys, objectClone, omit, optionalKeys, own, parsedType, partial, pick, prefixIssues, primitiveTypes, promiseAllObject, propertyKeyTypes, randomString, rawShape, required, safeExtend, shallowClone, sizeCaps, slugify, stringifyPrimitive, toZod, uint8ArrayToBase64, uint8ArrayToBase64url, uint8ArrayToHex, unwrapMessage };
 }
 declare namespace coerce {
 	export { ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, bigint$2 as bigint, boolean$2 as boolean, date$3 as date, number$2 as number, string$2 as string };
 }
 declare namespace schemas {
-	export { $DiscriminatedOption, $DiscriminatorValue, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $PartsToTemplateLiteral, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntInternals, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUIDDef, $ZodCUIDInternals, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberInternals, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringDef, $ZodStringFormat, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatTypes, $ZodStringInternals, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodType, $ZodTypeDef, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXor, $ZodXorInternals, $catchall, $loose, $partial, $strict, $strip, CheckFn, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, File$2 as File, ParseContext, ParseContextInternal, ParsePayload, SomeType, ToTemplateLiteral, URL_BAD_FORMAT, URL_UNPARSEABLE, _$ZodType, _$ZodTypeInternals, base64Charset, base64urlCharset, canParseURL, clone, getDiscriminatedOption, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, mergeValues, parseURLObject, standardProps, stripTabAndNewline, urlHostnameOk, urlProtocolOk, validateURL };
+	export { $DiscriminatedOption, $DiscriminatorValue, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $PartsToTemplateLiteral, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntInternals, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUIDDef, $ZodCUIDInternals, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberInternals, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringDef, $ZodStringFormat, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatTypes, $ZodStringInternals, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodType, $ZodTypeDef, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXor, $ZodXorInternals, $catchall, $loose, $partial, $strict, $strip, CheckFn, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, File$1 as File, ParseContext, ParseContextInternal, ParsePayload, SomeType, ToTemplateLiteral, URL_BAD_FORMAT, URL_UNPARSEABLE, _$ZodType, _$ZodTypeInternals, base64Charset, base64urlCharset, canParseURL, clone, getDiscriminatedOption, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, mergeValues, parseURLObject, standardProps, stripTabAndNewline, urlHostnameOk, urlProtocolOk, validateURL };
 }
 declare namespace regexes {
 	export { _null as null, _undefined as undefined, anyString, base64, base64url, bigint, boolean, browserEmail, cidrv4, cidrv6, creditCard, cuid, cuid2, currencyCode, date, datetime, domain, duration, e164, email, emoji, extendedDuration, guid, hex, hostname, html5Email, httpProtocol, iban, idnEmail, integer, ipv4, ipv6, ksuid, lowercase, mac, md5_base64, md5_base64url, md5_hex, nanoid, nanoidOfLength, number, rfc5322Email, sha1_base64, sha1_base64url, sha1_hex, sha256_base64, sha256_base64url, sha256_hex, sha384_base64, sha384_base64url, sha384_hex, sha512_base64, sha512_base64url, sha512_hex, string, time, ulid, unicodeEmail, uppercase, uuid, uuid4, uuid6, uuid7, xid };
@@ -82967,22 +82980,25 @@ declare namespace locales {
 	export { _default as ar, _default$1 as az, _default$10 as el, _default$11 as en, _default$12 as eo, _default$13 as es, _default$14 as fa, _default$15 as fi, _default$16 as fr, _default$17 as frCA, _default$18 as gu, _default$19 as he, _default$2 as be, _default$20 as hi, _default$21 as hr, _default$22 as hu, _default$23 as hy, _default$24 as id, _default$25 as is, _default$26 as it, _default$27 as ja, _default$28 as ka, _default$29 as kh, _default$3 as bg, _default$30 as km, _default$31 as kn, _default$32 as ko, _default$33 as lt, _default$34 as mk, _default$35 as ms, _default$36 as ne, _default$37 as nl, _default$38 as nn, _default$39 as no, _default$4 as bn, _default$40 as ota, _default$41 as ps, _default$42 as pl, _default$43 as pt, _default$44 as ptBR, _default$45 as ro, _default$46 as ru, _default$47 as sk, _default$48 as sl, _default$49 as sv, _default$5 as ca, _default$50 as ta, _default$51 as tg, _default$52 as th, _default$53 as tk, _default$54 as tr, _default$55 as ua, _default$56 as uk, _default$57 as ur, _default$58 as uz, _default$59 as vi, _default$6 as ckb, _default$60 as zhCN, _default$61 as zhTW, _default$62 as yo, _default$7 as cs, _default$8 as da, _default$9 as de };
 }
 declare namespace z4 {
-	export { z$1 as z };
+	export { z };
 }
 declare namespace schemas$1 {
 	export { SafeExtendShape, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodExactOptional, ZodFile, ZodFloat32, ZodFloat64, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodReadonly, ZodRecord, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _enum$1 as enum, _function, _function as function, _instanceof as instanceof, _null$2 as null, _undefined$2 as undefined, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, codec, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, exactOptional, file, float32, float64, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, looseObject, looseRecord, mac$1 as mac, map, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, partialRecord, pipe, prefault, preprocess, promise, readonly, record, refine, set, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, transform, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, xid$1 as xid, xor };
 }
 declare namespace core {
-	export { $Decode, $DecodeAsync, $DiscriminatedOption, $DiscriminatorValue, $Encode, $EncodeAsync, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $Parse, $ParseAsync, $PartsToTemplateLiteral, $RefinementCtx, $SafeDecode, $SafeDecodeAsync, $SafeEncode, $SafeEncodeAsync, $SafeParse, $SafeParseAsync, $Validate, $ValidateAsync, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodAnyParams, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodArrayParams, $ZodAsyncError, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64Params, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBase64URLParams, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntFormatParams, $ZodBigIntFormats, $ZodBigIntInternals, $ZodBigIntParams, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodBooleanParams, $ZodBranded, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv4Params, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCIDRv6Params, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUID2Params, $ZodCUIDDef, $ZodCUIDInternals, $ZodCUIDParams, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCatchParams, $ZodCheck, $ZodCheckBase64Params, $ZodCheckBase64URLParams, $ZodCheckBigIntFormat, $ZodCheckBigIntFormatDef, $ZodCheckBigIntFormatInternals, $ZodCheckBigIntFormatParams, $ZodCheckCIDRv4Params, $ZodCheckCIDRv6Params, $ZodCheckCUID2Params, $ZodCheckCUIDParams, $ZodCheckCreditCardParams, $ZodCheckDef, $ZodCheckE164Params, $ZodCheckEmailParams, $ZodCheckEmojiParams, $ZodCheckEndsWith, $ZodCheckEndsWithDef, $ZodCheckEndsWithInternals, $ZodCheckEndsWithParams, $ZodCheckGUIDParams, $ZodCheckGreaterThan, $ZodCheckGreaterThanDef, $ZodCheckGreaterThanInternals, $ZodCheckGreaterThanParams, $ZodCheckIBANParams, $ZodCheckIPv4Params, $ZodCheckIPv6Params, $ZodCheckISODateParams, $ZodCheckISODateTimeParams, $ZodCheckISODurationParams, $ZodCheckISOTimeParams, $ZodCheckIncludes, $ZodCheckIncludesDef, $ZodCheckIncludesInternals, $ZodCheckIncludesParams, $ZodCheckInternals, $ZodCheckJWTParams, $ZodCheckKSUIDParams, $ZodCheckLengthEquals, $ZodCheckLengthEqualsDef, $ZodCheckLengthEqualsInternals, $ZodCheckLengthEqualsParams, $ZodCheckLessThan, $ZodCheckLessThanDef, $ZodCheckLessThanInternals, $ZodCheckLessThanParams, $ZodCheckLowerCase, $ZodCheckLowerCaseDef, $ZodCheckLowerCaseInternals, $ZodCheckLowerCaseParams, $ZodCheckMACParams, $ZodCheckMaxLength, $ZodCheckMaxLengthDef, $ZodCheckMaxLengthInternals, $ZodCheckMaxLengthParams, $ZodCheckMaxSize, $ZodCheckMaxSizeDef, $ZodCheckMaxSizeInternals, $ZodCheckMaxSizeParams, $ZodCheckMimeType, $ZodCheckMimeTypeDef, $ZodCheckMimeTypeInternals, $ZodCheckMimeTypeParams, $ZodCheckMinLength, $ZodCheckMinLengthDef, $ZodCheckMinLengthInternals, $ZodCheckMinLengthParams, $ZodCheckMinSize, $ZodCheckMinSizeDef, $ZodCheckMinSizeInternals, $ZodCheckMinSizeParams, $ZodCheckMultipleOf, $ZodCheckMultipleOfDef, $ZodCheckMultipleOfInternals, $ZodCheckMultipleOfParams, $ZodCheckNanoIDParams, $ZodCheckNumberFormat, $ZodCheckNumberFormatDef, $ZodCheckNumberFormatInternals, $ZodCheckNumberFormatParams, $ZodCheckOverwrite, $ZodCheckOverwriteDef, $ZodCheckOverwriteInternals, $ZodCheckProperties, $ZodCheckPropertiesDef, $ZodCheckPropertiesInput, $ZodCheckPropertiesInternals, $ZodCheckPropertiesParams, $ZodCheckProperty, $ZodCheckPropertyDef, $ZodCheckPropertyInternals, $ZodCheckPropertyParams, $ZodCheckRegex, $ZodCheckRegexDef, $ZodCheckRegexInternals, $ZodCheckRegexParams, $ZodCheckSizeEquals, $ZodCheckSizeEqualsDef, $ZodCheckSizeEqualsInternals, $ZodCheckSizeEqualsParams, $ZodCheckStartsWith, $ZodCheckStartsWithDef, $ZodCheckStartsWithInternals, $ZodCheckStartsWithParams, $ZodCheckStringFormat, $ZodCheckStringFormatDef, $ZodCheckStringFormatInternals, $ZodCheckStringFormatParams, $ZodCheckULIDParams, $ZodCheckURLParams, $ZodCheckUUIDParams, $ZodCheckUUIDv4Params, $ZodCheckUUIDv6Params, $ZodCheckUUIDv7Params, $ZodCheckUpperCase, $ZodCheckUpperCaseDef, $ZodCheckUpperCaseInternals, $ZodCheckUpperCaseParams, $ZodCheckXIDParams, $ZodChecks, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodConfig, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCreditCardParams, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomParams, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodCyclicError, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDateParams, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDefaultParams, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodDiscriminatedUnionParams, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodE164Params, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmailParams, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEmojiParams, $ZodEncodeError, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodEnumParams, $ZodError, $ZodErrorClass, $ZodErrorMap, $ZodErrorTree, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFileParams, $ZodFlattenedError, $ZodFormattedError, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodGUIDParams, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIBANParams, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv4Params, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodIPv6Params, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateParams, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODateTimeParams, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISODurationParams, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodISOTimeParams, $ZodInternalIssue, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodIntersectionParams, $ZodInvalidTypeExpected, $ZodIssue, $ZodIssueBase, $ZodIssueCode, $ZodIssueCustom, $ZodIssueInvalidElement, $ZodIssueInvalidKey, $ZodIssueInvalidStringFormat, $ZodIssueInvalidType, $ZodIssueInvalidUnion, $ZodIssueInvalidValue, $ZodIssueNotMultipleOf, $ZodIssueStringCommonFormats, $ZodIssueStringEndsWith, $ZodIssueStringIncludes, $ZodIssueStringInvalidJWT, $ZodIssueStringInvalidRegex, $ZodIssueStringStartsWith, $ZodIssueTooBig, $ZodIssueTooSmall, $ZodIssueUnrecognizedKeys, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodJWTParams, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodKSUIDParams, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLazyParams, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLiteralParams, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMACParams, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMapParams, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNaNParams, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNanoIDParams, $ZodNarrow, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNeverParams, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNonOptionalParams, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullParams, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNullableParams, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberFormatParams, $ZodNumberFormats, $ZodNumberInternals, $ZodNumberParams, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodObjectParams, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodOptionalParams, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPipeParams, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodPromiseParams, $ZodRawIssue, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodReadonlyParams, $ZodRealError$1 as $ZodRealError, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodRecordParams, $ZodRegistry, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodSetParams, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringBoolParams, $ZodStringDef, $ZodStringFormat, $ZodStringFormatChecks, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatIssues, $ZodStringFormatParams, $ZodStringFormatTypes, $ZodStringFormats, $ZodStringInternals, $ZodStringParams, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSuccessParams, $ZodSuperRefineIssue, $ZodSuperRefineParams, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodSymbolParams, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralParams, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTransformParams, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodTupleParams, $ZodType, $ZodTypeDef, $ZodTypeDiscriminable, $ZodTypeDiscriminableInternals, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodULIDParams, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodURLParams, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUUIDParams, $ZodUUIDv4Params, $ZodUUIDv6Params, $ZodUUIDv7Params, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUndefinedParams, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnionParams, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodUnknownParams, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodVoidParams, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXIDParams, $ZodXor, $ZodXorInternals, $ZodXorParams, $brand, $catchall, $constructor, $constructorParams, $input, $loose, $output, $partial, $replace, $strict, $strip, CheckFn, CheckParams, CheckStringFormatParams, CheckTypeParams, CompileOptions, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, Doc, File$2 as File, GlobalMeta, INVALID, JSONSchema$1 as JSONSchema, JSONSchemaGenerator, JSONSchemaGeneratorParams, JSONSchemaMeta, NEVER, Params, ParseContext, ParseContextInternal, ParsePayload, ProcessParams, Processor, RegistryToJSONSchemaParams, Seen, SomeType, StringFormatParams, TimePrecision, ToJSONSchemaContext, ToJSONSchemaParams, ToTemplateLiteral, TypeParams, URL_BAD_FORMAT, URL_UNPARSEABLE, UnrepresentableHandler, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodStandardJSONSchemaPayload, ZodStandardSchemaWithJSON, _$ZodType, _$ZodTypeInternals, _any, _array, _base64, _base64url, _bigint, _boolean, _catch, _check, _cidrv4, _cidrv6, _coercedBigint, _coercedBoolean, _coercedDate, _coercedNumber, _coercedString, _creditCard, _cuid, _cuid2, _custom, _date, _decode, _decodeAsync, _default$63 as _default, _discriminatedUnion, _e164, _email, _emoji, _encode, _encodeAsync, _endsWith, _enum, _file, _float32, _float64, _gt, _gte, _gte as _min, _guid, _iban, _includes, _int, _int32, _int64, _intersection, _ipv4, _ipv6, _isoDate, _isoDateTime, _isoDuration, _isoTime, _jwt, _ksuid, _lazy, _length, _literal, _lowercase, _lt, _lte, _lte as _max, _mac, _map, _maxLength, _maxSize, _mime, _minLength, _minSize, _multipleOf, _nan, _nanoid, _nativeEnum, _negative, _never, _nonnegative, _nonoptional, _nonpositive, _normalize, _null$1 as _null, _nullable, _number, _optional, _overwrite, _parse, _parseAsync, _pipe, _positive, _promise, _properties, _property, _readonly, _record, _refine, _regex, _safeDecode, _safeDecodeAsync, _safeEncode, _safeEncodeAsync, _safeParse, _safeParseAsync, _set, _size, _slugify, _startsWith, _string, _stringFormat, _stringbool, _success, _superRefine, _symbol, _templateLiteral, _toLowerCase, _toUpperCase, _transform, _trim, _tuple, _uint32, _uint64, _ulid, _undefined$1 as _undefined, _union, _unknown, _uppercase, _url, _uuid, _uuidv4, _uuidv6, _uuidv7, _void, _xid, _xor, base64Charset, base64urlCharset, canParseURL, clone, compile, compileFn, config$1 as config, createStandardJSONSchemaMethod, createToJSONSchemaMethod, decode, decodeAsync, describe, encode, encodeAsync, extractDefs, finalize, flattenError, formatError, getDiscriminatedOption, globalConfig, globalRegistry, handleUnrepresentable, initializeContext, input, isBackEdge, isRecursiveSchema, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, locales, memoizer, mergeValues, meta, output, output as infer, parse, parseAsync, parseURLObject, prettifyError, processSchema, processSchema as process, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, standardProps, stripTabAndNewline, toDotPath, toJSONSchema, toZod, treeifyError, urlHostnameOk, urlProtocolOk, util, validate$1 as validate, validateAsync, validateURL, version, withParser };
+	export { $Decode, $DecodeAsync, $DiscriminatedOption, $DiscriminatorValue, $Encode, $EncodeAsync, $InferEnumInput, $InferEnumOutput, $InferInnerFunctionType, $InferInnerFunctionTypeAsync, $InferObjectInput, $InferObjectOutput, $InferOuterFunctionType, $InferOuterFunctionTypeAsync, $InferTupleInputType, $InferTupleOutputType, $InferUnionInput, $InferUnionOutput, $InferZodRecordInput, $InferZodRecordOutput, $Parse, $ParseAsync, $PartsToTemplateLiteral, $RefinementCtx, $SafeDecode, $SafeDecodeAsync, $SafeEncode, $SafeEncodeAsync, $SafeParse, $SafeParseAsync, $Validate, $ValidateAsync, $ZodAny, $ZodAnyDef, $ZodAnyInternals, $ZodAnyParams, $ZodArray, $ZodArrayDef, $ZodArrayInternals, $ZodArrayParams, $ZodAsyncError, $ZodBase64, $ZodBase64Def, $ZodBase64Internals, $ZodBase64Params, $ZodBase64URL, $ZodBase64URLDef, $ZodBase64URLInternals, $ZodBase64URLParams, $ZodBigInt, $ZodBigIntDef, $ZodBigIntFormat, $ZodBigIntFormatDef, $ZodBigIntFormatInternals, $ZodBigIntFormatParams, $ZodBigIntFormats, $ZodBigIntInternals, $ZodBigIntParams, $ZodBoolean, $ZodBooleanDef, $ZodBooleanInternals, $ZodBooleanParams, $ZodBranded, $ZodCIDRv4, $ZodCIDRv4Def, $ZodCIDRv4Internals, $ZodCIDRv4Params, $ZodCIDRv6, $ZodCIDRv6Def, $ZodCIDRv6Internals, $ZodCIDRv6Params, $ZodCUID, $ZodCUID2, $ZodCUID2Def, $ZodCUID2Internals, $ZodCUID2Params, $ZodCUIDDef, $ZodCUIDInternals, $ZodCUIDParams, $ZodCatch, $ZodCatchCtx, $ZodCatchDef, $ZodCatchInternals, $ZodCatchParams, $ZodCheck, $ZodCheckBase64Params, $ZodCheckBase64URLParams, $ZodCheckBigIntFormat, $ZodCheckBigIntFormatDef, $ZodCheckBigIntFormatInternals, $ZodCheckBigIntFormatParams, $ZodCheckCIDRv4Params, $ZodCheckCIDRv6Params, $ZodCheckCUID2Params, $ZodCheckCUIDParams, $ZodCheckCreditCardParams, $ZodCheckDef, $ZodCheckE164Params, $ZodCheckEmailParams, $ZodCheckEmojiParams, $ZodCheckEndsWith, $ZodCheckEndsWithDef, $ZodCheckEndsWithInternals, $ZodCheckEndsWithParams, $ZodCheckGUIDParams, $ZodCheckGreaterThan, $ZodCheckGreaterThanDef, $ZodCheckGreaterThanInternals, $ZodCheckGreaterThanParams, $ZodCheckIBANParams, $ZodCheckIPv4Params, $ZodCheckIPv6Params, $ZodCheckISODateParams, $ZodCheckISODateTimeParams, $ZodCheckISODurationParams, $ZodCheckISOTimeParams, $ZodCheckIncludes, $ZodCheckIncludesDef, $ZodCheckIncludesInternals, $ZodCheckIncludesParams, $ZodCheckInternals, $ZodCheckJWTParams, $ZodCheckKSUIDParams, $ZodCheckLengthEquals, $ZodCheckLengthEqualsDef, $ZodCheckLengthEqualsInternals, $ZodCheckLengthEqualsParams, $ZodCheckLessThan, $ZodCheckLessThanDef, $ZodCheckLessThanInternals, $ZodCheckLessThanParams, $ZodCheckLowerCase, $ZodCheckLowerCaseDef, $ZodCheckLowerCaseInternals, $ZodCheckLowerCaseParams, $ZodCheckMACParams, $ZodCheckMaxLength, $ZodCheckMaxLengthDef, $ZodCheckMaxLengthInternals, $ZodCheckMaxLengthParams, $ZodCheckMaxSize, $ZodCheckMaxSizeDef, $ZodCheckMaxSizeInternals, $ZodCheckMaxSizeParams, $ZodCheckMimeType, $ZodCheckMimeTypeDef, $ZodCheckMimeTypeInternals, $ZodCheckMimeTypeParams, $ZodCheckMinLength, $ZodCheckMinLengthDef, $ZodCheckMinLengthInternals, $ZodCheckMinLengthParams, $ZodCheckMinSize, $ZodCheckMinSizeDef, $ZodCheckMinSizeInternals, $ZodCheckMinSizeParams, $ZodCheckMultipleOf, $ZodCheckMultipleOfDef, $ZodCheckMultipleOfInternals, $ZodCheckMultipleOfParams, $ZodCheckNanoIDParams, $ZodCheckNumberFormat, $ZodCheckNumberFormatDef, $ZodCheckNumberFormatInternals, $ZodCheckNumberFormatParams, $ZodCheckOverwrite, $ZodCheckOverwriteDef, $ZodCheckOverwriteInternals, $ZodCheckProperties, $ZodCheckPropertiesDef, $ZodCheckPropertiesInput, $ZodCheckPropertiesInternals, $ZodCheckPropertiesParams, $ZodCheckProperty, $ZodCheckPropertyDef, $ZodCheckPropertyInternals, $ZodCheckPropertyParams, $ZodCheckRegex, $ZodCheckRegexDef, $ZodCheckRegexInternals, $ZodCheckRegexParams, $ZodCheckSizeEquals, $ZodCheckSizeEqualsDef, $ZodCheckSizeEqualsInternals, $ZodCheckSizeEqualsParams, $ZodCheckStartsWith, $ZodCheckStartsWithDef, $ZodCheckStartsWithInternals, $ZodCheckStartsWithParams, $ZodCheckStringFormat, $ZodCheckStringFormatDef, $ZodCheckStringFormatInternals, $ZodCheckStringFormatParams, $ZodCheckULIDParams, $ZodCheckURLParams, $ZodCheckUUIDParams, $ZodCheckUUIDv4Params, $ZodCheckUUIDv6Params, $ZodCheckUUIDv7Params, $ZodCheckUpperCase, $ZodCheckUpperCaseDef, $ZodCheckUpperCaseInternals, $ZodCheckUpperCaseParams, $ZodCheckXIDParams, $ZodChecks, $ZodCodec, $ZodCodecDef, $ZodCodecInternals, $ZodConfig, $ZodCreditCard, $ZodCreditCardDef, $ZodCreditCardInternals, $ZodCreditCardParams, $ZodCustom, $ZodCustomDef, $ZodCustomInternals, $ZodCustomParams, $ZodCustomStringFormat, $ZodCustomStringFormatDef, $ZodCustomStringFormatInternals, $ZodCyclicError, $ZodDate, $ZodDateDef, $ZodDateInternals, $ZodDateParams, $ZodDefault, $ZodDefaultDef, $ZodDefaultInternals, $ZodDefaultParams, $ZodDiscriminatedUnion, $ZodDiscriminatedUnionDef, $ZodDiscriminatedUnionInternals, $ZodDiscriminatedUnionParams, $ZodE164, $ZodE164Def, $ZodE164Internals, $ZodE164Params, $ZodEmail, $ZodEmailDef, $ZodEmailInternals, $ZodEmailParams, $ZodEmoji, $ZodEmojiDef, $ZodEmojiInternals, $ZodEmojiParams, $ZodEncodeError, $ZodEnum, $ZodEnumDef, $ZodEnumInternals, $ZodEnumParams, $ZodError, $ZodErrorClass, $ZodErrorMap, $ZodErrorTree, $ZodExactOptional, $ZodExactOptionalDef, $ZodExactOptionalInternals, $ZodFile, $ZodFileDef, $ZodFileInternals, $ZodFileParams, $ZodFlattenedError, $ZodFormattedError, $ZodFunction, $ZodFunctionArgs, $ZodFunctionDef, $ZodFunctionIn, $ZodFunctionInternals, $ZodFunctionOut, $ZodFunctionParams, $ZodGUID, $ZodGUIDDef, $ZodGUIDInternals, $ZodGUIDParams, $ZodIBAN, $ZodIBANDef, $ZodIBANInternals, $ZodIBANParams, $ZodIPv4, $ZodIPv4Def, $ZodIPv4Internals, $ZodIPv4Params, $ZodIPv6, $ZodIPv6Def, $ZodIPv6Internals, $ZodIPv6Params, $ZodISODate, $ZodISODateDef, $ZodISODateInternals, $ZodISODateParams, $ZodISODateTime, $ZodISODateTimeDef, $ZodISODateTimeInternals, $ZodISODateTimeParams, $ZodISODuration, $ZodISODurationDef, $ZodISODurationInternals, $ZodISODurationParams, $ZodISOTime, $ZodISOTimeDef, $ZodISOTimeInternals, $ZodISOTimeParams, $ZodInternalIssue, $ZodIntersection, $ZodIntersectionDef, $ZodIntersectionInternals, $ZodIntersectionParams, $ZodInvalidTypeExpected, $ZodIssue, $ZodIssueBase, $ZodIssueCode, $ZodIssueCustom, $ZodIssueInvalidElement, $ZodIssueInvalidKey, $ZodIssueInvalidStringFormat, $ZodIssueInvalidType, $ZodIssueInvalidUnion, $ZodIssueInvalidValue, $ZodIssueNotMultipleOf, $ZodIssueStringCommonFormats, $ZodIssueStringEndsWith, $ZodIssueStringIncludes, $ZodIssueStringInvalidJWT, $ZodIssueStringInvalidRegex, $ZodIssueStringStartsWith, $ZodIssueTooBig, $ZodIssueTooSmall, $ZodIssueUnrecognizedKeys, $ZodJWT, $ZodJWTDef, $ZodJWTInternals, $ZodJWTParams, $ZodKSUID, $ZodKSUIDDef, $ZodKSUIDInternals, $ZodKSUIDParams, $ZodLazy, $ZodLazyDef, $ZodLazyInternals, $ZodLazyParams, $ZodLiteral, $ZodLiteralDef, $ZodLiteralInternals, $ZodLiteralParams, $ZodLooseShape, $ZodMAC, $ZodMACDef, $ZodMACInternals, $ZodMACParams, $ZodMap, $ZodMapDef, $ZodMapInternals, $ZodMapParams, $ZodMemoizer, $ZodNaN, $ZodNaNDef, $ZodNaNInternals, $ZodNaNParams, $ZodNanoID, $ZodNanoIDDef, $ZodNanoIDInternals, $ZodNanoIDParams, $ZodNarrow, $ZodNever, $ZodNeverDef, $ZodNeverInternals, $ZodNeverParams, $ZodNonOptional, $ZodNonOptionalDef, $ZodNonOptionalInternals, $ZodNonOptionalParams, $ZodNull, $ZodNullDef, $ZodNullInternals, $ZodNullParams, $ZodNullable, $ZodNullableDef, $ZodNullableInternals, $ZodNullableParams, $ZodNumber, $ZodNumberDef, $ZodNumberFormat, $ZodNumberFormatDef, $ZodNumberFormatInternals, $ZodNumberFormatParams, $ZodNumberFormats, $ZodNumberInternals, $ZodNumberParams, $ZodObject, $ZodObjectConfig, $ZodObjectDef, $ZodObjectInternals, $ZodObjectJIT, $ZodObjectParams, $ZodOptional, $ZodOptionalDef, $ZodOptionalInternals, $ZodOptionalParams, $ZodPipe, $ZodPipeDef, $ZodPipeInternals, $ZodPipeParams, $ZodPrefault, $ZodPrefaultDef, $ZodPrefaultInternals, $ZodPreprocess, $ZodPreprocessDef, $ZodPreprocessInternals, $ZodPromise, $ZodPromiseDef, $ZodPromiseInternals, $ZodPromiseParams, $ZodRawIssue, $ZodReadonly, $ZodReadonlyDef, $ZodReadonlyInternals, $ZodReadonlyParams, $ZodRealError$1 as $ZodRealError, $ZodRecord, $ZodRecordDef, $ZodRecordInternals, $ZodRecordKey, $ZodRecordParams, $ZodRegistry, $ZodSet, $ZodSetDef, $ZodSetInternals, $ZodSetParams, $ZodShape, $ZodStandardSchema, $ZodString, $ZodStringBoolParams, $ZodStringDef, $ZodStringFormat, $ZodStringFormatChecks, $ZodStringFormatDef, $ZodStringFormatInternals, $ZodStringFormatIssues, $ZodStringFormatParams, $ZodStringFormatTypes, $ZodStringFormats, $ZodStringInternals, $ZodStringParams, $ZodSuccess, $ZodSuccessDef, $ZodSuccessInternals, $ZodSuccessParams, $ZodSuperRefineIssue, $ZodSuperRefineParams, $ZodSymbol, $ZodSymbolDef, $ZodSymbolInternals, $ZodSymbolParams, $ZodTemplateLiteral, $ZodTemplateLiteralDef, $ZodTemplateLiteralInternals, $ZodTemplateLiteralParams, $ZodTemplateLiteralPart, $ZodTransform, $ZodTransformDef, $ZodTransformInternals, $ZodTransformParams, $ZodTuple, $ZodTupleDef, $ZodTupleInternals, $ZodTupleParams, $ZodType, $ZodTypeDef, $ZodTypeDiscriminable, $ZodTypeDiscriminableInternals, $ZodTypeInternals, $ZodTypes, $ZodULID, $ZodULIDDef, $ZodULIDInternals, $ZodULIDParams, $ZodURL, $ZodURLDef, $ZodURLInternals, $ZodURLParams, $ZodUUID, $ZodUUIDDef, $ZodUUIDInternals, $ZodUUIDParams, $ZodUUIDv4Params, $ZodUUIDv6Params, $ZodUUIDv7Params, $ZodUndefined, $ZodUndefinedDef, $ZodUndefinedInternals, $ZodUndefinedParams, $ZodUnion, $ZodUnionDef, $ZodUnionInternals, $ZodUnionParams, $ZodUnknown, $ZodUnknownDef, $ZodUnknownInternals, $ZodUnknownParams, $ZodVoid, $ZodVoidDef, $ZodVoidInternals, $ZodVoidParams, $ZodXID, $ZodXIDDef, $ZodXIDInternals, $ZodXIDParams, $ZodXor, $ZodXorInternals, $ZodXorParams, $brand, $catchall, $constructor, $constructorParams, $input, $loose, $output, $partial, $replace, $strict, $strip, CheckFn, CheckParams, CheckStringFormatParams, CheckTypeParams, CompileOptions, ConcatenateTupleOfStrings, ConvertPartsToStringTuple, Doc, File$1 as File, GlobalMeta, INVALID, JSONSchema$1 as JSONSchema, JSONSchemaGenerator, JSONSchemaGeneratorParams, JSONSchemaMeta, NEVER, Params, ParseContext, ParseContextInternal, ParsePayload, ProcessParams, Processor, RegistryToJSONSchemaParams, Seen, SomeType, StringFormatParams, TimePrecision, ToJSONSchemaContext, ToJSONSchemaParams, ToTemplateLiteral, TypeParams, URL_BAD_FORMAT, URL_UNPARSEABLE, UnrepresentableHandler, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodStandardJSONSchemaPayload, ZodStandardSchemaWithJSON, _$ZodType, _$ZodTypeInternals, _any, _array, _base64, _base64url, _bigint, _boolean, _catch, _check, _cidrv4, _cidrv6, _coercedBigint, _coercedBoolean, _coercedDate, _coercedNumber, _coercedString, _creditCard, _cuid, _cuid2, _custom, _date, _decode, _decodeAsync, _default$63 as _default, _discriminatedUnion, _e164, _email, _emoji, _encode, _encodeAsync, _endsWith, _enum, _file, _float32, _float64, _gt, _gte, _gte as _min, _guid, _iban, _includes, _int, _int32, _int64, _intersection, _ipv4, _ipv6, _isoDate, _isoDateTime, _isoDuration, _isoTime, _jwt, _ksuid, _lazy, _length, _literal, _lowercase, _lt, _lte, _lte as _max, _mac, _map, _maxLength, _maxSize, _mime, _minLength, _minSize, _multipleOf, _nan, _nanoid, _nativeEnum, _negative, _never, _nonnegative, _nonoptional, _nonpositive, _normalize, _null$1 as _null, _nullable, _number, _optional, _overwrite, _parse, _parseAsync, _pipe, _positive, _promise, _properties, _property, _readonly, _record, _refine, _regex, _safeDecode, _safeDecodeAsync, _safeEncode, _safeEncodeAsync, _safeParse, _safeParseAsync, _set, _size, _slugify, _startsWith, _string, _stringFormat, _stringbool, _success, _superRefine, _symbol, _templateLiteral, _toLowerCase, _toUpperCase, _transform, _trim, _tuple, _uint32, _uint64, _ulid, _undefined$1 as _undefined, _union, _unknown, _uppercase, _url, _uuid, _uuidv4, _uuidv6, _uuidv7, _void, _xid, _xor, base64Charset, base64urlCharset, canParseURL, clone, compile, compileFn, config$1 as config, createStandardJSONSchemaMethod, createToJSONSchemaMethod, decode, decodeAsync, describe, encode, encodeAsync, extractDefs, finalize, flattenError, formatError, getDiscriminatedOption, globalConfig, globalRegistry, handleUnrepresentable, initializeContext, input, isBackEdge, isRecursiveSchema, isValidBase64, isValidBase64URL, isValidCIDRv6, isValidCreditCard, isValidIBAN, isValidIPv6, isValidJWT, locales, memoizer, mergeValues, meta, output, output as infer, parse, parseAsync, parseURLObject, prettifyError, processSchema, processSchema as process, regexes, registry, safeDecode, safeDecodeAsync, safeEncode, safeEncodeAsync, safeParse, safeParseAsync, standardProps, stripTabAndNewline, toDotPath, toJSONSchema, toZod, treeifyError, urlHostnameOk, urlProtocolOk, util, validate$1 as validate, validateAsync, validateURL, version, withParser };
 }
 declare namespace iso {
 	export { ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, date$2 as date, datetime$1 as datetime, duration$1 as duration, time$1 as time };
 }
+declare namespace fileViewer {
+	export { coerce, core, iso, locales };
+}
 declare namespace z {
-	export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor, z4 as core };
+	export { AnyZodObject, AnyZodTuple, ArrayCardinality, ArrayKeys, AssertArray, AsyncParseReturnType, BRAND$1 as BRAND, CatchallInput, CatchallOutput, CustomErrorParams, DIRTY, DenormalizedError, EMPTY_PATH, Effect, EnumLike$1 as EnumLike, EnumValues, ErrorMapCtx, FilterEnum, INVALID$1 as INVALID, Indices, InnerTypeOfFunction, InputTypeOfTuple, InputTypeOfTupleWithRest, IpVersion, IssueData$1 as IssueData, KeySchema, NEVER$1 as NEVER, OK, ObjectPair, OuterTypeOfFunction, OutputTypeOfTuple, OutputTypeOfTupleWithRest, ParseContext$1 as ParseContext, ParseInput, ParseParams, ParsePath, ParsePathComponent, ParseResult, ParseReturnType, ParseStatus, PassthroughType, PreprocessEffect, Primitive$2 as Primitive, ProcessedCreateParams, RawCreateParams, RecordType, Refinement, RefinementCtx, RefinementEffect, SafeParseError$1 as SafeParseError, SafeParseReturnType, SafeParseSuccess$1 as SafeParseSuccess, Scalars, SomeZodObject, StringValidation, SuperRefinement, SyncParseReturnType, TransformEffect, TypeOf$1 as TypeOf, TypeOf$1 as infer, UnknownKeysParam, Values, Writeable$1 as Writeable, ZodAny$1 as ZodAny, ZodAnyDef, ZodArray$1 as ZodArray, ZodArrayDef, ZodBigInt$1 as ZodBigInt, ZodBigIntCheck, ZodBigIntDef, ZodBoolean$1 as ZodBoolean, ZodBooleanDef, ZodBranded, ZodBrandedDef, ZodCatch$1 as ZodCatch, ZodCatchDef, ZodCustomIssue, ZodDate$1 as ZodDate, ZodDateCheck, ZodDateDef, ZodDefault$1 as ZodDefault, ZodDefaultDef, ZodDiscriminatedUnion$1 as ZodDiscriminatedUnion, ZodDiscriminatedUnionDef, ZodDiscriminatedUnionOption, ZodEffects, ZodEffects as ZodTransformer, ZodEffectsDef, ZodEnum$1 as ZodEnum, ZodEnumDef, ZodError$1 as ZodError, ZodErrorMap$1 as ZodErrorMap, ZodFirstPartySchemaTypes$1 as ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind$1 as ZodFirstPartyTypeKind, ZodFormattedError$1 as ZodFormattedError, ZodFunction$1 as ZodFunction, ZodFunctionDef, ZodIntersection$1 as ZodIntersection, ZodIntersectionDef, ZodInvalidArgumentsIssue, ZodInvalidDateIssue, ZodInvalidEnumValueIssue, ZodInvalidIntersectionTypesIssue, ZodInvalidLiteralIssue, ZodInvalidReturnTypeIssue, ZodInvalidStringIssue, ZodInvalidTypeIssue, ZodInvalidUnionDiscriminatorIssue, ZodInvalidUnionIssue, ZodIssue$1 as ZodIssue, ZodIssueBase, ZodIssueCode$1 as ZodIssueCode, ZodIssueOptionalMessage, ZodLazy$1 as ZodLazy, ZodLazyDef, ZodLiteral$1 as ZodLiteral, ZodLiteralDef, ZodMap$1 as ZodMap, ZodMapDef, ZodNaN$1 as ZodNaN, ZodNaNDef, ZodNativeEnum, ZodNativeEnumDef, ZodNever$1 as ZodNever, ZodNeverDef, ZodNonEmptyArray, ZodNotFiniteIssue, ZodNotMultipleOfIssue, ZodNull$1 as ZodNull, ZodNullDef, ZodNullable$1 as ZodNullable, ZodNullableDef, ZodNullableType, ZodNumber$1 as ZodNumber, ZodNumberCheck, ZodNumberDef, ZodObject$1 as ZodObject, ZodObjectDef, ZodOptional$1 as ZodOptional, ZodOptionalDef, ZodOptionalType, ZodParsedType, ZodPipeline, ZodPipelineDef, ZodPromise$1 as ZodPromise, ZodPromiseDef, ZodRawShape$1 as ZodRawShape, ZodReadonly$1 as ZodReadonly, ZodReadonlyDef, ZodRecord$1 as ZodRecord, ZodRecordDef, ZodSet$1 as ZodSet, ZodSetDef, ZodString$1 as ZodString, ZodStringCheck, ZodStringDef, ZodSymbol$1 as ZodSymbol, ZodSymbolDef, ZodTooBigIssue, ZodTooSmallIssue, ZodTuple$1 as ZodTuple, ZodTupleDef, ZodTupleItems, ZodType$1 as Schema, ZodType$1 as ZodSchema, ZodType$1 as ZodType, ZodTypeAny$1 as ZodTypeAny, ZodTypeDef, ZodUndefined$1 as ZodUndefined, ZodUndefinedDef, ZodUnion$1 as ZodUnion, ZodUnionDef, ZodUnionOptions, ZodUnknown$1 as ZodUnknown, ZodUnknownDef, ZodUnrecognizedKeysIssue, ZodVoid$1 as ZodVoid, ZodVoidDef, addIssueToContext, anyType as any, arrayOutputType, arrayType as array, baseObjectInputType, baseObjectOutputType, bigIntType as bigint, booleanType as boolean, coerce$1 as coerce, custom$1 as custom, dateType as date, datetimeRegex, deoptional, discriminatedUnionType as discriminatedUnion, effectsType as effect, effectsType as transformer, enumType as enum, errorMap as defaultErrorMap, functionType as function, getErrorMap$1 as getErrorMap, getParsedType$1 as getParsedType, inferFlattenedErrors$1 as inferFlattenedErrors, inferFormattedError$1 as inferFormattedError, input$2 as input, instanceOfType as instanceof, intersectionType as intersection, isAborted, isAsync, isDirty, isValid, late, lazyType as lazy, literalType as literal, makeIssue, mapType as map, mergeTypes, nanType as nan, nativeEnumType as nativeEnum, neverType as never, noUnrecognized, nullType as null, nullableType as nullable, numberType as number, objectInputType, objectOutputType, objectType as object, objectUtil, oboolean, onumber, optionalType as optional, ostring, output$2 as output, pipelineType as pipeline, preprocessType as preprocess, promiseType as promise, quotelessJson, recordType as record, setErrorMap$1 as setErrorMap, setType as set, strictObjectType as strictObject, stringType as string, symbolType as symbol, tupleType as tuple, typeToFlattenedError, typecast, undefinedType as undefined, unionType as union, unknownType as unknown, util$1 as util, voidType as void };
 }
 declare namespace z$1 {
-	export { AnyZodObject, AnyZodTuple, ArrayCardinality, ArrayKeys, AssertArray, AsyncParseReturnType, BRAND$1 as BRAND, CatchallInput, CatchallOutput, CustomErrorParams, DIRTY, DenormalizedError, EMPTY_PATH, Effect, EnumLike$1 as EnumLike, EnumValues, ErrorMapCtx, FilterEnum, INVALID$1 as INVALID, Indices, InnerTypeOfFunction, InputTypeOfTuple, InputTypeOfTupleWithRest, IpVersion, IssueData$1 as IssueData, KeySchema, NEVER$1 as NEVER, OK, ObjectPair, OuterTypeOfFunction, OutputTypeOfTuple, OutputTypeOfTupleWithRest, ParseContext$1 as ParseContext, ParseInput, ParseParams, ParsePath, ParsePathComponent, ParseResult, ParseReturnType, ParseStatus, PassthroughType, PreprocessEffect, Primitive$2 as Primitive, ProcessedCreateParams, RawCreateParams, RecordType, Refinement, RefinementCtx, RefinementEffect, SafeParseError$1 as SafeParseError, SafeParseReturnType, SafeParseSuccess$1 as SafeParseSuccess, Scalars, SomeZodObject, StringValidation, SuperRefinement, SyncParseReturnType, TransformEffect, TypeOf$1 as TypeOf, TypeOf$1 as infer, UnknownKeysParam, Values, Writeable$1 as Writeable, ZodAny$1 as ZodAny, ZodAnyDef, ZodArray$1 as ZodArray, ZodArrayDef, ZodBigInt$1 as ZodBigInt, ZodBigIntCheck, ZodBigIntDef, ZodBoolean$1 as ZodBoolean, ZodBooleanDef, ZodBranded, ZodBrandedDef, ZodCatch$1 as ZodCatch, ZodCatchDef, ZodCustomIssue, ZodDate$1 as ZodDate, ZodDateCheck, ZodDateDef, ZodDefault$1 as ZodDefault, ZodDefaultDef, ZodDiscriminatedUnion$1 as ZodDiscriminatedUnion, ZodDiscriminatedUnionDef, ZodDiscriminatedUnionOption, ZodEffects, ZodEffects as ZodTransformer, ZodEffectsDef, ZodEnum$1 as ZodEnum, ZodEnumDef, ZodError$1 as ZodError, ZodErrorMap$1 as ZodErrorMap, ZodFirstPartySchemaTypes$1 as ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind$1 as ZodFirstPartyTypeKind, ZodFormattedError$1 as ZodFormattedError, ZodFunction$1 as ZodFunction, ZodFunctionDef, ZodIntersection$1 as ZodIntersection, ZodIntersectionDef, ZodInvalidArgumentsIssue, ZodInvalidDateIssue, ZodInvalidEnumValueIssue, ZodInvalidIntersectionTypesIssue, ZodInvalidLiteralIssue, ZodInvalidReturnTypeIssue, ZodInvalidStringIssue, ZodInvalidTypeIssue, ZodInvalidUnionDiscriminatorIssue, ZodInvalidUnionIssue, ZodIssue$1 as ZodIssue, ZodIssueBase, ZodIssueCode$1 as ZodIssueCode, ZodIssueOptionalMessage, ZodLazy$1 as ZodLazy, ZodLazyDef, ZodLiteral$1 as ZodLiteral, ZodLiteralDef, ZodMap$1 as ZodMap, ZodMapDef, ZodNaN$1 as ZodNaN, ZodNaNDef, ZodNativeEnum, ZodNativeEnumDef, ZodNever$1 as ZodNever, ZodNeverDef, ZodNonEmptyArray, ZodNotFiniteIssue, ZodNotMultipleOfIssue, ZodNull$1 as ZodNull, ZodNullDef, ZodNullable$1 as ZodNullable, ZodNullableDef, ZodNullableType, ZodNumber$1 as ZodNumber, ZodNumberCheck, ZodNumberDef, ZodObject$1 as ZodObject, ZodObjectDef, ZodOptional$1 as ZodOptional, ZodOptionalDef, ZodOptionalType, ZodParsedType, ZodPipeline, ZodPipelineDef, ZodPromise$1 as ZodPromise, ZodPromiseDef, ZodRawShape$1 as ZodRawShape, ZodReadonly$1 as ZodReadonly, ZodReadonlyDef, ZodRecord$1 as ZodRecord, ZodRecordDef, ZodSet$1 as ZodSet, ZodSetDef, ZodString$1 as ZodString, ZodStringCheck, ZodStringDef, ZodSymbol$1 as ZodSymbol, ZodSymbolDef, ZodTooBigIssue, ZodTooSmallIssue, ZodTuple$1 as ZodTuple, ZodTupleDef, ZodTupleItems, ZodType$1 as Schema, ZodType$1 as ZodSchema, ZodType$1 as ZodType, ZodTypeAny$1 as ZodTypeAny, ZodTypeDef, ZodUndefined$1 as ZodUndefined, ZodUndefinedDef, ZodUnion$1 as ZodUnion, ZodUnionDef, ZodUnionOptions, ZodUnknown$1 as ZodUnknown, ZodUnknownDef, ZodUnrecognizedKeysIssue, ZodVoid$1 as ZodVoid, ZodVoidDef, addIssueToContext, anyType as any, arrayOutputType, arrayType as array, baseObjectInputType, baseObjectOutputType, bigIntType as bigint, booleanType as boolean, coerce$1 as coerce, custom$1 as custom, dateType as date, datetimeRegex, deoptional, discriminatedUnionType as discriminatedUnion, effectsType as effect, effectsType as transformer, enumType as enum, errorMap as defaultErrorMap, functionType as function, getErrorMap$1 as getErrorMap, getParsedType$1 as getParsedType, inferFlattenedErrors$1 as inferFlattenedErrors, inferFormattedError$1 as inferFormattedError, input$2 as input, instanceOfType as instanceof, intersectionType as intersection, isAborted, isAsync, isDirty, isValid, late, lazyType as lazy, literalType as literal, makeIssue, mapType as map, mergeTypes, nanType as nan, nativeEnumType as nativeEnum, neverType as never, noUnrecognized, nullType as null, nullableType as nullable, numberType as number, objectInputType, objectOutputType, objectType as object, objectUtil, oboolean, onumber, optionalType as optional, ostring, output$2 as output, pipelineType as pipeline, preprocessType as preprocess, promiseType as promise, quotelessJson, recordType as record, setErrorMap$1 as setErrorMap, setType as set, strictObjectType as strictObject, stringType as string, symbolType as symbol, tupleType as tuple, typeToFlattenedError, typecast, undefinedType as undefined, unionType as union, unknownType as unknown, util$1 as util, voidType as void };
+	export { $RefinementCtx as RefinementCtx, $brand, $input, $output, BRAND, CompileOptions, GlobalMeta, INVALID, Infer, IssueData, JSONType, NEVER, SafeExtendShape, Schema$1 as Schema, TimePrecision, TypeOf, ZodAny, ZodArray, ZodBase64, ZodBase64URL, ZodBigInt, ZodBigIntFormat, ZodBoolean, ZodCIDRv4, ZodCIDRv6, ZodCUID, ZodCUID2, ZodCatch, ZodCodec, ZodCoercedBigInt, ZodCoercedBoolean, ZodCoercedDate, ZodCoercedNumber, ZodCoercedString, ZodCompileAsyncError, ZodCompileUnsupportedError, ZodCreditCard, ZodCustom, ZodCustomStringFormat, ZodDate, ZodDefault, ZodDiscriminatedUnion, ZodE164, ZodEmail, ZodEmoji, ZodEnum, ZodError, ZodErrorMap, ZodExactOptional, ZodFile, ZodFirstPartySchemaTypes, ZodFirstPartyTypeKind, ZodFlattenedError, ZodFloat32, ZodFloat64, ZodFormattedError, ZodFunction, ZodGUID, ZodIBAN, ZodIPv4, ZodIPv6, ZodISODate, ZodISODateTime, ZodISODuration, ZodISOTime, ZodInstanceOf, ZodInt, ZodInt32, ZodInt64, ZodIntersection, ZodIssue, ZodIssueCode, ZodJSONSchema, ZodJSONSchemaInternals, ZodJWT, ZodKSUID, ZodLazy, ZodLiteral, ZodMAC, ZodMap, ZodNaN, ZodNanoID, ZodNever, ZodNonOptional, ZodNull, ZodNullable, ZodNumber, ZodNumberFormat, ZodObject, ZodOptional, ZodPipe, ZodPrefault, ZodPreprocess, ZodPromise, ZodRawShape, ZodReadonly, ZodRealError, ZodRecord, ZodSafeParseError, ZodSafeParseResult, ZodSafeParseSuccess, ZodSchema, ZodSet, ZodStandardSchemaWithJSON$1 as ZodStandardSchemaWithJSON, ZodString, ZodStringFormat, ZodSuccess, ZodSymbol, ZodTemplateLiteral, ZodTransform, ZodTuple, ZodType, ZodTypeAny, ZodUInt32, ZodUInt64, ZodULID, ZodURL, ZodUUID, ZodUndefined, ZodUnion, ZodUnknown, ZodVoid, ZodXID, ZodXor, _ZodBigInt, _ZodBoolean, _ZodDate, _ZodNumber, _ZodString, _ZodType, _catch$1 as catch, _default$64 as _default, _endsWith as endsWith, _enum$1 as enum, _function, _function as function, _gt as gt, _gte as gte, _includes as includes, _instanceof as instanceof, _length as length, _lowercase as lowercase, _lt as lt, _lte as lte, _maxLength as maxLength, _maxSize as maxSize, _mime as mime, _minLength as minLength, _minSize as minSize, _multipleOf as multipleOf, _negative as negative, _nonnegative as nonnegative, _nonpositive as nonpositive, _normalize as normalize, _null$2 as null, _overwrite as overwrite, _positive as positive, _properties as properties, _property as property, _regex as regex, _size as size, _slugify as slugify, _startsWith as startsWith, _toLowerCase as toLowerCase, _toUpperCase as toUpperCase, _trim as trim, _undefined$2 as undefined, _uppercase as uppercase, _void$1 as void, any, array, base64$1 as base64, base64url$1 as base64url, bigint$1 as bigint, boolean$1 as boolean, check, cidrv4$1 as cidrv4, cidrv6$1 as cidrv6, clone, codec, coerce, compile, config$1 as config, creditCard$1 as creditCard, cuid$1 as cuid, cuid2$1 as cuid2, currencyCode$1 as currencyCode, custom, date$1 as date, decode$1 as decode, decodeAsync$1 as decodeAsync, deepPartial, describe$1 as describe, discriminatedUnion, e164$1 as e164, email$1 as email, emoji$1 as emoji, encode$1 as encode, encodeAsync$1 as encodeAsync, exactOptional, file, flattenError, float32, float64, formatError, fromJSONSchema, getDiscriminatedOption, getErrorMap, globalRegistry, guid$1 as guid, hash, hex$1 as hex, hostname$1 as hostname, httpUrl, iban$1 as iban, inferFlattenedErrors, inferFormattedError, input$1 as input, int, int32, int64, intersection, invertCodec, ipv4$1 as ipv4, ipv6$1 as ipv6, iso, json, jwt, keyof, ksuid$1 as ksuid, lazy, literal, locales, looseObject, looseRecord, mac$1 as mac, map, memoizer, meta$1 as meta, nan, nanoid$1 as nanoid, nativeEnum, never, nonoptional, nullable, nullish$1 as nullish, number$1 as number, object, optional, output as infer, output$1 as output, parse$1 as parse, parseAsync$1 as parseAsync, partialRecord, pipe, prefault, preprocess, prettifyError, promise, readonly, record, refine, regexes, registry, safeDecode$1 as safeDecode, safeDecodeAsync$1 as safeDecodeAsync, safeEncode$1 as safeEncode, safeEncodeAsync$1 as safeEncodeAsync, safeParse$1 as safeParse, safeParseAsync$1 as safeParseAsync, set, setErrorMap, strictObject, string$1 as string, stringFormat, stringbool, success, superRefine, symbol, templateLiteral, toJSONSchema, toZod, transform, treeifyError, tuple, uint32, uint64, ulid$1 as ulid, union, unknown, url, util, uuid$1 as uuid, uuidv4, uuidv6, uuidv7, validate$1 as validate, validateAsync, withParser, xid$1 as xid, xor, z4 as core };
 }
 
 export {
@@ -83055,7 +83071,7 @@ export {
 	Timestamp$1 as Timestamp,
 	ViewMap$1 as Map,
 	dataGridFeatures$1 as dataGridFeatures,
-	z,
+	z$1 as z,
 };
 
 export as namespace NativeFrontend;
