@@ -82901,6 +82901,29 @@ type SubmitOptions = {
 };
 /** Submits multipart writes through the Solution's scoped transport. */
 export declare function useSubmit(path: string, options?: SubmitOptions): (data: FormData) => Promise<void>;
+/** Options for a compact confirmation. @category Runtime @group Hooks */
+export type ConfirmOptions = {
+	title: string;
+	description?: string;
+	cancelLabel?: string;
+	actionLabel: string;
+	actionVariant?: "default" | "destructive";
+	onAction: () => void | Promise<void>;
+};
+/**
+ * Render element once. show(options) opens a compact confirmation with Cancel focused.
+ * Actions show loading and close only after success. Failures keep the dialog open for retry.
+ * While pending, duplicate actions, show(), hide(), Cancel, and Escape are ignored.
+ * Cancel defaults to "Cancel"; actionVariant defaults to "default". Description is optional.
+ * Scoped request errors are reported by the host; other errors appear in the dialog.
+ * @category Runtime @group Hooks
+ */
+export declare function useConfirm(): {
+	show: (next: ConfirmOptions) => void;
+	hide: () => void;
+	isOpen: boolean;
+	element: React$1.JSX.Element | null;
+};
 export type FrontendElement = React$1.JSX.Element;
 export type FrontendElementType = React$1.JSX.ElementType;
 

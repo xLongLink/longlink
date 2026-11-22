@@ -174,6 +174,19 @@ async def storage_infrastructure(session: AsyncSession, organization_id: UUID) -
     return compute
 
 
+async def storage_usage(compute: ComputeRegistry, organization_id: UUID) -> int:
+    """Measure one Organization bucket with bounded I/O and stable availability errors."""
+
+    # Bound provider construction and the complete bucket scan.
+    try:
+        async with asyncio.timeout(15):
+            credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
+            storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+            return await storage.usage(Storage.bucket_name(organization_id))
+    except (TimeoutError, BotoCoreError, ClientError) as exc:
+        raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
+
+
 async def database_infrastructure(session: AsyncSession, organization_id: UUID) -> tuple[Organization, ComputeRegistry]:
     """Return only the credentials and capacity needed to inspect one Organization database."""
 
@@ -439,13 +452,7 @@ async def update_usage(session: AsyncSession, organization_id: UUID, user_id: UU
     quota_bytes = payload.storage_bytes
     if quota_bytes < organization.storage_quota_bytes:
         compute = await storage_infrastructure(session, organization_id)
-        credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
-        storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
-        try:
-            async with asyncio.timeout(15):
-                used_bytes = await storage.usage(Storage.bucket_name(organization_id))
-        except (TimeoutError, BotoCoreError, ClientError) as exc:
-            raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
+        used_bytes = await storage_usage(compute, organization_id)
         if quota_bytes < used_bytes:
             raise HTTPException(status_code=409, detail="Storage capacity cannot be reduced below current usage")
 

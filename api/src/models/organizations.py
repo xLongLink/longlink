@@ -1,7 +1,6 @@
 from enum import StrEnum
 from uuid import UUID
 from typing import Literal
-from decimal import ROUND_HALF_UP, Decimal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, model_validator
 from src.models import pricing
@@ -71,11 +70,10 @@ class OrganizationUsageUpdate(BaseModel):
 
         # Reject capacity that cannot be charged as a Stripe CHF invoice.
         monthly_price = sum(
-            amount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-            for amount in (
-                Decimal(self.compute_cpu_millicores + self.database_cpu_millicores) * pricing.CPU_MONTHLY_PRICE / 1000,
-                Decimal(self.compute_ram_bytes + self.database_ram_bytes) * pricing.RAM_GIB_MONTHLY_PRICE / pricing.GIB_BYTES,
-                Decimal(self.storage_bytes + self.database_storage_bytes) * pricing.STORAGE_GIB_MONTHLY_PRICE / pricing.GIB_BYTES,
+            pricing.allocation_amounts(
+                self.compute_cpu_millicores + self.database_cpu_millicores,
+                self.compute_ram_bytes + self.database_ram_bytes,
+                self.storage_bytes + self.database_storage_bytes,
             )
         )
         if monthly_price > 99_999_999:

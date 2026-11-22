@@ -280,15 +280,18 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     capacity["storage_bytes"] //= 2
     quota = capacity["storage_bytes"]
     monkeypatch.setattr(databases, "provisioned_storage_bytes", AsyncMock(return_value=capacity["database_storage_bytes"]))
-    measurement = AsyncMock(side_effect=[quota + 1, quota, quota])
+    measurement = AsyncMock(side_effect=[TimeoutError(), quota + 1, quota, quota])
     monkeypatch.setattr(s3.S3, "usage", measurement)
 
     # Act
+    unavailable = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
     rejected = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
     accepted = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
     pending = await clients[0].patch(f"/api/v1/organizations/{organization.id}/usage", json=capacity)
 
     # Assert
+    assert unavailable.status_code == 503
+    assert unavailable.json() == {"detail": "Storage resources unavailable"}
     assert rejected.status_code == 409
     assert accepted.status_code == 200
     assert accepted.json()["status"] == "creating"

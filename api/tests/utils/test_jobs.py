@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from factories import claim_operation, queue_operation, fetch_operations
 from functools import partial
 from src.utils import jobs as operation_worker
+from unittest.mock import AsyncMock
 from src.models.operations import OperationKind, OperationStatus
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
@@ -36,7 +37,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
         assert claimed.id == operation.id
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
+    monkeypatch.setattr(operation_worker.organizations, "reconcile", complete_handler)
 
     async def delayed_complete(session: AsyncSession, claimed: Operation) -> bool:
         """Delay the terminal transition until after worker cancellation."""
@@ -124,6 +125,63 @@ async def operation() -> Operation:
     return claimed
 
 
+@pytest.mark.parametrize(
+    ("kind", "module", "handler"),
+    [
+        (OperationKind.solution_deploy, "solutions", "deploy"),
+        (OperationKind.solution_delete, "solutions", "delete"),
+        (OperationKind.organization_create, "organizations", "reconcile"),
+        (OperationKind.organization_delete, "organizations", "delete"),
+    ],
+)
+async def test_execute_dispatches_claimed_work(monkeypatch: pytest.MonkeyPatch, kind: OperationKind, module: str, handler: str) -> None:
+    """Dispatch each durable operation with its required argument and complete its lease."""
+
+    # Arrange
+    queued = await queue_operation(kind=kind, target_id=UUID("22222222-2222-2222-2222-222222222222"))
+    claimed = await claim_operation()
+    assert claimed is not None
+    handlers = {
+        ("solutions", "deploy"): AsyncMock(),
+        ("solutions", "delete"): AsyncMock(),
+        ("organizations", "reconcile"): AsyncMock(),
+        ("organizations", "delete"): AsyncMock(),
+    }
+    for (module_name, handler_name), boundary in handlers.items():
+        monkeypatch.setattr(getattr(operation_worker, module_name), handler_name, boundary)
+
+    # Act
+    await operation_worker.execute(claimed)
+
+    # Assert
+    argument = claimed if kind == OperationKind.organization_create else claimed.target_id
+    handlers[module, handler].assert_awaited_once_with(argument)
+    for name, boundary in handlers.items():
+        if name != (module, handler):
+            boundary.assert_not_awaited()
+    [persisted] = await fetch_operations()
+    assert persisted.id == queued.id
+    assert persisted.status == OperationStatus.completed
+    assert persisted.lease_expires_at is None
+
+
+async def test_execute_fails_unsupported_operation_kind(operation: Operation) -> None:
+    """Release unsupported queued work as a terminal failure instead of abandoning its lease."""
+
+    # Arrange
+    operation.kind = "unsupported"  # type: ignore[assignment]
+
+    # Act
+    await operation_worker.execute(operation)
+
+    # Assert
+    [persisted] = await fetch_operations()
+    assert persisted.id == operation.id
+    assert persisted.status == OperationStatus.failed
+    assert persisted.failed == "ValueError: Unsupported operation kind: unsupported"
+    assert persisted.lease_expires_at is None
+
+
 HANDLER_FAILURES = [
     pytest.param(HTTPException(status_code=403, detail="workload deployment failed"), "workload deployment failed", id="http-error"),
     pytest.param(RuntimeError("provider unavailable"), "RuntimeError: provider unavailable", id="unexpected-error"),
@@ -144,7 +202,7 @@ async def test_execute_persists_handler_failure(
         assert claimed.id == operation.id
         raise failure
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
+    monkeypatch.setattr(operation_worker.organizations, "reconcile", failing_handler)
 
     # Act
     await operation_worker.execute(operation)
@@ -174,7 +232,7 @@ async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytes
         finally:
             cancelled.set()
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, stalled_handler)
+    monkeypatch.setattr(operation_worker.organizations, "reconcile", stalled_handler)
 
     # Act
     async with asyncio.timeout(1):
@@ -210,7 +268,7 @@ async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch:
         finally:
             handler_finished.set()
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)
+    monkeypatch.setattr(operation_worker.organizations, "reconcile", cancelled_handler)
 
     # Act
     execution = asyncio.create_task(operation_worker.execute(operation))
@@ -272,7 +330,7 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
             assert await operation_worker.operations.release(session, operation) is True
             await session.commit()
 
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
+    monkeypatch.setattr(operation_worker.organizations, "reconcile", complete_handler)
 
     # Act and assert
     with pytest.raises(RuntimeError) as exc_info:

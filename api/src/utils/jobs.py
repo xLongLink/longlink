@@ -1,11 +1,9 @@
 import asyncio
 import contextlib
-from uuid import UUID
-from typing import cast
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from functools import partial
-from src.operations import handlers
+from src.operations import solutions, organizations
 from collections.abc import Callable, Awaitable
 from src.database.session import session_scope
 from src.database.services import users, operations
@@ -58,12 +56,17 @@ async def execute(operation: Operation) -> None:
     # Bound one complete handler execution under its worker lease.
     try:
         async with asyncio.timeout(OPERATION_TIMEOUT_SECONDS):
-            if operation.kind == OperationKind.organization_create:
-                handler = cast(Callable[[Operation], Awaitable[None]], handlers[operation.kind])
-                await handler(operation)
-            else:
-                handler = cast(Callable[[UUID], Awaitable[None]], handlers[operation.kind])
-                await handler(operation.target_id)
+            match operation.kind:
+                case OperationKind.solution_deploy:
+                    await solutions.deploy(operation.target_id)
+                case OperationKind.solution_delete:
+                    await solutions.delete(operation.target_id)
+                case OperationKind.organization_create:
+                    await organizations.reconcile(operation)
+                case OperationKind.organization_delete:
+                    await organizations.delete(operation.target_id)
+                case _:
+                    raise ValueError(f"Unsupported operation kind: {operation.kind}")
 
     # Graceful shutdown leaves interrupted work available for the next scheduler.
     except asyncio.CancelledError:

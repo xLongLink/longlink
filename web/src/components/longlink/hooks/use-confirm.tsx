@@ -14,6 +14,7 @@ import {
     AlertDialogTitle
 } from '@/components/shadcn/alert-dialog';
 
+/** Options for a compact confirmation. @category Runtime @group Hooks */
 export type ConfirmOptions = {
     title: string;
     description?: string;
@@ -23,7 +24,14 @@ export type ConfirmOptions = {
     onAction: () => void | Promise<void>;
 };
 
-/** Owns a compact confirmation; render element once in the calling component's JSX. */
+/**
+ * Render element once. show(options) opens a compact confirmation with Cancel focused.
+ * Actions show loading and close only after success. Failures keep the dialog open for retry.
+ * While pending, duplicate actions, show(), hide(), Cancel, and Escape are ignored.
+ * Cancel defaults to "Cancel"; actionVariant defaults to "default". Description is optional.
+ * Scoped request errors are reported by the host; other errors appear in the dialog.
+ * @category Runtime @group Hooks
+ */
 export function useConfirm() {
     const [options, setOptions] = useState<ConfirmOptions | null>(null);
     const { isPending, inFlight: pending, run } = useConfirmAction();

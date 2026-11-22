@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { FocusEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useForm } from 'react-hook-form';
@@ -96,62 +96,8 @@ function CapacityCards({
     canManage: boolean;
     onSaved: () => Promise<void>;
 }) {
-    const formId = useId();
     const [editor, setEditor] = useState<CapacitySection | null>(null);
     const editing = canManage && (editor === 'database' || usage.has_payment_method) ? editor : null;
-    const fields: Partial<Record<keyof Capacity, CapacityField>> = editing ? sections[editing].fields : {};
-    const form = useForm({
-        resolver: zodResolver(
-            capacitySchema.superRefine((values, context) => {
-                for (const { key, label, unit, units, scale } of resources) {
-                    const field = fields[key];
-                    if (!field) continue;
-                    const schema = schemas.zOrganizationUsageUpdate.shape[field];
-                    const minimum = capacityMinimum(field, units, scale);
-                    const value = values[key];
-                    if (value < minimum) {
-                        context.addIssue({ code: 'custom', path: [key], message: `Minimum ${minimum} ${unit}.` });
-                    } else if (!Number.isSafeInteger(value * units)) {
-                        context.addIssue({
-                            code: 'custom',
-                            path: [key],
-                            message: `Enter ${label} in increments of ${1 / units} ${unit}.`
-                        });
-                    } else if (!schema.safeParse(value * units * (scale / units)).success) {
-                        context.addIssue({ code: 'custom', path: [key], message: `Enter a smaller ${label} amount.` });
-                    }
-                }
-            })
-        ),
-        defaultValues: { cpu: 0, ram: 0, storage: 0 }
-    });
-    const submit = useSubmit(
-        async (capacity: Capacity) => {
-            if (!editing) return;
-            const allocation = {
-                compute_cpu_millicores: usage.compute_cpu_millicores,
-                compute_ram_bytes: usage.compute_ram_bytes,
-                storage_bytes: usage.storage_bytes,
-                database_cpu_millicores: usage.database_cpu_millicores,
-                database_ram_bytes: usage.database_ram_bytes,
-                database_storage_bytes: usage.database_storage_bytes
-            };
-            for (const { key, units, scale } of resources) {
-                const field = fields[key];
-                if (field) allocation[field] = capacity[key] * units * (scale / units);
-            }
-            const json = schemas.zOrganizationUsageUpdate.parse(allocation);
-            await api.patch(`${base}/usage`, { json }).json(schemas.zOrganizationUsage);
-            await onSaved();
-            setEditor(null);
-        },
-        {
-            onError: (error) =>
-                form.setError('root', {
-                    message: error instanceof ApiError ? error.message : 'Could not save capacity. Please try again.'
-                })
-        }
-    );
 
     return (
         <Stack gap={4}>
@@ -184,20 +130,7 @@ function CapacityCards({
                                         variant="primary"
                                         size="sm"
                                         disabled={usage.status === 'creating'}
-                                        onClick={() => {
-                                            const draft = { cpu: 0, ram: 0, storage: 0 };
-                                            for (const { key, scale, units } of resources) {
-                                                const field = cardFields[key];
-                                                if (!field) continue;
-                                                const minimum = capacityMinimum(field, units, scale);
-                                                draft[key] = Math.max(
-                                                    minimum,
-                                                    Math.ceil(usage[field] / (scale / units)) / units
-                                                );
-                                            }
-                                            form.reset(draft);
-                                            setEditor(section);
-                                        }}
+                                        onClick={() => setEditor(section)}
                                     >
                                         Edit
                                     </Button>
@@ -268,97 +201,172 @@ function CapacityCards({
                 </Text>
             )}
             {editing && (
-                <Dialog
-                    open
-                    showHeader={false}
-                    bodyPadding={false}
-                    dismissible={!form.formState.isSubmitting}
-                    title={`Edit ${sections[editing].title.toLowerCase()} capacity`}
-                    onOpenChange={(open) => {
-                        if (!open) setEditor(null);
-                    }}
-                >
-                    <form
-                        id={formId}
-                        onSubmit={form.handleSubmit(submit)}
-                        noValidate
-                        aria-busy={form.formState.isSubmitting}
-                        className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
-                    >
-                        <fieldset
-                            disabled={form.formState.isSubmitting}
-                            className="flex min-w-0 flex-col gap-4 border-0 p-6"
-                            aria-label={`${sections[editing].title} capacity`}
-                        >
-                            <Heading level={2} size={4}>
-                                Edit {sections[editing].title.toLowerCase()} capacity
-                            </Heading>
-                            {resources.map(({ key, label, unit, units, scale }) => {
-                                const field = fields[key];
-                                if (!field) return null;
-                                const minimum = capacityMinimum(field, units, scale);
-                                const name = `${editing}_${key}`;
-                                return (
-                                    <Field key={name} data-invalid={Boolean(form.formState.errors[key])}>
-                                        <Stack
-                                            direction="horizontal"
-                                            wrap="wrap"
-                                            align="center"
-                                            justify="between"
-                                            gap={2}
-                                        >
-                                            <FieldLabel htmlFor={`capacity-${name}`}>
-                                                {label} ({unit})
-                                            </FieldLabel>
-                                            <FieldDescription>
-                                                Minimum {minimum} {unit}
-                                            </FieldDescription>
-                                        </Stack>
-                                        <Input
-                                            {...form.register(key, {
-                                                valueAsNumber: true,
-                                                onBlur: (event: FocusEvent<HTMLInputElement>) => {
-                                                    const value = event.target.valueAsNumber;
-                                                    if (!Number.isFinite(value)) return;
-                                                    const next = Math.max(minimum, Math.ceil(value * units) / units);
-                                                    form.setValue(key, next, {
-                                                        shouldValidate: true,
-                                                        shouldDirty: true
-                                                    });
-                                                }
-                                            })}
-                                            id={`capacity-${name}`}
-                                            type="number"
-                                            min={minimum}
-                                            step={1 / units}
-                                            aria-invalid={Boolean(form.formState.errors[key])}
-                                        />
-                                        <FieldError errors={[form.formState.errors[key]]} />
-                                    </Field>
-                                );
-                            })}
-                            <FieldError errors={[form.formState.errors.root]} />
-                            <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
-                                <Link disabled={form.formState.isSubmitting} onClick={() => setEditor(null)}>
-                                    Cancel
-                                </Link>
-                                <Button type="submit" disabled={form.formState.isSubmitting}>
-                                    Save capacity
-                                </Button>
-                            </Stack>
-                        </fieldset>
-                        <Stack direction="horizontal" gap={0} align="center" justify="center" padding={6}>
-                            <img
-                                src={sections[editing].image}
-                                alt=""
-                                decoding="async"
-                                className="w-full max-w-72 object-contain invert dark:invert-0"
-                            />
-                        </Stack>
-                    </form>
-                </Dialog>
+                <CapacityEditor
+                    key={editing}
+                    base={base}
+                    usage={usage}
+                    section={editing}
+                    onSaved={onSaved}
+                    onClose={() => setEditor(null)}
+                />
             )}
         </Stack>
+    );
+}
+
+function CapacityEditor({
+    base,
+    usage,
+    section,
+    onSaved,
+    onClose
+}: {
+    base: string;
+    usage: OrganizationUsage;
+    section: CapacitySection;
+    onSaved: () => Promise<void>;
+    onClose: () => void;
+}) {
+    const fields: Partial<Record<keyof Capacity, CapacityField>> = sections[section].fields;
+    const defaults = { cpu: 0, ram: 0, storage: 0 };
+    for (const { key, scale, units } of resources) {
+        const field = fields[key];
+        if (!field) continue;
+        const minimum = capacityMinimum(field, units, scale);
+        defaults[key] = Math.max(minimum, Math.ceil(usage[field] / (scale / units)) / units);
+    }
+    const form = useForm({
+        resolver: zodResolver(
+            capacitySchema.superRefine((values, context) => {
+                for (const { key, label, unit, units, scale } of resources) {
+                    const field = fields[key];
+                    if (!field) continue;
+                    const schema = schemas.zOrganizationUsageUpdate.shape[field];
+                    const minimum = capacityMinimum(field, units, scale);
+                    const value = values[key];
+                    if (value < minimum) {
+                        context.addIssue({ code: 'custom', path: [key], message: `Minimum ${minimum} ${unit}.` });
+                    } else if (!Number.isSafeInteger(value * units)) {
+                        context.addIssue({
+                            code: 'custom',
+                            path: [key],
+                            message: `Enter ${label} in increments of ${1 / units} ${unit}.`
+                        });
+                    } else if (!schema.safeParse(value * units * (scale / units)).success) {
+                        context.addIssue({ code: 'custom', path: [key], message: `Enter a smaller ${label} amount.` });
+                    }
+                }
+            })
+        ),
+        defaultValues: defaults
+    });
+    const submit = useSubmit(
+        async (capacity: Capacity) => {
+            const allocation = {
+                compute_cpu_millicores: usage.compute_cpu_millicores,
+                compute_ram_bytes: usage.compute_ram_bytes,
+                storage_bytes: usage.storage_bytes,
+                database_cpu_millicores: usage.database_cpu_millicores,
+                database_ram_bytes: usage.database_ram_bytes,
+                database_storage_bytes: usage.database_storage_bytes
+            };
+            for (const { key, units, scale } of resources) {
+                const field = fields[key];
+                if (field) allocation[field] = capacity[key] * units * (scale / units);
+            }
+            const json = schemas.zOrganizationUsageUpdate.parse(allocation);
+            await api.patch(`${base}/usage`, { json }).json(schemas.zOrganizationUsage);
+            await onSaved();
+            onClose();
+        },
+        {
+            onError: (error) =>
+                form.setError('root', {
+                    message: error instanceof ApiError ? error.message : 'Could not save capacity. Please try again.'
+                })
+        }
+    );
+
+    return (
+        <Dialog
+            open
+            showHeader={false}
+            bodyPadding={false}
+            dismissible={!form.formState.isSubmitting}
+            title={`Edit ${sections[section].title.toLowerCase()} capacity`}
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+        >
+            <form
+                onSubmit={form.handleSubmit(submit)}
+                noValidate
+                aria-busy={form.formState.isSubmitting}
+                className="grid min-h-full grid-cols-1 items-center sm:grid-cols-2"
+            >
+                <fieldset
+                    disabled={form.formState.isSubmitting}
+                    className="flex min-w-0 flex-col gap-4 border-0 p-6"
+                    aria-label={`${sections[section].title} capacity`}
+                >
+                    <Heading level={2} size={4}>
+                        Edit {sections[section].title.toLowerCase()} capacity
+                    </Heading>
+                    {resources.map(({ key, label, unit, units, scale }) => {
+                        const field = fields[key];
+                        if (!field) return null;
+                        const minimum = capacityMinimum(field, units, scale);
+                        const name = `${section}_${key}`;
+                        return (
+                            <Field key={name} data-invalid={Boolean(form.formState.errors[key])}>
+                                <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
+                                    <FieldLabel htmlFor={`capacity-${name}`}>
+                                        {label} ({unit})
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        Minimum {minimum} {unit}
+                                    </FieldDescription>
+                                </Stack>
+                                <Input
+                                    {...form.register(key, {
+                                        valueAsNumber: true,
+                                        onBlur: (event: FocusEvent<HTMLInputElement>) => {
+                                            const value = event.target.valueAsNumber;
+                                            if (!Number.isFinite(value)) return;
+                                            const next = Math.max(minimum, Math.ceil(value * units) / units);
+                                            form.setValue(key, next, { shouldValidate: true, shouldDirty: true });
+                                        }
+                                    })}
+                                    id={`capacity-${name}`}
+                                    type="number"
+                                    min={minimum}
+                                    step={1 / units}
+                                    aria-invalid={Boolean(form.formState.errors[key])}
+                                />
+                                <FieldError errors={[form.formState.errors[key]]} />
+                            </Field>
+                        );
+                    })}
+                    <FieldError errors={[form.formState.errors.root]} />
+                    <Stack direction="horizontal" wrap="wrap" align="center" justify="between" gap={2}>
+                        <Link disabled={form.formState.isSubmitting} onClick={onClose}>
+                            Cancel
+                        </Link>
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                            Save capacity
+                        </Button>
+                    </Stack>
+                </fieldset>
+                <Stack direction="horizontal" gap={0} align="center" justify="center" padding={6}>
+                    <img
+                        src={sections[section].image}
+                        alt=""
+                        decoding="async"
+                        className="w-full max-w-72 object-contain invert dark:invert-0"
+                    />
+                </Stack>
+            </form>
+        </Dialog>
     );
 }
 
