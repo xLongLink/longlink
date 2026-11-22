@@ -164,7 +164,7 @@ async def test_patch_me_persists_without_organization_database_access(
 
         pytest.fail("Profile updates must not access Organization databases")
 
-    monkeypatch.setattr("src.operations.databases.ready", unavailable)
+    monkeypatch.setattr("src.kubernetes.client.Kubernetes.api", unavailable)
 
     # Act
     response = await clients[1].patch("/api/v1/me", json={"name": expected_name, "theme": "dark"})

@@ -90,7 +90,6 @@ async def create(
         .where(col(Solution.organization_id) == organization_id, col(Solution.deleted_at).is_(None))
         .offset(MAX_SOLUTIONS - 1)
         .limit(1)
-        .with_for_update()
     )
 
     # Reject creation before allocating a Solution or release snapshot.

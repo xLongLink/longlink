@@ -15,7 +15,7 @@ from src.environments import env
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations, organizations
-from src.models.organizations import OrganizationUsageUpdate
+from src.models.organizations import DatabaseState, OrganizationUsageUpdate
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
@@ -43,12 +43,19 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             """Record database preparation."""
 
             calls.append("database")
+            async with session_scope() as session:
+                assert await session.get(OrganizationActivity, _organization) is not None
 
     class Storage(StorageKubernetes):
         async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Record bucket creation."""
 
             calls.append("storage")
+            async with session_scope() as session:
+                assert await session.get(OrganizationActivity, organization) is not None
+                current = await session.get(Organization, organization)
+                assert current is not None
+                assert current.database_state == DatabaseState.available
             await super().apply(organization, quota_bytes=quota_bytes)
 
     async def apply(_client: object, organization_id: UUID, *, cpu_millicores: int, ram_bytes: int) -> None:
@@ -75,6 +82,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     await organization_operations.reconcile(operation)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
+        assert await session.get(OrganizationActivity, organization.id) is None
 
     # Every boundary completes before status publication.
     assert calls == ["database", "namespace", "storage", "registries"]
@@ -115,7 +123,9 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(users: tuple[
         await organization_operations.reconcile(operation)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
+        assert await session.get(OrganizationActivity, organization.id) is None
     assert refreshed is not None
+    assert refreshed.database_state == DatabaseState.available
     assert refreshed.status == Status.creating
     assert refreshed.compute_cpu_millicores == organization.compute_cpu_millicores
     assert refreshed.compute_ram_bytes == organization.compute_ram_bytes

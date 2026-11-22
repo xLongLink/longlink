@@ -139,7 +139,6 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
     from src.kubernetes import organizations
     from src.operations import databases
-    from src.database.models.organizations import Organization
 
     class Service:
         """Provide the external database tunnel without Kubernetes I/O."""
@@ -167,14 +166,6 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     async def boundary(client: object, organization: UUID, *, cpu_millicores: int, ram_bytes: int) -> None:
         """Accept the namespace's external resource-quota reconciliation."""
 
-    async def compute_capacity(_client: object, organization: UUID) -> tuple[int, int]:
-        """Expose current database resources without contacting Kubernetes."""
-
-        async with session.session_scope() as connection:
-            current = await connection.get(Organization, organization)
-            assert current is not None
-            return current.database_cpu_millicores, current.database_ram_bytes
-
     async def wait_ready(client: object, organization: UUID) -> None:
         """Accept database readiness verification."""
 
@@ -187,7 +178,6 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(database_resources, "Service", Service)
     monkeypatch.setattr(database_resources, "apply", apply)
     monkeypatch.setattr(database_resources, "resize", resize)
-    monkeypatch.setattr(database_resources, "compute_capacity", compute_capacity)
     monkeypatch.setattr(organizations, "apply", boundary)
     monkeypatch.setattr(database_resources, "wait_ready", wait_ready)
     monkeypatch.setattr(database_resources, "certificate", certificate)
