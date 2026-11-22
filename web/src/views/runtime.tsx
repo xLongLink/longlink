@@ -8,7 +8,6 @@ import { ReportedError } from '@/lib/reported';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Spinner } from '@/components/shadcn/spinner';
 import { appearanceSchema, type Appearance } from '@/lib/appearance';
-import { bindViewCapabilities } from '@/components/longlink/capabilities';
 import { Alert, AlertTitle, AlertDescription, AlertAction } from '@/components/reui/alert';
 import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query';
 import {
@@ -286,7 +285,8 @@ function initialize(event: MessageEvent<unknown>): void {
             __fragment: React.Fragment,
             ...components,
             Map: globalThis.Map,
-            ...bindViewCapabilities({ download, navigate })
+            download,
+            navigate
         };
 
         type ViewComponent = React.ComponentType<{ params: Readonly<Record<string, string>> }>;
