@@ -23,7 +23,7 @@ export default function UseConfirmPage() {
                 language="jsx"
                 code={`export default function DeleteItem({ params }) {
   const confirmation = useConfirm();
-  const deleteItem = useSubmit(\`/api/items/\${params.item}\`, {
+  const form = useForm(\`/api/items/\${params.item}\`, {
     method: 'DELETE',
     onSuccess: () => navigate('/items')
   });
@@ -36,7 +36,7 @@ export default function UseConfirmPage() {
         actionLabel: 'Delete',
         actionVariant: 'destructive',
         onAction: async () => {
-          await deleteItem(new FormData());
+          await form.submit();
         }
       })}>
         Delete

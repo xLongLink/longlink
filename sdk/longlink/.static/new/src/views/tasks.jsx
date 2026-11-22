@@ -13,22 +13,14 @@ const taskSchema = z.object({
 
 /** Validates task values with the form schema. */
 function TaskForm({ onSuccess, onCancel }) {
-    const form = useForm({ defaultValues: { title: '', attachment: null }, resolver: zodResolver(taskSchema) });
-    const submit = useSubmit('/api/tasks', {
-        onSuccess,
-        onError: (error) => form.setError('root', { message: error.message })
+    const form = useForm('/api/tasks', {
+        schema: taskSchema,
+        defaultValues: { title: '', attachment: null },
+        onSuccess
     });
 
-    /** Sends validated values without discarding the draft on failure. */
-    async function save(values) {
-        const data = new FormData();
-        data.append('title', values.title);
-        data.append('attachment', values.attachment);
-        await submit(data);
-    }
-
     return (
-        <form onSubmit={form.handleSubmit(save)} noValidate aria-busy={form.formState.isSubmitting}>
+        <form onSubmit={form.onSubmit} noValidate aria-busy={form.formState.isSubmitting}>
             <fieldset disabled={form.formState.isSubmitting} className="contents">
                 <Stack gap={4}>
                     <Input

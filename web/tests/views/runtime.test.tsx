@@ -106,9 +106,9 @@ it('rejects an unfinished authored submission with View closed on pagehide befor
     const started = performance.now();
 
     const runtime = await initializeRuntime(`export default function View() {
-        const submit = useSubmit('/api/pending');
+        const form = useForm('/api/pending');
         useEffect(() => {
-            submit(new FormData()).then(
+            form.submit().then(
                 () => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: 'Request completed' })),
                 error => window.dispatchEvent(new CustomEvent('pending-request-settled', { detail: error.message }))
             );
@@ -163,12 +163,12 @@ it('shares scoped image bytes without colliding with JSON and refreshes them onl
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const runtime = await initializeRuntime(`export default function View() {
         const [data] = useApi('/api/photo');
-        const submit = useSubmit('/api/photo');
+        const form = useForm('/api/photo');
         return <>
             <p>Version {data.version}</p>
             <Image src="/api/photo" alt="First" />
             <Image src="/api/photo" alt="Second" />
-            <Link onClick={async () => { await submit(new FormData()); }}>Update</Link>
+            <Link onClick={async () => { await form.submit(); }}>Update</Link>
         </>;
     }`);
     runtime.channel.port2.onmessage = (event: MessageEvent<unknown>) => {
