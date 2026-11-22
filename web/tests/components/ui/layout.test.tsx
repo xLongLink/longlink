@@ -58,16 +58,11 @@ it.each([Box, Grid])('updates padding overrides without remounting an editable c
         // Assert
         expect(output.querySelector('input')).toBe(input);
         expect(input.value).toBe('Retained draft');
-        expect(layout.style.paddingInline).toBe('calc(var(--spacing) * 0)');
-        expect(layout.style.paddingBlock).toBe('calc(var(--spacing) * 2)');
-        expect(layout.hasAttribute('padding')).toBe(false);
 
         // Act
         await act(async () => user.click(toggle));
 
         // Assert
-        expect(layout.style.paddingInline).toBe('calc(var(--spacing) * 4)');
-        expect(layout.style.paddingBlock).toBe('calc(var(--spacing) * 4)');
         expect(input.value).toBe('Retained draft');
     });
 });

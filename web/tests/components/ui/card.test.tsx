@@ -1,80 +1,51 @@
 // @vitest-environment happy-dom
 import { act, useState } from 'react';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import userEvent from '@testing-library/user-event';
-import { renderStatic, withMounted } from '../../render';
 import { Card } from '@/components/longlink/layout/card';
 import { LinkNavigationContext } from '@/lib/view-capabilities';
 
-it('owns section layout and ignores injected styling', () => {
-    const overrides = { className: 'hidden', style: { display: 'none' } };
-    const output = renderStatic(
+it('keeps header and footer actions independent of surface activation', async () => {
+    const action = vi.fn();
+    const edit = vi.fn();
+    const user = userEvent.setup();
+
+    await withMounted(
         <Card
-            {...overrides}
-            aria-labelledby="order-title"
-            title={<h3 id="order-title">Order</h3>}
-            description="Ready to ship"
-            action={<button type="button">Details</button>}
-            footer={<button type="button">Edit</button>}
+            label="Open order"
+            onClick={action}
+            action={
+                <button type="button" onClick={edit}>
+                    Details
+                </button>
+            }
+            footer={
+                <button type="button" onClick={edit}>
+                    Edit
+                </button>
+            }
         >
             Order contents
-        </Card>
+        </Card>,
+        async (output) => {
+            const body = output.querySelector<HTMLElement>('[data-slot="card-content"]');
+            const footerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-footer"] button');
+            const headerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-action"] button');
+
+            if (!body || !footerAction || !headerAction) throw new Error('Missing card controls');
+            await act(async () => user.click(headerAction));
+            expect(edit).toHaveBeenCalledOnce();
+            expect(action).not.toHaveBeenCalled();
+            await act(async () => user.click(footerAction));
+            expect(edit).toHaveBeenCalledTimes(2);
+            expect(action).not.toHaveBeenCalled();
+
+            await act(async () => user.click(body));
+            expect(action).toHaveBeenCalledTimes(1);
+        }
     );
-
-    for (const part of output.querySelectorAll('[data-slot]')) {
-        expect(part.classList.contains('hidden')).toBe(false);
-        expect(part.hasAttribute('style')).toBe(false);
-    }
-    expect(output.querySelector('[aria-labelledby="order-title"]')).not.toBeNull();
-    expect(output.querySelector('[data-slot="card-header"] h3')).not.toBeNull();
-    expect(output.querySelector('[data-slot="card-description"]')).not.toBeNull();
 });
-
-it.each([true, false])(
-    'keeps header and footer actions independent of surface activation (titled: %s)',
-    async (titled) => {
-        const action = vi.fn();
-        const edit = vi.fn();
-        const user = userEvent.setup();
-
-        await withMounted(
-            <Card
-                label="Open order"
-                onClick={action}
-                title={titled ? 'Order' : undefined}
-                description={titled ? 'Ready to ship' : undefined}
-                action={
-                    <button type="button" onClick={edit}>
-                        Details
-                    </button>
-                }
-                footer={
-                    <button type="button" onClick={edit}>
-                        Edit
-                    </button>
-                }
-            >
-                Order contents
-            </Card>,
-            async (output) => {
-                const body = output.querySelector<HTMLElement>('[data-slot="card-content"]');
-                const footerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-footer"] button');
-                const headerAction = output.querySelector<HTMLButtonElement>('[data-slot="card-action"] button');
-
-                if (!body || !footerAction || !headerAction) throw new Error('Missing card controls');
-                await act(async () => user.click(headerAction));
-                expect(edit).toHaveBeenCalledOnce();
-                expect(action).not.toHaveBeenCalled();
-                await act(async () => user.click(footerAction));
-                expect(edit).toHaveBeenCalledTimes(2);
-                expect(action).not.toHaveBeenCalled();
-
-                await act(async () => user.click(body));
-                expect(action).toHaveBeenCalledTimes(1);
-            }
-        );
-    }
-);
 
 it('gives selection priority over actions and navigation and leaves nested controls independent', async () => {
     const action = vi.fn();

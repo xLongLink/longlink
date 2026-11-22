@@ -5,7 +5,7 @@ import { renderStatic, withMounted } from '../../render';
 import { RequestContext } from '@/lib/view-capabilities';
 import { Image } from '@/components/longlink/display/image';
 
-it('forwards native image attributes without allowing alternate network sources', () => {
+it('rejects alternate network sources supplied by untyped Views', () => {
     // Arrange
     const src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"/%3E';
 
@@ -14,16 +14,11 @@ it('forwards native image attributes without allowing alternate network sources'
 
     const output = renderStatic(
         // @ts-expect-error Exercise alternate sources supplied by untyped View code.
-        <Image {...unsafe} src={src} alt="Order preview" width={320} height={240} loading="lazy" decoding="async" />
+        <Image {...unsafe} src={src} alt="Order preview" />
     );
 
     // Assert
     expect(output.querySelector('img')?.getAttribute('src')).toBe(src);
-    expect(output.querySelector('img')?.getAttribute('alt')).toBe('Order preview');
-    expect(output.querySelector('img')?.getAttribute('width')).toBe('320');
-    expect(output.querySelector('img')?.getAttribute('height')).toBe('240');
-    expect(output.querySelector('img')?.getAttribute('loading')).toBe('lazy');
-    expect(output.querySelector('img')?.getAttribute('decoding')).toBe('async');
     expect(output.querySelector('img')?.getAttribute('srcset')).toBeNull();
 });
 

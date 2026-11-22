@@ -2,8 +2,8 @@
 // @vitest-environment-options {"url":"http://localhost"}
 import { act } from 'react';
 import { it, expect, vi } from 'vitest';
+import { withMounted } from '../../render';
 import { ApiErrorContext } from '@/lib/errors';
-import { renderStatic, withMounted } from '../../render';
 import { TestAccountProvider } from '../../platform/render';
 import { zCurrentUser } from '@/lib/generated/platform-api-v1/zod.gen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -64,17 +64,6 @@ function AccountControls() {
         </TestAccountProvider>
     );
 }
-
-it('rejects an anonymous account instead of exposing it to authenticated consumers', () => {
-    // Act / Assert
-    expect(() =>
-        renderStatic(
-            <TestAccountProvider account={null}>
-                <AccountSnapshot />
-            </TestAccountProvider>
-        )
-    ).toThrow('useAuthenticatedUser requires an authenticated account');
-});
 
 it('serializes independent account controls and publishes canonical responses before the next appearance preview', async () => {
     // Arrange

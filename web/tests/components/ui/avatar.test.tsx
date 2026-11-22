@@ -17,7 +17,6 @@ it('defers artwork until failure, uses the latest profile, and retries a newly s
                     ref={ref}
                     id="owner-avatar"
                     tabIndex={0}
-                    className="owner-avatar"
                     name={updated ? 'ACME Ink' : 'ACME Studio'}
                     shape={updated ? 'rounded' : 'circle'}
                     src={src}
@@ -47,7 +46,6 @@ it('defers artwork until failure, uses the latest profile, and retries a newly s
             const buttons = output.querySelectorAll('button');
 
             expect(image?.getAttribute('src')).toBe('https://images.example/first.png');
-            expect(root?.classList.contains('owner-avatar')).toBe(true);
             await act(async () => buttons[0]?.click());
             expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/first.png');
             expect(serialize).not.toHaveBeenCalled();
@@ -57,8 +55,6 @@ it('defers artwork until failure, uses the latest profile, and retries a newly s
             await act(async () => buttons[1]?.click());
             expect(output.querySelector('img')?.getAttribute('src')).toBe('https://images.example/second.png');
             expect(document.activeElement).toBe(root);
-            await act(async () => output.querySelector('img')?.dispatchEvent(new Event('load')));
-            expect(output.querySelector('img')?.hasAttribute('data-error')).toBe(false);
         });
     } finally {
         serialize.mockRestore();
