@@ -300,7 +300,7 @@ async def test_usage_edit_preserves_current_files_on_downsize(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == quota * 2
+        assert persisted.storage_bytes == quota * 2
         operation = await operations.claim(session)
         assert operation is not None
         await operations.fail(session, operation, "Provider failed")
@@ -389,7 +389,7 @@ async def test_usage_edit_accepts_minimum_workload_capacity_and_positive_file_sh
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.storage_quota_bytes == organization.storage_bytes
+        assert persisted.storage_bytes == organization.storage_bytes
     [operation] = await fetch_operations()
     assert operation.allocation == capacity
 
@@ -828,7 +828,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = {"space_used": expected_usage, "quota_bytes": organization.storage_quota_bytes}
+        expected_payload = {"space_used": expected_usage, "quota_bytes": organization.storage_bytes}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -862,7 +862,7 @@ async def test_organization_storage_endpoint_allows_members(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"space_used": 0, "quota_bytes": organization.storage_quota_bytes}
+    assert response.json() == {"space_used": 0, "quota_bytes": organization.storage_bytes}
 
 
 async def test_organization_storage_endpoint_rejects_non_members(

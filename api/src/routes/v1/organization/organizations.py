@@ -108,7 +108,7 @@ async def get_organization_storage_usage(session: auth.Session, membership: auth
     usage = await organizations.storage_usage(compute, membership.organization_id)
 
     # Report the measured usage alongside the tenant's configured quota.
-    return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
+    return {"space_used": usage, "quota_bytes": membership.organization.storage_bytes}
 
 
 @router.get("/organizations/{organization_id}/database", response_model=OrganizationByteUsage)
