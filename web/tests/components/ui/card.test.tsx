@@ -168,7 +168,7 @@ it('keeps disabled primary controls focusable without live destinations or activ
     const nested = vi.fn();
     const navigate = vi.fn();
     await withMounted(
-        <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
+        <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate, download: vi.fn() }}>
             <Card label="Action" isDisabled onClick={action}>
                 <p>Action</p>
                 <button onClick={nested}>Nested</button>
@@ -217,7 +217,7 @@ it('routes plain surface clicks through the validated primary link without steal
     const navigate = vi.fn();
     const nested = vi.fn((event: React.MouseEvent) => event.preventDefault());
     await withMounted(
-        <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
+        <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate, download: vi.fn() }}>
             <Card href="/orders">
                 <p>Order</p>
                 <a href="/other" onClick={nested}>
@@ -246,7 +246,7 @@ it('forwards modifier and middle gestures using the resolved destination and rej
 
     try {
         await withMounted(
-            <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate }}>
+            <LinkNavigationContext value={{ baseUrl: 'https://example.com/app/', navigate, download: vi.fn() }}>
                 <Card href="/orders">
                     <p>Order</p>
                 </Card>
