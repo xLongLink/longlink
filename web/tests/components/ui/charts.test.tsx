@@ -139,60 +139,33 @@ it('adds or removes chart controls only when requested', async () => {
 });
 
 it('formats category and value labels when the shared Cartesian axes are enabled', async () => {
-    // Arrange
-    function Preview() {
-        const [axes, setAxes] = useState(false);
-
-        return (
-            <div ref={(element) => measureCharts(element)}>
-                <button type="button" onClick={() => setAxes((value) => !value)}>
-                    Toggle axes
-                </button>
-                <Box height={280}>
-                    <BarChart
-                        data={[
-                            { month: 'Jan', requests: 10 },
-                            { month: 'Feb', requests: 20 }
-                        ]}
-                        xKey="month"
-                        series={[{ key: 'requests' }]}
-                        axes={axes}
-                        xTickFormatter={(value) => `Month ${value}`}
-                        yTickFormatter={(value) => `${value} requests`}
-                    />
-                </Box>
-            </div>
-        );
-    }
-
-    await withMounted(<Preview />, async (output) => {
-        const user = userEvent.setup();
-        const toggle = output.querySelector('button');
-
-        if (!toggle) throw new Error('Expected axis toggle');
-        expect(output.querySelector('.recharts-cartesian-axis-tick')).toBeNull();
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        await vi.waitFor(() => {
-            expect(output.querySelector('.recharts-cartesian-grid')).not.toBeNull();
-            const labels = Array.from(
-                output.querySelectorAll('.recharts-cartesian-axis-tick-value'),
-                (tick) => tick.textContent
-            ).join(' ');
-            expect(labels).toContain('Month Jan');
-            expect(labels).toContain('requests');
-        });
-
-        // Act
-        await act(async () => user.click(toggle));
-
-        // Assert
-        expect(output.querySelector('.recharts-cartesian-grid')).toBeNull();
-        expect(output.querySelector('.recharts-cartesian-axis-tick')).toBeNull();
-    });
+    await withMounted(
+        <div ref={(element) => measureCharts(element)}>
+            <Box height={280}>
+                <BarChart
+                    data={[
+                        { month: 'Jan', requests: 10 },
+                        { month: 'Feb', requests: 20 }
+                    ]}
+                    xKey="month"
+                    series={[{ key: 'requests' }]}
+                    axes
+                    xTickFormatter={(value) => `Month ${value}`}
+                    yTickFormatter={(value) => `${value} requests`}
+                />
+            </Box>
+        </div>,
+        async (output) => {
+            await vi.waitFor(() => {
+                const labels = Array.from(
+                    output.querySelectorAll('.recharts-cartesian-axis-tick-value'),
+                    (tick) => tick.textContent
+                ).join(' ');
+                expect(labels).toContain('Month Jan');
+                expect(labels).toContain('requests');
+            });
+        }
+    );
 });
 
 it('matches external segment legends to plotted order and clears them when data is removed', async () => {

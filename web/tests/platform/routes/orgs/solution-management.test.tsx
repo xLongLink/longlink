@@ -308,13 +308,17 @@ it('blocks duplicate MCP copies, reports failure, and closes only after a succes
             expect(document.querySelector('[role="dialog"]')).not.toBeNull();
 
             // Act
-            await act(async () => failCopy?.(new Error('Clipboard unavailable')));
+            await act(async () =>
+                failCopy?.(
+                    new Error('Clipboard unavailable; upstream=https://internal.example/private?token=transport-secret')
+                )
+            );
 
             // Assert
             await vi.waitFor(() => {
                 expect(copy.disabled).toBe(false);
                 expect(copy.getAttribute('aria-busy')).toBeNull();
-                expect(document.querySelector('[data-sonner-toast]')?.textContent).toContain(
+                expect(document.querySelector('[data-sonner-toast]')?.textContent).toBe(
                     'The request could not be completed. Please try again.'
                 );
             });

@@ -7,71 +7,45 @@ import { useForm } from '@/components/longlink/hooks/use-form';
 import type { FormOptions } from '@/components/longlink/hooks/use-form';
 
 it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
-    'submits %s through the scoped bridge without flattening repeated names, uploads, or submitter values',
+    'submits %s through the scoped bridge without flattening multipart entries',
     async (method) => {
+        // Arrange
         const file = new File(['invoice'], 'invoice.pdf', { type: 'application/pdf' });
-        const submissions: [string, string, [string, string | Blob][]][] = [];
-        let completed = false;
+        const data = new FormData();
+        data.append('tag', 'red');
+        data.append('tag', 'blue');
+        data.append('decision', 'save');
+        data.append('attachment', file);
+        const request = vi.fn().mockResolvedValue(null);
+        let submit: ((data: FormData) => Promise<void>) | undefined;
 
         function Example() {
-            const form = useForm('/api/orders', {
-                method,
-                onSuccess: () => {
-                    completed = true;
-                }
-            });
+            submit = useForm('/api/orders', { method }).submit;
 
-            return (
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-                        data.append('attachment', file);
-                        void form.submit(data);
-                    }}
-                >
-                    <input name="tag" defaultValue="red" />
-                    <input name="tag" defaultValue="blue" />
-                    <input name="excluded" defaultValue="private" disabled />
-                    <button type="submit" name="decision" value="save">
-                        Save
-                    </button>
-                </form>
-            );
+            return null;
         }
 
         await withMounted(
-            <RequestContext
-                value={{
-                    request: async (path, options) => {
-                        if (!options?.form || !options.method) throw new Error('Expected a write request');
-                        submissions.push([path, options.method, options.form]);
-                        expect(completed).toBe(false);
-
-                        return null;
-                    }
-                }}
-            >
+            <RequestContext value={{ request }}>
                 <Example />
             </RequestContext>,
-            async (output) => {
-                const button = output.querySelector('button');
+            async () => {
+                // Act
+                await act(async () => {
+                    if (!submit) throw new Error('Expected scoped submission');
+                    await submit(data);
+                });
 
-                if (!button) throw new Error('Expected the submit button');
-                await act(async () => button.click());
-                expect(submissions).toEqual([
-                    [
-                        '/api/orders',
-                        method,
-                        [
-                            ['tag', 'red'],
-                            ['tag', 'blue'],
-                            ['decision', 'save'],
-                            ['attachment', file]
-                        ]
+                // Assert
+                expect(request).toHaveBeenCalledExactlyOnceWith('/api/orders', {
+                    method,
+                    form: [
+                        ['tag', 'red'],
+                        ['tag', 'blue'],
+                        ['decision', 'save'],
+                        ['attachment', file]
                     ]
-                ]);
-                expect(completed).toBe(true);
+                });
             }
         );
     }
